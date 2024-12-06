@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -87,6 +88,82 @@ func (o CreateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRedirectUrls returns the value of the RedirectUrls field in CreateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomAppIntegration) GetRedirectUrls(ctx context.Context) ([]types.String, bool) {
+	if o.RedirectUrls.IsNull() || o.RedirectUrls.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RedirectUrls.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRedirectUrls sets the value of the RedirectUrls field in CreateCustomAppIntegration.
+func (o *CreateCustomAppIntegration) SetRedirectUrls(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	o.RedirectUrls = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in CreateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomAppIntegration) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in CreateCustomAppIntegration.
+func (o *CreateCustomAppIntegration) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in CreateCustomAppIntegration as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomAppIntegration) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in CreateCustomAppIntegration.
+func (o *CreateCustomAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
 }
 
 type CreateCustomAppIntegrationOutput struct {
@@ -189,6 +266,32 @@ func (o CreatePublishedAppIntegration) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in CreatePublishedAppIntegration as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePublishedAppIntegration) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in CreatePublishedAppIntegration.
+func (o *CreatePublishedAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
 }
 
 type CreatePublishedAppIntegrationOutput struct {
@@ -712,6 +815,82 @@ func (o GetCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRedirectUrls returns the value of the RedirectUrls field in GetCustomAppIntegrationOutput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationOutput) GetRedirectUrls(ctx context.Context) ([]types.String, bool) {
+	if o.RedirectUrls.IsNull() || o.RedirectUrls.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RedirectUrls.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRedirectUrls sets the value of the RedirectUrls field in GetCustomAppIntegrationOutput.
+func (o *GetCustomAppIntegrationOutput) SetRedirectUrls(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	o.RedirectUrls = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in GetCustomAppIntegrationOutput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationOutput) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in GetCustomAppIntegrationOutput.
+func (o *GetCustomAppIntegrationOutput) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in GetCustomAppIntegrationOutput as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationOutput) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in GetCustomAppIntegrationOutput.
+func (o *GetCustomAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
+}
+
 // Get OAuth Custom App Integration
 type GetCustomAppIntegrationRequest struct {
 	// The OAuth app integration ID.
@@ -805,6 +984,31 @@ func (o GetCustomAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetApps returns the value of the Apps field in GetCustomAppIntegrationsOutput as
+// a slice of GetCustomAppIntegrationOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationsOutput) GetApps(ctx context.Context) ([]GetCustomAppIntegrationOutput, bool) {
+	if o.Apps.IsNull() || o.Apps.IsUnknown() {
+		return nil, false
+	}
+	var v []GetCustomAppIntegrationOutput
+	d := o.Apps.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApps sets the value of the Apps field in GetCustomAppIntegrationsOutput.
+func (o *GetCustomAppIntegrationsOutput) SetApps(ctx context.Context, v []GetCustomAppIntegrationOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	o.Apps = types.ListValueMust(t, vs)
+}
+
 type GetPublishedAppIntegrationOutput struct {
 	// App-id of the published app integration
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
@@ -869,6 +1073,32 @@ func (o GetPublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in GetPublishedAppIntegrationOutput as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPublishedAppIntegrationOutput) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in GetPublishedAppIntegrationOutput.
+func (o *GetPublishedAppIntegrationOutput) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
 }
 
 // Get OAuth Published App Integration
@@ -963,6 +1193,31 @@ func (o GetPublishedAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetApps returns the value of the Apps field in GetPublishedAppIntegrationsOutput as
+// a slice of GetPublishedAppIntegrationOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPublishedAppIntegrationsOutput) GetApps(ctx context.Context) ([]GetPublishedAppIntegrationOutput, bool) {
+	if o.Apps.IsNull() || o.Apps.IsUnknown() {
+		return nil, false
+	}
+	var v []GetPublishedAppIntegrationOutput
+	d := o.Apps.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApps sets the value of the Apps field in GetPublishedAppIntegrationsOutput.
+func (o *GetPublishedAppIntegrationsOutput) SetApps(ctx context.Context, v []GetPublishedAppIntegrationOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	o.Apps = types.ListValueMust(t, vs)
+}
+
 type GetPublishedAppsOutput struct {
 	// List of Published OAuth Apps.
 	Apps types.List `tfsdk:"apps" tf:"optional"`
@@ -1012,6 +1267,31 @@ func (o GetPublishedAppsOutput) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetApps returns the value of the Apps field in GetPublishedAppsOutput as
+// a slice of PublishedAppOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPublishedAppsOutput) GetApps(ctx context.Context) ([]PublishedAppOutput, bool) {
+	if o.Apps.IsNull() || o.Apps.IsUnknown() {
+		return nil, false
+	}
+	var v []PublishedAppOutput
+	d := o.Apps.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApps sets the value of the Apps field in GetPublishedAppsOutput.
+func (o *GetPublishedAppsOutput) SetApps(ctx context.Context, v []PublishedAppOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	o.Apps = types.ListValueMust(t, vs)
 }
 
 // Get custom oauth app integrations
@@ -1262,6 +1542,31 @@ func (o ListServicePrincipalSecretsResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
+// GetSecrets returns the value of the Secrets field in ListServicePrincipalSecretsResponse as
+// a slice of SecretInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListServicePrincipalSecretsResponse) GetSecrets(ctx context.Context) ([]SecretInfo, bool) {
+	if o.Secrets.IsNull() || o.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v []SecretInfo
+	d := o.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in ListServicePrincipalSecretsResponse.
+func (o *ListServicePrincipalSecretsResponse) SetSecrets(ctx context.Context, v []SecretInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	o.Secrets = types.ListValueMust(t, vs)
+}
+
 type PublishedAppOutput struct {
 	// Unique ID of the published OAuth app.
 	AppId types.String `tfsdk:"app_id" tf:"optional"`
@@ -1335,6 +1640,56 @@ func (o PublishedAppOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRedirectUrls returns the value of the RedirectUrls field in PublishedAppOutput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PublishedAppOutput) GetRedirectUrls(ctx context.Context) ([]types.String, bool) {
+	if o.RedirectUrls.IsNull() || o.RedirectUrls.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RedirectUrls.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRedirectUrls sets the value of the RedirectUrls field in PublishedAppOutput.
+func (o *PublishedAppOutput) SetRedirectUrls(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	o.RedirectUrls = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in PublishedAppOutput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PublishedAppOutput) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in PublishedAppOutput.
+func (o *PublishedAppOutput) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
 }
 
 type SecretInfo struct {
@@ -1498,6 +1853,57 @@ func (o UpdateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRedirectUrls returns the value of the RedirectUrls field in UpdateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration) GetRedirectUrls(ctx context.Context) ([]types.String, bool) {
+	if o.RedirectUrls.IsNull() || o.RedirectUrls.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RedirectUrls.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRedirectUrls sets the value of the RedirectUrls field in UpdateCustomAppIntegration.
+func (o *UpdateCustomAppIntegration) SetRedirectUrls(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	o.RedirectUrls = types.ListValueMust(t, vs)
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in UpdateCustomAppIntegration as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in UpdateCustomAppIntegration.
+func (o *UpdateCustomAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
+}
+
 type UpdateCustomAppIntegrationOutput struct {
 }
 
@@ -1581,6 +1987,32 @@ func (o UpdatePublishedAppIntegration) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in UpdatePublishedAppIntegration as
+// a TokenAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePublishedAppIntegration) GetTokenAccessPolicy(ctx context.Context) (TokenAccessPolicy, bool) {
+	var e TokenAccessPolicy
+	if o.TokenAccessPolicy.IsNull() || o.TokenAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []TokenAccessPolicy
+	d := o.TokenAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenAccessPolicy sets the value of the TokenAccessPolicy field in UpdatePublishedAppIntegration.
+func (o *UpdatePublishedAppIntegration) SetTokenAccessPolicy(ctx context.Context, v TokenAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
+	o.TokenAccessPolicy = types.ListValueMust(t, vs)
 }
 
 type UpdatePublishedAppIntegrationOutput struct {

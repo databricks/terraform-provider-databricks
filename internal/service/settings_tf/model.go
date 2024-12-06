@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -123,6 +124,32 @@ func (o AibiDashboardEmbeddingAccessPolicySetting) Type(ctx context.Context) att
 	}
 }
 
+// GetAibiDashboardEmbeddingAccessPolicy returns the value of the AibiDashboardEmbeddingAccessPolicy field in AibiDashboardEmbeddingAccessPolicySetting as
+// a AibiDashboardEmbeddingAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AibiDashboardEmbeddingAccessPolicySetting) GetAibiDashboardEmbeddingAccessPolicy(ctx context.Context) (AibiDashboardEmbeddingAccessPolicy, bool) {
+	var e AibiDashboardEmbeddingAccessPolicy
+	if o.AibiDashboardEmbeddingAccessPolicy.IsNull() || o.AibiDashboardEmbeddingAccessPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []AibiDashboardEmbeddingAccessPolicy
+	d := o.AibiDashboardEmbeddingAccessPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAibiDashboardEmbeddingAccessPolicy sets the value of the AibiDashboardEmbeddingAccessPolicy field in AibiDashboardEmbeddingAccessPolicySetting.
+func (o *AibiDashboardEmbeddingAccessPolicySetting) SetAibiDashboardEmbeddingAccessPolicy(ctx context.Context, v AibiDashboardEmbeddingAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aibi_dashboard_embedding_access_policy"]
+	o.AibiDashboardEmbeddingAccessPolicy = types.ListValueMust(t, vs)
+}
+
 type AibiDashboardEmbeddingApprovedDomains struct {
 	ApprovedDomains types.List `tfsdk:"approved_domains" tf:"optional"`
 }
@@ -166,6 +193,31 @@ func (o AibiDashboardEmbeddingApprovedDomains) Type(ctx context.Context) attr.Ty
 			},
 		},
 	}
+}
+
+// GetApprovedDomains returns the value of the ApprovedDomains field in AibiDashboardEmbeddingApprovedDomains as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AibiDashboardEmbeddingApprovedDomains) GetApprovedDomains(ctx context.Context) ([]types.String, bool) {
+	if o.ApprovedDomains.IsNull() || o.ApprovedDomains.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ApprovedDomains.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApprovedDomains sets the value of the ApprovedDomains field in AibiDashboardEmbeddingApprovedDomains.
+func (o *AibiDashboardEmbeddingApprovedDomains) SetApprovedDomains(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["approved_domains"]
+	o.ApprovedDomains = types.ListValueMust(t, vs)
 }
 
 type AibiDashboardEmbeddingApprovedDomainsSetting struct {
@@ -231,6 +283,32 @@ func (o AibiDashboardEmbeddingApprovedDomainsSetting) Type(ctx context.Context) 
 	}
 }
 
+// GetAibiDashboardEmbeddingApprovedDomains returns the value of the AibiDashboardEmbeddingApprovedDomains field in AibiDashboardEmbeddingApprovedDomainsSetting as
+// a AibiDashboardEmbeddingApprovedDomains value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AibiDashboardEmbeddingApprovedDomainsSetting) GetAibiDashboardEmbeddingApprovedDomains(ctx context.Context) (AibiDashboardEmbeddingApprovedDomains, bool) {
+	var e AibiDashboardEmbeddingApprovedDomains
+	if o.AibiDashboardEmbeddingApprovedDomains.IsNull() || o.AibiDashboardEmbeddingApprovedDomains.IsUnknown() {
+		return e, false
+	}
+	var v []AibiDashboardEmbeddingApprovedDomains
+	d := o.AibiDashboardEmbeddingApprovedDomains.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAibiDashboardEmbeddingApprovedDomains sets the value of the AibiDashboardEmbeddingApprovedDomains field in AibiDashboardEmbeddingApprovedDomainsSetting.
+func (o *AibiDashboardEmbeddingApprovedDomainsSetting) SetAibiDashboardEmbeddingApprovedDomains(ctx context.Context, v AibiDashboardEmbeddingApprovedDomains) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aibi_dashboard_embedding_approved_domains"]
+	o.AibiDashboardEmbeddingApprovedDomains = types.ListValueMust(t, vs)
+}
+
 type AutomaticClusterUpdateSetting struct {
 	AutomaticClusterUpdateWorkspace types.List `tfsdk:"automatic_cluster_update_workspace" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -292,6 +370,32 @@ func (o AutomaticClusterUpdateSetting) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetAutomaticClusterUpdateWorkspace returns the value of the AutomaticClusterUpdateWorkspace field in AutomaticClusterUpdateSetting as
+// a ClusterAutoRestartMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AutomaticClusterUpdateSetting) GetAutomaticClusterUpdateWorkspace(ctx context.Context) (ClusterAutoRestartMessage, bool) {
+	var e ClusterAutoRestartMessage
+	if o.AutomaticClusterUpdateWorkspace.IsNull() || o.AutomaticClusterUpdateWorkspace.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAutoRestartMessage
+	d := o.AutomaticClusterUpdateWorkspace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutomaticClusterUpdateWorkspace sets the value of the AutomaticClusterUpdateWorkspace field in AutomaticClusterUpdateSetting.
+func (o *AutomaticClusterUpdateSetting) SetAutomaticClusterUpdateWorkspace(ctx context.Context, v ClusterAutoRestartMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["automatic_cluster_update_workspace"]
+	o.AutomaticClusterUpdateWorkspace = types.ListValueMust(t, vs)
 }
 
 type BooleanMessage struct {
@@ -404,6 +508,58 @@ func (o ClusterAutoRestartMessage) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEnablementDetails returns the value of the EnablementDetails field in ClusterAutoRestartMessage as
+// a ClusterAutoRestartMessageEnablementDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAutoRestartMessage) GetEnablementDetails(ctx context.Context) (ClusterAutoRestartMessageEnablementDetails, bool) {
+	var e ClusterAutoRestartMessageEnablementDetails
+	if o.EnablementDetails.IsNull() || o.EnablementDetails.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAutoRestartMessageEnablementDetails
+	d := o.EnablementDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnablementDetails sets the value of the EnablementDetails field in ClusterAutoRestartMessage.
+func (o *ClusterAutoRestartMessage) SetEnablementDetails(ctx context.Context, v ClusterAutoRestartMessageEnablementDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enablement_details"]
+	o.EnablementDetails = types.ListValueMust(t, vs)
+}
+
+// GetMaintenanceWindow returns the value of the MaintenanceWindow field in ClusterAutoRestartMessage as
+// a ClusterAutoRestartMessageMaintenanceWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAutoRestartMessage) GetMaintenanceWindow(ctx context.Context) (ClusterAutoRestartMessageMaintenanceWindow, bool) {
+	var e ClusterAutoRestartMessageMaintenanceWindow
+	if o.MaintenanceWindow.IsNull() || o.MaintenanceWindow.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAutoRestartMessageMaintenanceWindow
+	d := o.MaintenanceWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaintenanceWindow sets the value of the MaintenanceWindow field in ClusterAutoRestartMessage.
+func (o *ClusterAutoRestartMessage) SetMaintenanceWindow(ctx context.Context, v ClusterAutoRestartMessageMaintenanceWindow) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["maintenance_window"]
+	o.MaintenanceWindow = types.ListValueMust(t, vs)
+}
+
 // Contains an information about the enablement status judging (e.g. whether the
 // enterprise tier is enabled) This is only additional information that MUST NOT
 // be used to decide whether the setting is enabled or not. This is intended to
@@ -506,6 +662,32 @@ func (o ClusterAutoRestartMessageMaintenanceWindow) Type(ctx context.Context) at
 	}
 }
 
+// GetWeekDayBasedSchedule returns the value of the WeekDayBasedSchedule field in ClusterAutoRestartMessageMaintenanceWindow as
+// a ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAutoRestartMessageMaintenanceWindow) GetWeekDayBasedSchedule(ctx context.Context) (ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule, bool) {
+	var e ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
+	if o.WeekDayBasedSchedule.IsNull() || o.WeekDayBasedSchedule.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule
+	d := o.WeekDayBasedSchedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWeekDayBasedSchedule sets the value of the WeekDayBasedSchedule field in ClusterAutoRestartMessageMaintenanceWindow.
+func (o *ClusterAutoRestartMessageMaintenanceWindow) SetWeekDayBasedSchedule(ctx context.Context, v ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["week_day_based_schedule"]
+	o.WeekDayBasedSchedule = types.ListValueMust(t, vs)
+}
+
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule struct {
 	DayOfWeek types.String `tfsdk:"day_of_week" tf:"optional"`
 
@@ -557,6 +739,32 @@ func (o ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) Type(ctx
 			},
 		},
 	}
+}
+
+// GetWindowStartTime returns the value of the WindowStartTime field in ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule as
+// a ClusterAutoRestartMessageMaintenanceWindowWindowStartTime value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) GetWindowStartTime(ctx context.Context) (ClusterAutoRestartMessageMaintenanceWindowWindowStartTime, bool) {
+	var e ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
+	if o.WindowStartTime.IsNull() || o.WindowStartTime.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAutoRestartMessageMaintenanceWindowWindowStartTime
+	d := o.WindowStartTime.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWindowStartTime sets the value of the WindowStartTime field in ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule.
+func (o *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) SetWindowStartTime(ctx context.Context, v ClusterAutoRestartMessageMaintenanceWindowWindowStartTime) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["window_start_time"]
+	o.WindowStartTime = types.ListValueMust(t, vs)
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime struct {
@@ -655,6 +863,31 @@ func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetComplianceStandards returns the value of the ComplianceStandards field in ComplianceSecurityProfile as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ComplianceSecurityProfile) GetComplianceStandards(ctx context.Context) ([]types.String, bool) {
+	if o.ComplianceStandards.IsNull() || o.ComplianceStandards.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ComplianceStandards.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComplianceStandards sets the value of the ComplianceStandards field in ComplianceSecurityProfile.
+func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_standards"]
+	o.ComplianceStandards = types.ListValueMust(t, vs)
+}
+
 type ComplianceSecurityProfileSetting struct {
 	// SHIELD feature: CSP
 	ComplianceSecurityProfileWorkspace types.List `tfsdk:"compliance_security_profile_workspace" tf:"object"`
@@ -717,6 +950,32 @@ func (o ComplianceSecurityProfileSetting) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetComplianceSecurityProfileWorkspace returns the value of the ComplianceSecurityProfileWorkspace field in ComplianceSecurityProfileSetting as
+// a ComplianceSecurityProfile value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ComplianceSecurityProfileSetting) GetComplianceSecurityProfileWorkspace(ctx context.Context) (ComplianceSecurityProfile, bool) {
+	var e ComplianceSecurityProfile
+	if o.ComplianceSecurityProfileWorkspace.IsNull() || o.ComplianceSecurityProfileWorkspace.IsUnknown() {
+		return e, false
+	}
+	var v []ComplianceSecurityProfile
+	d := o.ComplianceSecurityProfileWorkspace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetComplianceSecurityProfileWorkspace sets the value of the ComplianceSecurityProfileWorkspace field in ComplianceSecurityProfileSetting.
+func (o *ComplianceSecurityProfileSetting) SetComplianceSecurityProfileWorkspace(ctx context.Context, v ComplianceSecurityProfile) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_security_profile_workspace"]
+	o.ComplianceSecurityProfileWorkspace = types.ListValueMust(t, vs)
 }
 
 type Config struct {
@@ -792,6 +1051,136 @@ func (o Config) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEmail returns the value of the Email field in Config as
+// a EmailConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Config) GetEmail(ctx context.Context) (EmailConfig, bool) {
+	var e EmailConfig
+	if o.Email.IsNull() || o.Email.IsUnknown() {
+		return e, false
+	}
+	var v []EmailConfig
+	d := o.Email.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmail sets the value of the Email field in Config.
+func (o *Config) SetEmail(ctx context.Context, v EmailConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email"]
+	o.Email = types.ListValueMust(t, vs)
+}
+
+// GetGenericWebhook returns the value of the GenericWebhook field in Config as
+// a GenericWebhookConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Config) GetGenericWebhook(ctx context.Context) (GenericWebhookConfig, bool) {
+	var e GenericWebhookConfig
+	if o.GenericWebhook.IsNull() || o.GenericWebhook.IsUnknown() {
+		return e, false
+	}
+	var v []GenericWebhookConfig
+	d := o.GenericWebhook.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGenericWebhook sets the value of the GenericWebhook field in Config.
+func (o *Config) SetGenericWebhook(ctx context.Context, v GenericWebhookConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["generic_webhook"]
+	o.GenericWebhook = types.ListValueMust(t, vs)
+}
+
+// GetMicrosoftTeams returns the value of the MicrosoftTeams field in Config as
+// a MicrosoftTeamsConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Config) GetMicrosoftTeams(ctx context.Context) (MicrosoftTeamsConfig, bool) {
+	var e MicrosoftTeamsConfig
+	if o.MicrosoftTeams.IsNull() || o.MicrosoftTeams.IsUnknown() {
+		return e, false
+	}
+	var v []MicrosoftTeamsConfig
+	d := o.MicrosoftTeams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMicrosoftTeams sets the value of the MicrosoftTeams field in Config.
+func (o *Config) SetMicrosoftTeams(ctx context.Context, v MicrosoftTeamsConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["microsoft_teams"]
+	o.MicrosoftTeams = types.ListValueMust(t, vs)
+}
+
+// GetPagerduty returns the value of the Pagerduty field in Config as
+// a PagerdutyConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Config) GetPagerduty(ctx context.Context) (PagerdutyConfig, bool) {
+	var e PagerdutyConfig
+	if o.Pagerduty.IsNull() || o.Pagerduty.IsUnknown() {
+		return e, false
+	}
+	var v []PagerdutyConfig
+	d := o.Pagerduty.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPagerduty sets the value of the Pagerduty field in Config.
+func (o *Config) SetPagerduty(ctx context.Context, v PagerdutyConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pagerduty"]
+	o.Pagerduty = types.ListValueMust(t, vs)
+}
+
+// GetSlack returns the value of the Slack field in Config as
+// a SlackConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Config) GetSlack(ctx context.Context) (SlackConfig, bool) {
+	var e SlackConfig
+	if o.Slack.IsNull() || o.Slack.IsUnknown() {
+		return e, false
+	}
+	var v []SlackConfig
+	d := o.Slack.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSlack sets the value of the Slack field in Config.
+func (o *Config) SetSlack(ctx context.Context, v SlackConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slack"]
+	o.Slack = types.ListValueMust(t, vs)
+}
+
 // Details required to configure a block list or allow list.
 type CreateIpAccessList struct {
 	IpAddresses types.List `tfsdk:"ip_addresses" tf:"optional"`
@@ -851,6 +1240,31 @@ func (o CreateIpAccessList) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIpAddresses returns the value of the IpAddresses field in CreateIpAccessList as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateIpAccessList) GetIpAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.IpAddresses.IsNull() || o.IpAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IpAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAddresses sets the value of the IpAddresses field in CreateIpAccessList.
+func (o *CreateIpAccessList) SetIpAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	o.IpAddresses = types.ListValueMust(t, vs)
+}
+
 // An IP access list was successfully created.
 type CreateIpAccessListResponse struct {
 	// Definition of an IP Access list
@@ -896,6 +1310,32 @@ func (o CreateIpAccessListResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetIpAccessList returns the value of the IpAccessList field in CreateIpAccessListResponse as
+// a IpAccessListInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAccessListInfo, bool) {
+	var e IpAccessListInfo
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessListInfo
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in CreateIpAccessListResponse.
+func (o *CreateIpAccessListResponse) SetIpAccessList(ctx context.Context, v IpAccessListInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
 type CreateNetworkConnectivityConfigRequest struct {
@@ -1000,6 +1440,32 @@ func (o CreateNotificationDestinationRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetConfig returns the value of the Config field in CreateNotificationDestinationRequest as
+// a Config value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateNotificationDestinationRequest) GetConfig(ctx context.Context) (Config, bool) {
+	var e Config
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []Config
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in CreateNotificationDestinationRequest.
+func (o *CreateNotificationDestinationRequest) SetConfig(ctx context.Context, v Config) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
 // Configuration details for creating on-behalf tokens.
 type CreateOboTokenRequest struct {
 	// Application ID of the service principal.
@@ -1099,6 +1565,32 @@ func (o CreateOboTokenResponse) Type(ctx context.Context) attr.Type {
 			"token_value": types.StringType,
 		},
 	}
+}
+
+// GetTokenInfo returns the value of the TokenInfo field in CreateOboTokenResponse as
+// a TokenInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateOboTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, bool) {
+	var e TokenInfo
+	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TokenInfo
+	d := o.TokenInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenInfo sets the value of the TokenInfo field in CreateOboTokenResponse.
+func (o *CreateOboTokenResponse) SetTokenInfo(ctx context.Context, v TokenInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_info"]
+	o.TokenInfo = types.ListValueMust(t, vs)
 }
 
 type CreatePrivateEndpointRuleRequest struct {
@@ -1251,6 +1743,32 @@ func (o CreateTokenResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTokenInfo returns the value of the TokenInfo field in CreateTokenResponse as
+// a PublicTokenInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateTokenResponse) GetTokenInfo(ctx context.Context) (PublicTokenInfo, bool) {
+	var e PublicTokenInfo
+	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
+		return e, false
+	}
+	var v []PublicTokenInfo
+	d := o.TokenInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenInfo sets the value of the TokenInfo field in CreateTokenResponse.
+func (o *CreateTokenResponse) SetTokenInfo(ctx context.Context, v PublicTokenInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_info"]
+	o.TokenInfo = types.ListValueMust(t, vs)
+}
+
 // Account level policy for CSP
 type CspEnablementAccount struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
@@ -1301,6 +1819,31 @@ func (o CspEnablementAccount) Type(ctx context.Context) attr.Type {
 			"is_enforced": types.BoolType,
 		},
 	}
+}
+
+// GetComplianceStandards returns the value of the ComplianceStandards field in CspEnablementAccount as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CspEnablementAccount) GetComplianceStandards(ctx context.Context) ([]types.String, bool) {
+	if o.ComplianceStandards.IsNull() || o.ComplianceStandards.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ComplianceStandards.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetComplianceStandards sets the value of the ComplianceStandards field in CspEnablementAccount.
+func (o *CspEnablementAccount) SetComplianceStandards(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_standards"]
+	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
 type CspEnablementAccountSetting struct {
@@ -1365,6 +1908,32 @@ func (o CspEnablementAccountSetting) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetCspEnablementAccount returns the value of the CspEnablementAccount field in CspEnablementAccountSetting as
+// a CspEnablementAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CspEnablementAccountSetting) GetCspEnablementAccount(ctx context.Context) (CspEnablementAccount, bool) {
+	var e CspEnablementAccount
+	if o.CspEnablementAccount.IsNull() || o.CspEnablementAccount.IsUnknown() {
+		return e, false
+	}
+	var v []CspEnablementAccount
+	d := o.CspEnablementAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCspEnablementAccount sets the value of the CspEnablementAccount field in CspEnablementAccountSetting.
+func (o *CspEnablementAccountSetting) SetCspEnablementAccount(ctx context.Context, v CspEnablementAccount) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["csp_enablement_account"]
+	o.CspEnablementAccount = types.ListValueMust(t, vs)
 }
 
 // This represents the setting configuration for the default namespace in the
@@ -1438,6 +2007,32 @@ func (o DefaultNamespaceSetting) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetNamespace returns the value of the Namespace field in DefaultNamespaceSetting as
+// a StringMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DefaultNamespaceSetting) GetNamespace(ctx context.Context) (StringMessage, bool) {
+	var e StringMessage
+	if o.Namespace.IsNull() || o.Namespace.IsUnknown() {
+		return e, false
+	}
+	var v []StringMessage
+	d := o.Namespace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNamespace sets the value of the Namespace field in DefaultNamespaceSetting.
+func (o *DefaultNamespaceSetting) SetNamespace(ctx context.Context, v StringMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["namespace"]
+	o.Namespace = types.ListValueMust(t, vs)
 }
 
 // Delete access list
@@ -2424,6 +3019,32 @@ func (o DisableLegacyAccess) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDisableLegacyAccess returns the value of the DisableLegacyAccess field in DisableLegacyAccess as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DisableLegacyAccess) GetDisableLegacyAccess(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.DisableLegacyAccess.IsNull() || o.DisableLegacyAccess.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.DisableLegacyAccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDisableLegacyAccess sets the value of the DisableLegacyAccess field in DisableLegacyAccess.
+func (o *DisableLegacyAccess) SetDisableLegacyAccess(ctx context.Context, v BooleanMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disable_legacy_access"]
+	o.DisableLegacyAccess = types.ListValueMust(t, vs)
+}
+
 type DisableLegacyDbfs struct {
 	DisableLegacyDbfs types.List `tfsdk:"disable_legacy_dbfs" tf:"object"`
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -2485,6 +3106,32 @@ func (o DisableLegacyDbfs) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetDisableLegacyDbfs returns the value of the DisableLegacyDbfs field in DisableLegacyDbfs as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DisableLegacyDbfs) GetDisableLegacyDbfs(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.DisableLegacyDbfs.IsNull() || o.DisableLegacyDbfs.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.DisableLegacyDbfs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDisableLegacyDbfs sets the value of the DisableLegacyDbfs field in DisableLegacyDbfs.
+func (o *DisableLegacyDbfs) SetDisableLegacyDbfs(ctx context.Context, v BooleanMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disable_legacy_dbfs"]
+	o.DisableLegacyDbfs = types.ListValueMust(t, vs)
 }
 
 type DisableLegacyFeatures struct {
@@ -2550,6 +3197,32 @@ func (o DisableLegacyFeatures) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDisableLegacyFeatures returns the value of the DisableLegacyFeatures field in DisableLegacyFeatures as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DisableLegacyFeatures) GetDisableLegacyFeatures(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.DisableLegacyFeatures.IsNull() || o.DisableLegacyFeatures.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.DisableLegacyFeatures.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDisableLegacyFeatures sets the value of the DisableLegacyFeatures field in DisableLegacyFeatures.
+func (o *DisableLegacyFeatures) SetDisableLegacyFeatures(ctx context.Context, v BooleanMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disable_legacy_features"]
+	o.DisableLegacyFeatures = types.ListValueMust(t, vs)
+}
+
 type EmailConfig struct {
 	// Email addresses to notify.
 	Addresses types.List `tfsdk:"addresses" tf:"optional"`
@@ -2594,6 +3267,31 @@ func (o EmailConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAddresses returns the value of the Addresses field in EmailConfig as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EmailConfig) GetAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.Addresses.IsNull() || o.Addresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Addresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAddresses sets the value of the Addresses field in EmailConfig.
+func (o *EmailConfig) SetAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["addresses"]
+	o.Addresses = types.ListValueMust(t, vs)
 }
 
 type Empty struct {
@@ -2738,6 +3436,32 @@ func (o EnhancedSecurityMonitoringSetting) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEnhancedSecurityMonitoringWorkspace returns the value of the EnhancedSecurityMonitoringWorkspace field in EnhancedSecurityMonitoringSetting as
+// a EnhancedSecurityMonitoring value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnhancedSecurityMonitoringSetting) GetEnhancedSecurityMonitoringWorkspace(ctx context.Context) (EnhancedSecurityMonitoring, bool) {
+	var e EnhancedSecurityMonitoring
+	if o.EnhancedSecurityMonitoringWorkspace.IsNull() || o.EnhancedSecurityMonitoringWorkspace.IsUnknown() {
+		return e, false
+	}
+	var v []EnhancedSecurityMonitoring
+	d := o.EnhancedSecurityMonitoringWorkspace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnhancedSecurityMonitoringWorkspace sets the value of the EnhancedSecurityMonitoringWorkspace field in EnhancedSecurityMonitoringSetting.
+func (o *EnhancedSecurityMonitoringSetting) SetEnhancedSecurityMonitoringWorkspace(ctx context.Context, v EnhancedSecurityMonitoring) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enhanced_security_monitoring_workspace"]
+	o.EnhancedSecurityMonitoringWorkspace = types.ListValueMust(t, vs)
+}
+
 // Account level policy for ESM
 type EsmEnablementAccount struct {
 	IsEnforced types.Bool `tfsdk:"is_enforced" tf:"optional"`
@@ -2844,6 +3568,32 @@ func (o EsmEnablementAccountSetting) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEsmEnablementAccount returns the value of the EsmEnablementAccount field in EsmEnablementAccountSetting as
+// a EsmEnablementAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EsmEnablementAccountSetting) GetEsmEnablementAccount(ctx context.Context) (EsmEnablementAccount, bool) {
+	var e EsmEnablementAccount
+	if o.EsmEnablementAccount.IsNull() || o.EsmEnablementAccount.IsUnknown() {
+		return e, false
+	}
+	var v []EsmEnablementAccount
+	d := o.EsmEnablementAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEsmEnablementAccount sets the value of the EsmEnablementAccount field in EsmEnablementAccountSetting.
+func (o *EsmEnablementAccountSetting) SetEsmEnablementAccount(ctx context.Context, v EsmEnablementAccount) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["esm_enablement_account"]
+	o.EsmEnablementAccount = types.ListValueMust(t, vs)
+}
+
 // The exchange token is the result of the token exchange with the IdP
 type ExchangeToken struct {
 	// The requested token.
@@ -2908,6 +3658,31 @@ func (o ExchangeToken) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetScopes returns the value of the Scopes field in ExchangeToken as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExchangeToken) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in ExchangeToken.
+func (o *ExchangeToken) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
 // Exchange a token with the IdP
 type ExchangeTokenRequest struct {
 	// The partition of Credentials store
@@ -2969,6 +3744,82 @@ func (o ExchangeTokenRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPartitionId returns the value of the PartitionId field in ExchangeTokenRequest as
+// a PartitionId value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExchangeTokenRequest) GetPartitionId(ctx context.Context) (PartitionId, bool) {
+	var e PartitionId
+	if o.PartitionId.IsNull() || o.PartitionId.IsUnknown() {
+		return e, false
+	}
+	var v []PartitionId
+	d := o.PartitionId.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPartitionId sets the value of the PartitionId field in ExchangeTokenRequest.
+func (o *ExchangeTokenRequest) SetPartitionId(ctx context.Context, v PartitionId) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["partitionId"]
+	o.PartitionId = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in ExchangeTokenRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExchangeTokenRequest) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in ExchangeTokenRequest.
+func (o *ExchangeTokenRequest) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
+// GetTokenType returns the value of the TokenType field in ExchangeTokenRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExchangeTokenRequest) GetTokenType(ctx context.Context) ([]types.String, bool) {
+	if o.TokenType.IsNull() || o.TokenType.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TokenType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokenType sets the value of the TokenType field in ExchangeTokenRequest.
+func (o *ExchangeTokenRequest) SetTokenType(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokenType"]
+	o.TokenType = types.ListValueMust(t, vs)
+}
+
 // Exhanged tokens were successfully returned.
 type ExchangeTokenResponse struct {
 	Values types.List `tfsdk:"values" tf:"optional"`
@@ -3013,6 +3864,31 @@ func (o ExchangeTokenResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetValues returns the value of the Values field in ExchangeTokenResponse as
+// a slice of ExchangeToken values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExchangeTokenResponse) GetValues(ctx context.Context) ([]ExchangeToken, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeToken
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in ExchangeTokenResponse.
+func (o *ExchangeTokenResponse) SetValues(ctx context.Context, v []ExchangeToken) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 // An IP access list was successfully returned.
@@ -3060,6 +3936,32 @@ func (o FetchIpAccessListResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetIpAccessList returns the value of the IpAccessList field in FetchIpAccessListResponse as
+// a IpAccessListInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FetchIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAccessListInfo, bool) {
+	var e IpAccessListInfo
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessListInfo
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in FetchIpAccessListResponse.
+func (o *FetchIpAccessListResponse) SetIpAccessList(ctx context.Context, v IpAccessListInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
 type GenericWebhookConfig struct {
@@ -3795,6 +4697,32 @@ func (o GetIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIpAccessList returns the value of the IpAccessList field in GetIpAccessListResponse as
+// a IpAccessListInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetIpAccessListResponse) GetIpAccessList(ctx context.Context) (IpAccessListInfo, bool) {
+	var e IpAccessListInfo
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessListInfo
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in GetIpAccessListResponse.
+func (o *GetIpAccessListResponse) SetIpAccessList(ctx context.Context, v IpAccessListInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
+}
+
 // IP access lists were successfully returned.
 type GetIpAccessListsResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists" tf:"optional"`
@@ -3839,6 +4767,31 @@ func (o GetIpAccessListsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetIpAccessLists returns the value of the IpAccessLists field in GetIpAccessListsResponse as
+// a slice of IpAccessListInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetIpAccessListsResponse) GetIpAccessLists(ctx context.Context) ([]IpAccessListInfo, bool) {
+	if o.IpAccessLists.IsNull() || o.IpAccessLists.IsUnknown() {
+		return nil, false
+	}
+	var v []IpAccessListInfo
+	d := o.IpAccessLists.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAccessLists sets the value of the IpAccessLists field in GetIpAccessListsResponse.
+func (o *GetIpAccessListsResponse) SetIpAccessLists(ctx context.Context, v []IpAccessListInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_lists"]
+	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
 // Get a network connectivity configuration
@@ -4202,6 +5155,31 @@ func (o GetTokenPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPermissionLevels returns the value of the PermissionLevels field in GetTokenPermissionLevelsResponse as
+// a slice of TokenPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetTokenPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]TokenPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetTokenPermissionLevelsResponse.
+func (o *GetTokenPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []TokenPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
 // Token with specified Token ID was successfully returned.
 type GetTokenResponse struct {
 	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
@@ -4246,6 +5224,32 @@ func (o GetTokenResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTokenInfo returns the value of the TokenInfo field in GetTokenResponse as
+// a TokenInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetTokenResponse) GetTokenInfo(ctx context.Context) (TokenInfo, bool) {
+	var e TokenInfo
+	if o.TokenInfo.IsNull() || o.TokenInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TokenInfo
+	d := o.TokenInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenInfo sets the value of the TokenInfo field in GetTokenResponse.
+func (o *GetTokenResponse) SetTokenInfo(ctx context.Context, v TokenInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_info"]
+	o.TokenInfo = types.ListValueMust(t, vs)
 }
 
 // Definition of an IP Access list
@@ -4336,6 +5340,31 @@ func (o IpAccessListInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIpAddresses returns the value of the IpAddresses field in IpAccessListInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IpAccessListInfo) GetIpAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.IpAddresses.IsNull() || o.IpAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IpAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAddresses sets the value of the IpAddresses field in IpAccessListInfo.
+func (o *IpAccessListInfo) SetIpAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	o.IpAddresses = types.ListValueMust(t, vs)
+}
+
 // IP access lists were successfully returned.
 type ListIpAccessListResponse struct {
 	IpAccessLists types.List `tfsdk:"ip_access_lists" tf:"optional"`
@@ -4380,6 +5409,31 @@ func (o ListIpAccessListResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetIpAccessLists returns the value of the IpAccessLists field in ListIpAccessListResponse as
+// a slice of IpAccessListInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListIpAccessListResponse) GetIpAccessLists(ctx context.Context) ([]IpAccessListInfo, bool) {
+	if o.IpAccessLists.IsNull() || o.IpAccessLists.IsUnknown() {
+		return nil, false
+	}
+	var v []IpAccessListInfo
+	d := o.IpAccessLists.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAccessLists sets the value of the IpAccessLists field in ListIpAccessListResponse.
+func (o *ListIpAccessListResponse) SetIpAccessLists(ctx context.Context, v []IpAccessListInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_lists"]
+	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
 type ListNccAzurePrivateEndpointRulesResponse struct {
@@ -4430,6 +5484,31 @@ func (o ListNccAzurePrivateEndpointRulesResponse) Type(ctx context.Context) attr
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetItems returns the value of the Items field in ListNccAzurePrivateEndpointRulesResponse as
+// a slice of NccAzurePrivateEndpointRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListNccAzurePrivateEndpointRulesResponse) GetItems(ctx context.Context) ([]NccAzurePrivateEndpointRule, bool) {
+	if o.Items.IsNull() || o.Items.IsUnknown() {
+		return nil, false
+	}
+	var v []NccAzurePrivateEndpointRule
+	d := o.Items.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetItems sets the value of the Items field in ListNccAzurePrivateEndpointRulesResponse.
+func (o *ListNccAzurePrivateEndpointRulesResponse) SetItems(ctx context.Context, v []NccAzurePrivateEndpointRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	o.Items = types.ListValueMust(t, vs)
 }
 
 // List network connectivity configurations
@@ -4523,6 +5602,31 @@ func (o ListNetworkConnectivityConfigurationsResponse) Type(ctx context.Context)
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetItems returns the value of the Items field in ListNetworkConnectivityConfigurationsResponse as
+// a slice of NetworkConnectivityConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListNetworkConnectivityConfigurationsResponse) GetItems(ctx context.Context) ([]NetworkConnectivityConfiguration, bool) {
+	if o.Items.IsNull() || o.Items.IsUnknown() {
+		return nil, false
+	}
+	var v []NetworkConnectivityConfiguration
+	d := o.Items.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetItems sets the value of the Items field in ListNetworkConnectivityConfigurationsResponse.
+func (o *ListNetworkConnectivityConfigurationsResponse) SetItems(ctx context.Context, v []NetworkConnectivityConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	o.Items = types.ListValueMust(t, vs)
 }
 
 // List notification destinations
@@ -4619,6 +5723,31 @@ func (o ListNotificationDestinationsResponse) Type(ctx context.Context) attr.Typ
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ListNotificationDestinationsResponse as
+// a slice of ListNotificationDestinationsResult values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListNotificationDestinationsResponse) GetResults(ctx context.Context) ([]ListNotificationDestinationsResult, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []ListNotificationDestinationsResult
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListNotificationDestinationsResponse.
+func (o *ListNotificationDestinationsResponse) SetResults(ctx context.Context, v []ListNotificationDestinationsResult) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 type ListNotificationDestinationsResult struct {
@@ -4765,6 +5894,31 @@ func (o ListPublicTokensResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTokenInfos returns the value of the TokenInfos field in ListPublicTokensResponse as
+// a slice of PublicTokenInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPublicTokensResponse) GetTokenInfos(ctx context.Context) ([]PublicTokenInfo, bool) {
+	if o.TokenInfos.IsNull() || o.TokenInfos.IsUnknown() {
+		return nil, false
+	}
+	var v []PublicTokenInfo
+	d := o.TokenInfos.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokenInfos sets the value of the TokenInfos field in ListPublicTokensResponse.
+func (o *ListPublicTokensResponse) SetTokenInfos(ctx context.Context, v []PublicTokenInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_infos"]
+	o.TokenInfos = types.ListValueMust(t, vs)
+}
+
 // List all tokens
 type ListTokenManagementRequest struct {
 	// User ID of the user that created the token.
@@ -4857,6 +6011,31 @@ func (o ListTokensResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTokenInfos returns the value of the TokenInfos field in ListTokensResponse as
+// a slice of TokenInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListTokensResponse) GetTokenInfos(ctx context.Context) ([]TokenInfo, bool) {
+	if o.TokenInfos.IsNull() || o.TokenInfos.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenInfo
+	d := o.TokenInfos.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokenInfos sets the value of the TokenInfos field in ListTokensResponse.
+func (o *ListTokensResponse) SetTokenInfos(ctx context.Context, v []TokenInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_infos"]
+	o.TokenInfos = types.ListValueMust(t, vs)
 }
 
 type MicrosoftTeamsConfig struct {
@@ -4952,6 +6131,31 @@ func (o NccAwsStableIpRule) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCidrBlocks returns the value of the CidrBlocks field in NccAwsStableIpRule as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccAwsStableIpRule) GetCidrBlocks(ctx context.Context) ([]types.String, bool) {
+	if o.CidrBlocks.IsNull() || o.CidrBlocks.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.CidrBlocks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCidrBlocks sets the value of the CidrBlocks field in NccAwsStableIpRule.
+func (o *NccAwsStableIpRule) SetCidrBlocks(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cidr_blocks"]
+	o.CidrBlocks = types.ListValueMust(t, vs)
 }
 
 type NccAzurePrivateEndpointRule struct {
@@ -5108,6 +6312,56 @@ func (o NccAzureServiceEndpointRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSubnets returns the value of the Subnets field in NccAzureServiceEndpointRule as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccAzureServiceEndpointRule) GetSubnets(ctx context.Context) ([]types.String, bool) {
+	if o.Subnets.IsNull() || o.Subnets.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Subnets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubnets sets the value of the Subnets field in NccAzureServiceEndpointRule.
+func (o *NccAzureServiceEndpointRule) SetSubnets(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnets"]
+	o.Subnets = types.ListValueMust(t, vs)
+}
+
+// GetTargetServices returns the value of the TargetServices field in NccAzureServiceEndpointRule as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccAzureServiceEndpointRule) GetTargetServices(ctx context.Context) ([]types.String, bool) {
+	if o.TargetServices.IsNull() || o.TargetServices.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TargetServices.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTargetServices sets the value of the TargetServices field in NccAzureServiceEndpointRule.
+func (o *NccAzureServiceEndpointRule) SetTargetServices(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target_services"]
+	o.TargetServices = types.ListValueMust(t, vs)
+}
+
 // The network connectivity rules that apply to network traffic from your
 // serverless compute resources.
 type NccEgressConfig struct {
@@ -5164,6 +6418,58 @@ func (o NccEgressConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDefaultRules returns the value of the DefaultRules field in NccEgressConfig as
+// a NccEgressDefaultRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressConfig) GetDefaultRules(ctx context.Context) (NccEgressDefaultRules, bool) {
+	var e NccEgressDefaultRules
+	if o.DefaultRules.IsNull() || o.DefaultRules.IsUnknown() {
+		return e, false
+	}
+	var v []NccEgressDefaultRules
+	d := o.DefaultRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDefaultRules sets the value of the DefaultRules field in NccEgressConfig.
+func (o *NccEgressConfig) SetDefaultRules(ctx context.Context, v NccEgressDefaultRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_rules"]
+	o.DefaultRules = types.ListValueMust(t, vs)
+}
+
+// GetTargetRules returns the value of the TargetRules field in NccEgressConfig as
+// a NccEgressTargetRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressConfig) GetTargetRules(ctx context.Context) (NccEgressTargetRules, bool) {
+	var e NccEgressTargetRules
+	if o.TargetRules.IsNull() || o.TargetRules.IsUnknown() {
+		return e, false
+	}
+	var v []NccEgressTargetRules
+	d := o.TargetRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTargetRules sets the value of the TargetRules field in NccEgressConfig.
+func (o *NccEgressConfig) SetTargetRules(ctx context.Context, v NccEgressTargetRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target_rules"]
+	o.TargetRules = types.ListValueMust(t, vs)
 }
 
 // The network connectivity rules that are applied by default without resource
@@ -5226,6 +6532,58 @@ func (o NccEgressDefaultRules) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsStableIpRule returns the value of the AwsStableIpRule field in NccEgressDefaultRules as
+// a NccAwsStableIpRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressDefaultRules) GetAwsStableIpRule(ctx context.Context) (NccAwsStableIpRule, bool) {
+	var e NccAwsStableIpRule
+	if o.AwsStableIpRule.IsNull() || o.AwsStableIpRule.IsUnknown() {
+		return e, false
+	}
+	var v []NccAwsStableIpRule
+	d := o.AwsStableIpRule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsStableIpRule sets the value of the AwsStableIpRule field in NccEgressDefaultRules.
+func (o *NccEgressDefaultRules) SetAwsStableIpRule(ctx context.Context, v NccAwsStableIpRule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_stable_ip_rule"]
+	o.AwsStableIpRule = types.ListValueMust(t, vs)
+}
+
+// GetAzureServiceEndpointRule returns the value of the AzureServiceEndpointRule field in NccEgressDefaultRules as
+// a NccAzureServiceEndpointRule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressDefaultRules) GetAzureServiceEndpointRule(ctx context.Context) (NccAzureServiceEndpointRule, bool) {
+	var e NccAzureServiceEndpointRule
+	if o.AzureServiceEndpointRule.IsNull() || o.AzureServiceEndpointRule.IsUnknown() {
+		return e, false
+	}
+	var v []NccAzureServiceEndpointRule
+	d := o.AzureServiceEndpointRule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServiceEndpointRule sets the value of the AzureServiceEndpointRule field in NccEgressDefaultRules.
+func (o *NccEgressDefaultRules) SetAzureServiceEndpointRule(ctx context.Context, v NccAzureServiceEndpointRule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_endpoint_rule"]
+	o.AzureServiceEndpointRule = types.ListValueMust(t, vs)
+}
+
 // The network connectivity rules that configured for each destinations. These
 // rules override default rules.
 type NccEgressTargetRules struct {
@@ -5271,6 +6629,31 @@ func (o NccEgressTargetRules) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAzurePrivateEndpointRules returns the value of the AzurePrivateEndpointRules field in NccEgressTargetRules as
+// a slice of NccAzurePrivateEndpointRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NccEgressTargetRules) GetAzurePrivateEndpointRules(ctx context.Context) ([]NccAzurePrivateEndpointRule, bool) {
+	if o.AzurePrivateEndpointRules.IsNull() || o.AzurePrivateEndpointRules.IsUnknown() {
+		return nil, false
+	}
+	var v []NccAzurePrivateEndpointRule
+	d := o.AzurePrivateEndpointRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAzurePrivateEndpointRules sets the value of the AzurePrivateEndpointRules field in NccEgressTargetRules.
+func (o *NccEgressTargetRules) SetAzurePrivateEndpointRules(ctx context.Context, v []NccAzurePrivateEndpointRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_private_endpoint_rules"]
+	o.AzurePrivateEndpointRules = types.ListValueMust(t, vs)
 }
 
 type NetworkConnectivityConfiguration struct {
@@ -5349,6 +6732,32 @@ func (o NetworkConnectivityConfiguration) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEgressConfig returns the value of the EgressConfig field in NetworkConnectivityConfiguration as
+// a NccEgressConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NetworkConnectivityConfiguration) GetEgressConfig(ctx context.Context) (NccEgressConfig, bool) {
+	var e NccEgressConfig
+	if o.EgressConfig.IsNull() || o.EgressConfig.IsUnknown() {
+		return e, false
+	}
+	var v []NccEgressConfig
+	d := o.EgressConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEgressConfig sets the value of the EgressConfig field in NetworkConnectivityConfiguration.
+func (o *NetworkConnectivityConfiguration) SetEgressConfig(ctx context.Context, v NccEgressConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["egress_config"]
+	o.EgressConfig = types.ListValueMust(t, vs)
+}
+
 type NotificationDestination struct {
 	// The configuration for the notification destination. Will be exactly one
 	// of the nested configs. Only returns for users with workspace admin
@@ -5408,6 +6817,32 @@ func (o NotificationDestination) Type(ctx context.Context) attr.Type {
 			"id":               types.StringType,
 		},
 	}
+}
+
+// GetConfig returns the value of the Config field in NotificationDestination as
+// a Config value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NotificationDestination) GetConfig(ctx context.Context) (Config, bool) {
+	var e Config
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []Config
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in NotificationDestination.
+func (o *NotificationDestination) SetConfig(ctx context.Context, v Config) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
 }
 
 type PagerdutyConfig struct {
@@ -5611,6 +7046,32 @@ func (o PersonalComputeSetting) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPersonalCompute returns the value of the PersonalCompute field in PersonalComputeSetting as
+// a PersonalComputeMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PersonalComputeSetting) GetPersonalCompute(ctx context.Context) (PersonalComputeMessage, bool) {
+	var e PersonalComputeMessage
+	if o.PersonalCompute.IsNull() || o.PersonalCompute.IsUnknown() {
+		return e, false
+	}
+	var v []PersonalComputeMessage
+	d := o.PersonalCompute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPersonalCompute sets the value of the PersonalCompute field in PersonalComputeSetting.
+func (o *PersonalComputeSetting) SetPersonalCompute(ctx context.Context, v PersonalComputeMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["personal_compute"]
+	o.PersonalCompute = types.ListValueMust(t, vs)
+}
+
 type PublicTokenInfo struct {
 	// Comment the token was created with, if applicable.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -5732,6 +7193,31 @@ func (o ReplaceIpAccessList) Type(ctx context.Context) attr.Type {
 			"list_type": types.StringType,
 		},
 	}
+}
+
+// GetIpAddresses returns the value of the IpAddresses field in ReplaceIpAccessList as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ReplaceIpAccessList) GetIpAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.IpAddresses.IsNull() || o.IpAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IpAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAddresses sets the value of the IpAddresses field in ReplaceIpAccessList.
+func (o *ReplaceIpAccessList) SetIpAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	o.IpAddresses = types.ListValueMust(t, vs)
 }
 
 type ReplaceResponse struct {
@@ -5873,6 +7359,32 @@ func (o RestrictWorkspaceAdminsSetting) Type(ctx context.Context) attr.Type {
 			"setting_name": types.StringType,
 		},
 	}
+}
+
+// GetRestrictWorkspaceAdmins returns the value of the RestrictWorkspaceAdmins field in RestrictWorkspaceAdminsSetting as
+// a RestrictWorkspaceAdminsMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RestrictWorkspaceAdminsSetting) GetRestrictWorkspaceAdmins(ctx context.Context) (RestrictWorkspaceAdminsMessage, bool) {
+	var e RestrictWorkspaceAdminsMessage
+	if o.RestrictWorkspaceAdmins.IsNull() || o.RestrictWorkspaceAdmins.IsUnknown() {
+		return e, false
+	}
+	var v []RestrictWorkspaceAdminsMessage
+	d := o.RestrictWorkspaceAdmins.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRestrictWorkspaceAdmins sets the value of the RestrictWorkspaceAdmins field in RestrictWorkspaceAdminsSetting.
+func (o *RestrictWorkspaceAdminsSetting) SetRestrictWorkspaceAdmins(ctx context.Context, v RestrictWorkspaceAdminsMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restrict_workspace_admins"]
+	o.RestrictWorkspaceAdmins = types.ListValueMust(t, vs)
 }
 
 type RevokeTokenRequest struct {
@@ -6193,6 +7705,31 @@ func (o TokenAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in TokenAccessControlResponse as
+// a slice of TokenPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TokenAccessControlResponse) GetAllPermissions(ctx context.Context) ([]TokenPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in TokenAccessControlResponse.
+func (o *TokenAccessControlResponse) SetAllPermissions(ctx context.Context, v []TokenPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type TokenInfo struct {
 	// Comment that describes the purpose of the token, specified by the token
 	// creator.
@@ -6322,6 +7859,31 @@ func (o TokenPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in TokenPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TokenPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in TokenPermission.
+func (o *TokenPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type TokenPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -6373,6 +7935,31 @@ func (o TokenPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in TokenPermissions as
+// a slice of TokenAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TokenPermissions) GetAccessControlList(ctx context.Context) ([]TokenAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in TokenPermissions.
+func (o *TokenPermissions) SetAccessControlList(ctx context.Context, v []TokenAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type TokenPermissionsDescription struct {
@@ -6465,6 +8052,31 @@ func (o TokenPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in TokenPermissionsRequest as
+// a slice of TokenAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TokenPermissionsRequest) GetAccessControlList(ctx context.Context) ([]TokenAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in TokenPermissionsRequest.
+func (o *TokenPermissionsRequest) SetAccessControlList(ctx context.Context, v []TokenAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -6522,6 +8134,32 @@ func (o UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) Type(ctx context
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateAibiDashboardEmbeddingAccessPolicySettingRequest as
+// a AibiDashboardEmbeddingAccessPolicySetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) GetSetting(ctx context.Context) (AibiDashboardEmbeddingAccessPolicySetting, bool) {
+	var e AibiDashboardEmbeddingAccessPolicySetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []AibiDashboardEmbeddingAccessPolicySetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateAibiDashboardEmbeddingAccessPolicySettingRequest.
+func (o *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) SetSetting(ctx context.Context, v AibiDashboardEmbeddingAccessPolicySetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -6583,6 +8221,32 @@ func (o UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) Type(ctx cont
 	}
 }
 
+// GetSetting returns the value of the Setting field in UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest as
+// a AibiDashboardEmbeddingApprovedDomainsSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetSetting(ctx context.Context) (AibiDashboardEmbeddingApprovedDomainsSetting, bool) {
+	var e AibiDashboardEmbeddingApprovedDomainsSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []AibiDashboardEmbeddingApprovedDomainsSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest.
+func (o *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) SetSetting(ctx context.Context, v AibiDashboardEmbeddingApprovedDomainsSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateAutomaticClusterUpdateSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -6640,6 +8304,32 @@ func (o UpdateAutomaticClusterUpdateSettingRequest) Type(ctx context.Context) at
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateAutomaticClusterUpdateSettingRequest as
+// a AutomaticClusterUpdateSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAutomaticClusterUpdateSettingRequest) GetSetting(ctx context.Context) (AutomaticClusterUpdateSetting, bool) {
+	var e AutomaticClusterUpdateSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []AutomaticClusterUpdateSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateAutomaticClusterUpdateSettingRequest.
+func (o *UpdateAutomaticClusterUpdateSettingRequest) SetSetting(ctx context.Context, v AutomaticClusterUpdateSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -6701,6 +8391,32 @@ func (o UpdateComplianceSecurityProfileSettingRequest) Type(ctx context.Context)
 	}
 }
 
+// GetSetting returns the value of the Setting field in UpdateComplianceSecurityProfileSettingRequest as
+// a ComplianceSecurityProfileSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateComplianceSecurityProfileSettingRequest) GetSetting(ctx context.Context) (ComplianceSecurityProfileSetting, bool) {
+	var e ComplianceSecurityProfileSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []ComplianceSecurityProfileSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateComplianceSecurityProfileSettingRequest.
+func (o *UpdateComplianceSecurityProfileSettingRequest) SetSetting(ctx context.Context, v ComplianceSecurityProfileSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateCspEnablementAccountSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -6758,6 +8474,32 @@ func (o UpdateCspEnablementAccountSettingRequest) Type(ctx context.Context) attr
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateCspEnablementAccountSettingRequest as
+// a CspEnablementAccountSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCspEnablementAccountSettingRequest) GetSetting(ctx context.Context) (CspEnablementAccountSetting, bool) {
+	var e CspEnablementAccountSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []CspEnablementAccountSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateCspEnablementAccountSettingRequest.
+func (o *UpdateCspEnablementAccountSettingRequest) SetSetting(ctx context.Context, v CspEnablementAccountSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -6827,6 +8569,32 @@ func (o UpdateDefaultNamespaceSettingRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetSetting returns the value of the Setting field in UpdateDefaultNamespaceSettingRequest as
+// a DefaultNamespaceSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDefaultNamespaceSettingRequest) GetSetting(ctx context.Context) (DefaultNamespaceSetting, bool) {
+	var e DefaultNamespaceSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DefaultNamespaceSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDefaultNamespaceSettingRequest.
+func (o *UpdateDefaultNamespaceSettingRequest) SetSetting(ctx context.Context, v DefaultNamespaceSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateDisableLegacyAccessRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -6884,6 +8652,32 @@ func (o UpdateDisableLegacyAccessRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateDisableLegacyAccessRequest as
+// a DisableLegacyAccess value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDisableLegacyAccessRequest) GetSetting(ctx context.Context) (DisableLegacyAccess, bool) {
+	var e DisableLegacyAccess
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DisableLegacyAccess
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDisableLegacyAccessRequest.
+func (o *UpdateDisableLegacyAccessRequest) SetSetting(ctx context.Context, v DisableLegacyAccess) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -6945,6 +8739,32 @@ func (o UpdateDisableLegacyDbfsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSetting returns the value of the Setting field in UpdateDisableLegacyDbfsRequest as
+// a DisableLegacyDbfs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDisableLegacyDbfsRequest) GetSetting(ctx context.Context) (DisableLegacyDbfs, bool) {
+	var e DisableLegacyDbfs
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DisableLegacyDbfs
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDisableLegacyDbfsRequest.
+func (o *UpdateDisableLegacyDbfsRequest) SetSetting(ctx context.Context, v DisableLegacyDbfs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateDisableLegacyFeaturesRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -7002,6 +8822,32 @@ func (o UpdateDisableLegacyFeaturesRequest) Type(ctx context.Context) attr.Type 
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateDisableLegacyFeaturesRequest as
+// a DisableLegacyFeatures value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDisableLegacyFeaturesRequest) GetSetting(ctx context.Context) (DisableLegacyFeatures, bool) {
+	var e DisableLegacyFeatures
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []DisableLegacyFeatures
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateDisableLegacyFeaturesRequest.
+func (o *UpdateDisableLegacyFeaturesRequest) SetSetting(ctx context.Context, v DisableLegacyFeatures) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -7063,6 +8909,32 @@ func (o UpdateEnhancedSecurityMonitoringSettingRequest) Type(ctx context.Context
 	}
 }
 
+// GetSetting returns the value of the Setting field in UpdateEnhancedSecurityMonitoringSettingRequest as
+// a EnhancedSecurityMonitoringSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEnhancedSecurityMonitoringSettingRequest) GetSetting(ctx context.Context) (EnhancedSecurityMonitoringSetting, bool) {
+	var e EnhancedSecurityMonitoringSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []EnhancedSecurityMonitoringSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateEnhancedSecurityMonitoringSettingRequest.
+func (o *UpdateEnhancedSecurityMonitoringSettingRequest) SetSetting(ctx context.Context, v EnhancedSecurityMonitoringSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
 // Details required to update a setting.
 type UpdateEsmEnablementAccountSettingRequest struct {
 	// This should always be set to true for Settings API. Added for AIP
@@ -7120,6 +8992,32 @@ func (o UpdateEsmEnablementAccountSettingRequest) Type(ctx context.Context) attr
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateEsmEnablementAccountSettingRequest as
+// a EsmEnablementAccountSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEsmEnablementAccountSettingRequest) GetSetting(ctx context.Context) (EsmEnablementAccountSetting, bool) {
+	var e EsmEnablementAccountSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []EsmEnablementAccountSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateEsmEnablementAccountSettingRequest.
+func (o *UpdateEsmEnablementAccountSettingRequest) SetSetting(ctx context.Context, v EsmEnablementAccountSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Details required to update an IP access list.
@@ -7190,6 +9088,31 @@ func (o UpdateIpAccessList) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIpAddresses returns the value of the IpAddresses field in UpdateIpAccessList as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateIpAccessList) GetIpAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.IpAddresses.IsNull() || o.IpAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IpAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIpAddresses sets the value of the IpAddresses field in UpdateIpAccessList.
+func (o *UpdateIpAccessList) SetIpAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	o.IpAddresses = types.ListValueMust(t, vs)
+}
+
 type UpdateNotificationDestinationRequest struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
@@ -7243,6 +9166,32 @@ func (o UpdateNotificationDestinationRequest) Type(ctx context.Context) attr.Typ
 			"id":           types.StringType,
 		},
 	}
+}
+
+// GetConfig returns the value of the Config field in UpdateNotificationDestinationRequest as
+// a Config value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateNotificationDestinationRequest) GetConfig(ctx context.Context) (Config, bool) {
+	var e Config
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []Config
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in UpdateNotificationDestinationRequest.
+func (o *UpdateNotificationDestinationRequest) SetConfig(ctx context.Context, v Config) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
 }
 
 // Details required to update a setting.
@@ -7302,6 +9251,32 @@ func (o UpdatePersonalComputeSettingRequest) Type(ctx context.Context) attr.Type
 			},
 		},
 	}
+}
+
+// GetSetting returns the value of the Setting field in UpdatePersonalComputeSettingRequest as
+// a PersonalComputeSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePersonalComputeSettingRequest) GetSetting(ctx context.Context) (PersonalComputeSetting, bool) {
+	var e PersonalComputeSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []PersonalComputeSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdatePersonalComputeSettingRequest.
+func (o *UpdatePersonalComputeSettingRequest) SetSetting(ctx context.Context, v PersonalComputeSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse struct {
@@ -7399,43 +9374,28 @@ func (o UpdateRestrictWorkspaceAdminsSettingRequest) Type(ctx context.Context) a
 	}
 }
 
-// Compliance stardard for SHIELD customers
+// GetSetting returns the value of the Setting field in UpdateRestrictWorkspaceAdminsSettingRequest as
+// a RestrictWorkspaceAdminsSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRestrictWorkspaceAdminsSettingRequest) GetSetting(ctx context.Context) (RestrictWorkspaceAdminsSetting, bool) {
+	var e RestrictWorkspaceAdminsSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []RestrictWorkspaceAdminsSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// The sub-resource type (group ID) of the target resource. Note that to connect
-// to workspace root storage (root DBFS), you need two endpoints, one for `blob`
-// and one for `dfs`.
-
-// Type of IP access list. Valid values are as follows and are case-sensitive:
-//
-// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block list.
-// Exclude this IP or range. IP addresses in the block list are excluded even if
-// they are included in an allow list.
-
-// The current status of this private endpoint. The private endpoint rules are
-// effective only if the connection state is `ESTABLISHED`. Remember that you
-// must approve new endpoints on your resources in the Azure portal before they
-// take effect.
-//
-// The possible values are: - INIT: (deprecated) The endpoint has been created
-// and pending approval. - PENDING: The endpoint has been created and pending
-// approval. - ESTABLISHED: The endpoint has been approved and is ready to use
-// in your serverless compute resources. - REJECTED: Connection was rejected by
-// the private link resource owner. - DISCONNECTED: Connection was removed by
-// the private link resource owner, the private endpoint becomes informative and
-// should be deleted for clean-up.
-
-// The sub-resource type (group ID) of the target resource. Note that to connect
-// to workspace root storage (root DBFS), you need two endpoints, one for `blob`
-// and one for `dfs`.
-
-// ON: Grants all users in all workspaces access to the Personal Compute default
-// policy, allowing all users to create single-machine compute resources.
-// DELEGATE: Moves access control for the Personal Compute default policy to
-// individual workspaces and requires a workspace’s users or groups to be
-// added to the ACLs of that workspace’s Personal Compute default policy
-// before they will be able to create compute resources through that policy.
-
-// Permission level
-
-// The type of token request. As of now, only `AZURE_ACTIVE_DIRECTORY_TOKEN` is
-// supported.
+// SetSetting sets the value of the Setting field in UpdateRestrictWorkspaceAdminsSettingRequest.
+func (o *UpdateRestrictWorkspaceAdminsSettingRequest) SetSetting(ctx context.Context, v RestrictWorkspaceAdminsSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}

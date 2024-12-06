@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -62,6 +63,32 @@ func (o AwsCredentials) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStsRole returns the value of the StsRole field in AwsCredentials as
+// a StsRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AwsCredentials) GetStsRole(ctx context.Context) (StsRole, bool) {
+	var e StsRole
+	if o.StsRole.IsNull() || o.StsRole.IsUnknown() {
+		return e, false
+	}
+	var v []StsRole
+	d := o.StsRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStsRole sets the value of the StsRole field in AwsCredentials.
+func (o *AwsCredentials) SetStsRole(ctx context.Context, v StsRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sts_role"]
+	o.StsRole = types.ListValueMust(t, vs)
 }
 
 type AwsKeyInfo struct {
@@ -214,6 +241,32 @@ func (o CloudResourceContainer) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGcp returns the value of the Gcp field in CloudResourceContainer as
+// a CustomerFacingGcpCloudResourceContainer value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CloudResourceContainer) GetGcp(ctx context.Context) (CustomerFacingGcpCloudResourceContainer, bool) {
+	var e CustomerFacingGcpCloudResourceContainer
+	if o.Gcp.IsNull() || o.Gcp.IsUnknown() {
+		return e, false
+	}
+	var v []CustomerFacingGcpCloudResourceContainer
+	d := o.Gcp.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcp sets the value of the Gcp field in CloudResourceContainer.
+func (o *CloudResourceContainer) SetGcp(ctx context.Context, v CustomerFacingGcpCloudResourceContainer) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp"]
+	o.Gcp = types.ListValueMust(t, vs)
+}
+
 type CreateAwsKeyInfo struct {
 	// The AWS KMS key alias.
 	KeyAlias types.String `tfsdk:"key_alias" tf:"optional"`
@@ -313,6 +366,32 @@ func (o CreateCredentialAwsCredentials) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetStsRole returns the value of the StsRole field in CreateCredentialAwsCredentials as
+// a CreateCredentialStsRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialAwsCredentials) GetStsRole(ctx context.Context) (CreateCredentialStsRole, bool) {
+	var e CreateCredentialStsRole
+	if o.StsRole.IsNull() || o.StsRole.IsUnknown() {
+		return e, false
+	}
+	var v []CreateCredentialStsRole
+	d := o.StsRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStsRole sets the value of the StsRole field in CreateCredentialAwsCredentials.
+func (o *CreateCredentialAwsCredentials) SetStsRole(ctx context.Context, v CreateCredentialStsRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sts_role"]
+	o.StsRole = types.ListValueMust(t, vs)
+}
+
 type CreateCredentialRequest struct {
 	AwsCredentials types.List `tfsdk:"aws_credentials" tf:"object"`
 	// The human-readable name of the credential configuration object.
@@ -360,6 +439,32 @@ func (o CreateCredentialRequest) Type(ctx context.Context) attr.Type {
 			"credentials_name": types.StringType,
 		},
 	}
+}
+
+// GetAwsCredentials returns the value of the AwsCredentials field in CreateCredentialRequest as
+// a CreateCredentialAwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialRequest) GetAwsCredentials(ctx context.Context) (CreateCredentialAwsCredentials, bool) {
+	var e CreateCredentialAwsCredentials
+	if o.AwsCredentials.IsNull() || o.AwsCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []CreateCredentialAwsCredentials
+	d := o.AwsCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsCredentials sets the value of the AwsCredentials field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetAwsCredentials(ctx context.Context, v CreateCredentialAwsCredentials) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_credentials"]
+	o.AwsCredentials = types.ListValueMust(t, vs)
 }
 
 type CreateCredentialStsRole struct {
@@ -461,6 +566,83 @@ func (o CreateCustomerManagedKeyRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAwsKeyInfo returns the value of the AwsKeyInfo field in CreateCustomerManagedKeyRequest as
+// a CreateAwsKeyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomerManagedKeyRequest) GetAwsKeyInfo(ctx context.Context) (CreateAwsKeyInfo, bool) {
+	var e CreateAwsKeyInfo
+	if o.AwsKeyInfo.IsNull() || o.AwsKeyInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateAwsKeyInfo
+	d := o.AwsKeyInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsKeyInfo sets the value of the AwsKeyInfo field in CreateCustomerManagedKeyRequest.
+func (o *CreateCustomerManagedKeyRequest) SetAwsKeyInfo(ctx context.Context, v CreateAwsKeyInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_key_info"]
+	o.AwsKeyInfo = types.ListValueMust(t, vs)
+}
+
+// GetGcpKeyInfo returns the value of the GcpKeyInfo field in CreateCustomerManagedKeyRequest as
+// a CreateGcpKeyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomerManagedKeyRequest) GetGcpKeyInfo(ctx context.Context) (CreateGcpKeyInfo, bool) {
+	var e CreateGcpKeyInfo
+	if o.GcpKeyInfo.IsNull() || o.GcpKeyInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateGcpKeyInfo
+	d := o.GcpKeyInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpKeyInfo sets the value of the GcpKeyInfo field in CreateCustomerManagedKeyRequest.
+func (o *CreateCustomerManagedKeyRequest) SetGcpKeyInfo(ctx context.Context, v CreateGcpKeyInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_key_info"]
+	o.GcpKeyInfo = types.ListValueMust(t, vs)
+}
+
+// GetUseCases returns the value of the UseCases field in CreateCustomerManagedKeyRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomerManagedKeyRequest) GetUseCases(ctx context.Context) ([]types.String, bool) {
+	if o.UseCases.IsNull() || o.UseCases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UseCases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUseCases sets the value of the UseCases field in CreateCustomerManagedKeyRequest.
+func (o *CreateCustomerManagedKeyRequest) SetUseCases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["use_cases"]
+	o.UseCases = types.ListValueMust(t, vs)
 }
 
 type CreateGcpKeyInfo struct {
@@ -587,6 +769,108 @@ func (o CreateNetworkRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGcpNetworkInfo returns the value of the GcpNetworkInfo field in CreateNetworkRequest as
+// a GcpNetworkInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateNetworkRequest) GetGcpNetworkInfo(ctx context.Context) (GcpNetworkInfo, bool) {
+	var e GcpNetworkInfo
+	if o.GcpNetworkInfo.IsNull() || o.GcpNetworkInfo.IsUnknown() {
+		return e, false
+	}
+	var v []GcpNetworkInfo
+	d := o.GcpNetworkInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpNetworkInfo sets the value of the GcpNetworkInfo field in CreateNetworkRequest.
+func (o *CreateNetworkRequest) SetGcpNetworkInfo(ctx context.Context, v GcpNetworkInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_network_info"]
+	o.GcpNetworkInfo = types.ListValueMust(t, vs)
+}
+
+// GetSecurityGroupIds returns the value of the SecurityGroupIds field in CreateNetworkRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateNetworkRequest) GetSecurityGroupIds(ctx context.Context) ([]types.String, bool) {
+	if o.SecurityGroupIds.IsNull() || o.SecurityGroupIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SecurityGroupIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecurityGroupIds sets the value of the SecurityGroupIds field in CreateNetworkRequest.
+func (o *CreateNetworkRequest) SetSecurityGroupIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["security_group_ids"]
+	o.SecurityGroupIds = types.ListValueMust(t, vs)
+}
+
+// GetSubnetIds returns the value of the SubnetIds field in CreateNetworkRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateNetworkRequest) GetSubnetIds(ctx context.Context) ([]types.String, bool) {
+	if o.SubnetIds.IsNull() || o.SubnetIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SubnetIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubnetIds sets the value of the SubnetIds field in CreateNetworkRequest.
+func (o *CreateNetworkRequest) SetSubnetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnet_ids"]
+	o.SubnetIds = types.ListValueMust(t, vs)
+}
+
+// GetVpcEndpoints returns the value of the VpcEndpoints field in CreateNetworkRequest as
+// a NetworkVpcEndpoints value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateNetworkRequest) GetVpcEndpoints(ctx context.Context) (NetworkVpcEndpoints, bool) {
+	var e NetworkVpcEndpoints
+	if o.VpcEndpoints.IsNull() || o.VpcEndpoints.IsUnknown() {
+		return e, false
+	}
+	var v []NetworkVpcEndpoints
+	d := o.VpcEndpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVpcEndpoints sets the value of the VpcEndpoints field in CreateNetworkRequest.
+func (o *CreateNetworkRequest) SetVpcEndpoints(ctx context.Context, v NetworkVpcEndpoints) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vpc_endpoints"]
+	o.VpcEndpoints = types.ListValueMust(t, vs)
+}
+
 type CreateStorageConfigurationRequest struct {
 	// Root S3 bucket information.
 	RootBucketInfo types.List `tfsdk:"root_bucket_info" tf:"object"`
@@ -635,6 +919,32 @@ func (o CreateStorageConfigurationRequest) Type(ctx context.Context) attr.Type {
 			"storage_configuration_name": types.StringType,
 		},
 	}
+}
+
+// GetRootBucketInfo returns the value of the RootBucketInfo field in CreateStorageConfigurationRequest as
+// a RootBucketInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageConfigurationRequest) GetRootBucketInfo(ctx context.Context) (RootBucketInfo, bool) {
+	var e RootBucketInfo
+	if o.RootBucketInfo.IsNull() || o.RootBucketInfo.IsUnknown() {
+		return e, false
+	}
+	var v []RootBucketInfo
+	d := o.RootBucketInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRootBucketInfo sets the value of the RootBucketInfo field in CreateStorageConfigurationRequest.
+func (o *CreateStorageConfigurationRequest) SetRootBucketInfo(ctx context.Context, v RootBucketInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["root_bucket_info"]
+	o.RootBucketInfo = types.ListValueMust(t, vs)
 }
 
 type CreateVpcEndpointRequest struct {
@@ -694,6 +1004,32 @@ func (o CreateVpcEndpointRequest) Type(ctx context.Context) attr.Type {
 			"vpc_endpoint_name": types.StringType,
 		},
 	}
+}
+
+// GetGcpVpcEndpointInfo returns the value of the GcpVpcEndpointInfo field in CreateVpcEndpointRequest as
+// a GcpVpcEndpointInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateVpcEndpointRequest) GetGcpVpcEndpointInfo(ctx context.Context) (GcpVpcEndpointInfo, bool) {
+	var e GcpVpcEndpointInfo
+	if o.GcpVpcEndpointInfo.IsNull() || o.GcpVpcEndpointInfo.IsUnknown() {
+		return e, false
+	}
+	var v []GcpVpcEndpointInfo
+	d := o.GcpVpcEndpointInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpVpcEndpointInfo sets the value of the GcpVpcEndpointInfo field in CreateVpcEndpointRequest.
+func (o *CreateVpcEndpointRequest) SetGcpVpcEndpointInfo(ctx context.Context, v GcpVpcEndpointInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_vpc_endpoint_info"]
+	o.GcpVpcEndpointInfo = types.ListValueMust(t, vs)
 }
 
 type CreateWorkspaceRequest struct {
@@ -891,6 +1227,109 @@ func (o CreateWorkspaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCloudResourceContainer returns the value of the CloudResourceContainer field in CreateWorkspaceRequest as
+// a CloudResourceContainer value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWorkspaceRequest) GetCloudResourceContainer(ctx context.Context) (CloudResourceContainer, bool) {
+	var e CloudResourceContainer
+	if o.CloudResourceContainer.IsNull() || o.CloudResourceContainer.IsUnknown() {
+		return e, false
+	}
+	var v []CloudResourceContainer
+	d := o.CloudResourceContainer.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloudResourceContainer sets the value of the CloudResourceContainer field in CreateWorkspaceRequest.
+func (o *CreateWorkspaceRequest) SetCloudResourceContainer(ctx context.Context, v CloudResourceContainer) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloud_resource_container"]
+	o.CloudResourceContainer = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in CreateWorkspaceRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWorkspaceRequest) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in CreateWorkspaceRequest.
+func (o *CreateWorkspaceRequest) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetGcpManagedNetworkConfig returns the value of the GcpManagedNetworkConfig field in CreateWorkspaceRequest as
+// a GcpManagedNetworkConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWorkspaceRequest) GetGcpManagedNetworkConfig(ctx context.Context) (GcpManagedNetworkConfig, bool) {
+	var e GcpManagedNetworkConfig
+	if o.GcpManagedNetworkConfig.IsNull() || o.GcpManagedNetworkConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GcpManagedNetworkConfig
+	d := o.GcpManagedNetworkConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpManagedNetworkConfig sets the value of the GcpManagedNetworkConfig field in CreateWorkspaceRequest.
+func (o *CreateWorkspaceRequest) SetGcpManagedNetworkConfig(ctx context.Context, v GcpManagedNetworkConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_managed_network_config"]
+	o.GcpManagedNetworkConfig = types.ListValueMust(t, vs)
+}
+
+// GetGkeConfig returns the value of the GkeConfig field in CreateWorkspaceRequest as
+// a GkeConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWorkspaceRequest) GetGkeConfig(ctx context.Context) (GkeConfig, bool) {
+	var e GkeConfig
+	if o.GkeConfig.IsNull() || o.GkeConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GkeConfig
+	d := o.GkeConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGkeConfig sets the value of the GkeConfig field in CreateWorkspaceRequest.
+func (o *CreateWorkspaceRequest) SetGkeConfig(ctx context.Context, v GkeConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gke_config"]
+	o.GkeConfig = types.ListValueMust(t, vs)
+}
+
 type Credential struct {
 	// The Databricks account ID that hosts the credential.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -951,6 +1390,32 @@ func (o Credential) Type(ctx context.Context) attr.Type {
 			"credentials_name": types.StringType,
 		},
 	}
+}
+
+// GetAwsCredentials returns the value of the AwsCredentials field in Credential as
+// a AwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Credential) GetAwsCredentials(ctx context.Context) (AwsCredentials, bool) {
+	var e AwsCredentials
+	if o.AwsCredentials.IsNull() || o.AwsCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []AwsCredentials
+	d := o.AwsCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsCredentials sets the value of the AwsCredentials field in Credential.
+func (o *Credential) SetAwsCredentials(ctx context.Context, v AwsCredentials) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_credentials"]
+	o.AwsCredentials = types.ListValueMust(t, vs)
 }
 
 // The general workspace configurations that are specific to Google Cloud.
@@ -1067,6 +1532,83 @@ func (o CustomerManagedKey) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAwsKeyInfo returns the value of the AwsKeyInfo field in CustomerManagedKey as
+// a AwsKeyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomerManagedKey) GetAwsKeyInfo(ctx context.Context) (AwsKeyInfo, bool) {
+	var e AwsKeyInfo
+	if o.AwsKeyInfo.IsNull() || o.AwsKeyInfo.IsUnknown() {
+		return e, false
+	}
+	var v []AwsKeyInfo
+	d := o.AwsKeyInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsKeyInfo sets the value of the AwsKeyInfo field in CustomerManagedKey.
+func (o *CustomerManagedKey) SetAwsKeyInfo(ctx context.Context, v AwsKeyInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_key_info"]
+	o.AwsKeyInfo = types.ListValueMust(t, vs)
+}
+
+// GetGcpKeyInfo returns the value of the GcpKeyInfo field in CustomerManagedKey as
+// a GcpKeyInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomerManagedKey) GetGcpKeyInfo(ctx context.Context) (GcpKeyInfo, bool) {
+	var e GcpKeyInfo
+	if o.GcpKeyInfo.IsNull() || o.GcpKeyInfo.IsUnknown() {
+		return e, false
+	}
+	var v []GcpKeyInfo
+	d := o.GcpKeyInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpKeyInfo sets the value of the GcpKeyInfo field in CustomerManagedKey.
+func (o *CustomerManagedKey) SetGcpKeyInfo(ctx context.Context, v GcpKeyInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_key_info"]
+	o.GcpKeyInfo = types.ListValueMust(t, vs)
+}
+
+// GetUseCases returns the value of the UseCases field in CustomerManagedKey as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomerManagedKey) GetUseCases(ctx context.Context) ([]types.String, bool) {
+	if o.UseCases.IsNull() || o.UseCases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UseCases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUseCases sets the value of the UseCases field in CustomerManagedKey.
+func (o *CustomerManagedKey) SetUseCases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["use_cases"]
+	o.UseCases = types.ListValueMust(t, vs)
 }
 
 // Delete credential configuration
@@ -2179,6 +2721,158 @@ func (o Network) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetErrorMessages returns the value of the ErrorMessages field in Network as
+// a slice of NetworkHealth values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetErrorMessages(ctx context.Context) ([]NetworkHealth, bool) {
+	if o.ErrorMessages.IsNull() || o.ErrorMessages.IsUnknown() {
+		return nil, false
+	}
+	var v []NetworkHealth
+	d := o.ErrorMessages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetErrorMessages sets the value of the ErrorMessages field in Network.
+func (o *Network) SetErrorMessages(ctx context.Context, v []NetworkHealth) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_messages"]
+	o.ErrorMessages = types.ListValueMust(t, vs)
+}
+
+// GetGcpNetworkInfo returns the value of the GcpNetworkInfo field in Network as
+// a GcpNetworkInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetGcpNetworkInfo(ctx context.Context) (GcpNetworkInfo, bool) {
+	var e GcpNetworkInfo
+	if o.GcpNetworkInfo.IsNull() || o.GcpNetworkInfo.IsUnknown() {
+		return e, false
+	}
+	var v []GcpNetworkInfo
+	d := o.GcpNetworkInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpNetworkInfo sets the value of the GcpNetworkInfo field in Network.
+func (o *Network) SetGcpNetworkInfo(ctx context.Context, v GcpNetworkInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_network_info"]
+	o.GcpNetworkInfo = types.ListValueMust(t, vs)
+}
+
+// GetSecurityGroupIds returns the value of the SecurityGroupIds field in Network as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetSecurityGroupIds(ctx context.Context) ([]types.String, bool) {
+	if o.SecurityGroupIds.IsNull() || o.SecurityGroupIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SecurityGroupIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecurityGroupIds sets the value of the SecurityGroupIds field in Network.
+func (o *Network) SetSecurityGroupIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["security_group_ids"]
+	o.SecurityGroupIds = types.ListValueMust(t, vs)
+}
+
+// GetSubnetIds returns the value of the SubnetIds field in Network as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetSubnetIds(ctx context.Context) ([]types.String, bool) {
+	if o.SubnetIds.IsNull() || o.SubnetIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SubnetIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubnetIds sets the value of the SubnetIds field in Network.
+func (o *Network) SetSubnetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnet_ids"]
+	o.SubnetIds = types.ListValueMust(t, vs)
+}
+
+// GetVpcEndpoints returns the value of the VpcEndpoints field in Network as
+// a NetworkVpcEndpoints value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetVpcEndpoints(ctx context.Context) (NetworkVpcEndpoints, bool) {
+	var e NetworkVpcEndpoints
+	if o.VpcEndpoints.IsNull() || o.VpcEndpoints.IsUnknown() {
+		return e, false
+	}
+	var v []NetworkVpcEndpoints
+	d := o.VpcEndpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVpcEndpoints sets the value of the VpcEndpoints field in Network.
+func (o *Network) SetVpcEndpoints(ctx context.Context, v NetworkVpcEndpoints) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vpc_endpoints"]
+	o.VpcEndpoints = types.ListValueMust(t, vs)
+}
+
+// GetWarningMessages returns the value of the WarningMessages field in Network as
+// a slice of NetworkWarning values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Network) GetWarningMessages(ctx context.Context) ([]NetworkWarning, bool) {
+	if o.WarningMessages.IsNull() || o.WarningMessages.IsUnknown() {
+		return nil, false
+	}
+	var v []NetworkWarning
+	d := o.WarningMessages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWarningMessages sets the value of the WarningMessages field in Network.
+func (o *Network) SetWarningMessages(ctx context.Context, v []NetworkWarning) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warning_messages"]
+	o.WarningMessages = types.ListValueMust(t, vs)
+}
+
 type NetworkHealth struct {
 	// Details of the error.
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
@@ -2283,6 +2977,56 @@ func (o NetworkVpcEndpoints) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDataplaneRelay returns the value of the DataplaneRelay field in NetworkVpcEndpoints as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NetworkVpcEndpoints) GetDataplaneRelay(ctx context.Context) ([]types.String, bool) {
+	if o.DataplaneRelay.IsNull() || o.DataplaneRelay.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DataplaneRelay.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataplaneRelay sets the value of the DataplaneRelay field in NetworkVpcEndpoints.
+func (o *NetworkVpcEndpoints) SetDataplaneRelay(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataplane_relay"]
+	o.DataplaneRelay = types.ListValueMust(t, vs)
+}
+
+// GetRestApi returns the value of the RestApi field in NetworkVpcEndpoints as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NetworkVpcEndpoints) GetRestApi(ctx context.Context) ([]types.String, bool) {
+	if o.RestApi.IsNull() || o.RestApi.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RestApi.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRestApi sets the value of the RestApi field in NetworkVpcEndpoints.
+func (o *NetworkVpcEndpoints) SetRestApi(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rest_api"]
+	o.RestApi = types.ListValueMust(t, vs)
 }
 
 type NetworkWarning struct {
@@ -2410,6 +3154,31 @@ func (o PrivateAccessSettings) Type(ctx context.Context) attr.Type {
 			"region":                       types.StringType,
 		},
 	}
+}
+
+// GetAllowedVpcEndpointIds returns the value of the AllowedVpcEndpointIds field in PrivateAccessSettings as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PrivateAccessSettings) GetAllowedVpcEndpointIds(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedVpcEndpointIds.IsNull() || o.AllowedVpcEndpointIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedVpcEndpointIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedVpcEndpointIds sets the value of the AllowedVpcEndpointIds field in PrivateAccessSettings.
+func (o *PrivateAccessSettings) SetAllowedVpcEndpointIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
 type ReplaceResponse struct {
@@ -2551,6 +3320,32 @@ func (o StorageConfiguration) Type(ctx context.Context) attr.Type {
 			"storage_configuration_name": types.StringType,
 		},
 	}
+}
+
+// GetRootBucketInfo returns the value of the RootBucketInfo field in StorageConfiguration as
+// a RootBucketInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageConfiguration) GetRootBucketInfo(ctx context.Context) (RootBucketInfo, bool) {
+	var e RootBucketInfo
+	if o.RootBucketInfo.IsNull() || o.RootBucketInfo.IsUnknown() {
+		return e, false
+	}
+	var v []RootBucketInfo
+	d := o.RootBucketInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRootBucketInfo sets the value of the RootBucketInfo field in StorageConfiguration.
+func (o *StorageConfiguration) SetRootBucketInfo(ctx context.Context, v RootBucketInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["root_bucket_info"]
+	o.RootBucketInfo = types.ListValueMust(t, vs)
 }
 
 type StsRole struct {
@@ -2730,6 +3525,31 @@ func (o UpdateWorkspaceRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCustomTags returns the value of the CustomTags field in UpdateWorkspaceRequest as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceRequest) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in UpdateWorkspaceRequest.
+func (o *UpdateWorkspaceRequest) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
 type UpsertPrivateAccessSettingsRequest struct {
 	// An array of Databricks VPC endpoint IDs. This is the Databricks ID that
 	// is returned when registering the VPC endpoint configuration in your
@@ -2817,6 +3637,31 @@ func (o UpsertPrivateAccessSettingsRequest) Type(ctx context.Context) attr.Type 
 			"region":                       types.StringType,
 		},
 	}
+}
+
+// GetAllowedVpcEndpointIds returns the value of the AllowedVpcEndpointIds field in UpsertPrivateAccessSettingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpsertPrivateAccessSettingsRequest) GetAllowedVpcEndpointIds(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedVpcEndpointIds.IsNull() || o.AllowedVpcEndpointIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedVpcEndpointIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedVpcEndpointIds sets the value of the AllowedVpcEndpointIds field in UpsertPrivateAccessSettingsRequest.
+func (o *UpsertPrivateAccessSettingsRequest) SetAllowedVpcEndpointIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
 type VpcEndpoint struct {
@@ -2914,6 +3759,32 @@ func (o VpcEndpoint) Type(ctx context.Context) attr.Type {
 			"vpc_endpoint_name": types.StringType,
 		},
 	}
+}
+
+// GetGcpVpcEndpointInfo returns the value of the GcpVpcEndpointInfo field in VpcEndpoint as
+// a GcpVpcEndpointInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *VpcEndpoint) GetGcpVpcEndpointInfo(ctx context.Context) (GcpVpcEndpointInfo, bool) {
+	var e GcpVpcEndpointInfo
+	if o.GcpVpcEndpointInfo.IsNull() || o.GcpVpcEndpointInfo.IsUnknown() {
+		return e, false
+	}
+	var v []GcpVpcEndpointInfo
+	d := o.GcpVpcEndpointInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpVpcEndpointInfo sets the value of the GcpVpcEndpointInfo field in VpcEndpoint.
+func (o *VpcEndpoint) SetGcpVpcEndpointInfo(ctx context.Context, v GcpVpcEndpointInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_vpc_endpoint_info"]
+	o.GcpVpcEndpointInfo = types.ListValueMust(t, vs)
 }
 
 type Workspace struct {
@@ -3118,45 +3989,157 @@ func (o Workspace) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// This enumeration represents the type of Databricks VPC [endpoint service]
-// that was used when creating this VPC endpoint.
-//
-// [endpoint service]: https://docs.aws.amazon.com/vpc/latest/privatelink/endpoint-service.html
+// GetAzureWorkspaceInfo returns the value of the AzureWorkspaceInfo field in Workspace as
+// a AzureWorkspaceInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetAzureWorkspaceInfo(ctx context.Context) (AzureWorkspaceInfo, bool) {
+	var e AzureWorkspaceInfo
+	if o.AzureWorkspaceInfo.IsNull() || o.AzureWorkspaceInfo.IsUnknown() {
+		return e, false
+	}
+	var v []AzureWorkspaceInfo
+	d := o.AzureWorkspaceInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// The AWS resource associated with this error: credentials, VPC, subnet,
-// security group, or network ACL.
+// SetAzureWorkspaceInfo sets the value of the AzureWorkspaceInfo field in Workspace.
+func (o *Workspace) SetAzureWorkspaceInfo(ctx context.Context, v AzureWorkspaceInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_workspace_info"]
+	o.AzureWorkspaceInfo = types.ListValueMust(t, vs)
+}
 
-// Specifies the network connectivity types for the GKE nodes and the GKE master
-// network.
-//
-// Set to `PRIVATE_NODE_PUBLIC_MASTER` for a private GKE cluster for the
-// workspace. The GKE nodes will not have public IPs.
-//
-// Set to `PUBLIC_NODE_PUBLIC_MASTER` for a public GKE cluster. The nodes of a
-// public GKE cluster have public IP addresses.
+// GetCloudResourceContainer returns the value of the CloudResourceContainer field in Workspace as
+// a CloudResourceContainer value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetCloudResourceContainer(ctx context.Context) (CloudResourceContainer, bool) {
+	var e CloudResourceContainer
+	if o.CloudResourceContainer.IsNull() || o.CloudResourceContainer.IsUnknown() {
+		return e, false
+	}
+	var v []CloudResourceContainer
+	d := o.CloudResourceContainer.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// Possible values are: * `MANAGED_SERVICES`: Encrypts notebook and secret data
-// in the control plane * `STORAGE`: Encrypts the workspace's root S3 bucket
-// (root DBFS and system data) and, optionally, cluster EBS volumes.
+// SetCloudResourceContainer sets the value of the CloudResourceContainer field in Workspace.
+func (o *Workspace) SetCloudResourceContainer(ctx context.Context, v CloudResourceContainer) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloud_resource_container"]
+	o.CloudResourceContainer = types.ListValueMust(t, vs)
+}
 
-// The pricing tier of the workspace. For pricing tier information, see [AWS
-// Pricing].
-//
-// [AWS Pricing]: https://databricks.com/product/aws-pricing
+// GetCustomTags returns the value of the CustomTags field in Workspace as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// The private access level controls which VPC endpoints can connect to the UI
-// or API of any workspace that attaches this private access settings object. *
-// `ACCOUNT` level access (the default) allows only VPC endpoints that are
-// registered in your Databricks account connect to your workspace. * `ENDPOINT`
-// level access allows only specified VPC endpoints connect to your workspace.
-// For details, see `allowed_vpc_endpoint_ids`.
+// SetCustomTags sets the value of the CustomTags field in Workspace.
+func (o *Workspace) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
 
-// The status of this network configuration object in terms of its use in a
-// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`: Broken.
-// * `WARNED`: Warned.
+// GetExternalCustomerInfo returns the value of the ExternalCustomerInfo field in Workspace as
+// a ExternalCustomerInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetExternalCustomerInfo(ctx context.Context) (ExternalCustomerInfo, bool) {
+	var e ExternalCustomerInfo
+	if o.ExternalCustomerInfo.IsNull() || o.ExternalCustomerInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalCustomerInfo
+	d := o.ExternalCustomerInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// The AWS resource associated with this warning: a subnet or a security group.
+// SetExternalCustomerInfo sets the value of the ExternalCustomerInfo field in Workspace.
+func (o *Workspace) SetExternalCustomerInfo(ctx context.Context, v ExternalCustomerInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_customer_info"]
+	o.ExternalCustomerInfo = types.ListValueMust(t, vs)
+}
 
-// The status of the workspace. For workspace creation, usually it is set to
-// `PROVISIONING` initially. Continue to check the status until the status is
-// `RUNNING`.
+// GetGcpManagedNetworkConfig returns the value of the GcpManagedNetworkConfig field in Workspace as
+// a GcpManagedNetworkConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetGcpManagedNetworkConfig(ctx context.Context) (GcpManagedNetworkConfig, bool) {
+	var e GcpManagedNetworkConfig
+	if o.GcpManagedNetworkConfig.IsNull() || o.GcpManagedNetworkConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GcpManagedNetworkConfig
+	d := o.GcpManagedNetworkConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpManagedNetworkConfig sets the value of the GcpManagedNetworkConfig field in Workspace.
+func (o *Workspace) SetGcpManagedNetworkConfig(ctx context.Context, v GcpManagedNetworkConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_managed_network_config"]
+	o.GcpManagedNetworkConfig = types.ListValueMust(t, vs)
+}
+
+// GetGkeConfig returns the value of the GkeConfig field in Workspace as
+// a GkeConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Workspace) GetGkeConfig(ctx context.Context) (GkeConfig, bool) {
+	var e GkeConfig
+	if o.GkeConfig.IsNull() || o.GkeConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GkeConfig
+	d := o.GkeConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGkeConfig sets the value of the GkeConfig field in Workspace.
+func (o *Workspace) SetGkeConfig(ctx context.Context, v GkeConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gke_config"]
+	o.GkeConfig = types.ListValueMust(t, vs)
+}

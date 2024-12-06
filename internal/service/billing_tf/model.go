@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -139,6 +140,31 @@ func (o AlertConfiguration) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetActionConfigurations returns the value of the ActionConfigurations field in AlertConfiguration as
+// a slice of ActionConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertConfiguration) GetActionConfigurations(ctx context.Context) ([]ActionConfiguration, bool) {
+	if o.ActionConfigurations.IsNull() || o.ActionConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []ActionConfiguration
+	d := o.ActionConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetActionConfigurations sets the value of the ActionConfigurations field in AlertConfiguration.
+func (o *AlertConfiguration) SetActionConfigurations(ctx context.Context, v []ActionConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	o.ActionConfigurations = types.ListValueMust(t, vs)
+}
+
 type BudgetConfiguration struct {
 	// Databricks account ID.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
@@ -216,6 +242,57 @@ func (o BudgetConfiguration) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAlertConfigurations returns the value of the AlertConfigurations field in BudgetConfiguration as
+// a slice of AlertConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfiguration) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
+	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertConfiguration
+	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlertConfigurations sets the value of the AlertConfigurations field in BudgetConfiguration.
+func (o *BudgetConfiguration) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	o.AlertConfigurations = types.ListValueMust(t, vs)
+}
+
+// GetFilter returns the value of the Filter field in BudgetConfiguration as
+// a BudgetConfigurationFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfiguration) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+	var e BudgetConfigurationFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfigurationFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in BudgetConfiguration.
+func (o *BudgetConfiguration) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
+}
+
 type BudgetConfigurationFilter struct {
 	// A list of tag keys and values that will limit the budget to usage that
 	// includes those specific custom tags. Tags are case-sensitive and should
@@ -271,6 +348,57 @@ func (o BudgetConfigurationFilter) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in BudgetConfigurationFilter as
+// a slice of BudgetConfigurationFilterTagClause values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfigurationFilter) GetTags(ctx context.Context) ([]BudgetConfigurationFilterTagClause, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []BudgetConfigurationFilterTagClause
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in BudgetConfigurationFilter.
+func (o *BudgetConfigurationFilter) SetTags(ctx context.Context, v []BudgetConfigurationFilterTagClause) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+// GetWorkspaceId returns the value of the WorkspaceId field in BudgetConfigurationFilter as
+// a BudgetConfigurationFilterWorkspaceIdClause value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfigurationFilter) GetWorkspaceId(ctx context.Context) (BudgetConfigurationFilterWorkspaceIdClause, bool) {
+	var e BudgetConfigurationFilterWorkspaceIdClause
+	if o.WorkspaceId.IsNull() || o.WorkspaceId.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfigurationFilterWorkspaceIdClause
+	d := o.WorkspaceId.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkspaceId sets the value of the WorkspaceId field in BudgetConfigurationFilter.
+func (o *BudgetConfigurationFilter) SetWorkspaceId(ctx context.Context, v BudgetConfigurationFilterWorkspaceIdClause) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_id"]
+	o.WorkspaceId = types.ListValueMust(t, vs)
+}
+
 type BudgetConfigurationFilterClause struct {
 	Operator types.String `tfsdk:"operator" tf:"optional"`
 
@@ -318,6 +446,31 @@ func (o BudgetConfigurationFilterClause) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetValues returns the value of the Values field in BudgetConfigurationFilterClause as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfigurationFilterClause) GetValues(ctx context.Context) ([]types.String, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in BudgetConfigurationFilterClause.
+func (o *BudgetConfigurationFilterClause) SetValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 type BudgetConfigurationFilterTagClause struct {
@@ -369,6 +522,32 @@ func (o BudgetConfigurationFilterTagClause) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GetValue returns the value of the Value field in BudgetConfigurationFilterTagClause as
+// a BudgetConfigurationFilterClause value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfigurationFilterTagClause) GetValue(ctx context.Context) (BudgetConfigurationFilterClause, bool) {
+	var e BudgetConfigurationFilterClause
+	if o.Value.IsNull() || o.Value.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfigurationFilterClause
+	d := o.Value.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetValue sets the value of the Value field in BudgetConfigurationFilterTagClause.
+func (o *BudgetConfigurationFilterTagClause) SetValue(ctx context.Context, v BudgetConfigurationFilterClause) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	o.Value = types.ListValueMust(t, vs)
+}
+
 type BudgetConfigurationFilterWorkspaceIdClause struct {
 	Operator types.String `tfsdk:"operator" tf:"optional"`
 
@@ -416,6 +595,31 @@ func (o BudgetConfigurationFilterWorkspaceIdClause) Type(ctx context.Context) at
 			},
 		},
 	}
+}
+
+// GetValues returns the value of the Values field in BudgetConfigurationFilterWorkspaceIdClause as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetConfigurationFilterWorkspaceIdClause) GetValues(ctx context.Context) ([]types.Int64, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in BudgetConfigurationFilterWorkspaceIdClause.
+func (o *BudgetConfigurationFilterWorkspaceIdClause) SetValues(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 type CreateBillingUsageDashboardRequest struct {
@@ -574,6 +778,57 @@ func (o CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAlertConfigurations returns the value of the AlertConfigurations field in CreateBudgetConfigurationBudget as
+// a slice of CreateBudgetConfigurationBudgetAlertConfigurations values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetAlertConfigurations, bool) {
+	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []CreateBudgetConfigurationBudgetAlertConfigurations
+	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlertConfigurations sets the value of the AlertConfigurations field in CreateBudgetConfigurationBudget.
+func (o *CreateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetAlertConfigurations) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	o.AlertConfigurations = types.ListValueMust(t, vs)
+}
+
+// GetFilter returns the value of the Filter field in CreateBudgetConfigurationBudget as
+// a BudgetConfigurationFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+	var e BudgetConfigurationFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfigurationFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in CreateBudgetConfigurationBudget.
+func (o *CreateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
+}
+
 type CreateBudgetConfigurationBudgetActionConfigurations struct {
 	// The type of the action.
 	ActionType types.String `tfsdk:"action_type" tf:"optional"`
@@ -686,6 +941,31 @@ func (o CreateBudgetConfigurationBudgetAlertConfigurations) Type(ctx context.Con
 	}
 }
 
+// GetActionConfigurations returns the value of the ActionConfigurations field in CreateBudgetConfigurationBudgetAlertConfigurations as
+// a slice of CreateBudgetConfigurationBudgetActionConfigurations values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateBudgetConfigurationBudgetAlertConfigurations) GetActionConfigurations(ctx context.Context) ([]CreateBudgetConfigurationBudgetActionConfigurations, bool) {
+	if o.ActionConfigurations.IsNull() || o.ActionConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []CreateBudgetConfigurationBudgetActionConfigurations
+	d := o.ActionConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetActionConfigurations sets the value of the ActionConfigurations field in CreateBudgetConfigurationBudgetAlertConfigurations.
+func (o *CreateBudgetConfigurationBudgetAlertConfigurations) SetActionConfigurations(ctx context.Context, v []CreateBudgetConfigurationBudgetActionConfigurations) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	o.ActionConfigurations = types.ListValueMust(t, vs)
+}
+
 type CreateBudgetConfigurationRequest struct {
 	// Properties of the new budget configuration.
 	Budget types.List `tfsdk:"budget" tf:"object"`
@@ -732,6 +1012,32 @@ func (o CreateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetBudget returns the value of the Budget field in CreateBudgetConfigurationRequest as
+// a CreateBudgetConfigurationBudget value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateBudgetConfigurationRequest) GetBudget(ctx context.Context) (CreateBudgetConfigurationBudget, bool) {
+	var e CreateBudgetConfigurationBudget
+	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+		return e, false
+	}
+	var v []CreateBudgetConfigurationBudget
+	d := o.Budget.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBudget sets the value of the Budget field in CreateBudgetConfigurationRequest.
+func (o *CreateBudgetConfigurationRequest) SetBudget(ctx context.Context, v CreateBudgetConfigurationBudget) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budget"]
+	o.Budget = types.ListValueMust(t, vs)
+}
+
 type CreateBudgetConfigurationResponse struct {
 	// The created budget configuration.
 	Budget types.List `tfsdk:"budget" tf:"optional,object"`
@@ -776,6 +1082,32 @@ func (o CreateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetBudget returns the value of the Budget field in CreateBudgetConfigurationResponse as
+// a BudgetConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+	var e BudgetConfiguration
+	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfiguration
+	d := o.Budget.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBudget sets the value of the Budget field in CreateBudgetConfigurationResponse.
+func (o *CreateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budget"]
+	o.Budget = types.ListValueMust(t, vs)
 }
 
 type CreateLogDeliveryConfigurationParams struct {
@@ -905,6 +1237,31 @@ func (o CreateLogDeliveryConfigurationParams) Type(ctx context.Context) attr.Typ
 			},
 		},
 	}
+}
+
+// GetWorkspaceIdsFilter returns the value of the WorkspaceIdsFilter field in CreateLogDeliveryConfigurationParams as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateLogDeliveryConfigurationParams) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
+	if o.WorkspaceIdsFilter.IsNull() || o.WorkspaceIdsFilter.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceIdsFilter sets the value of the WorkspaceIdsFilter field in CreateLogDeliveryConfigurationParams.
+func (o *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
 // Delete budget
@@ -1266,6 +1623,32 @@ func (o GetBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetBudget returns the value of the Budget field in GetBudgetConfigurationResponse as
+// a BudgetConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+	var e BudgetConfiguration
+	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfiguration
+	d := o.Budget.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBudget sets the value of the Budget field in GetBudgetConfigurationResponse.
+func (o *GetBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budget"]
+	o.Budget = types.ListValueMust(t, vs)
+}
+
 // Get log delivery configuration
 type GetLogDeliveryRequest struct {
 	// Databricks log delivery configuration ID
@@ -1402,6 +1785,31 @@ func (o ListBudgetConfigurationsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetBudgets returns the value of the Budgets field in ListBudgetConfigurationsResponse as
+// a slice of BudgetConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListBudgetConfigurationsResponse) GetBudgets(ctx context.Context) ([]BudgetConfiguration, bool) {
+	if o.Budgets.IsNull() || o.Budgets.IsUnknown() {
+		return nil, false
+	}
+	var v []BudgetConfiguration
+	d := o.Budgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBudgets sets the value of the Budgets field in ListBudgetConfigurationsResponse.
+func (o *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []BudgetConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budgets"]
+	o.Budgets = types.ListValueMust(t, vs)
 }
 
 // Get all log delivery configurations
@@ -1609,6 +2017,57 @@ func (o LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLogDeliveryStatus returns the value of the LogDeliveryStatus field in LogDeliveryConfiguration as
+// a LogDeliveryStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogDeliveryConfiguration) GetLogDeliveryStatus(ctx context.Context) (LogDeliveryStatus, bool) {
+	var e LogDeliveryStatus
+	if o.LogDeliveryStatus.IsNull() || o.LogDeliveryStatus.IsUnknown() {
+		return e, false
+	}
+	var v []LogDeliveryStatus
+	d := o.LogDeliveryStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogDeliveryStatus sets the value of the LogDeliveryStatus field in LogDeliveryConfiguration.
+func (o *LogDeliveryConfiguration) SetLogDeliveryStatus(ctx context.Context, v LogDeliveryStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_status"]
+	o.LogDeliveryStatus = types.ListValueMust(t, vs)
+}
+
+// GetWorkspaceIdsFilter returns the value of the WorkspaceIdsFilter field in LogDeliveryConfiguration as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogDeliveryConfiguration) GetWorkspaceIdsFilter(ctx context.Context) ([]types.Int64, bool) {
+	if o.WorkspaceIdsFilter.IsNull() || o.WorkspaceIdsFilter.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.WorkspaceIdsFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceIdsFilter sets the value of the WorkspaceIdsFilter field in LogDeliveryConfiguration.
+func (o *LogDeliveryConfiguration) SetWorkspaceIdsFilter(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
+}
+
 // Databricks log delivery status.
 type LogDeliveryStatus struct {
 	// The UTC time for the latest log delivery attempt.
@@ -1780,6 +2239,57 @@ func (o UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAlertConfigurations returns the value of the AlertConfigurations field in UpdateBudgetConfigurationBudget as
+// a slice of AlertConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateBudgetConfigurationBudget) GetAlertConfigurations(ctx context.Context) ([]AlertConfiguration, bool) {
+	if o.AlertConfigurations.IsNull() || o.AlertConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertConfiguration
+	d := o.AlertConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlertConfigurations sets the value of the AlertConfigurations field in UpdateBudgetConfigurationBudget.
+func (o *UpdateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Context, v []AlertConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	o.AlertConfigurations = types.ListValueMust(t, vs)
+}
+
+// GetFilter returns the value of the Filter field in UpdateBudgetConfigurationBudget as
+// a BudgetConfigurationFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateBudgetConfigurationBudget) GetFilter(ctx context.Context) (BudgetConfigurationFilter, bool) {
+	var e BudgetConfigurationFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfigurationFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in UpdateBudgetConfigurationBudget.
+func (o *UpdateBudgetConfigurationBudget) SetFilter(ctx context.Context, v BudgetConfigurationFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
+}
+
 type UpdateBudgetConfigurationRequest struct {
 	// The updated budget. This will overwrite the budget specified by the
 	// budget ID.
@@ -1831,6 +2341,32 @@ func (o UpdateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetBudget returns the value of the Budget field in UpdateBudgetConfigurationRequest as
+// a UpdateBudgetConfigurationBudget value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateBudgetConfigurationRequest) GetBudget(ctx context.Context) (UpdateBudgetConfigurationBudget, bool) {
+	var e UpdateBudgetConfigurationBudget
+	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateBudgetConfigurationBudget
+	d := o.Budget.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBudget sets the value of the Budget field in UpdateBudgetConfigurationRequest.
+func (o *UpdateBudgetConfigurationRequest) SetBudget(ctx context.Context, v UpdateBudgetConfigurationBudget) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budget"]
+	o.Budget = types.ListValueMust(t, vs)
+}
+
 type UpdateBudgetConfigurationResponse struct {
 	// The updated budget.
 	Budget types.List `tfsdk:"budget" tf:"optional,object"`
@@ -1875,6 +2411,32 @@ func (o UpdateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetBudget returns the value of the Budget field in UpdateBudgetConfigurationResponse as
+// a BudgetConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateBudgetConfigurationResponse) GetBudget(ctx context.Context) (BudgetConfiguration, bool) {
+	var e BudgetConfiguration
+	if o.Budget.IsNull() || o.Budget.IsUnknown() {
+		return e, false
+	}
+	var v []BudgetConfiguration
+	d := o.Budget.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBudget sets the value of the Budget field in UpdateBudgetConfigurationResponse.
+func (o *UpdateBudgetConfigurationResponse) SetBudget(ctx context.Context, v BudgetConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budget"]
+	o.Budget = types.ListValueMust(t, vs)
 }
 
 type UpdateLogDeliveryConfigurationStatusRequest struct {
@@ -1972,6 +2534,32 @@ func (o WrappedCreateLogDeliveryConfiguration) Type(ctx context.Context) attr.Ty
 	}
 }
 
+// GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in WrappedCreateLogDeliveryConfiguration as
+// a CreateLogDeliveryConfigurationParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WrappedCreateLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (CreateLogDeliveryConfigurationParams, bool) {
+	var e CreateLogDeliveryConfigurationParams
+	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []CreateLogDeliveryConfigurationParams
+	d := o.LogDeliveryConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedCreateLogDeliveryConfiguration.
+func (o *WrappedCreateLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v CreateLogDeliveryConfigurationParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configuration"]
+	o.LogDeliveryConfiguration = types.ListValueMust(t, vs)
+}
+
 type WrappedLogDeliveryConfiguration struct {
 	LogDeliveryConfiguration types.List `tfsdk:"log_delivery_configuration" tf:"optional,object"`
 }
@@ -2015,6 +2603,32 @@ func (o WrappedLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLogDeliveryConfiguration returns the value of the LogDeliveryConfiguration field in WrappedLogDeliveryConfiguration as
+// a LogDeliveryConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WrappedLogDeliveryConfiguration) GetLogDeliveryConfiguration(ctx context.Context) (LogDeliveryConfiguration, bool) {
+	var e LogDeliveryConfiguration
+	if o.LogDeliveryConfiguration.IsNull() || o.LogDeliveryConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []LogDeliveryConfiguration
+	d := o.LogDeliveryConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogDeliveryConfiguration sets the value of the LogDeliveryConfiguration field in WrappedLogDeliveryConfiguration.
+func (o *WrappedLogDeliveryConfiguration) SetLogDeliveryConfiguration(ctx context.Context, v LogDeliveryConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configuration"]
+	o.LogDeliveryConfiguration = types.ListValueMust(t, vs)
 }
 
 type WrappedLogDeliveryConfigurations struct {
@@ -2062,42 +2676,27 @@ func (o WrappedLogDeliveryConfigurations) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The status string for log delivery. Possible values are: * `CREATED`: There
-// were no log delivery attempts since the config was created. * `SUCCEEDED`:
-// The latest attempt of log delivery has succeeded completely. *
-// `USER_FAILURE`: The latest attempt of log delivery failed because of
-// misconfiguration of customer provided permissions on role or storage. *
-// `SYSTEM_FAILURE`: The latest attempt of log delivery failed because of an
-// Databricks internal error. Contact support if it doesn't go away soon. *
-// `NOT_FOUND`: The log delivery status as the configuration has been disabled
-// since the release of this feature or there are no workspaces in the account.
+// GetLogDeliveryConfigurations returns the value of the LogDeliveryConfigurations field in WrappedLogDeliveryConfigurations as
+// a slice of LogDeliveryConfiguration values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WrappedLogDeliveryConfigurations) GetLogDeliveryConfigurations(ctx context.Context) ([]LogDeliveryConfiguration, bool) {
+	if o.LogDeliveryConfigurations.IsNull() || o.LogDeliveryConfigurations.IsUnknown() {
+		return nil, false
+	}
+	var v []LogDeliveryConfiguration
+	d := o.LogDeliveryConfigurations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Status of log delivery configuration. Set to `ENABLED` (enabled) or
-// `DISABLED` (disabled). Defaults to `ENABLED`. You can [enable or disable the
-// configuration](#operation/patch-log-delivery-config-status) later. Deletion
-// of a configuration is not supported, so disable a log delivery configuration
-// that is no longer needed.
-
-// Log delivery type. Supported values are:
-//
-// * `BILLABLE_USAGE` — Configure [billable usage log delivery]. For the CSV
-// schema, see the [View billable usage].
-//
-// * `AUDIT_LOGS` — Configure [audit log delivery]. For the JSON schema, see
-// [Configure audit logging]
-//
-// [Configure audit logging]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
-// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
-// [audit log delivery]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
-// [billable usage log delivery]: https://docs.databricks.com/administration-guide/account-settings/billable-usage-delivery.html
-
-// The file type of log delivery.
-//
-// * If `log_type` is `BILLABLE_USAGE`, this value must be `CSV`. Only the CSV
-// (comma-separated values) format is supported. For the schema, see the [View
-// billable usage] * If `log_type` is `AUDIT_LOGS`, this value must be `JSON`.
-// Only the JSON (JavaScript Object Notation) format is supported. For the
-// schema, see the [Configuring audit logs].
-//
-// [Configuring audit logs]: https://docs.databricks.com/administration-guide/account-settings/audit-logs.html
-// [View billable usage]: https://docs.databricks.com/administration-guide/account-settings/usage.html
+// SetLogDeliveryConfigurations sets the value of the LogDeliveryConfigurations field in WrappedLogDeliveryConfigurations.
+func (o *WrappedLogDeliveryConfigurations) SetLogDeliveryConfigurations(ctx context.Context, v []LogDeliveryConfiguration) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configurations"]
+	o.LogDeliveryConfigurations = types.ListValueMust(t, vs)
+}

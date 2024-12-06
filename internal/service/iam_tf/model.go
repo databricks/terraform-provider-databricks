@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -133,6 +134,31 @@ func (o AccessControlResponse) Type(ctx context.Context) attr.Type {
 			"user_name":              types.StringType,
 		},
 	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in AccessControlResponse as
+// a slice of Permission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccessControlResponse) GetAllPermissions(ctx context.Context) ([]Permission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []Permission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in AccessControlResponse.
+func (o *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type ComplexValue struct {
@@ -821,6 +847,31 @@ func (o GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Ty
 	}
 }
 
+// GetRoles returns the value of the Roles field in GetAssignableRolesForResourceResponse as
+// a slice of Role values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetAssignableRolesForResourceResponse) GetRoles(ctx context.Context) ([]Role, bool) {
+	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+		return nil, false
+	}
+	var v []Role
+	d := o.Roles.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRoles sets the value of the Roles field in GetAssignableRolesForResourceResponse.
+func (o *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v []Role) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	o.Roles = types.ListValueMust(t, vs)
+}
+
 // Get group details
 type GetGroupRequest struct {
 	// Unique ID for a group in the Databricks workspace.
@@ -908,6 +959,31 @@ func (o GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse as
+// a slice of PasswordPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPasswordPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PasswordPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []PasswordPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetPasswordPermissionLevelsResponse.
+func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PasswordPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get object permission levels
@@ -1001,6 +1077,31 @@ func (o GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetPermissionLevelsResponse as
+// a slice of PermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []PermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetPermissionLevelsResponse.
+func (o *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get object permissions
@@ -1322,6 +1423,31 @@ func (o GrantRule) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPrincipals returns the value of the Principals field in GrantRule as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GrantRule) GetPrincipals(ctx context.Context) ([]types.String, bool) {
+	if o.Principals.IsNull() || o.Principals.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Principals.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrincipals sets the value of the Principals field in GrantRule.
+func (o *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
+	o.Principals = types.ListValueMust(t, vs)
+}
+
 type Group struct {
 	// String that represents a human-readable group name
 	DisplayName types.String `tfsdk:"displayName" tf:"optional"`
@@ -1416,6 +1542,157 @@ func (o Group) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetEntitlements returns the value of the Entitlements field in Group as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntitlements sets the value of the Entitlements field in Group.
+func (o *Group) SetEntitlements(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	o.Entitlements = types.ListValueMust(t, vs)
+}
+
+// GetGroups returns the value of the Groups field in Group as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Groups.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroups sets the value of the Groups field in Group.
+func (o *Group) SetGroups(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	o.Groups = types.ListValueMust(t, vs)
+}
+
+// GetMembers returns the value of the Members field in Group as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetMembers(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Members.IsNull() || o.Members.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Members.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMembers sets the value of the Members field in Group.
+func (o *Group) SetMembers(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	o.Members = types.ListValueMust(t, vs)
+}
+
+// GetMeta returns the value of the Meta field in Group as
+// a ResourceMeta value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetMeta(ctx context.Context) (ResourceMeta, bool) {
+	var e ResourceMeta
+	if o.Meta.IsNull() || o.Meta.IsUnknown() {
+		return e, false
+	}
+	var v []ResourceMeta
+	d := o.Meta.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMeta sets the value of the Meta field in Group.
+func (o *Group) SetMeta(ctx context.Context, v ResourceMeta) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["meta"]
+	o.Meta = types.ListValueMust(t, vs)
+}
+
+// GetRoles returns the value of the Roles field in Group as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Roles.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRoles sets the value of the Roles field in Group.
+func (o *Group) SetRoles(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	o.Roles = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in Group as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Group) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in Group.
+func (o *Group) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
 }
 
 // List group details
@@ -1777,6 +2054,56 @@ func (o ListGroupsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetResources returns the value of the Resources field in ListGroupsResponse as
+// a slice of Group values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListGroupsResponse) GetResources(ctx context.Context) ([]Group, bool) {
+	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []Group
+	d := o.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in ListGroupsResponse.
+func (o *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	o.Resources = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in ListGroupsResponse as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListGroupsResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ListGroupsResponse.
+func (o *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
+}
+
 type ListServicePrincipalResponse struct {
 	// Total results returned in the response.
 	ItemsPerPage types.Int64 `tfsdk:"itemsPerPage" tf:"optional"`
@@ -1841,6 +2168,56 @@ func (o ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
 			"totalResults": types.Int64Type,
 		},
 	}
+}
+
+// GetResources returns the value of the Resources field in ListServicePrincipalResponse as
+// a slice of ServicePrincipal values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListServicePrincipalResponse) GetResources(ctx context.Context) ([]ServicePrincipal, bool) {
+	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []ServicePrincipal
+	d := o.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in ListServicePrincipalResponse.
+func (o *ListServicePrincipalResponse) SetResources(ctx context.Context, v []ServicePrincipal) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	o.Resources = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in ListServicePrincipalResponse as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListServicePrincipalResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ListServicePrincipalResponse.
+func (o *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
 }
 
 // List service principals
@@ -2054,6 +2431,56 @@ func (o ListUsersResponse) Type(ctx context.Context) attr.Type {
 			"totalResults": types.Int64Type,
 		},
 	}
+}
+
+// GetResources returns the value of the Resources field in ListUsersResponse as
+// a slice of User values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListUsersResponse) GetResources(ctx context.Context) ([]User, bool) {
+	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []User
+	d := o.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in ListUsersResponse.
+func (o *ListUsersResponse) SetResources(ctx context.Context, v []User) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	o.Resources = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in ListUsersResponse as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListUsersResponse) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ListUsersResponse.
+func (o *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
 }
 
 // Get permission assignments
@@ -2295,6 +2722,31 @@ func (o ObjectPermissions) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in ObjectPermissions as
+// a slice of AccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ObjectPermissions) GetAccessControlList(ctx context.Context) ([]AccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ObjectPermissions.
+func (o *ObjectPermissions) SetAccessControlList(ctx context.Context, v []AccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type PartialUpdate struct {
 	// Unique ID for a user in the Databricks workspace.
 	Id types.String `tfsdk:"-"`
@@ -2351,6 +2803,56 @@ func (o PartialUpdate) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetOperations returns the value of the Operations field in PartialUpdate as
+// a slice of Patch values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PartialUpdate) GetOperations(ctx context.Context) ([]Patch, bool) {
+	if o.Operations.IsNull() || o.Operations.IsUnknown() {
+		return nil, false
+	}
+	var v []Patch
+	d := o.Operations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOperations sets the value of the Operations field in PartialUpdate.
+func (o *PartialUpdate) SetOperations(ctx context.Context, v []Patch) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Operations"]
+	o.Operations = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in PartialUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PartialUpdate) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in PartialUpdate.
+func (o *PartialUpdate) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
 }
 
 type PasswordAccessControlRequest struct {
@@ -2469,6 +2971,31 @@ func (o PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in PasswordAccessControlResponse as
+// a slice of PasswordPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PasswordAccessControlResponse) GetAllPermissions(ctx context.Context) ([]PasswordPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []PasswordPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in PasswordAccessControlResponse.
+func (o *PasswordAccessControlResponse) SetAllPermissions(ctx context.Context, v []PasswordPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type PasswordPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -2522,6 +3049,31 @@ func (o PasswordPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in PasswordPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PasswordPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in PasswordPermission.
+func (o *PasswordPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type PasswordPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -2573,6 +3125,31 @@ func (o PasswordPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in PasswordPermissions as
+// a slice of PasswordAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PasswordPermissions) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []PasswordAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in PasswordPermissions.
+func (o *PasswordPermissions) SetAccessControlList(ctx context.Context, v []PasswordAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type PasswordPermissionsDescription struct {
@@ -2663,6 +3240,31 @@ func (o PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in PasswordPermissionsRequest as
+// a slice of PasswordAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PasswordPermissionsRequest) GetAccessControlList(ctx context.Context) ([]PasswordAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []PasswordAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in PasswordPermissionsRequest.
+func (o *PasswordPermissionsRequest) SetAccessControlList(ctx context.Context, v []PasswordAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type Patch struct {
@@ -2804,6 +3406,31 @@ func (o Permission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in Permission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Permission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in Permission.
+func (o *Permission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 // The output format for existing workspace PermissionAssignment records, which
 // contains some info for user consumption.
 type PermissionAssignment struct {
@@ -2863,6 +3490,57 @@ func (o PermissionAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPermissions returns the value of the Permissions field in PermissionAssignment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionAssignment) GetPermissions(ctx context.Context) ([]types.String, bool) {
+	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Permissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissions sets the value of the Permissions field in PermissionAssignment.
+func (o *PermissionAssignment) SetPermissions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	o.Permissions = types.ListValueMust(t, vs)
+}
+
+// GetPrincipal returns the value of the Principal field in PermissionAssignment as
+// a PrincipalOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionAssignment) GetPrincipal(ctx context.Context) (PrincipalOutput, bool) {
+	var e PrincipalOutput
+	if o.Principal.IsNull() || o.Principal.IsUnknown() {
+		return e, false
+	}
+	var v []PrincipalOutput
+	d := o.Principal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrincipal sets the value of the Principal field in PermissionAssignment.
+func (o *PermissionAssignment) SetPrincipal(ctx context.Context, v PrincipalOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principal"]
+	o.Principal = types.ListValueMust(t, vs)
+}
+
 type PermissionAssignments struct {
 	// Array of permissions assignments defined for a workspace.
 	PermissionAssignments types.List `tfsdk:"permission_assignments" tf:"optional"`
@@ -2907,6 +3585,31 @@ func (o PermissionAssignments) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPermissionAssignments returns the value of the PermissionAssignments field in PermissionAssignments as
+// a slice of PermissionAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionAssignments) GetPermissionAssignments(ctx context.Context) ([]PermissionAssignment, bool) {
+	if o.PermissionAssignments.IsNull() || o.PermissionAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []PermissionAssignment
+	d := o.PermissionAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionAssignments sets the value of the PermissionAssignments field in PermissionAssignments.
+func (o *PermissionAssignments) SetPermissionAssignments(ctx context.Context, v []PermissionAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
+	o.PermissionAssignments = types.ListValueMust(t, vs)
 }
 
 type PermissionOutput struct {
@@ -3055,6 +3758,31 @@ func (o PermissionsRequest) Type(ctx context.Context) attr.Type {
 			"request_object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in PermissionsRequest as
+// a slice of AccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionsRequest) GetAccessControlList(ctx context.Context) ([]AccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in PermissionsRequest.
+func (o *PermissionsRequest) SetAccessControlList(ctx context.Context, v []AccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // Information about the principal assigned to the workspace.
@@ -3256,6 +3984,31 @@ func (o RuleSetResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGrantRules returns the value of the GrantRules field in RuleSetResponse as
+// a slice of GrantRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RuleSetResponse) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
+	if o.GrantRules.IsNull() || o.GrantRules.IsUnknown() {
+		return nil, false
+	}
+	var v []GrantRule
+	d := o.GrantRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGrantRules sets the value of the GrantRules field in RuleSetResponse.
+func (o *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	o.GrantRules = types.ListValueMust(t, vs)
+}
+
 type RuleSetUpdateRequest struct {
 	// The expected etag of the rule set to update. The update will fail if the
 	// value does not match the value that is stored in account access control
@@ -3310,6 +4063,31 @@ func (o RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+// GetGrantRules returns the value of the GrantRules field in RuleSetUpdateRequest as
+// a slice of GrantRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RuleSetUpdateRequest) GetGrantRules(ctx context.Context) ([]GrantRule, bool) {
+	if o.GrantRules.IsNull() || o.GrantRules.IsUnknown() {
+		return nil, false
+	}
+	var v []GrantRule
+	d := o.GrantRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGrantRules sets the value of the GrantRules field in RuleSetUpdateRequest.
+func (o *RuleSetUpdateRequest) SetGrantRules(ctx context.Context, v []GrantRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	o.GrantRules = types.ListValueMust(t, vs)
 }
 
 type ServicePrincipal struct {
@@ -3402,6 +4180,106 @@ func (o ServicePrincipal) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEntitlements returns the value of the Entitlements field in ServicePrincipal as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServicePrincipal) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntitlements sets the value of the Entitlements field in ServicePrincipal.
+func (o *ServicePrincipal) SetEntitlements(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	o.Entitlements = types.ListValueMust(t, vs)
+}
+
+// GetGroups returns the value of the Groups field in ServicePrincipal as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServicePrincipal) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Groups.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroups sets the value of the Groups field in ServicePrincipal.
+func (o *ServicePrincipal) SetGroups(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	o.Groups = types.ListValueMust(t, vs)
+}
+
+// GetRoles returns the value of the Roles field in ServicePrincipal as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServicePrincipal) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Roles.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRoles sets the value of the Roles field in ServicePrincipal.
+func (o *ServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	o.Roles = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in ServicePrincipal as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServicePrincipal) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ServicePrincipal.
+func (o *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
+}
+
 type UpdateResponse struct {
 }
 
@@ -3488,6 +4366,32 @@ func (o UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRuleSet returns the value of the RuleSet field in UpdateRuleSetRequest as
+// a RuleSetUpdateRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRuleSetRequest) GetRuleSet(ctx context.Context) (RuleSetUpdateRequest, bool) {
+	var e RuleSetUpdateRequest
+	if o.RuleSet.IsNull() || o.RuleSet.IsUnknown() {
+		return e, false
+	}
+	var v []RuleSetUpdateRequest
+	d := o.RuleSet.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRuleSet sets the value of the RuleSet field in UpdateRuleSetRequest.
+func (o *UpdateRuleSetRequest) SetRuleSet(ctx context.Context, v RuleSetUpdateRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rule_set"]
+	o.RuleSet = types.ListValueMust(t, vs)
+}
+
 type UpdateWorkspaceAssignments struct {
 	// Array of permissions assignments to update on the workspace. Valid values
 	// are "USER" and "ADMIN" (case-sensitive). If both "USER" and "ADMIN" are
@@ -3545,6 +4449,31 @@ func (o UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
 			"workspace_id": types.Int64Type,
 		},
 	}
+}
+
+// GetPermissions returns the value of the Permissions field in UpdateWorkspaceAssignments as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceAssignments) GetPermissions(ctx context.Context) ([]types.String, bool) {
+	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Permissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissions sets the value of the Permissions field in UpdateWorkspaceAssignments.
+func (o *UpdateWorkspaceAssignments) SetPermissions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	o.Permissions = types.ListValueMust(t, vs)
 }
 
 type User struct {
@@ -3657,6 +4586,157 @@ func (o User) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEmails returns the value of the Emails field in User as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetEmails(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Emails.IsNull() || o.Emails.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Emails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmails sets the value of the Emails field in User.
+func (o *User) SetEmails(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	o.Emails = types.ListValueMust(t, vs)
+}
+
+// GetEntitlements returns the value of the Entitlements field in User as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetEntitlements(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Entitlements.IsNull() || o.Entitlements.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Entitlements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntitlements sets the value of the Entitlements field in User.
+func (o *User) SetEntitlements(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	o.Entitlements = types.ListValueMust(t, vs)
+}
+
+// GetGroups returns the value of the Groups field in User as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetGroups(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Groups.IsNull() || o.Groups.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Groups.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGroups sets the value of the Groups field in User.
+func (o *User) SetGroups(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	o.Groups = types.ListValueMust(t, vs)
+}
+
+// GetName returns the value of the Name field in User as
+// a Name value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetName(ctx context.Context) (Name, bool) {
+	var e Name
+	if o.Name.IsNull() || o.Name.IsUnknown() {
+		return e, false
+	}
+	var v []Name
+	d := o.Name.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetName sets the value of the Name field in User.
+func (o *User) SetName(ctx context.Context, v Name) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["name"]
+	o.Name = types.ListValueMust(t, vs)
+}
+
+// GetRoles returns the value of the Roles field in User as
+// a slice of ComplexValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetRoles(ctx context.Context) ([]ComplexValue, bool) {
+	if o.Roles.IsNull() || o.Roles.IsUnknown() {
+		return nil, false
+	}
+	var v []ComplexValue
+	d := o.Roles.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRoles sets the value of the Roles field in User.
+func (o *User) SetRoles(ctx context.Context, v []ComplexValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	o.Roles = types.ListValueMust(t, vs)
+}
+
+// GetSchemas returns the value of the Schemas field in User as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *User) GetSchemas(ctx context.Context) ([]types.String, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in User.
+func (o *User) SetSchemas(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
+}
+
 type WorkspacePermissions struct {
 	// Array of permissions defined for a workspace.
 	Permissions types.List `tfsdk:"permissions" tf:"optional"`
@@ -3703,8 +4783,27 @@ func (o WorkspacePermissions) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Permission level
+// GetPermissions returns the value of the Permissions field in WorkspacePermissions as
+// a slice of PermissionOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspacePermissions) GetPermissions(ctx context.Context) ([]PermissionOutput, bool) {
+	if o.Permissions.IsNull() || o.Permissions.IsUnknown() {
+		return nil, false
+	}
+	var v []PermissionOutput
+	d := o.Permissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Type of patch operation.
-
-// Permission level
+// SetPermissions sets the value of the Permissions field in WorkspacePermissions.
+func (o *WorkspacePermissions) SetPermissions(ctx context.Context, v []PermissionOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	o.Permissions = types.ListValueMust(t, vs)
+}

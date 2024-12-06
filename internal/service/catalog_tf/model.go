@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -62,6 +63,32 @@ func (o AccountsCreateMetastore) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetastoreInfo returns the value of the MetastoreInfo field in AccountsCreateMetastore as
+// a CreateMetastore value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsCreateMetastore) GetMetastoreInfo(ctx context.Context) (CreateMetastore, bool) {
+	var e CreateMetastore
+	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateMetastore
+	d := o.MetastoreInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsCreateMetastore.
+func (o *AccountsCreateMetastore) SetMetastoreInfo(ctx context.Context, v CreateMetastore) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_info"]
+	o.MetastoreInfo = types.ListValueMust(t, vs)
 }
 
 type AccountsCreateMetastoreAssignment struct {
@@ -117,6 +144,32 @@ func (o AccountsCreateMetastoreAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetMetastoreAssignment returns the value of the MetastoreAssignment field in AccountsCreateMetastoreAssignment as
+// a CreateMetastoreAssignment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsCreateMetastoreAssignment) GetMetastoreAssignment(ctx context.Context) (CreateMetastoreAssignment, bool) {
+	var e CreateMetastoreAssignment
+	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
+		return e, false
+	}
+	var v []CreateMetastoreAssignment
+	d := o.MetastoreAssignment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsCreateMetastoreAssignment.
+func (o *AccountsCreateMetastoreAssignment) SetMetastoreAssignment(ctx context.Context, v CreateMetastoreAssignment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_assignment"]
+	o.MetastoreAssignment = types.ListValueMust(t, vs)
+}
+
 type AccountsCreateStorageCredential struct {
 	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
@@ -166,6 +219,32 @@ func (o AccountsCreateStorageCredential) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCredentialInfo returns the value of the CredentialInfo field in AccountsCreateStorageCredential as
+// a CreateStorageCredential value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsCreateStorageCredential) GetCredentialInfo(ctx context.Context) (CreateStorageCredential, bool) {
+	var e CreateStorageCredential
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateStorageCredential
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in AccountsCreateStorageCredential.
+func (o *AccountsCreateStorageCredential) SetCredentialInfo(ctx context.Context, v CreateStorageCredential) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
+}
+
 type AccountsMetastoreAssignment struct {
 	MetastoreAssignment types.List `tfsdk:"metastore_assignment" tf:"optional,object"`
 }
@@ -209,6 +288,32 @@ func (o AccountsMetastoreAssignment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetastoreAssignment returns the value of the MetastoreAssignment field in AccountsMetastoreAssignment as
+// a MetastoreAssignment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsMetastoreAssignment) GetMetastoreAssignment(ctx context.Context) (MetastoreAssignment, bool) {
+	var e MetastoreAssignment
+	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
+		return e, false
+	}
+	var v []MetastoreAssignment
+	d := o.MetastoreAssignment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsMetastoreAssignment.
+func (o *AccountsMetastoreAssignment) SetMetastoreAssignment(ctx context.Context, v MetastoreAssignment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_assignment"]
+	o.MetastoreAssignment = types.ListValueMust(t, vs)
 }
 
 type AccountsMetastoreInfo struct {
@@ -256,6 +361,32 @@ func (o AccountsMetastoreInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetMetastoreInfo returns the value of the MetastoreInfo field in AccountsMetastoreInfo as
+// a MetastoreInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsMetastoreInfo) GetMetastoreInfo(ctx context.Context) (MetastoreInfo, bool) {
+	var e MetastoreInfo
+	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
+		return e, false
+	}
+	var v []MetastoreInfo
+	d := o.MetastoreInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsMetastoreInfo.
+func (o *AccountsMetastoreInfo) SetMetastoreInfo(ctx context.Context, v MetastoreInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_info"]
+	o.MetastoreInfo = types.ListValueMust(t, vs)
+}
+
 type AccountsStorageCredentialInfo struct {
 	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 }
@@ -299,6 +430,32 @@ func (o AccountsStorageCredentialInfo) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in AccountsStorageCredentialInfo as
+// a StorageCredentialInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsStorageCredentialInfo) GetCredentialInfo(ctx context.Context) (StorageCredentialInfo, bool) {
+	var e StorageCredentialInfo
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []StorageCredentialInfo
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in AccountsStorageCredentialInfo.
+func (o *AccountsStorageCredentialInfo) SetCredentialInfo(ctx context.Context, v StorageCredentialInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
 }
 
 type AccountsUpdateMetastore struct {
@@ -349,6 +506,32 @@ func (o AccountsUpdateMetastore) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetastoreInfo returns the value of the MetastoreInfo field in AccountsUpdateMetastore as
+// a UpdateMetastore value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsUpdateMetastore) GetMetastoreInfo(ctx context.Context) (UpdateMetastore, bool) {
+	var e UpdateMetastore
+	if o.MetastoreInfo.IsNull() || o.MetastoreInfo.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateMetastore
+	d := o.MetastoreInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreInfo sets the value of the MetastoreInfo field in AccountsUpdateMetastore.
+func (o *AccountsUpdateMetastore) SetMetastoreInfo(ctx context.Context, v UpdateMetastore) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_info"]
+	o.MetastoreInfo = types.ListValueMust(t, vs)
 }
 
 type AccountsUpdateMetastoreAssignment struct {
@@ -404,6 +587,32 @@ func (o AccountsUpdateMetastoreAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetMetastoreAssignment returns the value of the MetastoreAssignment field in AccountsUpdateMetastoreAssignment as
+// a UpdateMetastoreAssignment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsUpdateMetastoreAssignment) GetMetastoreAssignment(ctx context.Context) (UpdateMetastoreAssignment, bool) {
+	var e UpdateMetastoreAssignment
+	if o.MetastoreAssignment.IsNull() || o.MetastoreAssignment.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateMetastoreAssignment
+	d := o.MetastoreAssignment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetastoreAssignment sets the value of the MetastoreAssignment field in AccountsUpdateMetastoreAssignment.
+func (o *AccountsUpdateMetastoreAssignment) SetMetastoreAssignment(ctx context.Context, v UpdateMetastoreAssignment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastore_assignment"]
+	o.MetastoreAssignment = types.ListValueMust(t, vs)
+}
+
 type AccountsUpdateStorageCredential struct {
 	CredentialInfo types.List `tfsdk:"credential_info" tf:"optional,object"`
 	// Unity Catalog metastore ID
@@ -455,6 +664,32 @@ func (o AccountsUpdateStorageCredential) Type(ctx context.Context) attr.Type {
 			"storage_credential_name": types.StringType,
 		},
 	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in AccountsUpdateStorageCredential as
+// a UpdateStorageCredential value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AccountsUpdateStorageCredential) GetCredentialInfo(ctx context.Context) (UpdateStorageCredential, bool) {
+	var e UpdateStorageCredential
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateStorageCredential
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in AccountsUpdateStorageCredential.
+func (o *AccountsUpdateStorageCredential) SetCredentialInfo(ctx context.Context, v UpdateStorageCredential) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
 }
 
 type ArtifactAllowlistInfo struct {
@@ -513,6 +748,31 @@ func (o ArtifactAllowlistInfo) Type(ctx context.Context) attr.Type {
 			"metastore_id": types.StringType,
 		},
 	}
+}
+
+// GetArtifactMatchers returns the value of the ArtifactMatchers field in ArtifactAllowlistInfo as
+// a slice of ArtifactMatcher values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ArtifactAllowlistInfo) GetArtifactMatchers(ctx context.Context) ([]ArtifactMatcher, bool) {
+	if o.ArtifactMatchers.IsNull() || o.ArtifactMatchers.IsUnknown() {
+		return nil, false
+	}
+	var v []ArtifactMatcher
+	d := o.ArtifactMatchers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArtifactMatchers sets the value of the ArtifactMatchers field in ArtifactAllowlistInfo.
+func (o *ArtifactAllowlistInfo) SetArtifactMatchers(ctx context.Context, v []ArtifactMatcher) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifact_matchers"]
+	o.ArtifactMatchers = types.ListValueMust(t, vs)
 }
 
 type ArtifactMatcher struct {
@@ -1354,6 +1614,108 @@ func (o CatalogInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEffectivePredictiveOptimizationFlag returns the value of the EffectivePredictiveOptimizationFlag field in CatalogInfo as
+// a EffectivePredictiveOptimizationFlag value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CatalogInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context) (EffectivePredictiveOptimizationFlag, bool) {
+	var e EffectivePredictiveOptimizationFlag
+	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		return e, false
+	}
+	var v []EffectivePredictiveOptimizationFlag
+	d := o.EffectivePredictiveOptimizationFlag.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in CatalogInfo.
+func (o *CatalogInfo) SetEffectivePredictiveOptimizationFlag(ctx context.Context, v EffectivePredictiveOptimizationFlag) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_predictive_optimization_flag"]
+	o.EffectivePredictiveOptimizationFlag = types.ListValueMust(t, vs)
+}
+
+// GetOptions returns the value of the Options field in CatalogInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CatalogInfo) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in CatalogInfo.
+func (o *CatalogInfo) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.MapValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in CatalogInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CatalogInfo) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CatalogInfo.
+func (o *CatalogInfo) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetProvisioningInfo returns the value of the ProvisioningInfo field in CatalogInfo as
+// a ProvisioningInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CatalogInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo, bool) {
+	var e ProvisioningInfo
+	if o.ProvisioningInfo.IsNull() || o.ProvisioningInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ProvisioningInfo
+	d := o.ProvisioningInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvisioningInfo sets the value of the ProvisioningInfo field in CatalogInfo.
+func (o *CatalogInfo) SetProvisioningInfo(ctx context.Context, v ProvisioningInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_info"]
+	o.ProvisioningInfo = types.ListValueMust(t, vs)
+}
+
 type CloudflareApiToken struct {
 	// The Cloudflare access key id of the token.
 	AccessKeyId types.String `tfsdk:"access_key_id" tf:""`
@@ -1494,6 +1856,32 @@ func (o ColumnInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetMask returns the value of the Mask field in ColumnInfo as
+// a ColumnMask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ColumnInfo) GetMask(ctx context.Context) (ColumnMask, bool) {
+	var e ColumnMask
+	if o.Mask.IsNull() || o.Mask.IsUnknown() {
+		return e, false
+	}
+	var v []ColumnMask
+	d := o.Mask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMask sets the value of the Mask field in ColumnInfo.
+func (o *ColumnInfo) SetMask(ctx context.Context, v ColumnMask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["mask"]
+	o.Mask = types.ListValueMust(t, vs)
+}
+
 type ColumnMask struct {
 	// The full name of the column mask SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:"optional"`
@@ -1545,6 +1933,31 @@ func (o ColumnMask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetUsingColumnNames returns the value of the UsingColumnNames field in ColumnMask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ColumnMask) GetUsingColumnNames(ctx context.Context) ([]types.String, bool) {
+	if o.UsingColumnNames.IsNull() || o.UsingColumnNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UsingColumnNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUsingColumnNames sets the value of the UsingColumnNames field in ColumnMask.
+func (o *ColumnMask) SetUsingColumnNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["using_column_names"]
+	o.UsingColumnNames = types.ListValueMust(t, vs)
 }
 
 type ConnectionInfo struct {
@@ -1672,6 +2085,82 @@ func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in ConnectionInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ConnectionInfo) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in ConnectionInfo.
+func (o *ConnectionInfo) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.MapValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in ConnectionInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ConnectionInfo) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in ConnectionInfo.
+func (o *ConnectionInfo) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetProvisioningInfo returns the value of the ProvisioningInfo field in ConnectionInfo as
+// a ProvisioningInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ConnectionInfo) GetProvisioningInfo(ctx context.Context) (ProvisioningInfo, bool) {
+	var e ProvisioningInfo
+	if o.ProvisioningInfo.IsNull() || o.ProvisioningInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ProvisioningInfo
+	d := o.ProvisioningInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvisioningInfo sets the value of the ProvisioningInfo field in ConnectionInfo.
+func (o *ConnectionInfo) SetProvisioningInfo(ctx context.Context, v ProvisioningInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_info"]
+	o.ProvisioningInfo = types.ListValueMust(t, vs)
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // ONLINE_CONTINUOUS_UPDATE or the ONLINE_UPDATING_PIPELINE_RESOURCES state.
 type ContinuousUpdateStatus struct {
@@ -1729,6 +2218,32 @@ func (o ContinuousUpdateStatus) Type(ctx context.Context) attr.Type {
 			"timestamp":                     types.StringType,
 		},
 	}
+}
+
+// GetInitialPipelineSyncProgress returns the value of the InitialPipelineSyncProgress field in ContinuousUpdateStatus as
+// a PipelineProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ContinuousUpdateStatus) GetInitialPipelineSyncProgress(ctx context.Context) (PipelineProgress, bool) {
+	var e PipelineProgress
+	if o.InitialPipelineSyncProgress.IsNull() || o.InitialPipelineSyncProgress.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineProgress
+	d := o.InitialPipelineSyncProgress.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInitialPipelineSyncProgress sets the value of the InitialPipelineSyncProgress field in ContinuousUpdateStatus.
+func (o *ContinuousUpdateStatus) SetInitialPipelineSyncProgress(ctx context.Context, v PipelineProgress) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["initial_pipeline_sync_progress"]
+	o.InitialPipelineSyncProgress = types.ListValueMust(t, vs)
 }
 
 type CreateCatalog struct {
@@ -1811,6 +2326,56 @@ func (o CreateCatalog) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in CreateCatalog as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCatalog) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in CreateCatalog.
+func (o *CreateCatalog) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.MapValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in CreateCatalog as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCatalog) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CreateCatalog.
+func (o *CreateCatalog) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type CreateConnection struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -1879,6 +2444,56 @@ func (o CreateConnection) Type(ctx context.Context) attr.Type {
 			"read_only": types.BoolType,
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in CreateConnection as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateConnection) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in CreateConnection.
+func (o *CreateConnection) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.MapValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in CreateConnection as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateConnection) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CreateConnection.
+func (o *CreateConnection) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
 }
 
 type CreateCredentialRequest struct {
@@ -1972,6 +2587,110 @@ func (o CreateCredentialRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in CreateCredentialRequest as
+// a AwsIamRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
+	var e AwsIamRole
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRole
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetAwsIamRole(ctx context.Context, v AwsIamRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in CreateCredentialRequest as
+// a AzureManagedIdentity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentity, bool) {
+	var e AzureManagedIdentity
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentity
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in CreateCredentialRequest as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetGcpServiceAccountKey returns the value of the GcpServiceAccountKey field in CreateCredentialRequest as
+// a GcpServiceAccountKey value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCredentialRequest) GetGcpServiceAccountKey(ctx context.Context) (GcpServiceAccountKey, bool) {
+	var e GcpServiceAccountKey
+	if o.GcpServiceAccountKey.IsNull() || o.GcpServiceAccountKey.IsUnknown() {
+		return e, false
+	}
+	var v []GcpServiceAccountKey
+	d := o.GcpServiceAccountKey.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpServiceAccountKey sets the value of the GcpServiceAccountKey field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetGcpServiceAccountKey(ctx context.Context, v GcpServiceAccountKey) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_service_account_key"]
+	o.GcpServiceAccountKey = types.ListValueMust(t, vs)
+}
+
 type CreateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -2051,6 +2770,32 @@ func (o CreateExternalLocation) Type(ctx context.Context) attr.Type {
 			"url":             types.StringType,
 		},
 	}
+}
+
+// GetEncryptionDetails returns the value of the EncryptionDetails field in CreateExternalLocation as
+// a EncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExternalLocation) GetEncryptionDetails(ctx context.Context) (EncryptionDetails, bool) {
+	var e EncryptionDetails
+	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []EncryptionDetails
+	d := o.EncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEncryptionDetails sets the value of the EncryptionDetails field in CreateExternalLocation.
+func (o *CreateExternalLocation) SetEncryptionDetails(ctx context.Context, v EncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["encryption_details"]
+	o.EncryptionDetails = types.ListValueMust(t, vs)
 }
 
 type CreateFunction struct {
@@ -2189,6 +2934,84 @@ func (o CreateFunction) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInputParams returns the value of the InputParams field in CreateFunction as
+// a FunctionParameterInfos value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFunction) GetInputParams(ctx context.Context) (FunctionParameterInfos, bool) {
+	var e FunctionParameterInfos
+	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionParameterInfos
+	d := o.InputParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInputParams sets the value of the InputParams field in CreateFunction.
+func (o *CreateFunction) SetInputParams(ctx context.Context, v FunctionParameterInfos) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_params"]
+	o.InputParams = types.ListValueMust(t, vs)
+}
+
+// GetReturnParams returns the value of the ReturnParams field in CreateFunction as
+// a FunctionParameterInfos value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFunction) GetReturnParams(ctx context.Context) (FunctionParameterInfos, bool) {
+	var e FunctionParameterInfos
+	if o.ReturnParams.IsNull() || o.ReturnParams.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionParameterInfos
+	d := o.ReturnParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReturnParams sets the value of the ReturnParams field in CreateFunction.
+func (o *CreateFunction) SetReturnParams(ctx context.Context, v FunctionParameterInfos) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["return_params"]
+	o.ReturnParams = types.ListValueMust(t, vs)
+}
+
+// GetRoutineDependencies returns the value of the RoutineDependencies field in CreateFunction as
+// a DependencyList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFunction) GetRoutineDependencies(ctx context.Context) (DependencyList, bool) {
+	var e DependencyList
+	if o.RoutineDependencies.IsNull() || o.RoutineDependencies.IsUnknown() {
+		return e, false
+	}
+	var v []DependencyList
+	d := o.RoutineDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRoutineDependencies sets the value of the RoutineDependencies field in CreateFunction.
+func (o *CreateFunction) SetRoutineDependencies(ctx context.Context, v DependencyList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routine_dependencies"]
+	o.RoutineDependencies = types.ListValueMust(t, vs)
+}
+
 type CreateFunctionRequest struct {
 	// Partial __FunctionInfo__ specifying the function to be created.
 	FunctionInfo types.List `tfsdk:"function_info" tf:"object"`
@@ -2233,6 +3056,32 @@ func (o CreateFunctionRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFunctionInfo returns the value of the FunctionInfo field in CreateFunctionRequest as
+// a CreateFunction value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFunctionRequest) GetFunctionInfo(ctx context.Context) (CreateFunction, bool) {
+	var e CreateFunction
+	if o.FunctionInfo.IsNull() || o.FunctionInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CreateFunction
+	d := o.FunctionInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFunctionInfo sets the value of the FunctionInfo field in CreateFunctionRequest.
+func (o *CreateFunctionRequest) SetFunctionInfo(ctx context.Context, v CreateFunction) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["function_info"]
+	o.FunctionInfo = types.ListValueMust(t, vs)
 }
 
 type CreateMetastore struct {
@@ -2469,6 +3318,212 @@ func (o CreateMonitor) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCustomMetrics returns the value of the CustomMetrics field in CreateMonitor as
+// a slice of MonitorMetric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetCustomMetrics(ctx context.Context) ([]MonitorMetric, bool) {
+	if o.CustomMetrics.IsNull() || o.CustomMetrics.IsUnknown() {
+		return nil, false
+	}
+	var v []MonitorMetric
+	d := o.CustomMetrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomMetrics sets the value of the CustomMetrics field in CreateMonitor.
+func (o *CreateMonitor) SetCustomMetrics(ctx context.Context, v []MonitorMetric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	o.CustomMetrics = types.ListValueMust(t, vs)
+}
+
+// GetDataClassificationConfig returns the value of the DataClassificationConfig field in CreateMonitor as
+// a MonitorDataClassificationConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetDataClassificationConfig(ctx context.Context) (MonitorDataClassificationConfig, bool) {
+	var e MonitorDataClassificationConfig
+	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorDataClassificationConfig
+	d := o.DataClassificationConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataClassificationConfig sets the value of the DataClassificationConfig field in CreateMonitor.
+func (o *CreateMonitor) SetDataClassificationConfig(ctx context.Context, v MonitorDataClassificationConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_classification_config"]
+	o.DataClassificationConfig = types.ListValueMust(t, vs)
+}
+
+// GetInferenceLog returns the value of the InferenceLog field in CreateMonitor as
+// a MonitorInferenceLog value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLog, bool) {
+	var e MonitorInferenceLog
+	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorInferenceLog
+	d := o.InferenceLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceLog sets the value of the InferenceLog field in CreateMonitor.
+func (o *CreateMonitor) SetInferenceLog(ctx context.Context, v MonitorInferenceLog) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_log"]
+	o.InferenceLog = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in CreateMonitor as
+// a MonitorNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetNotifications(ctx context.Context) (MonitorNotifications, bool) {
+	var e MonitorNotifications
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorNotifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotifications sets the value of the Notifications field in CreateMonitor.
+func (o *CreateMonitor) SetNotifications(ctx context.Context, v MonitorNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in CreateMonitor as
+// a MonitorCronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, bool) {
+	var e MonitorCronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorCronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in CreateMonitor.
+func (o *CreateMonitor) SetSchedule(ctx context.Context, v MonitorCronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetSlicingExprs returns the value of the SlicingExprs field in CreateMonitor as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetSlicingExprs(ctx context.Context) ([]types.String, bool) {
+	if o.SlicingExprs.IsNull() || o.SlicingExprs.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SlicingExprs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSlicingExprs sets the value of the SlicingExprs field in CreateMonitor.
+func (o *CreateMonitor) SetSlicingExprs(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	o.SlicingExprs = types.ListValueMust(t, vs)
+}
+
+// GetSnapshot returns the value of the Snapshot field in CreateMonitor as
+// a MonitorSnapshot value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool) {
+	var e MonitorSnapshot
+	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorSnapshot
+	d := o.Snapshot.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSnapshot sets the value of the Snapshot field in CreateMonitor.
+func (o *CreateMonitor) SetSnapshot(ctx context.Context, v MonitorSnapshot) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["snapshot"]
+	o.Snapshot = types.ListValueMust(t, vs)
+}
+
+// GetTimeSeries returns the value of the TimeSeries field in CreateMonitor as
+// a MonitorTimeSeries value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, bool) {
+	var e MonitorTimeSeries
+	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorTimeSeries
+	d := o.TimeSeries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTimeSeries sets the value of the TimeSeries field in CreateMonitor.
+func (o *CreateMonitor) SetTimeSeries(ctx context.Context, v MonitorTimeSeries) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["time_series"]
+	o.TimeSeries = types.ListValueMust(t, vs)
+}
+
 // Create an Online Table
 type CreateOnlineTableRequest struct {
 	// Online Table information.
@@ -2514,6 +3569,32 @@ func (o CreateOnlineTableRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTable returns the value of the Table field in CreateOnlineTableRequest as
+// a OnlineTable value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateOnlineTableRequest) GetTable(ctx context.Context) (OnlineTable, bool) {
+	var e OnlineTable
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineTable
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in CreateOnlineTableRequest.
+func (o *CreateOnlineTableRequest) SetTable(ctx context.Context, v OnlineTable) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
 }
 
 type CreateRegisteredModelRequest struct {
@@ -2673,6 +3754,31 @@ func (o CreateSchema) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProperties returns the value of the Properties field in CreateSchema as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateSchema) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in CreateSchema.
+func (o *CreateSchema) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type CreateStorageCredential struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
@@ -2764,6 +3870,136 @@ func (o CreateStorageCredential) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in CreateStorageCredential as
+// a AwsIamRoleRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRoleRequest, bool) {
+	var e AwsIamRoleRequest
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRoleRequest
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in CreateStorageCredential.
+func (o *CreateStorageCredential) SetAwsIamRole(ctx context.Context, v AwsIamRoleRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in CreateStorageCredential as
+// a AzureManagedIdentityRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentityRequest, bool) {
+	var e AzureManagedIdentityRequest
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentityRequest
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CreateStorageCredential.
+func (o *CreateStorageCredential) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentityRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in CreateStorageCredential as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageCredential) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CreateStorageCredential.
+func (o *CreateStorageCredential) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetCloudflareApiToken returns the value of the CloudflareApiToken field in CreateStorageCredential as
+// a CloudflareApiToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageCredential) GetCloudflareApiToken(ctx context.Context) (CloudflareApiToken, bool) {
+	var e CloudflareApiToken
+	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
+		return e, false
+	}
+	var v []CloudflareApiToken
+	d := o.CloudflareApiToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloudflareApiToken sets the value of the CloudflareApiToken field in CreateStorageCredential.
+func (o *CreateStorageCredential) SetCloudflareApiToken(ctx context.Context, v CloudflareApiToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloudflare_api_token"]
+	o.CloudflareApiToken = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in CreateStorageCredential as
+// a DatabricksGcpServiceAccountRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccountRequest, bool) {
+	var e DatabricksGcpServiceAccountRequest
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccountRequest
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CreateStorageCredential.
+func (o *CreateStorageCredential) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccountRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
+}
+
 type CreateTableConstraint struct {
 	// A table constraint, as defined by *one* of the following fields being
 	// set: __primary_key_constraint__, __foreign_key_constraint__,
@@ -2814,6 +4050,32 @@ func (o CreateTableConstraint) Type(ctx context.Context) attr.Type {
 			"full_name_arg": types.StringType,
 		},
 	}
+}
+
+// GetConstraint returns the value of the Constraint field in CreateTableConstraint as
+// a TableConstraint value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateTableConstraint) GetConstraint(ctx context.Context) (TableConstraint, bool) {
+	var e TableConstraint
+	if o.Constraint.IsNull() || o.Constraint.IsUnknown() {
+		return e, false
+	}
+	var v []TableConstraint
+	d := o.Constraint.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConstraint sets the value of the Constraint field in CreateTableConstraint.
+func (o *CreateTableConstraint) SetConstraint(ctx context.Context, v TableConstraint) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["constraint"]
+	o.Constraint = types.ListValueMust(t, vs)
 }
 
 type CreateVolumeRequestContent struct {
@@ -2998,6 +4260,84 @@ func (o CredentialInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in CredentialInfo as
+// a AwsIamRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
+	var e AwsIamRole
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRole
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in CredentialInfo.
+func (o *CredentialInfo) SetAwsIamRole(ctx context.Context, v AwsIamRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in CredentialInfo as
+// a AzureManagedIdentity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CredentialInfo) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentity, bool) {
+	var e AzureManagedIdentity
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentity
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in CredentialInfo.
+func (o *CredentialInfo) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in CredentialInfo as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CredentialInfo) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in CredentialInfo.
+func (o *CredentialInfo) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
 type CredentialValidationResult struct {
 	// Error message would exist when the result does not equal to **PASS**.
 	Message types.String `tfsdk:"message" tf:"optional"`
@@ -3089,6 +4429,31 @@ func (o CurrentWorkspaceBindings) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWorkspaces returns the value of the Workspaces field in CurrentWorkspaceBindings as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CurrentWorkspaceBindings) GetWorkspaces(ctx context.Context) ([]types.Int64, bool) {
+	if o.Workspaces.IsNull() || o.Workspaces.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.Workspaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaces sets the value of the Workspaces field in CurrentWorkspaceBindings.
+func (o *CurrentWorkspaceBindings) SetWorkspaces(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspaces"]
+	o.Workspaces = types.ListValueMust(t, vs)
 }
 
 type DatabricksGcpServiceAccountRequest struct {
@@ -4215,6 +5580,31 @@ func (o DeltaRuntimePropertiesKvPairs) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDeltaRuntimeProperties returns the value of the DeltaRuntimeProperties field in DeltaRuntimePropertiesKvPairs as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaRuntimePropertiesKvPairs) GetDeltaRuntimeProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.DeltaRuntimeProperties.IsNull() || o.DeltaRuntimeProperties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.DeltaRuntimeProperties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeltaRuntimeProperties sets the value of the DeltaRuntimeProperties field in DeltaRuntimePropertiesKvPairs.
+func (o *DeltaRuntimePropertiesKvPairs) SetDeltaRuntimeProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_runtime_properties"]
+	o.DeltaRuntimeProperties = types.MapValueMust(t, vs)
+}
+
 // A dependency of a SQL object. Either the __table__ field or the __function__
 // field must be defined.
 type Dependency struct {
@@ -4270,6 +5660,58 @@ func (o Dependency) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFunction returns the value of the Function field in Dependency as
+// a FunctionDependency value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dependency) GetFunction(ctx context.Context) (FunctionDependency, bool) {
+	var e FunctionDependency
+	if o.Function.IsNull() || o.Function.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionDependency
+	d := o.Function.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFunction sets the value of the Function field in Dependency.
+func (o *Dependency) SetFunction(ctx context.Context, v FunctionDependency) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["function"]
+	o.Function = types.ListValueMust(t, vs)
+}
+
+// GetTable returns the value of the Table field in Dependency as
+// a TableDependency value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dependency) GetTable(ctx context.Context) (TableDependency, bool) {
+	var e TableDependency
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []TableDependency
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in Dependency.
+func (o *Dependency) SetTable(ctx context.Context, v TableDependency) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
+}
+
 // A list of dependencies.
 type DependencyList struct {
 	// Array of dependencies.
@@ -4315,6 +5757,31 @@ func (o DependencyList) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDependencies returns the value of the Dependencies field in DependencyList as
+// a slice of Dependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DependencyList) GetDependencies(ctx context.Context) ([]Dependency, bool) {
+	if o.Dependencies.IsNull() || o.Dependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []Dependency
+	d := o.Dependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependencies sets the value of the Dependencies field in DependencyList.
+func (o *DependencyList) SetDependencies(ctx context.Context, v []Dependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	o.Dependencies = types.ListValueMust(t, vs)
 }
 
 // Disable a system schema
@@ -4445,6 +5912,31 @@ func (o EffectivePermissionsList) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in EffectivePermissionsList as
+// a slice of EffectivePrivilegeAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EffectivePermissionsList) GetPrivilegeAssignments(ctx context.Context) ([]EffectivePrivilegeAssignment, bool) {
+	if o.PrivilegeAssignments.IsNull() || o.PrivilegeAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []EffectivePrivilegeAssignment
+	d := o.PrivilegeAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in EffectivePermissionsList.
+func (o *EffectivePermissionsList) SetPrivilegeAssignments(ctx context.Context, v []EffectivePrivilegeAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
 type EffectivePredictiveOptimizationFlag struct {
@@ -4605,6 +6097,31 @@ func (o EffectivePrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPrivileges returns the value of the Privileges field in EffectivePrivilegeAssignment as
+// a slice of EffectivePrivilege values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EffectivePrivilegeAssignment) GetPrivileges(ctx context.Context) ([]EffectivePrivilege, bool) {
+	if o.Privileges.IsNull() || o.Privileges.IsUnknown() {
+		return nil, false
+	}
+	var v []EffectivePrivilege
+	d := o.Privileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivileges sets the value of the Privileges field in EffectivePrivilegeAssignment.
+func (o *EffectivePrivilegeAssignment) SetPrivileges(ctx context.Context, v []EffectivePrivilege) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	o.Privileges = types.ListValueMust(t, vs)
+}
+
 // Enable a system schema
 type EnableRequest struct {
 	// The metastore ID under which the system schema lives.
@@ -4733,6 +6250,32 @@ func (o EncryptionDetails) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSseEncryptionDetails returns the value of the SseEncryptionDetails field in EncryptionDetails as
+// a SseEncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EncryptionDetails) GetSseEncryptionDetails(ctx context.Context) (SseEncryptionDetails, bool) {
+	var e SseEncryptionDetails
+	if o.SseEncryptionDetails.IsNull() || o.SseEncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []SseEncryptionDetails
+	d := o.SseEncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSseEncryptionDetails sets the value of the SseEncryptionDetails field in EncryptionDetails.
+func (o *EncryptionDetails) SetSseEncryptionDetails(ctx context.Context, v SseEncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sse_encryption_details"]
+	o.SseEncryptionDetails = types.ListValueMust(t, vs)
 }
 
 // Get boolean reflecting if table exists
@@ -4893,6 +6436,32 @@ func (o ExternalLocationInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEncryptionDetails returns the value of the EncryptionDetails field in ExternalLocationInfo as
+// a EncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLocationInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetails, bool) {
+	var e EncryptionDetails
+	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []EncryptionDetails
+	d := o.EncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEncryptionDetails sets the value of the EncryptionDetails field in ExternalLocationInfo.
+func (o *ExternalLocationInfo) SetEncryptionDetails(ctx context.Context, v EncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["encryption_details"]
+	o.EncryptionDetails = types.ListValueMust(t, vs)
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // OFFLINE_FAILED or the ONLINE_PIPELINE_FAILED state.
 type FailedStatus struct {
@@ -5005,6 +6574,56 @@ func (o ForeignKeyConstraint) Type(ctx context.Context) attr.Type {
 			"parent_table": types.StringType,
 		},
 	}
+}
+
+// GetChildColumns returns the value of the ChildColumns field in ForeignKeyConstraint as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForeignKeyConstraint) GetChildColumns(ctx context.Context) ([]types.String, bool) {
+	if o.ChildColumns.IsNull() || o.ChildColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ChildColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChildColumns sets the value of the ChildColumns field in ForeignKeyConstraint.
+func (o *ForeignKeyConstraint) SetChildColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["child_columns"]
+	o.ChildColumns = types.ListValueMust(t, vs)
+}
+
+// GetParentColumns returns the value of the ParentColumns field in ForeignKeyConstraint as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForeignKeyConstraint) GetParentColumns(ctx context.Context) ([]types.String, bool) {
+	if o.ParentColumns.IsNull() || o.ParentColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ParentColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParentColumns sets the value of the ParentColumns field in ForeignKeyConstraint.
+func (o *ForeignKeyConstraint) SetParentColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parent_columns"]
+	o.ParentColumns = types.ListValueMust(t, vs)
 }
 
 // A function that is dependent on a SQL object.
@@ -5226,6 +6845,84 @@ func (o FunctionInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInputParams returns the value of the InputParams field in FunctionInfo as
+// a FunctionParameterInfos value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FunctionInfo) GetInputParams(ctx context.Context) (FunctionParameterInfos, bool) {
+	var e FunctionParameterInfos
+	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionParameterInfos
+	d := o.InputParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInputParams sets the value of the InputParams field in FunctionInfo.
+func (o *FunctionInfo) SetInputParams(ctx context.Context, v FunctionParameterInfos) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_params"]
+	o.InputParams = types.ListValueMust(t, vs)
+}
+
+// GetReturnParams returns the value of the ReturnParams field in FunctionInfo as
+// a FunctionParameterInfos value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FunctionInfo) GetReturnParams(ctx context.Context) (FunctionParameterInfos, bool) {
+	var e FunctionParameterInfos
+	if o.ReturnParams.IsNull() || o.ReturnParams.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionParameterInfos
+	d := o.ReturnParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReturnParams sets the value of the ReturnParams field in FunctionInfo.
+func (o *FunctionInfo) SetReturnParams(ctx context.Context, v FunctionParameterInfos) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["return_params"]
+	o.ReturnParams = types.ListValueMust(t, vs)
+}
+
+// GetRoutineDependencies returns the value of the RoutineDependencies field in FunctionInfo as
+// a DependencyList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FunctionInfo) GetRoutineDependencies(ctx context.Context) (DependencyList, bool) {
+	var e DependencyList
+	if o.RoutineDependencies.IsNull() || o.RoutineDependencies.IsUnknown() {
+		return e, false
+	}
+	var v []DependencyList
+	d := o.RoutineDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRoutineDependencies sets the value of the RoutineDependencies field in FunctionInfo.
+func (o *FunctionInfo) SetRoutineDependencies(ctx context.Context, v DependencyList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routine_dependencies"]
+	o.RoutineDependencies = types.ListValueMust(t, vs)
+}
+
 type FunctionParameterInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -5357,6 +7054,31 @@ func (o FunctionParameterInfos) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in FunctionParameterInfos as
+// a slice of FunctionParameterInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FunctionParameterInfos) GetParameters(ctx context.Context) ([]FunctionParameterInfo, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []FunctionParameterInfo
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in FunctionParameterInfos.
+func (o *FunctionParameterInfos) SetParameters(ctx context.Context, v []FunctionParameterInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 // GCP temporary credentials for API authentication. Read more at
@@ -5502,6 +7224,31 @@ func (o GenerateTemporaryServiceCredentialAzureOptions) Type(ctx context.Context
 	}
 }
 
+// GetResources returns the value of the Resources field in GenerateTemporaryServiceCredentialAzureOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryServiceCredentialAzureOptions) GetResources(ctx context.Context) ([]types.String, bool) {
+	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in GenerateTemporaryServiceCredentialAzureOptions.
+func (o *GenerateTemporaryServiceCredentialAzureOptions) SetResources(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	o.Resources = types.ListValueMust(t, vs)
+}
+
 type GenerateTemporaryServiceCredentialRequest struct {
 	// Options to customize the requested temporary credential
 	AzureOptions types.List `tfsdk:"azure_options" tf:"optional,object"`
@@ -5551,6 +7298,32 @@ func (o GenerateTemporaryServiceCredentialRequest) Type(ctx context.Context) att
 			"credential_name": types.StringType,
 		},
 	}
+}
+
+// GetAzureOptions returns the value of the AzureOptions field in GenerateTemporaryServiceCredentialRequest as
+// a GenerateTemporaryServiceCredentialAzureOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryServiceCredentialRequest) GetAzureOptions(ctx context.Context) (GenerateTemporaryServiceCredentialAzureOptions, bool) {
+	var e GenerateTemporaryServiceCredentialAzureOptions
+	if o.AzureOptions.IsNull() || o.AzureOptions.IsUnknown() {
+		return e, false
+	}
+	var v []GenerateTemporaryServiceCredentialAzureOptions
+	d := o.AzureOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureOptions sets the value of the AzureOptions field in GenerateTemporaryServiceCredentialRequest.
+func (o *GenerateTemporaryServiceCredentialRequest) SetAzureOptions(ctx context.Context, v GenerateTemporaryServiceCredentialAzureOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_options"]
+	o.AzureOptions = types.ListValueMust(t, vs)
 }
 
 type GenerateTemporaryTableCredentialRequest struct {
@@ -5688,6 +7461,136 @@ func (o GenerateTemporaryTableCredentialResponse) Type(ctx context.Context) attr
 			"url": types.StringType,
 		},
 	}
+}
+
+// GetAwsTempCredentials returns the value of the AwsTempCredentials field in GenerateTemporaryTableCredentialResponse as
+// a AwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryTableCredentialResponse) GetAwsTempCredentials(ctx context.Context) (AwsCredentials, bool) {
+	var e AwsCredentials
+	if o.AwsTempCredentials.IsNull() || o.AwsTempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []AwsCredentials
+	d := o.AwsTempCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsTempCredentials sets the value of the AwsTempCredentials field in GenerateTemporaryTableCredentialResponse.
+func (o *GenerateTemporaryTableCredentialResponse) SetAwsTempCredentials(ctx context.Context, v AwsCredentials) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_temp_credentials"]
+	o.AwsTempCredentials = types.ListValueMust(t, vs)
+}
+
+// GetAzureAad returns the value of the AzureAad field in GenerateTemporaryTableCredentialResponse as
+// a AzureActiveDirectoryToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryTableCredentialResponse) GetAzureAad(ctx context.Context) (AzureActiveDirectoryToken, bool) {
+	var e AzureActiveDirectoryToken
+	if o.AzureAad.IsNull() || o.AzureAad.IsUnknown() {
+		return e, false
+	}
+	var v []AzureActiveDirectoryToken
+	d := o.AzureAad.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAad sets the value of the AzureAad field in GenerateTemporaryTableCredentialResponse.
+func (o *GenerateTemporaryTableCredentialResponse) SetAzureAad(ctx context.Context, v AzureActiveDirectoryToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_aad"]
+	o.AzureAad = types.ListValueMust(t, vs)
+}
+
+// GetAzureUserDelegationSas returns the value of the AzureUserDelegationSas field in GenerateTemporaryTableCredentialResponse as
+// a AzureUserDelegationSas value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryTableCredentialResponse) GetAzureUserDelegationSas(ctx context.Context) (AzureUserDelegationSas, bool) {
+	var e AzureUserDelegationSas
+	if o.AzureUserDelegationSas.IsNull() || o.AzureUserDelegationSas.IsUnknown() {
+		return e, false
+	}
+	var v []AzureUserDelegationSas
+	d := o.AzureUserDelegationSas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureUserDelegationSas sets the value of the AzureUserDelegationSas field in GenerateTemporaryTableCredentialResponse.
+func (o *GenerateTemporaryTableCredentialResponse) SetAzureUserDelegationSas(ctx context.Context, v AzureUserDelegationSas) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_user_delegation_sas"]
+	o.AzureUserDelegationSas = types.ListValueMust(t, vs)
+}
+
+// GetGcpOauthToken returns the value of the GcpOauthToken field in GenerateTemporaryTableCredentialResponse as
+// a GcpOauthToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryTableCredentialResponse) GetGcpOauthToken(ctx context.Context) (GcpOauthToken, bool) {
+	var e GcpOauthToken
+	if o.GcpOauthToken.IsNull() || o.GcpOauthToken.IsUnknown() {
+		return e, false
+	}
+	var v []GcpOauthToken
+	d := o.GcpOauthToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpOauthToken sets the value of the GcpOauthToken field in GenerateTemporaryTableCredentialResponse.
+func (o *GenerateTemporaryTableCredentialResponse) SetGcpOauthToken(ctx context.Context, v GcpOauthToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_oauth_token"]
+	o.GcpOauthToken = types.ListValueMust(t, vs)
+}
+
+// GetR2TempCredentials returns the value of the R2TempCredentials field in GenerateTemporaryTableCredentialResponse as
+// a R2Credentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryTableCredentialResponse) GetR2TempCredentials(ctx context.Context) (R2Credentials, bool) {
+	var e R2Credentials
+	if o.R2TempCredentials.IsNull() || o.R2TempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []R2Credentials
+	d := o.R2TempCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetR2TempCredentials sets the value of the R2TempCredentials field in GenerateTemporaryTableCredentialResponse.
+func (o *GenerateTemporaryTableCredentialResponse) SetR2TempCredentials(ctx context.Context, v R2Credentials) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["r2_temp_credentials"]
+	o.R2TempCredentials = types.ListValueMust(t, vs)
 }
 
 // Gets the metastore assignment for a workspace
@@ -6716,6 +8619,32 @@ func (o GetQuotaResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetQuotaInfo returns the value of the QuotaInfo field in GetQuotaResponse as
+// a QuotaInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetQuotaResponse) GetQuotaInfo(ctx context.Context) (QuotaInfo, bool) {
+	var e QuotaInfo
+	if o.QuotaInfo.IsNull() || o.QuotaInfo.IsUnknown() {
+		return e, false
+	}
+	var v []QuotaInfo
+	d := o.QuotaInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuotaInfo sets the value of the QuotaInfo field in GetQuotaResponse.
+func (o *GetQuotaResponse) SetQuotaInfo(ctx context.Context, v QuotaInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["quota_info"]
+	o.QuotaInfo = types.ListValueMust(t, vs)
+}
+
 // Get refresh
 type GetRefreshRequest struct {
 	// ID of the refresh.
@@ -7094,6 +9023,31 @@ func (o ListAccountMetastoreAssignmentsResponse) Type(ctx context.Context) attr.
 	}
 }
 
+// GetWorkspaceIds returns the value of the WorkspaceIds field in ListAccountMetastoreAssignmentsResponse as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAccountMetastoreAssignmentsResponse) GetWorkspaceIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.WorkspaceIds.IsNull() || o.WorkspaceIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.WorkspaceIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkspaceIds sets the value of the WorkspaceIds field in ListAccountMetastoreAssignmentsResponse.
+func (o *ListAccountMetastoreAssignmentsResponse) SetWorkspaceIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids"]
+	o.WorkspaceIds = types.ListValueMust(t, vs)
+}
+
 // Get all storage credentials assigned to a metastore
 type ListAccountStorageCredentialsRequest struct {
 	// Unity Catalog metastore ID
@@ -7181,6 +9135,31 @@ func (o ListAccountStorageCredentialsResponse) Type(ctx context.Context) attr.Ty
 			},
 		},
 	}
+}
+
+// GetStorageCredentials returns the value of the StorageCredentials field in ListAccountStorageCredentialsResponse as
+// a slice of StorageCredentialInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAccountStorageCredentialsResponse) GetStorageCredentials(ctx context.Context) ([]StorageCredentialInfo, bool) {
+	if o.StorageCredentials.IsNull() || o.StorageCredentials.IsUnknown() {
+		return nil, false
+	}
+	var v []StorageCredentialInfo
+	d := o.StorageCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStorageCredentials sets the value of the StorageCredentials field in ListAccountStorageCredentialsResponse.
+func (o *ListAccountStorageCredentialsResponse) SetStorageCredentials(ctx context.Context, v []StorageCredentialInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["storage_credentials"]
+	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
 // List catalogs
@@ -7295,6 +9274,31 @@ func (o ListCatalogsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCatalogs returns the value of the Catalogs field in ListCatalogsResponse as
+// a slice of CatalogInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCatalogsResponse) GetCatalogs(ctx context.Context) ([]CatalogInfo, bool) {
+	if o.Catalogs.IsNull() || o.Catalogs.IsUnknown() {
+		return nil, false
+	}
+	var v []CatalogInfo
+	d := o.Catalogs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCatalogs sets the value of the Catalogs field in ListCatalogsResponse.
+func (o *ListCatalogsResponse) SetCatalogs(ctx context.Context, v []CatalogInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["catalogs"]
+	o.Catalogs = types.ListValueMust(t, vs)
+}
+
 // List connections
 type ListConnectionsRequest struct {
 	// Maximum number of connections to return. - If not set, all connections
@@ -7397,6 +9401,31 @@ func (o ListConnectionsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetConnections returns the value of the Connections field in ListConnectionsResponse as
+// a slice of ConnectionInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListConnectionsResponse) GetConnections(ctx context.Context) ([]ConnectionInfo, bool) {
+	if o.Connections.IsNull() || o.Connections.IsUnknown() {
+		return nil, false
+	}
+	var v []ConnectionInfo
+	d := o.Connections.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConnections sets the value of the Connections field in ListConnectionsResponse.
+func (o *ListConnectionsResponse) SetConnections(ctx context.Context, v []ConnectionInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["connections"]
+	o.Connections = types.ListValueMust(t, vs)
 }
 
 // List credentials
@@ -7503,6 +9532,31 @@ func (o ListCredentialsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetCredentials returns the value of the Credentials field in ListCredentialsResponse as
+// a slice of CredentialInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCredentialsResponse) GetCredentials(ctx context.Context) ([]CredentialInfo, bool) {
+	if o.Credentials.IsNull() || o.Credentials.IsUnknown() {
+		return nil, false
+	}
+	var v []CredentialInfo
+	d := o.Credentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCredentials sets the value of the Credentials field in ListCredentialsResponse.
+func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []CredentialInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credentials"]
+	o.Credentials = types.ListValueMust(t, vs)
 }
 
 // List external locations
@@ -7612,6 +9666,31 @@ func (o ListExternalLocationsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetExternalLocations returns the value of the ExternalLocations field in ListExternalLocationsResponse as
+// a slice of ExternalLocationInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExternalLocationsResponse) GetExternalLocations(ctx context.Context) ([]ExternalLocationInfo, bool) {
+	if o.ExternalLocations.IsNull() || o.ExternalLocations.IsUnknown() {
+		return nil, false
+	}
+	var v []ExternalLocationInfo
+	d := o.ExternalLocations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExternalLocations sets the value of the ExternalLocations field in ListExternalLocationsResponse.
+func (o *ListExternalLocationsResponse) SetExternalLocations(ctx context.Context, v []ExternalLocationInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_locations"]
+	o.ExternalLocations = types.ListValueMust(t, vs)
 }
 
 // List functions
@@ -7731,6 +9810,31 @@ func (o ListFunctionsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFunctions returns the value of the Functions field in ListFunctionsResponse as
+// a slice of FunctionInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFunctionsResponse) GetFunctions(ctx context.Context) ([]FunctionInfo, bool) {
+	if o.Functions.IsNull() || o.Functions.IsUnknown() {
+		return nil, false
+	}
+	var v []FunctionInfo
+	d := o.Functions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFunctions sets the value of the Functions field in ListFunctionsResponse.
+func (o *ListFunctionsResponse) SetFunctions(ctx context.Context, v []FunctionInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["functions"]
+	o.Functions = types.ListValueMust(t, vs)
+}
+
 type ListMetastoresResponse struct {
 	// An array of metastore information objects.
 	Metastores types.List `tfsdk:"metastores" tf:"optional"`
@@ -7775,6 +9879,31 @@ func (o ListMetastoresResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetastores returns the value of the Metastores field in ListMetastoresResponse as
+// a slice of MetastoreInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListMetastoresResponse) GetMetastores(ctx context.Context) ([]MetastoreInfo, bool) {
+	if o.Metastores.IsNull() || o.Metastores.IsUnknown() {
+		return nil, false
+	}
+	var v []MetastoreInfo
+	d := o.Metastores.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetastores sets the value of the Metastores field in ListMetastoresResponse.
+func (o *ListMetastoresResponse) SetMetastores(ctx context.Context, v []MetastoreInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastores"]
+	o.Metastores = types.ListValueMust(t, vs)
 }
 
 // List Model Versions
@@ -7891,6 +10020,31 @@ func (o ListModelVersionsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetModelVersions returns the value of the ModelVersions field in ListModelVersionsResponse as
+// a slice of ModelVersionInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListModelVersionsResponse) GetModelVersions(ctx context.Context) ([]ModelVersionInfo, bool) {
+	if o.ModelVersions.IsNull() || o.ModelVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersionInfo
+	d := o.ModelVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelVersions sets the value of the ModelVersions field in ListModelVersionsResponse.
+func (o *ListModelVersionsResponse) SetModelVersions(ctx context.Context, v []ModelVersionInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	o.ModelVersions = types.ListValueMust(t, vs)
+}
+
 // List all resource quotas under a metastore.
 type ListQuotasRequest struct {
 	// The number of quotas to return.
@@ -7988,6 +10142,31 @@ func (o ListQuotasResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQuotas returns the value of the Quotas field in ListQuotasResponse as
+// a slice of QuotaInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQuotasResponse) GetQuotas(ctx context.Context) ([]QuotaInfo, bool) {
+	if o.Quotas.IsNull() || o.Quotas.IsUnknown() {
+		return nil, false
+	}
+	var v []QuotaInfo
+	d := o.Quotas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetQuotas sets the value of the Quotas field in ListQuotasResponse.
+func (o *ListQuotasResponse) SetQuotas(ctx context.Context, v []QuotaInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["quotas"]
+	o.Quotas = types.ListValueMust(t, vs)
 }
 
 // List refreshes
@@ -8162,6 +10341,31 @@ func (o ListRegisteredModelsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRegisteredModels returns the value of the RegisteredModels field in ListRegisteredModelsResponse as
+// a slice of RegisteredModelInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListRegisteredModelsResponse) GetRegisteredModels(ctx context.Context) ([]RegisteredModelInfo, bool) {
+	if o.RegisteredModels.IsNull() || o.RegisteredModels.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelInfo
+	d := o.RegisteredModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRegisteredModels sets the value of the RegisteredModels field in ListRegisteredModelsResponse.
+func (o *ListRegisteredModelsResponse) SetRegisteredModels(ctx context.Context, v []RegisteredModelInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	o.RegisteredModels = types.ListValueMust(t, vs)
+}
+
 // List schemas
 type ListSchemasRequest struct {
 	// Parent catalog for schemas of interest.
@@ -8275,6 +10479,31 @@ func (o ListSchemasResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSchemas returns the value of the Schemas field in ListSchemasResponse as
+// a slice of SchemaInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSchemasResponse) GetSchemas(ctx context.Context) ([]SchemaInfo, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []SchemaInfo
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ListSchemasResponse.
+func (o *ListSchemasResponse) SetSchemas(ctx context.Context, v []SchemaInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
+}
+
 // List credentials
 type ListStorageCredentialsRequest struct {
 	// Maximum number of storage credentials to return. If not set, all the
@@ -8377,6 +10606,31 @@ func (o ListStorageCredentialsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStorageCredentials returns the value of the StorageCredentials field in ListStorageCredentialsResponse as
+// a slice of StorageCredentialInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListStorageCredentialsResponse) GetStorageCredentials(ctx context.Context) ([]StorageCredentialInfo, bool) {
+	if o.StorageCredentials.IsNull() || o.StorageCredentials.IsUnknown() {
+		return nil, false
+	}
+	var v []StorageCredentialInfo
+	d := o.StorageCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStorageCredentials sets the value of the StorageCredentials field in ListStorageCredentialsResponse.
+func (o *ListStorageCredentialsResponse) SetStorageCredentials(ctx context.Context, v []StorageCredentialInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["storage_credentials"]
+	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
 // List table summaries
@@ -8558,6 +10812,31 @@ func (o ListSystemSchemasResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSchemas returns the value of the Schemas field in ListSystemSchemasResponse as
+// a slice of SystemSchemaInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSystemSchemasResponse) GetSchemas(ctx context.Context) ([]SystemSchemaInfo, bool) {
+	if o.Schemas.IsNull() || o.Schemas.IsUnknown() {
+		return nil, false
+	}
+	var v []SystemSchemaInfo
+	d := o.Schemas.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchemas sets the value of the Schemas field in ListSystemSchemasResponse.
+func (o *ListSystemSchemasResponse) SetSchemas(ctx context.Context, v []SystemSchemaInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	o.Schemas = types.ListValueMust(t, vs)
+}
+
 type ListTableSummariesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -8608,6 +10887,31 @@ func (o ListTableSummariesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTables returns the value of the Tables field in ListTableSummariesResponse as
+// a slice of TableSummary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListTableSummariesResponse) GetTables(ctx context.Context) ([]TableSummary, bool) {
+	if o.Tables.IsNull() || o.Tables.IsUnknown() {
+		return nil, false
+	}
+	var v []TableSummary
+	d := o.Tables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTables sets the value of the Tables field in ListTableSummariesResponse.
+func (o *ListTableSummariesResponse) SetTables(ctx context.Context, v []TableSummary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	o.Tables = types.ListValueMust(t, vs)
 }
 
 // List tables
@@ -8748,6 +11052,31 @@ func (o ListTablesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTables returns the value of the Tables field in ListTablesResponse as
+// a slice of TableInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListTablesResponse) GetTables(ctx context.Context) ([]TableInfo, bool) {
+	if o.Tables.IsNull() || o.Tables.IsUnknown() {
+		return nil, false
+	}
+	var v []TableInfo
+	d := o.Tables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTables sets the value of the Tables field in ListTablesResponse.
+func (o *ListTablesResponse) SetTables(ctx context.Context, v []TableInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	o.Tables = types.ListValueMust(t, vs)
+}
+
 // List Volumes
 type ListVolumesRequest struct {
 	// The identifier of the catalog
@@ -8870,6 +11199,31 @@ func (o ListVolumesResponseContent) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetVolumes returns the value of the Volumes field in ListVolumesResponseContent as
+// a slice of VolumeInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListVolumesResponseContent) GetVolumes(ctx context.Context) ([]VolumeInfo, bool) {
+	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
+		return nil, false
+	}
+	var v []VolumeInfo
+	d := o.Volumes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVolumes sets the value of the Volumes field in ListVolumesResponseContent.
+func (o *ListVolumesResponseContent) SetVolumes(ctx context.Context, v []VolumeInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
+	o.Volumes = types.ListValueMust(t, vs)
 }
 
 type MetastoreAssignment struct {
@@ -9173,6 +11527,57 @@ func (o ModelVersionInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAliases returns the value of the Aliases field in ModelVersionInfo as
+// a slice of RegisteredModelAlias values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersionInfo) GetAliases(ctx context.Context) ([]RegisteredModelAlias, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelAlias
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in ModelVersionInfo.
+func (o *ModelVersionInfo) SetAliases(ctx context.Context, v []RegisteredModelAlias) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	o.Aliases = types.ListValueMust(t, vs)
+}
+
+// GetModelVersionDependencies returns the value of the ModelVersionDependencies field in ModelVersionInfo as
+// a DependencyList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersionInfo) GetModelVersionDependencies(ctx context.Context) (DependencyList, bool) {
+	var e DependencyList
+	if o.ModelVersionDependencies.IsNull() || o.ModelVersionDependencies.IsUnknown() {
+		return e, false
+	}
+	var v []DependencyList
+	d := o.ModelVersionDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersionDependencies sets the value of the ModelVersionDependencies field in ModelVersionInfo.
+func (o *ModelVersionInfo) SetModelVersionDependencies(ctx context.Context, v DependencyList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_version_dependencies"]
+	o.ModelVersionDependencies = types.ListValueMust(t, vs)
+}
+
 type MonitorCronSchedule struct {
 	// Read only field that indicates whether a schedule is paused or not.
 	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
@@ -9315,6 +11720,31 @@ func (o MonitorDestination) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEmailAddresses returns the value of the EmailAddresses field in MonitorDestination as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorDestination) GetEmailAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.EmailAddresses.IsNull() || o.EmailAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.EmailAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmailAddresses sets the value of the EmailAddresses field in MonitorDestination.
+func (o *MonitorDestination) SetEmailAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_addresses"]
+	o.EmailAddresses = types.ListValueMust(t, vs)
+}
+
 type MonitorInferenceLog struct {
 	// Granularities for aggregating data into time windows based on their
 	// timestamp. Currently the following static granularities are supported:
@@ -9397,6 +11827,31 @@ func (o MonitorInferenceLog) Type(ctx context.Context) attr.Type {
 			"timestamp_col":        types.StringType,
 		},
 	}
+}
+
+// GetGranularities returns the value of the Granularities field in MonitorInferenceLog as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInferenceLog) GetGranularities(ctx context.Context) ([]types.String, bool) {
+	if o.Granularities.IsNull() || o.Granularities.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Granularities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGranularities sets the value of the Granularities field in MonitorInferenceLog.
+func (o *MonitorInferenceLog) SetGranularities(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["granularities"]
+	o.Granularities = types.ListValueMust(t, vs)
 }
 
 type MonitorInfo struct {
@@ -9547,6 +12002,212 @@ func (o MonitorInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCustomMetrics returns the value of the CustomMetrics field in MonitorInfo as
+// a slice of MonitorMetric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetCustomMetrics(ctx context.Context) ([]MonitorMetric, bool) {
+	if o.CustomMetrics.IsNull() || o.CustomMetrics.IsUnknown() {
+		return nil, false
+	}
+	var v []MonitorMetric
+	d := o.CustomMetrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomMetrics sets the value of the CustomMetrics field in MonitorInfo.
+func (o *MonitorInfo) SetCustomMetrics(ctx context.Context, v []MonitorMetric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	o.CustomMetrics = types.ListValueMust(t, vs)
+}
+
+// GetDataClassificationConfig returns the value of the DataClassificationConfig field in MonitorInfo as
+// a MonitorDataClassificationConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetDataClassificationConfig(ctx context.Context) (MonitorDataClassificationConfig, bool) {
+	var e MonitorDataClassificationConfig
+	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorDataClassificationConfig
+	d := o.DataClassificationConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataClassificationConfig sets the value of the DataClassificationConfig field in MonitorInfo.
+func (o *MonitorInfo) SetDataClassificationConfig(ctx context.Context, v MonitorDataClassificationConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_classification_config"]
+	o.DataClassificationConfig = types.ListValueMust(t, vs)
+}
+
+// GetInferenceLog returns the value of the InferenceLog field in MonitorInfo as
+// a MonitorInferenceLog value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetInferenceLog(ctx context.Context) (MonitorInferenceLog, bool) {
+	var e MonitorInferenceLog
+	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorInferenceLog
+	d := o.InferenceLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceLog sets the value of the InferenceLog field in MonitorInfo.
+func (o *MonitorInfo) SetInferenceLog(ctx context.Context, v MonitorInferenceLog) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_log"]
+	o.InferenceLog = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in MonitorInfo as
+// a MonitorNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetNotifications(ctx context.Context) (MonitorNotifications, bool) {
+	var e MonitorNotifications
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorNotifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotifications sets the value of the Notifications field in MonitorInfo.
+func (o *MonitorInfo) SetNotifications(ctx context.Context, v MonitorNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in MonitorInfo as
+// a MonitorCronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetSchedule(ctx context.Context) (MonitorCronSchedule, bool) {
+	var e MonitorCronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorCronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in MonitorInfo.
+func (o *MonitorInfo) SetSchedule(ctx context.Context, v MonitorCronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetSlicingExprs returns the value of the SlicingExprs field in MonitorInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetSlicingExprs(ctx context.Context) ([]types.String, bool) {
+	if o.SlicingExprs.IsNull() || o.SlicingExprs.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SlicingExprs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSlicingExprs sets the value of the SlicingExprs field in MonitorInfo.
+func (o *MonitorInfo) SetSlicingExprs(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	o.SlicingExprs = types.ListValueMust(t, vs)
+}
+
+// GetSnapshot returns the value of the Snapshot field in MonitorInfo as
+// a MonitorSnapshot value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool) {
+	var e MonitorSnapshot
+	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorSnapshot
+	d := o.Snapshot.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSnapshot sets the value of the Snapshot field in MonitorInfo.
+func (o *MonitorInfo) SetSnapshot(ctx context.Context, v MonitorSnapshot) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["snapshot"]
+	o.Snapshot = types.ListValueMust(t, vs)
+}
+
+// GetTimeSeries returns the value of the TimeSeries field in MonitorInfo as
+// a MonitorTimeSeries value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorInfo) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, bool) {
+	var e MonitorTimeSeries
+	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorTimeSeries
+	d := o.TimeSeries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTimeSeries sets the value of the TimeSeries field in MonitorInfo.
+func (o *MonitorInfo) SetTimeSeries(ctx context.Context, v MonitorTimeSeries) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["time_series"]
+	o.TimeSeries = types.ListValueMust(t, vs)
+}
+
 type MonitorMetric struct {
 	// Jinja template for a SQL expression that specifies how to compute the
 	// metric. See [create metric definition].
@@ -9623,6 +12284,31 @@ func (o MonitorMetric) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInputColumns returns the value of the InputColumns field in MonitorMetric as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorMetric) GetInputColumns(ctx context.Context) ([]types.String, bool) {
+	if o.InputColumns.IsNull() || o.InputColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InputColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInputColumns sets the value of the InputColumns field in MonitorMetric.
+func (o *MonitorMetric) SetInputColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_columns"]
+	o.InputColumns = types.ListValueMust(t, vs)
+}
+
 type MonitorNotifications struct {
 	// Who to send notifications to on monitor failure.
 	OnFailure types.List `tfsdk:"on_failure" tf:"optional,object"`
@@ -9675,6 +12361,58 @@ func (o MonitorNotifications) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetOnFailure returns the value of the OnFailure field in MonitorNotifications as
+// a MonitorDestination value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorNotifications) GetOnFailure(ctx context.Context) (MonitorDestination, bool) {
+	var e MonitorDestination
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorDestination
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnFailure sets the value of the OnFailure field in MonitorNotifications.
+func (o *MonitorNotifications) SetOnFailure(ctx context.Context, v MonitorDestination) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnNewClassificationTagDetected returns the value of the OnNewClassificationTagDetected field in MonitorNotifications as
+// a MonitorDestination value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorNotifications) GetOnNewClassificationTagDetected(ctx context.Context) (MonitorDestination, bool) {
+	var e MonitorDestination
+	if o.OnNewClassificationTagDetected.IsNull() || o.OnNewClassificationTagDetected.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorDestination
+	d := o.OnNewClassificationTagDetected.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOnNewClassificationTagDetected sets the value of the OnNewClassificationTagDetected field in MonitorNotifications.
+func (o *MonitorNotifications) SetOnNewClassificationTagDetected(ctx context.Context, v MonitorDestination) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_new_classification_tag_detected"]
+	o.OnNewClassificationTagDetected = types.ListValueMust(t, vs)
 }
 
 type MonitorRefreshInfo struct {
@@ -9788,6 +12526,31 @@ func (o MonitorRefreshListResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRefreshes returns the value of the Refreshes field in MonitorRefreshListResponse as
+// a slice of MonitorRefreshInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorRefreshListResponse) GetRefreshes(ctx context.Context) ([]MonitorRefreshInfo, bool) {
+	if o.Refreshes.IsNull() || o.Refreshes.IsUnknown() {
+		return nil, false
+	}
+	var v []MonitorRefreshInfo
+	d := o.Refreshes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshes sets the value of the Refreshes field in MonitorRefreshListResponse.
+func (o *MonitorRefreshListResponse) SetRefreshes(ctx context.Context, v []MonitorRefreshInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refreshes"]
+	o.Refreshes = types.ListValueMust(t, vs)
+}
+
 type MonitorSnapshot struct {
 }
 
@@ -9880,6 +12643,31 @@ func (o MonitorTimeSeries) Type(ctx context.Context) attr.Type {
 			"timestamp_col": types.StringType,
 		},
 	}
+}
+
+// GetGranularities returns the value of the Granularities field in MonitorTimeSeries as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MonitorTimeSeries) GetGranularities(ctx context.Context) ([]types.String, bool) {
+	if o.Granularities.IsNull() || o.Granularities.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Granularities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGranularities sets the value of the Granularities field in MonitorTimeSeries.
+func (o *MonitorTimeSeries) SetGranularities(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["granularities"]
+	o.Granularities = types.ListValueMust(t, vs)
 }
 
 type NamedTableConstraint struct {
@@ -9993,6 +12781,58 @@ func (o OnlineTable) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSpec returns the value of the Spec field in OnlineTable as
+// a OnlineTableSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTable) GetSpec(ctx context.Context) (OnlineTableSpec, bool) {
+	var e OnlineTableSpec
+	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineTableSpec
+	d := o.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in OnlineTable.
+func (o *OnlineTable) SetSpec(ctx context.Context, v OnlineTableSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	o.Spec = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in OnlineTable as
+// a OnlineTableStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTable) GetStatus(ctx context.Context) (OnlineTableStatus, bool) {
+	var e OnlineTableStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineTableStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in OnlineTable.
+func (o *OnlineTable) SetStatus(ctx context.Context, v OnlineTableStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
 // Specification of an online table.
 type OnlineTableSpec struct {
 	// Whether to create a full-copy pipeline -- a pipeline that stops after
@@ -10077,6 +12917,83 @@ func (o OnlineTableSpec) Type(ctx context.Context) attr.Type {
 			"timeseries_key":         types.StringType,
 		},
 	}
+}
+
+// GetPrimaryKeyColumns returns the value of the PrimaryKeyColumns field in OnlineTableSpec as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableSpec) GetPrimaryKeyColumns(ctx context.Context) ([]types.String, bool) {
+	if o.PrimaryKeyColumns.IsNull() || o.PrimaryKeyColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PrimaryKeyColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrimaryKeyColumns sets the value of the PrimaryKeyColumns field in OnlineTableSpec.
+func (o *OnlineTableSpec) SetPrimaryKeyColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_key_columns"]
+	o.PrimaryKeyColumns = types.ListValueMust(t, vs)
+}
+
+// GetRunContinuously returns the value of the RunContinuously field in OnlineTableSpec as
+// a OnlineTableSpecContinuousSchedulingPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableSpec) GetRunContinuously(ctx context.Context) (OnlineTableSpecContinuousSchedulingPolicy, bool) {
+	var e OnlineTableSpecContinuousSchedulingPolicy
+	if o.RunContinuously.IsNull() || o.RunContinuously.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineTableSpecContinuousSchedulingPolicy
+	d := o.RunContinuously.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunContinuously sets the value of the RunContinuously field in OnlineTableSpec.
+func (o *OnlineTableSpec) SetRunContinuously(ctx context.Context, v OnlineTableSpecContinuousSchedulingPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_continuously"]
+	o.RunContinuously = types.ListValueMust(t, vs)
+}
+
+// GetRunTriggered returns the value of the RunTriggered field in OnlineTableSpec as
+// a OnlineTableSpecTriggeredSchedulingPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableSpec) GetRunTriggered(ctx context.Context) (OnlineTableSpecTriggeredSchedulingPolicy, bool) {
+	var e OnlineTableSpecTriggeredSchedulingPolicy
+	if o.RunTriggered.IsNull() || o.RunTriggered.IsUnknown() {
+		return e, false
+	}
+	var v []OnlineTableSpecTriggeredSchedulingPolicy
+	d := o.RunTriggered.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunTriggered sets the value of the RunTriggered field in OnlineTableSpec.
+func (o *OnlineTableSpec) SetRunTriggered(ctx context.Context, v OnlineTableSpecTriggeredSchedulingPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_triggered"]
+	o.RunTriggered = types.ListValueMust(t, vs)
 }
 
 type OnlineTableSpecContinuousSchedulingPolicy struct {
@@ -10232,6 +13149,110 @@ func (o OnlineTableStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetContinuousUpdateStatus returns the value of the ContinuousUpdateStatus field in OnlineTableStatus as
+// a ContinuousUpdateStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableStatus) GetContinuousUpdateStatus(ctx context.Context) (ContinuousUpdateStatus, bool) {
+	var e ContinuousUpdateStatus
+	if o.ContinuousUpdateStatus.IsNull() || o.ContinuousUpdateStatus.IsUnknown() {
+		return e, false
+	}
+	var v []ContinuousUpdateStatus
+	d := o.ContinuousUpdateStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuousUpdateStatus sets the value of the ContinuousUpdateStatus field in OnlineTableStatus.
+func (o *OnlineTableStatus) SetContinuousUpdateStatus(ctx context.Context, v ContinuousUpdateStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous_update_status"]
+	o.ContinuousUpdateStatus = types.ListValueMust(t, vs)
+}
+
+// GetFailedStatus returns the value of the FailedStatus field in OnlineTableStatus as
+// a FailedStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableStatus) GetFailedStatus(ctx context.Context) (FailedStatus, bool) {
+	var e FailedStatus
+	if o.FailedStatus.IsNull() || o.FailedStatus.IsUnknown() {
+		return e, false
+	}
+	var v []FailedStatus
+	d := o.FailedStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFailedStatus sets the value of the FailedStatus field in OnlineTableStatus.
+func (o *OnlineTableStatus) SetFailedStatus(ctx context.Context, v FailedStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failed_status"]
+	o.FailedStatus = types.ListValueMust(t, vs)
+}
+
+// GetProvisioningStatus returns the value of the ProvisioningStatus field in OnlineTableStatus as
+// a ProvisioningStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableStatus) GetProvisioningStatus(ctx context.Context) (ProvisioningStatus, bool) {
+	var e ProvisioningStatus
+	if o.ProvisioningStatus.IsNull() || o.ProvisioningStatus.IsUnknown() {
+		return e, false
+	}
+	var v []ProvisioningStatus
+	d := o.ProvisioningStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvisioningStatus sets the value of the ProvisioningStatus field in OnlineTableStatus.
+func (o *OnlineTableStatus) SetProvisioningStatus(ctx context.Context, v ProvisioningStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provisioning_status"]
+	o.ProvisioningStatus = types.ListValueMust(t, vs)
+}
+
+// GetTriggeredUpdateStatus returns the value of the TriggeredUpdateStatus field in OnlineTableStatus as
+// a TriggeredUpdateStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OnlineTableStatus) GetTriggeredUpdateStatus(ctx context.Context) (TriggeredUpdateStatus, bool) {
+	var e TriggeredUpdateStatus
+	if o.TriggeredUpdateStatus.IsNull() || o.TriggeredUpdateStatus.IsUnknown() {
+		return e, false
+	}
+	var v []TriggeredUpdateStatus
+	d := o.TriggeredUpdateStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggeredUpdateStatus sets the value of the TriggeredUpdateStatus field in OnlineTableStatus.
+func (o *OnlineTableStatus) SetTriggeredUpdateStatus(ctx context.Context, v TriggeredUpdateStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["triggered_update_status"]
+	o.TriggeredUpdateStatus = types.ListValueMust(t, vs)
+}
+
 type PermissionsChange struct {
 	// The set of privileges to add.
 	Add types.List `tfsdk:"add" tf:"optional"`
@@ -10289,6 +13310,56 @@ func (o PermissionsChange) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAdd returns the value of the Add field in PermissionsChange as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionsChange) GetAdd(ctx context.Context) ([]types.String, bool) {
+	if o.Add.IsNull() || o.Add.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Add.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAdd sets the value of the Add field in PermissionsChange.
+func (o *PermissionsChange) SetAdd(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add"]
+	o.Add = types.ListValueMust(t, vs)
+}
+
+// GetRemove returns the value of the Remove field in PermissionsChange as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionsChange) GetRemove(ctx context.Context) ([]types.String, bool) {
+	if o.Remove.IsNull() || o.Remove.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Remove.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRemove sets the value of the Remove field in PermissionsChange.
+func (o *PermissionsChange) SetRemove(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remove"]
+	o.Remove = types.ListValueMust(t, vs)
+}
+
 type PermissionsList struct {
 	// The privileges assigned to each principal
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments" tf:"optional"`
@@ -10333,6 +13404,31 @@ func (o PermissionsList) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in PermissionsList as
+// a slice of PrivilegeAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PermissionsList) GetPrivilegeAssignments(ctx context.Context) ([]PrivilegeAssignment, bool) {
+	if o.PrivilegeAssignments.IsNull() || o.PrivilegeAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []PrivilegeAssignment
+	d := o.PrivilegeAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in PermissionsList.
+func (o *PermissionsList) SetPrivilegeAssignments(ctx context.Context, v []PrivilegeAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
 // Progress information of the Online Table data synchronization pipeline.
@@ -10446,6 +13542,31 @@ func (o PrimaryKeyConstraint) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChildColumns returns the value of the ChildColumns field in PrimaryKeyConstraint as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PrimaryKeyConstraint) GetChildColumns(ctx context.Context) ([]types.String, bool) {
+	if o.ChildColumns.IsNull() || o.ChildColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ChildColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChildColumns sets the value of the ChildColumns field in PrimaryKeyConstraint.
+func (o *PrimaryKeyConstraint) SetChildColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["child_columns"]
+	o.ChildColumns = types.ListValueMust(t, vs)
+}
+
 type PrivilegeAssignment struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
@@ -10494,6 +13615,31 @@ func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPrivileges returns the value of the Privileges field in PrivilegeAssignment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PrivilegeAssignment) GetPrivileges(ctx context.Context) ([]types.String, bool) {
+	if o.Privileges.IsNull() || o.Privileges.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Privileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivileges sets the value of the Privileges field in PrivilegeAssignment.
+func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	o.Privileges = types.ListValueMust(t, vs)
 }
 
 // Status of an asynchronously provisioned resource.
@@ -10585,6 +13731,32 @@ func (o ProvisioningStatus) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInitialPipelineSyncProgress returns the value of the InitialPipelineSyncProgress field in ProvisioningStatus as
+// a PipelineProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ProvisioningStatus) GetInitialPipelineSyncProgress(ctx context.Context) (PipelineProgress, bool) {
+	var e PipelineProgress
+	if o.InitialPipelineSyncProgress.IsNull() || o.InitialPipelineSyncProgress.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineProgress
+	d := o.InitialPipelineSyncProgress.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInitialPipelineSyncProgress sets the value of the InitialPipelineSyncProgress field in ProvisioningStatus.
+func (o *ProvisioningStatus) SetInitialPipelineSyncProgress(ctx context.Context, v PipelineProgress) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["initial_pipeline_sync_progress"]
+	o.InitialPipelineSyncProgress = types.ListValueMust(t, vs)
 }
 
 type QuotaInfo struct {
@@ -10993,6 +14165,31 @@ func (o RegisteredModelInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAliases returns the value of the Aliases field in RegisteredModelInfo as
+// a slice of RegisteredModelAlias values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegisteredModelInfo) GetAliases(ctx context.Context) ([]RegisteredModelAlias, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelAlias
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in RegisteredModelInfo.
+func (o *RegisteredModelInfo) SetAliases(ctx context.Context, v []RegisteredModelAlias) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	o.Aliases = types.ListValueMust(t, vs)
+}
+
 // Queue a metric refresh for a monitor
 type RunRefreshRequest struct {
 	// Full name of the table.
@@ -11156,6 +14353,57 @@ func (o SchemaInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEffectivePredictiveOptimizationFlag returns the value of the EffectivePredictiveOptimizationFlag field in SchemaInfo as
+// a EffectivePredictiveOptimizationFlag value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SchemaInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context) (EffectivePredictiveOptimizationFlag, bool) {
+	var e EffectivePredictiveOptimizationFlag
+	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		return e, false
+	}
+	var v []EffectivePredictiveOptimizationFlag
+	d := o.EffectivePredictiveOptimizationFlag.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in SchemaInfo.
+func (o *SchemaInfo) SetEffectivePredictiveOptimizationFlag(ctx context.Context, v EffectivePredictiveOptimizationFlag) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_predictive_optimization_flag"]
+	o.EffectivePredictiveOptimizationFlag = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in SchemaInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SchemaInfo) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in SchemaInfo.
+func (o *SchemaInfo) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type SetArtifactAllowlist struct {
 	// A list of allowed artifact match patterns.
 	ArtifactMatchers types.List `tfsdk:"artifact_matchers" tf:""`
@@ -11204,6 +14452,31 @@ func (o SetArtifactAllowlist) Type(ctx context.Context) attr.Type {
 			"artifact_type": types.StringType,
 		},
 	}
+}
+
+// GetArtifactMatchers returns the value of the ArtifactMatchers field in SetArtifactAllowlist as
+// a slice of ArtifactMatcher values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetArtifactAllowlist) GetArtifactMatchers(ctx context.Context) ([]ArtifactMatcher, bool) {
+	if o.ArtifactMatchers.IsNull() || o.ArtifactMatchers.IsUnknown() {
+		return nil, false
+	}
+	var v []ArtifactMatcher
+	d := o.ArtifactMatchers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArtifactMatchers sets the value of the ArtifactMatchers field in SetArtifactAllowlist.
+func (o *SetArtifactAllowlist) SetArtifactMatchers(ctx context.Context, v []ArtifactMatcher) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifact_matchers"]
+	o.ArtifactMatchers = types.ListValueMust(t, vs)
 }
 
 type SetRegisteredModelAliasRequest struct {
@@ -11431,6 +14704,136 @@ func (o StorageCredentialInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in StorageCredentialInfo as
+// a AwsIamRoleResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageCredentialInfo) GetAwsIamRole(ctx context.Context) (AwsIamRoleResponse, bool) {
+	var e AwsIamRoleResponse
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRoleResponse
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in StorageCredentialInfo.
+func (o *StorageCredentialInfo) SetAwsIamRole(ctx context.Context, v AwsIamRoleResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in StorageCredentialInfo as
+// a AzureManagedIdentityResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageCredentialInfo) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentityResponse, bool) {
+	var e AzureManagedIdentityResponse
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentityResponse
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in StorageCredentialInfo.
+func (o *StorageCredentialInfo) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentityResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in StorageCredentialInfo as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageCredentialInfo) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in StorageCredentialInfo.
+func (o *StorageCredentialInfo) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetCloudflareApiToken returns the value of the CloudflareApiToken field in StorageCredentialInfo as
+// a CloudflareApiToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageCredentialInfo) GetCloudflareApiToken(ctx context.Context) (CloudflareApiToken, bool) {
+	var e CloudflareApiToken
+	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
+		return e, false
+	}
+	var v []CloudflareApiToken
+	d := o.CloudflareApiToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloudflareApiToken sets the value of the CloudflareApiToken field in StorageCredentialInfo.
+func (o *StorageCredentialInfo) SetCloudflareApiToken(ctx context.Context, v CloudflareApiToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloudflare_api_token"]
+	o.CloudflareApiToken = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in StorageCredentialInfo as
+// a DatabricksGcpServiceAccountResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StorageCredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccountResponse, bool) {
+	var e DatabricksGcpServiceAccountResponse
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccountResponse
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in StorageCredentialInfo.
+func (o *StorageCredentialInfo) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccountResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
+}
+
 type SystemSchemaInfo struct {
 	// Name of the system schema.
 	Schema types.String `tfsdk:"schema" tf:"optional"`
@@ -11538,6 +14941,84 @@ func (o TableConstraint) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetForeignKeyConstraint returns the value of the ForeignKeyConstraint field in TableConstraint as
+// a ForeignKeyConstraint value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableConstraint) GetForeignKeyConstraint(ctx context.Context) (ForeignKeyConstraint, bool) {
+	var e ForeignKeyConstraint
+	if o.ForeignKeyConstraint.IsNull() || o.ForeignKeyConstraint.IsUnknown() {
+		return e, false
+	}
+	var v []ForeignKeyConstraint
+	d := o.ForeignKeyConstraint.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForeignKeyConstraint sets the value of the ForeignKeyConstraint field in TableConstraint.
+func (o *TableConstraint) SetForeignKeyConstraint(ctx context.Context, v ForeignKeyConstraint) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foreign_key_constraint"]
+	o.ForeignKeyConstraint = types.ListValueMust(t, vs)
+}
+
+// GetNamedTableConstraint returns the value of the NamedTableConstraint field in TableConstraint as
+// a NamedTableConstraint value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableConstraint) GetNamedTableConstraint(ctx context.Context) (NamedTableConstraint, bool) {
+	var e NamedTableConstraint
+	if o.NamedTableConstraint.IsNull() || o.NamedTableConstraint.IsUnknown() {
+		return e, false
+	}
+	var v []NamedTableConstraint
+	d := o.NamedTableConstraint.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNamedTableConstraint sets the value of the NamedTableConstraint field in TableConstraint.
+func (o *TableConstraint) SetNamedTableConstraint(ctx context.Context, v NamedTableConstraint) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_table_constraint"]
+	o.NamedTableConstraint = types.ListValueMust(t, vs)
+}
+
+// GetPrimaryKeyConstraint returns the value of the PrimaryKeyConstraint field in TableConstraint as
+// a PrimaryKeyConstraint value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableConstraint) GetPrimaryKeyConstraint(ctx context.Context) (PrimaryKeyConstraint, bool) {
+	var e PrimaryKeyConstraint
+	if o.PrimaryKeyConstraint.IsNull() || o.PrimaryKeyConstraint.IsUnknown() {
+		return e, false
+	}
+	var v []PrimaryKeyConstraint
+	d := o.PrimaryKeyConstraint.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPrimaryKeyConstraint sets the value of the PrimaryKeyConstraint field in TableConstraint.
+func (o *TableConstraint) SetPrimaryKeyConstraint(ctx context.Context, v PrimaryKeyConstraint) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_key_constraint"]
+	o.PrimaryKeyConstraint = types.ListValueMust(t, vs)
 }
 
 // A table that is dependent on a SQL object.
@@ -11830,6 +15311,211 @@ func (o TableInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetColumns returns the value of the Columns field in TableInfo as
+// a slice of ColumnInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetColumns(ctx context.Context) ([]ColumnInfo, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnInfo
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in TableInfo.
+func (o *TableInfo) SetColumns(ctx context.Context, v []ColumnInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetDeltaRuntimePropertiesKvpairs returns the value of the DeltaRuntimePropertiesKvpairs field in TableInfo as
+// a DeltaRuntimePropertiesKvPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetDeltaRuntimePropertiesKvpairs(ctx context.Context) (DeltaRuntimePropertiesKvPairs, bool) {
+	var e DeltaRuntimePropertiesKvPairs
+	if o.DeltaRuntimePropertiesKvpairs.IsNull() || o.DeltaRuntimePropertiesKvpairs.IsUnknown() {
+		return e, false
+	}
+	var v []DeltaRuntimePropertiesKvPairs
+	d := o.DeltaRuntimePropertiesKvpairs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeltaRuntimePropertiesKvpairs sets the value of the DeltaRuntimePropertiesKvpairs field in TableInfo.
+func (o *TableInfo) SetDeltaRuntimePropertiesKvpairs(ctx context.Context, v DeltaRuntimePropertiesKvPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_runtime_properties_kvpairs"]
+	o.DeltaRuntimePropertiesKvpairs = types.ListValueMust(t, vs)
+}
+
+// GetEffectivePredictiveOptimizationFlag returns the value of the EffectivePredictiveOptimizationFlag field in TableInfo as
+// a EffectivePredictiveOptimizationFlag value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetEffectivePredictiveOptimizationFlag(ctx context.Context) (EffectivePredictiveOptimizationFlag, bool) {
+	var e EffectivePredictiveOptimizationFlag
+	if o.EffectivePredictiveOptimizationFlag.IsNull() || o.EffectivePredictiveOptimizationFlag.IsUnknown() {
+		return e, false
+	}
+	var v []EffectivePredictiveOptimizationFlag
+	d := o.EffectivePredictiveOptimizationFlag.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectivePredictiveOptimizationFlag sets the value of the EffectivePredictiveOptimizationFlag field in TableInfo.
+func (o *TableInfo) SetEffectivePredictiveOptimizationFlag(ctx context.Context, v EffectivePredictiveOptimizationFlag) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_predictive_optimization_flag"]
+	o.EffectivePredictiveOptimizationFlag = types.ListValueMust(t, vs)
+}
+
+// GetEncryptionDetails returns the value of the EncryptionDetails field in TableInfo as
+// a EncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetails, bool) {
+	var e EncryptionDetails
+	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []EncryptionDetails
+	d := o.EncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEncryptionDetails sets the value of the EncryptionDetails field in TableInfo.
+func (o *TableInfo) SetEncryptionDetails(ctx context.Context, v EncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["encryption_details"]
+	o.EncryptionDetails = types.ListValueMust(t, vs)
+}
+
+// GetProperties returns the value of the Properties field in TableInfo as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in TableInfo.
+func (o *TableInfo) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
+// GetRowFilter returns the value of the RowFilter field in TableInfo as
+// a TableRowFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetRowFilter(ctx context.Context) (TableRowFilter, bool) {
+	var e TableRowFilter
+	if o.RowFilter.IsNull() || o.RowFilter.IsUnknown() {
+		return e, false
+	}
+	var v []TableRowFilter
+	d := o.RowFilter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRowFilter sets the value of the RowFilter field in TableInfo.
+func (o *TableInfo) SetRowFilter(ctx context.Context, v TableRowFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["row_filter"]
+	o.RowFilter = types.ListValueMust(t, vs)
+}
+
+// GetTableConstraints returns the value of the TableConstraints field in TableInfo as
+// a slice of TableConstraint values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetTableConstraints(ctx context.Context) ([]TableConstraint, bool) {
+	if o.TableConstraints.IsNull() || o.TableConstraints.IsUnknown() {
+		return nil, false
+	}
+	var v []TableConstraint
+	d := o.TableConstraints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTableConstraints sets the value of the TableConstraints field in TableInfo.
+func (o *TableInfo) SetTableConstraints(ctx context.Context, v []TableConstraint) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_constraints"]
+	o.TableConstraints = types.ListValueMust(t, vs)
+}
+
+// GetViewDependencies returns the value of the ViewDependencies field in TableInfo as
+// a DependencyList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableInfo) GetViewDependencies(ctx context.Context) (DependencyList, bool) {
+	var e DependencyList
+	if o.ViewDependencies.IsNull() || o.ViewDependencies.IsUnknown() {
+		return e, false
+	}
+	var v []DependencyList
+	d := o.ViewDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetViewDependencies sets the value of the ViewDependencies field in TableInfo.
+func (o *TableInfo) SetViewDependencies(ctx context.Context, v DependencyList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["view_dependencies"]
+	o.ViewDependencies = types.ListValueMust(t, vs)
+}
+
 type TableRowFilter struct {
 	// The full name of the row filter SQL UDF.
 	FunctionName types.String `tfsdk:"function_name" tf:""`
@@ -11880,6 +15566,31 @@ func (o TableRowFilter) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInputColumnNames returns the value of the InputColumnNames field in TableRowFilter as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableRowFilter) GetInputColumnNames(ctx context.Context) ([]types.String, bool) {
+	if o.InputColumnNames.IsNull() || o.InputColumnNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InputColumnNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInputColumnNames sets the value of the InputColumnNames field in TableRowFilter.
+func (o *TableRowFilter) SetInputColumnNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_column_names"]
+	o.InputColumnNames = types.ListValueMust(t, vs)
 }
 
 type TableSummary struct {
@@ -11989,6 +15700,58 @@ func (o TemporaryCredentials) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsTempCredentials returns the value of the AwsTempCredentials field in TemporaryCredentials as
+// a AwsCredentials value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TemporaryCredentials) GetAwsTempCredentials(ctx context.Context) (AwsCredentials, bool) {
+	var e AwsCredentials
+	if o.AwsTempCredentials.IsNull() || o.AwsTempCredentials.IsUnknown() {
+		return e, false
+	}
+	var v []AwsCredentials
+	d := o.AwsTempCredentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsTempCredentials sets the value of the AwsTempCredentials field in TemporaryCredentials.
+func (o *TemporaryCredentials) SetAwsTempCredentials(ctx context.Context, v AwsCredentials) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_temp_credentials"]
+	o.AwsTempCredentials = types.ListValueMust(t, vs)
+}
+
+// GetAzureAad returns the value of the AzureAad field in TemporaryCredentials as
+// a AzureActiveDirectoryToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TemporaryCredentials) GetAzureAad(ctx context.Context) (AzureActiveDirectoryToken, bool) {
+	var e AzureActiveDirectoryToken
+	if o.AzureAad.IsNull() || o.AzureAad.IsUnknown() {
+		return e, false
+	}
+	var v []AzureActiveDirectoryToken
+	d := o.AzureAad.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAad sets the value of the AzureAad field in TemporaryCredentials.
+func (o *TemporaryCredentials) SetAzureAad(ctx context.Context, v AzureActiveDirectoryToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_aad"]
+	o.AzureAad = types.ListValueMust(t, vs)
+}
+
 // Detailed status of an online table. Shown if the online table is in the
 // ONLINE_TRIGGERED_UPDATE or the ONLINE_NO_PENDING_UPDATE state.
 type TriggeredUpdateStatus struct {
@@ -12046,6 +15809,32 @@ func (o TriggeredUpdateStatus) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTriggeredUpdateProgress returns the value of the TriggeredUpdateProgress field in TriggeredUpdateStatus as
+// a PipelineProgress value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggeredUpdateStatus) GetTriggeredUpdateProgress(ctx context.Context) (PipelineProgress, bool) {
+	var e PipelineProgress
+	if o.TriggeredUpdateProgress.IsNull() || o.TriggeredUpdateProgress.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineProgress
+	d := o.TriggeredUpdateProgress.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggeredUpdateProgress sets the value of the TriggeredUpdateProgress field in TriggeredUpdateStatus.
+func (o *TriggeredUpdateStatus) SetTriggeredUpdateProgress(ctx context.Context, v PipelineProgress) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["triggered_update_progress"]
+	o.TriggeredUpdateProgress = types.ListValueMust(t, vs)
 }
 
 // Delete an assignment
@@ -12239,6 +16028,31 @@ func (o UpdateCatalog) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProperties returns the value of the Properties field in UpdateCatalog as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCatalog) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in UpdateCatalog.
+func (o *UpdateCatalog) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type UpdateConnection struct {
 	// Name of the connection.
 	Name types.String `tfsdk:"-"`
@@ -12295,6 +16109,31 @@ func (o UpdateConnection) Type(ctx context.Context) attr.Type {
 			"owner": types.StringType,
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in UpdateConnection as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateConnection) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in UpdateConnection.
+func (o *UpdateConnection) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.MapValueMust(t, vs)
 }
 
 type UpdateCredentialRequest struct {
@@ -12394,6 +16233,84 @@ func (o UpdateCredentialRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in UpdateCredentialRequest as
+// a AwsIamRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
+	var e AwsIamRole
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRole
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in UpdateCredentialRequest.
+func (o *UpdateCredentialRequest) SetAwsIamRole(ctx context.Context, v AwsIamRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in UpdateCredentialRequest as
+// a AzureManagedIdentity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentity, bool) {
+	var e AzureManagedIdentity
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentity
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in UpdateCredentialRequest.
+func (o *UpdateCredentialRequest) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in UpdateCredentialRequest as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCredentialRequest) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in UpdateCredentialRequest.
+func (o *UpdateCredentialRequest) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
 type UpdateExternalLocation struct {
 	// The AWS access point to use when accesing s3 for this external location.
 	AccessPoint types.String `tfsdk:"access_point" tf:"optional"`
@@ -12490,6 +16407,32 @@ func (o UpdateExternalLocation) Type(ctx context.Context) attr.Type {
 			"url":             types.StringType,
 		},
 	}
+}
+
+// GetEncryptionDetails returns the value of the EncryptionDetails field in UpdateExternalLocation as
+// a EncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExternalLocation) GetEncryptionDetails(ctx context.Context) (EncryptionDetails, bool) {
+	var e EncryptionDetails
+	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []EncryptionDetails
+	d := o.EncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEncryptionDetails sets the value of the EncryptionDetails field in UpdateExternalLocation.
+func (o *UpdateExternalLocation) SetEncryptionDetails(ctx context.Context, v EncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["encryption_details"]
+	o.EncryptionDetails = types.ListValueMust(t, vs)
 }
 
 type UpdateFunction struct {
@@ -12833,6 +16776,212 @@ func (o UpdateMonitor) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCustomMetrics returns the value of the CustomMetrics field in UpdateMonitor as
+// a slice of MonitorMetric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetCustomMetrics(ctx context.Context) ([]MonitorMetric, bool) {
+	if o.CustomMetrics.IsNull() || o.CustomMetrics.IsUnknown() {
+		return nil, false
+	}
+	var v []MonitorMetric
+	d := o.CustomMetrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomMetrics sets the value of the CustomMetrics field in UpdateMonitor.
+func (o *UpdateMonitor) SetCustomMetrics(ctx context.Context, v []MonitorMetric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	o.CustomMetrics = types.ListValueMust(t, vs)
+}
+
+// GetDataClassificationConfig returns the value of the DataClassificationConfig field in UpdateMonitor as
+// a MonitorDataClassificationConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetDataClassificationConfig(ctx context.Context) (MonitorDataClassificationConfig, bool) {
+	var e MonitorDataClassificationConfig
+	if o.DataClassificationConfig.IsNull() || o.DataClassificationConfig.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorDataClassificationConfig
+	d := o.DataClassificationConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataClassificationConfig sets the value of the DataClassificationConfig field in UpdateMonitor.
+func (o *UpdateMonitor) SetDataClassificationConfig(ctx context.Context, v MonitorDataClassificationConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_classification_config"]
+	o.DataClassificationConfig = types.ListValueMust(t, vs)
+}
+
+// GetInferenceLog returns the value of the InferenceLog field in UpdateMonitor as
+// a MonitorInferenceLog value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetInferenceLog(ctx context.Context) (MonitorInferenceLog, bool) {
+	var e MonitorInferenceLog
+	if o.InferenceLog.IsNull() || o.InferenceLog.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorInferenceLog
+	d := o.InferenceLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceLog sets the value of the InferenceLog field in UpdateMonitor.
+func (o *UpdateMonitor) SetInferenceLog(ctx context.Context, v MonitorInferenceLog) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_log"]
+	o.InferenceLog = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in UpdateMonitor as
+// a MonitorNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetNotifications(ctx context.Context) (MonitorNotifications, bool) {
+	var e MonitorNotifications
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorNotifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotifications sets the value of the Notifications field in UpdateMonitor.
+func (o *UpdateMonitor) SetNotifications(ctx context.Context, v MonitorNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in UpdateMonitor as
+// a MonitorCronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetSchedule(ctx context.Context) (MonitorCronSchedule, bool) {
+	var e MonitorCronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorCronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in UpdateMonitor.
+func (o *UpdateMonitor) SetSchedule(ctx context.Context, v MonitorCronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetSlicingExprs returns the value of the SlicingExprs field in UpdateMonitor as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetSlicingExprs(ctx context.Context) ([]types.String, bool) {
+	if o.SlicingExprs.IsNull() || o.SlicingExprs.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SlicingExprs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSlicingExprs sets the value of the SlicingExprs field in UpdateMonitor.
+func (o *UpdateMonitor) SetSlicingExprs(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	o.SlicingExprs = types.ListValueMust(t, vs)
+}
+
+// GetSnapshot returns the value of the Snapshot field in UpdateMonitor as
+// a MonitorSnapshot value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetSnapshot(ctx context.Context) (MonitorSnapshot, bool) {
+	var e MonitorSnapshot
+	if o.Snapshot.IsNull() || o.Snapshot.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorSnapshot
+	d := o.Snapshot.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSnapshot sets the value of the Snapshot field in UpdateMonitor.
+func (o *UpdateMonitor) SetSnapshot(ctx context.Context, v MonitorSnapshot) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["snapshot"]
+	o.Snapshot = types.ListValueMust(t, vs)
+}
+
+// GetTimeSeries returns the value of the TimeSeries field in UpdateMonitor as
+// a MonitorTimeSeries value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateMonitor) GetTimeSeries(ctx context.Context) (MonitorTimeSeries, bool) {
+	var e MonitorTimeSeries
+	if o.TimeSeries.IsNull() || o.TimeSeries.IsUnknown() {
+		return e, false
+	}
+	var v []MonitorTimeSeries
+	d := o.TimeSeries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTimeSeries sets the value of the TimeSeries field in UpdateMonitor.
+func (o *UpdateMonitor) SetTimeSeries(ctx context.Context, v MonitorTimeSeries) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["time_series"]
+	o.TimeSeries = types.ListValueMust(t, vs)
+}
+
 type UpdatePermissions struct {
 	// Array of permissions change objects.
 	Changes types.List `tfsdk:"changes" tf:"optional"`
@@ -12885,6 +17034,31 @@ func (o UpdatePermissions) Type(ctx context.Context) attr.Type {
 			"securable_type": types.StringType,
 		},
 	}
+}
+
+// GetChanges returns the value of the Changes field in UpdatePermissions as
+// a slice of PermissionsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePermissions) GetChanges(ctx context.Context) ([]PermissionsChange, bool) {
+	if o.Changes.IsNull() || o.Changes.IsUnknown() {
+		return nil, false
+	}
+	var v []PermissionsChange
+	d := o.Changes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChanges sets the value of the Changes field in UpdatePermissions.
+func (o *UpdatePermissions) SetChanges(ctx context.Context, v []PermissionsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	o.Changes = types.ListValueMust(t, vs)
 }
 
 type UpdateRegisteredModelRequest struct {
@@ -13044,6 +17218,31 @@ func (o UpdateSchema) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProperties returns the value of the Properties field in UpdateSchema as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateSchema) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in UpdateSchema.
+func (o *UpdateSchema) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type UpdateStorageCredential struct {
 	// The AWS IAM role configuration.
 	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
@@ -13150,6 +17349,136 @@ func (o UpdateStorageCredential) Type(ctx context.Context) attr.Type {
 			"skip_validation": types.BoolType,
 		},
 	}
+}
+
+// GetAwsIamRole returns the value of the AwsIamRole field in UpdateStorageCredential as
+// a AwsIamRoleRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRoleRequest, bool) {
+	var e AwsIamRoleRequest
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRoleRequest
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in UpdateStorageCredential.
+func (o *UpdateStorageCredential) SetAwsIamRole(ctx context.Context, v AwsIamRoleRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in UpdateStorageCredential as
+// a AzureManagedIdentityResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentityResponse, bool) {
+	var e AzureManagedIdentityResponse
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentityResponse
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in UpdateStorageCredential.
+func (o *UpdateStorageCredential) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentityResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in UpdateStorageCredential as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateStorageCredential) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in UpdateStorageCredential.
+func (o *UpdateStorageCredential) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetCloudflareApiToken returns the value of the CloudflareApiToken field in UpdateStorageCredential as
+// a CloudflareApiToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateStorageCredential) GetCloudflareApiToken(ctx context.Context) (CloudflareApiToken, bool) {
+	var e CloudflareApiToken
+	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
+		return e, false
+	}
+	var v []CloudflareApiToken
+	d := o.CloudflareApiToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloudflareApiToken sets the value of the CloudflareApiToken field in UpdateStorageCredential.
+func (o *UpdateStorageCredential) SetCloudflareApiToken(ctx context.Context, v CloudflareApiToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloudflare_api_token"]
+	o.CloudflareApiToken = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in UpdateStorageCredential as
+// a DatabricksGcpServiceAccountRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccountRequest, bool) {
+	var e DatabricksGcpServiceAccountRequest
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccountRequest
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in UpdateStorageCredential.
+func (o *UpdateStorageCredential) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccountRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
 // Update a table owner.
@@ -13310,6 +17639,56 @@ func (o UpdateWorkspaceBindings) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAssignWorkspaces returns the value of the AssignWorkspaces field in UpdateWorkspaceBindings as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceBindings) GetAssignWorkspaces(ctx context.Context) ([]types.Int64, bool) {
+	if o.AssignWorkspaces.IsNull() || o.AssignWorkspaces.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.AssignWorkspaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssignWorkspaces sets the value of the AssignWorkspaces field in UpdateWorkspaceBindings.
+func (o *UpdateWorkspaceBindings) SetAssignWorkspaces(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assign_workspaces"]
+	o.AssignWorkspaces = types.ListValueMust(t, vs)
+}
+
+// GetUnassignWorkspaces returns the value of the UnassignWorkspaces field in UpdateWorkspaceBindings as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceBindings) GetUnassignWorkspaces(ctx context.Context) ([]types.Int64, bool) {
+	if o.UnassignWorkspaces.IsNull() || o.UnassignWorkspaces.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.UnassignWorkspaces.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUnassignWorkspaces sets the value of the UnassignWorkspaces field in UpdateWorkspaceBindings.
+func (o *UpdateWorkspaceBindings) SetUnassignWorkspaces(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["unassign_workspaces"]
+	o.UnassignWorkspaces = types.ListValueMust(t, vs)
+}
+
 type UpdateWorkspaceBindingsParameters struct {
 	// List of workspace bindings
 	Add types.List `tfsdk:"add" tf:"optional"`
@@ -13369,6 +17748,56 @@ func (o UpdateWorkspaceBindingsParameters) Type(ctx context.Context) attr.Type {
 			"securable_type": types.StringType,
 		},
 	}
+}
+
+// GetAdd returns the value of the Add field in UpdateWorkspaceBindingsParameters as
+// a slice of WorkspaceBinding values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceBindingsParameters) GetAdd(ctx context.Context) ([]WorkspaceBinding, bool) {
+	if o.Add.IsNull() || o.Add.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceBinding
+	d := o.Add.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAdd sets the value of the Add field in UpdateWorkspaceBindingsParameters.
+func (o *UpdateWorkspaceBindingsParameters) SetAdd(ctx context.Context, v []WorkspaceBinding) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add"]
+	o.Add = types.ListValueMust(t, vs)
+}
+
+// GetRemove returns the value of the Remove field in UpdateWorkspaceBindingsParameters as
+// a slice of WorkspaceBinding values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateWorkspaceBindingsParameters) GetRemove(ctx context.Context) ([]WorkspaceBinding, bool) {
+	if o.Remove.IsNull() || o.Remove.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceBinding
+	d := o.Remove.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRemove sets the value of the Remove field in UpdateWorkspaceBindingsParameters.
+func (o *UpdateWorkspaceBindingsParameters) SetRemove(ctx context.Context, v []WorkspaceBinding) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remove"]
+	o.Remove = types.ListValueMust(t, vs)
 }
 
 type ValidateCredentialRequest struct {
@@ -13449,6 +17878,58 @@ func (o ValidateCredentialRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in ValidateCredentialRequest as
+// a AwsIamRole value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateCredentialRequest) GetAwsIamRole(ctx context.Context) (AwsIamRole, bool) {
+	var e AwsIamRole
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRole
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in ValidateCredentialRequest.
+func (o *ValidateCredentialRequest) SetAwsIamRole(ctx context.Context, v AwsIamRole) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in ValidateCredentialRequest as
+// a AzureManagedIdentity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateCredentialRequest) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentity, bool) {
+	var e AzureManagedIdentity
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentity
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in ValidateCredentialRequest.
+func (o *ValidateCredentialRequest) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
 type ValidateCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage. Only
 	// applicable for when purpose is **STORAGE**.
@@ -13498,6 +17979,31 @@ func (o ValidateCredentialResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ValidateCredentialResponse as
+// a slice of CredentialValidationResult values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateCredentialResponse) GetResults(ctx context.Context) ([]CredentialValidationResult, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []CredentialValidationResult
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ValidateCredentialResponse.
+func (o *ValidateCredentialResponse) SetResults(ctx context.Context, v []CredentialValidationResult) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 type ValidateStorageCredential struct {
@@ -13590,6 +18096,136 @@ func (o ValidateStorageCredential) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsIamRole returns the value of the AwsIamRole field in ValidateStorageCredential as
+// a AwsIamRoleRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredential) GetAwsIamRole(ctx context.Context) (AwsIamRoleRequest, bool) {
+	var e AwsIamRoleRequest
+	if o.AwsIamRole.IsNull() || o.AwsIamRole.IsUnknown() {
+		return e, false
+	}
+	var v []AwsIamRoleRequest
+	d := o.AwsIamRole.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsIamRole sets the value of the AwsIamRole field in ValidateStorageCredential.
+func (o *ValidateStorageCredential) SetAwsIamRole(ctx context.Context, v AwsIamRoleRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_iam_role"]
+	o.AwsIamRole = types.ListValueMust(t, vs)
+}
+
+// GetAzureManagedIdentity returns the value of the AzureManagedIdentity field in ValidateStorageCredential as
+// a AzureManagedIdentityRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredential) GetAzureManagedIdentity(ctx context.Context) (AzureManagedIdentityRequest, bool) {
+	var e AzureManagedIdentityRequest
+	if o.AzureManagedIdentity.IsNull() || o.AzureManagedIdentity.IsUnknown() {
+		return e, false
+	}
+	var v []AzureManagedIdentityRequest
+	d := o.AzureManagedIdentity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureManagedIdentity sets the value of the AzureManagedIdentity field in ValidateStorageCredential.
+func (o *ValidateStorageCredential) SetAzureManagedIdentity(ctx context.Context, v AzureManagedIdentityRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_managed_identity"]
+	o.AzureManagedIdentity = types.ListValueMust(t, vs)
+}
+
+// GetAzureServicePrincipal returns the value of the AzureServicePrincipal field in ValidateStorageCredential as
+// a AzureServicePrincipal value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredential) GetAzureServicePrincipal(ctx context.Context) (AzureServicePrincipal, bool) {
+	var e AzureServicePrincipal
+	if o.AzureServicePrincipal.IsNull() || o.AzureServicePrincipal.IsUnknown() {
+		return e, false
+	}
+	var v []AzureServicePrincipal
+	d := o.AzureServicePrincipal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureServicePrincipal sets the value of the AzureServicePrincipal field in ValidateStorageCredential.
+func (o *ValidateStorageCredential) SetAzureServicePrincipal(ctx context.Context, v AzureServicePrincipal) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
+	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetCloudflareApiToken returns the value of the CloudflareApiToken field in ValidateStorageCredential as
+// a CloudflareApiToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredential) GetCloudflareApiToken(ctx context.Context) (CloudflareApiToken, bool) {
+	var e CloudflareApiToken
+	if o.CloudflareApiToken.IsNull() || o.CloudflareApiToken.IsUnknown() {
+		return e, false
+	}
+	var v []CloudflareApiToken
+	d := o.CloudflareApiToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloudflareApiToken sets the value of the CloudflareApiToken field in ValidateStorageCredential.
+func (o *ValidateStorageCredential) SetCloudflareApiToken(ctx context.Context, v CloudflareApiToken) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cloudflare_api_token"]
+	o.CloudflareApiToken = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in ValidateStorageCredential as
+// a DatabricksGcpServiceAccountRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredential) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccountRequest, bool) {
+	var e DatabricksGcpServiceAccountRequest
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccountRequest
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in ValidateStorageCredential.
+func (o *ValidateStorageCredential) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccountRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
+}
+
 type ValidateStorageCredentialResponse struct {
 	// Whether the tested location is a directory in cloud storage.
 	IsDir types.Bool `tfsdk:"isDir" tf:"optional"`
@@ -13638,6 +18274,31 @@ func (o ValidateStorageCredentialResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ValidateStorageCredentialResponse as
+// a slice of ValidationResult values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ValidateStorageCredentialResponse) GetResults(ctx context.Context) ([]ValidationResult, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []ValidationResult
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ValidateStorageCredentialResponse.
+func (o *ValidateStorageCredentialResponse) SetResults(ctx context.Context, v []ValidationResult) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 type ValidationResult struct {
@@ -13802,6 +18463,32 @@ func (o VolumeInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEncryptionDetails returns the value of the EncryptionDetails field in VolumeInfo as
+// a EncryptionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *VolumeInfo) GetEncryptionDetails(ctx context.Context) (EncryptionDetails, bool) {
+	var e EncryptionDetails
+	if o.EncryptionDetails.IsNull() || o.EncryptionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []EncryptionDetails
+	d := o.EncryptionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEncryptionDetails sets the value of the EncryptionDetails field in VolumeInfo.
+func (o *VolumeInfo) SetEncryptionDetails(ctx context.Context, v EncryptionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["encryption_details"]
+	o.EncryptionDetails = types.ListValueMust(t, vs)
+}
+
 type WorkspaceBinding struct {
 	BindingType types.String `tfsdk:"binding_type" tf:"optional"`
 
@@ -13900,103 +18587,27 @@ func (o WorkspaceBindingsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The artifact type
+// GetBindings returns the value of the Bindings field in WorkspaceBindingsResponse as
+// a slice of WorkspaceBinding values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspaceBindingsResponse) GetBindings(ctx context.Context) ([]WorkspaceBinding, bool) {
+	if o.Bindings.IsNull() || o.Bindings.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceBinding
+	d := o.Bindings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Kind of catalog securable.
-
-// Whether the current securable is accessible from all workspaces or a specific
-// set of workspaces.
-
-// The type of the catalog.
-
-// Name of type (INT, STRUCT, MAP, etc.).
-
-// Kind of connection securable.
-
-// The type of connection.
-
-// Function parameter style. **S** is the value for SQL.
-
-// Function language. When **EXTERNAL** is used, the language of the routine
-// function should be specified in the __external_language__ field, and the
-// __return_params__ of the function cannot be used (as **TABLE** return type is
-// not supported), and the __sql_data_access__ field must be **NO_SQL**.
-
-// The security type of the function.
-
-// Function SQL data access.
-
-// The type of credential.
-
-// Data source format
-
-// The type of the object from which the flag was inherited. If there was no
-// inheritance, this field is left blank.
-
-// Whether predictive optimization should be enabled for this object and objects
-// under it.
-
-// Function parameter style. **S** is the value for SQL.
-
-// Function language. When **EXTERNAL** is used, the language of the routine
-// function should be specified in the __external_language__ field, and the
-// __return_params__ of the function cannot be used (as **TABLE** return type is
-// not supported), and the __sql_data_access__ field must be **NO_SQL**.
-
-// The security type of the function.
-
-// Function SQL data access.
-
-// The mode of the function parameter.
-
-// The type of function parameter.
-
-// The scope of Delta Sharing enabled for the metastore.
-
-// The artifact pattern matching type
-
-// The scope of Delta Sharing enabled for the metastore.
-
-// Current status of the model version. Newly created model versions start in
-// PENDING_REGISTRATION status, then move to READY status once the model version
-// files are uploaded and the model version is finalized. Only model versions in
-// READY status can be loaded for inference or served.
-
-// Read only field that indicates whether a schedule is paused or not.
-
-// Problem type the model aims to solve. Determines the type of model-quality
-// metrics that will be computed.
-
-// The status of the monitor.
-
-// Can only be one of ``"CUSTOM_METRIC_TYPE_AGGREGATE"``,
-// ``"CUSTOM_METRIC_TYPE_DERIVED"``, or ``"CUSTOM_METRIC_TYPE_DRIFT"``. The
-// ``"CUSTOM_METRIC_TYPE_AGGREGATE"`` and ``"CUSTOM_METRIC_TYPE_DERIVED"``
-// metrics are computed on a single table, whereas the
-// ``"CUSTOM_METRIC_TYPE_DRIFT"`` compare metrics across baseline and input
-// table, or across the two consecutive time windows. -
-// CUSTOM_METRIC_TYPE_AGGREGATE: only depend on the existing columns in your
-// table - CUSTOM_METRIC_TYPE_DERIVED: depend on previously computed aggregate
-// metrics - CUSTOM_METRIC_TYPE_DRIFT: depend on previously computed aggregate
-// or derived metrics
-
-// The current state of the refresh.
-
-// The method by which the refresh was triggered.
-
-// The state of an online table.
-
-// The type of Unity Catalog securable
-
-// The type of key encryption to use (affects headers from s3 client).
-
-// The current state of enablement for the system schema. An empty string means
-// the system schema is available and ready for opt-in.
-
-// The scope of Delta Sharing enabled for the metastore.
-
-// A enum represents the result of the file operation
-
-// The operation tested.
-
-// The results of the tested operation.
+// SetBindings sets the value of the Bindings field in WorkspaceBindingsResponse.
+func (o *WorkspaceBindingsResponse) SetBindings(ctx context.Context, v []WorkspaceBinding) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["bindings"]
+	o.Bindings = types.ListValueMust(t, vs)
+}

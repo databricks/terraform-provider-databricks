@@ -14,7 +14,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/compute"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -89,6 +89,32 @@ func (o BaseJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSettings returns the value of the Settings field in BaseJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseJob) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in BaseJob.
+func (o *BaseJob) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
 }
 
 type BaseRun struct {
@@ -355,6 +381,314 @@ func (o BaseRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in BaseRun as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in BaseRun.
+func (o *BaseRun) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetClusterSpec returns the value of the ClusterSpec field in BaseRun as
+// a ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
+	var e ClusterSpec
+	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSpec
+	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterSpec sets the value of the ClusterSpec field in BaseRun.
+func (o *BaseRun) SetClusterSpec(ctx context.Context, v ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	o.ClusterSpec = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in BaseRun as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in BaseRun.
+func (o *BaseRun) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in BaseRun as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in BaseRun.
+func (o *BaseRun) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in BaseRun as
+// a slice of JobParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetJobParameters(ctx context.Context) ([]JobParameter, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameter
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in BaseRun.
+func (o *BaseRun) SetJobParameters(ctx context.Context, v []JobParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.ListValueMust(t, vs)
+}
+
+// GetOverridingParameters returns the value of the OverridingParameters field in BaseRun as
+// a RunParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetOverridingParameters(ctx context.Context) (RunParameters, bool) {
+	var e RunParameters
+	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RunParameters
+	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOverridingParameters sets the value of the OverridingParameters field in BaseRun.
+func (o *BaseRun) SetOverridingParameters(ctx context.Context, v RunParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	o.OverridingParameters = types.ListValueMust(t, vs)
+}
+
+// GetRepairHistory returns the value of the RepairHistory field in BaseRun as
+// a slice of RepairHistoryItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem, bool) {
+	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+		return nil, false
+	}
+	var v []RepairHistoryItem
+	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepairHistory sets the value of the RepairHistory field in BaseRun.
+func (o *BaseRun) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	o.RepairHistory = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in BaseRun as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in BaseRun.
+func (o *BaseRun) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in BaseRun as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in BaseRun.
+func (o *BaseRun) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in BaseRun as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in BaseRun.
+func (o *BaseRun) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in BaseRun as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetTasks(ctx context.Context) ([]RunTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in BaseRun.
+func (o *BaseRun) SetTasks(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTriggerInfo returns the value of the TriggerInfo field in BaseRun as
+// a TriggerInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BaseRun) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
+	var e TriggerInfo
+	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerInfo
+	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggerInfo sets the value of the TriggerInfo field in BaseRun.
+func (o *BaseRun) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	o.TriggerInfo = types.ListValueMust(t, vs)
+}
+
 type CancelAllRuns struct {
 	// Optional boolean parameter to cancel all queued runs. If no job_id is
 	// provided, all queued runs in the workspace are canceled.
@@ -608,8 +942,8 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState Cluster
 // SDK values.
 func (a ClusterSpec) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"library":     reflect.TypeOf(compute.Library{}),
-		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"library":     reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec{}),
 	}
 }
 
@@ -641,6 +975,57 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in ClusterSpec as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in ClusterSpec.
+func (o *ClusterSpec) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in ClusterSpec as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in ClusterSpec.
+func (o *ClusterSpec) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
 }
 
 type ConditionTask struct {
@@ -988,6 +1373,442 @@ func (o CreateJob) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in CreateJob as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in CreateJob.
+func (o *CreateJob) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+// GetContinuous returns the value of the Continuous field in CreateJob as
+// a Continuous value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetContinuous(ctx context.Context) (Continuous, bool) {
+	var e Continuous
+	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+		return e, false
+	}
+	var v []Continuous
+	d := o.Continuous.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuous sets the value of the Continuous field in CreateJob.
+func (o *CreateJob) SetContinuous(ctx context.Context, v Continuous) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	o.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in CreateJob as
+// a JobDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetDeployment(ctx context.Context) (JobDeployment, bool) {
+	var e JobDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []JobDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in CreateJob.
+func (o *CreateJob) SetDeployment(ctx context.Context, v JobDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in CreateJob as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in CreateJob.
+func (o *CreateJob) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in CreateJob as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in CreateJob.
+func (o *CreateJob) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in CreateJob as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in CreateJob.
+func (o *CreateJob) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in CreateJob as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in CreateJob.
+func (o *CreateJob) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in CreateJob as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in CreateJob.
+func (o *CreateJob) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in CreateJob as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in CreateJob.
+func (o *CreateJob) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in CreateJob as
+// a slice of JobParameterDefinition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetParameters(ctx context.Context) ([]JobParameterDefinition, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameterDefinition
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in CreateJob.
+func (o *CreateJob) SetParameters(ctx context.Context, v []JobParameterDefinition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in CreateJob as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in CreateJob.
+func (o *CreateJob) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in CreateJob as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in CreateJob.
+func (o *CreateJob) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in CreateJob as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in CreateJob.
+func (o *CreateJob) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateJob as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateJob.
+func (o *CreateJob) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.MapValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in CreateJob as
+// a slice of Task values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTasks(ctx context.Context) ([]Task, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []Task
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in CreateJob.
+func (o *CreateJob) SetTasks(ctx context.Context, v []Task) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in CreateJob as
+// a TriggerSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
+	var e TriggerSettings
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerSettings
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in CreateJob.
+func (o *CreateJob) SetTrigger(ctx context.Context, v TriggerSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in CreateJob as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateJob) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in CreateJob.
+func (o *CreateJob) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // Job was created successfully
 type CreateResponse struct {
 	// The canonical identifier for the newly created job.
@@ -1140,6 +1961,31 @@ func (o DbtOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetArtifactsHeaders returns the value of the ArtifactsHeaders field in DbtOutput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DbtOutput) GetArtifactsHeaders(ctx context.Context) (map[string]types.String, bool) {
+	if o.ArtifactsHeaders.IsNull() || o.ArtifactsHeaders.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.ArtifactsHeaders.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetArtifactsHeaders sets the value of the ArtifactsHeaders field in DbtOutput.
+func (o *DbtOutput) SetArtifactsHeaders(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
+	o.ArtifactsHeaders = types.MapValueMust(t, vs)
+}
+
 type DbtTask struct {
 	// Optional name of the catalog to use. The value is the top level in the
 	// 3-level namespace of Unity Catalog (catalog / schema / relation). The
@@ -1228,6 +2074,31 @@ func (o DbtTask) Type(ctx context.Context) attr.Type {
 			"warehouse_id":       types.StringType,
 		},
 	}
+}
+
+// GetCommands returns the value of the Commands field in DbtTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DbtTask) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Commands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCommands sets the value of the Commands field in DbtTask.
+func (o *DbtTask) SetCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	o.Commands = types.ListValueMust(t, vs)
 }
 
 type DeleteJob struct {
@@ -1557,6 +2428,57 @@ func (o EnforcePolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetJobClusterChanges returns the value of the JobClusterChanges field in EnforcePolicyComplianceResponse as
+// a slice of EnforcePolicyComplianceForJobResponseJobClusterSettingsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnforcePolicyComplianceResponse) GetJobClusterChanges(ctx context.Context) ([]EnforcePolicyComplianceForJobResponseJobClusterSettingsChange, bool) {
+	if o.JobClusterChanges.IsNull() || o.JobClusterChanges.IsUnknown() {
+		return nil, false
+	}
+	var v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange
+	d := o.JobClusterChanges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusterChanges sets the value of the JobClusterChanges field in EnforcePolicyComplianceResponse.
+func (o *EnforcePolicyComplianceResponse) SetJobClusterChanges(ctx context.Context, v []EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster_changes"]
+	o.JobClusterChanges = types.ListValueMust(t, vs)
+}
+
+// GetSettings returns the value of the Settings field in EnforcePolicyComplianceResponse as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnforcePolicyComplianceResponse) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in EnforcePolicyComplianceResponse.
+func (o *EnforcePolicyComplianceResponse) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
+}
+
 // Run was exported successfully.
 type ExportRunOutput struct {
 	// The exported content in HTML format (one for every view item). To extract
@@ -1606,6 +2528,31 @@ func (o ExportRunOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViews returns the value of the Views field in ExportRunOutput as
+// a slice of ViewItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExportRunOutput) GetViews(ctx context.Context) ([]ViewItem, bool) {
+	if o.Views.IsNull() || o.Views.IsUnknown() {
+		return nil, false
+	}
+	var v []ViewItem
+	d := o.Views.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViews sets the value of the Views field in ExportRunOutput.
+func (o *ExportRunOutput) SetViews(ctx context.Context, v []ViewItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["views"]
+	o.Views = types.ListValueMust(t, vs)
 }
 
 // Export and retrieve a job run
@@ -1764,6 +2711,57 @@ func (o ForEachStats) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetErrorMessageStats returns the value of the ErrorMessageStats field in ForEachStats as
+// a slice of ForEachTaskErrorMessageStats values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachStats) GetErrorMessageStats(ctx context.Context) ([]ForEachTaskErrorMessageStats, bool) {
+	if o.ErrorMessageStats.IsNull() || o.ErrorMessageStats.IsUnknown() {
+		return nil, false
+	}
+	var v []ForEachTaskErrorMessageStats
+	d := o.ErrorMessageStats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetErrorMessageStats sets the value of the ErrorMessageStats field in ForEachStats.
+func (o *ForEachStats) SetErrorMessageStats(ctx context.Context, v []ForEachTaskErrorMessageStats) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_message_stats"]
+	o.ErrorMessageStats = types.ListValueMust(t, vs)
+}
+
+// GetTaskRunStats returns the value of the TaskRunStats field in ForEachStats as
+// a ForEachTaskTaskRunStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachStats) GetTaskRunStats(ctx context.Context) (ForEachTaskTaskRunStats, bool) {
+	var e ForEachTaskTaskRunStats
+	if o.TaskRunStats.IsNull() || o.TaskRunStats.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTaskTaskRunStats
+	d := o.TaskRunStats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTaskRunStats sets the value of the TaskRunStats field in ForEachStats.
+func (o *ForEachStats) SetTaskRunStats(ctx context.Context, v ForEachTaskTaskRunStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_stats"]
+	o.TaskRunStats = types.ListValueMust(t, vs)
+}
+
 type ForEachTask struct {
 	// An optional maximum allowed number of concurrent runs of the task. Set
 	// this value if you want to be able to execute multiple runs of the task
@@ -1819,6 +2817,32 @@ func (o ForEachTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTask returns the value of the Task field in ForEachTask as
+// a Task value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ForEachTask) GetTask(ctx context.Context) (Task, bool) {
+	var e Task
+	if o.Task.IsNull() || o.Task.IsUnknown() {
+		return e, false
+	}
+	var v []Task
+	d := o.Task.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTask sets the value of the Task field in ForEachTask.
+func (o *ForEachTask) SetTask(ctx context.Context, v Task) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Task = types.ListValueMust(t, vs)
 }
 
 type ForEachTaskErrorMessageStats struct {
@@ -2024,6 +3048,31 @@ func (o GetJobPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPermissionLevels returns the value of the PermissionLevels field in GetJobPermissionLevelsResponse as
+// a slice of JobPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetJobPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]JobPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []JobPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetJobPermissionLevelsResponse.
+func (o *GetJobPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []JobPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
 // Get job permissions
 type GetJobPermissionsRequest struct {
 	// The job for which to get or manage permissions.
@@ -2209,6 +3258,31 @@ func (o GetPolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViolations returns the value of the Violations field in GetPolicyComplianceResponse as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPolicyComplianceResponse) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in GetPolicyComplianceResponse.
+func (o *GetPolicyComplianceResponse) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
 }
 
 // Get the output for a single run
@@ -2446,6 +3520,58 @@ func (o GitSource) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGitSnapshot returns the value of the GitSnapshot field in GitSource as
+// a GitSnapshot value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GitSource) GetGitSnapshot(ctx context.Context) (GitSnapshot, bool) {
+	var e GitSnapshot
+	if o.GitSnapshot.IsNull() || o.GitSnapshot.IsUnknown() {
+		return e, false
+	}
+	var v []GitSnapshot
+	d := o.GitSnapshot.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSnapshot sets the value of the GitSnapshot field in GitSource.
+func (o *GitSource) SetGitSnapshot(ctx context.Context, v GitSnapshot) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_snapshot"]
+	o.GitSnapshot = types.ListValueMust(t, vs)
+}
+
+// GetJobSource returns the value of the JobSource field in GitSource as
+// a JobSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GitSource) GetJobSource(ctx context.Context) (JobSource, bool) {
+	var e JobSource
+	if o.JobSource.IsNull() || o.JobSource.IsUnknown() {
+		return e, false
+	}
+	var v []JobSource
+	d := o.JobSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobSource sets the value of the JobSource field in GitSource.
+func (o *GitSource) SetJobSource(ctx context.Context, v JobSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_source"]
+	o.JobSource = types.ListValueMust(t, vs)
+}
+
 // Job was retrieved successfully.
 type Job struct {
 	// The time at which this job was created in epoch milliseconds
@@ -2525,6 +3651,32 @@ func (o Job) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSettings returns the value of the Settings field in Job as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Job) GetSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.Settings.IsNull() || o.Settings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.Settings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSettings sets the value of the Settings field in Job.
+func (o *Job) SetSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["settings"]
+	o.Settings = types.ListValueMust(t, vs)
 }
 
 type JobAccessControlRequest struct {
@@ -2643,6 +3795,31 @@ func (o JobAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in JobAccessControlResponse as
+// a slice of JobPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobAccessControlResponse) GetAllPermissions(ctx context.Context) ([]JobPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []JobPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in JobAccessControlResponse.
+func (o *JobAccessControlResponse) SetAllPermissions(ctx context.Context, v []JobPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type JobCluster struct {
 	// A unique name for the job cluster. This field is required and must be
 	// unique within the job. `JobTaskSettings` may refer to this field to
@@ -2667,7 +3844,7 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobClust
 // SDK values.
 func (a JobCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"new_cluster": reflect.TypeOf(compute.ClusterSpec{}),
+		"new_cluster": reflect.TypeOf(compute_tf.ClusterSpec{}),
 	}
 }
 
@@ -2693,6 +3870,32 @@ func (o JobCluster) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNewCluster returns the value of the NewCluster field in JobCluster as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobCluster) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in JobCluster.
+func (o *JobCluster) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
 }
 
 type JobCompliance struct {
@@ -2751,6 +3954,31 @@ func (o JobCompliance) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViolations returns the value of the Violations field in JobCompliance as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobCompliance) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in JobCompliance.
+func (o *JobCompliance) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
 }
 
 type JobDeployment struct {
@@ -2900,6 +4128,131 @@ func (o JobEmailNotifications) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnFailure returns the value of the OnFailure field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnFailure sets the value of the OnFailure field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnFailure(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnStart returns the value of the OnStart field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStart sets the value of the OnStart field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
+
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnSuccess returns the value of the OnSuccess field in JobEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEmailNotifications) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnSuccess sets the value of the OnSuccess field in JobEmailNotifications.
+func (o *JobEmailNotifications) SetOnSuccess(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
+}
+
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key" tf:""`
@@ -2924,7 +4277,7 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobE
 // SDK values.
 func (a JobEnvironment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"spec": reflect.TypeOf(compute.Environment{}),
+		"spec": reflect.TypeOf(compute_tf.Environment{}),
 	}
 }
 
@@ -2950,6 +4303,32 @@ func (o JobEnvironment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSpec returns the value of the Spec field in JobEnvironment as
+// a compute_tf.Environment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobEnvironment) GetSpec(ctx context.Context) (compute_tf.Environment, bool) {
+	var e compute_tf.Environment
+	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.Environment
+	d := o.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in JobEnvironment.
+func (o *JobEnvironment) SetSpec(ctx context.Context, v compute_tf.Environment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	o.Spec = types.ListValueMust(t, vs)
 }
 
 type JobNotificationSettings struct {
@@ -3150,6 +4529,31 @@ func (o JobPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in JobPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in JobPermission.
+func (o *JobPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type JobPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -3201,6 +4605,31 @@ func (o JobPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in JobPermissions as
+// a slice of JobAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermissions) GetAccessControlList(ctx context.Context) ([]JobAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in JobPermissions.
+func (o *JobPermissions) SetAccessControlList(ctx context.Context, v []JobAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type JobPermissionsDescription struct {
@@ -3295,6 +4724,31 @@ func (o JobPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"job_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in JobPermissionsRequest as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobPermissionsRequest) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in JobPermissionsRequest.
+func (o *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // Write-only setting. Specifies the user, service principal or group that the
@@ -3585,6 +5039,417 @@ func (o JobSettings) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetContinuous returns the value of the Continuous field in JobSettings as
+// a Continuous value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetContinuous(ctx context.Context) (Continuous, bool) {
+	var e Continuous
+	if o.Continuous.IsNull() || o.Continuous.IsUnknown() {
+		return e, false
+	}
+	var v []Continuous
+	d := o.Continuous.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContinuous sets the value of the Continuous field in JobSettings.
+func (o *JobSettings) SetContinuous(ctx context.Context, v Continuous) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["continuous"]
+	o.Continuous = types.ListValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in JobSettings as
+// a JobDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetDeployment(ctx context.Context) (JobDeployment, bool) {
+	var e JobDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []JobDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in JobSettings.
+func (o *JobSettings) SetDeployment(ctx context.Context, v JobDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in JobSettings as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in JobSettings.
+func (o *JobSettings) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in JobSettings as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in JobSettings.
+func (o *JobSettings) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in JobSettings as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in JobSettings.
+func (o *JobSettings) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in JobSettings as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in JobSettings.
+func (o *JobSettings) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in JobSettings as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in JobSettings.
+func (o *JobSettings) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in JobSettings as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in JobSettings.
+func (o *JobSettings) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in JobSettings as
+// a slice of JobParameterDefinition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetParameters(ctx context.Context) ([]JobParameterDefinition, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameterDefinition
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in JobSettings.
+func (o *JobSettings) SetParameters(ctx context.Context, v []JobParameterDefinition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in JobSettings as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in JobSettings.
+func (o *JobSettings) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in JobSettings as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in JobSettings.
+func (o *JobSettings) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in JobSettings as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in JobSettings.
+func (o *JobSettings) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in JobSettings as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in JobSettings.
+func (o *JobSettings) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.MapValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in JobSettings as
+// a slice of Task values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTasks(ctx context.Context) ([]Task, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []Task
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in JobSettings.
+func (o *JobSettings) SetTasks(ctx context.Context, v []Task) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in JobSettings as
+// a TriggerSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetTrigger(ctx context.Context) (TriggerSettings, bool) {
+	var e TriggerSettings
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerSettings
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in JobSettings.
+func (o *JobSettings) SetTrigger(ctx context.Context, v TriggerSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in JobSettings as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobSettings) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in JobSettings.
+func (o *JobSettings) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // The source of the job specification in the remote repository when the job is
 // source controlled.
 type JobSource struct {
@@ -3754,6 +5619,31 @@ func (o JobsHealthRules) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRules returns the value of the Rules field in JobsHealthRules as
+// a slice of JobsHealthRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *JobsHealthRules) GetRules(ctx context.Context) ([]JobsHealthRule, bool) {
+	if o.Rules.IsNull() || o.Rules.IsUnknown() {
+		return nil, false
+	}
+	var v []JobsHealthRule
+	d := o.Rules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRules sets the value of the Rules field in JobsHealthRules.
+func (o *JobsHealthRules) SetRules(ctx context.Context, v []JobsHealthRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
+	o.Rules = types.ListValueMust(t, vs)
+}
+
 type ListJobComplianceForPolicyResponse struct {
 	// A list of jobs and their policy compliance statuses.
 	Jobs types.List `tfsdk:"jobs" tf:"optional"`
@@ -3810,6 +5700,31 @@ func (o ListJobComplianceForPolicyResponse) Type(ctx context.Context) attr.Type 
 			"prev_page_token": types.StringType,
 		},
 	}
+}
+
+// GetJobs returns the value of the Jobs field in ListJobComplianceForPolicyResponse as
+// a slice of JobCompliance values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListJobComplianceForPolicyResponse) GetJobs(ctx context.Context) ([]JobCompliance, bool) {
+	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCompliance
+	d := o.Jobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobs sets the value of the Jobs field in ListJobComplianceForPolicyResponse.
+func (o *ListJobComplianceForPolicyResponse) SetJobs(ctx context.Context, v []JobCompliance) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	o.Jobs = types.ListValueMust(t, vs)
 }
 
 // List job policy compliance
@@ -3991,6 +5906,31 @@ func (o ListJobsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetJobs returns the value of the Jobs field in ListJobsResponse as
+// a slice of BaseJob values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListJobsResponse) GetJobs(ctx context.Context) ([]BaseJob, bool) {
+	if o.Jobs.IsNull() || o.Jobs.IsUnknown() {
+		return nil, false
+	}
+	var v []BaseJob
+	d := o.Jobs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobs sets the value of the Jobs field in ListJobsResponse.
+func (o *ListJobsResponse) SetJobs(ctx context.Context, v []BaseJob) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	o.Jobs = types.ListValueMust(t, vs)
+}
+
 // List job runs
 type ListRunsRequest struct {
 	// If active_only is `true`, only active runs are included in the results;
@@ -4148,6 +6088,31 @@ func (o ListRunsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRuns returns the value of the Runs field in ListRunsResponse as
+// a slice of BaseRun values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListRunsResponse) GetRuns(ctx context.Context) ([]BaseRun, bool) {
+	if o.Runs.IsNull() || o.Runs.IsUnknown() {
+		return nil, false
+	}
+	var v []BaseRun
+	d := o.Runs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRuns sets the value of the Runs field in ListRunsResponse.
+func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	o.Runs = types.ListValueMust(t, vs)
+}
+
 type NotebookOutput struct {
 	// The value passed to
 	// [dbutils.notebook.exit()](/notebooks/notebook-workflows.html#notebook-workflows-exit).
@@ -4285,6 +6250,31 @@ func (o NotebookTask) Type(ctx context.Context) attr.Type {
 			"warehouse_id":  types.StringType,
 		},
 	}
+}
+
+// GetBaseParameters returns the value of the BaseParameters field in NotebookTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NotebookTask) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseParameters sets the value of the BaseParameters field in NotebookTask.
+func (o *NotebookTask) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
 type PeriodicTriggerConfiguration struct {
@@ -4487,6 +6477,56 @@ func (o PythonWheelTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetNamedParameters returns the value of the NamedParameters field in PythonWheelTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PythonWheelTask) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNamedParameters sets the value of the NamedParameters field in PythonWheelTask.
+func (o *PythonWheelTask) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	o.NamedParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in PythonWheelTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PythonWheelTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in PythonWheelTask.
+func (o *PythonWheelTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
 type QueueDetails struct {
 	// The reason for queuing the run. * `ACTIVE_RUNS_LIMIT_REACHED`: The run
 	// was queued due to reaching the workspace limit of active task runs. *
@@ -4658,6 +6698,83 @@ func (o RepairHistoryItem) Type(ctx context.Context) attr.Type {
 			"type": types.StringType,
 		},
 	}
+}
+
+// GetState returns the value of the State field in RepairHistoryItem as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in RepairHistoryItem as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTaskRunIds returns the value of the TaskRunIds field in RepairHistoryItem as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairHistoryItem) GetTaskRunIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.TaskRunIds.IsNull() || o.TaskRunIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.TaskRunIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTaskRunIds sets the value of the TaskRunIds field in RepairHistoryItem.
+func (o *RepairHistoryItem) SetTaskRunIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_ids"]
+	o.TaskRunIds = types.ListValueMust(t, vs)
 }
 
 type RepairRun struct {
@@ -4857,6 +6974,257 @@ func (o RepairRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RepairRun.
+func (o *RepairRun) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RepairRun.
+func (o *RepairRun) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RepairRun.
+func (o *RepairRun) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RepairRun.
+func (o *RepairRun) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RepairRun as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RepairRun.
+func (o *RepairRun) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RepairRun.
+func (o *RepairRun) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RepairRun.
+func (o *RepairRun) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetRerunTasks returns the value of the RerunTasks field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetRerunTasks(ctx context.Context) ([]types.String, bool) {
+	if o.RerunTasks.IsNull() || o.RerunTasks.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RerunTasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRerunTasks sets the value of the RerunTasks field in RepairRun.
+func (o *RepairRun) SetRerunTasks(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rerun_tasks"]
+	o.RerunTasks = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RepairRun as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RepairRun.
+func (o *RepairRun) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RepairRun as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepairRun) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RepairRun.
+func (o *RepairRun) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 // Run repair was initiated.
 type RepairRunResponse struct {
 	// The ID of the repair. Must be provided in subsequent repairs using the
@@ -4953,6 +7321,32 @@ func (o ResetJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetNewSettings returns the value of the NewSettings field in ResetJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResetJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewSettings sets the value of the NewSettings field in ResetJob.
+func (o *ResetJob) SetNewSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	o.NewSettings = types.ListValueMust(t, vs)
 }
 
 type ResetResponse struct {
@@ -5081,6 +7475,31 @@ func (o ResolvedDbtTaskValues) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCommands returns the value of the Commands field in ResolvedDbtTaskValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedDbtTaskValues) GetCommands(ctx context.Context) ([]types.String, bool) {
+	if o.Commands.IsNull() || o.Commands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Commands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCommands sets the value of the Commands field in ResolvedDbtTaskValues.
+func (o *ResolvedDbtTaskValues) SetCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	o.Commands = types.ListValueMust(t, vs)
+}
+
 type ResolvedNotebookTaskValues struct {
 	BaseParameters types.Map `tfsdk:"base_parameters" tf:"optional"`
 }
@@ -5126,6 +7545,31 @@ func (o ResolvedNotebookTaskValues) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetBaseParameters returns the value of the BaseParameters field in ResolvedNotebookTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedNotebookTaskValues) GetBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.BaseParameters.IsNull() || o.BaseParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.BaseParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBaseParameters sets the value of the BaseParameters field in ResolvedNotebookTaskValues.
+func (o *ResolvedNotebookTaskValues) SetBaseParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	o.BaseParameters = types.MapValueMust(t, vs)
+}
+
 type ResolvedParamPairValues struct {
 	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
 }
@@ -5169,6 +7613,31 @@ func (o ResolvedParamPairValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedParamPairValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedParamPairValues) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedParamPairValues.
+func (o *ResolvedParamPairValues) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
 }
 
 type ResolvedPythonWheelTaskValues struct {
@@ -5223,6 +7692,56 @@ func (o ResolvedPythonWheelTaskValues) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetNamedParameters returns the value of the NamedParameters field in ResolvedPythonWheelTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedPythonWheelTaskValues) GetNamedParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.NamedParameters.IsNull() || o.NamedParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NamedParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNamedParameters sets the value of the NamedParameters field in ResolvedPythonWheelTaskValues.
+func (o *ResolvedPythonWheelTaskValues) SetNamedParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	o.NamedParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedPythonWheelTaskValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedPythonWheelTaskValues) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedPythonWheelTaskValues.
+func (o *ResolvedPythonWheelTaskValues) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
 type ResolvedRunJobTaskValues struct {
 	JobParameters types.Map `tfsdk:"job_parameters" tf:"optional"`
 
@@ -5275,6 +7794,56 @@ func (o ResolvedRunJobTaskValues) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetJobParameters returns the value of the JobParameters field in ResolvedRunJobTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedRunJobTaskValues) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in ResolvedRunJobTaskValues.
+func (o *ResolvedRunJobTaskValues) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedRunJobTaskValues as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedRunJobTaskValues) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedRunJobTaskValues.
+func (o *ResolvedRunJobTaskValues) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
+}
+
 type ResolvedStringParamsValues struct {
 	Parameters types.List `tfsdk:"parameters" tf:"optional"`
 }
@@ -5318,6 +7887,31 @@ func (o ResolvedStringParamsValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in ResolvedStringParamsValues as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedStringParamsValues) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ResolvedStringParamsValues.
+func (o *ResolvedStringParamsValues) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type ResolvedValues struct {
@@ -5426,6 +8020,266 @@ func (o ResolvedValues) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConditionTask returns the value of the ConditionTask field in ResolvedValues as
+// a ResolvedConditionTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetConditionTask(ctx context.Context) (ResolvedConditionTaskValues, bool) {
+	var e ResolvedConditionTaskValues
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedConditionTaskValues
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in ResolvedValues.
+func (o *ResolvedValues) SetConditionTask(ctx context.Context, v ResolvedConditionTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in ResolvedValues as
+// a ResolvedDbtTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetDbtTask(ctx context.Context) (ResolvedDbtTaskValues, bool) {
+	var e ResolvedDbtTaskValues
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedDbtTaskValues
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in ResolvedValues.
+func (o *ResolvedValues) SetDbtTask(ctx context.Context, v ResolvedDbtTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in ResolvedValues as
+// a ResolvedNotebookTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetNotebookTask(ctx context.Context) (ResolvedNotebookTaskValues, bool) {
+	var e ResolvedNotebookTaskValues
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedNotebookTaskValues
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in ResolvedValues.
+func (o *ResolvedValues) SetNotebookTask(ctx context.Context, v ResolvedNotebookTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in ResolvedValues as
+// a ResolvedPythonWheelTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetPythonWheelTask(ctx context.Context) (ResolvedPythonWheelTaskValues, bool) {
+	var e ResolvedPythonWheelTaskValues
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedPythonWheelTaskValues
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in ResolvedValues.
+func (o *ResolvedValues) SetPythonWheelTask(ctx context.Context, v ResolvedPythonWheelTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in ResolvedValues as
+// a ResolvedRunJobTaskValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetRunJobTask(ctx context.Context) (ResolvedRunJobTaskValues, bool) {
+	var e ResolvedRunJobTaskValues
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedRunJobTaskValues
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in ResolvedValues.
+func (o *ResolvedValues) SetRunJobTask(ctx context.Context, v ResolvedRunJobTaskValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSimulationTask returns the value of the SimulationTask field in ResolvedValues as
+// a ResolvedParamPairValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSimulationTask(ctx context.Context) (ResolvedParamPairValues, bool) {
+	var e ResolvedParamPairValues
+	if o.SimulationTask.IsNull() || o.SimulationTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedParamPairValues
+	d := o.SimulationTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSimulationTask sets the value of the SimulationTask field in ResolvedValues.
+func (o *ResolvedValues) SetSimulationTask(ctx context.Context, v ResolvedParamPairValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["simulation_task"]
+	o.SimulationTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkJarTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkJarTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkPythonTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkPythonTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in ResolvedValues as
+// a ResolvedStringParamsValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSparkSubmitTask(ctx context.Context) (ResolvedStringParamsValues, bool) {
+	var e ResolvedStringParamsValues
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedStringParamsValues
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in ResolvedValues.
+func (o *ResolvedValues) SetSparkSubmitTask(ctx context.Context, v ResolvedStringParamsValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in ResolvedValues as
+// a ResolvedParamPairValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResolvedValues) GetSqlTask(ctx context.Context) (ResolvedParamPairValues, bool) {
+	var e ResolvedParamPairValues
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedParamPairValues
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in ResolvedValues.
+func (o *ResolvedValues) SetSqlTask(ctx context.Context, v ResolvedParamPairValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
 }
 
 // Run was retrieved successfully
@@ -5705,6 +8559,339 @@ func (o Run) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in Run as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in Run.
+func (o *Run) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetClusterSpec returns the value of the ClusterSpec field in Run as
+// a ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetClusterSpec(ctx context.Context) (ClusterSpec, bool) {
+	var e ClusterSpec
+	if o.ClusterSpec.IsNull() || o.ClusterSpec.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSpec
+	d := o.ClusterSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterSpec sets the value of the ClusterSpec field in Run.
+func (o *Run) SetClusterSpec(ctx context.Context, v ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_spec"]
+	o.ClusterSpec = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in Run as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in Run.
+func (o *Run) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetIterations returns the value of the Iterations field in Run as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetIterations(ctx context.Context) ([]RunTask, bool) {
+	if o.Iterations.IsNull() || o.Iterations.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Iterations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIterations sets the value of the Iterations field in Run.
+func (o *Run) SetIterations(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["iterations"]
+	o.Iterations = types.ListValueMust(t, vs)
+}
+
+// GetJobClusters returns the value of the JobClusters field in Run as
+// a slice of JobCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetJobClusters(ctx context.Context) ([]JobCluster, bool) {
+	if o.JobClusters.IsNull() || o.JobClusters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobCluster
+	d := o.JobClusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobClusters sets the value of the JobClusters field in Run.
+func (o *Run) SetJobClusters(ctx context.Context, v []JobCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	o.JobClusters = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in Run as
+// a slice of JobParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetJobParameters(ctx context.Context) ([]JobParameter, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v []JobParameter
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in Run.
+func (o *Run) SetJobParameters(ctx context.Context, v []JobParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.ListValueMust(t, vs)
+}
+
+// GetOverridingParameters returns the value of the OverridingParameters field in Run as
+// a RunParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetOverridingParameters(ctx context.Context) (RunParameters, bool) {
+	var e RunParameters
+	if o.OverridingParameters.IsNull() || o.OverridingParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RunParameters
+	d := o.OverridingParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOverridingParameters sets the value of the OverridingParameters field in Run.
+func (o *Run) SetOverridingParameters(ctx context.Context, v RunParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["overriding_parameters"]
+	o.OverridingParameters = types.ListValueMust(t, vs)
+}
+
+// GetRepairHistory returns the value of the RepairHistory field in Run as
+// a slice of RepairHistoryItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetRepairHistory(ctx context.Context) ([]RepairHistoryItem, bool) {
+	if o.RepairHistory.IsNull() || o.RepairHistory.IsUnknown() {
+		return nil, false
+	}
+	var v []RepairHistoryItem
+	d := o.RepairHistory.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepairHistory sets the value of the RepairHistory field in Run.
+func (o *Run) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	o.RepairHistory = types.ListValueMust(t, vs)
+}
+
+// GetSchedule returns the value of the Schedule field in Run as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in Run.
+func (o *Run) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in Run as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in Run.
+func (o *Run) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in Run as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in Run.
+func (o *Run) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in Run as
+// a slice of RunTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetTasks(ctx context.Context) ([]RunTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in Run.
+func (o *Run) SetTasks(ctx context.Context, v []RunTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetTriggerInfo returns the value of the TriggerInfo field in Run as
+// a TriggerInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetTriggerInfo(ctx context.Context) (TriggerInfo, bool) {
+	var e TriggerInfo
+	if o.TriggerInfo.IsNull() || o.TriggerInfo.IsUnknown() {
+		return e, false
+	}
+	var v []TriggerInfo
+	d := o.TriggerInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTriggerInfo sets the value of the TriggerInfo field in Run.
+func (o *Run) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger_info"]
+	o.TriggerInfo = types.ListValueMust(t, vs)
+}
+
 type RunConditionTask struct {
 	// The left operand of the condition task. Can be either a string value or a
 	// job state or parameter reference.
@@ -5834,6 +9021,58 @@ func (o RunForEachTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStats returns the value of the Stats field in RunForEachTask as
+// a ForEachStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunForEachTask) GetStats(ctx context.Context) (ForEachStats, bool) {
+	var e ForEachStats
+	if o.Stats.IsNull() || o.Stats.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachStats
+	d := o.Stats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStats sets the value of the Stats field in RunForEachTask.
+func (o *RunForEachTask) SetStats(ctx context.Context, v ForEachStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
+	o.Stats = types.ListValueMust(t, vs)
+}
+
+// GetTask returns the value of the Task field in RunForEachTask as
+// a Task value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunForEachTask) GetTask(ctx context.Context) (Task, bool) {
+	var e Task
+	if o.Task.IsNull() || o.Task.IsUnknown() {
+		return e, false
+	}
+	var v []Task
+	d := o.Task.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTask sets the value of the Task field in RunForEachTask.
+func (o *RunForEachTask) SetTask(ctx context.Context, v Task) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	o.Task = types.ListValueMust(t, vs)
 }
 
 type RunJobOutput struct {
@@ -6050,6 +9289,232 @@ func (o RunJobTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunJobTask.
+func (o *RunJobTask) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunJobTask.
+func (o *RunJobTask) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RunJobTask.
+func (o *RunJobTask) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunJobTask.
+func (o *RunJobTask) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunJobTask as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunJobTask.
+func (o *RunJobTask) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunJobTask.
+func (o *RunJobTask) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunJobTask.
+func (o *RunJobTask) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunJobTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunJobTask.
+func (o *RunJobTask) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunJobTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunJobTask) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunJobTask.
+func (o *RunJobTask) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 type RunNow struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
@@ -6255,6 +9720,283 @@ func (o RunNow) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunNow.
+func (o *RunNow) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunNow.
+func (o *RunNow) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetJobParameters returns the value of the JobParameters field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetJobParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.JobParameters.IsNull() || o.JobParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.JobParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJobParameters sets the value of the JobParameters field in RunNow.
+func (o *RunNow) SetJobParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	o.JobParameters = types.MapValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunNow.
+func (o *RunNow) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetOnly returns the value of the Only field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetOnly(ctx context.Context) ([]types.String, bool) {
+	if o.Only.IsNull() || o.Only.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Only.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnly sets the value of the Only field in RunNow.
+func (o *RunNow) SetOnly(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["only"]
+	o.Only = types.ListValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunNow as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunNow.
+func (o *RunNow) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunNow.
+func (o *RunNow) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunNow.
+func (o *RunNow) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in RunNow as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in RunNow.
+func (o *RunNow) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunNow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunNow.
+func (o *RunNow) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunNow as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunNow) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunNow.
+func (o *RunNow) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 // Run was started successfully.
 type RunNowResponse struct {
 	// A unique identifier for this job run. This is set to the same value as
@@ -6412,6 +10154,136 @@ func (o RunOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDbtOutput returns the value of the DbtOutput field in RunOutput as
+// a DbtOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetDbtOutput(ctx context.Context) (DbtOutput, bool) {
+	var e DbtOutput
+	if o.DbtOutput.IsNull() || o.DbtOutput.IsUnknown() {
+		return e, false
+	}
+	var v []DbtOutput
+	d := o.DbtOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtOutput sets the value of the DbtOutput field in RunOutput.
+func (o *RunOutput) SetDbtOutput(ctx context.Context, v DbtOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_output"]
+	o.DbtOutput = types.ListValueMust(t, vs)
+}
+
+// GetMetadata returns the value of the Metadata field in RunOutput as
+// a Run value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetMetadata(ctx context.Context) (Run, bool) {
+	var e Run
+	if o.Metadata.IsNull() || o.Metadata.IsUnknown() {
+		return e, false
+	}
+	var v []Run
+	d := o.Metadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetadata sets the value of the Metadata field in RunOutput.
+func (o *RunOutput) SetMetadata(ctx context.Context, v Run) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metadata"]
+	o.Metadata = types.ListValueMust(t, vs)
+}
+
+// GetNotebookOutput returns the value of the NotebookOutput field in RunOutput as
+// a NotebookOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetNotebookOutput(ctx context.Context) (NotebookOutput, bool) {
+	var e NotebookOutput
+	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookOutput
+	d := o.NotebookOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookOutput sets the value of the NotebookOutput field in RunOutput.
+func (o *RunOutput) SetNotebookOutput(ctx context.Context, v NotebookOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
+	o.NotebookOutput = types.ListValueMust(t, vs)
+}
+
+// GetRunJobOutput returns the value of the RunJobOutput field in RunOutput as
+// a RunJobOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetRunJobOutput(ctx context.Context) (RunJobOutput, bool) {
+	var e RunJobOutput
+	if o.RunJobOutput.IsNull() || o.RunJobOutput.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobOutput
+	d := o.RunJobOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobOutput sets the value of the RunJobOutput field in RunOutput.
+func (o *RunOutput) SetRunJobOutput(ctx context.Context, v RunJobOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_output"]
+	o.RunJobOutput = types.ListValueMust(t, vs)
+}
+
+// GetSqlOutput returns the value of the SqlOutput field in RunOutput as
+// a SqlOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetSqlOutput(ctx context.Context) (SqlOutput, bool) {
+	var e SqlOutput
+	if o.SqlOutput.IsNull() || o.SqlOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlOutput
+	d := o.SqlOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlOutput sets the value of the SqlOutput field in RunOutput.
+func (o *RunOutput) SetSqlOutput(ctx context.Context, v SqlOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_output"]
+	o.SqlOutput = types.ListValueMust(t, vs)
 }
 
 type RunParameters struct {
@@ -6575,6 +10447,207 @@ func (o RunParameters) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbtCommands returns the value of the DbtCommands field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetDbtCommands(ctx context.Context) ([]types.String, bool) {
+	if o.DbtCommands.IsNull() || o.DbtCommands.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DbtCommands.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDbtCommands sets the value of the DbtCommands field in RunParameters.
+func (o *RunParameters) SetDbtCommands(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	o.DbtCommands = types.ListValueMust(t, vs)
+}
+
+// GetJarParams returns the value of the JarParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetJarParams(ctx context.Context) ([]types.String, bool) {
+	if o.JarParams.IsNull() || o.JarParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarParams sets the value of the JarParams field in RunParameters.
+func (o *RunParameters) SetJarParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	o.JarParams = types.ListValueMust(t, vs)
+}
+
+// GetNotebookParams returns the value of the NotebookParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetNotebookParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookParams.IsNull() || o.NotebookParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookParams sets the value of the NotebookParams field in RunParameters.
+func (o *RunParameters) SetNotebookParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	o.NotebookParams = types.MapValueMust(t, vs)
+}
+
+// GetPipelineParams returns the value of the PipelineParams field in RunParameters as
+// a PipelineParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPipelineParams(ctx context.Context) (PipelineParams, bool) {
+	var e PipelineParams
+	if o.PipelineParams.IsNull() || o.PipelineParams.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineParams
+	d := o.PipelineParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineParams sets the value of the PipelineParams field in RunParameters.
+func (o *RunParameters) SetPipelineParams(ctx context.Context, v PipelineParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_params"]
+	o.PipelineParams = types.ListValueMust(t, vs)
+}
+
+// GetPythonNamedParams returns the value of the PythonNamedParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPythonNamedParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.PythonNamedParams.IsNull() || o.PythonNamedParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.PythonNamedParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonNamedParams sets the value of the PythonNamedParams field in RunParameters.
+func (o *RunParameters) SetPythonNamedParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	o.PythonNamedParams = types.MapValueMust(t, vs)
+}
+
+// GetPythonParams returns the value of the PythonParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetPythonParams(ctx context.Context) ([]types.String, bool) {
+	if o.PythonParams.IsNull() || o.PythonParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PythonParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPythonParams sets the value of the PythonParams field in RunParameters.
+func (o *RunParameters) SetPythonParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	o.PythonParams = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitParams returns the value of the SparkSubmitParams field in RunParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetSparkSubmitParams(ctx context.Context) ([]types.String, bool) {
+	if o.SparkSubmitParams.IsNull() || o.SparkSubmitParams.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SparkSubmitParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkSubmitParams sets the value of the SparkSubmitParams field in RunParameters.
+func (o *RunParameters) SetSparkSubmitParams(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	o.SparkSubmitParams = types.ListValueMust(t, vs)
+}
+
+// GetSqlParams returns the value of the SqlParams field in RunParameters as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunParameters) GetSqlParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.SqlParams.IsNull() || o.SqlParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SqlParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlParams sets the value of the SqlParams field in RunParameters.
+func (o *RunParameters) SetSqlParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	o.SqlParams = types.MapValueMust(t, vs)
+}
+
 // The current state of the run.
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
@@ -6695,6 +10768,58 @@ func (o RunStatus) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQueueDetails returns the value of the QueueDetails field in RunStatus as
+// a QueueDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunStatus) GetQueueDetails(ctx context.Context) (QueueDetails, bool) {
+	var e QueueDetails
+	if o.QueueDetails.IsNull() || o.QueueDetails.IsUnknown() {
+		return e, false
+	}
+	var v []QueueDetails
+	d := o.QueueDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueueDetails sets the value of the QueueDetails field in RunStatus.
+func (o *RunStatus) SetQueueDetails(ctx context.Context, v QueueDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue_details"]
+	o.QueueDetails = types.ListValueMust(t, vs)
+}
+
+// GetTerminationDetails returns the value of the TerminationDetails field in RunStatus as
+// a TerminationDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunStatus) GetTerminationDetails(ctx context.Context) (TerminationDetails, bool) {
+	var e TerminationDetails
+	if o.TerminationDetails.IsNull() || o.TerminationDetails.IsUnknown() {
+		return e, false
+	}
+	var v []TerminationDetails
+	d := o.TerminationDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTerminationDetails sets the value of the TerminationDetails field in RunStatus.
+func (o *RunStatus) SetTerminationDetails(ctx context.Context, v TerminationDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_details"]
+	o.TerminationDetails = types.ListValueMust(t, vs)
 }
 
 // Used when outputting a child run, in GetRun or ListRuns.
@@ -6887,8 +11012,8 @@ func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(RunForEachTask{}),
 		"git_source":            reflect.TypeOf(GitSource{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -7045,6 +11170,576 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterInstance returns the value of the ClusterInstance field in RunTask as
+// a ClusterInstance value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetClusterInstance(ctx context.Context) (ClusterInstance, bool) {
+	var e ClusterInstance
+	if o.ClusterInstance.IsNull() || o.ClusterInstance.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterInstance
+	d := o.ClusterInstance.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterInstance sets the value of the ClusterInstance field in RunTask.
+func (o *RunTask) SetClusterInstance(ctx context.Context, v ClusterInstance) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_instance"]
+	o.ClusterInstance = types.ListValueMust(t, vs)
+}
+
+// GetConditionTask returns the value of the ConditionTask field in RunTask as
+// a RunConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetConditionTask(ctx context.Context) (RunConditionTask, bool) {
+	var e RunConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in RunTask.
+func (o *RunTask) SetConditionTask(ctx context.Context, v RunConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in RunTask as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in RunTask.
+func (o *RunTask) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in RunTask as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in RunTask.
+func (o *RunTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in RunTask as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in RunTask.
+func (o *RunTask) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in RunTask as
+// a RunForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetForEachTask(ctx context.Context) (RunForEachTask, bool) {
+	var e RunForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in RunTask.
+func (o *RunTask) SetForEachTask(ctx context.Context, v RunForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in RunTask as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in RunTask.
+func (o *RunTask) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in RunTask as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in RunTask.
+func (o *RunTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in RunTask as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in RunTask.
+func (o *RunTask) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in RunTask as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in RunTask.
+func (o *RunTask) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in RunTask as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in RunTask.
+func (o *RunTask) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in RunTask as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in RunTask.
+func (o *RunTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in RunTask as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in RunTask.
+func (o *RunTask) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetResolvedValues returns the value of the ResolvedValues field in RunTask as
+// a ResolvedValues value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetResolvedValues(ctx context.Context) (ResolvedValues, bool) {
+	var e ResolvedValues
+	if o.ResolvedValues.IsNull() || o.ResolvedValues.IsUnknown() {
+		return e, false
+	}
+	var v []ResolvedValues
+	d := o.ResolvedValues.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResolvedValues sets the value of the ResolvedValues field in RunTask.
+func (o *RunTask) SetResolvedValues(ctx context.Context, v ResolvedValues) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resolved_values"]
+	o.ResolvedValues = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in RunTask as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in RunTask.
+func (o *RunTask) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in RunTask as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in RunTask.
+func (o *RunTask) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in RunTask as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in RunTask.
+func (o *RunTask) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in RunTask as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in RunTask.
+func (o *RunTask) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in RunTask as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in RunTask.
+func (o *RunTask) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in RunTask as
+// a RunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetState(ctx context.Context) (RunState, bool) {
+	var e RunState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []RunState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in RunTask.
+func (o *RunTask) SetState(ctx context.Context, v RunState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in RunTask as
+// a RunStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetStatus(ctx context.Context) (RunStatus, bool) {
+	var e RunStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []RunStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in RunTask.
+func (o *RunTask) SetStatus(ctx context.Context, v RunStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in RunTask as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in RunTask.
+func (o *RunTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 type SparkJarTask struct {
 	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
 	// instead. For an example, see :method:jobs/create.
@@ -7107,6 +11802,31 @@ func (o SparkJarTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in SparkJarTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkJarTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkJarTask.
+func (o *SparkJarTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type SparkPythonTask struct {
@@ -7180,6 +11900,31 @@ func (o SparkPythonTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in SparkPythonTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkPythonTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkPythonTask.
+func (o *SparkPythonTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
 type SparkSubmitTask struct {
 	// Command-line parameters passed to spark submit.
 	//
@@ -7229,6 +11974,31 @@ func (o SparkSubmitTask) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in SparkSubmitTask as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkSubmitTask) GetParameters(ctx context.Context) ([]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SparkSubmitTask.
+func (o *SparkSubmitTask) SetParameters(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
 }
 
 type SqlAlertOutput struct {
@@ -7298,6 +12068,31 @@ func (o SqlAlertOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSqlStatements returns the value of the SqlStatements field in SqlAlertOutput as
+// a slice of SqlStatementOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlAlertOutput) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput, bool) {
+	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput
+	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlAlertOutput.
+func (o *SqlAlertOutput) SetSqlStatements(ctx context.Context, v []SqlStatementOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	o.SqlStatements = types.ListValueMust(t, vs)
+}
+
 type SqlDashboardOutput struct {
 	// The canonical identifier of the SQL warehouse.
 	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
@@ -7346,6 +12141,31 @@ func (o SqlDashboardOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWidgets returns the value of the Widgets field in SqlDashboardOutput as
+// a slice of SqlDashboardWidgetOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlDashboardOutput) GetWidgets(ctx context.Context) ([]SqlDashboardWidgetOutput, bool) {
+	if o.Widgets.IsNull() || o.Widgets.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlDashboardWidgetOutput
+	d := o.Widgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgets sets the value of the Widgets field in SqlDashboardOutput.
+func (o *SqlDashboardOutput) SetWidgets(ctx context.Context, v []SqlDashboardWidgetOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	o.Widgets = types.ListValueMust(t, vs)
 }
 
 type SqlDashboardWidgetOutput struct {
@@ -7418,6 +12238,32 @@ func (o SqlDashboardWidgetOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetError returns the value of the Error field in SqlDashboardWidgetOutput as
+// a SqlOutputError value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlDashboardWidgetOutput) GetError(ctx context.Context) (SqlOutputError, bool) {
+	var e SqlOutputError
+	if o.Error.IsNull() || o.Error.IsUnknown() {
+		return e, false
+	}
+	var v []SqlOutputError
+	d := o.Error.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetError sets the value of the Error field in SqlDashboardWidgetOutput.
+func (o *SqlDashboardWidgetOutput) SetError(ctx context.Context, v SqlOutputError) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	o.Error = types.ListValueMust(t, vs)
+}
+
 type SqlOutput struct {
 	// The output of a SQL alert task, if available.
 	AlertOutput types.List `tfsdk:"alert_output" tf:"optional,object"`
@@ -7476,6 +12322,84 @@ func (o SqlOutput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAlertOutput returns the value of the AlertOutput field in SqlOutput as
+// a SqlAlertOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetAlertOutput(ctx context.Context) (SqlAlertOutput, bool) {
+	var e SqlAlertOutput
+	if o.AlertOutput.IsNull() || o.AlertOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlAlertOutput
+	d := o.AlertOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlertOutput sets the value of the AlertOutput field in SqlOutput.
+func (o *SqlOutput) SetAlertOutput(ctx context.Context, v SqlAlertOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_output"]
+	o.AlertOutput = types.ListValueMust(t, vs)
+}
+
+// GetDashboardOutput returns the value of the DashboardOutput field in SqlOutput as
+// a SqlDashboardOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetDashboardOutput(ctx context.Context) (SqlDashboardOutput, bool) {
+	var e SqlDashboardOutput
+	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlDashboardOutput
+	d := o.DashboardOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardOutput sets the value of the DashboardOutput field in SqlOutput.
+func (o *SqlOutput) SetDashboardOutput(ctx context.Context, v SqlDashboardOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard_output"]
+	o.DashboardOutput = types.ListValueMust(t, vs)
+}
+
+// GetQueryOutput returns the value of the QueryOutput field in SqlOutput as
+// a SqlQueryOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlOutput) GetQueryOutput(ctx context.Context) (SqlQueryOutput, bool) {
+	var e SqlQueryOutput
+	if o.QueryOutput.IsNull() || o.QueryOutput.IsUnknown() {
+		return e, false
+	}
+	var v []SqlQueryOutput
+	d := o.QueryOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryOutput sets the value of the QueryOutput field in SqlOutput.
+func (o *SqlOutput) SetQueryOutput(ctx context.Context, v SqlQueryOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_output"]
+	o.QueryOutput = types.ListValueMust(t, vs)
 }
 
 type SqlOutputError struct {
@@ -7580,6 +12504,31 @@ func (o SqlQueryOutput) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetSqlStatements returns the value of the SqlStatements field in SqlQueryOutput as
+// a slice of SqlStatementOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlQueryOutput) GetSqlStatements(ctx context.Context) ([]SqlStatementOutput, bool) {
+	if o.SqlStatements.IsNull() || o.SqlStatements.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlStatementOutput
+	d := o.SqlStatements.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSqlStatements sets the value of the SqlStatements field in SqlQueryOutput.
+func (o *SqlQueryOutput) SetSqlStatements(ctx context.Context, v []SqlStatementOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	o.SqlStatements = types.ListValueMust(t, vs)
 }
 
 type SqlStatementOutput struct {
@@ -7707,6 +12656,135 @@ func (o SqlTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAlert returns the value of the Alert field in SqlTask as
+// a SqlTaskAlert value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetAlert(ctx context.Context) (SqlTaskAlert, bool) {
+	var e SqlTaskAlert
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskAlert
+	d := o.Alert.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in SqlTask.
+func (o *SqlTask) SetAlert(ctx context.Context, v SqlTaskAlert) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
+	o.Alert = types.ListValueMust(t, vs)
+}
+
+// GetDashboard returns the value of the Dashboard field in SqlTask as
+// a SqlTaskDashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetDashboard(ctx context.Context) (SqlTaskDashboard, bool) {
+	var e SqlTaskDashboard
+	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskDashboard
+	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboard sets the value of the Dashboard field in SqlTask.
+func (o *SqlTask) SetDashboard(ctx context.Context, v SqlTaskDashboard) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
+	o.Dashboard = types.ListValueMust(t, vs)
+}
+
+// GetFile returns the value of the File field in SqlTask as
+// a SqlTaskFile value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetFile(ctx context.Context) (SqlTaskFile, bool) {
+	var e SqlTaskFile
+	if o.File.IsNull() || o.File.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskFile
+	d := o.File.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFile sets the value of the File field in SqlTask.
+func (o *SqlTask) SetFile(ctx context.Context, v SqlTaskFile) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	o.File = types.ListValueMust(t, vs)
+}
+
+// GetParameters returns the value of the Parameters field in SqlTask as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in SqlTask.
+func (o *SqlTask) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
+}
+
+// GetQuery returns the value of the Query field in SqlTask as
+// a SqlTaskQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTask) GetQuery(ctx context.Context) (SqlTaskQuery, bool) {
+	var e SqlTaskQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTaskQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in SqlTask.
+func (o *SqlTask) SetQuery(ctx context.Context, v SqlTaskQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
+}
+
 type SqlTaskAlert struct {
 	// The canonical identifier of the SQL alert.
 	AlertId types.String `tfsdk:"alert_id" tf:""`
@@ -7759,6 +12837,31 @@ func (o SqlTaskAlert) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in SqlTaskAlert as
+// a slice of SqlTaskSubscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTaskAlert) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlTaskSubscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in SqlTaskAlert.
+func (o *SqlTaskAlert) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskDashboard struct {
@@ -7818,6 +12921,31 @@ func (o SqlTaskDashboard) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in SqlTaskDashboard as
+// a slice of SqlTaskSubscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SqlTaskDashboard) GetSubscriptions(ctx context.Context) ([]SqlTaskSubscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []SqlTaskSubscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in SqlTaskDashboard.
+func (o *SqlTaskDashboard) SetSubscriptions(ctx context.Context, v []SqlTaskSubscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type SqlTaskFile struct {
@@ -8123,6 +13251,263 @@ func (o SubmitRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in SubmitRun as
+// a slice of JobAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetAccessControlList(ctx context.Context) ([]JobAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []JobAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SubmitRun.
+func (o *SubmitRun) SetAccessControlList(ctx context.Context, v []JobAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in SubmitRun as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in SubmitRun.
+func (o *SubmitRun) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetEnvironments returns the value of the Environments field in SubmitRun as
+// a slice of JobEnvironment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetEnvironments(ctx context.Context) ([]JobEnvironment, bool) {
+	if o.Environments.IsNull() || o.Environments.IsUnknown() {
+		return nil, false
+	}
+	var v []JobEnvironment
+	d := o.Environments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironments sets the value of the Environments field in SubmitRun.
+func (o *SubmitRun) SetEnvironments(ctx context.Context, v []JobEnvironment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environments"]
+	o.Environments = types.ListValueMust(t, vs)
+}
+
+// GetGitSource returns the value of the GitSource field in SubmitRun as
+// a GitSource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetGitSource(ctx context.Context) (GitSource, bool) {
+	var e GitSource
+	if o.GitSource.IsNull() || o.GitSource.IsUnknown() {
+		return e, false
+	}
+	var v []GitSource
+	d := o.GitSource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitSource sets the value of the GitSource field in SubmitRun.
+func (o *SubmitRun) SetGitSource(ctx context.Context, v GitSource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_source"]
+	o.GitSource = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in SubmitRun as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in SubmitRun.
+func (o *SubmitRun) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in SubmitRun as
+// a JobNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetNotificationSettings(ctx context.Context) (JobNotificationSettings, bool) {
+	var e JobNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in SubmitRun.
+func (o *SubmitRun) SetNotificationSettings(ctx context.Context, v JobNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetQueue returns the value of the Queue field in SubmitRun as
+// a QueueSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetQueue(ctx context.Context) (QueueSettings, bool) {
+	var e QueueSettings
+	if o.Queue.IsNull() || o.Queue.IsUnknown() {
+		return e, false
+	}
+	var v []QueueSettings
+	d := o.Queue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueue sets the value of the Queue field in SubmitRun.
+func (o *SubmitRun) SetQueue(ctx context.Context, v QueueSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["queue"]
+	o.Queue = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in SubmitRun as
+// a JobRunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetRunAs(ctx context.Context) (JobRunAs, bool) {
+	var e JobRunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []JobRunAs
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in SubmitRun.
+func (o *SubmitRun) SetRunAs(ctx context.Context, v JobRunAs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetTasks returns the value of the Tasks field in SubmitRun as
+// a slice of SubmitTask values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetTasks(ctx context.Context) ([]SubmitTask, bool) {
+	if o.Tasks.IsNull() || o.Tasks.IsUnknown() {
+		return nil, false
+	}
+	var v []SubmitTask
+	d := o.Tasks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTasks sets the value of the Tasks field in SubmitRun.
+func (o *SubmitRun) SetTasks(ctx context.Context, v []SubmitTask) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	o.Tasks = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitRun as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitRun) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitRun.
+func (o *SubmitRun) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 // Run was created and started successfully.
 type SubmitRunResponse struct {
 	// The canonical identifier for the newly submitted run.
@@ -8287,8 +13672,8 @@ func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"email_notifications":   reflect.TypeOf(JobEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(ForEachTask{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -8404,6 +13789,472 @@ func (o SubmitTask) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetConditionTask returns the value of the ConditionTask field in SubmitTask as
+// a ConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
+	var e ConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in SubmitTask.
+func (o *SubmitTask) SetConditionTask(ctx context.Context, v ConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in SubmitTask as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in SubmitTask.
+func (o *SubmitTask) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in SubmitTask as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in SubmitTask.
+func (o *SubmitTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in SubmitTask as
+// a JobEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetEmailNotifications(ctx context.Context) (JobEmailNotifications, bool) {
+	var e JobEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []JobEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in SubmitTask.
+func (o *SubmitTask) SetEmailNotifications(ctx context.Context, v JobEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in SubmitTask as
+// a ForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
+	var e ForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in SubmitTask.
+func (o *SubmitTask) SetForEachTask(ctx context.Context, v ForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in SubmitTask as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in SubmitTask.
+func (o *SubmitTask) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in SubmitTask as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in SubmitTask.
+func (o *SubmitTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in SubmitTask as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in SubmitTask.
+func (o *SubmitTask) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in SubmitTask as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in SubmitTask.
+func (o *SubmitTask) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in SubmitTask as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in SubmitTask.
+func (o *SubmitTask) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in SubmitTask as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in SubmitTask.
+func (o *SubmitTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in SubmitTask as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in SubmitTask.
+func (o *SubmitTask) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in SubmitTask as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in SubmitTask.
+func (o *SubmitTask) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in SubmitTask as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in SubmitTask.
+func (o *SubmitTask) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in SubmitTask as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in SubmitTask.
+func (o *SubmitTask) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in SubmitTask as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in SubmitTask.
+func (o *SubmitTask) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in SubmitTask as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in SubmitTask.
+func (o *SubmitTask) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in SubmitTask as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in SubmitTask.
+func (o *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
+}
+
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
 	Condition types.String `tfsdk:"condition" tf:"optional"`
@@ -8466,6 +14317,31 @@ func (o TableUpdateTriggerConfiguration) Type(ctx context.Context) attr.Type {
 			"wait_after_last_change_seconds": types.Int64Type,
 		},
 	}
+}
+
+// GetTableNames returns the value of the TableNames field in TableUpdateTriggerConfiguration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableUpdateTriggerConfiguration) GetTableNames(ctx context.Context) ([]types.String, bool) {
+	if o.TableNames.IsNull() || o.TableNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TableNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTableNames sets the value of the TableNames field in TableUpdateTriggerConfiguration.
+func (o *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
+	o.TableNames = types.ListValueMust(t, vs)
 }
 
 type Task struct {
@@ -8612,8 +14488,8 @@ func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"email_notifications":   reflect.TypeOf(TaskEmailNotifications{}),
 		"for_each_task":         reflect.TypeOf(ForEachTask{}),
 		"health":                reflect.TypeOf(JobsHealthRules{}),
-		"library":               reflect.TypeOf(compute.Library{}),
-		"new_cluster":           reflect.TypeOf(compute.ClusterSpec{}),
+		"library":               reflect.TypeOf(compute_tf.Library{}),
+		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec{}),
 		"notebook_task":         reflect.TypeOf(NotebookTask{}),
 		"notification_settings": reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":         reflect.TypeOf(PipelineTask{}),
@@ -8737,6 +14613,472 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConditionTask returns the value of the ConditionTask field in Task as
+// a ConditionTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
+	var e ConditionTask
+	if o.ConditionTask.IsNull() || o.ConditionTask.IsUnknown() {
+		return e, false
+	}
+	var v []ConditionTask
+	d := o.ConditionTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConditionTask sets the value of the ConditionTask field in Task.
+func (o *Task) SetConditionTask(ctx context.Context, v ConditionTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition_task"]
+	o.ConditionTask = types.ListValueMust(t, vs)
+}
+
+// GetDbtTask returns the value of the DbtTask field in Task as
+// a DbtTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetDbtTask(ctx context.Context) (DbtTask, bool) {
+	var e DbtTask
+	if o.DbtTask.IsNull() || o.DbtTask.IsUnknown() {
+		return e, false
+	}
+	var v []DbtTask
+	d := o.DbtTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbtTask sets the value of the DbtTask field in Task.
+func (o *Task) SetDbtTask(ctx context.Context, v DbtTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_task"]
+	o.DbtTask = types.ListValueMust(t, vs)
+}
+
+// GetDependsOn returns the value of the DependsOn field in Task as
+// a slice of TaskDependency values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetDependsOn(ctx context.Context) ([]TaskDependency, bool) {
+	if o.DependsOn.IsNull() || o.DependsOn.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskDependency
+	d := o.DependsOn.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependsOn sets the value of the DependsOn field in Task.
+func (o *Task) SetDependsOn(ctx context.Context, v []TaskDependency) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	o.DependsOn = types.ListValueMust(t, vs)
+}
+
+// GetEmailNotifications returns the value of the EmailNotifications field in Task as
+// a TaskEmailNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetEmailNotifications(ctx context.Context) (TaskEmailNotifications, bool) {
+	var e TaskEmailNotifications
+	if o.EmailNotifications.IsNull() || o.EmailNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []TaskEmailNotifications
+	d := o.EmailNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEmailNotifications sets the value of the EmailNotifications field in Task.
+func (o *Task) SetEmailNotifications(ctx context.Context, v TaskEmailNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_notifications"]
+	o.EmailNotifications = types.ListValueMust(t, vs)
+}
+
+// GetForEachTask returns the value of the ForEachTask field in Task as
+// a ForEachTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetForEachTask(ctx context.Context) (ForEachTask, bool) {
+	var e ForEachTask
+	if o.ForEachTask.IsNull() || o.ForEachTask.IsUnknown() {
+		return e, false
+	}
+	var v []ForEachTask
+	d := o.ForEachTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetForEachTask sets the value of the ForEachTask field in Task.
+func (o *Task) SetForEachTask(ctx context.Context, v ForEachTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
+	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in Task as
+// a JobsHealthRules value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetHealth(ctx context.Context) (JobsHealthRules, bool) {
+	var e JobsHealthRules
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []JobsHealthRules
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in Task.
+func (o *Task) SetHealth(ctx context.Context, v JobsHealthRules) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in Task as
+// a slice of compute_tf.Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetLibraries(ctx context.Context) ([]compute_tf.Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in Task.
+func (o *Task) SetLibraries(ctx context.Context, v []compute_tf.Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNewCluster returns the value of the NewCluster field in Task as
+// a compute_tf.ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNewCluster(ctx context.Context) (compute_tf.ClusterSpec, bool) {
+	var e compute_tf.ClusterSpec
+	if o.NewCluster.IsNull() || o.NewCluster.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterSpec
+	d := o.NewCluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewCluster sets the value of the NewCluster field in Task.
+func (o *Task) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
+	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// GetNotebookTask returns the value of the NotebookTask field in Task as
+// a NotebookTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNotebookTask(ctx context.Context) (NotebookTask, bool) {
+	var e NotebookTask
+	if o.NotebookTask.IsNull() || o.NotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookTask
+	d := o.NotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookTask sets the value of the NotebookTask field in Task.
+func (o *Task) SetNotebookTask(ctx context.Context, v NotebookTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_task"]
+	o.NotebookTask = types.ListValueMust(t, vs)
+}
+
+// GetNotificationSettings returns the value of the NotificationSettings field in Task as
+// a TaskNotificationSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetNotificationSettings(ctx context.Context) (TaskNotificationSettings, bool) {
+	var e TaskNotificationSettings
+	if o.NotificationSettings.IsNull() || o.NotificationSettings.IsUnknown() {
+		return e, false
+	}
+	var v []TaskNotificationSettings
+	d := o.NotificationSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotificationSettings sets the value of the NotificationSettings field in Task.
+func (o *Task) SetNotificationSettings(ctx context.Context, v TaskNotificationSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notification_settings"]
+	o.NotificationSettings = types.ListValueMust(t, vs)
+}
+
+// GetPipelineTask returns the value of the PipelineTask field in Task as
+// a PipelineTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
+	var e PipelineTask
+	if o.PipelineTask.IsNull() || o.PipelineTask.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTask
+	d := o.PipelineTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPipelineTask sets the value of the PipelineTask field in Task.
+func (o *Task) SetPipelineTask(ctx context.Context, v PipelineTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pipeline_task"]
+	o.PipelineTask = types.ListValueMust(t, vs)
+}
+
+// GetPythonWheelTask returns the value of the PythonWheelTask field in Task as
+// a PythonWheelTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetPythonWheelTask(ctx context.Context) (PythonWheelTask, bool) {
+	var e PythonWheelTask
+	if o.PythonWheelTask.IsNull() || o.PythonWheelTask.IsUnknown() {
+		return e, false
+	}
+	var v []PythonWheelTask
+	d := o.PythonWheelTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPythonWheelTask sets the value of the PythonWheelTask field in Task.
+func (o *Task) SetPythonWheelTask(ctx context.Context, v PythonWheelTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_wheel_task"]
+	o.PythonWheelTask = types.ListValueMust(t, vs)
+}
+
+// GetRunJobTask returns the value of the RunJobTask field in Task as
+// a RunJobTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetRunJobTask(ctx context.Context) (RunJobTask, bool) {
+	var e RunJobTask
+	if o.RunJobTask.IsNull() || o.RunJobTask.IsUnknown() {
+		return e, false
+	}
+	var v []RunJobTask
+	d := o.RunJobTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunJobTask sets the value of the RunJobTask field in Task.
+func (o *Task) SetRunJobTask(ctx context.Context, v RunJobTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_job_task"]
+	o.RunJobTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkJarTask returns the value of the SparkJarTask field in Task as
+// a SparkJarTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkJarTask(ctx context.Context) (SparkJarTask, bool) {
+	var e SparkJarTask
+	if o.SparkJarTask.IsNull() || o.SparkJarTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkJarTask
+	d := o.SparkJarTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkJarTask sets the value of the SparkJarTask field in Task.
+func (o *Task) SetSparkJarTask(ctx context.Context, v SparkJarTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_jar_task"]
+	o.SparkJarTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkPythonTask returns the value of the SparkPythonTask field in Task as
+// a SparkPythonTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkPythonTask(ctx context.Context) (SparkPythonTask, bool) {
+	var e SparkPythonTask
+	if o.SparkPythonTask.IsNull() || o.SparkPythonTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkPythonTask
+	d := o.SparkPythonTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkPythonTask sets the value of the SparkPythonTask field in Task.
+func (o *Task) SetSparkPythonTask(ctx context.Context, v SparkPythonTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_python_task"]
+	o.SparkPythonTask = types.ListValueMust(t, vs)
+}
+
+// GetSparkSubmitTask returns the value of the SparkSubmitTask field in Task as
+// a SparkSubmitTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSparkSubmitTask(ctx context.Context) (SparkSubmitTask, bool) {
+	var e SparkSubmitTask
+	if o.SparkSubmitTask.IsNull() || o.SparkSubmitTask.IsUnknown() {
+		return e, false
+	}
+	var v []SparkSubmitTask
+	d := o.SparkSubmitTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparkSubmitTask sets the value of the SparkSubmitTask field in Task.
+func (o *Task) SetSparkSubmitTask(ctx context.Context, v SparkSubmitTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_task"]
+	o.SparkSubmitTask = types.ListValueMust(t, vs)
+}
+
+// GetSqlTask returns the value of the SqlTask field in Task as
+// a SqlTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetSqlTask(ctx context.Context) (SqlTask, bool) {
+	var e SqlTask
+	if o.SqlTask.IsNull() || o.SqlTask.IsUnknown() {
+		return e, false
+	}
+	var v []SqlTask
+	d := o.SqlTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlTask sets the value of the SqlTask field in Task.
+func (o *Task) SetSqlTask(ctx context.Context, v SqlTask) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_task"]
+	o.SqlTask = types.ListValueMust(t, vs)
+}
+
+// GetWebhookNotifications returns the value of the WebhookNotifications field in Task as
+// a WebhookNotifications value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetWebhookNotifications(ctx context.Context) (WebhookNotifications, bool) {
+	var e WebhookNotifications
+	if o.WebhookNotifications.IsNull() || o.WebhookNotifications.IsUnknown() {
+		return e, false
+	}
+	var v []WebhookNotifications
+	d := o.WebhookNotifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhookNotifications sets the value of the WebhookNotifications field in Task.
+func (o *Task) SetWebhookNotifications(ctx context.Context, v WebhookNotifications) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook_notifications"]
+	o.WebhookNotifications = types.ListValueMust(t, vs)
 }
 
 type TaskDependency struct {
@@ -8883,6 +15225,131 @@ func (o TaskEmailNotifications) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnFailure returns the value of the OnFailure field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnFailure(ctx context.Context) ([]types.String, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnFailure sets the value of the OnFailure field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnFailure(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
+
+// GetOnStart returns the value of the OnStart field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnStart(ctx context.Context) ([]types.String, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStart sets the value of the OnStart field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnStart(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
+
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]types.String, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
+
+// GetOnSuccess returns the value of the OnSuccess field in TaskEmailNotifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskEmailNotifications) GetOnSuccess(ctx context.Context) ([]types.String, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOnSuccess sets the value of the OnSuccess field in TaskEmailNotifications.
+func (o *TaskEmailNotifications) SetOnSuccess(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
 }
 
 type TaskNotificationSettings struct {
@@ -9155,6 +15622,110 @@ func (o TriggerSettings) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFileArrival returns the value of the FileArrival field in TriggerSettings as
+// a FileArrivalTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetFileArrival(ctx context.Context) (FileArrivalTriggerConfiguration, bool) {
+	var e FileArrivalTriggerConfiguration
+	if o.FileArrival.IsNull() || o.FileArrival.IsUnknown() {
+		return e, false
+	}
+	var v []FileArrivalTriggerConfiguration
+	d := o.FileArrival.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileArrival sets the value of the FileArrival field in TriggerSettings.
+func (o *TriggerSettings) SetFileArrival(ctx context.Context, v FileArrivalTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_arrival"]
+	o.FileArrival = types.ListValueMust(t, vs)
+}
+
+// GetPeriodic returns the value of the Periodic field in TriggerSettings as
+// a PeriodicTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetPeriodic(ctx context.Context) (PeriodicTriggerConfiguration, bool) {
+	var e PeriodicTriggerConfiguration
+	if o.Periodic.IsNull() || o.Periodic.IsUnknown() {
+		return e, false
+	}
+	var v []PeriodicTriggerConfiguration
+	d := o.Periodic.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPeriodic sets the value of the Periodic field in TriggerSettings.
+func (o *TriggerSettings) SetPeriodic(ctx context.Context, v PeriodicTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["periodic"]
+	o.Periodic = types.ListValueMust(t, vs)
+}
+
+// GetTable returns the value of the Table field in TriggerSettings as
+// a TableUpdateTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetTable(ctx context.Context) (TableUpdateTriggerConfiguration, bool) {
+	var e TableUpdateTriggerConfiguration
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []TableUpdateTriggerConfiguration
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in TriggerSettings.
+func (o *TriggerSettings) SetTable(ctx context.Context, v TableUpdateTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
+}
+
+// GetTableUpdate returns the value of the TableUpdate field in TriggerSettings as
+// a TableUpdateTriggerConfiguration value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TriggerSettings) GetTableUpdate(ctx context.Context) (TableUpdateTriggerConfiguration, bool) {
+	var e TableUpdateTriggerConfiguration
+	if o.TableUpdate.IsNull() || o.TableUpdate.IsUnknown() {
+		return e, false
+	}
+	var v []TableUpdateTriggerConfiguration
+	d := o.TableUpdate.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableUpdate sets the value of the TableUpdate field in TriggerSettings.
+func (o *TriggerSettings) SetTableUpdate(ctx context.Context, v TableUpdateTriggerConfiguration) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_update"]
+	o.TableUpdate = types.ListValueMust(t, vs)
+}
+
 type UpdateJob struct {
 	// Remove top-level fields in the job settings. Removing nested fields is
 	// not supported, except for tasks and job clusters (`tasks/task_1`). This
@@ -9222,6 +15793,57 @@ func (o UpdateJob) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFieldsToRemove returns the value of the FieldsToRemove field in UpdateJob as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateJob) GetFieldsToRemove(ctx context.Context) ([]types.String, bool) {
+	if o.FieldsToRemove.IsNull() || o.FieldsToRemove.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FieldsToRemove.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFieldsToRemove sets the value of the FieldsToRemove field in UpdateJob.
+func (o *UpdateJob) SetFieldsToRemove(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields_to_remove"]
+	o.FieldsToRemove = types.ListValueMust(t, vs)
+}
+
+// GetNewSettings returns the value of the NewSettings field in UpdateJob as
+// a JobSettings value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateJob) GetNewSettings(ctx context.Context) (JobSettings, bool) {
+	var e JobSettings
+	if o.NewSettings.IsNull() || o.NewSettings.IsUnknown() {
+		return e, false
+	}
+	var v []JobSettings
+	d := o.NewSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNewSettings sets the value of the NewSettings field in UpdateJob.
+func (o *UpdateJob) SetNewSettings(ctx context.Context, v JobSettings) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_settings"]
+	o.NewSettings = types.ListValueMust(t, vs)
 }
 
 type UpdateResponse struct {
@@ -9441,189 +16063,127 @@ func (o WebhookNotifications) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// * `EQUAL_TO`, `NOT_EQUAL` operators perform string comparison of their
-// operands. This means that `“12.0” == “12”` will evaluate to `false`.
-// * `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`
-// operators perform numeric comparison of their operands. `“12.0” >=
-// “12”` will evaluate to `true`, `“10.0” >= “12”` will evaluate to
-// `false`.
-//
-// The boolean comparison to task values can be implemented with operators
-// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it will
-// be serialized to `“true”` or `“false”` for the comparison.
+// GetOnDurationWarningThresholdExceeded returns the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnDurationWarningThresholdExceeded(ctx context.Context) ([]Webhook, bool) {
+	if o.OnDurationWarningThresholdExceeded.IsNull() || o.OnDurationWarningThresholdExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnDurationWarningThresholdExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
+// SetOnDurationWarningThresholdExceeded sets the value of the OnDurationWarningThresholdExceeded field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnDurationWarningThresholdExceeded(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
+}
 
-// Edit mode of the job.
-//
-// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
-// `EDITABLE`: The job is in an editable state and can be modified.
+// GetOnFailure returns the value of the OnFailure field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnFailure(ctx context.Context) ([]Webhook, bool) {
+	if o.OnFailure.IsNull() || o.OnFailure.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnFailure.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Permission level
+// SetOnFailure sets the value of the OnFailure field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnFailure(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	o.OnFailure = types.ListValueMust(t, vs)
+}
 
-// Dirty state indicates the job is not fully synced with the job specification
-// in the remote repository.
-//
-// Possible values are: * `NOT_SYNCED`: The job is not yet synced with the
-// remote job specification. Import the remote job specification from UI to make
-// the job fully synced. * `DISCONNECTED`: The job is temporary disconnected
-// from the remote job specification and is allowed for live edit. Import the
-// remote job specification again from UI to make the job fully synced.
+// GetOnStart returns the value of the OnStart field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnStart(ctx context.Context) ([]Webhook, bool) {
+	if o.OnStart.IsNull() || o.OnStart.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnStart.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// Specifies the health metric that is being evaluated for a particular health
-// rule.
-//
-// * `RUN_DURATION_SECONDS`: Expected total time for a run in seconds. *
-// `STREAMING_BACKLOG_BYTES`: An estimate of the maximum bytes of data waiting
-// to be consumed across all streams. This metric is in Private Preview. *
-// `STREAMING_BACKLOG_RECORDS`: An estimate of the maximum offset lag across all
-// streams. This metric is in Private Preview. * `STREAMING_BACKLOG_SECONDS`: An
-// estimate of the maximum consumer delay across all streams. This metric is in
-// Private Preview. * `STREAMING_BACKLOG_FILES`: An estimate of the maximum
-// number of outstanding files across all streams. This metric is in Private
-// Preview.
+// SetOnStart sets the value of the OnStart field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnStart(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	o.OnStart = types.ListValueMust(t, vs)
+}
 
-// Specifies the operator used to compare the health metric value with the
-// specified threshold.
+// GetOnStreamingBacklogExceeded returns the value of the OnStreamingBacklogExceeded field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnStreamingBacklogExceeded(ctx context.Context) ([]Webhook, bool) {
+	if o.OnStreamingBacklogExceeded.IsNull() || o.OnStreamingBacklogExceeded.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnStreamingBacklogExceeded.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// The reason for queuing the run. * `ACTIVE_RUNS_LIMIT_REACHED`: The run was
-// queued due to reaching the workspace limit of active task runs. *
-// `MAX_CONCURRENT_RUNS_REACHED`: The run was queued due to reaching the per-job
-// limit of concurrent job runs. * `ACTIVE_RUN_JOB_TASKS_LIMIT_REACHED`: The run
-// was queued due to reaching the workspace limit of active run job tasks.
+// SetOnStreamingBacklogExceeded sets the value of the OnStreamingBacklogExceeded field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnStreamingBacklogExceeded(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
+}
 
-// The repair history item type. Indicates whether a run is the original run or
-// a repair run.
+// GetOnSuccess returns the value of the OnSuccess field in WebhookNotifications as
+// a slice of Webhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WebhookNotifications) GetOnSuccess(ctx context.Context) ([]Webhook, bool) {
+	if o.OnSuccess.IsNull() || o.OnSuccess.IsUnknown() {
+		return nil, false
+	}
+	var v []Webhook
+	d := o.OnSuccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// An optional value indicating the condition that determines whether the task
-// should be run once its dependencies have been completed. When omitted,
-// defaults to `ALL_SUCCESS`.
-//
-// Possible values are: * `ALL_SUCCESS`: All dependencies have executed and
-// succeeded * `AT_LEAST_ONE_SUCCESS`: At least one dependency has succeeded *
-// `NONE_FAILED`: None of the dependencies have failed and at least one was
-// executed * `ALL_DONE`: All dependencies have been completed *
-// `AT_LEAST_ONE_FAILED`: At least one dependency failed * `ALL_FAILED`: ALl
-// dependencies have failed
-
-// A value indicating the run's lifecycle state. The possible values are: *
-// `QUEUED`: The run is queued. * `PENDING`: The run is waiting to be executed
-// while the cluster and execution context are being prepared. * `RUNNING`: The
-// task of this run is being executed. * `TERMINATING`: The task of this run has
-// completed, and the cluster and execution context are being cleaned up. *
-// `TERMINATED`: The task of this run has completed, and the cluster and
-// execution context have been cleaned up. This state is terminal. * `SKIPPED`:
-// This run was aborted because a previous run of the same job was already
-// active. This state is terminal. * `INTERNAL_ERROR`: An exceptional state that
-// indicates a failure in the Jobs service, such as network failure over a long
-// period. If a run on a new cluster ends in the `INTERNAL_ERROR` state, the
-// Jobs service terminates the cluster as soon as possible. This state is
-// terminal. * `BLOCKED`: The run is blocked on an upstream dependency. *
-// `WAITING_FOR_RETRY`: The run is waiting for a retry.
-
-// The current state of the run.
-
-// A value indicating the run's result. The possible values are: * `SUCCESS`:
-// The task completed successfully. * `FAILED`: The task completed with an
-// error. * `TIMEDOUT`: The run was stopped after reaching the timeout. *
-// `CANCELED`: The run was canceled at user request. *
-// `MAXIMUM_CONCURRENT_RUNS_REACHED`: The run was skipped because the maximum
-// concurrent runs were reached. * `EXCLUDED`: The run was skipped because the
-// necessary conditions were not met. * `SUCCESS_WITH_FAILURES`: The job run
-// completed successfully with some failures; leaf tasks were successful. *
-// `UPSTREAM_FAILED`: The run was skipped because of an upstream failure. *
-// `UPSTREAM_CANCELED`: The run was skipped because an upstream task was
-// canceled. * `DISABLED`: The run was skipped because it was disabled
-// explicitly by the user.
-
-// The type of a run. * `JOB_RUN`: Normal job run. A run created with
-// :method:jobs/runNow. * `WORKFLOW_RUN`: Workflow run. A run created with
-// [dbutils.notebook.run]. * `SUBMIT_RUN`: Submit run. A run created with
-// :method:jobs/submit.
-//
-// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-
-// Optional location type of the SQL file. When set to `WORKSPACE`, the SQL file
-// will be retrieved\ from the local Databricks workspace. When set to `GIT`,
-// the SQL file will be retrieved from a Git repository defined in `git_source`.
-// If the value is empty, the task will use `GIT` if `git_source` is defined and
-// `WORKSPACE` otherwise.
-//
-// * `WORKSPACE`: SQL file is located in Databricks workspace. * `GIT`: SQL file
-// is located in cloud Git provider.
-
-// The state of the SQL alert.
-//
-// * UNKNOWN: alert yet to be evaluated * OK: alert evaluated and did not
-// fulfill trigger conditions * TRIGGERED: alert evaluated and fulfilled trigger
-// conditions
-
-// The code indicates why the run was terminated. Additional codes might be
-// introduced in future releases. * `SUCCESS`: The run was completed
-// successfully. * `USER_CANCELED`: The run was successfully canceled during
-// execution by a user. * `CANCELED`: The run was canceled during execution by
-// the Databricks platform; for example, if the maximum run duration was
-// exceeded. * `SKIPPED`: Run was never executed, for example, if the upstream
-// task run failed, the dependency type condition was not met, or there were no
-// material tasks to execute. * `INTERNAL_ERROR`: The run encountered an
-// unexpected error. Refer to the state message for further details. *
-// `DRIVER_ERROR`: The run encountered an error while communicating with the
-// Spark Driver. * `CLUSTER_ERROR`: The run failed due to a cluster error. Refer
-// to the state message for further details. * `REPOSITORY_CHECKOUT_FAILED`:
-// Failed to complete the checkout due to an error when communicating with the
-// third party service. * `INVALID_CLUSTER_REQUEST`: The run failed because it
-// issued an invalid request to start the cluster. *
-// `WORKSPACE_RUN_LIMIT_EXCEEDED`: The workspace has reached the quota for the
-// maximum number of concurrent active runs. Consider scheduling the runs over a
-// larger time frame. * `FEATURE_DISABLED`: The run failed because it tried to
-// access a feature unavailable for the workspace. *
-// `CLUSTER_REQUEST_LIMIT_EXCEEDED`: The number of cluster creation, start, and
-// upsize requests have exceeded the allotted rate limit. Consider spreading the
-// run execution over a larger time frame. * `STORAGE_ACCESS_ERROR`: The run
-// failed due to an error when accessing the customer blob storage. Refer to the
-// state message for further details. * `RUN_EXECUTION_ERROR`: The run was
-// completed with task failures. For more details, refer to the state message or
-// run output. * `UNAUTHORIZED_ERROR`: The run failed due to a permission issue
-// while accessing a resource. Refer to the state message for further details. *
-// `LIBRARY_INSTALLATION_ERROR`: The run failed while installing the
-// user-requested library. Refer to the state message for further details. The
-// causes might include, but are not limited to: The provided library is
-// invalid, there are insufficient permissions to install the library, and so
-// forth. * `MAX_CONCURRENT_RUNS_EXCEEDED`: The scheduled run exceeds the limit
-// of maximum concurrent runs set for the job. * `MAX_SPARK_CONTEXTS_EXCEEDED`:
-// The run is scheduled on a cluster that has already reached the maximum number
-// of contexts it is configured to create. See: [Link]. * `RESOURCE_NOT_FOUND`:
-// A resource necessary for run execution does not exist. Refer to the state
-// message for further details. * `INVALID_RUN_CONFIGURATION`: The run failed
-// due to an invalid configuration. Refer to the state message for further
-// details. * `CLOUD_FAILURE`: The run failed due to a cloud provider issue.
-// Refer to the state message for further details. *
-// `MAX_JOB_QUEUE_SIZE_EXCEEDED`: The run was skipped due to reaching the job
-// level queue size limit.
-//
-// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
-
-// * `SUCCESS`: The run terminated without any issues * `INTERNAL_ERROR`: An
-// error occurred in the Databricks platform. Please look at the [status page]
-// or contact support if the issue persists. * `CLIENT_ERROR`: The run was
-// terminated because of an error caused by user input or the job configuration.
-// * `CLOUD_FAILURE`: The run was terminated because of an issue with your cloud
-// provider.
-//
-// [status page]: https://status.databricks.com/
-
-// The type of trigger that fired this run.
-//
-// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
-// scheduler. * `ONE_TIME`: One time triggers that fire a single run. This
-// occurs you triggered a single run on demand through the UI or the API. *
-// `RETRY`: Indicates a run that is triggered as a retry of a previously failed
-// run. This occurs when you request to re-run the job in case of failures. *
-// `RUN_JOB_TASK`: Indicates a run that is triggered using a Run Job task. *
-// `FILE_ARRIVAL`: Indicates a run that is triggered by a file arrival. *
-// `TABLE`: Indicates a run that is triggered by a table update.
-
-// * `NOTEBOOK`: Notebook view item. * `DASHBOARD`: Dashboard view item.
-
-// * `CODE`: Code view of the notebook. * `DASHBOARDS`: All dashboard views of
-// the notebook. * `ALL`: All views of the notebook.
+// SetOnSuccess sets the value of the OnSuccess field in WebhookNotifications.
+func (o *WebhookNotifications) SetOnSuccess(ctx context.Context, v []Webhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	o.OnSuccess = types.ListValueMust(t, vs)
+}

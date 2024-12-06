@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -184,6 +185,58 @@ func (o CreateVectorIndexRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDeltaSyncIndexSpec returns the value of the DeltaSyncIndexSpec field in CreateVectorIndexRequest as
+// a DeltaSyncVectorIndexSpecRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateVectorIndexRequest) GetDeltaSyncIndexSpec(ctx context.Context) (DeltaSyncVectorIndexSpecRequest, bool) {
+	var e DeltaSyncVectorIndexSpecRequest
+	if o.DeltaSyncIndexSpec.IsNull() || o.DeltaSyncIndexSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DeltaSyncVectorIndexSpecRequest
+	d := o.DeltaSyncIndexSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeltaSyncIndexSpec sets the value of the DeltaSyncIndexSpec field in CreateVectorIndexRequest.
+func (o *CreateVectorIndexRequest) SetDeltaSyncIndexSpec(ctx context.Context, v DeltaSyncVectorIndexSpecRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_sync_index_spec"]
+	o.DeltaSyncIndexSpec = types.ListValueMust(t, vs)
+}
+
+// GetDirectAccessIndexSpec returns the value of the DirectAccessIndexSpec field in CreateVectorIndexRequest as
+// a DirectAccessVectorIndexSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateVectorIndexRequest) GetDirectAccessIndexSpec(ctx context.Context) (DirectAccessVectorIndexSpec, bool) {
+	var e DirectAccessVectorIndexSpec
+	if o.DirectAccessIndexSpec.IsNull() || o.DirectAccessIndexSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DirectAccessVectorIndexSpec
+	d := o.DirectAccessIndexSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDirectAccessIndexSpec sets the value of the DirectAccessIndexSpec field in CreateVectorIndexRequest.
+func (o *CreateVectorIndexRequest) SetDirectAccessIndexSpec(ctx context.Context, v DirectAccessVectorIndexSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_access_index_spec"]
+	o.DirectAccessIndexSpec = types.ListValueMust(t, vs)
+}
+
 type CreateVectorIndexResponse struct {
 	VectorIndex types.List `tfsdk:"vector_index" tf:"optional,object"`
 }
@@ -227,6 +280,32 @@ func (o CreateVectorIndexResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetVectorIndex returns the value of the VectorIndex field in CreateVectorIndexResponse as
+// a VectorIndex value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateVectorIndexResponse) GetVectorIndex(ctx context.Context) (VectorIndex, bool) {
+	var e VectorIndex
+	if o.VectorIndex.IsNull() || o.VectorIndex.IsUnknown() {
+		return e, false
+	}
+	var v []VectorIndex
+	d := o.VectorIndex.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVectorIndex sets the value of the VectorIndex field in CreateVectorIndexResponse.
+func (o *CreateVectorIndexResponse) SetVectorIndex(ctx context.Context, v VectorIndex) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vector_index"]
+	o.VectorIndex = types.ListValueMust(t, vs)
 }
 
 // Result of the upsert or delete operation.
@@ -278,6 +357,31 @@ func (o DeleteDataResult) Type(ctx context.Context) attr.Type {
 			"success_row_count": types.Int64Type,
 		},
 	}
+}
+
+// GetFailedPrimaryKeys returns the value of the FailedPrimaryKeys field in DeleteDataResult as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteDataResult) GetFailedPrimaryKeys(ctx context.Context) ([]types.String, bool) {
+	if o.FailedPrimaryKeys.IsNull() || o.FailedPrimaryKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FailedPrimaryKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFailedPrimaryKeys sets the value of the FailedPrimaryKeys field in DeleteDataResult.
+func (o *DeleteDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failed_primary_keys"]
+	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
 // Request payload for deleting data from a vector index.
@@ -332,6 +436,31 @@ func (o DeleteDataVectorIndexRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPrimaryKeys returns the value of the PrimaryKeys field in DeleteDataVectorIndexRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteDataVectorIndexRequest) GetPrimaryKeys(ctx context.Context) ([]types.String, bool) {
+	if o.PrimaryKeys.IsNull() || o.PrimaryKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PrimaryKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrimaryKeys sets the value of the PrimaryKeys field in DeleteDataVectorIndexRequest.
+func (o *DeleteDataVectorIndexRequest) SetPrimaryKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_keys"]
+	o.PrimaryKeys = types.ListValueMust(t, vs)
+}
+
 // Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse struct {
 	// Result of the upsert or delete operation.
@@ -381,6 +510,32 @@ func (o DeleteDataVectorIndexResponse) Type(ctx context.Context) attr.Type {
 			"status": types.StringType,
 		},
 	}
+}
+
+// GetResult returns the value of the Result field in DeleteDataVectorIndexResponse as
+// a DeleteDataResult value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeleteDataVectorIndexResponse) GetResult(ctx context.Context) (DeleteDataResult, bool) {
+	var e DeleteDataResult
+	if o.Result.IsNull() || o.Result.IsUnknown() {
+		return e, false
+	}
+	var v []DeleteDataResult
+	d := o.Result.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResult sets the value of the Result field in DeleteDataVectorIndexResponse.
+func (o *DeleteDataVectorIndexResponse) SetResult(ctx context.Context, v DeleteDataResult) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["result"]
+	o.Result = types.ListValueMust(t, vs)
 }
 
 // Delete an endpoint
@@ -626,6 +781,81 @@ func (o DeltaSyncVectorIndexSpecRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetColumnsToSync returns the value of the ColumnsToSync field in DeltaSyncVectorIndexSpecRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSyncVectorIndexSpecRequest) GetColumnsToSync(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToSync.IsNull() || o.ColumnsToSync.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToSync.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToSync sets the value of the ColumnsToSync field in DeltaSyncVectorIndexSpecRequest.
+func (o *DeltaSyncVectorIndexSpecRequest) SetColumnsToSync(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_sync"]
+	o.ColumnsToSync = types.ListValueMust(t, vs)
+}
+
+// GetEmbeddingSourceColumns returns the value of the EmbeddingSourceColumns field in DeltaSyncVectorIndexSpecRequest as
+// a slice of EmbeddingSourceColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSyncVectorIndexSpecRequest) GetEmbeddingSourceColumns(ctx context.Context) ([]EmbeddingSourceColumn, bool) {
+	if o.EmbeddingSourceColumns.IsNull() || o.EmbeddingSourceColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingSourceColumn
+	d := o.EmbeddingSourceColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingSourceColumns sets the value of the EmbeddingSourceColumns field in DeltaSyncVectorIndexSpecRequest.
+func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingSourceColumns(ctx context.Context, v []EmbeddingSourceColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
+}
+
+// GetEmbeddingVectorColumns returns the value of the EmbeddingVectorColumns field in DeltaSyncVectorIndexSpecRequest as
+// a slice of EmbeddingVectorColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSyncVectorIndexSpecRequest) GetEmbeddingVectorColumns(ctx context.Context) ([]EmbeddingVectorColumn, bool) {
+	if o.EmbeddingVectorColumns.IsNull() || o.EmbeddingVectorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingVectorColumn
+	d := o.EmbeddingVectorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingVectorColumns sets the value of the EmbeddingVectorColumns field in DeltaSyncVectorIndexSpecRequest.
+func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingVectorColumns(ctx context.Context, v []EmbeddingVectorColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
+}
+
 type DeltaSyncVectorIndexSpecResponse struct {
 	// The columns that contain the embedding source.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
@@ -703,6 +933,56 @@ func (o DeltaSyncVectorIndexSpecResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEmbeddingSourceColumns returns the value of the EmbeddingSourceColumns field in DeltaSyncVectorIndexSpecResponse as
+// a slice of EmbeddingSourceColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSyncVectorIndexSpecResponse) GetEmbeddingSourceColumns(ctx context.Context) ([]EmbeddingSourceColumn, bool) {
+	if o.EmbeddingSourceColumns.IsNull() || o.EmbeddingSourceColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingSourceColumn
+	d := o.EmbeddingSourceColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingSourceColumns sets the value of the EmbeddingSourceColumns field in DeltaSyncVectorIndexSpecResponse.
+func (o *DeltaSyncVectorIndexSpecResponse) SetEmbeddingSourceColumns(ctx context.Context, v []EmbeddingSourceColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
+}
+
+// GetEmbeddingVectorColumns returns the value of the EmbeddingVectorColumns field in DeltaSyncVectorIndexSpecResponse as
+// a slice of EmbeddingVectorColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSyncVectorIndexSpecResponse) GetEmbeddingVectorColumns(ctx context.Context) ([]EmbeddingVectorColumn, bool) {
+	if o.EmbeddingVectorColumns.IsNull() || o.EmbeddingVectorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingVectorColumn
+	d := o.EmbeddingVectorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingVectorColumns sets the value of the EmbeddingVectorColumns field in DeltaSyncVectorIndexSpecResponse.
+func (o *DeltaSyncVectorIndexSpecResponse) SetEmbeddingVectorColumns(ctx context.Context, v []EmbeddingVectorColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
+}
+
 type DirectAccessVectorIndexSpec struct {
 	// Contains the optional model endpoint to use during query time.
 	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
@@ -763,6 +1043,56 @@ func (o DirectAccessVectorIndexSpec) Type(ctx context.Context) attr.Type {
 			"schema_json": types.StringType,
 		},
 	}
+}
+
+// GetEmbeddingSourceColumns returns the value of the EmbeddingSourceColumns field in DirectAccessVectorIndexSpec as
+// a slice of EmbeddingSourceColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DirectAccessVectorIndexSpec) GetEmbeddingSourceColumns(ctx context.Context) ([]EmbeddingSourceColumn, bool) {
+	if o.EmbeddingSourceColumns.IsNull() || o.EmbeddingSourceColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingSourceColumn
+	d := o.EmbeddingSourceColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingSourceColumns sets the value of the EmbeddingSourceColumns field in DirectAccessVectorIndexSpec.
+func (o *DirectAccessVectorIndexSpec) SetEmbeddingSourceColumns(ctx context.Context, v []EmbeddingSourceColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
+}
+
+// GetEmbeddingVectorColumns returns the value of the EmbeddingVectorColumns field in DirectAccessVectorIndexSpec as
+// a slice of EmbeddingVectorColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DirectAccessVectorIndexSpec) GetEmbeddingVectorColumns(ctx context.Context) ([]EmbeddingVectorColumn, bool) {
+	if o.EmbeddingVectorColumns.IsNull() || o.EmbeddingVectorColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingVectorColumn
+	d := o.EmbeddingVectorColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddingVectorColumns sets the value of the EmbeddingVectorColumns field in DirectAccessVectorIndexSpec.
+func (o *DirectAccessVectorIndexSpec) SetEmbeddingVectorColumns(ctx context.Context, v []EmbeddingVectorColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
 }
 
 type EmbeddingSourceColumn struct {
@@ -933,6 +1263,32 @@ func (o EndpointInfo) Type(ctx context.Context) attr.Type {
 			"num_indexes":            types.Int64Type,
 		},
 	}
+}
+
+// GetEndpointStatus returns the value of the EndpointStatus field in EndpointInfo as
+// a EndpointStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo) GetEndpointStatus(ctx context.Context) (EndpointStatus, bool) {
+	var e EndpointStatus
+	if o.EndpointStatus.IsNull() || o.EndpointStatus.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointStatus
+	d := o.EndpointStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEndpointStatus sets the value of the EndpointStatus field in EndpointInfo.
+func (o *EndpointInfo) SetEndpointStatus(ctx context.Context, v EndpointStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoint_status"]
+	o.EndpointStatus = types.ListValueMust(t, vs)
 }
 
 // Status information of an endpoint
@@ -1119,6 +1475,31 @@ func (o ListEndpointResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEndpoints returns the value of the Endpoints field in ListEndpointResponse as
+// a slice of EndpointInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListEndpointResponse) GetEndpoints(ctx context.Context) ([]EndpointInfo, bool) {
+	if o.Endpoints.IsNull() || o.Endpoints.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointInfo
+	d := o.Endpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEndpoints sets the value of the Endpoints field in ListEndpointResponse.
+func (o *ListEndpointResponse) SetEndpoints(ctx context.Context, v []EndpointInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoints"]
+	o.Endpoints = types.ListValueMust(t, vs)
+}
+
 // List all endpoints
 type ListEndpointsRequest struct {
 	// Token for pagination
@@ -1254,6 +1635,31 @@ func (o ListValue) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetValues returns the value of the Values field in ListValue as
+// a slice of Value values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListValue) GetValues(ctx context.Context) ([]Value, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []Value
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in ListValue.
+func (o *ListValue) SetValues(ctx context.Context, v []Value) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
+}
+
 type ListVectorIndexesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
@@ -1305,6 +1711,31 @@ func (o ListVectorIndexesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetVectorIndexes returns the value of the VectorIndexes field in ListVectorIndexesResponse as
+// a slice of MiniVectorIndex values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListVectorIndexesResponse) GetVectorIndexes(ctx context.Context) ([]MiniVectorIndex, bool) {
+	if o.VectorIndexes.IsNull() || o.VectorIndexes.IsUnknown() {
+		return nil, false
+	}
+	var v []MiniVectorIndex
+	d := o.VectorIndexes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVectorIndexes sets the value of the VectorIndexes field in ListVectorIndexesResponse.
+func (o *ListVectorIndexesResponse) SetVectorIndexes(ctx context.Context, v []MiniVectorIndex) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vector_indexes"]
+	o.VectorIndexes = types.ListValueMust(t, vs)
+}
+
 // Key-value pair.
 type MapStringValueEntry struct {
 	// Column name.
@@ -1354,6 +1785,32 @@ func (o MapStringValueEntry) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetValue returns the value of the Value field in MapStringValueEntry as
+// a Value value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MapStringValueEntry) GetValue(ctx context.Context) (Value, bool) {
+	var e Value
+	if o.Value.IsNull() || o.Value.IsUnknown() {
+		return e, false
+	}
+	var v []Value
+	d := o.Value.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetValue sets the value of the Value field in MapStringValueEntry.
+func (o *MapStringValueEntry) SetValue(ctx context.Context, v Value) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	o.Value = types.ListValueMust(t, vs)
 }
 
 type MiniVectorIndex struct {
@@ -1555,6 +2012,56 @@ func (o QueryVectorIndexRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetColumns returns the value of the Columns field in QueryVectorIndexRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest) GetColumns(ctx context.Context) ([]types.String, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in QueryVectorIndexRequest.
+func (o *QueryVectorIndexRequest) SetColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetQueryVector returns the value of the QueryVector field in QueryVectorIndexRequest as
+// a slice of types.Float64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest) GetQueryVector(ctx context.Context) ([]types.Float64, bool) {
+	if o.QueryVector.IsNull() || o.QueryVector.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Float64
+	d := o.QueryVector.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetQueryVector sets the value of the QueryVector field in QueryVectorIndexRequest.
+func (o *QueryVectorIndexRequest) SetQueryVector(ctx context.Context, v []types.Float64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_vector"]
+	o.QueryVector = types.ListValueMust(t, vs)
+}
+
 type QueryVectorIndexResponse struct {
 	// Metadata about the result set.
 	Manifest types.List `tfsdk:"manifest" tf:"optional,object"`
@@ -1614,6 +2121,58 @@ func (o QueryVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetManifest returns the value of the Manifest field in QueryVectorIndexResponse as
+// a ResultManifest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexResponse) GetManifest(ctx context.Context) (ResultManifest, bool) {
+	var e ResultManifest
+	if o.Manifest.IsNull() || o.Manifest.IsUnknown() {
+		return e, false
+	}
+	var v []ResultManifest
+	d := o.Manifest.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetManifest sets the value of the Manifest field in QueryVectorIndexResponse.
+func (o *QueryVectorIndexResponse) SetManifest(ctx context.Context, v ResultManifest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["manifest"]
+	o.Manifest = types.ListValueMust(t, vs)
+}
+
+// GetResult returns the value of the Result field in QueryVectorIndexResponse as
+// a ResultData value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexResponse) GetResult(ctx context.Context) (ResultData, bool) {
+	var e ResultData
+	if o.Result.IsNull() || o.Result.IsUnknown() {
+		return e, false
+	}
+	var v []ResultData
+	d := o.Result.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResult sets the value of the Result field in QueryVectorIndexResponse.
+func (o *QueryVectorIndexResponse) SetResult(ctx context.Context, v ResultData) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["result"]
+	o.Result = types.ListValueMust(t, vs)
+}
+
 // Data returned in the query result.
 type ResultData struct {
 	// Data rows returned in the query.
@@ -1667,6 +2226,31 @@ func (o ResultData) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDataArray returns the value of the DataArray field in ResultData as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultData) GetDataArray(ctx context.Context) ([]types.String, bool) {
+	if o.DataArray.IsNull() || o.DataArray.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DataArray.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataArray sets the value of the DataArray field in ResultData.
+func (o *ResultData) SetDataArray(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_array"]
+	o.DataArray = types.ListValueMust(t, vs)
+}
+
 // Metadata about the result set.
 type ResultManifest struct {
 	// Number of columns in the result set.
@@ -1716,6 +2300,31 @@ func (o ResultManifest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetColumns returns the value of the Columns field in ResultManifest as
+// a slice of ColumnInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultManifest) GetColumns(ctx context.Context) ([]ColumnInfo, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnInfo
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in ResultManifest.
+func (o *ResultManifest) SetColumns(ctx context.Context, v []ColumnInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	o.Columns = types.ListValueMust(t, vs)
 }
 
 // Request payload for scanning data from a vector index.
@@ -1820,6 +2429,31 @@ func (o ScanVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetData returns the value of the Data field in ScanVectorIndexResponse as
+// a slice of Struct values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ScanVectorIndexResponse) GetData(ctx context.Context) ([]Struct, bool) {
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return nil, false
+	}
+	var v []Struct
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetData sets the value of the Data field in ScanVectorIndexResponse.
+func (o *ScanVectorIndexResponse) SetData(ctx context.Context, v []Struct) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	o.Data = types.ListValueMust(t, vs)
+}
+
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
 	Fields types.List `tfsdk:"fields" tf:"optional"`
@@ -1864,6 +2498,31 @@ func (o Struct) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFields returns the value of the Fields field in Struct as
+// a slice of MapStringValueEntry values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Struct) GetFields(ctx context.Context) ([]MapStringValueEntry, bool) {
+	if o.Fields.IsNull() || o.Fields.IsUnknown() {
+		return nil, false
+	}
+	var v []MapStringValueEntry
+	d := o.Fields.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFields sets the value of the Fields field in Struct.
+func (o *Struct) SetFields(ctx context.Context, v []MapStringValueEntry) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields"]
+	o.Fields = types.ListValueMust(t, vs)
 }
 
 // Synchronize an index
@@ -1996,6 +2655,31 @@ func (o UpsertDataResult) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFailedPrimaryKeys returns the value of the FailedPrimaryKeys field in UpsertDataResult as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpsertDataResult) GetFailedPrimaryKeys(ctx context.Context) ([]types.String, bool) {
+	if o.FailedPrimaryKeys.IsNull() || o.FailedPrimaryKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FailedPrimaryKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFailedPrimaryKeys sets the value of the FailedPrimaryKeys field in UpsertDataResult.
+func (o *UpsertDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failed_primary_keys"]
+	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
+}
+
 // Request payload for upserting data into a vector index.
 type UpsertDataVectorIndexRequest struct {
 	// Name of the vector index where data is to be upserted. Must be a Direct
@@ -2095,6 +2779,32 @@ func (o UpsertDataVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetResult returns the value of the Result field in UpsertDataVectorIndexResponse as
+// a UpsertDataResult value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpsertDataVectorIndexResponse) GetResult(ctx context.Context) (UpsertDataResult, bool) {
+	var e UpsertDataResult
+	if o.Result.IsNull() || o.Result.IsUnknown() {
+		return e, false
+	}
+	var v []UpsertDataResult
+	d := o.Result.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResult sets the value of the Result field in UpsertDataVectorIndexResponse.
+func (o *UpsertDataVectorIndexResponse) SetResult(ctx context.Context, v UpsertDataResult) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["result"]
+	o.Result = types.ListValueMust(t, vs)
+}
+
 type Value struct {
 	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
 
@@ -2161,6 +2871,58 @@ func (o Value) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetListValue returns the value of the ListValue field in Value as
+// a ListValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Value) GetListValue(ctx context.Context) (ListValue, bool) {
+	var e ListValue
+	if o.ListValue.IsNull() || o.ListValue.IsUnknown() {
+		return e, false
+	}
+	var v []ListValue
+	d := o.ListValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetListValue sets the value of the ListValue field in Value.
+func (o *Value) SetListValue(ctx context.Context, v ListValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["list_value"]
+	o.ListValue = types.ListValueMust(t, vs)
+}
+
+// GetStructValue returns the value of the StructValue field in Value as
+// a Struct value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Value) GetStructValue(ctx context.Context) (Struct, bool) {
+	var e Struct
+	if o.StructValue.IsNull() || o.StructValue.IsUnknown() {
+		return e, false
+	}
+	var v []Struct
+	d := o.StructValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStructValue sets the value of the StructValue field in Value.
+func (o *Value) SetStructValue(ctx context.Context, v Struct) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["struct_value"]
+	o.StructValue = types.ListValueMust(t, vs)
 }
 
 type VectorIndex struct {
@@ -2249,6 +3011,84 @@ func (o VectorIndex) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDeltaSyncIndexSpec returns the value of the DeltaSyncIndexSpec field in VectorIndex as
+// a DeltaSyncVectorIndexSpecResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *VectorIndex) GetDeltaSyncIndexSpec(ctx context.Context) (DeltaSyncVectorIndexSpecResponse, bool) {
+	var e DeltaSyncVectorIndexSpecResponse
+	if o.DeltaSyncIndexSpec.IsNull() || o.DeltaSyncIndexSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DeltaSyncVectorIndexSpecResponse
+	d := o.DeltaSyncIndexSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeltaSyncIndexSpec sets the value of the DeltaSyncIndexSpec field in VectorIndex.
+func (o *VectorIndex) SetDeltaSyncIndexSpec(ctx context.Context, v DeltaSyncVectorIndexSpecResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_sync_index_spec"]
+	o.DeltaSyncIndexSpec = types.ListValueMust(t, vs)
+}
+
+// GetDirectAccessIndexSpec returns the value of the DirectAccessIndexSpec field in VectorIndex as
+// a DirectAccessVectorIndexSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *VectorIndex) GetDirectAccessIndexSpec(ctx context.Context) (DirectAccessVectorIndexSpec, bool) {
+	var e DirectAccessVectorIndexSpec
+	if o.DirectAccessIndexSpec.IsNull() || o.DirectAccessIndexSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DirectAccessVectorIndexSpec
+	d := o.DirectAccessIndexSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDirectAccessIndexSpec sets the value of the DirectAccessIndexSpec field in VectorIndex.
+func (o *VectorIndex) SetDirectAccessIndexSpec(ctx context.Context, v DirectAccessVectorIndexSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["direct_access_index_spec"]
+	o.DirectAccessIndexSpec = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in VectorIndex as
+// a VectorIndexStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *VectorIndex) GetStatus(ctx context.Context) (VectorIndexStatus, bool) {
+	var e VectorIndexStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []VectorIndexStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in VectorIndex.
+func (o *VectorIndex) SetStatus(ctx context.Context, v VectorIndexStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
 type VectorIndexStatus struct {
 	// Index API Url to be used to perform operations on the index
 	IndexUrl types.String `tfsdk:"index_url" tf:"optional"`
@@ -2302,28 +3142,3 @@ func (o VectorIndexStatus) Type(ctx context.Context) attr.Type {
 		},
 	}
 }
-
-// Status of the delete operation.
-
-// Current state of the endpoint
-
-// Type of endpoint.
-
-// Pipeline execution mode.
-//
-// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the system
-// stops processing after successfully refreshing the source table in the
-// pipeline once, ensuring the table is updated based on the data available when
-// the update started. - `CONTINUOUS`: If the pipeline uses continuous
-// execution, the pipeline processes new data as it arrives in the source table
-// to keep vector index fresh.
-
-// Status of the upsert operation.
-
-// There are 2 types of Vector Search indexes:
-//
-// - `DELTA_SYNC`: An index that automatically syncs with a source Delta Table,
-// automatically and incrementally updating the index as the underlying data in
-// the Delta Table changes. - `DIRECT_ACCESS`: An index that supports direct
-// read and write of vectors and metadata through our REST and SDK APIs. With
-// this model, the user manages index updates.

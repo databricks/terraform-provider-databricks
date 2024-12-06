@@ -63,7 +63,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 
 	// objectType is the type of the destination struct. Entries from this are used when constructing
 	// plugin framework attr.Values for fields in the object.
-	objectType := tfcommon.NewObjectValuable(tfsdk).Type(ctx).(types.ObjectType)
+	objectType := tfcommon.NewObjectTyper(tfsdk).Type(ctx).(types.ObjectType)
 
 	var forceSendFieldVal []string
 	forceSendField := srcVal.FieldByName("ForceSendFields")
@@ -124,7 +124,7 @@ func goSdkToTfSdkSingleField(
 	innerType reflect.Type) (d diag.Diagnostics) {
 	if !destField.CanSet() {
 		d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
-		return d
+		return
 	}
 
 	switch srcField.Kind() {
@@ -133,7 +133,7 @@ func goSdkToTfSdkSingleField(
 		// If nil, set the destination field to the null value of the appropriate type.
 		if srcField.IsNil() {
 			setFieldToNull(destField, tfType)
-			return nil
+			return
 		}
 
 		// Otherwise, dereference the pointer and continue.
@@ -197,7 +197,8 @@ func goSdkToTfSdkSingleField(
 		if destField.Type() == reflect.TypeOf(types.List{}) {
 			listSrc := reflect.MakeSlice(reflect.SliceOf(srcField.Type()), 1, 1)
 			listSrc.Index(0).Set(srcField)
-			return goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)
+			d.Append(goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)...)
+			return
 		}
 
 		// Otherwise, the destination field is a types.Object. Convert the nested struct to the corresponding
@@ -225,9 +226,15 @@ func goSdkToTfSdkSingleField(
 			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a list type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
+		if srcField.IsNil() {
+			// Treat the source field as an empty slice.
+			nullList := types.ListNull(listType.ElemType)
+			destField.Set(reflect.ValueOf(nullList))
+			return
+		}
 		if srcField.Len() == 0 {
-			// If the destination field is a types.List, treat the source field as an empty slice.
-			emptyList := types.ListNull(listType.ElemType)
+			// Treat the source field as an empty slice.
+			emptyList := types.ListValueMust(listType.ElemType, []attr.Value{})
 			destField.Set(reflect.ValueOf(emptyList))
 			return
 		}
@@ -264,9 +271,15 @@ func goSdkToTfSdkSingleField(
 			d.AddError(goSdkToTfSdkFieldConversionFailureMessage, fmt.Sprintf("inner type is not a map type: %s. %s", tfType, common.TerraformBugErrorMessage))
 			return
 		}
+		if srcField.IsNil() {
+			// If the source field is nil, treat the destination field as an empty map.
+			nullMap := types.MapNull(mapType.ElemType)
+			destField.Set(reflect.ValueOf(nullMap))
+			return
+		}
 		if srcField.Len() == 0 {
 			// If the destination field is a types.Map, treat the source field as an empty map.
-			emptyMap := types.MapNull(mapType.ElemType)
+			emptyMap := types.MapValueMust(mapType.ElemType, map[string]attr.Value{})
 			destField.Set(reflect.ValueOf(emptyMap))
 			return
 		}
@@ -309,12 +322,13 @@ func setFieldToNull(destField reflect.Value, innerType attr.Type) {
 	case reflect.TypeOf(types.List{}):
 		// If the destination field is a types.List, treat the source field as an empty slice.
 		listType := innerType.(types.ListType)
-		emptyList := types.ListNull(listType.ElemType)
-		destField.Set(reflect.ValueOf(emptyList))
+		nullList := types.ListNull(listType.ElemType)
+		destField.Set(reflect.ValueOf(nullList))
 	case reflect.TypeOf(types.Object{}):
 		// If the destination field is a types.Object, treat the source field as an empty object.
 		innerType := innerType.(types.ObjectType)
-		destField.Set(reflect.ValueOf(types.ObjectNull(innerType.AttrTypes)))
+		nullObject := types.ObjectNull(innerType.AttrTypes)
+		destField.Set(reflect.ValueOf(nullObject))
 	}
 }
 

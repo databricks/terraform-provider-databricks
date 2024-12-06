@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -142,6 +143,135 @@ func (o App) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetActiveDeployment returns the value of the ActiveDeployment field in App as
+// a AppDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App) GetActiveDeployment(ctx context.Context) (AppDeployment, bool) {
+	var e AppDeployment
+	if o.ActiveDeployment.IsNull() || o.ActiveDeployment.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeployment
+	d := o.ActiveDeployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetActiveDeployment sets the value of the ActiveDeployment field in App.
+func (o *App) SetActiveDeployment(ctx context.Context, v AppDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["active_deployment"]
+	o.ActiveDeployment = types.ListValueMust(t, vs)
+}
+
+// GetAppStatus returns the value of the AppStatus field in App as
+// a ApplicationStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App) GetAppStatus(ctx context.Context) (ApplicationStatus, bool) {
+	var e ApplicationStatus
+	if o.AppStatus.IsNull() || o.AppStatus.IsUnknown() {
+		return e, false
+	}
+	var v []ApplicationStatus
+	d := o.AppStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAppStatus sets the value of the AppStatus field in App.
+func (o *App) SetAppStatus(ctx context.Context, v ApplicationStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_status"]
+	o.AppStatus = types.ListValueMust(t, vs)
+}
+
+// GetComputeStatus returns the value of the ComputeStatus field in App as
+// a ComputeStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App) GetComputeStatus(ctx context.Context) (ComputeStatus, bool) {
+	var e ComputeStatus
+	if o.ComputeStatus.IsNull() || o.ComputeStatus.IsUnknown() {
+		return e, false
+	}
+	var v []ComputeStatus
+	d := o.ComputeStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetComputeStatus sets the value of the ComputeStatus field in App.
+func (o *App) SetComputeStatus(ctx context.Context, v ComputeStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compute_status"]
+	o.ComputeStatus = types.ListValueMust(t, vs)
+}
+
+// GetPendingDeployment returns the value of the PendingDeployment field in App as
+// a AppDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App) GetPendingDeployment(ctx context.Context) (AppDeployment, bool) {
+	var e AppDeployment
+	if o.PendingDeployment.IsNull() || o.PendingDeployment.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeployment
+	d := o.PendingDeployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPendingDeployment sets the value of the PendingDeployment field in App.
+func (o *App) SetPendingDeployment(ctx context.Context, v AppDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_deployment"]
+	o.PendingDeployment = types.ListValueMust(t, vs)
+}
+
+// GetResources returns the value of the Resources field in App as
+// a slice of AppResource values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App) GetResources(ctx context.Context) ([]AppResource, bool) {
+	if o.Resources.IsNull() || o.Resources.IsUnknown() {
+		return nil, false
+	}
+	var v []AppResource
+	d := o.Resources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResources sets the value of the Resources field in App.
+func (o *App) SetResources(ctx context.Context, v []AppResource) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	o.Resources = types.ListValueMust(t, vs)
+}
+
 type AppAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -258,6 +388,31 @@ func (o AppAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in AppAccessControlResponse as
+// a slice of AppPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppAccessControlResponse) GetAllPermissions(ctx context.Context) ([]AppPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []AppPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in AppAccessControlResponse.
+func (o *AppAccessControlResponse) SetAllPermissions(ctx context.Context, v []AppPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
@@ -339,6 +494,58 @@ func (o AppDeployment) Type(ctx context.Context) attr.Type {
 			"update_time": types.StringType,
 		},
 	}
+}
+
+// GetDeploymentArtifacts returns the value of the DeploymentArtifacts field in AppDeployment as
+// a AppDeploymentArtifacts value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppDeployment) GetDeploymentArtifacts(ctx context.Context) (AppDeploymentArtifacts, bool) {
+	var e AppDeploymentArtifacts
+	if o.DeploymentArtifacts.IsNull() || o.DeploymentArtifacts.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeploymentArtifacts
+	d := o.DeploymentArtifacts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeploymentArtifacts sets the value of the DeploymentArtifacts field in AppDeployment.
+func (o *AppDeployment) SetDeploymentArtifacts(ctx context.Context, v AppDeploymentArtifacts) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment_artifacts"]
+	o.DeploymentArtifacts = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in AppDeployment as
+// a AppDeploymentStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppDeployment) GetStatus(ctx context.Context) (AppDeploymentStatus, bool) {
+	var e AppDeploymentStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeploymentStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in AppDeployment.
+func (o *AppDeployment) SetStatus(ctx context.Context, v AppDeploymentStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
 }
 
 type AppDeploymentArtifacts struct {
@@ -483,6 +690,31 @@ func (o AppPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in AppPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in AppPermission.
+func (o *AppPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type AppPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -534,6 +766,31 @@ func (o AppPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in AppPermissions as
+// a slice of AppAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppPermissions) GetAccessControlList(ctx context.Context) ([]AppAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AppAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in AppPermissions.
+func (o *AppPermissions) SetAccessControlList(ctx context.Context, v []AppAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type AppPermissionsDescription struct {
@@ -630,6 +887,31 @@ func (o AppPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in AppPermissionsRequest as
+// a slice of AppAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppPermissionsRequest) GetAccessControlList(ctx context.Context) ([]AppAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AppAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in AppPermissionsRequest.
+func (o *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []AppAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type AppResource struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description" tf:"optional"`
@@ -703,6 +985,110 @@ func (o AppResource) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetJob returns the value of the Job field in AppResource as
+// a AppResourceJob value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
+	var e AppResourceJob
+	if o.Job.IsNull() || o.Job.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceJob
+	d := o.Job.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJob sets the value of the Job field in AppResource.
+func (o *AppResource) SetJob(ctx context.Context, v AppResourceJob) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job"]
+	o.Job = types.ListValueMust(t, vs)
+}
+
+// GetSecret returns the value of the Secret field in AppResource as
+// a AppResourceSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetSecret(ctx context.Context) (AppResourceSecret, bool) {
+	var e AppResourceSecret
+	if o.Secret.IsNull() || o.Secret.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceSecret
+	d := o.Secret.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSecret sets the value of the Secret field in AppResource.
+func (o *AppResource) SetSecret(ctx context.Context, v AppResourceSecret) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
+	o.Secret = types.ListValueMust(t, vs)
+}
+
+// GetServingEndpoint returns the value of the ServingEndpoint field in AppResource as
+// a AppResourceServingEndpoint value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetServingEndpoint(ctx context.Context) (AppResourceServingEndpoint, bool) {
+	var e AppResourceServingEndpoint
+	if o.ServingEndpoint.IsNull() || o.ServingEndpoint.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceServingEndpoint
+	d := o.ServingEndpoint.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetServingEndpoint sets the value of the ServingEndpoint field in AppResource.
+func (o *AppResource) SetServingEndpoint(ctx context.Context, v AppResourceServingEndpoint) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint"]
+	o.ServingEndpoint = types.ListValueMust(t, vs)
+}
+
+// GetSqlWarehouse returns the value of the SqlWarehouse field in AppResource as
+// a AppResourceSqlWarehouse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AppResource) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWarehouse, bool) {
+	var e AppResourceSqlWarehouse
+	if o.SqlWarehouse.IsNull() || o.SqlWarehouse.IsUnknown() {
+		return e, false
+	}
+	var v []AppResourceSqlWarehouse
+	d := o.SqlWarehouse.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlWarehouse sets the value of the SqlWarehouse field in AppResource.
+func (o *AppResource) SetSqlWarehouse(ctx context.Context, v AppResourceSqlWarehouse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
+	o.SqlWarehouse = types.ListValueMust(t, vs)
 }
 
 type AppResourceJob struct {
@@ -1039,6 +1425,32 @@ func (o CreateAppDeploymentRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAppDeployment returns the value of the AppDeployment field in CreateAppDeploymentRequest as
+// a AppDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAppDeploymentRequest) GetAppDeployment(ctx context.Context) (AppDeployment, bool) {
+	var e AppDeployment
+	if o.AppDeployment.IsNull() || o.AppDeployment.IsUnknown() {
+		return e, false
+	}
+	var v []AppDeployment
+	d := o.AppDeployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAppDeployment sets the value of the AppDeployment field in CreateAppDeploymentRequest.
+func (o *CreateAppDeploymentRequest) SetAppDeployment(ctx context.Context, v AppDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment"]
+	o.AppDeployment = types.ListValueMust(t, vs)
+}
+
 // Create an app
 type CreateAppRequest struct {
 	App types.List `tfsdk:"app" tf:"optional,object"`
@@ -1083,6 +1495,32 @@ func (o CreateAppRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetApp returns the value of the App field in CreateAppRequest as
+// a App value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAppRequest) GetApp(ctx context.Context) (App, bool) {
+	var e App
+	if o.App.IsNull() || o.App.IsUnknown() {
+		return e, false
+	}
+	var v []App
+	d := o.App.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApp sets the value of the App field in CreateAppRequest.
+func (o *CreateAppRequest) SetApp(ctx context.Context, v App) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	o.App = types.ListValueMust(t, vs)
 }
 
 // Delete an app
@@ -1262,6 +1700,31 @@ func (o GetAppPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetAppPermissionLevelsResponse as
+// a slice of AppPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetAppPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]AppPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []AppPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetAppPermissionLevelsResponse.
+func (o *GetAppPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []AppPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get app permissions
@@ -1452,6 +1915,31 @@ func (o ListAppDeploymentsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAppDeployments returns the value of the AppDeployments field in ListAppDeploymentsResponse as
+// a slice of AppDeployment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAppDeploymentsResponse) GetAppDeployments(ctx context.Context) ([]AppDeployment, bool) {
+	if o.AppDeployments.IsNull() || o.AppDeployments.IsUnknown() {
+		return nil, false
+	}
+	var v []AppDeployment
+	d := o.AppDeployments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAppDeployments sets the value of the AppDeployments field in ListAppDeploymentsResponse.
+func (o *ListAppDeploymentsResponse) SetAppDeployments(ctx context.Context, v []AppDeployment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployments"]
+	o.AppDeployments = types.ListValueMust(t, vs)
+}
+
 // List apps
 type ListAppsRequest struct {
 	// Upper bound for items returned.
@@ -1547,6 +2035,31 @@ func (o ListAppsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetApps returns the value of the Apps field in ListAppsResponse as
+// a slice of App values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAppsResponse) GetApps(ctx context.Context) ([]App, bool) {
+	if o.Apps.IsNull() || o.Apps.IsUnknown() {
+		return nil, false
+	}
+	var v []App
+	d := o.Apps.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetApps sets the value of the Apps field in ListAppsResponse.
+func (o *ListAppsResponse) SetApps(ctx context.Context, v []App) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	o.Apps = types.ListValueMust(t, vs)
 }
 
 type StartAppRequest struct {
@@ -1684,7 +2197,28 @@ func (o UpdateAppRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Permission level
+// GetApp returns the value of the App field in UpdateAppRequest as
+// a App value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
+	var e App
+	if o.App.IsNull() || o.App.IsUnknown() {
+		return e, false
+	}
+	var v []App
+	d := o.App.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// Permission to grant on the secret scope. Supported permissions are: "READ",
-// "WRITE", "MANAGE".
+// SetApp sets the value of the App field in UpdateAppRequest.
+func (o *UpdateAppRequest) SetApp(ctx context.Context, v App) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
+	o.App = types.ListValueMust(t, vs)
+}

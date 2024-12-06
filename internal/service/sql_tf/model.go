@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -184,6 +185,32 @@ func (o Alert) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCondition returns the value of the Condition field in Alert as
+// a AlertCondition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Alert) GetCondition(ctx context.Context) (AlertCondition, bool) {
+	var e AlertCondition
+	if o.Condition.IsNull() || o.Condition.IsUnknown() {
+		return e, false
+	}
+	var v []AlertCondition
+	d := o.Condition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCondition sets the value of the Condition field in Alert.
+func (o *Alert) SetCondition(ctx context.Context, v AlertCondition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition"]
+	o.Condition = types.ListValueMust(t, vs)
+}
+
 type AlertCondition struct {
 	// Alert state if result is empty.
 	EmptyResultState types.String `tfsdk:"empty_result_state" tf:"optional"`
@@ -246,6 +273,58 @@ func (o AlertCondition) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOperand returns the value of the Operand field in AlertCondition as
+// a AlertConditionOperand value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertCondition) GetOperand(ctx context.Context) (AlertConditionOperand, bool) {
+	var e AlertConditionOperand
+	if o.Operand.IsNull() || o.Operand.IsUnknown() {
+		return e, false
+	}
+	var v []AlertConditionOperand
+	d := o.Operand.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOperand sets the value of the Operand field in AlertCondition.
+func (o *AlertCondition) SetOperand(ctx context.Context, v AlertConditionOperand) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["operand"]
+	o.Operand = types.ListValueMust(t, vs)
+}
+
+// GetThreshold returns the value of the Threshold field in AlertCondition as
+// a AlertConditionThreshold value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertCondition) GetThreshold(ctx context.Context) (AlertConditionThreshold, bool) {
+	var e AlertConditionThreshold
+	if o.Threshold.IsNull() || o.Threshold.IsUnknown() {
+		return e, false
+	}
+	var v []AlertConditionThreshold
+	d := o.Threshold.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetThreshold sets the value of the Threshold field in AlertCondition.
+func (o *AlertCondition) SetThreshold(ctx context.Context, v AlertConditionThreshold) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["threshold"]
+	o.Threshold = types.ListValueMust(t, vs)
+}
+
 type AlertConditionOperand struct {
 	Column types.List `tfsdk:"column" tf:"optional,object"`
 }
@@ -291,6 +370,32 @@ func (o AlertConditionOperand) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetColumn returns the value of the Column field in AlertConditionOperand as
+// a AlertOperandColumn value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertConditionOperand) GetColumn(ctx context.Context) (AlertOperandColumn, bool) {
+	var e AlertOperandColumn
+	if o.Column.IsNull() || o.Column.IsUnknown() {
+		return e, false
+	}
+	var v []AlertOperandColumn
+	d := o.Column.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumn sets the value of the Column field in AlertConditionOperand.
+func (o *AlertConditionOperand) SetColumn(ctx context.Context, v AlertOperandColumn) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["column"]
+	o.Column = types.ListValueMust(t, vs)
+}
+
 type AlertConditionThreshold struct {
 	Value types.List `tfsdk:"value" tf:"optional,object"`
 }
@@ -334,6 +439,32 @@ func (o AlertConditionThreshold) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetValue returns the value of the Value field in AlertConditionThreshold as
+// a AlertOperandValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertConditionThreshold) GetValue(ctx context.Context) (AlertOperandValue, bool) {
+	var e AlertOperandValue
+	if o.Value.IsNull() || o.Value.IsUnknown() {
+		return e, false
+	}
+	var v []AlertOperandValue
+	d := o.Value.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetValue sets the value of the Value field in AlertConditionThreshold.
+func (o *AlertConditionThreshold) SetValue(ctx context.Context, v AlertOperandValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	o.Value = types.ListValueMust(t, vs)
 }
 
 type AlertOperandColumn struct {
@@ -611,6 +742,57 @@ func (o AlertQuery) Type(ctx context.Context) attr.Type {
 			"user_id":    types.Int64Type,
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in AlertQuery as
+// a QueryOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertQuery) GetOptions(ctx context.Context) (QueryOptions, bool) {
+	var e QueryOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []QueryOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in AlertQuery.
+func (o *AlertQuery) SetOptions(ctx context.Context, v QueryOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in AlertQuery as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertQuery) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in AlertQuery.
+func (o *AlertQuery) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 // Describes metadata for a particular chunk, within a result set; this
@@ -978,6 +1160,32 @@ func (o CreateAlert) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in CreateAlert as
+// a AlertOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAlert) GetOptions(ctx context.Context) (AlertOptions, bool) {
+	var e AlertOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []AlertOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in CreateAlert.
+func (o *CreateAlert) SetOptions(ctx context.Context, v AlertOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
 type CreateAlertRequest struct {
 	Alert types.List `tfsdk:"alert" tf:"optional,object"`
 }
@@ -1021,6 +1229,32 @@ func (o CreateAlertRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAlert returns the value of the Alert field in CreateAlertRequest as
+// a CreateAlertRequestAlert value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAlertRequest) GetAlert(ctx context.Context) (CreateAlertRequestAlert, bool) {
+	var e CreateAlertRequestAlert
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []CreateAlertRequestAlert
+	d := o.Alert.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in CreateAlertRequest.
+func (o *CreateAlertRequest) SetAlert(ctx context.Context, v CreateAlertRequestAlert) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
+	o.Alert = types.ListValueMust(t, vs)
 }
 
 type CreateAlertRequestAlert struct {
@@ -1106,6 +1340,32 @@ func (o CreateAlertRequestAlert) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCondition returns the value of the Condition field in CreateAlertRequestAlert as
+// a AlertCondition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAlertRequestAlert) GetCondition(ctx context.Context) (AlertCondition, bool) {
+	var e AlertCondition
+	if o.Condition.IsNull() || o.Condition.IsUnknown() {
+		return e, false
+	}
+	var v []AlertCondition
+	d := o.Condition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCondition sets the value of the Condition field in CreateAlertRequestAlert.
+func (o *CreateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition"]
+	o.Condition = types.ListValueMust(t, vs)
+}
+
 type CreateQueryRequest struct {
 	Query types.List `tfsdk:"query" tf:"optional,object"`
 }
@@ -1149,6 +1409,32 @@ func (o CreateQueryRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQuery returns the value of the Query field in CreateQueryRequest as
+// a CreateQueryRequestQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateQueryRequest) GetQuery(ctx context.Context) (CreateQueryRequestQuery, bool) {
+	var e CreateQueryRequestQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []CreateQueryRequestQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in CreateQueryRequest.
+func (o *CreateQueryRequest) SetQuery(ctx context.Context, v CreateQueryRequestQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
 }
 
 type CreateQueryRequestQuery struct {
@@ -1240,6 +1526,56 @@ func (o CreateQueryRequestQuery) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in CreateQueryRequestQuery as
+// a slice of QueryParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateQueryRequestQuery) GetParameters(ctx context.Context) ([]QueryParameter, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryParameter
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in CreateQueryRequestQuery.
+func (o *CreateQueryRequestQuery) SetParameters(ctx context.Context, v []QueryParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateQueryRequestQuery as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateQueryRequestQuery) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateQueryRequestQuery.
+func (o *CreateQueryRequestQuery) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 // Add visualization to a query
@@ -1348,6 +1684,32 @@ func (o CreateVisualizationRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetVisualization returns the value of the Visualization field in CreateVisualizationRequest as
+// a CreateVisualizationRequestVisualization value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateVisualizationRequest) GetVisualization(ctx context.Context) (CreateVisualizationRequestVisualization, bool) {
+	var e CreateVisualizationRequestVisualization
+	if o.Visualization.IsNull() || o.Visualization.IsUnknown() {
+		return e, false
+	}
+	var v []CreateVisualizationRequestVisualization
+	d := o.Visualization.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVisualization sets the value of the Visualization field in CreateVisualizationRequest.
+func (o *CreateVisualizationRequest) SetVisualization(ctx context.Context, v CreateVisualizationRequestVisualization) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["visualization"]
+	o.Visualization = types.ListValueMust(t, vs)
 }
 
 type CreateVisualizationRequestVisualization struct {
@@ -1544,6 +1906,58 @@ func (o CreateWarehouseRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChannel returns the value of the Channel field in CreateWarehouseRequest as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWarehouseRequest) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in CreateWarehouseRequest.
+func (o *CreateWarehouseRequest) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateWarehouseRequest as
+// a EndpointTags value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWarehouseRequest) GetTags(ctx context.Context) (EndpointTags, bool) {
+	var e EndpointTags
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointTags
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTags sets the value of the Tags field in CreateWarehouseRequest.
+func (o *CreateWarehouseRequest) SetTags(ctx context.Context, v EndpointTags) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type CreateWarehouseResponse struct {
 	// Id for the SQL warehouse. This value is unique across all SQL warehouses.
 	Id types.String `tfsdk:"id" tf:"optional"`
@@ -1652,6 +2066,32 @@ func (o CreateWidget) Type(ctx context.Context) attr.Type {
 			"width":            types.Int64Type,
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in CreateWidget as
+// a WidgetOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWidget) GetOptions(ctx context.Context) (WidgetOptions, bool) {
+	var e WidgetOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []WidgetOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in CreateWidget.
+func (o *CreateWidget) SetOptions(ctx context.Context, v WidgetOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
 }
 
 // A JSON representing a dashboard containing widgets of visualizations and text
@@ -1785,6 +2225,108 @@ func (o Dashboard) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in Dashboard as
+// a DashboardOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dashboard) GetOptions(ctx context.Context) (DashboardOptions, bool) {
+	var e DashboardOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in Dashboard.
+func (o *Dashboard) SetOptions(ctx context.Context, v DashboardOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in Dashboard as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dashboard) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in Dashboard.
+func (o *Dashboard) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+// GetUser returns the value of the User field in Dashboard as
+// a User value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dashboard) GetUser(ctx context.Context) (User, bool) {
+	var e User
+	if o.User.IsNull() || o.User.IsUnknown() {
+		return e, false
+	}
+	var v []User
+	d := o.User.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUser sets the value of the User field in Dashboard.
+func (o *Dashboard) SetUser(ctx context.Context, v User) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user"]
+	o.User = types.ListValueMust(t, vs)
+}
+
+// GetWidgets returns the value of the Widgets field in Dashboard as
+// a slice of Widget values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Dashboard) GetWidgets(ctx context.Context) ([]Widget, bool) {
+	if o.Widgets.IsNull() || o.Widgets.IsUnknown() {
+		return nil, false
+	}
+	var v []Widget
+	d := o.Widgets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgets sets the value of the Widgets field in Dashboard.
+func (o *Dashboard) SetWidgets(ctx context.Context, v []Widget) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	o.Widgets = types.ListValueMust(t, vs)
+}
+
 type DashboardEditContent struct {
 	DashboardId types.String `tfsdk:"-"`
 	// The title of this dashboard that appears in list views and at the top of
@@ -1843,6 +2385,31 @@ func (o DashboardEditContent) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTags returns the value of the Tags field in DashboardEditContent as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardEditContent) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in DashboardEditContent.
+func (o *DashboardEditContent) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type DashboardOptions struct {
@@ -1957,6 +2524,31 @@ func (o DashboardPostContent) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTags returns the value of the Tags field in DashboardPostContent as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardPostContent) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in DashboardPostContent.
+func (o *DashboardPostContent) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 // A JSON object representing a DBSQL data source / SQL warehouse.
@@ -2142,6 +2734,32 @@ func (o DateRangeValue) Type(ctx context.Context) attr.Type {
 			"start_day_of_week":        types.Int64Type,
 		},
 	}
+}
+
+// GetDateRangeValue returns the value of the DateRangeValue field in DateRangeValue as
+// a DateRange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DateRangeValue) GetDateRangeValue(ctx context.Context) (DateRange, bool) {
+	var e DateRange
+	if o.DateRangeValue.IsNull() || o.DateRangeValue.IsUnknown() {
+		return e, false
+	}
+	var v []DateRange
+	d := o.DateRangeValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDateRangeValue sets the value of the DateRangeValue field in DateRangeValue.
+func (o *DateRangeValue) SetDateRangeValue(ctx context.Context, v DateRange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["date_range_value"]
+	o.DateRangeValue = types.ListValueMust(t, vs)
 }
 
 type DateValue struct {
@@ -2627,6 +3245,32 @@ func (o EditAlert) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in EditAlert as
+// a AlertOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditAlert) GetOptions(ctx context.Context) (AlertOptions, bool) {
+	var e AlertOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []AlertOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in EditAlert.
+func (o *EditAlert) SetOptions(ctx context.Context, v AlertOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
 type EditWarehouseRequest struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -2759,6 +3403,58 @@ func (o EditWarehouseRequest) Type(ctx context.Context) attr.Type {
 			"warehouse_type": types.StringType,
 		},
 	}
+}
+
+// GetChannel returns the value of the Channel field in EditWarehouseRequest as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditWarehouseRequest) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in EditWarehouseRequest.
+func (o *EditWarehouseRequest) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in EditWarehouseRequest as
+// a EndpointTags value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditWarehouseRequest) GetTags(ctx context.Context) (EndpointTags, bool) {
+	var e EndpointTags
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointTags
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTags sets the value of the Tags field in EditWarehouseRequest.
+func (o *EditWarehouseRequest) SetTags(ctx context.Context, v EndpointTags) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type EditWarehouseResponse struct {
@@ -2944,6 +3640,32 @@ func (o EndpointHealth) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFailureReason returns the value of the FailureReason field in EndpointHealth as
+// a TerminationReason value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointHealth) GetFailureReason(ctx context.Context) (TerminationReason, bool) {
+	var e TerminationReason
+	if o.FailureReason.IsNull() || o.FailureReason.IsUnknown() {
+		return e, false
+	}
+	var v []TerminationReason
+	d := o.FailureReason.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFailureReason sets the value of the FailureReason field in EndpointHealth.
+func (o *EndpointHealth) SetFailureReason(ctx context.Context, v TerminationReason) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failure_reason"]
+	o.FailureReason = types.ListValueMust(t, vs)
+}
+
 type EndpointInfo struct {
 	// The amount of time in minutes that a SQL warehouse must be idle (i.e., no
 	// RUNNING queries) before it is automatically stopped.
@@ -3109,6 +3831,110 @@ func (o EndpointInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChannel returns the value of the Channel field in EndpointInfo as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in EndpointInfo.
+func (o *EndpointInfo) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in EndpointInfo as
+// a EndpointHealth value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo) GetHealth(ctx context.Context) (EndpointHealth, bool) {
+	var e EndpointHealth
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointHealth
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in EndpointInfo.
+func (o *EndpointInfo) SetHealth(ctx context.Context, v EndpointHealth) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetOdbcParams returns the value of the OdbcParams field in EndpointInfo as
+// a OdbcParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo) GetOdbcParams(ctx context.Context) (OdbcParams, bool) {
+	var e OdbcParams
+	if o.OdbcParams.IsNull() || o.OdbcParams.IsUnknown() {
+		return e, false
+	}
+	var v []OdbcParams
+	d := o.OdbcParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOdbcParams sets the value of the OdbcParams field in EndpointInfo.
+func (o *EndpointInfo) SetOdbcParams(ctx context.Context, v OdbcParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["odbc_params"]
+	o.OdbcParams = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in EndpointInfo as
+// a EndpointTags value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointInfo) GetTags(ctx context.Context) (EndpointTags, bool) {
+	var e EndpointTags
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointTags
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTags sets the value of the Tags field in EndpointInfo.
+func (o *EndpointInfo) SetTags(ctx context.Context, v EndpointTags) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type EndpointTagPair struct {
 	Key types.String `tfsdk:"key" tf:"optional"`
 
@@ -3199,6 +4025,31 @@ func (o EndpointTags) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCustomTags returns the value of the CustomTags field in EndpointTags as
+// a slice of EndpointTagPair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointTags) GetCustomTags(ctx context.Context) ([]EndpointTagPair, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTagPair
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in EndpointTags.
+func (o *EndpointTags) SetCustomTags(ctx context.Context, v []EndpointTagPair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.ListValueMust(t, vs)
+}
+
 type EnumValue struct {
 	// List of valid query parameter values, newline delimited.
 	EnumOptions types.String `tfsdk:"enum_options" tf:"optional"`
@@ -3254,6 +4105,57 @@ func (o EnumValue) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMultiValuesOptions returns the value of the MultiValuesOptions field in EnumValue as
+// a MultiValuesOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnumValue) GetMultiValuesOptions(ctx context.Context) (MultiValuesOptions, bool) {
+	var e MultiValuesOptions
+	if o.MultiValuesOptions.IsNull() || o.MultiValuesOptions.IsUnknown() {
+		return e, false
+	}
+	var v []MultiValuesOptions
+	d := o.MultiValuesOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMultiValuesOptions sets the value of the MultiValuesOptions field in EnumValue.
+func (o *EnumValue) SetMultiValuesOptions(ctx context.Context, v MultiValuesOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["multi_values_options"]
+	o.MultiValuesOptions = types.ListValueMust(t, vs)
+}
+
+// GetValues returns the value of the Values field in EnumValue as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnumValue) GetValues(ctx context.Context) ([]types.String, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in EnumValue.
+func (o *EnumValue) SetValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 type ExecuteStatementRequest struct {
@@ -3443,6 +4345,31 @@ func (o ExecuteStatementRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in ExecuteStatementRequest as
+// a slice of StatementParameterListItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExecuteStatementRequest) GetParameters(ctx context.Context) ([]StatementParameterListItem, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []StatementParameterListItem
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ExecuteStatementRequest.
+func (o *ExecuteStatementRequest) SetParameters(ctx context.Context, v []StatementParameterListItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
 type ExternalLink struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
@@ -3531,6 +4458,31 @@ func (o ExternalLink) Type(ctx context.Context) attr.Type {
 			"row_offset":               types.Int64Type,
 		},
 	}
+}
+
+// GetHttpHeaders returns the value of the HttpHeaders field in ExternalLink as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalLink) GetHttpHeaders(ctx context.Context) (map[string]types.String, bool) {
+	if o.HttpHeaders.IsNull() || o.HttpHeaders.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.HttpHeaders.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHttpHeaders sets the value of the HttpHeaders field in ExternalLink.
+func (o *ExternalLink) SetHttpHeaders(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["http_headers"]
+	o.HttpHeaders = types.MapValueMust(t, vs)
 }
 
 // Get an alert
@@ -3843,6 +4795,31 @@ func (o GetResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in GetResponse as
+// a slice of AccessControl values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetResponse) GetAccessControlList(ctx context.Context) ([]AccessControl, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControl
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in GetResponse.
+func (o *GetResponse) SetAccessControlList(ctx context.Context, v []AccessControl) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 // Get status, manifest, and result first chunk
 type GetStatementRequest struct {
 	// The statement ID is returned upon successfully submitting a SQL
@@ -4021,6 +4998,31 @@ func (o GetWarehousePermissionLevelsResponse) Type(ctx context.Context) attr.Typ
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetWarehousePermissionLevelsResponse as
+// a slice of WarehousePermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWarehousePermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]WarehousePermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehousePermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetWarehousePermissionLevelsResponse.
+func (o *GetWarehousePermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []WarehousePermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get SQL warehouse permissions
@@ -4274,6 +5276,110 @@ func (o GetWarehouseResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChannel returns the value of the Channel field in GetWarehouseResponse as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWarehouseResponse) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in GetWarehouseResponse.
+func (o *GetWarehouseResponse) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetHealth returns the value of the Health field in GetWarehouseResponse as
+// a EndpointHealth value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWarehouseResponse) GetHealth(ctx context.Context) (EndpointHealth, bool) {
+	var e EndpointHealth
+	if o.Health.IsNull() || o.Health.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointHealth
+	d := o.Health.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHealth sets the value of the Health field in GetWarehouseResponse.
+func (o *GetWarehouseResponse) SetHealth(ctx context.Context, v EndpointHealth) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["health"]
+	o.Health = types.ListValueMust(t, vs)
+}
+
+// GetOdbcParams returns the value of the OdbcParams field in GetWarehouseResponse as
+// a OdbcParams value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWarehouseResponse) GetOdbcParams(ctx context.Context) (OdbcParams, bool) {
+	var e OdbcParams
+	if o.OdbcParams.IsNull() || o.OdbcParams.IsUnknown() {
+		return e, false
+	}
+	var v []OdbcParams
+	d := o.OdbcParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOdbcParams sets the value of the OdbcParams field in GetWarehouseResponse.
+func (o *GetWarehouseResponse) SetOdbcParams(ctx context.Context, v OdbcParams) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["odbc_params"]
+	o.OdbcParams = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in GetWarehouseResponse as
+// a EndpointTags value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWarehouseResponse) GetTags(ctx context.Context) (EndpointTags, bool) {
+	var e EndpointTags
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointTags
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTags sets the value of the Tags field in GetWarehouseResponse.
+func (o *GetWarehouseResponse) SetTags(ctx context.Context, v EndpointTags) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type GetWorkspaceWarehouseConfigResponse struct {
 	// Optional: Channel selection details
 	Channel types.List `tfsdk:"channel" tf:"optional,object"`
@@ -4374,6 +5480,160 @@ func (o GetWorkspaceWarehouseConfigResponse) Type(ctx context.Context) attr.Type
 	}
 }
 
+// GetChannel returns the value of the Channel field in GetWorkspaceWarehouseConfigResponse as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetConfigParam returns the value of the ConfigParam field in GetWorkspaceWarehouseConfigResponse as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetConfigParam(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.ConfigParam.IsNull() || o.ConfigParam.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.ConfigParam.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfigParam sets the value of the ConfigParam field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetConfigParam(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config_param"]
+	o.ConfigParam = types.ListValueMust(t, vs)
+}
+
+// GetDataAccessConfig returns the value of the DataAccessConfig field in GetWorkspaceWarehouseConfigResponse as
+// a slice of EndpointConfPair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetDataAccessConfig(ctx context.Context) ([]EndpointConfPair, bool) {
+	if o.DataAccessConfig.IsNull() || o.DataAccessConfig.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointConfPair
+	d := o.DataAccessConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataAccessConfig sets the value of the DataAccessConfig field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetDataAccessConfig(ctx context.Context, v []EndpointConfPair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_access_config"]
+	o.DataAccessConfig = types.ListValueMust(t, vs)
+}
+
+// GetEnabledWarehouseTypes returns the value of the EnabledWarehouseTypes field in GetWorkspaceWarehouseConfigResponse as
+// a slice of WarehouseTypePair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetEnabledWarehouseTypes(ctx context.Context) ([]WarehouseTypePair, bool) {
+	if o.EnabledWarehouseTypes.IsNull() || o.EnabledWarehouseTypes.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehouseTypePair
+	d := o.EnabledWarehouseTypes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnabledWarehouseTypes sets the value of the EnabledWarehouseTypes field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetEnabledWarehouseTypes(ctx context.Context, v []WarehouseTypePair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enabled_warehouse_types"]
+	o.EnabledWarehouseTypes = types.ListValueMust(t, vs)
+}
+
+// GetGlobalParam returns the value of the GlobalParam field in GetWorkspaceWarehouseConfigResponse as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetGlobalParam(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.GlobalParam.IsNull() || o.GlobalParam.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.GlobalParam.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGlobalParam sets the value of the GlobalParam field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetGlobalParam(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["global_param"]
+	o.GlobalParam = types.ListValueMust(t, vs)
+}
+
+// GetSqlConfigurationParameters returns the value of the SqlConfigurationParameters field in GetWorkspaceWarehouseConfigResponse as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceWarehouseConfigResponse) GetSqlConfigurationParameters(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.SqlConfigurationParameters.IsNull() || o.SqlConfigurationParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.SqlConfigurationParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlConfigurationParameters sets the value of the SqlConfigurationParameters field in GetWorkspaceWarehouseConfigResponse.
+func (o *GetWorkspaceWarehouseConfigResponse) SetSqlConfigurationParameters(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_configuration_parameters"]
+	o.SqlConfigurationParameters = types.ListValueMust(t, vs)
+}
+
 type LegacyAlert struct {
 	// Timestamp when the alert was created.
 	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
@@ -4468,6 +5728,84 @@ func (o LegacyAlert) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in LegacyAlert as
+// a AlertOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyAlert) GetOptions(ctx context.Context) (AlertOptions, bool) {
+	var e AlertOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []AlertOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in LegacyAlert.
+func (o *LegacyAlert) SetOptions(ctx context.Context, v AlertOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
+// GetQuery returns the value of the Query field in LegacyAlert as
+// a AlertQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyAlert) GetQuery(ctx context.Context) (AlertQuery, bool) {
+	var e AlertQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []AlertQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in LegacyAlert.
+func (o *LegacyAlert) SetQuery(ctx context.Context, v AlertQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
+}
+
+// GetUser returns the value of the User field in LegacyAlert as
+// a User value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyAlert) GetUser(ctx context.Context) (User, bool) {
+	var e User
+	if o.User.IsNull() || o.User.IsUnknown() {
+		return e, false
+	}
+	var v []User
+	d := o.User.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUser sets the value of the User field in LegacyAlert.
+func (o *LegacyAlert) SetUser(ctx context.Context, v User) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user"]
+	o.User = types.ListValueMust(t, vs)
 }
 
 type LegacyQuery struct {
@@ -4640,6 +5978,134 @@ func (o LegacyQuery) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLastModifiedBy returns the value of the LastModifiedBy field in LegacyQuery as
+// a User value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyQuery) GetLastModifiedBy(ctx context.Context) (User, bool) {
+	var e User
+	if o.LastModifiedBy.IsNull() || o.LastModifiedBy.IsUnknown() {
+		return e, false
+	}
+	var v []User
+	d := o.LastModifiedBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLastModifiedBy sets the value of the LastModifiedBy field in LegacyQuery.
+func (o *LegacyQuery) SetLastModifiedBy(ctx context.Context, v User) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["last_modified_by"]
+	o.LastModifiedBy = types.ListValueMust(t, vs)
+}
+
+// GetOptions returns the value of the Options field in LegacyQuery as
+// a QueryOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyQuery) GetOptions(ctx context.Context) (QueryOptions, bool) {
+	var e QueryOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []QueryOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in LegacyQuery.
+func (o *LegacyQuery) SetOptions(ctx context.Context, v QueryOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in LegacyQuery as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyQuery) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in LegacyQuery.
+func (o *LegacyQuery) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+// GetUser returns the value of the User field in LegacyQuery as
+// a User value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyQuery) GetUser(ctx context.Context) (User, bool) {
+	var e User
+	if o.User.IsNull() || o.User.IsUnknown() {
+		return e, false
+	}
+	var v []User
+	d := o.User.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUser sets the value of the User field in LegacyQuery.
+func (o *LegacyQuery) SetUser(ctx context.Context, v User) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user"]
+	o.User = types.ListValueMust(t, vs)
+}
+
+// GetVisualizations returns the value of the Visualizations field in LegacyQuery as
+// a slice of LegacyVisualization values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyQuery) GetVisualizations(ctx context.Context) ([]LegacyVisualization, bool) {
+	if o.Visualizations.IsNull() || o.Visualizations.IsUnknown() {
+		return nil, false
+	}
+	var v []LegacyVisualization
+	d := o.Visualizations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVisualizations sets the value of the Visualizations field in LegacyQuery.
+func (o *LegacyQuery) SetVisualizations(ctx context.Context, v []LegacyVisualization) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["visualizations"]
+	o.Visualizations = types.ListValueMust(t, vs)
+}
+
 // The visualization description API changes frequently and is unsupported. You
 // can duplicate a visualization by copying description objects received _from
 // the API_ and then using them to create a new one with a POST request to the
@@ -4720,6 +6186,32 @@ func (o LegacyVisualization) Type(ctx context.Context) attr.Type {
 			"updated_at": types.StringType,
 		},
 	}
+}
+
+// GetQuery returns the value of the Query field in LegacyVisualization as
+// a LegacyQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LegacyVisualization) GetQuery(ctx context.Context) (LegacyQuery, bool) {
+	var e LegacyQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []LegacyQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in LegacyVisualization.
+func (o *LegacyVisualization) SetQuery(ctx context.Context, v LegacyQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
 }
 
 // List alerts
@@ -4815,6 +6307,31 @@ func (o ListAlertsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ListAlertsResponse as
+// a slice of ListAlertsResponseAlert values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAlertsResponse) GetResults(ctx context.Context) ([]ListAlertsResponseAlert, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []ListAlertsResponseAlert
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListAlertsResponse.
+func (o *ListAlertsResponse) SetResults(ctx context.Context, v []ListAlertsResponseAlert) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 type ListAlertsResponseAlert struct {
@@ -4926,6 +6443,32 @@ func (o ListAlertsResponseAlert) Type(ctx context.Context) attr.Type {
 			"update_time":          types.StringType,
 		},
 	}
+}
+
+// GetCondition returns the value of the Condition field in ListAlertsResponseAlert as
+// a AlertCondition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAlertsResponseAlert) GetCondition(ctx context.Context) (AlertCondition, bool) {
+	var e AlertCondition
+	if o.Condition.IsNull() || o.Condition.IsUnknown() {
+		return e, false
+	}
+	var v []AlertCondition
+	d := o.Condition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCondition sets the value of the Condition field in ListAlertsResponseAlert.
+func (o *ListAlertsResponseAlert) SetCondition(ctx context.Context, v AlertCondition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition"]
+	o.Condition = types.ListValueMust(t, vs)
 }
 
 // Get dashboard objects
@@ -5151,6 +6694,31 @@ func (o ListQueriesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRes returns the value of the Res field in ListQueriesResponse as
+// a slice of QueryInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQueriesResponse) GetRes(ctx context.Context) ([]QueryInfo, bool) {
+	if o.Res.IsNull() || o.Res.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryInfo
+	d := o.Res.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRes sets the value of the Res field in ListQueriesResponse.
+func (o *ListQueriesResponse) SetRes(ctx context.Context, v []QueryInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["res"]
+	o.Res = types.ListValueMust(t, vs)
+}
+
 // List Queries
 type ListQueryHistoryRequest struct {
 	// A filter to limit query history results. This field is optional.
@@ -5215,6 +6783,32 @@ func (o ListQueryHistoryRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilterBy returns the value of the FilterBy field in ListQueryHistoryRequest as
+// a QueryFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQueryHistoryRequest) GetFilterBy(ctx context.Context) (QueryFilter, bool) {
+	var e QueryFilter
+	if o.FilterBy.IsNull() || o.FilterBy.IsUnknown() {
+		return e, false
+	}
+	var v []QueryFilter
+	d := o.FilterBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilterBy sets the value of the FilterBy field in ListQueryHistoryRequest.
+func (o *ListQueryHistoryRequest) SetFilterBy(ctx context.Context, v QueryFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter_by"]
+	o.FilterBy = types.ListValueMust(t, vs)
+}
+
 type ListQueryObjectsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 
@@ -5262,6 +6856,31 @@ func (o ListQueryObjectsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ListQueryObjectsResponse as
+// a slice of ListQueryObjectsResponseQuery values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQueryObjectsResponse) GetResults(ctx context.Context) ([]ListQueryObjectsResponseQuery, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []ListQueryObjectsResponseQuery
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListQueryObjectsResponse.
+func (o *ListQueryObjectsResponse) SetResults(ctx context.Context, v []ListQueryObjectsResponseQuery) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 type ListQueryObjectsResponseQuery struct {
@@ -5375,6 +6994,56 @@ func (o ListQueryObjectsResponseQuery) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in ListQueryObjectsResponseQuery as
+// a slice of QueryParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQueryObjectsResponseQuery) GetParameters(ctx context.Context) ([]QueryParameter, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryParameter
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in ListQueryObjectsResponseQuery.
+func (o *ListQueryObjectsResponseQuery) SetParameters(ctx context.Context, v []QueryParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ListQueryObjectsResponseQuery as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListQueryObjectsResponseQuery) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ListQueryObjectsResponseQuery.
+func (o *ListQueryObjectsResponseQuery) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ListResponse struct {
 	// The total number of dashboards.
 	Count types.Int64 `tfsdk:"count" tf:"optional"`
@@ -5431,6 +7100,31 @@ func (o ListResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in ListResponse as
+// a slice of Dashboard values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListResponse) GetResults(ctx context.Context) ([]Dashboard, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []Dashboard
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListResponse.
+func (o *ListResponse) SetResults(ctx context.Context, v []Dashboard) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 // List visualizations on a query
@@ -5532,6 +7226,31 @@ func (o ListVisualizationsForQueryResponse) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GetResults returns the value of the Results field in ListVisualizationsForQueryResponse as
+// a slice of Visualization values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListVisualizationsForQueryResponse) GetResults(ctx context.Context) ([]Visualization, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []Visualization
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListVisualizationsForQueryResponse.
+func (o *ListVisualizationsForQueryResponse) SetResults(ctx context.Context, v []Visualization) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
+}
+
 // List warehouses
 type ListWarehousesRequest struct {
 	// Service Principal which will be used to fetch the list of warehouses. If
@@ -5620,6 +7339,31 @@ func (o ListWarehousesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWarehouses returns the value of the Warehouses field in ListWarehousesResponse as
+// a slice of EndpointInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListWarehousesResponse) GetWarehouses(ctx context.Context) ([]EndpointInfo, bool) {
+	if o.Warehouses.IsNull() || o.Warehouses.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointInfo
+	d := o.Warehouses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWarehouses sets the value of the Warehouses field in ListWarehousesResponse.
+func (o *ListWarehousesResponse) SetWarehouses(ctx context.Context, v []EndpointInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warehouses"]
+	o.Warehouses = types.ListValueMust(t, vs)
 }
 
 type MultiValuesOptions struct {
@@ -5841,6 +7585,32 @@ func (o Parameter) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetMultiValuesOptions returns the value of the MultiValuesOptions field in Parameter as
+// a MultiValuesOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Parameter) GetMultiValuesOptions(ctx context.Context) (MultiValuesOptions, bool) {
+	var e MultiValuesOptions
+	if o.MultiValuesOptions.IsNull() || o.MultiValuesOptions.IsUnknown() {
+		return e, false
+	}
+	var v []MultiValuesOptions
+	d := o.MultiValuesOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMultiValuesOptions sets the value of the MultiValuesOptions field in Parameter.
+func (o *Parameter) SetMultiValuesOptions(ctx context.Context, v MultiValuesOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["multiValuesOptions"]
+	o.MultiValuesOptions = types.ListValueMust(t, vs)
+}
+
 type Query struct {
 	// Whether to apply a 1000 row limit to the query result.
 	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
@@ -5956,6 +7726,56 @@ func (o Query) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in Query as
+// a slice of QueryParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Query) GetParameters(ctx context.Context) ([]QueryParameter, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryParameter
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in Query.
+func (o *Query) SetParameters(ctx context.Context, v []QueryParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in Query as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Query) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in Query.
+func (o *Query) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type QueryBackedValue struct {
 	// If specified, allows multiple values to be selected for this parameter.
 	MultiValuesOptions types.List `tfsdk:"multi_values_options" tf:"optional,object"`
@@ -6011,6 +7831,57 @@ func (o QueryBackedValue) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMultiValuesOptions returns the value of the MultiValuesOptions field in QueryBackedValue as
+// a MultiValuesOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryBackedValue) GetMultiValuesOptions(ctx context.Context) (MultiValuesOptions, bool) {
+	var e MultiValuesOptions
+	if o.MultiValuesOptions.IsNull() || o.MultiValuesOptions.IsUnknown() {
+		return e, false
+	}
+	var v []MultiValuesOptions
+	d := o.MultiValuesOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMultiValuesOptions sets the value of the MultiValuesOptions field in QueryBackedValue.
+func (o *QueryBackedValue) SetMultiValuesOptions(ctx context.Context, v MultiValuesOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["multi_values_options"]
+	o.MultiValuesOptions = types.ListValueMust(t, vs)
+}
+
+// GetValues returns the value of the Values field in QueryBackedValue as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryBackedValue) GetValues(ctx context.Context) ([]types.String, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in QueryBackedValue.
+func (o *QueryBackedValue) SetValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 type QueryEditContent struct {
@@ -6096,6 +7967,31 @@ func (o QueryEditContent) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in QueryEditContent as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEditContent) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in QueryEditContent.
+func (o *QueryEditContent) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type QueryFilter struct {
 	// A range filter for query submitted time. The time range must be <= 30
 	// days.
@@ -6169,6 +8065,132 @@ func (o QueryFilter) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQueryStartTimeRange returns the value of the QueryStartTimeRange field in QueryFilter as
+// a TimeRange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryFilter) GetQueryStartTimeRange(ctx context.Context) (TimeRange, bool) {
+	var e TimeRange
+	if o.QueryStartTimeRange.IsNull() || o.QueryStartTimeRange.IsUnknown() {
+		return e, false
+	}
+	var v []TimeRange
+	d := o.QueryStartTimeRange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryStartTimeRange sets the value of the QueryStartTimeRange field in QueryFilter.
+func (o *QueryFilter) SetQueryStartTimeRange(ctx context.Context, v TimeRange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_start_time_range"]
+	o.QueryStartTimeRange = types.ListValueMust(t, vs)
+}
+
+// GetStatementIds returns the value of the StatementIds field in QueryFilter as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryFilter) GetStatementIds(ctx context.Context) ([]types.String, bool) {
+	if o.StatementIds.IsNull() || o.StatementIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.StatementIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatementIds sets the value of the StatementIds field in QueryFilter.
+func (o *QueryFilter) SetStatementIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statement_ids"]
+	o.StatementIds = types.ListValueMust(t, vs)
+}
+
+// GetStatuses returns the value of the Statuses field in QueryFilter as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryFilter) GetStatuses(ctx context.Context) ([]types.String, bool) {
+	if o.Statuses.IsNull() || o.Statuses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Statuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatuses sets the value of the Statuses field in QueryFilter.
+func (o *QueryFilter) SetStatuses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	o.Statuses = types.ListValueMust(t, vs)
+}
+
+// GetUserIds returns the value of the UserIds field in QueryFilter as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryFilter) GetUserIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.UserIds.IsNull() || o.UserIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.UserIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserIds sets the value of the UserIds field in QueryFilter.
+func (o *QueryFilter) SetUserIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_ids"]
+	o.UserIds = types.ListValueMust(t, vs)
+}
+
+// GetWarehouseIds returns the value of the WarehouseIds field in QueryFilter as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryFilter) GetWarehouseIds(ctx context.Context) ([]types.String, bool) {
+	if o.WarehouseIds.IsNull() || o.WarehouseIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.WarehouseIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWarehouseIds sets the value of the WarehouseIds field in QueryFilter.
+func (o *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warehouse_ids"]
+	o.WarehouseIds = types.ListValueMust(t, vs)
 }
 
 type QueryInfo struct {
@@ -6309,6 +8331,58 @@ func (o QueryInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChannelUsed returns the value of the ChannelUsed field in QueryInfo as
+// a ChannelInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryInfo) GetChannelUsed(ctx context.Context) (ChannelInfo, bool) {
+	var e ChannelInfo
+	if o.ChannelUsed.IsNull() || o.ChannelUsed.IsUnknown() {
+		return e, false
+	}
+	var v []ChannelInfo
+	d := o.ChannelUsed.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannelUsed sets the value of the ChannelUsed field in QueryInfo.
+func (o *QueryInfo) SetChannelUsed(ctx context.Context, v ChannelInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel_used"]
+	o.ChannelUsed = types.ListValueMust(t, vs)
+}
+
+// GetMetrics returns the value of the Metrics field in QueryInfo as
+// a QueryMetrics value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryInfo) GetMetrics(ctx context.Context) (QueryMetrics, bool) {
+	var e QueryMetrics
+	if o.Metrics.IsNull() || o.Metrics.IsUnknown() {
+		return e, false
+	}
+	var v []QueryMetrics
+	d := o.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMetrics sets the value of the Metrics field in QueryInfo.
+func (o *QueryInfo) SetMetrics(ctx context.Context, v QueryMetrics) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	o.Metrics = types.ListValueMust(t, vs)
+}
+
 type QueryList struct {
 	// The total number of queries.
 	Count types.Int64 `tfsdk:"count" tf:"optional"`
@@ -6365,6 +8439,31 @@ func (o QueryList) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in QueryList as
+// a slice of LegacyQuery values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryList) GetResults(ctx context.Context) ([]LegacyQuery, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []LegacyQuery
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in QueryList.
+func (o *QueryList) SetResults(ctx context.Context, v []LegacyQuery) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 // A query metric that encapsulates a set of measurements for a single query.
@@ -6567,6 +8666,31 @@ func (o QueryOptions) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in QueryOptions as
+// a slice of Parameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryOptions) GetParameters(ctx context.Context) ([]Parameter, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []Parameter
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in QueryOptions.
+func (o *QueryOptions) SetParameters(ctx context.Context, v []Parameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
 type QueryParameter struct {
 	// Date-range query parameter value. Can only specify one of
 	// `dynamic_date_range_value` or `date_range_value`.
@@ -6659,6 +8783,162 @@ func (o QueryParameter) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDateRangeValue returns the value of the DateRangeValue field in QueryParameter as
+// a DateRangeValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetDateRangeValue(ctx context.Context) (DateRangeValue, bool) {
+	var e DateRangeValue
+	if o.DateRangeValue.IsNull() || o.DateRangeValue.IsUnknown() {
+		return e, false
+	}
+	var v []DateRangeValue
+	d := o.DateRangeValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDateRangeValue sets the value of the DateRangeValue field in QueryParameter.
+func (o *QueryParameter) SetDateRangeValue(ctx context.Context, v DateRangeValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["date_range_value"]
+	o.DateRangeValue = types.ListValueMust(t, vs)
+}
+
+// GetDateValue returns the value of the DateValue field in QueryParameter as
+// a DateValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetDateValue(ctx context.Context) (DateValue, bool) {
+	var e DateValue
+	if o.DateValue.IsNull() || o.DateValue.IsUnknown() {
+		return e, false
+	}
+	var v []DateValue
+	d := o.DateValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDateValue sets the value of the DateValue field in QueryParameter.
+func (o *QueryParameter) SetDateValue(ctx context.Context, v DateValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["date_value"]
+	o.DateValue = types.ListValueMust(t, vs)
+}
+
+// GetEnumValue returns the value of the EnumValue field in QueryParameter as
+// a EnumValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetEnumValue(ctx context.Context) (EnumValue, bool) {
+	var e EnumValue
+	if o.EnumValue.IsNull() || o.EnumValue.IsUnknown() {
+		return e, false
+	}
+	var v []EnumValue
+	d := o.EnumValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEnumValue sets the value of the EnumValue field in QueryParameter.
+func (o *QueryParameter) SetEnumValue(ctx context.Context, v EnumValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enum_value"]
+	o.EnumValue = types.ListValueMust(t, vs)
+}
+
+// GetNumericValue returns the value of the NumericValue field in QueryParameter as
+// a NumericValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetNumericValue(ctx context.Context) (NumericValue, bool) {
+	var e NumericValue
+	if o.NumericValue.IsNull() || o.NumericValue.IsUnknown() {
+		return e, false
+	}
+	var v []NumericValue
+	d := o.NumericValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNumericValue sets the value of the NumericValue field in QueryParameter.
+func (o *QueryParameter) SetNumericValue(ctx context.Context, v NumericValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["numeric_value"]
+	o.NumericValue = types.ListValueMust(t, vs)
+}
+
+// GetQueryBackedValue returns the value of the QueryBackedValue field in QueryParameter as
+// a QueryBackedValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetQueryBackedValue(ctx context.Context) (QueryBackedValue, bool) {
+	var e QueryBackedValue
+	if o.QueryBackedValue.IsNull() || o.QueryBackedValue.IsUnknown() {
+		return e, false
+	}
+	var v []QueryBackedValue
+	d := o.QueryBackedValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryBackedValue sets the value of the QueryBackedValue field in QueryParameter.
+func (o *QueryParameter) SetQueryBackedValue(ctx context.Context, v QueryBackedValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_backed_value"]
+	o.QueryBackedValue = types.ListValueMust(t, vs)
+}
+
+// GetTextValue returns the value of the TextValue field in QueryParameter as
+// a TextValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryParameter) GetTextValue(ctx context.Context) (TextValue, bool) {
+	var e TextValue
+	if o.TextValue.IsNull() || o.TextValue.IsUnknown() {
+		return e, false
+	}
+	var v []TextValue
+	d := o.TextValue.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTextValue sets the value of the TextValue field in QueryParameter.
+func (o *QueryParameter) SetTextValue(ctx context.Context, v TextValue) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["text_value"]
+	o.TextValue = types.ListValueMust(t, vs)
+}
+
 type QueryPostContent struct {
 	// Data source ID maps to the ID of the data source used by the resource and
 	// is distinct from the warehouse ID. [Learn more]
@@ -6742,6 +9022,31 @@ func (o QueryPostContent) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in QueryPostContent as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryPostContent) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in QueryPostContent.
+func (o *QueryPostContent) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
 	ConfigPair types.List `tfsdk:"config_pair" tf:"optional"`
@@ -6793,6 +9098,56 @@ func (o RepeatedEndpointConfPairs) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetConfigPair returns the value of the ConfigPair field in RepeatedEndpointConfPairs as
+// a slice of EndpointConfPair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepeatedEndpointConfPairs) GetConfigPair(ctx context.Context) ([]EndpointConfPair, bool) {
+	if o.ConfigPair.IsNull() || o.ConfigPair.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointConfPair
+	d := o.ConfigPair.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfigPair sets the value of the ConfigPair field in RepeatedEndpointConfPairs.
+func (o *RepeatedEndpointConfPairs) SetConfigPair(ctx context.Context, v []EndpointConfPair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config_pair"]
+	o.ConfigPair = types.ListValueMust(t, vs)
+}
+
+// GetConfigurationPairs returns the value of the ConfigurationPairs field in RepeatedEndpointConfPairs as
+// a slice of EndpointConfPair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepeatedEndpointConfPairs) GetConfigurationPairs(ctx context.Context) ([]EndpointConfPair, bool) {
+	if o.ConfigurationPairs.IsNull() || o.ConfigurationPairs.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointConfPair
+	d := o.ConfigurationPairs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfigurationPairs sets the value of the ConfigurationPairs field in RepeatedEndpointConfPairs.
+func (o *RepeatedEndpointConfPairs) SetConfigurationPairs(ctx context.Context, v []EndpointConfPair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration_pairs"]
+	o.ConfigurationPairs = types.ListValueMust(t, vs)
 }
 
 // Restore a dashboard
@@ -7002,6 +9357,56 @@ func (o ResultData) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDataArray returns the value of the DataArray field in ResultData as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultData) GetDataArray(ctx context.Context) ([]types.String, bool) {
+	if o.DataArray.IsNull() || o.DataArray.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DataArray.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataArray sets the value of the DataArray field in ResultData.
+func (o *ResultData) SetDataArray(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_array"]
+	o.DataArray = types.ListValueMust(t, vs)
+}
+
+// GetExternalLinks returns the value of the ExternalLinks field in ResultData as
+// a slice of ExternalLink values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultData) GetExternalLinks(ctx context.Context) ([]ExternalLink, bool) {
+	if o.ExternalLinks.IsNull() || o.ExternalLinks.IsUnknown() {
+		return nil, false
+	}
+	var v []ExternalLink
+	d := o.ExternalLinks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExternalLinks sets the value of the ExternalLinks field in ResultData.
+func (o *ResultData) SetExternalLinks(ctx context.Context, v []ExternalLink) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_links"]
+	o.ExternalLinks = types.ListValueMust(t, vs)
+}
+
 // The result manifest provides schema and metadata for the result set.
 type ResultManifest struct {
 	// Array of result set chunk metadata.
@@ -7078,6 +9483,57 @@ func (o ResultManifest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChunks returns the value of the Chunks field in ResultManifest as
+// a slice of BaseChunkInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultManifest) GetChunks(ctx context.Context) ([]BaseChunkInfo, bool) {
+	if o.Chunks.IsNull() || o.Chunks.IsUnknown() {
+		return nil, false
+	}
+	var v []BaseChunkInfo
+	d := o.Chunks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChunks sets the value of the Chunks field in ResultManifest.
+func (o *ResultManifest) SetChunks(ctx context.Context, v []BaseChunkInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["chunks"]
+	o.Chunks = types.ListValueMust(t, vs)
+}
+
+// GetSchema returns the value of the Schema field in ResultManifest as
+// a ResultSchema value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultManifest) GetSchema(ctx context.Context) (ResultSchema, bool) {
+	var e ResultSchema
+	if o.Schema.IsNull() || o.Schema.IsUnknown() {
+		return e, false
+	}
+	var v []ResultSchema
+	d := o.Schema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchema sets the value of the Schema field in ResultManifest.
+func (o *ResultManifest) SetSchema(ctx context.Context, v ResultSchema) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schema"]
+	o.Schema = types.ListValueMust(t, vs)
+}
+
 // The schema is an ordered list of column descriptions.
 type ResultSchema struct {
 	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
@@ -7126,6 +9582,31 @@ func (o ResultSchema) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetColumns returns the value of the Columns field in ResultSchema as
+// a slice of ColumnInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResultSchema) GetColumns(ctx context.Context) ([]ColumnInfo, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []ColumnInfo
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in ResultSchema.
+func (o *ResultSchema) SetColumns(ctx context.Context, v []ColumnInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	o.Columns = types.ListValueMust(t, vs)
 }
 
 type ServiceError struct {
@@ -7228,6 +9709,31 @@ func (o SetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in SetRequest as
+// a slice of AccessControl values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetRequest) GetAccessControlList(ctx context.Context) ([]AccessControl, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControl
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SetRequest.
+func (o *SetRequest) SetAccessControlList(ctx context.Context, v []AccessControl) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type SetResponse struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 	// An object's type and UUID, separated by a forward slash (/) character.
@@ -7279,6 +9785,31 @@ func (o SetResponse) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in SetResponse as
+// a slice of AccessControl values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetResponse) GetAccessControlList(ctx context.Context) ([]AccessControl, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []AccessControl
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in SetResponse.
+func (o *SetResponse) SetAccessControlList(ctx context.Context, v []AccessControl) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type SetWorkspaceWarehouseConfigRequest struct {
@@ -7379,6 +9910,160 @@ func (o SetWorkspaceWarehouseConfigRequest) Type(ctx context.Context) attr.Type 
 			},
 		},
 	}
+}
+
+// GetChannel returns the value of the Channel field in SetWorkspaceWarehouseConfigRequest as
+// a Channel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetChannel(ctx context.Context) (Channel, bool) {
+	var e Channel
+	if o.Channel.IsNull() || o.Channel.IsUnknown() {
+		return e, false
+	}
+	var v []Channel
+	d := o.Channel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetChannel sets the value of the Channel field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetChannel(ctx context.Context, v Channel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["channel"]
+	o.Channel = types.ListValueMust(t, vs)
+}
+
+// GetConfigParam returns the value of the ConfigParam field in SetWorkspaceWarehouseConfigRequest as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetConfigParam(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.ConfigParam.IsNull() || o.ConfigParam.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.ConfigParam.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfigParam sets the value of the ConfigParam field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetConfigParam(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config_param"]
+	o.ConfigParam = types.ListValueMust(t, vs)
+}
+
+// GetDataAccessConfig returns the value of the DataAccessConfig field in SetWorkspaceWarehouseConfigRequest as
+// a slice of EndpointConfPair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetDataAccessConfig(ctx context.Context) ([]EndpointConfPair, bool) {
+	if o.DataAccessConfig.IsNull() || o.DataAccessConfig.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointConfPair
+	d := o.DataAccessConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataAccessConfig sets the value of the DataAccessConfig field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetDataAccessConfig(ctx context.Context, v []EndpointConfPair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_access_config"]
+	o.DataAccessConfig = types.ListValueMust(t, vs)
+}
+
+// GetEnabledWarehouseTypes returns the value of the EnabledWarehouseTypes field in SetWorkspaceWarehouseConfigRequest as
+// a slice of WarehouseTypePair values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetEnabledWarehouseTypes(ctx context.Context) ([]WarehouseTypePair, bool) {
+	if o.EnabledWarehouseTypes.IsNull() || o.EnabledWarehouseTypes.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehouseTypePair
+	d := o.EnabledWarehouseTypes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnabledWarehouseTypes sets the value of the EnabledWarehouseTypes field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetEnabledWarehouseTypes(ctx context.Context, v []WarehouseTypePair) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enabled_warehouse_types"]
+	o.EnabledWarehouseTypes = types.ListValueMust(t, vs)
+}
+
+// GetGlobalParam returns the value of the GlobalParam field in SetWorkspaceWarehouseConfigRequest as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetGlobalParam(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.GlobalParam.IsNull() || o.GlobalParam.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.GlobalParam.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGlobalParam sets the value of the GlobalParam field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetGlobalParam(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["global_param"]
+	o.GlobalParam = types.ListValueMust(t, vs)
+}
+
+// GetSqlConfigurationParameters returns the value of the SqlConfigurationParameters field in SetWorkspaceWarehouseConfigRequest as
+// a RepeatedEndpointConfPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SetWorkspaceWarehouseConfigRequest) GetSqlConfigurationParameters(ctx context.Context) (RepeatedEndpointConfPairs, bool) {
+	var e RepeatedEndpointConfPairs
+	if o.SqlConfigurationParameters.IsNull() || o.SqlConfigurationParameters.IsUnknown() {
+		return e, false
+	}
+	var v []RepeatedEndpointConfPairs
+	d := o.SqlConfigurationParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSqlConfigurationParameters sets the value of the SqlConfigurationParameters field in SetWorkspaceWarehouseConfigRequest.
+func (o *SetWorkspaceWarehouseConfigRequest) SetSqlConfigurationParameters(ctx context.Context, v RepeatedEndpointConfPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_configuration_parameters"]
+	o.SqlConfigurationParameters = types.ListValueMust(t, vs)
 }
 
 type SetWorkspaceWarehouseConfigResponse struct {
@@ -7619,6 +10304,84 @@ func (o StatementResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetManifest returns the value of the Manifest field in StatementResponse as
+// a ResultManifest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StatementResponse) GetManifest(ctx context.Context) (ResultManifest, bool) {
+	var e ResultManifest
+	if o.Manifest.IsNull() || o.Manifest.IsUnknown() {
+		return e, false
+	}
+	var v []ResultManifest
+	d := o.Manifest.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetManifest sets the value of the Manifest field in StatementResponse.
+func (o *StatementResponse) SetManifest(ctx context.Context, v ResultManifest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["manifest"]
+	o.Manifest = types.ListValueMust(t, vs)
+}
+
+// GetResult returns the value of the Result field in StatementResponse as
+// a ResultData value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StatementResponse) GetResult(ctx context.Context) (ResultData, bool) {
+	var e ResultData
+	if o.Result.IsNull() || o.Result.IsUnknown() {
+		return e, false
+	}
+	var v []ResultData
+	d := o.Result.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResult sets the value of the Result field in StatementResponse.
+func (o *StatementResponse) SetResult(ctx context.Context, v ResultData) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["result"]
+	o.Result = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in StatementResponse as
+// a StatementStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StatementResponse) GetStatus(ctx context.Context) (StatementStatus, bool) {
+	var e StatementStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []StatementStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in StatementResponse.
+func (o *StatementResponse) SetStatus(ctx context.Context, v StatementStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
 // The status response includes execution state and if relevant, error
 // information.
 type StatementStatus struct {
@@ -7674,6 +10437,32 @@ func (o StatementStatus) Type(ctx context.Context) attr.Type {
 			"state": types.StringType,
 		},
 	}
+}
+
+// GetError returns the value of the Error field in StatementStatus as
+// a ServiceError value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StatementStatus) GetError(ctx context.Context) (ServiceError, bool) {
+	var e ServiceError
+	if o.Error.IsNull() || o.Error.IsUnknown() {
+		return e, false
+	}
+	var v []ServiceError
+	d := o.Error.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetError sets the value of the Error field in StatementStatus.
+func (o *StatementStatus) SetError(ctx context.Context, v ServiceError) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	o.Error = types.ListValueMust(t, vs)
 }
 
 // Stop a warehouse
@@ -7849,6 +10638,31 @@ func (o TerminationReason) Type(ctx context.Context) attr.Type {
 			"type": types.StringType,
 		},
 	}
+}
+
+// GetParameters returns the value of the Parameters field in TerminationReason as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TerminationReason) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in TerminationReason.
+func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
 }
 
 type TextValue struct {
@@ -8035,6 +10849,32 @@ func (o TransferOwnershipRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetObjectId returns the value of the ObjectId field in TransferOwnershipRequest as
+// a TransferOwnershipObjectId value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TransferOwnershipRequest) GetObjectId(ctx context.Context) (TransferOwnershipObjectId, bool) {
+	var e TransferOwnershipObjectId
+	if o.ObjectId.IsNull() || o.ObjectId.IsUnknown() {
+		return e, false
+	}
+	var v []TransferOwnershipObjectId
+	d := o.ObjectId.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetObjectId sets the value of the ObjectId field in TransferOwnershipRequest.
+func (o *TransferOwnershipRequest) SetObjectId(ctx context.Context, v TransferOwnershipObjectId) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["objectId"]
+	o.ObjectId = types.ListValueMust(t, vs)
+}
+
 // Delete an alert
 type TrashAlertRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -8175,6 +11015,32 @@ func (o UpdateAlertRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAlert returns the value of the Alert field in UpdateAlertRequest as
+// a UpdateAlertRequestAlert value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAlertRequest) GetAlert(ctx context.Context) (UpdateAlertRequestAlert, bool) {
+	var e UpdateAlertRequestAlert
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateAlertRequestAlert
+	d := o.Alert.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in UpdateAlertRequest.
+func (o *UpdateAlertRequest) SetAlert(ctx context.Context, v UpdateAlertRequestAlert) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert"]
+	o.Alert = types.ListValueMust(t, vs)
+}
+
 type UpdateAlertRequestAlert struct {
 	// Trigger conditions of the alert.
 	Condition types.List `tfsdk:"condition" tf:"optional,object"`
@@ -8259,6 +11125,32 @@ func (o UpdateAlertRequestAlert) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCondition returns the value of the Condition field in UpdateAlertRequestAlert as
+// a AlertCondition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAlertRequestAlert) GetCondition(ctx context.Context) (AlertCondition, bool) {
+	var e AlertCondition
+	if o.Condition.IsNull() || o.Condition.IsUnknown() {
+		return e, false
+	}
+	var v []AlertCondition
+	d := o.Condition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCondition sets the value of the Condition field in UpdateAlertRequestAlert.
+func (o *UpdateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["condition"]
+	o.Condition = types.ListValueMust(t, vs)
+}
+
 type UpdateQueryRequest struct {
 	Id types.String `tfsdk:"-"`
 
@@ -8313,6 +11205,32 @@ func (o UpdateQueryRequest) Type(ctx context.Context) attr.Type {
 			"update_mask": types.StringType,
 		},
 	}
+}
+
+// GetQuery returns the value of the Query field in UpdateQueryRequest as
+// a UpdateQueryRequestQuery value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateQueryRequest) GetQuery(ctx context.Context) (UpdateQueryRequestQuery, bool) {
+	var e UpdateQueryRequestQuery
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateQueryRequestQuery
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in UpdateQueryRequest.
+func (o *UpdateQueryRequest) SetQuery(ctx context.Context, v UpdateQueryRequestQuery) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
 }
 
 type UpdateQueryRequestQuery struct {
@@ -8406,6 +11324,56 @@ func (o UpdateQueryRequestQuery) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in UpdateQueryRequestQuery as
+// a slice of QueryParameter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateQueryRequestQuery) GetParameters(ctx context.Context) ([]QueryParameter, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v []QueryParameter
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in UpdateQueryRequestQuery.
+func (o *UpdateQueryRequestQuery) SetParameters(ctx context.Context, v []QueryParameter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in UpdateQueryRequestQuery as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateQueryRequestQuery) GetTags(ctx context.Context) ([]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in UpdateQueryRequestQuery.
+func (o *UpdateQueryRequestQuery) SetTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type UpdateResponse struct {
 }
 
@@ -8496,6 +11464,32 @@ func (o UpdateVisualizationRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetVisualization returns the value of the Visualization field in UpdateVisualizationRequest as
+// a UpdateVisualizationRequestVisualization value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateVisualizationRequest) GetVisualization(ctx context.Context) (UpdateVisualizationRequestVisualization, bool) {
+	var e UpdateVisualizationRequestVisualization
+	if o.Visualization.IsNull() || o.Visualization.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateVisualizationRequestVisualization
+	d := o.Visualization.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVisualization sets the value of the Visualization field in UpdateVisualizationRequest.
+func (o *UpdateVisualizationRequest) SetVisualization(ctx context.Context, v UpdateVisualizationRequestVisualization) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["visualization"]
+	o.Visualization = types.ListValueMust(t, vs)
 }
 
 type UpdateVisualizationRequestVisualization struct {
@@ -8795,6 +11789,31 @@ func (o WarehouseAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in WarehouseAccessControlResponse as
+// a slice of WarehousePermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WarehouseAccessControlResponse) GetAllPermissions(ctx context.Context) ([]WarehousePermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehousePermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in WarehouseAccessControlResponse.
+func (o *WarehouseAccessControlResponse) SetAllPermissions(ctx context.Context, v []WarehousePermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type WarehousePermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -8848,6 +11867,31 @@ func (o WarehousePermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in WarehousePermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WarehousePermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in WarehousePermission.
+func (o *WarehousePermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type WarehousePermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -8899,6 +11943,31 @@ func (o WarehousePermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in WarehousePermissions as
+// a slice of WarehouseAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WarehousePermissions) GetAccessControlList(ctx context.Context) ([]WarehouseAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehouseAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in WarehousePermissions.
+func (o *WarehousePermissions) SetAccessControlList(ctx context.Context, v []WarehouseAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type WarehousePermissionsDescription struct {
@@ -8993,6 +12062,31 @@ func (o WarehousePermissionsRequest) Type(ctx context.Context) attr.Type {
 			"warehouse_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in WarehousePermissionsRequest as
+// a slice of WarehouseAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WarehousePermissionsRequest) GetAccessControlList(ctx context.Context) ([]WarehouseAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []WarehouseAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in WarehousePermissionsRequest.
+func (o *WarehousePermissionsRequest) SetAccessControlList(ctx context.Context, v []WarehouseAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type WarehouseTypePair struct {
@@ -9107,6 +12201,58 @@ func (o Widget) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOptions returns the value of the Options field in Widget as
+// a WidgetOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Widget) GetOptions(ctx context.Context) (WidgetOptions, bool) {
+	var e WidgetOptions
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return e, false
+	}
+	var v []WidgetOptions
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOptions sets the value of the Options field in Widget.
+func (o *Widget) SetOptions(ctx context.Context, v WidgetOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	o.Options = types.ListValueMust(t, vs)
+}
+
+// GetVisualization returns the value of the Visualization field in Widget as
+// a LegacyVisualization value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Widget) GetVisualization(ctx context.Context) (LegacyVisualization, bool) {
+	var e LegacyVisualization
+	if o.Visualization.IsNull() || o.Visualization.IsUnknown() {
+		return e, false
+	}
+	var v []LegacyVisualization
+	d := o.Visualization.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVisualization sets the value of the Visualization field in Widget.
+func (o *Widget) SetVisualization(ctx context.Context, v LegacyVisualization) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["visualization"]
+	o.Visualization = types.ListValueMust(t, vs)
+}
+
 type WidgetOptions struct {
 	// Timestamp when this object was created
 	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
@@ -9180,6 +12326,32 @@ func (o WidgetOptions) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPosition returns the value of the Position field in WidgetOptions as
+// a WidgetPosition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WidgetOptions) GetPosition(ctx context.Context) (WidgetPosition, bool) {
+	var e WidgetPosition
+	if o.Position.IsNull() || o.Position.IsUnknown() {
+		return e, false
+	}
+	var v []WidgetPosition
+	d := o.Position.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPosition sets the value of the Position field in WidgetOptions.
+func (o *WidgetOptions) SetPosition(ctx context.Context, v WidgetPosition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["position"]
+	o.Position = types.ListValueMust(t, vs)
+}
+
 // Coordinates of this widget on a dashboard. This portion of the API changes
 // frequently and is unsupported.
 type WidgetPosition struct {
@@ -9239,80 +12411,3 @@ func (o WidgetPosition) Type(ctx context.Context) attr.Type {
 		},
 	}
 }
-
-// State that alert evaluates to when query result is empty.
-
-// The name of the base data type. This doesn't include details for complex
-// types such as STRUCT, MAP or ARRAY.
-
-// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless compute,
-// you must set to `PRO` and also set the field `enable_serverless_compute` to
-// `true`.
-
-// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless compute,
-// you must set to `PRO` and also set the field `enable_serverless_compute` to
-// `true`.
-
-// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless compute,
-// you must set to `PRO` and also set the field `enable_serverless_compute` to
-// `true`.
-
-// When `wait_timeout > 0s`, the call will block up to the specified time. If
-// the statement execution doesn't finish within this time, `on_wait_timeout`
-// determines whether the execution should continue or be canceled. When set to
-// `CONTINUE`, the statement execution continues asynchronously and the call
-// returns a statement ID which can be used for polling with
-// :method:statementexecution/getStatement. When set to `CANCEL`, the statement
-// execution is canceled and the call returns with a `CANCELED` state.
-
-// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless compute,
-// you must set to `PRO` and also set the field `enable_serverless_compute` to
-// `true`.
-
-// Security policy for warehouses
-
-// State of the alert. Possible values are: `unknown` (yet to be evaluated),
-// `triggered` (evaluated and fulfilled trigger conditions), or `ok` (evaluated
-// and did not fulfill trigger conditions).
-
-// A singular noun object type.
-
-// Always a plural of the object type.
-
-// The singular form of the type of object which can be owned.
-
-// Parameters can have several different types.
-
-// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query * `CAN_EDIT`:
-// Can edit the query * `CAN_MANAGE`: Can manage the query
-
-// Possible Reasons for which we have not saved plans in the database
-
-// Statuses which are also used by OperationStatus in runtime
-
-// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
-// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as owner"
-// behavior)
-
-// Security policy for warehouses
-
-// Configurations whether the warehouse should use spot instances.
-
-// State of the warehouse
-
-// Statement execution state: - `PENDING`: waiting for warehouse - `RUNNING`:
-// running - `SUCCEEDED`: execution was successful, result data available for
-// fetch - `FAILED`: execution failed; reason for failure described in
-// accomanying error message - `CANCELED`: user canceled; can come from explicit
-// cancel call, or timeout with `on_wait_timeout=CANCEL` - `CLOSED`: execution
-// successful, and statement closed; result no longer available for fetch
-
-// Health status of the warehouse.
-
-// status code indicating why the cluster was terminated
-
-// type of the termination
-
-// Permission level
-
-// Warehouse type: `PRO` or `CLASSIC`.

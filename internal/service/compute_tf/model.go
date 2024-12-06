@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -434,6 +435,32 @@ func (o AzureAttributes) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLogAnalyticsInfo returns the value of the LogAnalyticsInfo field in AzureAttributes as
+// a LogAnalyticsInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AzureAttributes) GetLogAnalyticsInfo(ctx context.Context) (LogAnalyticsInfo, bool) {
+	var e LogAnalyticsInfo
+	if o.LogAnalyticsInfo.IsNull() || o.LogAnalyticsInfo.IsUnknown() {
+		return e, false
+	}
+	var v []LogAnalyticsInfo
+	d := o.LogAnalyticsInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogAnalyticsInfo sets the value of the LogAnalyticsInfo field in AzureAttributes.
+func (o *AzureAttributes) SetLogAnalyticsInfo(ctx context.Context, v LogAnalyticsInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_analytics_info"]
+	o.LogAnalyticsInfo = types.ListValueMust(t, vs)
+}
+
 type CancelCommand struct {
 	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
 
@@ -734,6 +761,31 @@ func (o CloudProviderNodeInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetStatus returns the value of the Status field in CloudProviderNodeInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CloudProviderNodeInfo) GetStatus(ctx context.Context) ([]types.String, bool) {
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatus sets the value of the Status field in CloudProviderNodeInfo.
+func (o *CloudProviderNodeInfo) SetStatus(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
 type ClusterAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -848,6 +900,31 @@ func (o ClusterAccessControlResponse) Type(ctx context.Context) attr.Type {
 			"user_name":              types.StringType,
 		},
 	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in ClusterAccessControlResponse as
+// a slice of ClusterPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAccessControlResponse) GetAllPermissions(ctx context.Context) ([]ClusterPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in ClusterAccessControlResponse.
+func (o *ClusterAccessControlResponse) SetAllPermissions(ctx context.Context, v []ClusterPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type ClusterAttributes struct {
@@ -1100,6 +1177,287 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsAttributes returns the value of the AwsAttributes field in ClusterAttributes as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in ClusterAttributes.
+func (o *ClusterAttributes) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in ClusterAttributes as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in ClusterAttributes.
+func (o *ClusterAttributes) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in ClusterAttributes as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in ClusterAttributes.
+func (o *ClusterAttributes) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in ClusterAttributes as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in ClusterAttributes.
+func (o *ClusterAttributes) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in ClusterAttributes as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in ClusterAttributes.
+func (o *ClusterAttributes) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in ClusterAttributes as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in ClusterAttributes.
+func (o *ClusterAttributes) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in ClusterAttributes as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in ClusterAttributes.
+func (o *ClusterAttributes) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in ClusterAttributes as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in ClusterAttributes.
+func (o *ClusterAttributes) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in ClusterAttributes as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in ClusterAttributes.
+func (o *ClusterAttributes) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in ClusterAttributes as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in ClusterAttributes.
+func (o *ClusterAttributes) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in ClusterAttributes as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterAttributes) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in ClusterAttributes.
+func (o *ClusterAttributes) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 type ClusterCompliance struct {
 	// Canonical unique identifier for a cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -1156,6 +1514,31 @@ func (o ClusterCompliance) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetViolations returns the value of the Violations field in ClusterCompliance as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterCompliance) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in ClusterCompliance.
+func (o *ClusterCompliance) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
 }
 
 type ClusterDetails struct {
@@ -1554,6 +1937,467 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in ClusterDetails as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in ClusterDetails.
+func (o *ClusterDetails) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in ClusterDetails as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in ClusterDetails.
+func (o *ClusterDetails) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in ClusterDetails as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in ClusterDetails.
+func (o *ClusterDetails) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in ClusterDetails as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in ClusterDetails.
+func (o *ClusterDetails) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogStatus returns the value of the ClusterLogStatus field in ClusterDetails as
+// a LogSyncStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetClusterLogStatus(ctx context.Context) (LogSyncStatus, bool) {
+	var e LogSyncStatus
+	if o.ClusterLogStatus.IsNull() || o.ClusterLogStatus.IsUnknown() {
+		return e, false
+	}
+	var v []LogSyncStatus
+	d := o.ClusterLogStatus.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogStatus sets the value of the ClusterLogStatus field in ClusterDetails.
+func (o *ClusterDetails) SetClusterLogStatus(ctx context.Context, v LogSyncStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_status"]
+	o.ClusterLogStatus = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in ClusterDetails as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in ClusterDetails.
+func (o *ClusterDetails) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDefaultTags returns the value of the DefaultTags field in ClusterDetails as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetDefaultTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.DefaultTags.IsNull() || o.DefaultTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.DefaultTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultTags sets the value of the DefaultTags field in ClusterDetails.
+func (o *ClusterDetails) SetDefaultTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	o.DefaultTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in ClusterDetails as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in ClusterDetails.
+func (o *ClusterDetails) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetDriver returns the value of the Driver field in ClusterDetails as
+// a SparkNode value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetDriver(ctx context.Context) (SparkNode, bool) {
+	var e SparkNode
+	if o.Driver.IsNull() || o.Driver.IsUnknown() {
+		return e, false
+	}
+	var v []SparkNode
+	d := o.Driver.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDriver sets the value of the Driver field in ClusterDetails.
+func (o *ClusterDetails) SetDriver(ctx context.Context, v SparkNode) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["driver"]
+	o.Driver = types.ListValueMust(t, vs)
+}
+
+// GetExecutors returns the value of the Executors field in ClusterDetails as
+// a slice of SparkNode values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetExecutors(ctx context.Context) ([]SparkNode, bool) {
+	if o.Executors.IsNull() || o.Executors.IsUnknown() {
+		return nil, false
+	}
+	var v []SparkNode
+	d := o.Executors.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExecutors sets the value of the Executors field in ClusterDetails.
+func (o *ClusterDetails) SetExecutors(ctx context.Context, v []SparkNode) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["executors"]
+	o.Executors = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in ClusterDetails as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in ClusterDetails.
+func (o *ClusterDetails) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in ClusterDetails as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in ClusterDetails.
+func (o *ClusterDetails) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in ClusterDetails as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in ClusterDetails.
+func (o *ClusterDetails) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in ClusterDetails as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in ClusterDetails.
+func (o *ClusterDetails) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSpec returns the value of the Spec field in ClusterDetails as
+// a ClusterSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetSpec(ctx context.Context) (ClusterSpec, bool) {
+	var e ClusterSpec
+	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSpec
+	d := o.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in ClusterDetails.
+func (o *ClusterDetails) SetSpec(ctx context.Context, v ClusterSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	o.Spec = types.ListValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in ClusterDetails as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in ClusterDetails.
+func (o *ClusterDetails) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetTerminationReason returns the value of the TerminationReason field in ClusterDetails as
+// a TerminationReason value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationReason, bool) {
+	var e TerminationReason
+	if o.TerminationReason.IsNull() || o.TerminationReason.IsUnknown() {
+		return e, false
+	}
+	var v []TerminationReason
+	d := o.TerminationReason.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTerminationReason sets the value of the TerminationReason field in ClusterDetails.
+func (o *ClusterDetails) SetTerminationReason(ctx context.Context, v TerminationReason) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_reason"]
+	o.TerminationReason = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in ClusterDetails as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterDetails) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in ClusterDetails.
+func (o *ClusterDetails) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 type ClusterEvent struct {
 	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -1621,6 +2465,58 @@ func (o ClusterEvent) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDataPlaneEventDetails returns the value of the DataPlaneEventDetails field in ClusterEvent as
+// a DataPlaneEventDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterEvent) GetDataPlaneEventDetails(ctx context.Context) (DataPlaneEventDetails, bool) {
+	var e DataPlaneEventDetails
+	if o.DataPlaneEventDetails.IsNull() || o.DataPlaneEventDetails.IsUnknown() {
+		return e, false
+	}
+	var v []DataPlaneEventDetails
+	d := o.DataPlaneEventDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataPlaneEventDetails sets the value of the DataPlaneEventDetails field in ClusterEvent.
+func (o *ClusterEvent) SetDataPlaneEventDetails(ctx context.Context, v DataPlaneEventDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_plane_event_details"]
+	o.DataPlaneEventDetails = types.ListValueMust(t, vs)
+}
+
+// GetDetails returns the value of the Details field in ClusterEvent as
+// a EventDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterEvent) GetDetails(ctx context.Context) (EventDetails, bool) {
+	var e EventDetails
+	if o.Details.IsNull() || o.Details.IsUnknown() {
+		return e, false
+	}
+	var v []EventDetails
+	d := o.Details.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDetails sets the value of the Details field in ClusterEvent.
+func (o *ClusterEvent) SetDetails(ctx context.Context, v EventDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["details"]
+	o.Details = types.ListValueMust(t, vs)
+}
+
 type ClusterLibraryStatuses struct {
 	// Unique identifier for the cluster.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
@@ -1669,6 +2565,31 @@ func (o ClusterLibraryStatuses) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLibraryStatuses returns the value of the LibraryStatuses field in ClusterLibraryStatuses as
+// a slice of LibraryFullStatus values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterLibraryStatuses) GetLibraryStatuses(ctx context.Context) ([]LibraryFullStatus, bool) {
+	if o.LibraryStatuses.IsNull() || o.LibraryStatuses.IsUnknown() {
+		return nil, false
+	}
+	var v []LibraryFullStatus
+	d := o.LibraryStatuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraryStatuses sets the value of the LibraryStatuses field in ClusterLibraryStatuses.
+func (o *ClusterLibraryStatuses) SetLibraryStatuses(ctx context.Context, v []LibraryFullStatus) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library_statuses"]
+	o.LibraryStatuses = types.ListValueMust(t, vs)
 }
 
 type ClusterLogConf struct {
@@ -1729,6 +2650,58 @@ func (o ClusterLogConf) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDbfs returns the value of the Dbfs field in ClusterLogConf as
+// a DbfsStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterLogConf) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
+	var e DbfsStorageInfo
+	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
+		return e, false
+	}
+	var v []DbfsStorageInfo
+	d := o.Dbfs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbfs sets the value of the Dbfs field in ClusterLogConf.
+func (o *ClusterLogConf) SetDbfs(ctx context.Context, v DbfsStorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbfs"]
+	o.Dbfs = types.ListValueMust(t, vs)
+}
+
+// GetS3 returns the value of the S3 field in ClusterLogConf as
+// a S3StorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
+	var e S3StorageInfo
+	if o.S3.IsNull() || o.S3.IsUnknown() {
+		return e, false
+	}
+	var v []S3StorageInfo
+	d := o.S3.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetS3 sets the value of the S3 field in ClusterLogConf.
+func (o *ClusterLogConf) SetS3(ctx context.Context, v S3StorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
+	o.S3 = types.ListValueMust(t, vs)
+}
+
 type ClusterPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -1782,6 +2755,31 @@ func (o ClusterPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in ClusterPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in ClusterPermission.
+func (o *ClusterPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type ClusterPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -1833,6 +2831,31 @@ func (o ClusterPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ClusterPermissions as
+// a slice of ClusterAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPermissions) GetAccessControlList(ctx context.Context) ([]ClusterAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ClusterPermissions.
+func (o *ClusterPermissions) SetAccessControlList(ctx context.Context, v []ClusterAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ClusterPermissionsDescription struct {
@@ -1927,6 +2950,31 @@ func (o ClusterPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"cluster_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ClusterPermissionsRequest as
+// a slice of ClusterAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPermissionsRequest) GetAccessControlList(ctx context.Context) ([]ClusterAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ClusterPermissionsRequest.
+func (o *ClusterPermissionsRequest) SetAccessControlList(ctx context.Context, v []ClusterAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ClusterPolicyAccessControlRequest struct {
@@ -2045,6 +3093,31 @@ func (o ClusterPolicyAccessControlResponse) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in ClusterPolicyAccessControlResponse as
+// a slice of ClusterPolicyPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPolicyAccessControlResponse) GetAllPermissions(ctx context.Context) ([]ClusterPolicyPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPolicyPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in ClusterPolicyAccessControlResponse.
+func (o *ClusterPolicyAccessControlResponse) SetAllPermissions(ctx context.Context, v []ClusterPolicyPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type ClusterPolicyPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -2098,6 +3171,31 @@ func (o ClusterPolicyPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in ClusterPolicyPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPolicyPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in ClusterPolicyPermission.
+func (o *ClusterPolicyPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type ClusterPolicyPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -2149,6 +3247,31 @@ func (o ClusterPolicyPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ClusterPolicyPermissions as
+// a slice of ClusterPolicyAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPolicyPermissions) GetAccessControlList(ctx context.Context) ([]ClusterPolicyAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPolicyAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ClusterPolicyPermissions.
+func (o *ClusterPolicyPermissions) SetAccessControlList(ctx context.Context, v []ClusterPolicyAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ClusterPolicyPermissionsDescription struct {
@@ -2243,6 +3366,31 @@ func (o ClusterPolicyPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"cluster_policy_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ClusterPolicyPermissionsRequest as
+// a slice of ClusterPolicyAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterPolicyPermissionsRequest) GetAccessControlList(ctx context.Context) ([]ClusterPolicyAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPolicyAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ClusterPolicyPermissionsRequest.
+func (o *ClusterPolicyPermissionsRequest) SetAccessControlList(ctx context.Context, v []ClusterPolicyAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 // Represents a change to the cluster settings required for the cluster to
@@ -2362,6 +3510,32 @@ func (o ClusterSize) Type(ctx context.Context) attr.Type {
 			"num_workers": types.Int64Type,
 		},
 	}
+}
+
+// GetAutoscale returns the value of the Autoscale field in ClusterSize as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSize) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in ClusterSize.
+func (o *ClusterSize) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
 }
 
 type ClusterSpec struct {
@@ -2642,6 +3816,313 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in ClusterSpec as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in ClusterSpec.
+func (o *ClusterSpec) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in ClusterSpec as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in ClusterSpec.
+func (o *ClusterSpec) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in ClusterSpec as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in ClusterSpec.
+func (o *ClusterSpec) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in ClusterSpec as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in ClusterSpec.
+func (o *ClusterSpec) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in ClusterSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in ClusterSpec.
+func (o *ClusterSpec) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in ClusterSpec as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in ClusterSpec.
+func (o *ClusterSpec) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in ClusterSpec as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in ClusterSpec.
+func (o *ClusterSpec) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in ClusterSpec as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in ClusterSpec.
+func (o *ClusterSpec) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in ClusterSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in ClusterSpec.
+func (o *ClusterSpec) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in ClusterSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in ClusterSpec.
+func (o *ClusterSpec) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in ClusterSpec as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in ClusterSpec.
+func (o *ClusterSpec) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in ClusterSpec as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterSpec) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in ClusterSpec.
+func (o *ClusterSpec) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 // Get status
 type ClusterStatus struct {
 	// Unique identifier of the cluster whose status should be retrieved.
@@ -2840,6 +4321,32 @@ func (o CommandStatusResponse) Type(ctx context.Context) attr.Type {
 			"status": types.StringType,
 		},
 	}
+}
+
+// GetResults returns the value of the Results field in CommandStatusResponse as
+// a Results value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CommandStatusResponse) GetResults(ctx context.Context) (Results, bool) {
+	var e Results
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return e, false
+	}
+	var v []Results
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetResults sets the value of the Results field in CommandStatusResponse.
+func (o *CommandStatusResponse) SetResults(ctx context.Context, v Results) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	o.Results = types.ListValueMust(t, vs)
 }
 
 // Get status
@@ -3219,6 +4726,339 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in CreateCluster as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in CreateCluster.
+func (o *CreateCluster) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in CreateCluster as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in CreateCluster.
+func (o *CreateCluster) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in CreateCluster as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in CreateCluster.
+func (o *CreateCluster) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetCloneFrom returns the value of the CloneFrom field in CreateCluster as
+// a CloneCluster value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetCloneFrom(ctx context.Context) (CloneCluster, bool) {
+	var e CloneCluster
+	if o.CloneFrom.IsNull() || o.CloneFrom.IsUnknown() {
+		return e, false
+	}
+	var v []CloneCluster
+	d := o.CloneFrom.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCloneFrom sets the value of the CloneFrom field in CreateCluster.
+func (o *CreateCluster) SetCloneFrom(ctx context.Context, v CloneCluster) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clone_from"]
+	o.CloneFrom = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in CreateCluster as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in CreateCluster.
+func (o *CreateCluster) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in CreateCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in CreateCluster.
+func (o *CreateCluster) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in CreateCluster as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in CreateCluster.
+func (o *CreateCluster) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in CreateCluster as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in CreateCluster.
+func (o *CreateCluster) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in CreateCluster as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in CreateCluster.
+func (o *CreateCluster) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in CreateCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in CreateCluster.
+func (o *CreateCluster) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in CreateCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in CreateCluster.
+func (o *CreateCluster) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in CreateCluster as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in CreateCluster.
+func (o *CreateCluster) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in CreateCluster as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in CreateCluster.
+func (o *CreateCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 type CreateClusterResponse struct {
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
 }
@@ -3446,6 +5286,185 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsAttributes returns the value of the AwsAttributes field in CreateInstancePool as
+// a InstancePoolAwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAwsAttributes, bool) {
+	var e InstancePoolAwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in CreateInstancePool.
+func (o *CreateInstancePool) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in CreateInstancePool as
+// a InstancePoolAzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolAzureAttributes, bool) {
+	var e InstancePoolAzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in CreateInstancePool.
+func (o *CreateInstancePool) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in CreateInstancePool as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in CreateInstancePool.
+func (o *CreateInstancePool) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDiskSpec returns the value of the DiskSpec field in CreateInstancePool as
+// a DiskSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
+	var e DiskSpec
+	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DiskSpec
+	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDiskSpec sets the value of the DiskSpec field in CreateInstancePool.
+func (o *CreateInstancePool) SetDiskSpec(ctx context.Context, v DiskSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
+	o.DiskSpec = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in CreateInstancePool as
+// a InstancePoolGcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcpAttributes, bool) {
+	var e InstancePoolGcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolGcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in CreateInstancePool.
+func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
+// a slice of DockerImage values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetPreloadedDockerImages(ctx context.Context) ([]DockerImage, bool) {
+	if o.PreloadedDockerImages.IsNull() || o.PreloadedDockerImages.IsUnknown() {
+		return nil, false
+	}
+	var v []DockerImage
+	d := o.PreloadedDockerImages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedDockerImages sets the value of the PreloadedDockerImages field in CreateInstancePool.
+func (o *CreateInstancePool) SetPreloadedDockerImages(ctx context.Context, v []DockerImage) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	o.PreloadedDockerImages = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedSparkVersions returns the value of the PreloadedSparkVersions field in CreateInstancePool as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetPreloadedSparkVersions(ctx context.Context) ([]types.String, bool) {
+	if o.PreloadedSparkVersions.IsNull() || o.PreloadedSparkVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PreloadedSparkVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedSparkVersions sets the value of the PreloadedSparkVersions field in CreateInstancePool.
+func (o *CreateInstancePool) SetPreloadedSparkVersions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
+}
+
 type CreateInstancePoolResponse struct {
 	// The ID of the created instance pool.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
@@ -3575,6 +5594,31 @@ func (o CreatePolicy) Type(ctx context.Context) attr.Type {
 			"policy_family_id":                   types.StringType,
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in CreatePolicy as
+// a slice of Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePolicy) GetLibraries(ctx context.Context) ([]Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in CreatePolicy.
+func (o *CreatePolicy) SetLibraries(ctx context.Context, v []Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
 }
 
 type CreatePolicyResponse struct {
@@ -4276,6 +6320,32 @@ func (o DiskSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDiskType returns the value of the DiskType field in DiskSpec as
+// a DiskType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DiskSpec) GetDiskType(ctx context.Context) (DiskType, bool) {
+	var e DiskType
+	if o.DiskType.IsNull() || o.DiskType.IsUnknown() {
+		return e, false
+	}
+	var v []DiskType
+	d := o.DiskType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDiskType sets the value of the DiskType field in DiskSpec.
+func (o *DiskSpec) SetDiskType(ctx context.Context, v DiskType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_type"]
+	o.DiskType = types.ListValueMust(t, vs)
+}
+
 type DiskType struct {
 	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type" tf:"optional"`
 
@@ -4414,6 +6484,32 @@ func (o DockerImage) Type(ctx context.Context) attr.Type {
 			"url": types.StringType,
 		},
 	}
+}
+
+// GetBasicAuth returns the value of the BasicAuth field in DockerImage as
+// a DockerBasicAuth value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DockerImage) GetBasicAuth(ctx context.Context) (DockerBasicAuth, bool) {
+	var e DockerBasicAuth
+	if o.BasicAuth.IsNull() || o.BasicAuth.IsUnknown() {
+		return e, false
+	}
+	var v []DockerBasicAuth
+	d := o.BasicAuth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBasicAuth sets the value of the BasicAuth field in DockerImage.
+func (o *DockerImage) SetBasicAuth(ctx context.Context, v DockerBasicAuth) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["basic_auth"]
+	o.BasicAuth = types.ListValueMust(t, vs)
 }
 
 type EditCluster struct {
@@ -4698,6 +6794,313 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in EditCluster as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in EditCluster.
+func (o *EditCluster) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in EditCluster as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in EditCluster.
+func (o *EditCluster) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in EditCluster as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in EditCluster.
+func (o *EditCluster) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in EditCluster as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in EditCluster.
+func (o *EditCluster) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in EditCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in EditCluster.
+func (o *EditCluster) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in EditCluster as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in EditCluster.
+func (o *EditCluster) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in EditCluster as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in EditCluster.
+func (o *EditCluster) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in EditCluster as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in EditCluster.
+func (o *EditCluster) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in EditCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in EditCluster.
+func (o *EditCluster) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in EditCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in EditCluster.
+func (o *EditCluster) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in EditCluster as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in EditCluster.
+func (o *EditCluster) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in EditCluster as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in EditCluster.
+func (o *EditCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 type EditClusterResponse struct {
 }
 
@@ -4819,6 +7222,31 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"node_type_id":                          types.StringType,
 		},
 	}
+}
+
+// GetCustomTags returns the value of the CustomTags field in EditInstancePool as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in EditInstancePool.
+func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
 }
 
 type EditInstancePoolResponse struct {
@@ -4948,6 +7376,31 @@ func (o EditPolicy) Type(ctx context.Context) attr.Type {
 			"policy_id":                          types.StringType,
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in EditPolicy as
+// a slice of Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPolicy) GetLibraries(ctx context.Context) ([]Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in EditPolicy.
+func (o *EditPolicy) SetLibraries(ctx context.Context, v []Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
 }
 
 type EditPolicyResponse struct {
@@ -5121,6 +7574,31 @@ func (o EnforceClusterComplianceResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetChanges returns the value of the Changes field in EnforceClusterComplianceResponse as
+// a slice of ClusterSettingsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnforceClusterComplianceResponse) GetChanges(ctx context.Context) ([]ClusterSettingsChange, bool) {
+	if o.Changes.IsNull() || o.Changes.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterSettingsChange
+	d := o.Changes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChanges sets the value of the Changes field in EnforceClusterComplianceResponse.
+func (o *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []ClusterSettingsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	o.Changes = types.ListValueMust(t, vs)
+}
+
 // The environment entity used to preserve serverless environment side panel and
 // jobs' environment for non-notebook task. In this minimal environment spec,
 // only pip dependencies are supported.
@@ -5180,6 +7658,31 @@ func (o Environment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDependencies returns the value of the Dependencies field in Environment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Environment) GetDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.Dependencies.IsNull() || o.Dependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Dependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDependencies sets the value of the Dependencies field in Environment.
+func (o *Environment) SetDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	o.Dependencies = types.ListValueMust(t, vs)
 }
 
 type EventDetails struct {
@@ -5325,6 +7828,162 @@ func (o EventDetails) Type(ctx context.Context) attr.Type {
 			"user":               types.StringType,
 		},
 	}
+}
+
+// GetAttributes returns the value of the Attributes field in EventDetails as
+// a ClusterAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetAttributes(ctx context.Context) (ClusterAttributes, bool) {
+	var e ClusterAttributes
+	if o.Attributes.IsNull() || o.Attributes.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAttributes
+	d := o.Attributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAttributes sets the value of the Attributes field in EventDetails.
+func (o *EventDetails) SetAttributes(ctx context.Context, v ClusterAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["attributes"]
+	o.Attributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterSize returns the value of the ClusterSize field in EventDetails as
+// a ClusterSize value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetClusterSize(ctx context.Context) (ClusterSize, bool) {
+	var e ClusterSize
+	if o.ClusterSize.IsNull() || o.ClusterSize.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSize
+	d := o.ClusterSize.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterSize sets the value of the ClusterSize field in EventDetails.
+func (o *EventDetails) SetClusterSize(ctx context.Context, v ClusterSize) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_size"]
+	o.ClusterSize = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in EventDetails as
+// a InitScriptEventDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetInitScripts(ctx context.Context) (InitScriptEventDetails, bool) {
+	var e InitScriptEventDetails
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return e, false
+	}
+	var v []InitScriptEventDetails
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInitScripts sets the value of the InitScripts field in EventDetails.
+func (o *EventDetails) SetInitScripts(ctx context.Context, v InitScriptEventDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetPreviousAttributes returns the value of the PreviousAttributes field in EventDetails as
+// a ClusterAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetPreviousAttributes(ctx context.Context) (ClusterAttributes, bool) {
+	var e ClusterAttributes
+	if o.PreviousAttributes.IsNull() || o.PreviousAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterAttributes
+	d := o.PreviousAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPreviousAttributes sets the value of the PreviousAttributes field in EventDetails.
+func (o *EventDetails) SetPreviousAttributes(ctx context.Context, v ClusterAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["previous_attributes"]
+	o.PreviousAttributes = types.ListValueMust(t, vs)
+}
+
+// GetPreviousClusterSize returns the value of the PreviousClusterSize field in EventDetails as
+// a ClusterSize value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetPreviousClusterSize(ctx context.Context) (ClusterSize, bool) {
+	var e ClusterSize
+	if o.PreviousClusterSize.IsNull() || o.PreviousClusterSize.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterSize
+	d := o.PreviousClusterSize.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPreviousClusterSize sets the value of the PreviousClusterSize field in EventDetails.
+func (o *EventDetails) SetPreviousClusterSize(ctx context.Context, v ClusterSize) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["previous_cluster_size"]
+	o.PreviousClusterSize = types.ListValueMust(t, vs)
+}
+
+// GetReason returns the value of the Reason field in EventDetails as
+// a TerminationReason value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EventDetails) GetReason(ctx context.Context) (TerminationReason, bool) {
+	var e TerminationReason
+	if o.Reason.IsNull() || o.Reason.IsUnknown() {
+		return e, false
+	}
+	var v []TerminationReason
+	d := o.Reason.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReason sets the value of the Reason field in EventDetails.
+func (o *EventDetails) SetReason(ctx context.Context, v TerminationReason) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reason"]
+	o.Reason = types.ListValueMust(t, vs)
 }
 
 type GcpAttributes struct {
@@ -5548,6 +8207,31 @@ func (o GetClusterComplianceResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetViolations returns the value of the Violations field in GetClusterComplianceResponse as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetClusterComplianceResponse) GetViolations(ctx context.Context) (map[string]types.String, bool) {
+	if o.Violations.IsNull() || o.Violations.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Violations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetViolations sets the value of the Violations field in GetClusterComplianceResponse.
+func (o *GetClusterComplianceResponse) SetViolations(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	o.Violations = types.MapValueMust(t, vs)
+}
+
 // Get cluster permission levels
 type GetClusterPermissionLevelsRequest struct {
 	// The cluster for which to get or manage permissions.
@@ -5635,6 +8319,31 @@ func (o GetClusterPermissionLevelsResponse) Type(ctx context.Context) attr.Type 
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetClusterPermissionLevelsResponse as
+// a slice of ClusterPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetClusterPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]ClusterPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetClusterPermissionLevelsResponse.
+func (o *GetClusterPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []ClusterPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get cluster permissions
@@ -5767,6 +8476,31 @@ func (o GetClusterPolicyPermissionLevelsResponse) Type(ctx context.Context) attr
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetClusterPolicyPermissionLevelsResponse as
+// a slice of ClusterPolicyPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetClusterPolicyPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]ClusterPolicyPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterPolicyPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetClusterPolicyPermissionLevelsResponse.
+func (o *GetClusterPolicyPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []ClusterPolicyPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get cluster policy permissions
@@ -5974,6 +8708,31 @@ func (o GetEvents) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEventTypes returns the value of the EventTypes field in GetEvents as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetEvents) GetEventTypes(ctx context.Context) ([]types.String, bool) {
+	if o.EventTypes.IsNull() || o.EventTypes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.EventTypes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEventTypes sets the value of the EventTypes field in GetEvents.
+func (o *GetEvents) SetEventTypes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_types"]
+	o.EventTypes = types.ListValueMust(t, vs)
+}
+
 type GetEventsResponse struct {
 	// <content needs to be added>
 	Events types.List `tfsdk:"events" tf:"optional"`
@@ -6031,6 +8790,57 @@ func (o GetEventsResponse) Type(ctx context.Context) attr.Type {
 			"total_count": types.Int64Type,
 		},
 	}
+}
+
+// GetEvents returns the value of the Events field in GetEventsResponse as
+// a slice of ClusterEvent values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetEventsResponse) GetEvents(ctx context.Context) ([]ClusterEvent, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterEvent
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in GetEventsResponse.
+func (o *GetEventsResponse) SetEvents(ctx context.Context, v []ClusterEvent) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
+}
+
+// GetNextPage returns the value of the NextPage field in GetEventsResponse as
+// a GetEvents value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetEventsResponse) GetNextPage(ctx context.Context) (GetEvents, bool) {
+	var e GetEvents
+	if o.NextPage.IsNull() || o.NextPage.IsUnknown() {
+		return e, false
+	}
+	var v []GetEvents
+	d := o.NextPage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNextPage sets the value of the NextPage field in GetEventsResponse.
+func (o *GetEventsResponse) SetNextPage(ctx context.Context, v GetEvents) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["next_page"]
+	o.NextPage = types.ListValueMust(t, vs)
 }
 
 // Get an init script
@@ -6254,6 +9064,262 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAwsAttributes returns the value of the AwsAttributes field in GetInstancePool as
+// a InstancePoolAwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAwsAttributes, bool) {
+	var e InstancePoolAwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in GetInstancePool.
+func (o *GetInstancePool) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in GetInstancePool as
+// a InstancePoolAzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolAzureAttributes, bool) {
+	var e InstancePoolAzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in GetInstancePool.
+func (o *GetInstancePool) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in GetInstancePool as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in GetInstancePool.
+func (o *GetInstancePool) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDefaultTags returns the value of the DefaultTags field in GetInstancePool as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetDefaultTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.DefaultTags.IsNull() || o.DefaultTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.DefaultTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultTags sets the value of the DefaultTags field in GetInstancePool.
+func (o *GetInstancePool) SetDefaultTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	o.DefaultTags = types.MapValueMust(t, vs)
+}
+
+// GetDiskSpec returns the value of the DiskSpec field in GetInstancePool as
+// a DiskSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
+	var e DiskSpec
+	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DiskSpec
+	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDiskSpec sets the value of the DiskSpec field in GetInstancePool.
+func (o *GetInstancePool) SetDiskSpec(ctx context.Context, v DiskSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
+	o.DiskSpec = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in GetInstancePool as
+// a InstancePoolGcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcpAttributes, bool) {
+	var e InstancePoolGcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolGcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in GetInstancePool.
+func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
+// a slice of DockerImage values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetPreloadedDockerImages(ctx context.Context) ([]DockerImage, bool) {
+	if o.PreloadedDockerImages.IsNull() || o.PreloadedDockerImages.IsUnknown() {
+		return nil, false
+	}
+	var v []DockerImage
+	d := o.PreloadedDockerImages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedDockerImages sets the value of the PreloadedDockerImages field in GetInstancePool.
+func (o *GetInstancePool) SetPreloadedDockerImages(ctx context.Context, v []DockerImage) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	o.PreloadedDockerImages = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedSparkVersions returns the value of the PreloadedSparkVersions field in GetInstancePool as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetPreloadedSparkVersions(ctx context.Context) ([]types.String, bool) {
+	if o.PreloadedSparkVersions.IsNull() || o.PreloadedSparkVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PreloadedSparkVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedSparkVersions sets the value of the PreloadedSparkVersions field in GetInstancePool.
+func (o *GetInstancePool) SetPreloadedSparkVersions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
+}
+
+// GetStats returns the value of the Stats field in GetInstancePool as
+// a InstancePoolStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetStats(ctx context.Context) (InstancePoolStats, bool) {
+	var e InstancePoolStats
+	if o.Stats.IsNull() || o.Stats.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolStats
+	d := o.Stats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStats sets the value of the Stats field in GetInstancePool.
+func (o *GetInstancePool) SetStats(ctx context.Context, v InstancePoolStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
+	o.Stats = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in GetInstancePool as
+// a InstancePoolStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetStatus(ctx context.Context) (InstancePoolStatus, bool) {
+	var e InstancePoolStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in GetInstancePool.
+func (o *GetInstancePool) SetStatus(ctx context.Context, v InstancePoolStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
+}
+
 // Get instance pool permission levels
 type GetInstancePoolPermissionLevelsRequest struct {
 	// The instance pool for which to get or manage permissions.
@@ -6341,6 +9407,31 @@ func (o GetInstancePoolPermissionLevelsResponse) Type(ctx context.Context) attr.
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetInstancePoolPermissionLevelsResponse as
+// a slice of InstancePoolPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePoolPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]InstancePoolPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []InstancePoolPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetInstancePoolPermissionLevelsResponse.
+func (o *GetInstancePoolPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []InstancePoolPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get instance pool permissions
@@ -6521,6 +9612,31 @@ func (o GetSparkVersionsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetVersions returns the value of the Versions field in GetSparkVersionsResponse as
+// a slice of SparkVersion values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetSparkVersionsResponse) GetVersions(ctx context.Context) ([]SparkVersion, bool) {
+	if o.Versions.IsNull() || o.Versions.IsUnknown() {
+		return nil, false
+	}
+	var v []SparkVersion
+	d := o.Versions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetVersions sets the value of the Versions field in GetSparkVersionsResponse.
+func (o *GetSparkVersionsResponse) SetVersions(ctx context.Context, v []SparkVersion) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["versions"]
+	o.Versions = types.ListValueMust(t, vs)
 }
 
 type GlobalInitScriptCreateRequest struct {
@@ -6863,6 +9979,56 @@ func (o InitScriptEventDetails) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCluster returns the value of the Cluster field in InitScriptEventDetails as
+// a slice of InitScriptInfoAndExecutionDetails values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptEventDetails) GetCluster(ctx context.Context) ([]InitScriptInfoAndExecutionDetails, bool) {
+	if o.Cluster.IsNull() || o.Cluster.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfoAndExecutionDetails
+	d := o.Cluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCluster sets the value of the Cluster field in InitScriptEventDetails.
+func (o *InitScriptEventDetails) SetCluster(ctx context.Context, v []InitScriptInfoAndExecutionDetails) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster"]
+	o.Cluster = types.ListValueMust(t, vs)
+}
+
+// GetGlobal returns the value of the Global field in InitScriptEventDetails as
+// a slice of InitScriptInfoAndExecutionDetails values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptEventDetails) GetGlobal(ctx context.Context) ([]InitScriptInfoAndExecutionDetails, bool) {
+	if o.Global.IsNull() || o.Global.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfoAndExecutionDetails
+	d := o.Global.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGlobal sets the value of the Global field in InitScriptEventDetails.
+func (o *InitScriptEventDetails) SetGlobal(ctx context.Context, v []InitScriptInfoAndExecutionDetails) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["global"]
+	o.Global = types.ListValueMust(t, vs)
+}
+
 type InitScriptExecutionDetails struct {
 	// Addition details regarding errors.
 	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
@@ -7012,6 +10178,188 @@ func (o InitScriptInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAbfss returns the value of the Abfss field in InitScriptInfo as
+// a Adlsgen2Info value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetAbfss(ctx context.Context) (Adlsgen2Info, bool) {
+	var e Adlsgen2Info
+	if o.Abfss.IsNull() || o.Abfss.IsUnknown() {
+		return e, false
+	}
+	var v []Adlsgen2Info
+	d := o.Abfss.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAbfss sets the value of the Abfss field in InitScriptInfo.
+func (o *InitScriptInfo) SetAbfss(ctx context.Context, v Adlsgen2Info) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["abfss"]
+	o.Abfss = types.ListValueMust(t, vs)
+}
+
+// GetDbfs returns the value of the Dbfs field in InitScriptInfo as
+// a DbfsStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
+	var e DbfsStorageInfo
+	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
+		return e, false
+	}
+	var v []DbfsStorageInfo
+	d := o.Dbfs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDbfs sets the value of the Dbfs field in InitScriptInfo.
+func (o *InitScriptInfo) SetDbfs(ctx context.Context, v DbfsStorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbfs"]
+	o.Dbfs = types.ListValueMust(t, vs)
+}
+
+// GetFile returns the value of the File field in InitScriptInfo as
+// a LocalFileInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetFile(ctx context.Context) (LocalFileInfo, bool) {
+	var e LocalFileInfo
+	if o.File.IsNull() || o.File.IsUnknown() {
+		return e, false
+	}
+	var v []LocalFileInfo
+	d := o.File.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFile sets the value of the File field in InitScriptInfo.
+func (o *InitScriptInfo) SetFile(ctx context.Context, v LocalFileInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	o.File = types.ListValueMust(t, vs)
+}
+
+// GetGcs returns the value of the Gcs field in InitScriptInfo as
+// a GcsStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetGcs(ctx context.Context) (GcsStorageInfo, bool) {
+	var e GcsStorageInfo
+	if o.Gcs.IsNull() || o.Gcs.IsUnknown() {
+		return e, false
+	}
+	var v []GcsStorageInfo
+	d := o.Gcs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcs sets the value of the Gcs field in InitScriptInfo.
+func (o *InitScriptInfo) SetGcs(ctx context.Context, v GcsStorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcs"]
+	o.Gcs = types.ListValueMust(t, vs)
+}
+
+// GetS3 returns the value of the S3 field in InitScriptInfo as
+// a S3StorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetS3(ctx context.Context) (S3StorageInfo, bool) {
+	var e S3StorageInfo
+	if o.S3.IsNull() || o.S3.IsUnknown() {
+		return e, false
+	}
+	var v []S3StorageInfo
+	d := o.S3.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetS3 sets the value of the S3 field in InitScriptInfo.
+func (o *InitScriptInfo) SetS3(ctx context.Context, v S3StorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
+	o.S3 = types.ListValueMust(t, vs)
+}
+
+// GetVolumes returns the value of the Volumes field in InitScriptInfo as
+// a VolumesStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetVolumes(ctx context.Context) (VolumesStorageInfo, bool) {
+	var e VolumesStorageInfo
+	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
+		return e, false
+	}
+	var v []VolumesStorageInfo
+	d := o.Volumes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVolumes sets the value of the Volumes field in InitScriptInfo.
+func (o *InitScriptInfo) SetVolumes(ctx context.Context, v VolumesStorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
+	o.Volumes = types.ListValueMust(t, vs)
+}
+
+// GetWorkspace returns the value of the Workspace field in InitScriptInfo as
+// a WorkspaceStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfo) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo, bool) {
+	var e WorkspaceStorageInfo
+	if o.Workspace.IsNull() || o.Workspace.IsUnknown() {
+		return e, false
+	}
+	var v []WorkspaceStorageInfo
+	d := o.Workspace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkspace sets the value of the Workspace field in InitScriptInfo.
+func (o *InitScriptInfo) SetWorkspace(ctx context.Context, v WorkspaceStorageInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace"]
+	o.Workspace = types.ListValueMust(t, vs)
+}
+
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
 	ExecutionDetails types.List `tfsdk:"execution_details" tf:"optional,object"`
@@ -7065,6 +10413,58 @@ func (o InitScriptInfoAndExecutionDetails) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExecutionDetails returns the value of the ExecutionDetails field in InitScriptInfoAndExecutionDetails as
+// a InitScriptExecutionDetails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails) GetExecutionDetails(ctx context.Context) (InitScriptExecutionDetails, bool) {
+	var e InitScriptExecutionDetails
+	if o.ExecutionDetails.IsNull() || o.ExecutionDetails.IsUnknown() {
+		return e, false
+	}
+	var v []InitScriptExecutionDetails
+	d := o.ExecutionDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExecutionDetails sets the value of the ExecutionDetails field in InitScriptInfoAndExecutionDetails.
+func (o *InitScriptInfoAndExecutionDetails) SetExecutionDetails(ctx context.Context, v InitScriptExecutionDetails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["execution_details"]
+	o.ExecutionDetails = types.ListValueMust(t, vs)
+}
+
+// GetScript returns the value of the Script field in InitScriptInfoAndExecutionDetails as
+// a InitScriptInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails) GetScript(ctx context.Context) (InitScriptInfo, bool) {
+	var e InitScriptInfo
+	if o.Script.IsNull() || o.Script.IsUnknown() {
+		return e, false
+	}
+	var v []InitScriptInfo
+	d := o.Script.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetScript sets the value of the Script field in InitScriptInfoAndExecutionDetails.
+func (o *InitScriptInfoAndExecutionDetails) SetScript(ctx context.Context, v InitScriptInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["script"]
+	o.Script = types.ListValueMust(t, vs)
+}
+
 type InstallLibraries struct {
 	// Unique identifier for the cluster on which to install these libraries.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -7113,6 +10513,31 @@ func (o InstallLibraries) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in InstallLibraries as
+// a slice of Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstallLibraries) GetLibraries(ctx context.Context) ([]Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in InstallLibraries.
+func (o *InstallLibraries) SetLibraries(ctx context.Context, v []Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
 }
 
 type InstallLibrariesResponse struct {
@@ -7265,6 +10690,31 @@ func (o InstancePoolAccessControlResponse) Type(ctx context.Context) attr.Type {
 			"user_name":              types.StringType,
 		},
 	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in InstancePoolAccessControlResponse as
+// a slice of InstancePoolPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAccessControlResponse) GetAllPermissions(ctx context.Context) ([]InstancePoolPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []InstancePoolPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in InstancePoolAccessControlResponse.
+func (o *InstancePoolAccessControlResponse) SetAllPermissions(ctx context.Context, v []InstancePoolPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type InstancePoolAndStats struct {
@@ -7443,6 +10893,262 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in InstancePoolAndStats as
+// a InstancePoolAwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetAwsAttributes(ctx context.Context) (InstancePoolAwsAttributes, bool) {
+	var e InstancePoolAwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in InstancePoolAndStats as
+// a InstancePoolAzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetAzureAttributes(ctx context.Context) (InstancePoolAzureAttributes, bool) {
+	var e InstancePoolAzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolAzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in InstancePoolAndStats as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDefaultTags returns the value of the DefaultTags field in InstancePoolAndStats as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetDefaultTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.DefaultTags.IsNull() || o.DefaultTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.DefaultTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDefaultTags sets the value of the DefaultTags field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetDefaultTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	o.DefaultTags = types.MapValueMust(t, vs)
+}
+
+// GetDiskSpec returns the value of the DiskSpec field in InstancePoolAndStats as
+// a DiskSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
+	var e DiskSpec
+	if o.DiskSpec.IsNull() || o.DiskSpec.IsUnknown() {
+		return e, false
+	}
+	var v []DiskSpec
+	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDiskSpec sets the value of the DiskSpec field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetDiskSpec(ctx context.Context, v DiskSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
+	o.DiskSpec = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in InstancePoolAndStats as
+// a InstancePoolGcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePoolGcpAttributes, bool) {
+	var e InstancePoolGcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolGcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
+// a slice of DockerImage values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetPreloadedDockerImages(ctx context.Context) ([]DockerImage, bool) {
+	if o.PreloadedDockerImages.IsNull() || o.PreloadedDockerImages.IsUnknown() {
+		return nil, false
+	}
+	var v []DockerImage
+	d := o.PreloadedDockerImages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedDockerImages sets the value of the PreloadedDockerImages field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetPreloadedDockerImages(ctx context.Context, v []DockerImage) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	o.PreloadedDockerImages = types.ListValueMust(t, vs)
+}
+
+// GetPreloadedSparkVersions returns the value of the PreloadedSparkVersions field in InstancePoolAndStats as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetPreloadedSparkVersions(ctx context.Context) ([]types.String, bool) {
+	if o.PreloadedSparkVersions.IsNull() || o.PreloadedSparkVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PreloadedSparkVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPreloadedSparkVersions sets the value of the PreloadedSparkVersions field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetPreloadedSparkVersions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
+}
+
+// GetStats returns the value of the Stats field in InstancePoolAndStats as
+// a InstancePoolStats value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetStats(ctx context.Context) (InstancePoolStats, bool) {
+	var e InstancePoolStats
+	if o.Stats.IsNull() || o.Stats.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolStats
+	d := o.Stats.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStats sets the value of the Stats field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetStats(ctx context.Context, v InstancePoolStats) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
+	o.Stats = types.ListValueMust(t, vs)
+}
+
+// GetStatus returns the value of the Status field in InstancePoolAndStats as
+// a InstancePoolStatus value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetStatus(ctx context.Context) (InstancePoolStatus, bool) {
+	var e InstancePoolStatus
+	if o.Status.IsNull() || o.Status.IsUnknown() {
+		return e, false
+	}
+	var v []InstancePoolStatus
+	d := o.Status.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatus sets the value of the Status field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetStatus(ctx context.Context, v InstancePoolStatus) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	o.Status = types.ListValueMust(t, vs)
 }
 
 type InstancePoolAwsAttributes struct {
@@ -7693,6 +11399,31 @@ func (o InstancePoolPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in InstancePoolPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in InstancePoolPermission.
+func (o *InstancePoolPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type InstancePoolPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -7744,6 +11475,31 @@ func (o InstancePoolPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in InstancePoolPermissions as
+// a slice of InstancePoolAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolPermissions) GetAccessControlList(ctx context.Context) ([]InstancePoolAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []InstancePoolAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in InstancePoolPermissions.
+func (o *InstancePoolPermissions) SetAccessControlList(ctx context.Context, v []InstancePoolAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type InstancePoolPermissionsDescription struct {
@@ -7838,6 +11594,31 @@ func (o InstancePoolPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"instance_pool_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in InstancePoolPermissionsRequest as
+// a slice of InstancePoolAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolPermissionsRequest) GetAccessControlList(ctx context.Context) ([]InstancePoolAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []InstancePoolAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in InstancePoolPermissionsRequest.
+func (o *InstancePoolPermissionsRequest) SetAccessControlList(ctx context.Context, v []InstancePoolAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type InstancePoolStats struct {
@@ -7941,6 +11722,31 @@ func (o InstancePoolStatus) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPendingInstanceErrors returns the value of the PendingInstanceErrors field in InstancePoolStatus as
+// a slice of PendingInstanceError values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolStatus) GetPendingInstanceErrors(ctx context.Context) ([]PendingInstanceError, bool) {
+	if o.PendingInstanceErrors.IsNull() || o.PendingInstanceErrors.IsUnknown() {
+		return nil, false
+	}
+	var v []PendingInstanceError
+	d := o.PendingInstanceErrors.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPendingInstanceErrors sets the value of the PendingInstanceErrors field in InstancePoolStatus.
+func (o *InstancePoolStatus) SetPendingInstanceErrors(ctx context.Context, v []PendingInstanceError) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_instance_errors"]
+	o.PendingInstanceErrors = types.ListValueMust(t, vs)
 }
 
 type InstanceProfile struct {
@@ -8100,6 +11906,84 @@ func (o Library) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCran returns the value of the Cran field in Library as
+// a RCranLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Library) GetCran(ctx context.Context) (RCranLibrary, bool) {
+	var e RCranLibrary
+	if o.Cran.IsNull() || o.Cran.IsUnknown() {
+		return e, false
+	}
+	var v []RCranLibrary
+	d := o.Cran.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCran sets the value of the Cran field in Library.
+func (o *Library) SetCran(ctx context.Context, v RCranLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cran"]
+	o.Cran = types.ListValueMust(t, vs)
+}
+
+// GetMaven returns the value of the Maven field in Library as
+// a MavenLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Library) GetMaven(ctx context.Context) (MavenLibrary, bool) {
+	var e MavenLibrary
+	if o.Maven.IsNull() || o.Maven.IsUnknown() {
+		return e, false
+	}
+	var v []MavenLibrary
+	d := o.Maven.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaven sets the value of the Maven field in Library.
+func (o *Library) SetMaven(ctx context.Context, v MavenLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["maven"]
+	o.Maven = types.ListValueMust(t, vs)
+}
+
+// GetPypi returns the value of the Pypi field in Library as
+// a PythonPyPiLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Library) GetPypi(ctx context.Context) (PythonPyPiLibrary, bool) {
+	var e PythonPyPiLibrary
+	if o.Pypi.IsNull() || o.Pypi.IsUnknown() {
+		return e, false
+	}
+	var v []PythonPyPiLibrary
+	d := o.Pypi.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPypi sets the value of the Pypi field in Library.
+func (o *Library) SetPypi(ctx context.Context, v PythonPyPiLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pypi"]
+	o.Pypi = types.ListValueMust(t, vs)
+}
+
 // The status of the library on a specific cluster.
 type LibraryFullStatus struct {
 	// Whether the library was set to be installed on all clusters via the
@@ -8164,6 +12048,57 @@ func (o LibraryFullStatus) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLibrary returns the value of the Library field in LibraryFullStatus as
+// a Library value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LibraryFullStatus) GetLibrary(ctx context.Context) (Library, bool) {
+	var e Library
+	if o.Library.IsNull() || o.Library.IsUnknown() {
+		return e, false
+	}
+	var v []Library
+	d := o.Library.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLibrary sets the value of the Library field in LibraryFullStatus.
+func (o *LibraryFullStatus) SetLibrary(ctx context.Context, v Library) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	o.Library = types.ListValueMust(t, vs)
+}
+
+// GetMessages returns the value of the Messages field in LibraryFullStatus as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LibraryFullStatus) GetMessages(ctx context.Context) ([]types.String, bool) {
+	if o.Messages.IsNull() || o.Messages.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Messages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMessages sets the value of the Messages field in LibraryFullStatus.
+func (o *LibraryFullStatus) SetMessages(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
+	o.Messages = types.ListValueMust(t, vs)
+}
+
 type ListAllClusterLibraryStatusesResponse struct {
 	// A list of cluster statuses.
 	Statuses types.List `tfsdk:"statuses" tf:"optional"`
@@ -8208,6 +12143,31 @@ func (o ListAllClusterLibraryStatusesResponse) Type(ctx context.Context) attr.Ty
 			},
 		},
 	}
+}
+
+// GetStatuses returns the value of the Statuses field in ListAllClusterLibraryStatusesResponse as
+// a slice of ClusterLibraryStatuses values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAllClusterLibraryStatusesResponse) GetStatuses(ctx context.Context) ([]ClusterLibraryStatuses, bool) {
+	if o.Statuses.IsNull() || o.Statuses.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterLibraryStatuses
+	d := o.Statuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatuses sets the value of the Statuses field in ListAllClusterLibraryStatusesResponse.
+func (o *ListAllClusterLibraryStatusesResponse) SetStatuses(ctx context.Context, v []ClusterLibraryStatuses) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	o.Statuses = types.ListValueMust(t, vs)
 }
 
 type ListAvailableZonesResponse struct {
@@ -8259,6 +12219,31 @@ func (o ListAvailableZonesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetZones returns the value of the Zones field in ListAvailableZonesResponse as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAvailableZonesResponse) GetZones(ctx context.Context) ([]types.String, bool) {
+	if o.Zones.IsNull() || o.Zones.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Zones.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetZones sets the value of the Zones field in ListAvailableZonesResponse.
+func (o *ListAvailableZonesResponse) SetZones(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["zones"]
+	o.Zones = types.ListValueMust(t, vs)
 }
 
 // List cluster policy compliance
@@ -8372,6 +12357,31 @@ func (o ListClusterCompliancesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusters returns the value of the Clusters field in ListClusterCompliancesResponse as
+// a slice of ClusterCompliance values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClusterCompliancesResponse) GetClusters(ctx context.Context) ([]ClusterCompliance, bool) {
+	if o.Clusters.IsNull() || o.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterCompliance
+	d := o.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in ListClusterCompliancesResponse.
+func (o *ListClusterCompliancesResponse) SetClusters(ctx context.Context, v []ClusterCompliance) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	o.Clusters = types.ListValueMust(t, vs)
+}
+
 // List cluster policies
 type ListClusterPoliciesRequest struct {
 	// The cluster policy attribute to sort by. * `POLICY_CREATION_TIME` - Sort
@@ -8483,6 +12493,56 @@ func (o ListClustersFilterBy) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusterSources returns the value of the ClusterSources field in ListClustersFilterBy as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClustersFilterBy) GetClusterSources(ctx context.Context) ([]types.String, bool) {
+	if o.ClusterSources.IsNull() || o.ClusterSources.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ClusterSources.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusterSources sets the value of the ClusterSources field in ListClustersFilterBy.
+func (o *ListClustersFilterBy) SetClusterSources(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_sources"]
+	o.ClusterSources = types.ListValueMust(t, vs)
+}
+
+// GetClusterStates returns the value of the ClusterStates field in ListClustersFilterBy as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClustersFilterBy) GetClusterStates(ctx context.Context) ([]types.String, bool) {
+	if o.ClusterStates.IsNull() || o.ClusterStates.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ClusterStates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusterStates sets the value of the ClusterStates field in ListClustersFilterBy.
+func (o *ListClustersFilterBy) SetClusterStates(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_states"]
+	o.ClusterStates = types.ListValueMust(t, vs)
+}
+
 // List clusters
 type ListClustersRequest struct {
 	// Filters to apply to the list of clusters.
@@ -8548,6 +12608,58 @@ func (o ListClustersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilterBy returns the value of the FilterBy field in ListClustersRequest as
+// a ListClustersFilterBy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClustersRequest) GetFilterBy(ctx context.Context) (ListClustersFilterBy, bool) {
+	var e ListClustersFilterBy
+	if o.FilterBy.IsNull() || o.FilterBy.IsUnknown() {
+		return e, false
+	}
+	var v []ListClustersFilterBy
+	d := o.FilterBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilterBy sets the value of the FilterBy field in ListClustersRequest.
+func (o *ListClustersRequest) SetFilterBy(ctx context.Context, v ListClustersFilterBy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter_by"]
+	o.FilterBy = types.ListValueMust(t, vs)
+}
+
+// GetSortBy returns the value of the SortBy field in ListClustersRequest as
+// a ListClustersSortBy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClustersRequest) GetSortBy(ctx context.Context) (ListClustersSortBy, bool) {
+	var e ListClustersSortBy
+	if o.SortBy.IsNull() || o.SortBy.IsUnknown() {
+		return e, false
+	}
+	var v []ListClustersSortBy
+	d := o.SortBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSortBy sets the value of the SortBy field in ListClustersRequest.
+func (o *ListClustersRequest) SetSortBy(ctx context.Context, v ListClustersSortBy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sort_by"]
+	o.SortBy = types.ListValueMust(t, vs)
+}
+
 type ListClustersResponse struct {
 	// <needs content added>
 	Clusters types.List `tfsdk:"clusters" tf:"optional"`
@@ -8603,6 +12715,31 @@ func (o ListClustersResponse) Type(ctx context.Context) attr.Type {
 			"prev_page_token": types.StringType,
 		},
 	}
+}
+
+// GetClusters returns the value of the Clusters field in ListClustersResponse as
+// a slice of ClusterDetails values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListClustersResponse) GetClusters(ctx context.Context) ([]ClusterDetails, bool) {
+	if o.Clusters.IsNull() || o.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []ClusterDetails
+	d := o.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in ListClustersResponse.
+func (o *ListClustersResponse) SetClusters(ctx context.Context, v []ClusterDetails) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	o.Clusters = types.ListValueMust(t, vs)
 }
 
 type ListClustersSortBy struct {
@@ -8698,6 +12835,31 @@ func (o ListGlobalInitScriptsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetScripts returns the value of the Scripts field in ListGlobalInitScriptsResponse as
+// a slice of GlobalInitScriptDetails values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListGlobalInitScriptsResponse) GetScripts(ctx context.Context) ([]GlobalInitScriptDetails, bool) {
+	if o.Scripts.IsNull() || o.Scripts.IsUnknown() {
+		return nil, false
+	}
+	var v []GlobalInitScriptDetails
+	d := o.Scripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScripts sets the value of the Scripts field in ListGlobalInitScriptsResponse.
+func (o *ListGlobalInitScriptsResponse) SetScripts(ctx context.Context, v []GlobalInitScriptDetails) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scripts"]
+	o.Scripts = types.ListValueMust(t, vs)
+}
+
 type ListInstancePools struct {
 	InstancePools types.List `tfsdk:"instance_pools" tf:"optional"`
 }
@@ -8741,6 +12903,31 @@ func (o ListInstancePools) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInstancePools returns the value of the InstancePools field in ListInstancePools as
+// a slice of InstancePoolAndStats values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListInstancePools) GetInstancePools(ctx context.Context) ([]InstancePoolAndStats, bool) {
+	if o.InstancePools.IsNull() || o.InstancePools.IsUnknown() {
+		return nil, false
+	}
+	var v []InstancePoolAndStats
+	d := o.InstancePools.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInstancePools sets the value of the InstancePools field in ListInstancePools.
+func (o *ListInstancePools) SetInstancePools(ctx context.Context, v []InstancePoolAndStats) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instance_pools"]
+	o.InstancePools = types.ListValueMust(t, vs)
 }
 
 type ListInstanceProfilesResponse struct {
@@ -8789,6 +12976,31 @@ func (o ListInstanceProfilesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInstanceProfiles returns the value of the InstanceProfiles field in ListInstanceProfilesResponse as
+// a slice of InstanceProfile values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListInstanceProfilesResponse) GetInstanceProfiles(ctx context.Context) ([]InstanceProfile, bool) {
+	if o.InstanceProfiles.IsNull() || o.InstanceProfiles.IsUnknown() {
+		return nil, false
+	}
+	var v []InstanceProfile
+	d := o.InstanceProfiles.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInstanceProfiles sets the value of the InstanceProfiles field in ListInstanceProfilesResponse.
+func (o *ListInstanceProfilesResponse) SetInstanceProfiles(ctx context.Context, v []InstanceProfile) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instance_profiles"]
+	o.InstanceProfiles = types.ListValueMust(t, vs)
+}
+
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
 	NodeTypes types.List `tfsdk:"node_types" tf:"optional"`
@@ -8835,6 +13047,31 @@ func (o ListNodeTypesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetNodeTypes returns the value of the NodeTypes field in ListNodeTypesResponse as
+// a slice of NodeType values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListNodeTypesResponse) GetNodeTypes(ctx context.Context) ([]NodeType, bool) {
+	if o.NodeTypes.IsNull() || o.NodeTypes.IsUnknown() {
+		return nil, false
+	}
+	var v []NodeType
+	d := o.NodeTypes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNodeTypes sets the value of the NodeTypes field in ListNodeTypesResponse.
+func (o *ListNodeTypesResponse) SetNodeTypes(ctx context.Context, v []NodeType) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_types"]
+	o.NodeTypes = types.ListValueMust(t, vs)
+}
+
 type ListPoliciesResponse struct {
 	// List of policies.
 	Policies types.List `tfsdk:"policies" tf:"optional"`
@@ -8879,6 +13116,31 @@ func (o ListPoliciesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPolicies returns the value of the Policies field in ListPoliciesResponse as
+// a slice of Policy values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPoliciesResponse) GetPolicies(ctx context.Context) ([]Policy, bool) {
+	if o.Policies.IsNull() || o.Policies.IsUnknown() {
+		return nil, false
+	}
+	var v []Policy
+	d := o.Policies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicies sets the value of the Policies field in ListPoliciesResponse.
+func (o *ListPoliciesResponse) SetPolicies(ctx context.Context, v []Policy) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
+	o.Policies = types.ListValueMust(t, vs)
 }
 
 // List policy families
@@ -8977,6 +13239,31 @@ func (o ListPolicyFamiliesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPolicyFamilies returns the value of the PolicyFamilies field in ListPolicyFamiliesResponse as
+// a slice of PolicyFamily values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPolicyFamiliesResponse) GetPolicyFamilies(ctx context.Context) ([]PolicyFamily, bool) {
+	if o.PolicyFamilies.IsNull() || o.PolicyFamilies.IsUnknown() {
+		return nil, false
+	}
+	var v []PolicyFamily
+	d := o.PolicyFamilies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicyFamilies sets the value of the PolicyFamilies field in ListPolicyFamiliesResponse.
+func (o *ListPolicyFamiliesResponse) SetPolicyFamilies(ctx context.Context, v []PolicyFamily) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policy_families"]
+	o.PolicyFamilies = types.ListValueMust(t, vs)
 }
 
 type LocalFileInfo struct {
@@ -9174,6 +13461,31 @@ func (o MavenLibrary) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExclusions returns the value of the Exclusions field in MavenLibrary as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *MavenLibrary) GetExclusions(ctx context.Context) ([]types.String, bool) {
+	if o.Exclusions.IsNull() || o.Exclusions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Exclusions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExclusions sets the value of the Exclusions field in MavenLibrary.
+func (o *MavenLibrary) SetExclusions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclusions"]
+	o.Exclusions = types.ListValueMust(t, vs)
+}
+
 type NodeInstanceType struct {
 	InstanceTypeId types.String `tfsdk:"instance_type_id" tf:"optional"`
 
@@ -9363,6 +13675,58 @@ func (o NodeType) Type(ctx context.Context) attr.Type {
 			"supports_elastic_disk":   types.BoolType,
 		},
 	}
+}
+
+// GetNodeInfo returns the value of the NodeInfo field in NodeType as
+// a CloudProviderNodeInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NodeType) GetNodeInfo(ctx context.Context) (CloudProviderNodeInfo, bool) {
+	var e CloudProviderNodeInfo
+	if o.NodeInfo.IsNull() || o.NodeInfo.IsUnknown() {
+		return e, false
+	}
+	var v []CloudProviderNodeInfo
+	d := o.NodeInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeInfo sets the value of the NodeInfo field in NodeType.
+func (o *NodeType) SetNodeInfo(ctx context.Context, v CloudProviderNodeInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_info"]
+	o.NodeInfo = types.ListValueMust(t, vs)
+}
+
+// GetNodeInstanceType returns the value of the NodeInstanceType field in NodeType as
+// a NodeInstanceType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, bool) {
+	var e NodeInstanceType
+	if o.NodeInstanceType.IsNull() || o.NodeInstanceType.IsUnknown() {
+		return e, false
+	}
+	var v []NodeInstanceType
+	d := o.NodeInstanceType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeInstanceType sets the value of the NodeInstanceType field in NodeType.
+func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_instance_type"]
+	o.NodeInstanceType = types.ListValueMust(t, vs)
 }
 
 type PendingInstanceError struct {
@@ -9676,6 +14040,31 @@ func (o Policy) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLibraries returns the value of the Libraries field in Policy as
+// a slice of Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Policy) GetLibraries(ctx context.Context) ([]Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in Policy.
+func (o *Policy) SetLibraries(ctx context.Context, v []Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
 type PolicyFamily struct {
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
@@ -9972,6 +14361,32 @@ func (o ResizeCluster) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in ResizeCluster as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ResizeCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in ResizeCluster.
+func (o *ResizeCluster) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
 type ResizeClusterResponse struct {
 }
 
@@ -10178,6 +14593,56 @@ func (o Results) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFileNames returns the value of the FileNames field in Results as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Results) GetFileNames(ctx context.Context) ([]types.String, bool) {
+	if o.FileNames.IsNull() || o.FileNames.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FileNames.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFileNames sets the value of the FileNames field in Results.
+func (o *Results) SetFileNames(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fileNames"]
+	o.FileNames = types.ListValueMust(t, vs)
+}
+
+// GetSchema returns the value of the Schema field in Results as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Results) GetSchema(ctx context.Context) ([]types.Object, bool) {
+	if o.Schema.IsNull() || o.Schema.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.Schema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchema sets the value of the Schema field in Results.
+func (o *Results) SetSchema(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schema"]
+	o.Schema = types.ListValueMust(t, vs)
+}
+
 type S3StorageInfo struct {
 	// (Optional) Set canned access control list for the logs, e.g.
 	// `bucket-owner-full-control`. If `canned_cal` is set, please make sure the
@@ -10339,6 +14804,32 @@ func (o SparkNode) Type(ctx context.Context) attr.Type {
 			"start_timestamp": types.Int64Type,
 		},
 	}
+}
+
+// GetNodeAwsAttributes returns the value of the NodeAwsAttributes field in SparkNode as
+// a SparkNodeAwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparkNode) GetNodeAwsAttributes(ctx context.Context) (SparkNodeAwsAttributes, bool) {
+	var e SparkNodeAwsAttributes
+	if o.NodeAwsAttributes.IsNull() || o.NodeAwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []SparkNodeAwsAttributes
+	d := o.NodeAwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeAwsAttributes sets the value of the NodeAwsAttributes field in SparkNode.
+func (o *SparkNode) SetNodeAwsAttributes(ctx context.Context, v SparkNodeAwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_aws_attributes"]
+	o.NodeAwsAttributes = types.ListValueMust(t, vs)
 }
 
 type SparkNodeAwsAttributes struct {
@@ -10566,6 +15057,31 @@ func (o TerminationReason) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetParameters returns the value of the Parameters field in TerminationReason as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TerminationReason) GetParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.Parameters.IsNull() || o.Parameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Parameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParameters sets the value of the Parameters field in TerminationReason.
+func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	o.Parameters = types.MapValueMust(t, vs)
+}
+
 type UninstallLibraries struct {
 	// Unique identifier for the cluster on which to uninstall these libraries.
 	ClusterId types.String `tfsdk:"cluster_id" tf:""`
@@ -10614,6 +15130,31 @@ func (o UninstallLibraries) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetLibraries returns the value of the Libraries field in UninstallLibraries as
+// a slice of Library values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UninstallLibraries) GetLibraries(ctx context.Context) ([]Library, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []Library
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in UninstallLibraries.
+func (o *UninstallLibraries) SetLibraries(ctx context.Context, v []Library) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
 }
 
 type UninstallLibrariesResponse struct {
@@ -10786,6 +15327,32 @@ func (o UpdateCluster) Type(ctx context.Context) attr.Type {
 			"update_mask": types.StringType,
 		},
 	}
+}
+
+// GetCluster returns the value of the Cluster field in UpdateCluster as
+// a UpdateClusterResource value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCluster) GetCluster(ctx context.Context) (UpdateClusterResource, bool) {
+	var e UpdateClusterResource
+	if o.Cluster.IsNull() || o.Cluster.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateClusterResource
+	d := o.Cluster.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCluster sets the value of the Cluster field in UpdateCluster.
+func (o *UpdateCluster) SetCluster(ctx context.Context, v UpdateClusterResource) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster"]
+	o.Cluster = types.ListValueMust(t, vs)
 }
 
 type UpdateClusterResource struct {
@@ -11060,6 +15627,313 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoscale returns the value of the Autoscale field in UpdateClusterResource as
+// a AutoScale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetAutoscale(ctx context.Context) (AutoScale, bool) {
+	var e AutoScale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []AutoScale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetAutoscale(ctx context.Context, v AutoScale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in UpdateClusterResource as
+// a AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool) {
+	var e AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in UpdateClusterResource as
+// a AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetAzureAttributes(ctx context.Context) (AzureAttributes, bool) {
+	var e AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in UpdateClusterResource as
+// a ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bool) {
+	var e ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in UpdateClusterResource as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetDockerImage returns the value of the DockerImage field in UpdateClusterResource as
+// a DockerImage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetDockerImage(ctx context.Context) (DockerImage, bool) {
+	var e DockerImage
+	if o.DockerImage.IsNull() || o.DockerImage.IsUnknown() {
+		return e, false
+	}
+	var v []DockerImage
+	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDockerImage sets the value of the DockerImage field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetDockerImage(ctx context.Context, v DockerImage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
+	o.DockerImage = types.ListValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in UpdateClusterResource as
+// a GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool) {
+	var e GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in UpdateClusterResource as
+// a slice of InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetInitScripts(ctx context.Context) ([]InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in UpdateClusterResource as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in UpdateClusterResource as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in UpdateClusterResource as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
+}
+
+// GetWorkloadType returns the value of the WorkloadType field in UpdateClusterResource as
+// a WorkloadType value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateClusterResource) GetWorkloadType(ctx context.Context) (WorkloadType, bool) {
+	var e WorkloadType
+	if o.WorkloadType.IsNull() || o.WorkloadType.IsUnknown() {
+		return e, false
+	}
+	var v []WorkloadType
+	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkloadType sets the value of the WorkloadType field in UpdateClusterResource.
+func (o *UpdateClusterResource) SetWorkloadType(ctx context.Context, v WorkloadType) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
+	o.WorkloadType = types.ListValueMust(t, vs)
+}
+
 type UpdateClusterResponse struct {
 }
 
@@ -11220,6 +16094,32 @@ func (o WorkloadType) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClients returns the value of the Clients field in WorkloadType as
+// a ClientsTypes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkloadType) GetClients(ctx context.Context) (ClientsTypes, bool) {
+	var e ClientsTypes
+	if o.Clients.IsNull() || o.Clients.IsUnknown() {
+		return e, false
+	}
+	var v []ClientsTypes
+	d := o.Clients.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClients sets the value of the Clients field in WorkloadType.
+func (o *WorkloadType) SetClients(ctx context.Context, v ClientsTypes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clients"]
+	o.Clients = types.ListValueMust(t, vs)
+}
+
 type WorkspaceStorageInfo struct {
 	// workspace files destination, e.g.
 	// `/Users/user1@databricks.com/my-init.sh`
@@ -11262,97 +16162,3 @@ func (o WorkspaceStorageInfo) Type(ctx context.Context) attr.Type {
 		},
 	}
 }
-
-// Availability type used for all subsequent nodes past the `first_on_demand`
-// ones.
-//
-// Note: If `first_on_demand` is zero, this availability type will be used for
-// the entire cluster.
-
-// Availability type used for all subsequent nodes past the `first_on_demand`
-// ones. Note: If `first_on_demand` is zero (which only happens on pool
-// clusters), this availability type will be used for the entire cluster.
-
-// Permission level
-
-// Permission level
-
-// Determines whether the cluster was created by a user through the UI, created
-// by the Databricks Jobs Scheduler, or through an API request. This is the same
-// as cluster_creator, but read only.
-
-// <needs content added>
-
-// Data security mode decides what data governance model to use when accessing
-// data from a cluster.
-//
-// * `NONE`: No security isolation for multiple users sharing the cluster. Data
-// governance features are not available in this mode. * `SINGLE_USER`: A secure
-// cluster that can only be exclusively used by a single user specified in
-// `single_user_name`. Most programming languages, cluster features and data
-// governance features are available in this mode. * `USER_ISOLATION`: A secure
-// cluster that can be shared by multiple users. Cluster users are fully
-// isolated so that they cannot see each other's data and credentials. Most data
-// governance features are supported in this mode. But programming languages and
-// cluster features might be limited.
-//
-// The following modes are deprecated starting with Databricks Runtime 15.0 and
-// will be removed for future Databricks Runtime versions:
-//
-// * `LEGACY_TABLE_ACL`: This mode is for users migrating from legacy Table ACL
-// clusters. * `LEGACY_PASSTHROUGH`: This mode is for users migrating from
-// legacy Passthrough on high concurrency clusters. * `LEGACY_SINGLE_USER`: This
-// mode is for users migrating from legacy Passthrough on standard clusters. *
-// `LEGACY_SINGLE_USER_STANDARD`: This mode provides a way that doesn’t have
-// UC nor passthrough enabled.
-
-// The type of EBS volumes that will be launched with this cluster.
-
-// The cause of a change in target size.
-
-// This field determines whether the instance pool will contain preemptible VMs,
-// on-demand VMs, or preemptible VMs with a fallback to on-demand VMs if the
-// former is unavailable.
-
-// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
-
-// The current status of the script
-
-// Availability type used for the spot nodes.
-//
-// The default value is defined by
-// InstancePoolConf.instancePoolDefaultAwsAvailability
-
-// Shows the Availability type used for the spot nodes.
-//
-// The default value is defined by
-// InstancePoolConf.instancePoolDefaultAzureAvailability
-
-// Permission level
-
-// Current state of the instance pool.
-
-// The status of a library on a specific cluster.
-
-// The direction to sort by.
-
-// The sorting criteria. By default, clusters are sorted by 3 columns from
-// highest to lowest precedence: cluster state, pinned or unpinned, then cluster
-// name.
-
-// A generic ordering enum for list-based queries.
-
-// Determines the cluster's runtime engine, either standard or Photon.
-//
-// This field is not compatible with legacy `spark_version` values that contain
-// `-photon-`. Remove `-photon-` from the `spark_version` and set
-// `runtime_engine` to `PHOTON`.
-//
-// If left unspecified, the runtime engine defaults to standard unless the
-// spark_version contains -photon-, in which case Photon will be used.
-
-// Current state of the cluster.
-
-// status code indicating why the cluster was terminated
-
-// type of the termination

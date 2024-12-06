@@ -14,7 +14,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/sql"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -67,6 +67,32 @@ func (o CreateDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDashboard returns the value of the Dashboard field in CreateDashboardRequest as
+// a Dashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, bool) {
+	var e Dashboard
+	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v []Dashboard
+	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboard sets the value of the Dashboard field in CreateDashboardRequest.
+func (o *CreateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
+	o.Dashboard = types.ListValueMust(t, vs)
+}
+
 // Create dashboard schedule
 type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
@@ -116,6 +142,32 @@ func (o CreateScheduleRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSchedule returns the value of the Schedule field in CreateScheduleRequest as
+// a Schedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool) {
+	var e Schedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []Schedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in CreateScheduleRequest.
+func (o *CreateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
 }
 
 // Create schedule subscription
@@ -171,6 +223,32 @@ func (o CreateSubscriptionRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscription returns the value of the Subscription field in CreateSubscriptionRequest as
+// a Subscription value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscription, bool) {
+	var e Subscription
+	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
+		return e, false
+	}
+	var v []Subscription
+	d := o.Subscription.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSubscription sets the value of the Subscription field in CreateSubscriptionRequest.
+func (o *CreateSubscriptionRequest) SetSubscription(ctx context.Context, v Subscription) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscription"]
+	o.Subscription = types.ListValueMust(t, vs)
 }
 
 type CronSchedule struct {
@@ -549,6 +627,58 @@ func (o GenieAttachment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetQuery returns the value of the Query field in GenieAttachment as
+// a QueryAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieAttachment) GetQuery(ctx context.Context) (QueryAttachment, bool) {
+	var e QueryAttachment
+	if o.Query.IsNull() || o.Query.IsUnknown() {
+		return e, false
+	}
+	var v []QueryAttachment
+	d := o.Query.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuery sets the value of the Query field in GenieAttachment.
+func (o *GenieAttachment) SetQuery(ctx context.Context, v QueryAttachment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
+	o.Query = types.ListValueMust(t, vs)
+}
+
+// GetText returns the value of the Text field in GenieAttachment as
+// a TextAttachment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
+	var e TextAttachment
+	if o.Text.IsNull() || o.Text.IsUnknown() {
+		return e, false
+	}
+	var v []TextAttachment
+	d := o.Text.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetText sets the value of the Text field in GenieAttachment.
+func (o *GenieAttachment) SetText(ctx context.Context, v TextAttachment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["text"]
+	o.Text = types.ListValueMust(t, vs)
+}
+
 type GenieConversation struct {
 	// Timestamp when the message was created
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
@@ -837,7 +967,7 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRea
 // SDK values.
 func (a GenieGetMessageQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"statement_response": reflect.TypeOf(sql.StatementResponse{}),
+		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
 	}
 }
 
@@ -861,6 +991,32 @@ func (o GenieGetMessageQueryResultResponse) Type(ctx context.Context) attr.Type 
 			},
 		},
 	}
+}
+
+// GetStatementResponse returns the value of the StatementResponse field in GenieGetMessageQueryResultResponse as
+// a sql_tf.StatementResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
+	var e sql_tf.StatementResponse
+	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
+		return e, false
+	}
+	var v []sql_tf.StatementResponse
+	d := o.StatementResponse.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatementResponse sets the value of the StatementResponse field in GenieGetMessageQueryResultResponse.
+func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statement_response"]
+	o.StatementResponse = types.ListValueMust(t, vs)
 }
 
 type GenieMessage struct {
@@ -970,6 +1126,83 @@ func (o GenieMessage) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAttachments returns the value of the Attachments field in GenieMessage as
+// a slice of GenieAttachment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieMessage) GetAttachments(ctx context.Context) ([]GenieAttachment, bool) {
+	if o.Attachments.IsNull() || o.Attachments.IsUnknown() {
+		return nil, false
+	}
+	var v []GenieAttachment
+	d := o.Attachments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAttachments sets the value of the Attachments field in GenieMessage.
+func (o *GenieMessage) SetAttachments(ctx context.Context, v []GenieAttachment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["attachments"]
+	o.Attachments = types.ListValueMust(t, vs)
+}
+
+// GetError returns the value of the Error field in GenieMessage as
+// a MessageError value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
+	var e MessageError
+	if o.Error.IsNull() || o.Error.IsUnknown() {
+		return e, false
+	}
+	var v []MessageError
+	d := o.Error.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetError sets the value of the Error field in GenieMessage.
+func (o *GenieMessage) SetError(ctx context.Context, v MessageError) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	o.Error = types.ListValueMust(t, vs)
+}
+
+// GetQueryResult returns the value of the QueryResult field in GenieMessage as
+// a Result value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
+	var e Result
+	if o.QueryResult.IsNull() || o.QueryResult.IsUnknown() {
+		return e, false
+	}
+	var v []Result
+	d := o.QueryResult.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryResult sets the value of the QueryResult field in GenieMessage.
+func (o *GenieMessage) SetQueryResult(ctx context.Context, v Result) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_result"]
+	o.QueryResult = types.ListValueMust(t, vs)
+}
+
 type GenieStartConversationMessageRequest struct {
 	// The text of the message that starts the conversation.
 	Content types.String `tfsdk:"content" tf:""`
@@ -1075,6 +1308,58 @@ func (o GenieStartConversationResponse) Type(ctx context.Context) attr.Type {
 			"message_id": types.StringType,
 		},
 	}
+}
+
+// GetConversation returns the value of the Conversation field in GenieStartConversationResponse as
+// a GenieConversation value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (GenieConversation, bool) {
+	var e GenieConversation
+	if o.Conversation.IsNull() || o.Conversation.IsUnknown() {
+		return e, false
+	}
+	var v []GenieConversation
+	d := o.Conversation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConversation sets the value of the Conversation field in GenieStartConversationResponse.
+func (o *GenieStartConversationResponse) SetConversation(ctx context.Context, v GenieConversation) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["conversation"]
+	o.Conversation = types.ListValueMust(t, vs)
+}
+
+// GetMessage returns the value of the Message field in GenieStartConversationResponse as
+// a GenieMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieMessage, bool) {
+	var e GenieMessage
+	if o.Message.IsNull() || o.Message.IsUnknown() {
+		return e, false
+	}
+	var v []GenieMessage
+	d := o.Message.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMessage sets the value of the Message field in GenieStartConversationResponse.
+func (o *GenieStartConversationResponse) SetMessage(ctx context.Context, v GenieMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["message"]
+	o.Message = types.ListValueMust(t, vs)
 }
 
 // Get dashboard
@@ -1368,6 +1653,31 @@ func (o ListDashboardsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDashboards returns the value of the Dashboards field in ListDashboardsResponse as
+// a slice of Dashboard values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDashboardsResponse) GetDashboards(ctx context.Context) ([]Dashboard, bool) {
+	if o.Dashboards.IsNull() || o.Dashboards.IsUnknown() {
+		return nil, false
+	}
+	var v []Dashboard
+	d := o.Dashboards.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDashboards sets the value of the Dashboards field in ListDashboardsResponse.
+func (o *ListDashboardsResponse) SetDashboards(ctx context.Context, v []Dashboard) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboards"]
+	o.Dashboards = types.ListValueMust(t, vs)
+}
+
 // List dashboard schedules
 type ListSchedulesRequest struct {
 	// UUID identifying the dashboard to which the schedules belongs.
@@ -1470,6 +1780,31 @@ func (o ListSchedulesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSchedules returns the value of the Schedules field in ListSchedulesResponse as
+// a slice of Schedule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSchedulesResponse) GetSchedules(ctx context.Context) ([]Schedule, bool) {
+	if o.Schedules.IsNull() || o.Schedules.IsUnknown() {
+		return nil, false
+	}
+	var v []Schedule
+	d := o.Schedules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSchedules sets the value of the Schedules field in ListSchedulesResponse.
+func (o *ListSchedulesResponse) SetSchedules(ctx context.Context, v []Schedule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedules"]
+	o.Schedules = types.ListValueMust(t, vs)
 }
 
 // List schedule subscriptions
@@ -1578,6 +1913,31 @@ func (o ListSubscriptionsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in ListSubscriptionsResponse as
+// a slice of Subscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSubscriptionsResponse) GetSubscriptions(ctx context.Context) ([]Subscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []Subscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in ListSubscriptionsResponse.
+func (o *ListSubscriptionsResponse) SetSubscriptions(ctx context.Context, v []Subscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
 type MessageError struct {
@@ -1984,6 +2344,32 @@ func (o Schedule) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCronSchedule returns the value of the CronSchedule field in Schedule as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.CronSchedule.IsNull() || o.CronSchedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.CronSchedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCronSchedule sets the value of the CronSchedule field in Schedule.
+func (o *Schedule) SetCronSchedule(ctx context.Context, v CronSchedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cron_schedule"]
+	o.CronSchedule = types.ListValueMust(t, vs)
+}
+
 type Subscriber struct {
 	// The destination to receive the subscription email. This parameter is
 	// mutually exclusive with `user_subscriber`.
@@ -2037,6 +2423,58 @@ func (o Subscriber) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDestinationSubscriber returns the value of the DestinationSubscriber field in Subscriber as
+// a SubscriptionSubscriberDestination value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (SubscriptionSubscriberDestination, bool) {
+	var e SubscriptionSubscriberDestination
+	if o.DestinationSubscriber.IsNull() || o.DestinationSubscriber.IsUnknown() {
+		return e, false
+	}
+	var v []SubscriptionSubscriberDestination
+	d := o.DestinationSubscriber.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDestinationSubscriber sets the value of the DestinationSubscriber field in Subscriber.
+func (o *Subscriber) SetDestinationSubscriber(ctx context.Context, v SubscriptionSubscriberDestination) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_subscriber"]
+	o.DestinationSubscriber = types.ListValueMust(t, vs)
+}
+
+// GetUserSubscriber returns the value of the UserSubscriber field in Subscriber as
+// a SubscriptionSubscriberUser value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscriberUser, bool) {
+	var e SubscriptionSubscriberUser
+	if o.UserSubscriber.IsNull() || o.UserSubscriber.IsUnknown() {
+		return e, false
+	}
+	var v []SubscriptionSubscriberUser
+	d := o.UserSubscriber.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUserSubscriber sets the value of the UserSubscriber field in Subscriber.
+func (o *Subscriber) SetUserSubscriber(ctx context.Context, v SubscriptionSubscriberUser) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_subscriber"]
+	o.UserSubscriber = types.ListValueMust(t, vs)
 }
 
 type Subscription struct {
@@ -2115,6 +2553,32 @@ func (o Subscription) Type(ctx context.Context) attr.Type {
 			"update_time":     types.StringType,
 		},
 	}
+}
+
+// GetSubscriber returns the value of the Subscriber field in Subscription as
+// a Subscriber value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
+	var e Subscriber
+	if o.Subscriber.IsNull() || o.Subscriber.IsUnknown() {
+		return e, false
+	}
+	var v []Subscriber
+	d := o.Subscriber.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSubscriber sets the value of the Subscriber field in Subscription.
+func (o *Subscription) SetSubscriber(ctx context.Context, v Subscriber) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriber"]
+	o.Subscriber = types.ListValueMust(t, vs)
 }
 
 type SubscriptionSubscriberDestination struct {
@@ -2456,6 +2920,32 @@ func (o UpdateDashboardRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDashboard returns the value of the Dashboard field in UpdateDashboardRequest as
+// a Dashboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, bool) {
+	var e Dashboard
+	if o.Dashboard.IsNull() || o.Dashboard.IsUnknown() {
+		return e, false
+	}
+	var v []Dashboard
+	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboard sets the value of the Dashboard field in UpdateDashboardRequest.
+func (o *UpdateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
+	o.Dashboard = types.ListValueMust(t, vs)
+}
+
 // Update dashboard schedule
 type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
@@ -2511,18 +3001,28 @@ func (o UpdateScheduleRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
-// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart context
-// step to determine relevant context. * `ASKING_AI`: Waiting for the LLM to
-// respond to the users question. * `EXECUTING_QUERY`: Executing AI provided SQL
-// query. Get the SQL query result by calling
-// [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
-// **Important: The message status will stay in the `EXECUTING_QUERY` until a
-// client calls [getMessageQueryResult](:method:genie/getMessageQueryResult)**.
-// * `FAILED`: Generating a response or the executing the query failed. Please
-// see `error` field. * `COMPLETED`: Message processing is completed. Results
-// are in the `attachments` field. Get the SQL query result by calling
-// [getMessageQueryResult](:method:genie/getMessageQueryResult) API. *
-// `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL result
-// is not available anymore. The user needs to execute the query again. *
-// `CANCELLED`: Message has been cancelled.
+// GetSchedule returns the value of the Schedule field in UpdateScheduleRequest as
+// a Schedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool) {
+	var e Schedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []Schedule
+	d := o.Schedule.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in UpdateScheduleRequest.
+func (o *UpdateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
+	o.Schedule = types.ListValueMust(t, vs)
+}

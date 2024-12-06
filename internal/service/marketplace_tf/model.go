@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -109,6 +110,32 @@ func (o AddExchangeForListingResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchangeForListing returns the value of the ExchangeForListing field in AddExchangeForListingResponse as
+// a ExchangeListing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AddExchangeForListingResponse) GetExchangeForListing(ctx context.Context) (ExchangeListing, bool) {
+	var e ExchangeListing
+	if o.ExchangeForListing.IsNull() || o.ExchangeForListing.IsUnknown() {
+		return e, false
+	}
+	var v []ExchangeListing
+	d := o.ExchangeForListing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExchangeForListing sets the value of the ExchangeForListing field in AddExchangeForListingResponse.
+func (o *AddExchangeForListingResponse) SetExchangeForListing(ctx context.Context, v ExchangeListing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_for_listing"]
+	o.ExchangeForListing = types.ListValueMust(t, vs)
+}
+
 // Get one batch of listings. One may specify up to 50 IDs per request.
 type BatchGetListingsRequest struct {
 	Ids types.List `tfsdk:"-"`
@@ -155,6 +182,31 @@ func (o BatchGetListingsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIds returns the value of the Ids field in BatchGetListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchGetListingsRequest) GetIds(ctx context.Context) ([]types.String, bool) {
+	if o.Ids.IsNull() || o.Ids.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Ids.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIds sets the value of the Ids field in BatchGetListingsRequest.
+func (o *BatchGetListingsRequest) SetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	o.Ids = types.ListValueMust(t, vs)
+}
+
 type BatchGetListingsResponse struct {
 	Listings types.List `tfsdk:"listings" tf:"optional"`
 }
@@ -198,6 +250,31 @@ func (o BatchGetListingsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetListings returns the value of the Listings field in BatchGetListingsResponse as
+// a slice of Listing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchGetListingsResponse) GetListings(ctx context.Context) ([]Listing, bool) {
+	if o.Listings.IsNull() || o.Listings.IsUnknown() {
+		return nil, false
+	}
+	var v []Listing
+	d := o.Listings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetListings sets the value of the Listings field in BatchGetListingsResponse.
+func (o *BatchGetListingsResponse) SetListings(ctx context.Context, v []Listing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	o.Listings = types.ListValueMust(t, vs)
 }
 
 // Get one batch of providers. One may specify up to 50 IDs per request.
@@ -246,6 +323,31 @@ func (o BatchGetProvidersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIds returns the value of the Ids field in BatchGetProvidersRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchGetProvidersRequest) GetIds(ctx context.Context) ([]types.String, bool) {
+	if o.Ids.IsNull() || o.Ids.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Ids.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIds sets the value of the Ids field in BatchGetProvidersRequest.
+func (o *BatchGetProvidersRequest) SetIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	o.Ids = types.ListValueMust(t, vs)
+}
+
 type BatchGetProvidersResponse struct {
 	Providers types.List `tfsdk:"providers" tf:"optional"`
 }
@@ -289,6 +391,31 @@ func (o BatchGetProvidersResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetProviders returns the value of the Providers field in BatchGetProvidersResponse as
+// a slice of ProviderInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BatchGetProvidersResponse) GetProviders(ctx context.Context) ([]ProviderInfo, bool) {
+	if o.Providers.IsNull() || o.Providers.IsUnknown() {
+		return nil, false
+	}
+	var v []ProviderInfo
+	d := o.Providers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProviders sets the value of the Providers field in BatchGetProvidersResponse.
+func (o *BatchGetProvidersResponse) SetProviders(ctx context.Context, v []ProviderInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	o.Providers = types.ListValueMust(t, vs)
 }
 
 type ConsumerTerms struct {
@@ -432,6 +559,32 @@ func (o CreateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilter returns the value of the Filter field in CreateExchangeFilterRequest as
+// a ExchangeFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFilter, bool) {
+	var e ExchangeFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []ExchangeFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in CreateExchangeFilterRequest.
+func (o *CreateExchangeFilterRequest) SetFilter(ctx context.Context, v ExchangeFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
+}
+
 type CreateExchangeFilterResponse struct {
 	FilterId types.String `tfsdk:"filter_id" tf:"optional"`
 }
@@ -516,6 +669,32 @@ func (o CreateExchangeRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExchange returns the value of the Exchange field in CreateExchangeRequest as
+// a Exchange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool) {
+	var e Exchange
+	if o.Exchange.IsNull() || o.Exchange.IsUnknown() {
+		return e, false
+	}
+	var v []Exchange
+	d := o.Exchange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExchange sets the value of the Exchange field in CreateExchangeRequest.
+func (o *CreateExchangeRequest) SetExchange(ctx context.Context, v Exchange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
+	o.Exchange = types.ListValueMust(t, vs)
 }
 
 type CreateExchangeResponse struct {
@@ -616,6 +795,32 @@ func (o CreateFileRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFileParent returns the value of the FileParent field in CreateFileRequest as
+// a FileParent value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFileRequest) GetFileParent(ctx context.Context) (FileParent, bool) {
+	var e FileParent
+	if o.FileParent.IsNull() || o.FileParent.IsUnknown() {
+		return e, false
+	}
+	var v []FileParent
+	d := o.FileParent.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileParent sets the value of the FileParent field in CreateFileRequest.
+func (o *CreateFileRequest) SetFileParent(ctx context.Context, v FileParent) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
+	o.FileParent = types.ListValueMust(t, vs)
+}
+
 type CreateFileResponse struct {
 	FileInfo types.List `tfsdk:"file_info" tf:"optional,object"`
 	// Pre-signed POST URL to blob storage
@@ -663,6 +868,32 @@ func (o CreateFileResponse) Type(ctx context.Context) attr.Type {
 			"upload_url": types.StringType,
 		},
 	}
+}
+
+// GetFileInfo returns the value of the FileInfo field in CreateFileResponse as
+// a FileInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
+	var e FileInfo
+	if o.FileInfo.IsNull() || o.FileInfo.IsUnknown() {
+		return e, false
+	}
+	var v []FileInfo
+	d := o.FileInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileInfo sets the value of the FileInfo field in CreateFileResponse.
+func (o *CreateFileResponse) SetFileInfo(ctx context.Context, v FileInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_info"]
+	o.FileInfo = types.ListValueMust(t, vs)
 }
 
 type CreateInstallationRequest struct {
@@ -733,6 +964,58 @@ func (o CreateInstallationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAcceptedConsumerTerms returns the value of the AcceptedConsumerTerms field in CreateInstallationRequest as
+// a ConsumerTerms value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstallationRequest) GetAcceptedConsumerTerms(ctx context.Context) (ConsumerTerms, bool) {
+	var e ConsumerTerms
+	if o.AcceptedConsumerTerms.IsNull() || o.AcceptedConsumerTerms.IsUnknown() {
+		return e, false
+	}
+	var v []ConsumerTerms
+	d := o.AcceptedConsumerTerms.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAcceptedConsumerTerms sets the value of the AcceptedConsumerTerms field in CreateInstallationRequest.
+func (o *CreateInstallationRequest) SetAcceptedConsumerTerms(ctx context.Context, v ConsumerTerms) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["accepted_consumer_terms"]
+	o.AcceptedConsumerTerms = types.ListValueMust(t, vs)
+}
+
+// GetRepoDetail returns the value of the RepoDetail field in CreateInstallationRequest as
+// a RepoInstallation value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstallationRequest) GetRepoDetail(ctx context.Context) (RepoInstallation, bool) {
+	var e RepoInstallation
+	if o.RepoDetail.IsNull() || o.RepoDetail.IsUnknown() {
+		return e, false
+	}
+	var v []RepoInstallation
+	d := o.RepoDetail.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRepoDetail sets the value of the RepoDetail field in CreateInstallationRequest.
+func (o *CreateInstallationRequest) SetRepoDetail(ctx context.Context, v RepoInstallation) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repo_detail"]
+	o.RepoDetail = types.ListValueMust(t, vs)
+}
+
 type CreateListingRequest struct {
 	Listing types.List `tfsdk:"listing" tf:"object"`
 }
@@ -776,6 +1059,32 @@ func (o CreateListingRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetListing returns the value of the Listing field in CreateListingRequest as
+// a Listing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
+	var e Listing
+	if o.Listing.IsNull() || o.Listing.IsUnknown() {
+		return e, false
+	}
+	var v []Listing
+	d := o.Listing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetListing sets the value of the Listing field in CreateListingRequest.
+func (o *CreateListingRequest) SetListing(ctx context.Context, v Listing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
+	o.Listing = types.ListValueMust(t, vs)
 }
 
 type CreateListingResponse struct {
@@ -897,6 +1206,32 @@ func (o CreatePersonalizationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAcceptedConsumerTerms returns the value of the AcceptedConsumerTerms field in CreatePersonalizationRequest as
+// a ConsumerTerms value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePersonalizationRequest) GetAcceptedConsumerTerms(ctx context.Context) (ConsumerTerms, bool) {
+	var e ConsumerTerms
+	if o.AcceptedConsumerTerms.IsNull() || o.AcceptedConsumerTerms.IsUnknown() {
+		return e, false
+	}
+	var v []ConsumerTerms
+	d := o.AcceptedConsumerTerms.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAcceptedConsumerTerms sets the value of the AcceptedConsumerTerms field in CreatePersonalizationRequest.
+func (o *CreatePersonalizationRequest) SetAcceptedConsumerTerms(ctx context.Context, v ConsumerTerms) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["accepted_consumer_terms"]
+	o.AcceptedConsumerTerms = types.ListValueMust(t, vs)
+}
+
 type CreatePersonalizationRequestResponse struct {
 	Id types.String `tfsdk:"id" tf:"optional"`
 }
@@ -981,6 +1316,32 @@ func (o CreateProviderRequest) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetProvider returns the value of the Provider field in CreateProviderRequest as
+// a ProviderInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, bool) {
+	var e ProviderInfo
+	if o.Provider.IsNull() || o.Provider.IsUnknown() {
+		return e, false
+	}
+	var v []ProviderInfo
+	d := o.Provider.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvider sets the value of the Provider field in CreateProviderRequest.
+func (o *CreateProviderRequest) SetProvider(ctx context.Context, v ProviderInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
+	o.Provider = types.ListValueMust(t, vs)
 }
 
 type CreateProviderResponse struct {
@@ -1621,6 +1982,56 @@ func (o Exchange) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilters returns the value of the Filters field in Exchange as
+// a slice of ExchangeFilter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Exchange) GetFilters(ctx context.Context) ([]ExchangeFilter, bool) {
+	if o.Filters.IsNull() || o.Filters.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeFilter
+	d := o.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFilters sets the value of the Filters field in Exchange.
+func (o *Exchange) SetFilters(ctx context.Context, v []ExchangeFilter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	o.Filters = types.ListValueMust(t, vs)
+}
+
+// GetLinkedListings returns the value of the LinkedListings field in Exchange as
+// a slice of ExchangeListing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Exchange) GetLinkedListings(ctx context.Context) ([]ExchangeListing, bool) {
+	if o.LinkedListings.IsNull() || o.LinkedListings.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeListing
+	d := o.LinkedListings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLinkedListings sets the value of the LinkedListings field in Exchange.
+func (o *Exchange) SetLinkedListings(ctx context.Context, v []ExchangeListing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["linked_listings"]
+	o.LinkedListings = types.ListValueMust(t, vs)
+}
+
 type ExchangeFilter struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 
@@ -1841,6 +2252,32 @@ func (o FileInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFileParent returns the value of the FileParent field in FileInfo as
+// a FileParent value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FileInfo) GetFileParent(ctx context.Context) (FileParent, bool) {
+	var e FileParent
+	if o.FileParent.IsNull() || o.FileParent.IsUnknown() {
+		return e, false
+	}
+	var v []FileParent
+	d := o.FileParent.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileParent sets the value of the FileParent field in FileInfo.
+func (o *FileInfo) SetFileParent(ctx context.Context, v FileParent) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
+	o.FileParent = types.ListValueMust(t, vs)
+}
+
 type FileParent struct {
 	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
 	// TODO make the following fields required
@@ -1973,6 +2410,32 @@ func (o GetExchangeResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchange returns the value of the Exchange field in GetExchangeResponse as
+// a Exchange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetExchangeResponse) GetExchange(ctx context.Context) (Exchange, bool) {
+	var e Exchange
+	if o.Exchange.IsNull() || o.Exchange.IsUnknown() {
+		return e, false
+	}
+	var v []Exchange
+	d := o.Exchange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExchange sets the value of the Exchange field in GetExchangeResponse.
+func (o *GetExchangeResponse) SetExchange(ctx context.Context, v Exchange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
+	o.Exchange = types.ListValueMust(t, vs)
+}
+
 // Get a file
 type GetFileRequest struct {
 	FileId types.String `tfsdk:"-"`
@@ -2058,6 +2521,32 @@ func (o GetFileResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFileInfo returns the value of the FileInfo field in GetFileResponse as
+// a FileInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
+	var e FileInfo
+	if o.FileInfo.IsNull() || o.FileInfo.IsUnknown() {
+		return e, false
+	}
+	var v []FileInfo
+	d := o.FileInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileInfo sets the value of the FileInfo field in GetFileResponse.
+func (o *GetFileResponse) SetFileInfo(ctx context.Context, v FileInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_info"]
+	o.FileInfo = types.ListValueMust(t, vs)
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse struct {
@@ -2201,6 +2690,31 @@ func (o GetListingContentMetadataResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSharedDataObjects returns the value of the SharedDataObjects field in GetListingContentMetadataResponse as
+// a slice of SharedDataObject values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetListingContentMetadataResponse) GetSharedDataObjects(ctx context.Context) ([]SharedDataObject, bool) {
+	if o.SharedDataObjects.IsNull() || o.SharedDataObjects.IsUnknown() {
+		return nil, false
+	}
+	var v []SharedDataObject
+	d := o.SharedDataObjects.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSharedDataObjects sets the value of the SharedDataObjects field in GetListingContentMetadataResponse.
+func (o *GetListingContentMetadataResponse) SetSharedDataObjects(ctx context.Context, v []SharedDataObject) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shared_data_objects"]
+	o.SharedDataObjects = types.ListValueMust(t, vs)
+}
+
 // Get listing
 type GetListingRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -2286,6 +2800,32 @@ func (o GetListingResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetListing returns the value of the Listing field in GetListingResponse as
+// a Listing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetListingResponse) GetListing(ctx context.Context) (Listing, bool) {
+	var e Listing
+	if o.Listing.IsNull() || o.Listing.IsUnknown() {
+		return e, false
+	}
+	var v []Listing
+	d := o.Listing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetListing sets the value of the Listing field in GetListingResponse.
+func (o *GetListingResponse) SetListing(ctx context.Context, v Listing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
+	o.Listing = types.ListValueMust(t, vs)
 }
 
 // List listings
@@ -2383,6 +2923,31 @@ func (o GetListingsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetListings returns the value of the Listings field in GetListingsResponse as
+// a slice of Listing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetListingsResponse) GetListings(ctx context.Context) ([]Listing, bool) {
+	if o.Listings.IsNull() || o.Listings.IsUnknown() {
+		return nil, false
+	}
+	var v []Listing
+	d := o.Listings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetListings sets the value of the Listings field in GetListingsResponse.
+func (o *GetListingsResponse) SetListings(ctx context.Context, v []Listing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	o.Listings = types.ListValueMust(t, vs)
+}
+
 // Get the personalization request for a listing
 type GetPersonalizationRequestRequest struct {
 	ListingId types.String `tfsdk:"-"`
@@ -2468,6 +3033,31 @@ func (o GetPersonalizationRequestResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPersonalizationRequests returns the value of the PersonalizationRequests field in GetPersonalizationRequestResponse as
+// a slice of PersonalizationRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPersonalizationRequestResponse) GetPersonalizationRequests(ctx context.Context) ([]PersonalizationRequest, bool) {
+	if o.PersonalizationRequests.IsNull() || o.PersonalizationRequests.IsUnknown() {
+		return nil, false
+	}
+	var v []PersonalizationRequest
+	d := o.PersonalizationRequests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPersonalizationRequests sets the value of the PersonalizationRequests field in GetPersonalizationRequestResponse.
+func (o *GetPersonalizationRequestResponse) SetPersonalizationRequests(ctx context.Context, v []PersonalizationRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["personalization_requests"]
+	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
 // Get a provider
@@ -2557,6 +3147,32 @@ func (o GetProviderResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProvider returns the value of the Provider field in GetProviderResponse as
+// a ProviderInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetProviderResponse) GetProvider(ctx context.Context) (ProviderInfo, bool) {
+	var e ProviderInfo
+	if o.Provider.IsNull() || o.Provider.IsUnknown() {
+		return e, false
+	}
+	var v []ProviderInfo
+	d := o.Provider.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvider sets the value of the Provider field in GetProviderResponse.
+func (o *GetProviderResponse) SetProvider(ctx context.Context, v ProviderInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
+	o.Provider = types.ListValueMust(t, vs)
+}
+
 type Installation struct {
 	Installation types.List `tfsdk:"installation" tf:"optional,object"`
 }
@@ -2600,6 +3216,32 @@ func (o Installation) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInstallation returns the value of the Installation field in Installation as
+// a InstallationDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Installation) GetInstallation(ctx context.Context) (InstallationDetail, bool) {
+	var e InstallationDetail
+	if o.Installation.IsNull() || o.Installation.IsUnknown() {
+		return e, false
+	}
+	var v []InstallationDetail
+	d := o.Installation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInstallation sets the value of the Installation field in Installation.
+func (o *Installation) SetInstallation(ctx context.Context, v InstallationDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
+	o.Installation = types.ListValueMust(t, vs)
 }
 
 type InstallationDetail struct {
@@ -2698,6 +3340,57 @@ func (o InstallationDetail) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTokenDetail returns the value of the TokenDetail field in InstallationDetail as
+// a TokenDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstallationDetail) GetTokenDetail(ctx context.Context) (TokenDetail, bool) {
+	var e TokenDetail
+	if o.TokenDetail.IsNull() || o.TokenDetail.IsUnknown() {
+		return e, false
+	}
+	var v []TokenDetail
+	d := o.TokenDetail.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTokenDetail sets the value of the TokenDetail field in InstallationDetail.
+func (o *InstallationDetail) SetTokenDetail(ctx context.Context, v TokenDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_detail"]
+	o.TokenDetail = types.ListValueMust(t, vs)
+}
+
+// GetTokens returns the value of the Tokens field in InstallationDetail as
+// a slice of TokenInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstallationDetail) GetTokens(ctx context.Context) ([]TokenInfo, bool) {
+	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
+		return nil, false
+	}
+	var v []TokenInfo
+	d := o.Tokens.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokens sets the value of the Tokens field in InstallationDetail.
+func (o *InstallationDetail) SetTokens(ctx context.Context, v []TokenInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	o.Tokens = types.ListValueMust(t, vs)
+}
+
 // List all installations
 type ListAllInstallationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2793,6 +3486,31 @@ func (o ListAllInstallationsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInstallations returns the value of the Installations field in ListAllInstallationsResponse as
+// a slice of InstallationDetail values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAllInstallationsResponse) GetInstallations(ctx context.Context) ([]InstallationDetail, bool) {
+	if o.Installations.IsNull() || o.Installations.IsUnknown() {
+		return nil, false
+	}
+	var v []InstallationDetail
+	d := o.Installations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInstallations sets the value of the Installations field in ListAllInstallationsResponse.
+func (o *ListAllInstallationsResponse) SetInstallations(ctx context.Context, v []InstallationDetail) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installations"]
+	o.Installations = types.ListValueMust(t, vs)
+}
+
 // List all personalization requests
 type ListAllPersonalizationRequestsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2886,6 +3604,31 @@ func (o ListAllPersonalizationRequestsResponse) Type(ctx context.Context) attr.T
 			},
 		},
 	}
+}
+
+// GetPersonalizationRequests returns the value of the PersonalizationRequests field in ListAllPersonalizationRequestsResponse as
+// a slice of PersonalizationRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAllPersonalizationRequestsResponse) GetPersonalizationRequests(ctx context.Context) ([]PersonalizationRequest, bool) {
+	if o.PersonalizationRequests.IsNull() || o.PersonalizationRequests.IsUnknown() {
+		return nil, false
+	}
+	var v []PersonalizationRequest
+	d := o.PersonalizationRequests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPersonalizationRequests sets the value of the PersonalizationRequests field in ListAllPersonalizationRequestsResponse.
+func (o *ListAllPersonalizationRequestsResponse) SetPersonalizationRequests(ctx context.Context, v []PersonalizationRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["personalization_requests"]
+	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
 // List exchange filters
@@ -2987,6 +3730,31 @@ func (o ListExchangeFiltersResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilters returns the value of the Filters field in ListExchangeFiltersResponse as
+// a slice of ExchangeFilter values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExchangeFiltersResponse) GetFilters(ctx context.Context) ([]ExchangeFilter, bool) {
+	if o.Filters.IsNull() || o.Filters.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeFilter
+	d := o.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFilters sets the value of the Filters field in ListExchangeFiltersResponse.
+func (o *ListExchangeFiltersResponse) SetFilters(ctx context.Context, v []ExchangeFilter) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	o.Filters = types.ListValueMust(t, vs)
+}
+
 // List exchanges for listing
 type ListExchangesForListingRequest struct {
 	ListingId types.String `tfsdk:"-"`
@@ -3086,6 +3854,31 @@ func (o ListExchangesForListingResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchangeListing returns the value of the ExchangeListing field in ListExchangesForListingResponse as
+// a slice of ExchangeListing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExchangesForListingResponse) GetExchangeListing(ctx context.Context) ([]ExchangeListing, bool) {
+	if o.ExchangeListing.IsNull() || o.ExchangeListing.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeListing
+	d := o.ExchangeListing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExchangeListing sets the value of the ExchangeListing field in ListExchangesForListingResponse.
+func (o *ListExchangesForListingResponse) SetExchangeListing(ctx context.Context, v []ExchangeListing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_listing"]
+	o.ExchangeListing = types.ListValueMust(t, vs)
+}
+
 // List exchanges
 type ListExchangesRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
@@ -3181,6 +3974,31 @@ func (o ListExchangesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchanges returns the value of the Exchanges field in ListExchangesResponse as
+// a slice of Exchange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExchangesResponse) GetExchanges(ctx context.Context) ([]Exchange, bool) {
+	if o.Exchanges.IsNull() || o.Exchanges.IsUnknown() {
+		return nil, false
+	}
+	var v []Exchange
+	d := o.Exchanges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExchanges sets the value of the Exchanges field in ListExchangesResponse.
+func (o *ListExchangesResponse) SetExchanges(ctx context.Context, v []Exchange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchanges"]
+	o.Exchanges = types.ListValueMust(t, vs)
+}
+
 // List files
 type ListFilesRequest struct {
 	FileParent types.List `tfsdk:"-"`
@@ -3235,6 +4053,32 @@ func (o ListFilesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFileParent returns the value of the FileParent field in ListFilesRequest as
+// a FileParent value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFilesRequest) GetFileParent(ctx context.Context) (FileParent, bool) {
+	var e FileParent
+	if o.FileParent.IsNull() || o.FileParent.IsUnknown() {
+		return e, false
+	}
+	var v []FileParent
+	d := o.FileParent.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFileParent sets the value of the FileParent field in ListFilesRequest.
+func (o *ListFilesRequest) SetFileParent(ctx context.Context, v FileParent) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
+	o.FileParent = types.ListValueMust(t, vs)
+}
+
 type ListFilesResponse struct {
 	FileInfos types.List `tfsdk:"file_infos" tf:"optional"`
 
@@ -3282,6 +4126,31 @@ func (o ListFilesResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetFileInfos returns the value of the FileInfos field in ListFilesResponse as
+// a slice of FileInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFilesResponse) GetFileInfos(ctx context.Context) ([]FileInfo, bool) {
+	if o.FileInfos.IsNull() || o.FileInfos.IsUnknown() {
+		return nil, false
+	}
+	var v []FileInfo
+	d := o.FileInfos.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFileInfos sets the value of the FileInfos field in ListFilesResponse.
+func (o *ListFilesResponse) SetFileInfos(ctx context.Context, v []FileInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_infos"]
+	o.FileInfos = types.ListValueMust(t, vs)
 }
 
 // List all listing fulfillments
@@ -3383,6 +4252,31 @@ func (o ListFulfillmentsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFulfillments returns the value of the Fulfillments field in ListFulfillmentsResponse as
+// a slice of ListingFulfillment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFulfillmentsResponse) GetFulfillments(ctx context.Context) ([]ListingFulfillment, bool) {
+	if o.Fulfillments.IsNull() || o.Fulfillments.IsUnknown() {
+		return nil, false
+	}
+	var v []ListingFulfillment
+	d := o.Fulfillments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFulfillments sets the value of the Fulfillments field in ListFulfillmentsResponse.
+func (o *ListFulfillmentsResponse) SetFulfillments(ctx context.Context, v []ListingFulfillment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fulfillments"]
+	o.Fulfillments = types.ListValueMust(t, vs)
+}
+
 // List installations for a listing
 type ListInstallationsRequest struct {
 	ListingId types.String `tfsdk:"-"`
@@ -3480,6 +4374,31 @@ func (o ListInstallationsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetInstallations returns the value of the Installations field in ListInstallationsResponse as
+// a slice of InstallationDetail values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListInstallationsResponse) GetInstallations(ctx context.Context) ([]InstallationDetail, bool) {
+	if o.Installations.IsNull() || o.Installations.IsUnknown() {
+		return nil, false
+	}
+	var v []InstallationDetail
+	d := o.Installations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInstallations sets the value of the Installations field in ListInstallationsResponse.
+func (o *ListInstallationsResponse) SetInstallations(ctx context.Context, v []InstallationDetail) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installations"]
+	o.Installations = types.ListValueMust(t, vs)
 }
 
 // List listings for exchange
@@ -3581,6 +4500,31 @@ func (o ListListingsForExchangeResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchangeListings returns the value of the ExchangeListings field in ListListingsForExchangeResponse as
+// a slice of ExchangeListing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsForExchangeResponse) GetExchangeListings(ctx context.Context) ([]ExchangeListing, bool) {
+	if o.ExchangeListings.IsNull() || o.ExchangeListings.IsUnknown() {
+		return nil, false
+	}
+	var v []ExchangeListing
+	d := o.ExchangeListings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExchangeListings sets the value of the ExchangeListings field in ListListingsForExchangeResponse.
+func (o *ListListingsForExchangeResponse) SetExchangeListings(ctx context.Context, v []ExchangeListing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_listings"]
+	o.ExchangeListings = types.ListValueMust(t, vs)
+}
+
 // List listings
 type ListListingsRequest struct {
 	// Matches any of the following asset types
@@ -3669,6 +4613,106 @@ func (o ListListingsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAssets returns the value of the Assets field in ListListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsRequest) GetAssets(ctx context.Context) ([]types.String, bool) {
+	if o.Assets.IsNull() || o.Assets.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Assets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssets sets the value of the Assets field in ListListingsRequest.
+func (o *ListListingsRequest) SetAssets(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	o.Assets = types.ListValueMust(t, vs)
+}
+
+// GetCategories returns the value of the Categories field in ListListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsRequest) GetCategories(ctx context.Context) ([]types.String, bool) {
+	if o.Categories.IsNull() || o.Categories.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Categories.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCategories sets the value of the Categories field in ListListingsRequest.
+func (o *ListListingsRequest) SetCategories(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	o.Categories = types.ListValueMust(t, vs)
+}
+
+// GetProviderIds returns the value of the ProviderIds field in ListListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsRequest) GetProviderIds(ctx context.Context) ([]types.String, bool) {
+	if o.ProviderIds.IsNull() || o.ProviderIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ProviderIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProviderIds sets the value of the ProviderIds field in ListListingsRequest.
+func (o *ListListingsRequest) SetProviderIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_ids"]
+	o.ProviderIds = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ListListingsRequest as
+// a slice of ListingTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsRequest) GetTags(ctx context.Context) ([]ListingTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ListingTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ListListingsRequest.
+func (o *ListListingsRequest) SetTags(ctx context.Context, v []ListingTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ListListingsResponse struct {
 	Listings types.List `tfsdk:"listings" tf:"optional"`
 
@@ -3716,6 +4760,31 @@ func (o ListListingsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetListings returns the value of the Listings field in ListListingsResponse as
+// a slice of Listing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListListingsResponse) GetListings(ctx context.Context) ([]Listing, bool) {
+	if o.Listings.IsNull() || o.Listings.IsUnknown() {
+		return nil, false
+	}
+	var v []Listing
+	d := o.Listings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetListings sets the value of the Listings field in ListListingsResponse.
+func (o *ListListingsResponse) SetListings(ctx context.Context, v []Listing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	o.Listings = types.ListValueMust(t, vs)
 }
 
 type ListProviderAnalyticsDashboardResponse struct {
@@ -3867,6 +4936,31 @@ func (o ListProvidersResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProviders returns the value of the Providers field in ListProvidersResponse as
+// a slice of ProviderInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListProvidersResponse) GetProviders(ctx context.Context) ([]ProviderInfo, bool) {
+	if o.Providers.IsNull() || o.Providers.IsUnknown() {
+		return nil, false
+	}
+	var v []ProviderInfo
+	d := o.Providers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProviders sets the value of the Providers field in ListProvidersResponse.
+func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	o.Providers = types.ListValueMust(t, vs)
+}
+
 type Listing struct {
 	Detail types.List `tfsdk:"detail" tf:"optional,object"`
 
@@ -3921,6 +5015,58 @@ func (o Listing) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDetail returns the value of the Detail field in Listing as
+// a ListingDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Listing) GetDetail(ctx context.Context) (ListingDetail, bool) {
+	var e ListingDetail
+	if o.Detail.IsNull() || o.Detail.IsUnknown() {
+		return e, false
+	}
+	var v []ListingDetail
+	d := o.Detail.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDetail sets the value of the Detail field in Listing.
+func (o *Listing) SetDetail(ctx context.Context, v ListingDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["detail"]
+	o.Detail = types.ListValueMust(t, vs)
+}
+
+// GetSummary returns the value of the Summary field in Listing as
+// a ListingSummary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Listing) GetSummary(ctx context.Context) (ListingSummary, bool) {
+	var e ListingSummary
+	if o.Summary.IsNull() || o.Summary.IsUnknown() {
+		return e, false
+	}
+	var v []ListingSummary
+	d := o.Summary.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSummary sets the value of the Summary field in Listing.
+func (o *Listing) SetSummary(ctx context.Context, v ListingSummary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["summary"]
+	o.Summary = types.ListValueMust(t, vs)
 }
 
 type ListingDetail struct {
@@ -4066,6 +5212,158 @@ func (o ListingDetail) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAssets returns the value of the Assets field in ListingDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetAssets(ctx context.Context) ([]types.String, bool) {
+	if o.Assets.IsNull() || o.Assets.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Assets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssets sets the value of the Assets field in ListingDetail.
+func (o *ListingDetail) SetAssets(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	o.Assets = types.ListValueMust(t, vs)
+}
+
+// GetCollectionGranularity returns the value of the CollectionGranularity field in ListingDetail as
+// a DataRefreshInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetCollectionGranularity(ctx context.Context) (DataRefreshInfo, bool) {
+	var e DataRefreshInfo
+	if o.CollectionGranularity.IsNull() || o.CollectionGranularity.IsUnknown() {
+		return e, false
+	}
+	var v []DataRefreshInfo
+	d := o.CollectionGranularity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCollectionGranularity sets the value of the CollectionGranularity field in ListingDetail.
+func (o *ListingDetail) SetCollectionGranularity(ctx context.Context, v DataRefreshInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["collection_granularity"]
+	o.CollectionGranularity = types.ListValueMust(t, vs)
+}
+
+// GetEmbeddedNotebookFileInfos returns the value of the EmbeddedNotebookFileInfos field in ListingDetail as
+// a slice of FileInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetEmbeddedNotebookFileInfos(ctx context.Context) ([]FileInfo, bool) {
+	if o.EmbeddedNotebookFileInfos.IsNull() || o.EmbeddedNotebookFileInfos.IsUnknown() {
+		return nil, false
+	}
+	var v []FileInfo
+	d := o.EmbeddedNotebookFileInfos.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbeddedNotebookFileInfos sets the value of the EmbeddedNotebookFileInfos field in ListingDetail.
+func (o *ListingDetail) SetEmbeddedNotebookFileInfos(ctx context.Context, v []FileInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedded_notebook_file_infos"]
+	o.EmbeddedNotebookFileInfos = types.ListValueMust(t, vs)
+}
+
+// GetFileIds returns the value of the FileIds field in ListingDetail as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetFileIds(ctx context.Context) ([]types.String, bool) {
+	if o.FileIds.IsNull() || o.FileIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FileIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFileIds sets the value of the FileIds field in ListingDetail.
+func (o *ListingDetail) SetFileIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_ids"]
+	o.FileIds = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ListingDetail as
+// a slice of ListingTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetTags(ctx context.Context) ([]ListingTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ListingTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ListingDetail.
+func (o *ListingDetail) SetTags(ctx context.Context, v []ListingTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+// GetUpdateFrequency returns the value of the UpdateFrequency field in ListingDetail as
+// a DataRefreshInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingDetail) GetUpdateFrequency(ctx context.Context) (DataRefreshInfo, bool) {
+	var e DataRefreshInfo
+	if o.UpdateFrequency.IsNull() || o.UpdateFrequency.IsUnknown() {
+		return e, false
+	}
+	var v []DataRefreshInfo
+	d := o.UpdateFrequency.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUpdateFrequency sets the value of the UpdateFrequency field in ListingDetail.
+func (o *ListingDetail) SetUpdateFrequency(ctx context.Context, v DataRefreshInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["update_frequency"]
+	o.UpdateFrequency = types.ListValueMust(t, vs)
+}
+
 type ListingFulfillment struct {
 	FulfillmentType types.String `tfsdk:"fulfillment_type" tf:"optional"`
 
@@ -4128,6 +5426,58 @@ func (o ListingFulfillment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRepoInfo returns the value of the RepoInfo field in ListingFulfillment as
+// a RepoInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingFulfillment) GetRepoInfo(ctx context.Context) (RepoInfo, bool) {
+	var e RepoInfo
+	if o.RepoInfo.IsNull() || o.RepoInfo.IsUnknown() {
+		return e, false
+	}
+	var v []RepoInfo
+	d := o.RepoInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRepoInfo sets the value of the RepoInfo field in ListingFulfillment.
+func (o *ListingFulfillment) SetRepoInfo(ctx context.Context, v RepoInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repo_info"]
+	o.RepoInfo = types.ListValueMust(t, vs)
+}
+
+// GetShareInfo returns the value of the ShareInfo field in ListingFulfillment as
+// a ShareInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingFulfillment) GetShareInfo(ctx context.Context) (ShareInfo, bool) {
+	var e ShareInfo
+	if o.ShareInfo.IsNull() || o.ShareInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ShareInfo
+	d := o.ShareInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetShareInfo sets the value of the ShareInfo field in ListingFulfillment.
+func (o *ListingFulfillment) SetShareInfo(ctx context.Context, v ShareInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share_info"]
+	o.ShareInfo = types.ListValueMust(t, vs)
 }
 
 type ListingSetting struct {
@@ -4305,6 +5655,160 @@ func (o ListingSummary) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetCategories returns the value of the Categories field in ListingSummary as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetCategories(ctx context.Context) ([]types.String, bool) {
+	if o.Categories.IsNull() || o.Categories.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Categories.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCategories sets the value of the Categories field in ListingSummary.
+func (o *ListingSummary) SetCategories(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	o.Categories = types.ListValueMust(t, vs)
+}
+
+// GetExchangeIds returns the value of the ExchangeIds field in ListingSummary as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetExchangeIds(ctx context.Context) ([]types.String, bool) {
+	if o.ExchangeIds.IsNull() || o.ExchangeIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExchangeIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExchangeIds sets the value of the ExchangeIds field in ListingSummary.
+func (o *ListingSummary) SetExchangeIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_ids"]
+	o.ExchangeIds = types.ListValueMust(t, vs)
+}
+
+// GetGitRepo returns the value of the GitRepo field in ListingSummary as
+// a RepoInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetGitRepo(ctx context.Context) (RepoInfo, bool) {
+	var e RepoInfo
+	if o.GitRepo.IsNull() || o.GitRepo.IsUnknown() {
+		return e, false
+	}
+	var v []RepoInfo
+	d := o.GitRepo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGitRepo sets the value of the GitRepo field in ListingSummary.
+func (o *ListingSummary) SetGitRepo(ctx context.Context, v RepoInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_repo"]
+	o.GitRepo = types.ListValueMust(t, vs)
+}
+
+// GetProviderRegion returns the value of the ProviderRegion field in ListingSummary as
+// a RegionInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetProviderRegion(ctx context.Context) (RegionInfo, bool) {
+	var e RegionInfo
+	if o.ProviderRegion.IsNull() || o.ProviderRegion.IsUnknown() {
+		return e, false
+	}
+	var v []RegionInfo
+	d := o.ProviderRegion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProviderRegion sets the value of the ProviderRegion field in ListingSummary.
+func (o *ListingSummary) SetProviderRegion(ctx context.Context, v RegionInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_region"]
+	o.ProviderRegion = types.ListValueMust(t, vs)
+}
+
+// GetSetting returns the value of the Setting field in ListingSummary as
+// a ListingSetting value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetSetting(ctx context.Context) (ListingSetting, bool) {
+	var e ListingSetting
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []ListingSetting
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in ListingSummary.
+func (o *ListingSummary) SetSetting(ctx context.Context, v ListingSetting) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
+// GetShare returns the value of the Share field in ListingSummary as
+// a ShareInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingSummary) GetShare(ctx context.Context) (ShareInfo, bool) {
+	var e ShareInfo
+	if o.Share.IsNull() || o.Share.IsUnknown() {
+		return e, false
+	}
+	var v []ShareInfo
+	d := o.Share.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetShare sets the value of the Share field in ListingSummary.
+func (o *ListingSummary) SetShare(ctx context.Context, v ShareInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
+	o.Share = types.ListValueMust(t, vs)
+}
+
 type ListingTag struct {
 	// Tag name (enum)
 	TagName types.String `tfsdk:"tag_name" tf:"optional"`
@@ -4354,6 +5858,31 @@ func (o ListingTag) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTagValues returns the value of the TagValues field in ListingTag as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListingTag) GetTagValues(ctx context.Context) ([]types.String, bool) {
+	if o.TagValues.IsNull() || o.TagValues.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TagValues.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTagValues sets the value of the TagValues field in ListingTag.
+func (o *ListingTag) SetTagValues(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_values"]
+	o.TagValues = types.ListValueMust(t, vs)
 }
 
 type PersonalizationRequest struct {
@@ -4466,6 +5995,84 @@ func (o PersonalizationRequest) Type(ctx context.Context) attr.Type {
 			"updated_at":     types.Int64Type,
 		},
 	}
+}
+
+// GetConsumerRegion returns the value of the ConsumerRegion field in PersonalizationRequest as
+// a RegionInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PersonalizationRequest) GetConsumerRegion(ctx context.Context) (RegionInfo, bool) {
+	var e RegionInfo
+	if o.ConsumerRegion.IsNull() || o.ConsumerRegion.IsUnknown() {
+		return e, false
+	}
+	var v []RegionInfo
+	d := o.ConsumerRegion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConsumerRegion sets the value of the ConsumerRegion field in PersonalizationRequest.
+func (o *PersonalizationRequest) SetConsumerRegion(ctx context.Context, v RegionInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["consumer_region"]
+	o.ConsumerRegion = types.ListValueMust(t, vs)
+}
+
+// GetContactInfo returns the value of the ContactInfo field in PersonalizationRequest as
+// a ContactInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PersonalizationRequest) GetContactInfo(ctx context.Context) (ContactInfo, bool) {
+	var e ContactInfo
+	if o.ContactInfo.IsNull() || o.ContactInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ContactInfo
+	d := o.ContactInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetContactInfo sets the value of the ContactInfo field in PersonalizationRequest.
+func (o *PersonalizationRequest) SetContactInfo(ctx context.Context, v ContactInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["contact_info"]
+	o.ContactInfo = types.ListValueMust(t, vs)
+}
+
+// GetShare returns the value of the Share field in PersonalizationRequest as
+// a ShareInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PersonalizationRequest) GetShare(ctx context.Context) (ShareInfo, bool) {
+	var e ShareInfo
+	if o.Share.IsNull() || o.Share.IsUnknown() {
+		return e, false
+	}
+	var v []ShareInfo
+	d := o.Share.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetShare sets the value of the Share field in PersonalizationRequest.
+func (o *PersonalizationRequest) SetShare(ctx context.Context, v ShareInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
+	o.Share = types.ListValueMust(t, vs)
 }
 
 type ProviderAnalyticsDashboard struct {
@@ -4896,6 +6503,81 @@ func (o SearchListingsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAssets returns the value of the Assets field in SearchListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchListingsRequest) GetAssets(ctx context.Context) ([]types.String, bool) {
+	if o.Assets.IsNull() || o.Assets.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Assets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAssets sets the value of the Assets field in SearchListingsRequest.
+func (o *SearchListingsRequest) SetAssets(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	o.Assets = types.ListValueMust(t, vs)
+}
+
+// GetCategories returns the value of the Categories field in SearchListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchListingsRequest) GetCategories(ctx context.Context) ([]types.String, bool) {
+	if o.Categories.IsNull() || o.Categories.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Categories.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCategories sets the value of the Categories field in SearchListingsRequest.
+func (o *SearchListingsRequest) SetCategories(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	o.Categories = types.ListValueMust(t, vs)
+}
+
+// GetProviderIds returns the value of the ProviderIds field in SearchListingsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchListingsRequest) GetProviderIds(ctx context.Context) ([]types.String, bool) {
+	if o.ProviderIds.IsNull() || o.ProviderIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ProviderIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProviderIds sets the value of the ProviderIds field in SearchListingsRequest.
+func (o *SearchListingsRequest) SetProviderIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_ids"]
+	o.ProviderIds = types.ListValueMust(t, vs)
+}
+
 type SearchListingsResponse struct {
 	Listings types.List `tfsdk:"listings" tf:"optional"`
 
@@ -4943,6 +6625,31 @@ func (o SearchListingsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetListings returns the value of the Listings field in SearchListingsResponse as
+// a slice of Listing values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchListingsResponse) GetListings(ctx context.Context) ([]Listing, bool) {
+	if o.Listings.IsNull() || o.Listings.IsUnknown() {
+		return nil, false
+	}
+	var v []Listing
+	d := o.Listings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetListings sets the value of the Listings field in SearchListingsResponse.
+func (o *SearchListingsResponse) SetListings(ctx context.Context, v []Listing) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	o.Listings = types.ListValueMust(t, vs)
 }
 
 type ShareInfo struct {
@@ -5208,6 +6915,32 @@ func (o UpdateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFilter returns the value of the Filter field in UpdateExchangeFilterRequest as
+// a ExchangeFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFilter, bool) {
+	var e ExchangeFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []ExchangeFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in UpdateExchangeFilterRequest.
+func (o *UpdateExchangeFilterRequest) SetFilter(ctx context.Context, v ExchangeFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
+}
+
 type UpdateExchangeFilterResponse struct {
 	Filter types.List `tfsdk:"filter" tf:"optional,object"`
 }
@@ -5251,6 +6984,32 @@ func (o UpdateExchangeFilterResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFilter returns the value of the Filter field in UpdateExchangeFilterResponse as
+// a ExchangeFilter value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExchangeFilterResponse) GetFilter(ctx context.Context) (ExchangeFilter, bool) {
+	var e ExchangeFilter
+	if o.Filter.IsNull() || o.Filter.IsUnknown() {
+		return e, false
+	}
+	var v []ExchangeFilter
+	d := o.Filter.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilter sets the value of the Filter field in UpdateExchangeFilterResponse.
+func (o *UpdateExchangeFilterResponse) SetFilter(ctx context.Context, v ExchangeFilter) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
+	o.Filter = types.ListValueMust(t, vs)
 }
 
 type UpdateExchangeRequest struct {
@@ -5302,6 +7061,32 @@ func (o UpdateExchangeRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExchange returns the value of the Exchange field in UpdateExchangeRequest as
+// a Exchange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool) {
+	var e Exchange
+	if o.Exchange.IsNull() || o.Exchange.IsUnknown() {
+		return e, false
+	}
+	var v []Exchange
+	d := o.Exchange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExchange sets the value of the Exchange field in UpdateExchangeRequest.
+func (o *UpdateExchangeRequest) SetExchange(ctx context.Context, v Exchange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
+	o.Exchange = types.ListValueMust(t, vs)
+}
+
 type UpdateExchangeResponse struct {
 	Exchange types.List `tfsdk:"exchange" tf:"optional,object"`
 }
@@ -5345,6 +7130,32 @@ func (o UpdateExchangeResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExchange returns the value of the Exchange field in UpdateExchangeResponse as
+// a Exchange value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateExchangeResponse) GetExchange(ctx context.Context) (Exchange, bool) {
+	var e Exchange
+	if o.Exchange.IsNull() || o.Exchange.IsUnknown() {
+		return e, false
+	}
+	var v []Exchange
+	d := o.Exchange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExchange sets the value of the Exchange field in UpdateExchangeResponse.
+func (o *UpdateExchangeResponse) SetExchange(ctx context.Context, v Exchange) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
+	o.Exchange = types.ListValueMust(t, vs)
 }
 
 type UpdateInstallationRequest struct {
@@ -5404,6 +7215,32 @@ func (o UpdateInstallationRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInstallation returns the value of the Installation field in UpdateInstallationRequest as
+// a InstallationDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInstallationRequest) GetInstallation(ctx context.Context) (InstallationDetail, bool) {
+	var e InstallationDetail
+	if o.Installation.IsNull() || o.Installation.IsUnknown() {
+		return e, false
+	}
+	var v []InstallationDetail
+	d := o.Installation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInstallation sets the value of the Installation field in UpdateInstallationRequest.
+func (o *UpdateInstallationRequest) SetInstallation(ctx context.Context, v InstallationDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
+	o.Installation = types.ListValueMust(t, vs)
+}
+
 type UpdateInstallationResponse struct {
 	Installation types.List `tfsdk:"installation" tf:"optional,object"`
 }
@@ -5447,6 +7284,32 @@ func (o UpdateInstallationResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInstallation returns the value of the Installation field in UpdateInstallationResponse as
+// a InstallationDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInstallationResponse) GetInstallation(ctx context.Context) (InstallationDetail, bool) {
+	var e InstallationDetail
+	if o.Installation.IsNull() || o.Installation.IsUnknown() {
+		return e, false
+	}
+	var v []InstallationDetail
+	d := o.Installation.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInstallation sets the value of the Installation field in UpdateInstallationResponse.
+func (o *UpdateInstallationResponse) SetInstallation(ctx context.Context, v InstallationDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
+	o.Installation = types.ListValueMust(t, vs)
 }
 
 type UpdateListingRequest struct {
@@ -5498,6 +7361,32 @@ func (o UpdateListingRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetListing returns the value of the Listing field in UpdateListingRequest as
+// a Listing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
+	var e Listing
+	if o.Listing.IsNull() || o.Listing.IsUnknown() {
+		return e, false
+	}
+	var v []Listing
+	d := o.Listing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetListing sets the value of the Listing field in UpdateListingRequest.
+func (o *UpdateListingRequest) SetListing(ctx context.Context, v Listing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
+	o.Listing = types.ListValueMust(t, vs)
+}
+
 type UpdateListingResponse struct {
 	Listing types.List `tfsdk:"listing" tf:"optional,object"`
 }
@@ -5541,6 +7430,32 @@ func (o UpdateListingResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetListing returns the value of the Listing field in UpdateListingResponse as
+// a Listing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateListingResponse) GetListing(ctx context.Context) (Listing, bool) {
+	var e Listing
+	if o.Listing.IsNull() || o.Listing.IsUnknown() {
+		return e, false
+	}
+	var v []Listing
+	d := o.Listing.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetListing sets the value of the Listing field in UpdateListingResponse.
+func (o *UpdateListingResponse) SetListing(ctx context.Context, v Listing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
+	o.Listing = types.ListValueMust(t, vs)
 }
 
 type UpdatePersonalizationRequestRequest struct {
@@ -5604,6 +7519,32 @@ func (o UpdatePersonalizationRequestRequest) Type(ctx context.Context) attr.Type
 	}
 }
 
+// GetShare returns the value of the Share field in UpdatePersonalizationRequestRequest as
+// a ShareInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePersonalizationRequestRequest) GetShare(ctx context.Context) (ShareInfo, bool) {
+	var e ShareInfo
+	if o.Share.IsNull() || o.Share.IsUnknown() {
+		return e, false
+	}
+	var v []ShareInfo
+	d := o.Share.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetShare sets the value of the Share field in UpdatePersonalizationRequestRequest.
+func (o *UpdatePersonalizationRequestRequest) SetShare(ctx context.Context, v ShareInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
+	o.Share = types.ListValueMust(t, vs)
+}
+
 type UpdatePersonalizationRequestResponse struct {
 	Request types.List `tfsdk:"request" tf:"optional,object"`
 }
@@ -5647,6 +7588,32 @@ func (o UpdatePersonalizationRequestResponse) Type(ctx context.Context) attr.Typ
 			},
 		},
 	}
+}
+
+// GetRequest returns the value of the Request field in UpdatePersonalizationRequestResponse as
+// a PersonalizationRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdatePersonalizationRequestResponse) GetRequest(ctx context.Context) (PersonalizationRequest, bool) {
+	var e PersonalizationRequest
+	if o.Request.IsNull() || o.Request.IsUnknown() {
+		return e, false
+	}
+	var v []PersonalizationRequest
+	d := o.Request.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRequest sets the value of the Request field in UpdatePersonalizationRequestResponse.
+func (o *UpdatePersonalizationRequestResponse) SetRequest(ctx context.Context, v PersonalizationRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["request"]
+	o.Request = types.ListValueMust(t, vs)
 }
 
 type UpdateProviderAnalyticsDashboardRequest struct {
@@ -5796,6 +7763,32 @@ func (o UpdateProviderRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProvider returns the value of the Provider field in UpdateProviderRequest as
+// a ProviderInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, bool) {
+	var e ProviderInfo
+	if o.Provider.IsNull() || o.Provider.IsUnknown() {
+		return e, false
+	}
+	var v []ProviderInfo
+	d := o.Provider.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvider sets the value of the Provider field in UpdateProviderRequest.
+func (o *UpdateProviderRequest) SetProvider(ctx context.Context, v ProviderInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
+	o.Provider = types.ListValueMust(t, vs)
+}
+
 type UpdateProviderResponse struct {
 	Provider types.List `tfsdk:"provider" tf:"optional,object"`
 }
@@ -5841,4 +7834,28 @@ func (o UpdateProviderResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Enums
+// GetProvider returns the value of the Provider field in UpdateProviderResponse as
+// a ProviderInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateProviderResponse) GetProvider(ctx context.Context) (ProviderInfo, bool) {
+	var e ProviderInfo
+	if o.Provider.IsNull() || o.Provider.IsUnknown() {
+		return e, false
+	}
+	var v []ProviderInfo
+	d := o.Provider.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetProvider sets the value of the Provider field in UpdateProviderResponse.
+func (o *UpdateProviderResponse) SetProvider(ctx context.Context, v ProviderInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
+	o.Provider = types.ListValueMust(t, vs)
+}

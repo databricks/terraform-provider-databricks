@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -290,6 +291,32 @@ func (o CreateRepoRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSparseCheckout returns the value of the SparseCheckout field in CreateRepoRequest as
+// a SparseCheckout value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRepoRequest) GetSparseCheckout(ctx context.Context) (SparseCheckout, bool) {
+	var e SparseCheckout
+	if o.SparseCheckout.IsNull() || o.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v []SparseCheckout
+	d := o.SparseCheckout.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in CreateRepoRequest.
+func (o *CreateRepoRequest) SetSparseCheckout(ctx context.Context, v SparseCheckout) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sparse_checkout"]
+	o.SparseCheckout = types.ListValueMust(t, vs)
+}
+
 type CreateRepoResponse struct {
 	// Branch that the Git folder (repo) is checked out to.
 	Branch types.String `tfsdk:"branch" tf:"optional"`
@@ -361,6 +388,32 @@ func (o CreateRepoResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSparseCheckout returns the value of the SparseCheckout field in CreateRepoResponse as
+// a SparseCheckout value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRepoResponse) GetSparseCheckout(ctx context.Context) (SparseCheckout, bool) {
+	var e SparseCheckout
+	if o.SparseCheckout.IsNull() || o.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v []SparseCheckout
+	d := o.SparseCheckout.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in CreateRepoResponse.
+func (o *CreateRepoResponse) SetSparseCheckout(ctx context.Context, v SparseCheckout) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sparse_checkout"]
+	o.SparseCheckout = types.ListValueMust(t, vs)
+}
+
 type CreateScope struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
 	BackendAzureKeyvault types.List `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
@@ -419,6 +472,32 @@ func (o CreateScope) Type(ctx context.Context) attr.Type {
 			"scope_backend_type":       types.StringType,
 		},
 	}
+}
+
+// GetBackendAzureKeyvault returns the value of the BackendAzureKeyvault field in CreateScope as
+// a AzureKeyVaultSecretScopeMetadata value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateScope) GetBackendAzureKeyvault(ctx context.Context) (AzureKeyVaultSecretScopeMetadata, bool) {
+	var e AzureKeyVaultSecretScopeMetadata
+	if o.BackendAzureKeyvault.IsNull() || o.BackendAzureKeyvault.IsUnknown() {
+		return e, false
+	}
+	var v []AzureKeyVaultSecretScopeMetadata
+	d := o.BackendAzureKeyvault.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBackendAzureKeyvault sets the value of the BackendAzureKeyvault field in CreateScope.
+func (o *CreateScope) SetBackendAzureKeyvault(ctx context.Context, v AzureKeyVaultSecretScopeMetadata) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["backend_azure_keyvault"]
+	o.BackendAzureKeyvault = types.ListValueMust(t, vs)
 }
 
 type CreateScopeResponse struct {
@@ -1331,6 +1410,31 @@ func (o GetRepoPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPermissionLevels returns the value of the PermissionLevels field in GetRepoPermissionLevelsResponse as
+// a slice of RepoPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetRepoPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]RepoPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []RepoPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetRepoPermissionLevelsResponse.
+func (o *GetRepoPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []RepoPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
 // Get repo permissions
 type GetRepoPermissionsRequest struct {
 	// The repo for which to get or manage permissions.
@@ -1485,6 +1589,32 @@ func (o GetRepoResponse) Type(ctx context.Context) attr.Type {
 			"url": types.StringType,
 		},
 	}
+}
+
+// GetSparseCheckout returns the value of the SparseCheckout field in GetRepoResponse as
+// a SparseCheckout value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetRepoResponse) GetSparseCheckout(ctx context.Context) (SparseCheckout, bool) {
+	var e SparseCheckout
+	if o.SparseCheckout.IsNull() || o.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v []SparseCheckout
+	d := o.SparseCheckout.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in GetRepoResponse.
+func (o *GetRepoResponse) SetSparseCheckout(ctx context.Context, v SparseCheckout) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sparse_checkout"]
+	o.SparseCheckout = types.ListValueMust(t, vs)
 }
 
 // Get a secret
@@ -1714,6 +1844,31 @@ func (o GetWorkspaceObjectPermissionLevelsResponse) Type(ctx context.Context) at
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetWorkspaceObjectPermissionLevelsResponse as
+// a slice of WorkspaceObjectPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetWorkspaceObjectPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]WorkspaceObjectPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceObjectPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetWorkspaceObjectPermissionLevelsResponse.
+func (o *GetWorkspaceObjectPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []WorkspaceObjectPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get workspace object permissions
@@ -1966,6 +2121,31 @@ func (o ListAclsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetItems returns the value of the Items field in ListAclsResponse as
+// a slice of AclItem values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAclsResponse) GetItems(ctx context.Context) ([]AclItem, bool) {
+	if o.Items.IsNull() || o.Items.IsUnknown() {
+		return nil, false
+	}
+	var v []AclItem
+	d := o.Items.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetItems sets the value of the Items field in ListAclsResponse.
+func (o *ListAclsResponse) SetItems(ctx context.Context, v []AclItem) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	o.Items = types.ListValueMust(t, vs)
+}
+
 type ListCredentialsResponse struct {
 	// List of credentials.
 	Credentials types.List `tfsdk:"credentials" tf:"optional"`
@@ -2010,6 +2190,31 @@ func (o ListCredentialsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCredentials returns the value of the Credentials field in ListCredentialsResponse as
+// a slice of CredentialInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListCredentialsResponse) GetCredentials(ctx context.Context) ([]CredentialInfo, bool) {
+	if o.Credentials.IsNull() || o.Credentials.IsUnknown() {
+		return nil, false
+	}
+	var v []CredentialInfo
+	d := o.Credentials.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCredentials sets the value of the Credentials field in ListCredentialsResponse.
+func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []CredentialInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credentials"]
+	o.Credentials = types.ListValueMust(t, vs)
 }
 
 // Get repos
@@ -2114,6 +2319,31 @@ func (o ListReposResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRepos returns the value of the Repos field in ListReposResponse as
+// a slice of RepoInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListReposResponse) GetRepos(ctx context.Context) ([]RepoInfo, bool) {
+	if o.Repos.IsNull() || o.Repos.IsUnknown() {
+		return nil, false
+	}
+	var v []RepoInfo
+	d := o.Repos.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRepos sets the value of the Repos field in ListReposResponse.
+func (o *ListReposResponse) SetRepos(ctx context.Context, v []RepoInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repos"]
+	o.Repos = types.ListValueMust(t, vs)
+}
+
 type ListResponse struct {
 	// List of objects.
 	Objects types.List `tfsdk:"objects" tf:"optional"`
@@ -2160,6 +2390,31 @@ func (o ListResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetObjects returns the value of the Objects field in ListResponse as
+// a slice of ObjectInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListResponse) GetObjects(ctx context.Context) ([]ObjectInfo, bool) {
+	if o.Objects.IsNull() || o.Objects.IsUnknown() {
+		return nil, false
+	}
+	var v []ObjectInfo
+	d := o.Objects.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetObjects sets the value of the Objects field in ListResponse.
+func (o *ListResponse) SetObjects(ctx context.Context, v []ObjectInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["objects"]
+	o.Objects = types.ListValueMust(t, vs)
+}
+
 type ListScopesResponse struct {
 	// The available secret scopes.
 	Scopes types.List `tfsdk:"scopes" tf:"optional"`
@@ -2204,6 +2459,31 @@ func (o ListScopesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetScopes returns the value of the Scopes field in ListScopesResponse as
+// a slice of SecretScope values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListScopesResponse) GetScopes(ctx context.Context) ([]SecretScope, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []SecretScope
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in ListScopesResponse.
+func (o *ListScopesResponse) SetScopes(ctx context.Context, v []SecretScope) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	o.Scopes = types.ListValueMust(t, vs)
 }
 
 // List secret keys
@@ -2293,6 +2573,31 @@ func (o ListSecretsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetSecrets returns the value of the Secrets field in ListSecretsResponse as
+// a slice of SecretMetadata values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSecretsResponse) GetSecrets(ctx context.Context) ([]SecretMetadata, bool) {
+	if o.Secrets.IsNull() || o.Secrets.IsUnknown() {
+		return nil, false
+	}
+	var v []SecretMetadata
+	d := o.Secrets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSecrets sets the value of the Secrets field in ListSecretsResponse.
+func (o *ListSecretsResponse) SetSecrets(ctx context.Context, v []SecretMetadata) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	o.Secrets = types.ListValueMust(t, vs)
 }
 
 // List contents
@@ -2790,6 +3095,31 @@ func (o RepoAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in RepoAccessControlResponse as
+// a slice of RepoPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepoAccessControlResponse) GetAllPermissions(ctx context.Context) ([]RepoPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []RepoPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in RepoAccessControlResponse.
+func (o *RepoAccessControlResponse) SetAllPermissions(ctx context.Context, v []RepoPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 // Git folder (repo) information.
 type RepoInfo struct {
 	// Name of the current git branch of the git folder (repo).
@@ -2861,6 +3191,32 @@ func (o RepoInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSparseCheckout returns the value of the SparseCheckout field in RepoInfo as
+// a SparseCheckout value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepoInfo) GetSparseCheckout(ctx context.Context) (SparseCheckout, bool) {
+	var e SparseCheckout
+	if o.SparseCheckout.IsNull() || o.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v []SparseCheckout
+	d := o.SparseCheckout.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in RepoInfo.
+func (o *RepoInfo) SetSparseCheckout(ctx context.Context, v SparseCheckout) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sparse_checkout"]
+	o.SparseCheckout = types.ListValueMust(t, vs)
+}
+
 type RepoPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -2914,6 +3270,31 @@ func (o RepoPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in RepoPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepoPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in RepoPermission.
+func (o *RepoPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type RepoPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -2965,6 +3346,31 @@ func (o RepoPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in RepoPermissions as
+// a slice of RepoAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepoPermissions) GetAccessControlList(ctx context.Context) ([]RepoAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []RepoAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in RepoPermissions.
+func (o *RepoPermissions) SetAccessControlList(ctx context.Context, v []RepoAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type RepoPermissionsDescription struct {
@@ -3059,6 +3465,31 @@ func (o RepoPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"repo_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in RepoPermissionsRequest as
+// a slice of RepoAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RepoPermissionsRequest) GetAccessControlList(ctx context.Context) ([]RepoAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []RepoAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in RepoPermissionsRequest.
+func (o *RepoPermissionsRequest) SetAccessControlList(ctx context.Context, v []RepoAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type SecretMetadata struct {
@@ -3161,6 +3592,32 @@ func (o SecretScope) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetKeyvaultMetadata returns the value of the KeyvaultMetadata field in SecretScope as
+// a AzureKeyVaultSecretScopeMetadata value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecretScope) GetKeyvaultMetadata(ctx context.Context) (AzureKeyVaultSecretScopeMetadata, bool) {
+	var e AzureKeyVaultSecretScopeMetadata
+	if o.KeyvaultMetadata.IsNull() || o.KeyvaultMetadata.IsUnknown() {
+		return e, false
+	}
+	var v []AzureKeyVaultSecretScopeMetadata
+	d := o.KeyvaultMetadata.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetKeyvaultMetadata sets the value of the KeyvaultMetadata field in SecretScope.
+func (o *SecretScope) SetKeyvaultMetadata(ctx context.Context, v AzureKeyVaultSecretScopeMetadata) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["keyvault_metadata"]
+	o.KeyvaultMetadata = types.ListValueMust(t, vs)
+}
+
 // Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckout struct {
 	// List of sparse checkout cone patterns, see [cone mode handling] for
@@ -3211,6 +3668,31 @@ func (o SparseCheckout) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPatterns returns the value of the Patterns field in SparseCheckout as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparseCheckout) GetPatterns(ctx context.Context) ([]types.String, bool) {
+	if o.Patterns.IsNull() || o.Patterns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Patterns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPatterns sets the value of the Patterns field in SparseCheckout.
+func (o *SparseCheckout) SetPatterns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["patterns"]
+	o.Patterns = types.ListValueMust(t, vs)
+}
+
 // Sparse checkout configuration, it contains options like cone patterns.
 type SparseCheckoutUpdate struct {
 	// List of sparse checkout cone patterns, see [cone mode handling] for
@@ -3259,6 +3741,31 @@ func (o SparseCheckoutUpdate) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPatterns returns the value of the Patterns field in SparseCheckoutUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SparseCheckoutUpdate) GetPatterns(ctx context.Context) ([]types.String, bool) {
+	if o.Patterns.IsNull() || o.Patterns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Patterns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPatterns sets the value of the Patterns field in SparseCheckoutUpdate.
+func (o *SparseCheckoutUpdate) SetPatterns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["patterns"]
+	o.Patterns = types.ListValueMust(t, vs)
 }
 
 type UpdateCredentialsRequest struct {
@@ -3426,6 +3933,32 @@ func (o UpdateRepoRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetSparseCheckout returns the value of the SparseCheckout field in UpdateRepoRequest as
+// a SparseCheckoutUpdate value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRepoRequest) GetSparseCheckout(ctx context.Context) (SparseCheckoutUpdate, bool) {
+	var e SparseCheckoutUpdate
+	if o.SparseCheckout.IsNull() || o.SparseCheckout.IsUnknown() {
+		return e, false
+	}
+	var v []SparseCheckoutUpdate
+	d := o.SparseCheckout.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSparseCheckout sets the value of the SparseCheckout field in UpdateRepoRequest.
+func (o *UpdateRepoRequest) SetSparseCheckout(ctx context.Context, v SparseCheckoutUpdate) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sparse_checkout"]
+	o.SparseCheckout = types.ListValueMust(t, vs)
+}
+
 type UpdateRepoResponse struct {
 }
 
@@ -3578,6 +4111,31 @@ func (o WorkspaceObjectAccessControlResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in WorkspaceObjectAccessControlResponse as
+// a slice of WorkspaceObjectPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspaceObjectAccessControlResponse) GetAllPermissions(ctx context.Context) ([]WorkspaceObjectPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceObjectPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in WorkspaceObjectAccessControlResponse.
+func (o *WorkspaceObjectAccessControlResponse) SetAllPermissions(ctx context.Context, v []WorkspaceObjectPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type WorkspaceObjectPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -3631,6 +4189,31 @@ func (o WorkspaceObjectPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in WorkspaceObjectPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspaceObjectPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in WorkspaceObjectPermission.
+func (o *WorkspaceObjectPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type WorkspaceObjectPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -3682,6 +4265,31 @@ func (o WorkspaceObjectPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in WorkspaceObjectPermissions as
+// a slice of WorkspaceObjectAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspaceObjectPermissions) GetAccessControlList(ctx context.Context) ([]WorkspaceObjectAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceObjectAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in WorkspaceObjectPermissions.
+func (o *WorkspaceObjectPermissions) SetAccessControlList(ctx context.Context, v []WorkspaceObjectAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type WorkspaceObjectPermissionsDescription struct {
@@ -3782,28 +4390,27 @@ func (o WorkspaceObjectPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// This specifies the format of the file to be imported.
-//
-// The value is case sensitive.
-//
-// - `AUTO`: The item is imported depending on an analysis of the item's
-// extension and the header content provided in the request. If the item is
-// imported as a notebook, then the item's extension is automatically removed. -
-// `SOURCE`: The notebook or directory is imported as source code. - `HTML`: The
-// notebook is imported as an HTML file. - `JUPYTER`: The notebook is imported
-// as a Jupyter/IPython Notebook file. - `DBC`: The notebook is imported in
-// Databricks archive format. Required for directories. - `R_MARKDOWN`: The
-// notebook is imported from R Markdown format.
+// GetAccessControlList returns the value of the AccessControlList field in WorkspaceObjectPermissionsRequest as
+// a slice of WorkspaceObjectAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *WorkspaceObjectPermissionsRequest) GetAccessControlList(ctx context.Context) ([]WorkspaceObjectAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []WorkspaceObjectAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// The language of the object. This value is set only if the object type is
-// `NOTEBOOK`.
-
-// The type of the object in workspace.
-//
-// - `NOTEBOOK`: document that contains runnable code, visualizations, and
-// explanatory text. - `DIRECTORY`: directory - `LIBRARY`: library - `FILE`:
-// file - `REPO`: repository - `DASHBOARD`: Lakeview dashboard
-
-// Permission level
-
-// Permission level
+// SetAccessControlList sets the value of the AccessControlList field in WorkspaceObjectPermissionsRequest.
+func (o *WorkspaceObjectPermissionsRequest) SetAccessControlList(ctx context.Context, v []WorkspaceObjectAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}

@@ -92,7 +92,7 @@ func (TestNestedMapTfSdk) GetComplexFieldTypes(context.Context) map[string]refle
 	}
 }
 
-var dummyType = tfcommon.NewObjectValuable(DummyNested{}).Type(context.Background()).(types.ObjectType)
+var dummyType = tfcommon.NewObjectTyper(DummyNested{}).Type(context.Background()).(types.ObjectType)
 
 var tests = []struct {
 	name       string
@@ -254,7 +254,7 @@ var error_tests = []struct {
 	{
 		"slice of slice conversion",
 		TestSliceOfSlice{},
-		fmt.Sprintf("unexpected type [][]string in tfsdk structs, expected a plugin framework type. %s", common.TerraformBugErrorMessage),
+		fmt.Sprintf("unexpected type [][]string in tfsdk structs, expected a plugin framework value type. %s", common.TerraformBugErrorMessage),
 	},
 }
 

@@ -44,17 +44,6 @@ func (FunctionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Ty
 	}
 }
 
-func (FunctionsData) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"catalog_name":   types.StringType,
-			"schema_name":    types.StringType,
-			"include_browse": types.BoolType,
-			"functions":      types.ListType{ElemType: pluginfwcommon.NewObjectValuable(catalog_tf.FunctionInfo{}).Type(ctx)},
-		},
-	}
-}
-
 func (d *FunctionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }

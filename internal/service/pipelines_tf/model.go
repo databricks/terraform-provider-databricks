@@ -14,7 +14,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/compute"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -200,6 +200,262 @@ func (o CreatePipeline) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusters returns the value of the Clusters field in CreatePipeline as
+// a slice of PipelineCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetClusters(ctx context.Context) ([]PipelineCluster, bool) {
+	if o.Clusters.IsNull() || o.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineCluster
+	d := o.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in CreatePipeline.
+func (o *CreatePipeline) SetClusters(ctx context.Context, v []PipelineCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	o.Clusters = types.ListValueMust(t, vs)
+}
+
+// GetConfiguration returns the value of the Configuration field in CreatePipeline as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetConfiguration(ctx context.Context) (map[string]types.String, bool) {
+	if o.Configuration.IsNull() || o.Configuration.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Configuration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfiguration sets the value of the Configuration field in CreatePipeline.
+func (o *CreatePipeline) SetConfiguration(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	o.Configuration = types.MapValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in CreatePipeline as
+// a PipelineDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetDeployment(ctx context.Context) (PipelineDeployment, bool) {
+	var e PipelineDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in CreatePipeline.
+func (o *CreatePipeline) SetDeployment(ctx context.Context, v PipelineDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetFilters returns the value of the Filters field in CreatePipeline as
+// a Filters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetFilters(ctx context.Context) (Filters, bool) {
+	var e Filters
+	if o.Filters.IsNull() || o.Filters.IsUnknown() {
+		return e, false
+	}
+	var v []Filters
+	d := o.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilters sets the value of the Filters field in CreatePipeline.
+func (o *CreatePipeline) SetFilters(ctx context.Context, v Filters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	o.Filters = types.ListValueMust(t, vs)
+}
+
+// GetGatewayDefinition returns the value of the GatewayDefinition field in CreatePipeline as
+// a IngestionGatewayPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetGatewayDefinition(ctx context.Context) (IngestionGatewayPipelineDefinition, bool) {
+	var e IngestionGatewayPipelineDefinition
+	if o.GatewayDefinition.IsNull() || o.GatewayDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionGatewayPipelineDefinition
+	d := o.GatewayDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGatewayDefinition sets the value of the GatewayDefinition field in CreatePipeline.
+func (o *CreatePipeline) SetGatewayDefinition(ctx context.Context, v IngestionGatewayPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gateway_definition"]
+	o.GatewayDefinition = types.ListValueMust(t, vs)
+}
+
+// GetIngestionDefinition returns the value of the IngestionDefinition field in CreatePipeline as
+// a IngestionPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetIngestionDefinition(ctx context.Context) (IngestionPipelineDefinition, bool) {
+	var e IngestionPipelineDefinition
+	if o.IngestionDefinition.IsNull() || o.IngestionDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinition
+	d := o.IngestionDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionDefinition sets the value of the IngestionDefinition field in CreatePipeline.
+func (o *CreatePipeline) SetIngestionDefinition(ctx context.Context, v IngestionPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_definition"]
+	o.IngestionDefinition = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in CreatePipeline as
+// a slice of PipelineLibrary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetLibraries(ctx context.Context) ([]PipelineLibrary, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineLibrary
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in CreatePipeline.
+func (o *CreatePipeline) SetLibraries(ctx context.Context, v []PipelineLibrary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in CreatePipeline as
+// a slice of Notifications values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetNotifications(ctx context.Context) ([]Notifications, bool) {
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return nil, false
+	}
+	var v []Notifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotifications sets the value of the Notifications field in CreatePipeline.
+func (o *CreatePipeline) SetNotifications(ctx context.Context, v []Notifications) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetRestartWindow returns the value of the RestartWindow field in CreatePipeline as
+// a RestartWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetRestartWindow(ctx context.Context) (RestartWindow, bool) {
+	var e RestartWindow
+	if o.RestartWindow.IsNull() || o.RestartWindow.IsUnknown() {
+		return e, false
+	}
+	var v []RestartWindow
+	d := o.RestartWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRestartWindow sets the value of the RestartWindow field in CreatePipeline.
+func (o *CreatePipeline) SetRestartWindow(ctx context.Context, v RestartWindow) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
+	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in CreatePipeline as
+// a PipelineTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetTrigger(ctx context.Context) (PipelineTrigger, bool) {
+	var e PipelineTrigger
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTrigger
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in CreatePipeline.
+func (o *CreatePipeline) SetTrigger(ctx context.Context, v PipelineTrigger) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
 type CreatePipelineResponse struct {
 	// Only returned when dry_run is true.
 	EffectiveSettings types.List `tfsdk:"effective_settings" tf:"optional,object"`
@@ -249,6 +505,32 @@ func (o CreatePipelineResponse) Type(ctx context.Context) attr.Type {
 			"pipeline_id": types.StringType,
 		},
 	}
+}
+
+// GetEffectiveSettings returns the value of the EffectiveSettings field in CreatePipelineResponse as
+// a PipelineSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipelineResponse) GetEffectiveSettings(ctx context.Context) (PipelineSpec, bool) {
+	var e PipelineSpec
+	if o.EffectiveSettings.IsNull() || o.EffectiveSettings.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineSpec
+	d := o.EffectiveSettings.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEffectiveSettings sets the value of the EffectiveSettings field in CreatePipelineResponse.
+func (o *CreatePipelineResponse) SetEffectiveSettings(ctx context.Context, v PipelineSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_settings"]
+	o.EffectiveSettings = types.ListValueMust(t, vs)
 }
 
 type CronTrigger struct {
@@ -605,6 +887,262 @@ func (o EditPipeline) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusters returns the value of the Clusters field in EditPipeline as
+// a slice of PipelineCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetClusters(ctx context.Context) ([]PipelineCluster, bool) {
+	if o.Clusters.IsNull() || o.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineCluster
+	d := o.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in EditPipeline.
+func (o *EditPipeline) SetClusters(ctx context.Context, v []PipelineCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	o.Clusters = types.ListValueMust(t, vs)
+}
+
+// GetConfiguration returns the value of the Configuration field in EditPipeline as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetConfiguration(ctx context.Context) (map[string]types.String, bool) {
+	if o.Configuration.IsNull() || o.Configuration.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Configuration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfiguration sets the value of the Configuration field in EditPipeline.
+func (o *EditPipeline) SetConfiguration(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	o.Configuration = types.MapValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in EditPipeline as
+// a PipelineDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetDeployment(ctx context.Context) (PipelineDeployment, bool) {
+	var e PipelineDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in EditPipeline.
+func (o *EditPipeline) SetDeployment(ctx context.Context, v PipelineDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetFilters returns the value of the Filters field in EditPipeline as
+// a Filters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetFilters(ctx context.Context) (Filters, bool) {
+	var e Filters
+	if o.Filters.IsNull() || o.Filters.IsUnknown() {
+		return e, false
+	}
+	var v []Filters
+	d := o.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilters sets the value of the Filters field in EditPipeline.
+func (o *EditPipeline) SetFilters(ctx context.Context, v Filters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	o.Filters = types.ListValueMust(t, vs)
+}
+
+// GetGatewayDefinition returns the value of the GatewayDefinition field in EditPipeline as
+// a IngestionGatewayPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetGatewayDefinition(ctx context.Context) (IngestionGatewayPipelineDefinition, bool) {
+	var e IngestionGatewayPipelineDefinition
+	if o.GatewayDefinition.IsNull() || o.GatewayDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionGatewayPipelineDefinition
+	d := o.GatewayDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGatewayDefinition sets the value of the GatewayDefinition field in EditPipeline.
+func (o *EditPipeline) SetGatewayDefinition(ctx context.Context, v IngestionGatewayPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gateway_definition"]
+	o.GatewayDefinition = types.ListValueMust(t, vs)
+}
+
+// GetIngestionDefinition returns the value of the IngestionDefinition field in EditPipeline as
+// a IngestionPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetIngestionDefinition(ctx context.Context) (IngestionPipelineDefinition, bool) {
+	var e IngestionPipelineDefinition
+	if o.IngestionDefinition.IsNull() || o.IngestionDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinition
+	d := o.IngestionDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionDefinition sets the value of the IngestionDefinition field in EditPipeline.
+func (o *EditPipeline) SetIngestionDefinition(ctx context.Context, v IngestionPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_definition"]
+	o.IngestionDefinition = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in EditPipeline as
+// a slice of PipelineLibrary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetLibraries(ctx context.Context) ([]PipelineLibrary, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineLibrary
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in EditPipeline.
+func (o *EditPipeline) SetLibraries(ctx context.Context, v []PipelineLibrary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in EditPipeline as
+// a slice of Notifications values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetNotifications(ctx context.Context) ([]Notifications, bool) {
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return nil, false
+	}
+	var v []Notifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotifications sets the value of the Notifications field in EditPipeline.
+func (o *EditPipeline) SetNotifications(ctx context.Context, v []Notifications) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetRestartWindow returns the value of the RestartWindow field in EditPipeline as
+// a RestartWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetRestartWindow(ctx context.Context) (RestartWindow, bool) {
+	var e RestartWindow
+	if o.RestartWindow.IsNull() || o.RestartWindow.IsUnknown() {
+		return e, false
+	}
+	var v []RestartWindow
+	d := o.RestartWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRestartWindow sets the value of the RestartWindow field in EditPipeline.
+func (o *EditPipeline) SetRestartWindow(ctx context.Context, v RestartWindow) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
+	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in EditPipeline as
+// a PipelineTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetTrigger(ctx context.Context) (PipelineTrigger, bool) {
+	var e PipelineTrigger
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTrigger
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in EditPipeline.
+func (o *EditPipeline) SetTrigger(ctx context.Context, v PipelineTrigger) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
 type EditPipelineResponse struct {
 }
 
@@ -689,6 +1227,31 @@ func (o ErrorDetail) Type(ctx context.Context) attr.Type {
 			"fatal": types.BoolType,
 		},
 	}
+}
+
+// GetExceptions returns the value of the Exceptions field in ErrorDetail as
+// a slice of SerializedException values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ErrorDetail) GetExceptions(ctx context.Context) ([]SerializedException, bool) {
+	if o.Exceptions.IsNull() || o.Exceptions.IsUnknown() {
+		return nil, false
+	}
+	var v []SerializedException
+	d := o.Exceptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExceptions sets the value of the Exceptions field in ErrorDetail.
+func (o *ErrorDetail) SetExceptions(ctx context.Context, v []SerializedException) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exceptions"]
+	o.Exceptions = types.ListValueMust(t, vs)
 }
 
 type FileLibrary struct {
@@ -786,6 +1349,56 @@ func (o Filters) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExclude returns the value of the Exclude field in Filters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Filters) GetExclude(ctx context.Context) ([]types.String, bool) {
+	if o.Exclude.IsNull() || o.Exclude.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Exclude.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExclude sets the value of the Exclude field in Filters.
+func (o *Filters) SetExclude(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclude"]
+	o.Exclude = types.ListValueMust(t, vs)
+}
+
+// GetInclude returns the value of the Include field in Filters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Filters) GetInclude(ctx context.Context) ([]types.String, bool) {
+	if o.Include.IsNull() || o.Include.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Include.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInclude sets the value of the Include field in Filters.
+func (o *Filters) SetInclude(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include"]
+	o.Include = types.ListValueMust(t, vs)
+}
+
 // Get pipeline permission levels
 type GetPipelinePermissionLevelsRequest struct {
 	// The pipeline for which to get or manage permissions.
@@ -873,6 +1486,31 @@ func (o GetPipelinePermissionLevelsResponse) Type(ctx context.Context) attr.Type
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetPipelinePermissionLevelsResponse as
+// a slice of PipelinePermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPipelinePermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]PipelinePermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelinePermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetPipelinePermissionLevelsResponse.
+func (o *GetPipelinePermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []PipelinePermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get pipeline permissions
@@ -1055,6 +1693,57 @@ func (o GetPipelineResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLatestUpdates returns the value of the LatestUpdates field in GetPipelineResponse as
+// a slice of UpdateStateInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPipelineResponse) GetLatestUpdates(ctx context.Context) ([]UpdateStateInfo, bool) {
+	if o.LatestUpdates.IsNull() || o.LatestUpdates.IsUnknown() {
+		return nil, false
+	}
+	var v []UpdateStateInfo
+	d := o.LatestUpdates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLatestUpdates sets the value of the LatestUpdates field in GetPipelineResponse.
+func (o *GetPipelineResponse) SetLatestUpdates(ctx context.Context, v []UpdateStateInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_updates"]
+	o.LatestUpdates = types.ListValueMust(t, vs)
+}
+
+// GetSpec returns the value of the Spec field in GetPipelineResponse as
+// a PipelineSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPipelineResponse) GetSpec(ctx context.Context) (PipelineSpec, bool) {
+	var e PipelineSpec
+	if o.Spec.IsNull() || o.Spec.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineSpec
+	d := o.Spec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSpec sets the value of the Spec field in GetPipelineResponse.
+func (o *GetPipelineResponse) SetSpec(ctx context.Context, v PipelineSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
+	o.Spec = types.ListValueMust(t, vs)
+}
+
 // Get a pipeline update
 type GetUpdateRequest struct {
 	// The ID of the pipeline.
@@ -1148,6 +1837,32 @@ func (o GetUpdateResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetUpdate returns the value of the Update field in GetUpdateResponse as
+// a UpdateInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetUpdateResponse) GetUpdate(ctx context.Context) (UpdateInfo, bool) {
+	var e UpdateInfo
+	if o.Update.IsNull() || o.Update.IsUnknown() {
+		return e, false
+	}
+	var v []UpdateInfo
+	d := o.Update.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUpdate sets the value of the Update field in GetUpdateResponse.
+func (o *GetUpdateResponse) SetUpdate(ctx context.Context, v UpdateInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["update"]
+	o.Update = types.ListValueMust(t, vs)
+}
+
 type IngestionConfig struct {
 	// Select a specific source report.
 	Report types.List `tfsdk:"report" tf:"optional,object"`
@@ -1206,6 +1921,84 @@ func (o IngestionConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetReport returns the value of the Report field in IngestionConfig as
+// a ReportSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionConfig) GetReport(ctx context.Context) (ReportSpec, bool) {
+	var e ReportSpec
+	if o.Report.IsNull() || o.Report.IsUnknown() {
+		return e, false
+	}
+	var v []ReportSpec
+	d := o.Report.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetReport sets the value of the Report field in IngestionConfig.
+func (o *IngestionConfig) SetReport(ctx context.Context, v ReportSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["report"]
+	o.Report = types.ListValueMust(t, vs)
+}
+
+// GetSchema returns the value of the Schema field in IngestionConfig as
+// a SchemaSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionConfig) GetSchema(ctx context.Context) (SchemaSpec, bool) {
+	var e SchemaSpec
+	if o.Schema.IsNull() || o.Schema.IsUnknown() {
+		return e, false
+	}
+	var v []SchemaSpec
+	d := o.Schema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchema sets the value of the Schema field in IngestionConfig.
+func (o *IngestionConfig) SetSchema(ctx context.Context, v SchemaSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schema"]
+	o.Schema = types.ListValueMust(t, vs)
+}
+
+// GetTable returns the value of the Table field in IngestionConfig as
+// a TableSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionConfig) GetTable(ctx context.Context) (TableSpec, bool) {
+	var e TableSpec
+	if o.Table.IsNull() || o.Table.IsUnknown() {
+		return e, false
+	}
+	var v []TableSpec
+	d := o.Table.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTable sets the value of the Table field in IngestionConfig.
+func (o *IngestionConfig) SetTable(ctx context.Context, v TableSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
 }
 
 type IngestionGatewayPipelineDefinition struct {
@@ -1341,6 +2134,57 @@ func (o IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetObjects returns the value of the Objects field in IngestionPipelineDefinition as
+// a slice of IngestionConfig values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinition) GetObjects(ctx context.Context) ([]IngestionConfig, bool) {
+	if o.Objects.IsNull() || o.Objects.IsUnknown() {
+		return nil, false
+	}
+	var v []IngestionConfig
+	d := o.Objects.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetObjects sets the value of the Objects field in IngestionPipelineDefinition.
+func (o *IngestionPipelineDefinition) SetObjects(ctx context.Context, v []IngestionConfig) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["objects"]
+	o.Objects = types.ListValueMust(t, vs)
+}
+
+// GetTableConfiguration returns the value of the TableConfiguration field in IngestionPipelineDefinition as
+// a TableSpecificConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IngestionPipelineDefinition) GetTableConfiguration(ctx context.Context) (TableSpecificConfig, bool) {
+	var e TableSpecificConfig
+	if o.TableConfiguration.IsNull() || o.TableConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []TableSpecificConfig
+	d := o.TableConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableConfiguration sets the value of the TableConfiguration field in IngestionPipelineDefinition.
+func (o *IngestionPipelineDefinition) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_configuration"]
+	o.TableConfiguration = types.ListValueMust(t, vs)
+}
+
 // List pipeline events
 type ListPipelineEventsRequest struct {
 	// Criteria to select a subset of results, expressed using a SQL-like
@@ -1417,6 +2261,31 @@ func (o ListPipelineEventsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOrderBy returns the value of the OrderBy field in ListPipelineEventsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPipelineEventsRequest) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in ListPipelineEventsRequest.
+func (o *ListPipelineEventsRequest) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type ListPipelineEventsResponse struct {
 	// The list of events matching the request criteria.
 	Events types.List `tfsdk:"events" tf:"optional"`
@@ -1469,6 +2338,31 @@ func (o ListPipelineEventsResponse) Type(ctx context.Context) attr.Type {
 			"prev_page_token": types.StringType,
 		},
 	}
+}
+
+// GetEvents returns the value of the Events field in ListPipelineEventsResponse as
+// a slice of PipelineEvent values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPipelineEventsResponse) GetEvents(ctx context.Context) ([]PipelineEvent, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineEvent
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in ListPipelineEventsResponse.
+func (o *ListPipelineEventsResponse) SetEvents(ctx context.Context, v []PipelineEvent) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
 }
 
 // List pipelines
@@ -1543,6 +2437,31 @@ func (o ListPipelinesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOrderBy returns the value of the OrderBy field in ListPipelinesRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPipelinesRequest) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in ListPipelinesRequest.
+func (o *ListPipelinesRequest) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type ListPipelinesResponse struct {
 	// If present, a token to fetch the next page of events.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -1591,6 +2510,31 @@ func (o ListPipelinesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStatuses returns the value of the Statuses field in ListPipelinesResponse as
+// a slice of PipelineStateInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListPipelinesResponse) GetStatuses(ctx context.Context) ([]PipelineStateInfo, bool) {
+	if o.Statuses.IsNull() || o.Statuses.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineStateInfo
+	d := o.Statuses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStatuses sets the value of the Statuses field in ListPipelinesResponse.
+func (o *ListPipelinesResponse) SetStatuses(ctx context.Context, v []PipelineStateInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	o.Statuses = types.ListValueMust(t, vs)
 }
 
 // List pipeline updates
@@ -1702,6 +2646,31 @@ func (o ListUpdatesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetUpdates returns the value of the Updates field in ListUpdatesResponse as
+// a slice of UpdateInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListUpdatesResponse) GetUpdates(ctx context.Context) ([]UpdateInfo, bool) {
+	if o.Updates.IsNull() || o.Updates.IsUnknown() {
+		return nil, false
+	}
+	var v []UpdateInfo
+	d := o.Updates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUpdates sets the value of the Updates field in ListUpdatesResponse.
+func (o *ListUpdatesResponse) SetUpdates(ctx context.Context, v []UpdateInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["updates"]
+	o.Updates = types.ListValueMust(t, vs)
 }
 
 type ManualTrigger struct {
@@ -1839,6 +2808,56 @@ func (o Notifications) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAlerts returns the value of the Alerts field in Notifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Notifications) GetAlerts(ctx context.Context) ([]types.String, bool) {
+	if o.Alerts.IsNull() || o.Alerts.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Alerts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAlerts sets the value of the Alerts field in Notifications.
+func (o *Notifications) SetAlerts(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alerts"]
+	o.Alerts = types.ListValueMust(t, vs)
+}
+
+// GetEmailRecipients returns the value of the EmailRecipients field in Notifications as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Notifications) GetEmailRecipients(ctx context.Context) ([]types.String, bool) {
+	if o.EmailRecipients.IsNull() || o.EmailRecipients.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.EmailRecipients.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmailRecipients sets the value of the EmailRecipients field in Notifications.
+func (o *Notifications) SetEmailRecipients(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_recipients"]
+	o.EmailRecipients = types.ListValueMust(t, vs)
 }
 
 type Origin struct {
@@ -2064,6 +3083,31 @@ func (o PipelineAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in PipelineAccessControlResponse as
+// a slice of PipelinePermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineAccessControlResponse) GetAllPermissions(ctx context.Context) ([]PipelinePermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelinePermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in PipelineAccessControlResponse.
+func (o *PipelineAccessControlResponse) SetAllPermissions(ctx context.Context, v []PipelinePermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type PipelineCluster struct {
 	// Note: This field won't be persisted. Only API users will check this
 	// field.
@@ -2177,12 +3221,12 @@ func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState Pip
 func (a PipelineCluster) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"autoscale":        reflect.TypeOf(PipelineClusterAutoscale{}),
-		"aws_attributes":   reflect.TypeOf(compute.AwsAttributes{}),
-		"azure_attributes": reflect.TypeOf(compute.AzureAttributes{}),
-		"cluster_log_conf": reflect.TypeOf(compute.ClusterLogConf{}),
+		"aws_attributes":   reflect.TypeOf(compute_tf.AwsAttributes{}),
+		"azure_attributes": reflect.TypeOf(compute_tf.AzureAttributes{}),
+		"cluster_log_conf": reflect.TypeOf(compute_tf.ClusterLogConf{}),
 		"custom_tags":      reflect.TypeOf(types.String{}),
-		"gcp_attributes":   reflect.TypeOf(compute.GcpAttributes{}),
-		"init_scripts":     reflect.TypeOf(compute.InitScriptInfo{}),
+		"gcp_attributes":   reflect.TypeOf(compute_tf.GcpAttributes{}),
+		"init_scripts":     reflect.TypeOf(compute_tf.InitScriptInfo{}),
 		"spark_conf":       reflect.TypeOf(types.String{}),
 		"spark_env_vars":   reflect.TypeOf(types.String{}),
 		"ssh_public_keys":  reflect.TypeOf(types.String{}),
@@ -2263,6 +3307,261 @@ func (o PipelineCluster) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAutoscale returns the value of the Autoscale field in PipelineCluster as
+// a PipelineClusterAutoscale value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetAutoscale(ctx context.Context) (PipelineClusterAutoscale, bool) {
+	var e PipelineClusterAutoscale
+	if o.Autoscale.IsNull() || o.Autoscale.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineClusterAutoscale
+	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoscale sets the value of the Autoscale field in PipelineCluster.
+func (o *PipelineCluster) SetAutoscale(ctx context.Context, v PipelineClusterAutoscale) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
+	o.Autoscale = types.ListValueMust(t, vs)
+}
+
+// GetAwsAttributes returns the value of the AwsAttributes field in PipelineCluster as
+// a compute_tf.AwsAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetAwsAttributes(ctx context.Context) (compute_tf.AwsAttributes, bool) {
+	var e compute_tf.AwsAttributes
+	if o.AwsAttributes.IsNull() || o.AwsAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.AwsAttributes
+	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAwsAttributes sets the value of the AwsAttributes field in PipelineCluster.
+func (o *PipelineCluster) SetAwsAttributes(ctx context.Context, v compute_tf.AwsAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
+	o.AwsAttributes = types.ListValueMust(t, vs)
+}
+
+// GetAzureAttributes returns the value of the AzureAttributes field in PipelineCluster as
+// a compute_tf.AzureAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetAzureAttributes(ctx context.Context) (compute_tf.AzureAttributes, bool) {
+	var e compute_tf.AzureAttributes
+	if o.AzureAttributes.IsNull() || o.AzureAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.AzureAttributes
+	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAzureAttributes sets the value of the AzureAttributes field in PipelineCluster.
+func (o *PipelineCluster) SetAzureAttributes(ctx context.Context, v compute_tf.AzureAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
+	o.AzureAttributes = types.ListValueMust(t, vs)
+}
+
+// GetClusterLogConf returns the value of the ClusterLogConf field in PipelineCluster as
+// a compute_tf.ClusterLogConf value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetClusterLogConf(ctx context.Context) (compute_tf.ClusterLogConf, bool) {
+	var e compute_tf.ClusterLogConf
+	if o.ClusterLogConf.IsNull() || o.ClusterLogConf.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.ClusterLogConf
+	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetClusterLogConf sets the value of the ClusterLogConf field in PipelineCluster.
+func (o *PipelineCluster) SetClusterLogConf(ctx context.Context, v compute_tf.ClusterLogConf) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
+	o.ClusterLogConf = types.ListValueMust(t, vs)
+}
+
+// GetCustomTags returns the value of the CustomTags field in PipelineCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetCustomTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetCustomTags sets the value of the CustomTags field in PipelineCluster.
+func (o *PipelineCluster) SetCustomTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetGcpAttributes returns the value of the GcpAttributes field in PipelineCluster as
+// a compute_tf.GcpAttributes value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetGcpAttributes(ctx context.Context) (compute_tf.GcpAttributes, bool) {
+	var e compute_tf.GcpAttributes
+	if o.GcpAttributes.IsNull() || o.GcpAttributes.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.GcpAttributes
+	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpAttributes sets the value of the GcpAttributes field in PipelineCluster.
+func (o *PipelineCluster) SetGcpAttributes(ctx context.Context, v compute_tf.GcpAttributes) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
+	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetInitScripts returns the value of the InitScripts field in PipelineCluster as
+// a slice of compute_tf.InitScriptInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetInitScripts(ctx context.Context) ([]compute_tf.InitScriptInfo, bool) {
+	if o.InitScripts.IsNull() || o.InitScripts.IsUnknown() {
+		return nil, false
+	}
+	var v []compute_tf.InitScriptInfo
+	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInitScripts sets the value of the InitScripts field in PipelineCluster.
+func (o *PipelineCluster) SetInitScripts(ctx context.Context, v []compute_tf.InitScriptInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	o.InitScripts = types.ListValueMust(t, vs)
+}
+
+// GetSparkConf returns the value of the SparkConf field in PipelineCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetSparkConf(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkConf.IsNull() || o.SparkConf.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkConf.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkConf sets the value of the SparkConf field in PipelineCluster.
+func (o *PipelineCluster) SetSparkConf(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	o.SparkConf = types.MapValueMust(t, vs)
+}
+
+// GetSparkEnvVars returns the value of the SparkEnvVars field in PipelineCluster as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetSparkEnvVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.SparkEnvVars.IsNull() || o.SparkEnvVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.SparkEnvVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSparkEnvVars sets the value of the SparkEnvVars field in PipelineCluster.
+func (o *PipelineCluster) SetSparkEnvVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	o.SparkEnvVars = types.MapValueMust(t, vs)
+}
+
+// GetSshPublicKeys returns the value of the SshPublicKeys field in PipelineCluster as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineCluster) GetSshPublicKeys(ctx context.Context) ([]types.String, bool) {
+	if o.SshPublicKeys.IsNull() || o.SshPublicKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SshPublicKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSshPublicKeys sets the value of the SshPublicKeys field in PipelineCluster.
+func (o *PipelineCluster) SetSshPublicKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
 type PipelineClusterAutoscale struct {
@@ -2452,6 +3751,84 @@ func (o PipelineEvent) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetError returns the value of the Error field in PipelineEvent as
+// a ErrorDetail value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineEvent) GetError(ctx context.Context) (ErrorDetail, bool) {
+	var e ErrorDetail
+	if o.Error.IsNull() || o.Error.IsUnknown() {
+		return e, false
+	}
+	var v []ErrorDetail
+	d := o.Error.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetError sets the value of the Error field in PipelineEvent.
+func (o *PipelineEvent) SetError(ctx context.Context, v ErrorDetail) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
+	o.Error = types.ListValueMust(t, vs)
+}
+
+// GetOrigin returns the value of the Origin field in PipelineEvent as
+// a Origin value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineEvent) GetOrigin(ctx context.Context) (Origin, bool) {
+	var e Origin
+	if o.Origin.IsNull() || o.Origin.IsUnknown() {
+		return e, false
+	}
+	var v []Origin
+	d := o.Origin.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOrigin sets the value of the Origin field in PipelineEvent.
+func (o *PipelineEvent) SetOrigin(ctx context.Context, v Origin) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["origin"]
+	o.Origin = types.ListValueMust(t, vs)
+}
+
+// GetSequence returns the value of the Sequence field in PipelineEvent as
+// a Sequencing value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineEvent) GetSequence(ctx context.Context) (Sequencing, bool) {
+	var e Sequencing
+	if o.Sequence.IsNull() || o.Sequence.IsUnknown() {
+		return e, false
+	}
+	var v []Sequencing
+	d := o.Sequence.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSequence sets the value of the Sequence field in PipelineEvent.
+func (o *PipelineEvent) SetSequence(ctx context.Context, v Sequencing) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sequence"]
+	o.Sequence = types.ListValueMust(t, vs)
+}
+
 type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
@@ -2483,7 +3860,7 @@ func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState Pip
 func (a PipelineLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file":     reflect.TypeOf(FileLibrary{}),
-		"maven":    reflect.TypeOf(compute.MavenLibrary{}),
+		"maven":    reflect.TypeOf(compute_tf.MavenLibrary{}),
 		"notebook": reflect.TypeOf(NotebookLibrary{}),
 	}
 }
@@ -2520,6 +3897,84 @@ func (o PipelineLibrary) Type(ctx context.Context) attr.Type {
 			"whl": types.StringType,
 		},
 	}
+}
+
+// GetFile returns the value of the File field in PipelineLibrary as
+// a FileLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary) GetFile(ctx context.Context) (FileLibrary, bool) {
+	var e FileLibrary
+	if o.File.IsNull() || o.File.IsUnknown() {
+		return e, false
+	}
+	var v []FileLibrary
+	d := o.File.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFile sets the value of the File field in PipelineLibrary.
+func (o *PipelineLibrary) SetFile(ctx context.Context, v FileLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	o.File = types.ListValueMust(t, vs)
+}
+
+// GetMaven returns the value of the Maven field in PipelineLibrary as
+// a compute_tf.MavenLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary) GetMaven(ctx context.Context) (compute_tf.MavenLibrary, bool) {
+	var e compute_tf.MavenLibrary
+	if o.Maven.IsNull() || o.Maven.IsUnknown() {
+		return e, false
+	}
+	var v []compute_tf.MavenLibrary
+	d := o.Maven.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetMaven sets the value of the Maven field in PipelineLibrary.
+func (o *PipelineLibrary) SetMaven(ctx context.Context, v compute_tf.MavenLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["maven"]
+	o.Maven = types.ListValueMust(t, vs)
+}
+
+// GetNotebook returns the value of the Notebook field in PipelineLibrary as
+// a NotebookLibrary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary) GetNotebook(ctx context.Context) (NotebookLibrary, bool) {
+	var e NotebookLibrary
+	if o.Notebook.IsNull() || o.Notebook.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookLibrary
+	d := o.Notebook.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebook sets the value of the Notebook field in PipelineLibrary.
+func (o *PipelineLibrary) SetNotebook(ctx context.Context, v NotebookLibrary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook"]
+	o.Notebook = types.ListValueMust(t, vs)
 }
 
 type PipelinePermission struct {
@@ -2575,6 +4030,31 @@ func (o PipelinePermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in PipelinePermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelinePermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in PipelinePermission.
+func (o *PipelinePermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type PipelinePermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -2626,6 +4106,31 @@ func (o PipelinePermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in PipelinePermissions as
+// a slice of PipelineAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelinePermissions) GetAccessControlList(ctx context.Context) ([]PipelineAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in PipelinePermissions.
+func (o *PipelinePermissions) SetAccessControlList(ctx context.Context, v []PipelineAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type PipelinePermissionsDescription struct {
@@ -2720,6 +4225,31 @@ func (o PipelinePermissionsRequest) Type(ctx context.Context) attr.Type {
 			"pipeline_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in PipelinePermissionsRequest as
+// a slice of PipelineAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelinePermissionsRequest) GetAccessControlList(ctx context.Context) ([]PipelineAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in PipelinePermissionsRequest.
+func (o *PipelinePermissionsRequest) SetAccessControlList(ctx context.Context, v []PipelineAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type PipelineSpec struct {
@@ -2892,6 +4422,262 @@ func (o PipelineSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetClusters returns the value of the Clusters field in PipelineSpec as
+// a slice of PipelineCluster values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetClusters(ctx context.Context) ([]PipelineCluster, bool) {
+	if o.Clusters.IsNull() || o.Clusters.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineCluster
+	d := o.Clusters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetClusters sets the value of the Clusters field in PipelineSpec.
+func (o *PipelineSpec) SetClusters(ctx context.Context, v []PipelineCluster) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	o.Clusters = types.ListValueMust(t, vs)
+}
+
+// GetConfiguration returns the value of the Configuration field in PipelineSpec as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetConfiguration(ctx context.Context) (map[string]types.String, bool) {
+	if o.Configuration.IsNull() || o.Configuration.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Configuration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetConfiguration sets the value of the Configuration field in PipelineSpec.
+func (o *PipelineSpec) SetConfiguration(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	o.Configuration = types.MapValueMust(t, vs)
+}
+
+// GetDeployment returns the value of the Deployment field in PipelineSpec as
+// a PipelineDeployment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetDeployment(ctx context.Context) (PipelineDeployment, bool) {
+	var e PipelineDeployment
+	if o.Deployment.IsNull() || o.Deployment.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineDeployment
+	d := o.Deployment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDeployment sets the value of the Deployment field in PipelineSpec.
+func (o *PipelineSpec) SetDeployment(ctx context.Context, v PipelineDeployment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
+	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetFilters returns the value of the Filters field in PipelineSpec as
+// a Filters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetFilters(ctx context.Context) (Filters, bool) {
+	var e Filters
+	if o.Filters.IsNull() || o.Filters.IsUnknown() {
+		return e, false
+	}
+	var v []Filters
+	d := o.Filters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFilters sets the value of the Filters field in PipelineSpec.
+func (o *PipelineSpec) SetFilters(ctx context.Context, v Filters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	o.Filters = types.ListValueMust(t, vs)
+}
+
+// GetGatewayDefinition returns the value of the GatewayDefinition field in PipelineSpec as
+// a IngestionGatewayPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetGatewayDefinition(ctx context.Context) (IngestionGatewayPipelineDefinition, bool) {
+	var e IngestionGatewayPipelineDefinition
+	if o.GatewayDefinition.IsNull() || o.GatewayDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionGatewayPipelineDefinition
+	d := o.GatewayDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGatewayDefinition sets the value of the GatewayDefinition field in PipelineSpec.
+func (o *PipelineSpec) SetGatewayDefinition(ctx context.Context, v IngestionGatewayPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gateway_definition"]
+	o.GatewayDefinition = types.ListValueMust(t, vs)
+}
+
+// GetIngestionDefinition returns the value of the IngestionDefinition field in PipelineSpec as
+// a IngestionPipelineDefinition value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetIngestionDefinition(ctx context.Context) (IngestionPipelineDefinition, bool) {
+	var e IngestionPipelineDefinition
+	if o.IngestionDefinition.IsNull() || o.IngestionDefinition.IsUnknown() {
+		return e, false
+	}
+	var v []IngestionPipelineDefinition
+	d := o.IngestionDefinition.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIngestionDefinition sets the value of the IngestionDefinition field in PipelineSpec.
+func (o *PipelineSpec) SetIngestionDefinition(ctx context.Context, v IngestionPipelineDefinition) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ingestion_definition"]
+	o.IngestionDefinition = types.ListValueMust(t, vs)
+}
+
+// GetLibraries returns the value of the Libraries field in PipelineSpec as
+// a slice of PipelineLibrary values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetLibraries(ctx context.Context) ([]PipelineLibrary, bool) {
+	if o.Libraries.IsNull() || o.Libraries.IsUnknown() {
+		return nil, false
+	}
+	var v []PipelineLibrary
+	d := o.Libraries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLibraries sets the value of the Libraries field in PipelineSpec.
+func (o *PipelineSpec) SetLibraries(ctx context.Context, v []PipelineLibrary) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	o.Libraries = types.ListValueMust(t, vs)
+}
+
+// GetNotifications returns the value of the Notifications field in PipelineSpec as
+// a slice of Notifications values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetNotifications(ctx context.Context) ([]Notifications, bool) {
+	if o.Notifications.IsNull() || o.Notifications.IsUnknown() {
+		return nil, false
+	}
+	var v []Notifications
+	d := o.Notifications.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotifications sets the value of the Notifications field in PipelineSpec.
+func (o *PipelineSpec) SetNotifications(ctx context.Context, v []Notifications) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	o.Notifications = types.ListValueMust(t, vs)
+}
+
+// GetRestartWindow returns the value of the RestartWindow field in PipelineSpec as
+// a RestartWindow value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetRestartWindow(ctx context.Context) (RestartWindow, bool) {
+	var e RestartWindow
+	if o.RestartWindow.IsNull() || o.RestartWindow.IsUnknown() {
+		return e, false
+	}
+	var v []RestartWindow
+	d := o.RestartWindow.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRestartWindow sets the value of the RestartWindow field in PipelineSpec.
+func (o *PipelineSpec) SetRestartWindow(ctx context.Context, v RestartWindow) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
+	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetTrigger returns the value of the Trigger field in PipelineSpec as
+// a PipelineTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec) GetTrigger(ctx context.Context) (PipelineTrigger, bool) {
+	var e PipelineTrigger
+	if o.Trigger.IsNull() || o.Trigger.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineTrigger
+	d := o.Trigger.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrigger sets the value of the Trigger field in PipelineSpec.
+func (o *PipelineSpec) SetTrigger(ctx context.Context, v PipelineTrigger) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["trigger"]
+	o.Trigger = types.ListValueMust(t, vs)
+}
+
 type PipelineStateInfo struct {
 	// The unique identifier of the cluster running the pipeline.
 	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
@@ -2968,6 +4754,31 @@ func (o PipelineStateInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLatestUpdates returns the value of the LatestUpdates field in PipelineStateInfo as
+// a slice of UpdateStateInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineStateInfo) GetLatestUpdates(ctx context.Context) ([]UpdateStateInfo, bool) {
+	if o.LatestUpdates.IsNull() || o.LatestUpdates.IsUnknown() {
+		return nil, false
+	}
+	var v []UpdateStateInfo
+	d := o.LatestUpdates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLatestUpdates sets the value of the LatestUpdates field in PipelineStateInfo.
+func (o *PipelineStateInfo) SetLatestUpdates(ctx context.Context, v []UpdateStateInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_updates"]
+	o.LatestUpdates = types.ListValueMust(t, vs)
+}
+
 type PipelineTrigger struct {
 	Cron types.List `tfsdk:"cron" tf:"optional,object"`
 
@@ -3018,6 +4829,58 @@ func (o PipelineTrigger) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCron returns the value of the Cron field in PipelineTrigger as
+// a CronTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineTrigger) GetCron(ctx context.Context) (CronTrigger, bool) {
+	var e CronTrigger
+	if o.Cron.IsNull() || o.Cron.IsUnknown() {
+		return e, false
+	}
+	var v []CronTrigger
+	d := o.Cron.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCron sets the value of the Cron field in PipelineTrigger.
+func (o *PipelineTrigger) SetCron(ctx context.Context, v CronTrigger) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cron"]
+	o.Cron = types.ListValueMust(t, vs)
+}
+
+// GetManual returns the value of the Manual field in PipelineTrigger as
+// a ManualTrigger value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineTrigger) GetManual(ctx context.Context) (ManualTrigger, bool) {
+	var e ManualTrigger
+	if o.Manual.IsNull() || o.Manual.IsUnknown() {
+		return e, false
+	}
+	var v []ManualTrigger
+	d := o.Manual.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetManual sets the value of the Manual field in PipelineTrigger.
+func (o *PipelineTrigger) SetManual(ctx context.Context, v ManualTrigger) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["manual"]
+	o.Manual = types.ListValueMust(t, vs)
 }
 
 type ReportSpec struct {
@@ -3083,6 +4946,32 @@ func (o ReportSpec) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTableConfiguration returns the value of the TableConfiguration field in ReportSpec as
+// a TableSpecificConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ReportSpec) GetTableConfiguration(ctx context.Context) (TableSpecificConfig, bool) {
+	var e TableSpecificConfig
+	if o.TableConfiguration.IsNull() || o.TableConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []TableSpecificConfig
+	d := o.TableConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableConfiguration sets the value of the TableConfiguration field in ReportSpec.
+func (o *ReportSpec) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_configuration"]
+	o.TableConfiguration = types.ListValueMust(t, vs)
 }
 
 type RestartWindow struct {
@@ -3208,6 +5097,32 @@ func (o SchemaSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTableConfiguration returns the value of the TableConfiguration field in SchemaSpec as
+// a TableSpecificConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SchemaSpec) GetTableConfiguration(ctx context.Context) (TableSpecificConfig, bool) {
+	var e TableSpecificConfig
+	if o.TableConfiguration.IsNull() || o.TableConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []TableSpecificConfig
+	d := o.TableConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableConfiguration sets the value of the TableConfiguration field in SchemaSpec.
+func (o *SchemaSpec) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_configuration"]
+	o.TableConfiguration = types.ListValueMust(t, vs)
+}
+
 type Sequencing struct {
 	// A sequence number, unique and increasing within the control plane.
 	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
@@ -3256,6 +5171,32 @@ func (o Sequencing) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDataPlaneId returns the value of the DataPlaneId field in Sequencing as
+// a DataPlaneId value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Sequencing) GetDataPlaneId(ctx context.Context) (DataPlaneId, bool) {
+	var e DataPlaneId
+	if o.DataPlaneId.IsNull() || o.DataPlaneId.IsUnknown() {
+		return e, false
+	}
+	var v []DataPlaneId
+	d := o.DataPlaneId.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataPlaneId sets the value of the DataPlaneId field in Sequencing.
+func (o *Sequencing) SetDataPlaneId(ctx context.Context, v DataPlaneId) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_plane_id"]
+	o.DataPlaneId = types.ListValueMust(t, vs)
 }
 
 type SerializedException struct {
@@ -3310,6 +5251,31 @@ func (o SerializedException) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetStack returns the value of the Stack field in SerializedException as
+// a slice of StackFrame values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SerializedException) GetStack(ctx context.Context) ([]StackFrame, bool) {
+	if o.Stack.IsNull() || o.Stack.IsUnknown() {
+		return nil, false
+	}
+	var v []StackFrame
+	d := o.Stack.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStack sets the value of the Stack field in SerializedException.
+func (o *SerializedException) SetStack(ctx context.Context, v []StackFrame) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stack"]
+	o.Stack = types.ListValueMust(t, vs)
 }
 
 type StackFrame struct {
@@ -3439,6 +5405,56 @@ func (o StartUpdate) Type(ctx context.Context) attr.Type {
 			"validate_only": types.BoolType,
 		},
 	}
+}
+
+// GetFullRefreshSelection returns the value of the FullRefreshSelection field in StartUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StartUpdate) GetFullRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if o.FullRefreshSelection.IsNull() || o.FullRefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FullRefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelection sets the value of the FullRefreshSelection field in StartUpdate.
+func (o *StartUpdate) SetFullRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	o.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelection returns the value of the RefreshSelection field in StartUpdate as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *StartUpdate) GetRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if o.RefreshSelection.IsNull() || o.RefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelection sets the value of the RefreshSelection field in StartUpdate.
+func (o *StartUpdate) SetRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	o.RefreshSelection = types.ListValueMust(t, vs)
 }
 
 type StartUpdateResponse struct {
@@ -3634,6 +5650,32 @@ func (o TableSpec) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTableConfiguration returns the value of the TableConfiguration field in TableSpec as
+// a TableSpecificConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpec) GetTableConfiguration(ctx context.Context) (TableSpecificConfig, bool) {
+	var e TableSpecificConfig
+	if o.TableConfiguration.IsNull() || o.TableConfiguration.IsUnknown() {
+		return e, false
+	}
+	var v []TableSpecificConfig
+	d := o.TableConfiguration.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTableConfiguration sets the value of the TableConfiguration field in TableSpec.
+func (o *TableSpec) SetTableConfiguration(ctx context.Context, v TableSpecificConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_configuration"]
+	o.TableConfiguration = types.ListValueMust(t, vs)
+}
+
 type TableSpecificConfig struct {
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys" tf:"optional"`
@@ -3696,6 +5738,56 @@ func (o TableSpecificConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPrimaryKeys returns the value of the PrimaryKeys field in TableSpecificConfig as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig) GetPrimaryKeys(ctx context.Context) ([]types.String, bool) {
+	if o.PrimaryKeys.IsNull() || o.PrimaryKeys.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.PrimaryKeys.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrimaryKeys sets the value of the PrimaryKeys field in TableSpecificConfig.
+func (o *TableSpecificConfig) SetPrimaryKeys(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_keys"]
+	o.PrimaryKeys = types.ListValueMust(t, vs)
+}
+
+// GetSequenceBy returns the value of the SequenceBy field in TableSpecificConfig as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig) GetSequenceBy(ctx context.Context) ([]types.String, bool) {
+	if o.SequenceBy.IsNull() || o.SequenceBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.SequenceBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSequenceBy sets the value of the SequenceBy field in TableSpecificConfig.
+func (o *TableSpecificConfig) SetSequenceBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sequence_by"]
+	o.SequenceBy = types.ListValueMust(t, vs)
 }
 
 type UpdateInfo struct {
@@ -3798,6 +5890,82 @@ func (o UpdateInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetConfig returns the value of the Config field in UpdateInfo as
+// a PipelineSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInfo) GetConfig(ctx context.Context) (PipelineSpec, bool) {
+	var e PipelineSpec
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PipelineSpec
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in UpdateInfo.
+func (o *UpdateInfo) SetConfig(ctx context.Context, v PipelineSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetFullRefreshSelection returns the value of the FullRefreshSelection field in UpdateInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInfo) GetFullRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if o.FullRefreshSelection.IsNull() || o.FullRefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.FullRefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFullRefreshSelection sets the value of the FullRefreshSelection field in UpdateInfo.
+func (o *UpdateInfo) SetFullRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	o.FullRefreshSelection = types.ListValueMust(t, vs)
+}
+
+// GetRefreshSelection returns the value of the RefreshSelection field in UpdateInfo as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateInfo) GetRefreshSelection(ctx context.Context) ([]types.String, bool) {
+	if o.RefreshSelection.IsNull() || o.RefreshSelection.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RefreshSelection.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRefreshSelection sets the value of the RefreshSelection field in UpdateInfo.
+func (o *UpdateInfo) SetRefreshSelection(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	o.RefreshSelection = types.ListValueMust(t, vs)
+}
+
 type UpdateStateInfo struct {
 	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
 
@@ -3846,34 +6014,3 @@ func (o UpdateStateInfo) Type(ctx context.Context) attr.Type {
 		},
 	}
 }
-
-// The deployment method that manages the pipeline: - BUNDLE: The pipeline is
-// managed by a Databricks Asset Bundle.
-
-// The severity level of the event.
-
-// The health of a pipeline.
-
-// Maturity level for EventDetails.
-
-// Databricks Enhanced Autoscaling optimizes cluster utilization by
-// automatically allocating cluster resources based on workload volume, with
-// minimal impact to the data processing latency of your pipelines. Enhanced
-// Autoscaling is available for `updates` clusters only. The legacy autoscaling
-// feature is used for `maintenance` clusters.
-
-// Permission level
-
-// The pipeline state.
-
-// The health of a pipeline.
-
-// Days of week in which the restart is allowed to happen (within a five-hour
-// window starting at start_hour). If not specified all days of the week will be
-// used.
-
-// The SCD type to use to ingest the table.
-
-// What triggered this update.
-
-// The update state.

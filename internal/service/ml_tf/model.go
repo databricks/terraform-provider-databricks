@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -241,6 +242,32 @@ func (o ApproveTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetActivity returns the value of the Activity field in ApproveTransitionRequestResponse as
+// a Activity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ApproveTransitionRequestResponse) GetActivity(ctx context.Context) (Activity, bool) {
+	var e Activity
+	if o.Activity.IsNull() || o.Activity.IsUnknown() {
+		return e, false
+	}
+	var v []Activity
+	d := o.Activity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetActivity sets the value of the Activity field in ApproveTransitionRequestResponse.
+func (o *ApproveTransitionRequestResponse) SetActivity(ctx context.Context, v Activity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["activity"]
+	o.Activity = types.ListValueMust(t, vs)
+}
+
 // Comment details.
 type CommentObject struct {
 	// Array of actions on the activity allowed for the current viewer.
@@ -306,6 +333,31 @@ func (o CommentObject) Type(ctx context.Context) attr.Type {
 			"user_id":                types.StringType,
 		},
 	}
+}
+
+// GetAvailableActions returns the value of the AvailableActions field in CommentObject as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CommentObject) GetAvailableActions(ctx context.Context) ([]types.String, bool) {
+	if o.AvailableActions.IsNull() || o.AvailableActions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AvailableActions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAvailableActions sets the value of the AvailableActions field in CommentObject.
+func (o *CommentObject) SetAvailableActions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["available_actions"]
+	o.AvailableActions = types.ListValueMust(t, vs)
 }
 
 type CreateComment struct {
@@ -404,6 +456,32 @@ func (o CreateCommentResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetComment returns the value of the Comment field in CreateCommentResponse as
+// a CommentObject value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCommentResponse) GetComment(ctx context.Context) (CommentObject, bool) {
+	var e CommentObject
+	if o.Comment.IsNull() || o.Comment.IsUnknown() {
+		return e, false
+	}
+	var v []CommentObject
+	d := o.Comment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetComment sets the value of the Comment field in CreateCommentResponse.
+func (o *CreateCommentResponse) SetComment(ctx context.Context, v CommentObject) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["comment"]
+	o.Comment = types.ListValueMust(t, vs)
+}
+
 type CreateExperiment struct {
 	// Location where all artifacts for the experiment are stored. If not
 	// provided, the remote server will select an appropriate default.
@@ -461,6 +539,31 @@ func (o CreateExperiment) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetTags returns the value of the Tags field in CreateExperiment as
+// a slice of ExperimentTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateExperiment) GetTags(ctx context.Context) ([]ExperimentTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateExperiment.
+func (o *CreateExperiment) SetTags(ctx context.Context, v []ExperimentTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type CreateExperimentResponse struct {
@@ -559,6 +662,31 @@ func (o CreateModelRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in CreateModelRequest as
+// a slice of ModelTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateModelRequest) GetTags(ctx context.Context) ([]ModelTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateModelRequest.
+func (o *CreateModelRequest) SetTags(ctx context.Context, v []ModelTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type CreateModelResponse struct {
 	RegisteredModel types.List `tfsdk:"registered_model" tf:"optional,object"`
 }
@@ -602,6 +730,32 @@ func (o CreateModelResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRegisteredModel returns the value of the RegisteredModel field in CreateModelResponse as
+// a Model value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateModelResponse) GetRegisteredModel(ctx context.Context) (Model, bool) {
+	var e Model
+	if o.RegisteredModel.IsNull() || o.RegisteredModel.IsUnknown() {
+		return e, false
+	}
+	var v []Model
+	d := o.RegisteredModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRegisteredModel sets the value of the RegisteredModel field in CreateModelResponse.
+func (o *CreateModelResponse) SetRegisteredModel(ctx context.Context, v Model) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_model"]
+	o.RegisteredModel = types.ListValueMust(t, vs)
 }
 
 type CreateModelVersionRequest struct {
@@ -672,6 +826,31 @@ func (o CreateModelVersionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in CreateModelVersionRequest as
+// a slice of ModelVersionTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateModelVersionRequest) GetTags(ctx context.Context) ([]ModelVersionTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersionTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateModelVersionRequest.
+func (o *CreateModelVersionRequest) SetTags(ctx context.Context, v []ModelVersionTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type CreateModelVersionResponse struct {
 	// Return new version number generated for this model in registry.
 	ModelVersion types.List `tfsdk:"model_version" tf:"optional,object"`
@@ -716,6 +895,32 @@ func (o CreateModelVersionResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetModelVersion returns the value of the ModelVersion field in CreateModelVersionResponse as
+// a ModelVersion value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateModelVersionResponse) GetModelVersion(ctx context.Context) (ModelVersion, bool) {
+	var e ModelVersion
+	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+		return e, false
+	}
+	var v []ModelVersion
+	d := o.ModelVersion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersion sets the value of the ModelVersion field in CreateModelVersionResponse.
+func (o *CreateModelVersionResponse) SetModelVersion(ctx context.Context, v ModelVersion) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_version"]
+	o.ModelVersion = types.ListValueMust(t, vs)
 }
 
 type CreateRegistryWebhook struct {
@@ -829,6 +1034,83 @@ func (o CreateRegistryWebhook) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEvents returns the value of the Events field in CreateRegistryWebhook as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRegistryWebhook) GetEvents(ctx context.Context) ([]types.String, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in CreateRegistryWebhook.
+func (o *CreateRegistryWebhook) SetEvents(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
+}
+
+// GetHttpUrlSpec returns the value of the HttpUrlSpec field in CreateRegistryWebhook as
+// a HttpUrlSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRegistryWebhook) GetHttpUrlSpec(ctx context.Context) (HttpUrlSpec, bool) {
+	var e HttpUrlSpec
+	if o.HttpUrlSpec.IsNull() || o.HttpUrlSpec.IsUnknown() {
+		return e, false
+	}
+	var v []HttpUrlSpec
+	d := o.HttpUrlSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHttpUrlSpec sets the value of the HttpUrlSpec field in CreateRegistryWebhook.
+func (o *CreateRegistryWebhook) SetHttpUrlSpec(ctx context.Context, v HttpUrlSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["http_url_spec"]
+	o.HttpUrlSpec = types.ListValueMust(t, vs)
+}
+
+// GetJobSpec returns the value of the JobSpec field in CreateRegistryWebhook as
+// a JobSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRegistryWebhook) GetJobSpec(ctx context.Context) (JobSpec, bool) {
+	var e JobSpec
+	if o.JobSpec.IsNull() || o.JobSpec.IsUnknown() {
+		return e, false
+	}
+	var v []JobSpec
+	d := o.JobSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobSpec sets the value of the JobSpec field in CreateRegistryWebhook.
+func (o *CreateRegistryWebhook) SetJobSpec(ctx context.Context, v JobSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_spec"]
+	o.JobSpec = types.ListValueMust(t, vs)
+}
+
 type CreateRun struct {
 	// ID of the associated experiment.
 	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
@@ -889,6 +1171,31 @@ func (o CreateRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in CreateRun as
+// a slice of RunTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRun) GetTags(ctx context.Context) ([]RunTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateRun.
+func (o *CreateRun) SetTags(ctx context.Context, v []RunTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type CreateRunResponse struct {
 	// The newly created run.
 	Run types.List `tfsdk:"run" tf:"optional,object"`
@@ -933,6 +1240,32 @@ func (o CreateRunResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRun returns the value of the Run field in CreateRunResponse as
+// a Run value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRunResponse) GetRun(ctx context.Context) (Run, bool) {
+	var e Run
+	if o.Run.IsNull() || o.Run.IsUnknown() {
+		return e, false
+	}
+	var v []Run
+	d := o.Run.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRun sets the value of the Run field in CreateRunResponse.
+func (o *CreateRunResponse) SetRun(ctx context.Context, v Run) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run"]
+	o.Run = types.ListValueMust(t, vs)
 }
 
 type CreateTransitionRequest struct {
@@ -1043,6 +1376,32 @@ func (o CreateTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRequest returns the value of the Request field in CreateTransitionRequestResponse as
+// a TransitionRequest value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateTransitionRequestResponse) GetRequest(ctx context.Context) (TransitionRequest, bool) {
+	var e TransitionRequest
+	if o.Request.IsNull() || o.Request.IsUnknown() {
+		return e, false
+	}
+	var v []TransitionRequest
+	d := o.Request.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRequest sets the value of the Request field in CreateTransitionRequestResponse.
+func (o *CreateTransitionRequestResponse) SetRequest(ctx context.Context, v TransitionRequest) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["request"]
+	o.Request = types.ListValueMust(t, vs)
+}
+
 type CreateWebhookResponse struct {
 	Webhook types.List `tfsdk:"webhook" tf:"optional,object"`
 }
@@ -1086,6 +1445,32 @@ func (o CreateWebhookResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWebhook returns the value of the Webhook field in CreateWebhookResponse as
+// a RegistryWebhook value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateWebhookResponse) GetWebhook(ctx context.Context) (RegistryWebhook, bool) {
+	var e RegistryWebhook
+	if o.Webhook.IsNull() || o.Webhook.IsUnknown() {
+		return e, false
+	}
+	var v []RegistryWebhook
+	d := o.Webhook.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhook sets the value of the Webhook field in CreateWebhookResponse.
+func (o *CreateWebhookResponse) SetWebhook(ctx context.Context, v RegistryWebhook) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook"]
+	o.Webhook = types.ListValueMust(t, vs)
 }
 
 type Dataset struct {
@@ -1210,6 +1595,57 @@ func (o DatasetInput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDataset returns the value of the Dataset field in DatasetInput as
+// a Dataset value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DatasetInput) GetDataset(ctx context.Context) (Dataset, bool) {
+	var e Dataset
+	if o.Dataset.IsNull() || o.Dataset.IsUnknown() {
+		return e, false
+	}
+	var v []Dataset
+	d := o.Dataset.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataset sets the value of the Dataset field in DatasetInput.
+func (o *DatasetInput) SetDataset(ctx context.Context, v Dataset) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataset"]
+	o.Dataset = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in DatasetInput as
+// a slice of InputTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DatasetInput) GetTags(ctx context.Context) ([]InputTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []InputTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in DatasetInput.
+func (o *DatasetInput) SetTags(ctx context.Context, v []InputTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 // Delete a comment
@@ -2212,6 +2648,31 @@ func (o Experiment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in Experiment as
+// a slice of ExperimentTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Experiment) GetTags(ctx context.Context) ([]ExperimentTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in Experiment.
+func (o *Experiment) SetTags(ctx context.Context, v []ExperimentTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ExperimentAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -2328,6 +2789,31 @@ func (o ExperimentAccessControlResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in ExperimentAccessControlResponse as
+// a slice of ExperimentPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExperimentAccessControlResponse) GetAllPermissions(ctx context.Context) ([]ExperimentPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in ExperimentAccessControlResponse.
+func (o *ExperimentAccessControlResponse) SetAllPermissions(ctx context.Context, v []ExperimentPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type ExperimentPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -2381,6 +2867,31 @@ func (o ExperimentPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in ExperimentPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExperimentPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in ExperimentPermission.
+func (o *ExperimentPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type ExperimentPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -2432,6 +2943,31 @@ func (o ExperimentPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ExperimentPermissions as
+// a slice of ExperimentAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExperimentPermissions) GetAccessControlList(ctx context.Context) ([]ExperimentAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ExperimentPermissions.
+func (o *ExperimentPermissions) SetAccessControlList(ctx context.Context, v []ExperimentAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ExperimentPermissionsDescription struct {
@@ -2526,6 +3062,31 @@ func (o ExperimentPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"experiment_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ExperimentPermissionsRequest as
+// a slice of ExperimentAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExperimentPermissionsRequest) GetAccessControlList(ctx context.Context) ([]ExperimentAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ExperimentPermissionsRequest.
+func (o *ExperimentPermissionsRequest) SetAccessControlList(ctx context.Context, v []ExperimentAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ExperimentTag struct {
@@ -2756,6 +3317,31 @@ func (o GetExperimentPermissionLevelsResponse) Type(ctx context.Context) attr.Ty
 	}
 }
 
+// GetPermissionLevels returns the value of the PermissionLevels field in GetExperimentPermissionLevelsResponse as
+// a slice of ExperimentPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetExperimentPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]ExperimentPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []ExperimentPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetExperimentPermissionLevelsResponse.
+func (o *GetExperimentPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []ExperimentPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
 // Get experiment permissions
 type GetExperimentPermissionsRequest struct {
 	// The experiment for which to get or manage permissions.
@@ -2888,6 +3474,32 @@ func (o GetExperimentResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExperiment returns the value of the Experiment field in GetExperimentResponse as
+// a Experiment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetExperimentResponse) GetExperiment(ctx context.Context) (Experiment, bool) {
+	var e Experiment
+	if o.Experiment.IsNull() || o.Experiment.IsUnknown() {
+		return e, false
+	}
+	var v []Experiment
+	d := o.Experiment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExperiment sets the value of the Experiment field in GetExperimentResponse.
+func (o *GetExperimentResponse) SetExperiment(ctx context.Context, v Experiment) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment"]
+	o.Experiment = types.ListValueMust(t, vs)
+}
+
 // Get history of a given metric within a run
 type GetHistoryRequest struct {
 	// Maximum number of Metric records to return per paginated request. Default
@@ -3000,6 +3612,31 @@ func (o GetLatestVersionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetStages returns the value of the Stages field in GetLatestVersionsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLatestVersionsRequest) GetStages(ctx context.Context) ([]types.String, bool) {
+	if o.Stages.IsNull() || o.Stages.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Stages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStages sets the value of the Stages field in GetLatestVersionsRequest.
+func (o *GetLatestVersionsRequest) SetStages(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stages"]
+	o.Stages = types.ListValueMust(t, vs)
+}
+
 type GetLatestVersionsResponse struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
@@ -3046,6 +3683,31 @@ func (o GetLatestVersionsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetModelVersions returns the value of the ModelVersions field in GetLatestVersionsResponse as
+// a slice of ModelVersion values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetLatestVersionsResponse) GetModelVersions(ctx context.Context) ([]ModelVersion, bool) {
+	if o.ModelVersions.IsNull() || o.ModelVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersion
+	d := o.ModelVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelVersions sets the value of the ModelVersions field in GetLatestVersionsResponse.
+func (o *GetLatestVersionsResponse) SetModelVersions(ctx context.Context, v []ModelVersion) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
 type GetMetricHistoryResponse struct {
@@ -3097,6 +3759,31 @@ func (o GetMetricHistoryResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetMetrics returns the value of the Metrics field in GetMetricHistoryResponse as
+// a slice of Metric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetMetricHistoryResponse) GetMetrics(ctx context.Context) ([]Metric, bool) {
+	if o.Metrics.IsNull() || o.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []Metric
+	d := o.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in GetMetricHistoryResponse.
+func (o *GetMetricHistoryResponse) SetMetrics(ctx context.Context, v []Metric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	o.Metrics = types.ListValueMust(t, vs)
 }
 
 // Get model
@@ -3185,6 +3872,32 @@ func (o GetModelResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRegisteredModelDatabricks returns the value of the RegisteredModelDatabricks field in GetModelResponse as
+// a ModelDatabricks value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetModelResponse) GetRegisteredModelDatabricks(ctx context.Context) (ModelDatabricks, bool) {
+	var e ModelDatabricks
+	if o.RegisteredModelDatabricks.IsNull() || o.RegisteredModelDatabricks.IsUnknown() {
+		return e, false
+	}
+	var v []ModelDatabricks
+	d := o.RegisteredModelDatabricks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRegisteredModelDatabricks sets the value of the RegisteredModelDatabricks field in GetModelResponse.
+func (o *GetModelResponse) SetRegisteredModelDatabricks(ctx context.Context, v ModelDatabricks) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_model_databricks"]
+	o.RegisteredModelDatabricks = types.ListValueMust(t, vs)
 }
 
 // Get a model version URI
@@ -3368,6 +4081,32 @@ func (o GetModelVersionResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetModelVersion returns the value of the ModelVersion field in GetModelVersionResponse as
+// a ModelVersion value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetModelVersionResponse) GetModelVersion(ctx context.Context) (ModelVersion, bool) {
+	var e ModelVersion
+	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+		return e, false
+	}
+	var v []ModelVersion
+	d := o.ModelVersion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersion sets the value of the ModelVersion field in GetModelVersionResponse.
+func (o *GetModelVersionResponse) SetModelVersion(ctx context.Context, v ModelVersion) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_version"]
+	o.ModelVersion = types.ListValueMust(t, vs)
+}
+
 // Get registered model permission levels
 type GetRegisteredModelPermissionLevelsRequest struct {
 	// The registered model for which to get or manage permissions.
@@ -3455,6 +4194,31 @@ func (o GetRegisteredModelPermissionLevelsResponse) Type(ctx context.Context) at
 			},
 		},
 	}
+}
+
+// GetPermissionLevels returns the value of the PermissionLevels field in GetRegisteredModelPermissionLevelsResponse as
+// a slice of RegisteredModelPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetRegisteredModelPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]RegisteredModelPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetRegisteredModelPermissionLevelsResponse.
+func (o *GetRegisteredModelPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []RegisteredModelPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
 // Get registered model permissions
@@ -3593,6 +4357,32 @@ func (o GetRunResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRun returns the value of the Run field in GetRunResponse as
+// a Run value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetRunResponse) GetRun(ctx context.Context) (Run, bool) {
+	var e Run
+	if o.Run.IsNull() || o.Run.IsUnknown() {
+		return e, false
+	}
+	var v []Run
+	d := o.Run.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRun sets the value of the Run field in GetRunResponse.
+func (o *GetRunResponse) SetRun(ctx context.Context, v Run) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run"]
+	o.Run = types.ListValueMust(t, vs)
 }
 
 type HttpUrlSpec struct {
@@ -3974,6 +4764,31 @@ func (o ListArtifactsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetFiles returns the value of the Files field in ListArtifactsResponse as
+// a slice of FileInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListArtifactsResponse) GetFiles(ctx context.Context) ([]FileInfo, bool) {
+	if o.Files.IsNull() || o.Files.IsUnknown() {
+		return nil, false
+	}
+	var v []FileInfo
+	d := o.Files.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFiles sets the value of the Files field in ListArtifactsResponse.
+func (o *ListArtifactsResponse) SetFiles(ctx context.Context, v []FileInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	o.Files = types.ListValueMust(t, vs)
+}
+
 // List experiments
 type ListExperimentsRequest struct {
 	// Maximum number of experiments desired. If `max_results` is unspecified,
@@ -4082,6 +4897,31 @@ func (o ListExperimentsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExperiments returns the value of the Experiments field in ListExperimentsResponse as
+// a slice of Experiment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListExperimentsResponse) GetExperiments(ctx context.Context) ([]Experiment, bool) {
+	if o.Experiments.IsNull() || o.Experiments.IsUnknown() {
+		return nil, false
+	}
+	var v []Experiment
+	d := o.Experiments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExperiments sets the value of the Experiments field in ListExperimentsResponse.
+func (o *ListExperimentsResponse) SetExperiments(ctx context.Context, v []Experiment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
+	o.Experiments = types.ListValueMust(t, vs)
+}
+
 // List models
 type ListModelsRequest struct {
 	// Maximum number of registered models desired. Max threshold is 1000.
@@ -4179,6 +5019,31 @@ func (o ListModelsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRegisteredModels returns the value of the RegisteredModels field in ListModelsResponse as
+// a slice of Model values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListModelsResponse) GetRegisteredModels(ctx context.Context) ([]Model, bool) {
+	if o.RegisteredModels.IsNull() || o.RegisteredModels.IsUnknown() {
+		return nil, false
+	}
+	var v []Model
+	d := o.RegisteredModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRegisteredModels sets the value of the RegisteredModels field in ListModelsResponse.
+func (o *ListModelsResponse) SetRegisteredModels(ctx context.Context, v []Model) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	o.RegisteredModels = types.ListValueMust(t, vs)
+}
+
 type ListRegistryWebhooks struct {
 	// Token that can be used to retrieve the next page of artifact results
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -4227,6 +5092,31 @@ func (o ListRegistryWebhooks) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetWebhooks returns the value of the Webhooks field in ListRegistryWebhooks as
+// a slice of RegistryWebhook values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListRegistryWebhooks) GetWebhooks(ctx context.Context) ([]RegistryWebhook, bool) {
+	if o.Webhooks.IsNull() || o.Webhooks.IsUnknown() {
+		return nil, false
+	}
+	var v []RegistryWebhook
+	d := o.Webhooks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWebhooks sets the value of the Webhooks field in ListRegistryWebhooks.
+func (o *ListRegistryWebhooks) SetWebhooks(ctx context.Context, v []RegistryWebhook) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhooks"]
+	o.Webhooks = types.ListValueMust(t, vs)
 }
 
 // List transition requests
@@ -4322,6 +5212,31 @@ func (o ListTransitionRequestsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRequests returns the value of the Requests field in ListTransitionRequestsResponse as
+// a slice of Activity values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListTransitionRequestsResponse) GetRequests(ctx context.Context) ([]Activity, bool) {
+	if o.Requests.IsNull() || o.Requests.IsUnknown() {
+		return nil, false
+	}
+	var v []Activity
+	d := o.Requests.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRequests sets the value of the Requests field in ListTransitionRequestsResponse.
+func (o *ListTransitionRequestsResponse) SetRequests(ctx context.Context, v []Activity) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["requests"]
+	o.Requests = types.ListValueMust(t, vs)
+}
+
 // List registry webhooks
 type ListWebhooksRequest struct {
 	// If `events` is specified, any webhook with one or more of the specified
@@ -4378,6 +5293,31 @@ func (o ListWebhooksRequest) Type(ctx context.Context) attr.Type {
 			"page_token": types.StringType,
 		},
 	}
+}
+
+// GetEvents returns the value of the Events field in ListWebhooksRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListWebhooksRequest) GetEvents(ctx context.Context) ([]types.String, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in ListWebhooksRequest.
+func (o *ListWebhooksRequest) SetEvents(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
 }
 
 type LogBatch struct {
@@ -4445,6 +5385,81 @@ func (o LogBatch) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetrics returns the value of the Metrics field in LogBatch as
+// a slice of Metric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogBatch) GetMetrics(ctx context.Context) ([]Metric, bool) {
+	if o.Metrics.IsNull() || o.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []Metric
+	d := o.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in LogBatch.
+func (o *LogBatch) SetMetrics(ctx context.Context, v []Metric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	o.Metrics = types.ListValueMust(t, vs)
+}
+
+// GetParams returns the value of the Params field in LogBatch as
+// a slice of Param values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogBatch) GetParams(ctx context.Context) ([]Param, bool) {
+	if o.Params.IsNull() || o.Params.IsUnknown() {
+		return nil, false
+	}
+	var v []Param
+	d := o.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in LogBatch.
+func (o *LogBatch) SetParams(ctx context.Context, v []Param) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	o.Params = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in LogBatch as
+// a slice of RunTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogBatch) GetTags(ctx context.Context) ([]RunTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in LogBatch.
+func (o *LogBatch) SetTags(ctx context.Context, v []RunTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type LogBatchResponse struct {
@@ -4531,6 +5546,31 @@ func (o LogInputs) Type(ctx context.Context) attr.Type {
 			"run_id": types.StringType,
 		},
 	}
+}
+
+// GetDatasets returns the value of the Datasets field in LogInputs as
+// a slice of DatasetInput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogInputs) GetDatasets(ctx context.Context) ([]DatasetInput, bool) {
+	if o.Datasets.IsNull() || o.Datasets.IsUnknown() {
+		return nil, false
+	}
+	var v []DatasetInput
+	d := o.Datasets.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatasets sets the value of the Datasets field in LogInputs.
+func (o *LogInputs) SetDatasets(ctx context.Context, v []DatasetInput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	o.Datasets = types.ListValueMust(t, vs)
 }
 
 type LogInputsResponse struct {
@@ -4970,6 +6010,56 @@ func (o Model) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetLatestVersions returns the value of the LatestVersions field in Model as
+// a slice of ModelVersion values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Model) GetLatestVersions(ctx context.Context) ([]ModelVersion, bool) {
+	if o.LatestVersions.IsNull() || o.LatestVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersion
+	d := o.LatestVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLatestVersions sets the value of the LatestVersions field in Model.
+func (o *Model) SetLatestVersions(ctx context.Context, v []ModelVersion) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_versions"]
+	o.LatestVersions = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in Model as
+// a slice of ModelTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Model) GetTags(ctx context.Context) ([]ModelTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in Model.
+func (o *Model) SetTags(ctx context.Context, v []ModelTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ModelDatabricks struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
@@ -5050,6 +6140,56 @@ func (o ModelDatabricks) Type(ctx context.Context) attr.Type {
 			"user_id": types.StringType,
 		},
 	}
+}
+
+// GetLatestVersions returns the value of the LatestVersions field in ModelDatabricks as
+// a slice of ModelVersion values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelDatabricks) GetLatestVersions(ctx context.Context) ([]ModelVersion, bool) {
+	if o.LatestVersions.IsNull() || o.LatestVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersion
+	d := o.LatestVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetLatestVersions sets the value of the LatestVersions field in ModelDatabricks.
+func (o *ModelDatabricks) SetLatestVersions(ctx context.Context, v []ModelVersion) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_versions"]
+	o.LatestVersions = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ModelDatabricks as
+// a slice of ModelTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelDatabricks) GetTags(ctx context.Context) ([]ModelTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ModelDatabricks.
+func (o *ModelDatabricks) SetTags(ctx context.Context, v []ModelTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type ModelTag struct {
@@ -5195,6 +6335,31 @@ func (o ModelVersion) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetTags returns the value of the Tags field in ModelVersion as
+// a slice of ModelVersionTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersion) GetTags(ctx context.Context) ([]ModelVersionTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersionTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ModelVersion.
+func (o *ModelVersion) SetTags(ctx context.Context, v []ModelVersionTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ModelVersionDatabricks struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
@@ -5311,6 +6476,31 @@ func (o ModelVersionDatabricks) Type(ctx context.Context) attr.Type {
 			"version": types.StringType,
 		},
 	}
+}
+
+// GetTags returns the value of the Tags field in ModelVersionDatabricks as
+// a slice of ModelVersionTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelVersionDatabricks) GetTags(ctx context.Context) ([]ModelVersionTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersionTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ModelVersionDatabricks.
+func (o *ModelVersionDatabricks) SetTags(ctx context.Context, v []ModelVersionTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type ModelVersionTag struct {
@@ -5521,6 +6711,31 @@ func (o RegisteredModelAccessControlResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetAllPermissions returns the value of the AllPermissions field in RegisteredModelAccessControlResponse as
+// a slice of RegisteredModelPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegisteredModelAccessControlResponse) GetAllPermissions(ctx context.Context) ([]RegisteredModelPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in RegisteredModelAccessControlResponse.
+func (o *RegisteredModelAccessControlResponse) SetAllPermissions(ctx context.Context, v []RegisteredModelPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
+}
+
 type RegisteredModelPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -5574,6 +6789,31 @@ func (o RegisteredModelPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in RegisteredModelPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegisteredModelPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in RegisteredModelPermission.
+func (o *RegisteredModelPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type RegisteredModelPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -5625,6 +6865,31 @@ func (o RegisteredModelPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in RegisteredModelPermissions as
+// a slice of RegisteredModelAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegisteredModelPermissions) GetAccessControlList(ctx context.Context) ([]RegisteredModelAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in RegisteredModelPermissions.
+func (o *RegisteredModelPermissions) SetAccessControlList(ctx context.Context, v []RegisteredModelAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type RegisteredModelPermissionsDescription struct {
@@ -5719,6 +6984,31 @@ func (o RegisteredModelPermissionsRequest) Type(ctx context.Context) attr.Type {
 			"registered_model_id": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in RegisteredModelPermissionsRequest as
+// a slice of RegisteredModelAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegisteredModelPermissionsRequest) GetAccessControlList(ctx context.Context) ([]RegisteredModelAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in RegisteredModelPermissionsRequest.
+func (o *RegisteredModelPermissionsRequest) SetAccessControlList(ctx context.Context, v []RegisteredModelAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type RegistryWebhook struct {
@@ -5844,6 +7134,83 @@ func (o RegistryWebhook) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEvents returns the value of the Events field in RegistryWebhook as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegistryWebhook) GetEvents(ctx context.Context) ([]types.String, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in RegistryWebhook.
+func (o *RegistryWebhook) SetEvents(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
+}
+
+// GetHttpUrlSpec returns the value of the HttpUrlSpec field in RegistryWebhook as
+// a HttpUrlSpecWithoutSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegistryWebhook) GetHttpUrlSpec(ctx context.Context) (HttpUrlSpecWithoutSecret, bool) {
+	var e HttpUrlSpecWithoutSecret
+	if o.HttpUrlSpec.IsNull() || o.HttpUrlSpec.IsUnknown() {
+		return e, false
+	}
+	var v []HttpUrlSpecWithoutSecret
+	d := o.HttpUrlSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHttpUrlSpec sets the value of the HttpUrlSpec field in RegistryWebhook.
+func (o *RegistryWebhook) SetHttpUrlSpec(ctx context.Context, v HttpUrlSpecWithoutSecret) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["http_url_spec"]
+	o.HttpUrlSpec = types.ListValueMust(t, vs)
+}
+
+// GetJobSpec returns the value of the JobSpec field in RegistryWebhook as
+// a JobSpecWithoutSecret value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RegistryWebhook) GetJobSpec(ctx context.Context) (JobSpecWithoutSecret, bool) {
+	var e JobSpecWithoutSecret
+	if o.JobSpec.IsNull() || o.JobSpec.IsUnknown() {
+		return e, false
+	}
+	var v []JobSpecWithoutSecret
+	d := o.JobSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobSpec sets the value of the JobSpec field in RegistryWebhook.
+func (o *RegistryWebhook) SetJobSpec(ctx context.Context, v JobSpecWithoutSecret) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_spec"]
+	o.JobSpec = types.ListValueMust(t, vs)
+}
+
 type RejectTransitionRequest struct {
 	// User-provided comment on the action.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -5952,6 +7319,32 @@ func (o RejectTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetActivity returns the value of the Activity field in RejectTransitionRequestResponse as
+// a Activity value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RejectTransitionRequestResponse) GetActivity(ctx context.Context) (Activity, bool) {
+	var e Activity
+	if o.Activity.IsNull() || o.Activity.IsUnknown() {
+		return e, false
+	}
+	var v []Activity
+	d := o.Activity.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetActivity sets the value of the Activity field in RejectTransitionRequestResponse.
+func (o *RejectTransitionRequestResponse) SetActivity(ctx context.Context, v Activity) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["activity"]
+	o.Activity = types.ListValueMust(t, vs)
+}
+
 type RenameModelRequest struct {
 	// Registered model unique name identifier.
 	Name types.String `tfsdk:"name" tf:""`
@@ -6041,6 +7434,32 @@ func (o RenameModelResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRegisteredModel returns the value of the RegisteredModel field in RenameModelResponse as
+// a Model value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RenameModelResponse) GetRegisteredModel(ctx context.Context) (Model, bool) {
+	var e Model
+	if o.RegisteredModel.IsNull() || o.RegisteredModel.IsUnknown() {
+		return e, false
+	}
+	var v []Model
+	d := o.RegisteredModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRegisteredModel sets the value of the RegisteredModel field in RenameModelResponse.
+func (o *RenameModelResponse) SetRegisteredModel(ctx context.Context, v Model) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_model"]
+	o.RegisteredModel = types.ListValueMust(t, vs)
 }
 
 type RestoreExperiment struct {
@@ -6354,6 +7773,84 @@ func (o Run) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetData returns the value of the Data field in Run as
+// a RunData value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetData(ctx context.Context) (RunData, bool) {
+	var e RunData
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return e, false
+	}
+	var v []RunData
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetData sets the value of the Data field in Run.
+func (o *Run) SetData(ctx context.Context, v RunData) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	o.Data = types.ListValueMust(t, vs)
+}
+
+// GetInfo returns the value of the Info field in Run as
+// a RunInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetInfo(ctx context.Context) (RunInfo, bool) {
+	var e RunInfo
+	if o.Info.IsNull() || o.Info.IsUnknown() {
+		return e, false
+	}
+	var v []RunInfo
+	d := o.Info.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInfo sets the value of the Info field in Run.
+func (o *Run) SetInfo(ctx context.Context, v RunInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["info"]
+	o.Info = types.ListValueMust(t, vs)
+}
+
+// GetInputs returns the value of the Inputs field in Run as
+// a RunInputs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Run) GetInputs(ctx context.Context) (RunInputs, bool) {
+	var e RunInputs
+	if o.Inputs.IsNull() || o.Inputs.IsUnknown() {
+		return e, false
+	}
+	var v []RunInputs
+	d := o.Inputs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInputs sets the value of the Inputs field in Run.
+func (o *Run) SetInputs(ctx context.Context, v RunInputs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inputs"]
+	o.Inputs = types.ListValueMust(t, vs)
+}
+
 type RunData struct {
 	// Run metrics.
 	Metrics types.List `tfsdk:"metrics" tf:"optional"`
@@ -6412,6 +7909,81 @@ func (o RunData) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetMetrics returns the value of the Metrics field in RunData as
+// a slice of Metric values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunData) GetMetrics(ctx context.Context) ([]Metric, bool) {
+	if o.Metrics.IsNull() || o.Metrics.IsUnknown() {
+		return nil, false
+	}
+	var v []Metric
+	d := o.Metrics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMetrics sets the value of the Metrics field in RunData.
+func (o *RunData) SetMetrics(ctx context.Context, v []Metric) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	o.Metrics = types.ListValueMust(t, vs)
+}
+
+// GetParams returns the value of the Params field in RunData as
+// a slice of Param values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunData) GetParams(ctx context.Context) ([]Param, bool) {
+	if o.Params.IsNull() || o.Params.IsUnknown() {
+		return nil, false
+	}
+	var v []Param
+	d := o.Params.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetParams sets the value of the Params field in RunData.
+func (o *RunData) SetParams(ctx context.Context, v []Param) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	o.Params = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in RunData as
+// a slice of RunTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunData) GetTags(ctx context.Context) ([]RunTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []RunTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in RunData.
+func (o *RunData) SetTags(ctx context.Context, v []RunTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type RunInfo struct {
@@ -6540,6 +8112,31 @@ func (o RunInputs) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDatasetInputs returns the value of the DatasetInputs field in RunInputs as
+// a slice of DatasetInput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunInputs) GetDatasetInputs(ctx context.Context) ([]DatasetInput, bool) {
+	if o.DatasetInputs.IsNull() || o.DatasetInputs.IsUnknown() {
+		return nil, false
+	}
+	var v []DatasetInput
+	d := o.DatasetInputs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDatasetInputs sets the value of the DatasetInputs field in RunInputs.
+func (o *RunInputs) SetDatasetInputs(ctx context.Context, v []DatasetInput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataset_inputs"]
+	o.DatasetInputs = types.ListValueMust(t, vs)
+}
+
 type RunTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key" tf:"optional"`
@@ -6653,6 +8250,31 @@ func (o SearchExperiments) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOrderBy returns the value of the OrderBy field in SearchExperiments as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchExperiments) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in SearchExperiments.
+func (o *SearchExperiments) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type SearchExperimentsResponse struct {
 	// Experiments that match the search criteria
 	Experiments types.List `tfsdk:"experiments" tf:"optional"`
@@ -6702,6 +8324,31 @@ func (o SearchExperimentsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetExperiments returns the value of the Experiments field in SearchExperimentsResponse as
+// a slice of Experiment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchExperimentsResponse) GetExperiments(ctx context.Context) ([]Experiment, bool) {
+	if o.Experiments.IsNull() || o.Experiments.IsUnknown() {
+		return nil, false
+	}
+	var v []Experiment
+	d := o.Experiments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExperiments sets the value of the Experiments field in SearchExperimentsResponse.
+func (o *SearchExperimentsResponse) SetExperiments(ctx context.Context, v []Experiment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
+	o.Experiments = types.ListValueMust(t, vs)
 }
 
 // Searches model versions
@@ -6767,6 +8414,31 @@ func (o SearchModelVersionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOrderBy returns the value of the OrderBy field in SearchModelVersionsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchModelVersionsRequest) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in SearchModelVersionsRequest.
+func (o *SearchModelVersionsRequest) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type SearchModelVersionsResponse struct {
 	// Models that match the search criteria
 	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
@@ -6816,6 +8488,31 @@ func (o SearchModelVersionsResponse) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 		},
 	}
+}
+
+// GetModelVersions returns the value of the ModelVersions field in SearchModelVersionsResponse as
+// a slice of ModelVersion values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchModelVersionsResponse) GetModelVersions(ctx context.Context) ([]ModelVersion, bool) {
+	if o.ModelVersions.IsNull() || o.ModelVersions.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelVersion
+	d := o.ModelVersions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelVersions sets the value of the ModelVersions field in SearchModelVersionsResponse.
+func (o *SearchModelVersionsResponse) SetModelVersions(ctx context.Context, v []ModelVersion) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
 // Search models
@@ -6881,6 +8578,31 @@ func (o SearchModelsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetOrderBy returns the value of the OrderBy field in SearchModelsRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchModelsRequest) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in SearchModelsRequest.
+func (o *SearchModelsRequest) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type SearchModelsResponse struct {
 	// Pagination token to request the next page of models.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -6929,6 +8651,31 @@ func (o SearchModelsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRegisteredModels returns the value of the RegisteredModels field in SearchModelsResponse as
+// a slice of Model values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchModelsResponse) GetRegisteredModels(ctx context.Context) ([]Model, bool) {
+	if o.RegisteredModels.IsNull() || o.RegisteredModels.IsUnknown() {
+		return nil, false
+	}
+	var v []Model
+	d := o.RegisteredModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRegisteredModels sets the value of the RegisteredModels field in SearchModelsResponse.
+func (o *SearchModelsResponse) SetRegisteredModels(ctx context.Context, v []Model) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	o.RegisteredModels = types.ListValueMust(t, vs)
 }
 
 type SearchRuns struct {
@@ -7017,6 +8764,56 @@ func (o SearchRuns) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetExperimentIds returns the value of the ExperimentIds field in SearchRuns as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchRuns) GetExperimentIds(ctx context.Context) ([]types.String, bool) {
+	if o.ExperimentIds.IsNull() || o.ExperimentIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExperimentIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExperimentIds sets the value of the ExperimentIds field in SearchRuns.
+func (o *SearchRuns) SetExperimentIds(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment_ids"]
+	o.ExperimentIds = types.ListValueMust(t, vs)
+}
+
+// GetOrderBy returns the value of the OrderBy field in SearchRuns as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchRuns) GetOrderBy(ctx context.Context) ([]types.String, bool) {
+	if o.OrderBy.IsNull() || o.OrderBy.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.OrderBy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOrderBy sets the value of the OrderBy field in SearchRuns.
+func (o *SearchRuns) SetOrderBy(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	o.OrderBy = types.ListValueMust(t, vs)
+}
+
 type SearchRunsResponse struct {
 	// Token for the next page of runs.
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
@@ -7065,6 +8862,31 @@ func (o SearchRunsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRuns returns the value of the Runs field in SearchRunsResponse as
+// a slice of Run values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SearchRunsResponse) GetRuns(ctx context.Context) ([]Run, bool) {
+	if o.Runs.IsNull() || o.Runs.IsUnknown() {
+		return nil, false
+	}
+	var v []Run
+	d := o.Runs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRuns sets the value of the Runs field in SearchRunsResponse.
+func (o *SearchRunsResponse) SetRuns(ctx context.Context, v []Run) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	o.Runs = types.ListValueMust(t, vs)
 }
 
 type SetExperimentTag struct {
@@ -7577,6 +9399,32 @@ func (o TestRegistryWebhookResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetWebhook returns the value of the Webhook field in TestRegistryWebhookResponse as
+// a TestRegistryWebhook value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TestRegistryWebhookResponse) GetWebhook(ctx context.Context) (TestRegistryWebhook, bool) {
+	var e TestRegistryWebhook
+	if o.Webhook.IsNull() || o.Webhook.IsUnknown() {
+		return e, false
+	}
+	var v []TestRegistryWebhook
+	d := o.Webhook.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWebhook sets the value of the Webhook field in TestRegistryWebhookResponse.
+func (o *TestRegistryWebhookResponse) SetWebhook(ctx context.Context, v TestRegistryWebhook) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhook"]
+	o.Webhook = types.ListValueMust(t, vs)
+}
+
 type TransitionModelVersionStageDatabricks struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
@@ -7716,6 +9564,31 @@ func (o TransitionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAvailableActions returns the value of the AvailableActions field in TransitionRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TransitionRequest) GetAvailableActions(ctx context.Context) ([]types.String, bool) {
+	if o.AvailableActions.IsNull() || o.AvailableActions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AvailableActions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAvailableActions sets the value of the AvailableActions field in TransitionRequest.
+func (o *TransitionRequest) SetAvailableActions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["available_actions"]
+	o.AvailableActions = types.ListValueMust(t, vs)
+}
+
 type TransitionStageResponse struct {
 	ModelVersion types.List `tfsdk:"model_version" tf:"optional,object"`
 }
@@ -7759,6 +9632,32 @@ func (o TransitionStageResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetModelVersion returns the value of the ModelVersion field in TransitionStageResponse as
+// a ModelVersionDatabricks value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TransitionStageResponse) GetModelVersion(ctx context.Context) (ModelVersionDatabricks, bool) {
+	var e ModelVersionDatabricks
+	if o.ModelVersion.IsNull() || o.ModelVersion.IsUnknown() {
+		return e, false
+	}
+	var v []ModelVersionDatabricks
+	d := o.ModelVersion.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetModelVersion sets the value of the ModelVersion field in TransitionStageResponse.
+func (o *TransitionStageResponse) SetModelVersion(ctx context.Context, v ModelVersionDatabricks) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_version"]
+	o.ModelVersion = types.ListValueMust(t, vs)
 }
 
 type UpdateComment struct {
@@ -7851,6 +9750,32 @@ func (o UpdateCommentResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetComment returns the value of the Comment field in UpdateCommentResponse as
+// a CommentObject value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCommentResponse) GetComment(ctx context.Context) (CommentObject, bool) {
+	var e CommentObject
+	if o.Comment.IsNull() || o.Comment.IsUnknown() {
+		return e, false
+	}
+	var v []CommentObject
+	d := o.Comment.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetComment sets the value of the Comment field in UpdateCommentResponse.
+func (o *UpdateCommentResponse) SetComment(ctx context.Context, v CommentObject) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["comment"]
+	o.Comment = types.ListValueMust(t, vs)
 }
 
 type UpdateExperiment struct {
@@ -8215,6 +10140,83 @@ func (o UpdateRegistryWebhook) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEvents returns the value of the Events field in UpdateRegistryWebhook as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRegistryWebhook) GetEvents(ctx context.Context) ([]types.String, bool) {
+	if o.Events.IsNull() || o.Events.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Events.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEvents sets the value of the Events field in UpdateRegistryWebhook.
+func (o *UpdateRegistryWebhook) SetEvents(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	o.Events = types.ListValueMust(t, vs)
+}
+
+// GetHttpUrlSpec returns the value of the HttpUrlSpec field in UpdateRegistryWebhook as
+// a HttpUrlSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRegistryWebhook) GetHttpUrlSpec(ctx context.Context) (HttpUrlSpec, bool) {
+	var e HttpUrlSpec
+	if o.HttpUrlSpec.IsNull() || o.HttpUrlSpec.IsUnknown() {
+		return e, false
+	}
+	var v []HttpUrlSpec
+	d := o.HttpUrlSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetHttpUrlSpec sets the value of the HttpUrlSpec field in UpdateRegistryWebhook.
+func (o *UpdateRegistryWebhook) SetHttpUrlSpec(ctx context.Context, v HttpUrlSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["http_url_spec"]
+	o.HttpUrlSpec = types.ListValueMust(t, vs)
+}
+
+// GetJobSpec returns the value of the JobSpec field in UpdateRegistryWebhook as
+// a JobSpec value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRegistryWebhook) GetJobSpec(ctx context.Context) (JobSpec, bool) {
+	var e JobSpec
+	if o.JobSpec.IsNull() || o.JobSpec.IsUnknown() {
+		return e, false
+	}
+	var v []JobSpec
+	d := o.JobSpec.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobSpec sets the value of the JobSpec field in UpdateRegistryWebhook.
+func (o *UpdateRegistryWebhook) SetJobSpec(ctx context.Context, v JobSpec) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_spec"]
+	o.JobSpec = types.ListValueMust(t, vs)
+}
+
 type UpdateRun struct {
 	// Unix timestamp in milliseconds of when the run ended.
 	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
@@ -8316,6 +10318,32 @@ func (o UpdateRunResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRunInfo returns the value of the RunInfo field in UpdateRunResponse as
+// a RunInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRunResponse) GetRunInfo(ctx context.Context) (RunInfo, bool) {
+	var e RunInfo
+	if o.RunInfo.IsNull() || o.RunInfo.IsUnknown() {
+		return e, false
+	}
+	var v []RunInfo
+	d := o.RunInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunInfo sets the value of the RunInfo field in UpdateRunResponse.
+func (o *UpdateRunResponse) SetRunInfo(ctx context.Context, v RunInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_info"]
+	o.RunInfo = types.ListValueMust(t, vs)
+}
+
 type UpdateWebhookResponse struct {
 }
 
@@ -8351,76 +10379,3 @@ func (o UpdateWebhookResponse) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{},
 	}
 }
-
-// An action that a user (with sufficient permissions) could take on an
-// activity. Valid values are: * `APPROVE_TRANSITION_REQUEST`: Approve a
-// transition request
-//
-// * `REJECT_TRANSITION_REQUEST`: Reject a transition request
-//
-// * `CANCEL_TRANSITION_REQUEST`: Cancel (delete) a transition request
-
-// Type of activity. Valid values are: * `APPLIED_TRANSITION`: User applied the
-// corresponding stage transition.
-//
-// * `REQUESTED_TRANSITION`: User requested the corresponding stage transition.
-//
-// * `CANCELLED_REQUEST`: User cancelled an existing transition request.
-//
-// * `APPROVED_REQUEST`: User approved the corresponding stage transition.
-//
-// * `REJECTED_REQUEST`: User rejected the coressponding stage transition.
-//
-// * `SYSTEM_TRANSITION`: For events performed as a side effect, such as
-// archiving existing model versions in a stage.
-
-// An action that a user (with sufficient permissions) could take on a comment.
-// Valid values are: * `EDIT_COMMENT`: Edit the comment
-//
-// * `DELETE_COMMENT`: Delete the comment
-
-// Permission level
-
-// Current status of `model_version`
-
-// Permission level of the requesting user on the object. For what is allowed at
-// each level, see [MLflow Model permissions](..).
-
-// Permission level
-
-// Enable or disable triggering the webhook, or put the webhook into test mode.
-// The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an associated
-// event happens.
-//
-// * `DISABLED`: Webhook is not triggered.
-//
-// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is not
-// triggered on a real event.
-
-// Current status of the run.
-
-// Qualifier for type of experiments to be returned. If unspecified, return only
-// active experiments.
-
-// Whether to display only active, only deleted, or all runs. Defaults to only
-// active runs.
-
-// Stage of the model version. Valid values are:
-//
-// * `None`: The initial stage of a model version.
-//
-// * `Staging`: Staging or pre-production stage.
-//
-// * `Production`: Production stage.
-//
-// * `Archived`: Archived stage.
-
-// The status of the model version. Valid values are: * `PENDING_REGISTRATION`:
-// Request to register a new model version is pending as server performs
-// background tasks.
-//
-// * `FAILED_REGISTRATION`: Request to register a new model version has failed.
-//
-// * `READY`: Model version is ready for use.
-
-// Updated status of the run.

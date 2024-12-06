@@ -143,7 +143,7 @@ func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
 			typ = types.StringType
 		default:
 			innerVal := reflect.New(complexType).Elem().Interface()
-			typ = tfcommon.NewObjectValuable(innerVal).Type(context.Background())
+			typ = tfcommon.NewObjectTyper(innerVal).Type(context.Background())
 		}
 		switch field.Type() {
 		case reflect.TypeOf(types.List{}):
@@ -197,7 +197,7 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
 
-var dummyType = tfcommon.NewObjectValuable(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
+var dummyType = tfcommon.NewObjectTyper(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
 
 var tests = []struct {
 	name        string

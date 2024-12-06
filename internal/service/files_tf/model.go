@@ -14,6 +14,7 @@ import (
 	"context"
 	"reflect"
 
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1139,6 +1140,31 @@ func (o ListDirectoryResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetContents returns the value of the Contents field in ListDirectoryResponse as
+// a slice of DirectoryEntry values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListDirectoryResponse) GetContents(ctx context.Context) ([]DirectoryEntry, bool) {
+	if o.Contents.IsNull() || o.Contents.IsUnknown() {
+		return nil, false
+	}
+	var v []DirectoryEntry
+	d := o.Contents.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetContents sets the value of the Contents field in ListDirectoryResponse.
+func (o *ListDirectoryResponse) SetContents(ctx context.Context, v []DirectoryEntry) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["contents"]
+	o.Contents = types.ListValueMust(t, vs)
+}
+
 type ListStatusResponse struct {
 	// A list of FileInfo's that describe contents of directory or file. See
 	// example above.
@@ -1184,6 +1210,31 @@ func (o ListStatusResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFiles returns the value of the Files field in ListStatusResponse as
+// a slice of FileInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListStatusResponse) GetFiles(ctx context.Context) ([]FileInfo, bool) {
+	if o.Files.IsNull() || o.Files.IsUnknown() {
+		return nil, false
+	}
+	var v []FileInfo
+	d := o.Files.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetFiles sets the value of the Files field in ListStatusResponse.
+func (o *ListStatusResponse) SetFiles(ctx context.Context, v []FileInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	o.Files = types.ListValueMust(t, vs)
 }
 
 type MkDirs struct {

@@ -14,7 +14,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/oauth2"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/oauth2_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -145,6 +145,109 @@ func (o AiGatewayConfig) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGuardrails returns the value of the Guardrails field in AiGatewayConfig as
+// a AiGatewayGuardrails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayConfig) GetGuardrails(ctx context.Context) (AiGatewayGuardrails, bool) {
+	var e AiGatewayGuardrails
+	if o.Guardrails.IsNull() || o.Guardrails.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrails
+	d := o.Guardrails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGuardrails sets the value of the Guardrails field in AiGatewayConfig.
+func (o *AiGatewayConfig) SetGuardrails(ctx context.Context, v AiGatewayGuardrails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["guardrails"]
+	o.Guardrails = types.ListValueMust(t, vs)
+}
+
+// GetInferenceTableConfig returns the value of the InferenceTableConfig field in AiGatewayConfig as
+// a AiGatewayInferenceTableConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayConfig) GetInferenceTableConfig(ctx context.Context) (AiGatewayInferenceTableConfig, bool) {
+	var e AiGatewayInferenceTableConfig
+	if o.InferenceTableConfig.IsNull() || o.InferenceTableConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayInferenceTableConfig
+	d := o.InferenceTableConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceTableConfig sets the value of the InferenceTableConfig field in AiGatewayConfig.
+func (o *AiGatewayConfig) SetInferenceTableConfig(ctx context.Context, v AiGatewayInferenceTableConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_table_config"]
+	o.InferenceTableConfig = types.ListValueMust(t, vs)
+}
+
+// GetRateLimits returns the value of the RateLimits field in AiGatewayConfig as
+// a slice of AiGatewayRateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayConfig) GetRateLimits(ctx context.Context) ([]AiGatewayRateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []AiGatewayRateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in AiGatewayConfig.
+func (o *AiGatewayConfig) SetRateLimits(ctx context.Context, v []AiGatewayRateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
+}
+
+// GetUsageTrackingConfig returns the value of the UsageTrackingConfig field in AiGatewayConfig as
+// a AiGatewayUsageTrackingConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayConfig) GetUsageTrackingConfig(ctx context.Context) (AiGatewayUsageTrackingConfig, bool) {
+	var e AiGatewayUsageTrackingConfig
+	if o.UsageTrackingConfig.IsNull() || o.UsageTrackingConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayUsageTrackingConfig
+	d := o.UsageTrackingConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUsageTrackingConfig sets the value of the UsageTrackingConfig field in AiGatewayConfig.
+func (o *AiGatewayConfig) SetUsageTrackingConfig(ctx context.Context, v AiGatewayUsageTrackingConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["usage_tracking_config"]
+	o.UsageTrackingConfig = types.ListValueMust(t, vs)
+}
+
 type AiGatewayGuardrailParameters struct {
 	// List of invalid keywords. AI guardrail uses keyword or string matching to
 	// decide if the keyword exists in the request or response content.
@@ -209,6 +312,82 @@ func (o AiGatewayGuardrailParameters) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInvalidKeywords returns the value of the InvalidKeywords field in AiGatewayGuardrailParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayGuardrailParameters) GetInvalidKeywords(ctx context.Context) ([]types.String, bool) {
+	if o.InvalidKeywords.IsNull() || o.InvalidKeywords.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InvalidKeywords.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInvalidKeywords sets the value of the InvalidKeywords field in AiGatewayGuardrailParameters.
+func (o *AiGatewayGuardrailParameters) SetInvalidKeywords(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["invalid_keywords"]
+	o.InvalidKeywords = types.ListValueMust(t, vs)
+}
+
+// GetPii returns the value of the Pii field in AiGatewayGuardrailParameters as
+// a AiGatewayGuardrailPiiBehavior value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayGuardrailParameters) GetPii(ctx context.Context) (AiGatewayGuardrailPiiBehavior, bool) {
+	var e AiGatewayGuardrailPiiBehavior
+	if o.Pii.IsNull() || o.Pii.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrailPiiBehavior
+	d := o.Pii.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPii sets the value of the Pii field in AiGatewayGuardrailParameters.
+func (o *AiGatewayGuardrailParameters) SetPii(ctx context.Context, v AiGatewayGuardrailPiiBehavior) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pii"]
+	o.Pii = types.ListValueMust(t, vs)
+}
+
+// GetValidTopics returns the value of the ValidTopics field in AiGatewayGuardrailParameters as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayGuardrailParameters) GetValidTopics(ctx context.Context) ([]types.String, bool) {
+	if o.ValidTopics.IsNull() || o.ValidTopics.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ValidTopics.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValidTopics sets the value of the ValidTopics field in AiGatewayGuardrailParameters.
+func (o *AiGatewayGuardrailParameters) SetValidTopics(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["valid_topics"]
+	o.ValidTopics = types.ListValueMust(t, vs)
 }
 
 type AiGatewayGuardrailPiiBehavior struct {
@@ -309,6 +488,58 @@ func (o AiGatewayGuardrails) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetInput returns the value of the Input field in AiGatewayGuardrails as
+// a AiGatewayGuardrailParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayGuardrails) GetInput(ctx context.Context) (AiGatewayGuardrailParameters, bool) {
+	var e AiGatewayGuardrailParameters
+	if o.Input.IsNull() || o.Input.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrailParameters
+	d := o.Input.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInput sets the value of the Input field in AiGatewayGuardrails.
+func (o *AiGatewayGuardrails) SetInput(ctx context.Context, v AiGatewayGuardrailParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input"]
+	o.Input = types.ListValueMust(t, vs)
+}
+
+// GetOutput returns the value of the Output field in AiGatewayGuardrails as
+// a AiGatewayGuardrailParameters value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayGuardrails) GetOutput(ctx context.Context) (AiGatewayGuardrailParameters, bool) {
+	var e AiGatewayGuardrailParameters
+	if o.Output.IsNull() || o.Output.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrailParameters
+	d := o.Output.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOutput sets the value of the Output field in AiGatewayGuardrails.
+func (o *AiGatewayGuardrails) SetOutput(ctx context.Context, v AiGatewayGuardrailParameters) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output"]
+	o.Output = types.ListValueMust(t, vs)
 }
 
 type AiGatewayInferenceTableConfig struct {
@@ -717,6 +948,32 @@ func (o AutoCaptureConfigOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetState returns the value of the State field in AutoCaptureConfigOutput as
+// a AutoCaptureState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AutoCaptureConfigOutput) GetState(ctx context.Context) (AutoCaptureState, bool) {
+	var e AutoCaptureState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []AutoCaptureState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in AutoCaptureConfigOutput.
+func (o *AutoCaptureConfigOutput) SetState(ctx context.Context, v AutoCaptureState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
 type AutoCaptureState struct {
 	PayloadTable types.List `tfsdk:"payload_table" tf:"optional,object"`
 }
@@ -760,6 +1017,32 @@ func (o AutoCaptureState) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetPayloadTable returns the value of the PayloadTable field in AutoCaptureState as
+// a PayloadTable value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AutoCaptureState) GetPayloadTable(ctx context.Context) (PayloadTable, bool) {
+	var e PayloadTable
+	if o.PayloadTable.IsNull() || o.PayloadTable.IsUnknown() {
+		return e, false
+	}
+	var v []PayloadTable
+	d := o.PayloadTable.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPayloadTable sets the value of the PayloadTable field in AutoCaptureState.
+func (o *AutoCaptureState) SetPayloadTable(ctx context.Context, v PayloadTable) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["payload_table"]
+	o.PayloadTable = types.ListValueMust(t, vs)
 }
 
 // Get build logs for a served model
@@ -1036,6 +1319,108 @@ func (o CreateServingEndpoint) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAiGateway returns the value of the AiGateway field in CreateServingEndpoint as
+// a AiGatewayConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateServingEndpoint) GetAiGateway(ctx context.Context) (AiGatewayConfig, bool) {
+	var e AiGatewayConfig
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in CreateServingEndpoint.
+func (o *CreateServingEndpoint) SetAiGateway(ctx context.Context, v AiGatewayConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in CreateServingEndpoint as
+// a EndpointCoreConfigInput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateServingEndpoint) GetConfig(ctx context.Context) (EndpointCoreConfigInput, bool) {
+	var e EndpointCoreConfigInput
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointCoreConfigInput
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in CreateServingEndpoint.
+func (o *CreateServingEndpoint) SetConfig(ctx context.Context, v EndpointCoreConfigInput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetRateLimits returns the value of the RateLimits field in CreateServingEndpoint as
+// a slice of RateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateServingEndpoint) GetRateLimits(ctx context.Context) ([]RateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []RateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in CreateServingEndpoint.
+func (o *CreateServingEndpoint) SetRateLimits(ctx context.Context, v []RateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreateServingEndpoint as
+// a slice of EndpointTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateServingEndpoint) GetTags(ctx context.Context) ([]EndpointTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreateServingEndpoint.
+func (o *CreateServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type DatabricksModelServingConfig struct {
 	// The Databricks secret key reference for a Databricks API token that
 	// corresponds to a user or service principal with Can Query access to the
@@ -1154,6 +1539,81 @@ func (o DataframeSplitInput) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetColumns returns the value of the Columns field in DataframeSplitInput as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DataframeSplitInput) GetColumns(ctx context.Context) ([]types.Object, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in DataframeSplitInput.
+func (o *DataframeSplitInput) SetColumns(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetData returns the value of the Data field in DataframeSplitInput as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DataframeSplitInput) GetData(ctx context.Context) ([]types.Object, bool) {
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetData sets the value of the Data field in DataframeSplitInput.
+func (o *DataframeSplitInput) SetData(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	o.Data = types.ListValueMust(t, vs)
+}
+
+// GetIndex returns the value of the Index field in DataframeSplitInput as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DataframeSplitInput) GetIndex(ctx context.Context) ([]types.Int64, bool) {
+	if o.Index.IsNull() || o.Index.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.Index.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIndex sets the value of the Index field in DataframeSplitInput.
+func (o *DataframeSplitInput) SetIndex(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["index"]
+	o.Index = types.ListValueMust(t, vs)
 }
 
 type DeleteResponse struct {
@@ -1288,6 +1748,31 @@ func (o EmbeddingsV1ResponseEmbeddingElement) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetEmbedding returns the value of the Embedding field in EmbeddingsV1ResponseEmbeddingElement as
+// a slice of types.Float64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EmbeddingsV1ResponseEmbeddingElement) GetEmbedding(ctx context.Context) ([]types.Float64, bool) {
+	if o.Embedding.IsNull() || o.Embedding.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Float64
+	d := o.Embedding.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEmbedding sets the value of the Embedding field in EmbeddingsV1ResponseEmbeddingElement.
+func (o *EmbeddingsV1ResponseEmbeddingElement) SetEmbedding(ctx context.Context, v []types.Float64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding"]
+	o.Embedding = types.ListValueMust(t, vs)
+}
+
 type EndpointCoreConfigInput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
@@ -1363,6 +1848,108 @@ func (o EndpointCoreConfigInput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoCaptureConfig returns the value of the AutoCaptureConfig field in EndpointCoreConfigInput as
+// a AutoCaptureConfigInput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigInput) GetAutoCaptureConfig(ctx context.Context) (AutoCaptureConfigInput, bool) {
+	var e AutoCaptureConfigInput
+	if o.AutoCaptureConfig.IsNull() || o.AutoCaptureConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AutoCaptureConfigInput
+	d := o.AutoCaptureConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoCaptureConfig sets the value of the AutoCaptureConfig field in EndpointCoreConfigInput.
+func (o *EndpointCoreConfigInput) SetAutoCaptureConfig(ctx context.Context, v AutoCaptureConfigInput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_capture_config"]
+	o.AutoCaptureConfig = types.ListValueMust(t, vs)
+}
+
+// GetServedEntities returns the value of the ServedEntities field in EndpointCoreConfigInput as
+// a slice of ServedEntityInput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigInput) GetServedEntities(ctx context.Context) ([]ServedEntityInput, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedEntityInput
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in EndpointCoreConfigInput.
+func (o *EndpointCoreConfigInput) SetServedEntities(ctx context.Context, v []ServedEntityInput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetServedModels returns the value of the ServedModels field in EndpointCoreConfigInput as
+// a slice of ServedModelInput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigInput) GetServedModels(ctx context.Context) ([]ServedModelInput, bool) {
+	if o.ServedModels.IsNull() || o.ServedModels.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedModelInput
+	d := o.ServedModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedModels sets the value of the ServedModels field in EndpointCoreConfigInput.
+func (o *EndpointCoreConfigInput) SetServedModels(ctx context.Context, v []ServedModelInput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	o.ServedModels = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in EndpointCoreConfigInput as
+// a TrafficConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigInput) GetTrafficConfig(ctx context.Context) (TrafficConfig, bool) {
+	var e TrafficConfig
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in EndpointCoreConfigInput.
+func (o *EndpointCoreConfigInput) SetTrafficConfig(ctx context.Context, v TrafficConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
+}
+
 type EndpointCoreConfigOutput struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
@@ -1436,6 +2023,108 @@ func (o EndpointCoreConfigOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAutoCaptureConfig returns the value of the AutoCaptureConfig field in EndpointCoreConfigOutput as
+// a AutoCaptureConfigOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigOutput) GetAutoCaptureConfig(ctx context.Context) (AutoCaptureConfigOutput, bool) {
+	var e AutoCaptureConfigOutput
+	if o.AutoCaptureConfig.IsNull() || o.AutoCaptureConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AutoCaptureConfigOutput
+	d := o.AutoCaptureConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoCaptureConfig sets the value of the AutoCaptureConfig field in EndpointCoreConfigOutput.
+func (o *EndpointCoreConfigOutput) SetAutoCaptureConfig(ctx context.Context, v AutoCaptureConfigOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_capture_config"]
+	o.AutoCaptureConfig = types.ListValueMust(t, vs)
+}
+
+// GetServedEntities returns the value of the ServedEntities field in EndpointCoreConfigOutput as
+// a slice of ServedEntityOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigOutput) GetServedEntities(ctx context.Context) ([]ServedEntityOutput, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedEntityOutput
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in EndpointCoreConfigOutput.
+func (o *EndpointCoreConfigOutput) SetServedEntities(ctx context.Context, v []ServedEntityOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetServedModels returns the value of the ServedModels field in EndpointCoreConfigOutput as
+// a slice of ServedModelOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigOutput) GetServedModels(ctx context.Context) ([]ServedModelOutput, bool) {
+	if o.ServedModels.IsNull() || o.ServedModels.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedModelOutput
+	d := o.ServedModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedModels sets the value of the ServedModels field in EndpointCoreConfigOutput.
+func (o *EndpointCoreConfigOutput) SetServedModels(ctx context.Context, v []ServedModelOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	o.ServedModels = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in EndpointCoreConfigOutput as
+// a TrafficConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigOutput) GetTrafficConfig(ctx context.Context) (TrafficConfig, bool) {
+	var e TrafficConfig
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in EndpointCoreConfigOutput.
+func (o *EndpointCoreConfigOutput) SetTrafficConfig(ctx context.Context, v TrafficConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
+}
+
 type EndpointCoreConfigSummary struct {
 	// The list of served entities under the serving endpoint config.
 	ServedEntities types.List `tfsdk:"served_entities" tf:"optional"`
@@ -1488,6 +2177,56 @@ func (o EndpointCoreConfigSummary) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetServedEntities returns the value of the ServedEntities field in EndpointCoreConfigSummary as
+// a slice of ServedEntitySpec values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigSummary) GetServedEntities(ctx context.Context) ([]ServedEntitySpec, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedEntitySpec
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in EndpointCoreConfigSummary.
+func (o *EndpointCoreConfigSummary) SetServedEntities(ctx context.Context, v []ServedEntitySpec) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetServedModels returns the value of the ServedModels field in EndpointCoreConfigSummary as
+// a slice of ServedModelSpec values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointCoreConfigSummary) GetServedModels(ctx context.Context) ([]ServedModelSpec, bool) {
+	if o.ServedModels.IsNull() || o.ServedModels.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedModelSpec
+	d := o.ServedModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedModels sets the value of the ServedModels field in EndpointCoreConfigSummary.
+func (o *EndpointCoreConfigSummary) SetServedModels(ctx context.Context, v []ServedModelSpec) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	o.ServedModels = types.ListValueMust(t, vs)
 }
 
 type EndpointPendingConfig struct {
@@ -1567,6 +2306,108 @@ func (o EndpointPendingConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetAutoCaptureConfig returns the value of the AutoCaptureConfig field in EndpointPendingConfig as
+// a AutoCaptureConfigOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointPendingConfig) GetAutoCaptureConfig(ctx context.Context) (AutoCaptureConfigOutput, bool) {
+	var e AutoCaptureConfigOutput
+	if o.AutoCaptureConfig.IsNull() || o.AutoCaptureConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AutoCaptureConfigOutput
+	d := o.AutoCaptureConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAutoCaptureConfig sets the value of the AutoCaptureConfig field in EndpointPendingConfig.
+func (o *EndpointPendingConfig) SetAutoCaptureConfig(ctx context.Context, v AutoCaptureConfigOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["auto_capture_config"]
+	o.AutoCaptureConfig = types.ListValueMust(t, vs)
+}
+
+// GetServedEntities returns the value of the ServedEntities field in EndpointPendingConfig as
+// a slice of ServedEntityOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointPendingConfig) GetServedEntities(ctx context.Context) ([]ServedEntityOutput, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedEntityOutput
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in EndpointPendingConfig.
+func (o *EndpointPendingConfig) SetServedEntities(ctx context.Context, v []ServedEntityOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetServedModels returns the value of the ServedModels field in EndpointPendingConfig as
+// a slice of ServedModelOutput values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointPendingConfig) GetServedModels(ctx context.Context) ([]ServedModelOutput, bool) {
+	if o.ServedModels.IsNull() || o.ServedModels.IsUnknown() {
+		return nil, false
+	}
+	var v []ServedModelOutput
+	d := o.ServedModels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedModels sets the value of the ServedModels field in EndpointPendingConfig.
+func (o *EndpointPendingConfig) SetServedModels(ctx context.Context, v []ServedModelOutput) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	o.ServedModels = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in EndpointPendingConfig as
+// a TrafficConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointPendingConfig) GetTrafficConfig(ctx context.Context) (TrafficConfig, bool) {
+	var e TrafficConfig
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in EndpointPendingConfig.
+func (o *EndpointPendingConfig) SetTrafficConfig(ctx context.Context, v TrafficConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
 }
 
 type EndpointState struct {
@@ -1865,6 +2706,214 @@ func (o ExternalModel) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAi21labsConfig returns the value of the Ai21labsConfig field in ExternalModel as
+// a Ai21LabsConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetAi21labsConfig(ctx context.Context) (Ai21LabsConfig, bool) {
+	var e Ai21LabsConfig
+	if o.Ai21labsConfig.IsNull() || o.Ai21labsConfig.IsUnknown() {
+		return e, false
+	}
+	var v []Ai21LabsConfig
+	d := o.Ai21labsConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAi21labsConfig sets the value of the Ai21labsConfig field in ExternalModel.
+func (o *ExternalModel) SetAi21labsConfig(ctx context.Context, v Ai21LabsConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai21labs_config"]
+	o.Ai21labsConfig = types.ListValueMust(t, vs)
+}
+
+// GetAmazonBedrockConfig returns the value of the AmazonBedrockConfig field in ExternalModel as
+// a AmazonBedrockConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetAmazonBedrockConfig(ctx context.Context) (AmazonBedrockConfig, bool) {
+	var e AmazonBedrockConfig
+	if o.AmazonBedrockConfig.IsNull() || o.AmazonBedrockConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AmazonBedrockConfig
+	d := o.AmazonBedrockConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAmazonBedrockConfig sets the value of the AmazonBedrockConfig field in ExternalModel.
+func (o *ExternalModel) SetAmazonBedrockConfig(ctx context.Context, v AmazonBedrockConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["amazon_bedrock_config"]
+	o.AmazonBedrockConfig = types.ListValueMust(t, vs)
+}
+
+// GetAnthropicConfig returns the value of the AnthropicConfig field in ExternalModel as
+// a AnthropicConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetAnthropicConfig(ctx context.Context) (AnthropicConfig, bool) {
+	var e AnthropicConfig
+	if o.AnthropicConfig.IsNull() || o.AnthropicConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AnthropicConfig
+	d := o.AnthropicConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAnthropicConfig sets the value of the AnthropicConfig field in ExternalModel.
+func (o *ExternalModel) SetAnthropicConfig(ctx context.Context, v AnthropicConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["anthropic_config"]
+	o.AnthropicConfig = types.ListValueMust(t, vs)
+}
+
+// GetCohereConfig returns the value of the CohereConfig field in ExternalModel as
+// a CohereConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetCohereConfig(ctx context.Context) (CohereConfig, bool) {
+	var e CohereConfig
+	if o.CohereConfig.IsNull() || o.CohereConfig.IsUnknown() {
+		return e, false
+	}
+	var v []CohereConfig
+	d := o.CohereConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCohereConfig sets the value of the CohereConfig field in ExternalModel.
+func (o *ExternalModel) SetCohereConfig(ctx context.Context, v CohereConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cohere_config"]
+	o.CohereConfig = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksModelServingConfig returns the value of the DatabricksModelServingConfig field in ExternalModel as
+// a DatabricksModelServingConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetDatabricksModelServingConfig(ctx context.Context) (DatabricksModelServingConfig, bool) {
+	var e DatabricksModelServingConfig
+	if o.DatabricksModelServingConfig.IsNull() || o.DatabricksModelServingConfig.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksModelServingConfig
+	d := o.DatabricksModelServingConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksModelServingConfig sets the value of the DatabricksModelServingConfig field in ExternalModel.
+func (o *ExternalModel) SetDatabricksModelServingConfig(ctx context.Context, v DatabricksModelServingConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_model_serving_config"]
+	o.DatabricksModelServingConfig = types.ListValueMust(t, vs)
+}
+
+// GetGoogleCloudVertexAiConfig returns the value of the GoogleCloudVertexAiConfig field in ExternalModel as
+// a GoogleCloudVertexAiConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetGoogleCloudVertexAiConfig(ctx context.Context) (GoogleCloudVertexAiConfig, bool) {
+	var e GoogleCloudVertexAiConfig
+	if o.GoogleCloudVertexAiConfig.IsNull() || o.GoogleCloudVertexAiConfig.IsUnknown() {
+		return e, false
+	}
+	var v []GoogleCloudVertexAiConfig
+	d := o.GoogleCloudVertexAiConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGoogleCloudVertexAiConfig sets the value of the GoogleCloudVertexAiConfig field in ExternalModel.
+func (o *ExternalModel) SetGoogleCloudVertexAiConfig(ctx context.Context, v GoogleCloudVertexAiConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["google_cloud_vertex_ai_config"]
+	o.GoogleCloudVertexAiConfig = types.ListValueMust(t, vs)
+}
+
+// GetOpenaiConfig returns the value of the OpenaiConfig field in ExternalModel as
+// a OpenAiConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetOpenaiConfig(ctx context.Context) (OpenAiConfig, bool) {
+	var e OpenAiConfig
+	if o.OpenaiConfig.IsNull() || o.OpenaiConfig.IsUnknown() {
+		return e, false
+	}
+	var v []OpenAiConfig
+	d := o.OpenaiConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOpenaiConfig sets the value of the OpenaiConfig field in ExternalModel.
+func (o *ExternalModel) SetOpenaiConfig(ctx context.Context, v OpenAiConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["openai_config"]
+	o.OpenaiConfig = types.ListValueMust(t, vs)
+}
+
+// GetPalmConfig returns the value of the PalmConfig field in ExternalModel as
+// a PaLmConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel) GetPalmConfig(ctx context.Context) (PaLmConfig, bool) {
+	var e PaLmConfig
+	if o.PalmConfig.IsNull() || o.PalmConfig.IsUnknown() {
+		return e, false
+	}
+	var v []PaLmConfig
+	d := o.PalmConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPalmConfig sets the value of the PalmConfig field in ExternalModel.
+func (o *ExternalModel) SetPalmConfig(ctx context.Context, v PaLmConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["palm_config"]
+	o.PalmConfig = types.ListValueMust(t, vs)
+}
+
 type ExternalModelUsageElement struct {
 	// The number of tokens in the chat/completions response.
 	CompletionTokens types.Int64 `tfsdk:"completion_tokens" tf:"optional"`
@@ -2140,6 +3189,31 @@ func (o GetServingEndpointPermissionLevelsResponse) Type(ctx context.Context) at
 	}
 }
 
+// GetPermissionLevels returns the value of the PermissionLevels field in GetServingEndpointPermissionLevelsResponse as
+// a slice of ServingEndpointPermissionsDescription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetServingEndpointPermissionLevelsResponse) GetPermissionLevels(ctx context.Context) ([]ServingEndpointPermissionsDescription, bool) {
+	if o.PermissionLevels.IsNull() || o.PermissionLevels.IsUnknown() {
+		return nil, false
+	}
+	var v []ServingEndpointPermissionsDescription
+	d := o.PermissionLevels.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionLevels sets the value of the PermissionLevels field in GetServingEndpointPermissionLevelsResponse.
+func (o *GetServingEndpointPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v []ServingEndpointPermissionsDescription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	o.PermissionLevels = types.ListValueMust(t, vs)
+}
+
 // Get serving endpoint permissions
 type GetServingEndpointPermissionsRequest struct {
 	// The serving endpoint for which to get or manage permissions.
@@ -2345,6 +3419,31 @@ func (o ListEndpointsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEndpoints returns the value of the Endpoints field in ListEndpointsResponse as
+// a slice of ServingEndpoint values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListEndpointsResponse) GetEndpoints(ctx context.Context) ([]ServingEndpoint, bool) {
+	if o.Endpoints.IsNull() || o.Endpoints.IsUnknown() {
+		return nil, false
+	}
+	var v []ServingEndpoint
+	d := o.Endpoints.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEndpoints sets the value of the Endpoints field in ListEndpointsResponse.
+func (o *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []ServingEndpoint) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoints"]
+	o.Endpoints = types.ListValueMust(t, vs)
+}
+
 // Get the latest logs for a served model
 type LogsRequest struct {
 	// The name of the serving endpoint that the served model belongs to. This
@@ -2414,7 +3513,7 @@ func (newState *ModelDataPlaneInfo) SyncEffectiveFieldsDuringRead(existingState 
 // SDK values.
 func (a ModelDataPlaneInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"query_info": reflect.TypeOf(oauth2.DataPlaneInfo{}),
+		"query_info": reflect.TypeOf(oauth2_tf.DataPlaneInfo{}),
 	}
 }
 
@@ -2438,6 +3537,32 @@ func (o ModelDataPlaneInfo) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetQueryInfo returns the value of the QueryInfo field in ModelDataPlaneInfo as
+// a oauth2_tf.DataPlaneInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ModelDataPlaneInfo) GetQueryInfo(ctx context.Context) (oauth2_tf.DataPlaneInfo, bool) {
+	var e oauth2_tf.DataPlaneInfo
+	if o.QueryInfo.IsNull() || o.QueryInfo.IsUnknown() {
+		return e, false
+	}
+	var v []oauth2_tf.DataPlaneInfo
+	d := o.QueryInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryInfo sets the value of the QueryInfo field in ModelDataPlaneInfo.
+func (o *ModelDataPlaneInfo) SetQueryInfo(ctx context.Context, v oauth2_tf.DataPlaneInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_info"]
+	o.QueryInfo = types.ListValueMust(t, vs)
 }
 
 type OpenAiConfig struct {
@@ -2661,6 +3786,56 @@ func (o PatchServingEndpointTags) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAddTags returns the value of the AddTags field in PatchServingEndpointTags as
+// a slice of EndpointTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PatchServingEndpointTags) GetAddTags(ctx context.Context) ([]EndpointTag, bool) {
+	if o.AddTags.IsNull() || o.AddTags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag
+	d := o.AddTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAddTags sets the value of the AddTags field in PatchServingEndpointTags.
+func (o *PatchServingEndpointTags) SetAddTags(ctx context.Context, v []EndpointTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add_tags"]
+	o.AddTags = types.ListValueMust(t, vs)
+}
+
+// GetDeleteTags returns the value of the DeleteTags field in PatchServingEndpointTags as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PatchServingEndpointTags) GetDeleteTags(ctx context.Context) ([]types.String, bool) {
+	if o.DeleteTags.IsNull() || o.DeleteTags.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DeleteTags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDeleteTags sets the value of the DeleteTags field in PatchServingEndpointTags.
+func (o *PatchServingEndpointTags) SetDeleteTags(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delete_tags"]
+	o.DeleteTags = types.ListValueMust(t, vs)
+}
+
 type PayloadTable struct {
 	// The name of the payload table.
 	Name types.String `tfsdk:"name" tf:"optional"`
@@ -2789,6 +3964,109 @@ func (o PutAiGatewayRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGuardrails returns the value of the Guardrails field in PutAiGatewayRequest as
+// a AiGatewayGuardrails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayRequest) GetGuardrails(ctx context.Context) (AiGatewayGuardrails, bool) {
+	var e AiGatewayGuardrails
+	if o.Guardrails.IsNull() || o.Guardrails.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrails
+	d := o.Guardrails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGuardrails sets the value of the Guardrails field in PutAiGatewayRequest.
+func (o *PutAiGatewayRequest) SetGuardrails(ctx context.Context, v AiGatewayGuardrails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["guardrails"]
+	o.Guardrails = types.ListValueMust(t, vs)
+}
+
+// GetInferenceTableConfig returns the value of the InferenceTableConfig field in PutAiGatewayRequest as
+// a AiGatewayInferenceTableConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayRequest) GetInferenceTableConfig(ctx context.Context) (AiGatewayInferenceTableConfig, bool) {
+	var e AiGatewayInferenceTableConfig
+	if o.InferenceTableConfig.IsNull() || o.InferenceTableConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayInferenceTableConfig
+	d := o.InferenceTableConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceTableConfig sets the value of the InferenceTableConfig field in PutAiGatewayRequest.
+func (o *PutAiGatewayRequest) SetInferenceTableConfig(ctx context.Context, v AiGatewayInferenceTableConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_table_config"]
+	o.InferenceTableConfig = types.ListValueMust(t, vs)
+}
+
+// GetRateLimits returns the value of the RateLimits field in PutAiGatewayRequest as
+// a slice of AiGatewayRateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayRequest) GetRateLimits(ctx context.Context) ([]AiGatewayRateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []AiGatewayRateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in PutAiGatewayRequest.
+func (o *PutAiGatewayRequest) SetRateLimits(ctx context.Context, v []AiGatewayRateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
+}
+
+// GetUsageTrackingConfig returns the value of the UsageTrackingConfig field in PutAiGatewayRequest as
+// a AiGatewayUsageTrackingConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayRequest) GetUsageTrackingConfig(ctx context.Context) (AiGatewayUsageTrackingConfig, bool) {
+	var e AiGatewayUsageTrackingConfig
+	if o.UsageTrackingConfig.IsNull() || o.UsageTrackingConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayUsageTrackingConfig
+	d := o.UsageTrackingConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUsageTrackingConfig sets the value of the UsageTrackingConfig field in PutAiGatewayRequest.
+func (o *PutAiGatewayRequest) SetUsageTrackingConfig(ctx context.Context, v AiGatewayUsageTrackingConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["usage_tracking_config"]
+	o.UsageTrackingConfig = types.ListValueMust(t, vs)
+}
+
 type PutAiGatewayResponse struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
@@ -2861,6 +4139,109 @@ func (o PutAiGatewayResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetGuardrails returns the value of the Guardrails field in PutAiGatewayResponse as
+// a AiGatewayGuardrails value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayResponse) GetGuardrails(ctx context.Context) (AiGatewayGuardrails, bool) {
+	var e AiGatewayGuardrails
+	if o.Guardrails.IsNull() || o.Guardrails.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayGuardrails
+	d := o.Guardrails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGuardrails sets the value of the Guardrails field in PutAiGatewayResponse.
+func (o *PutAiGatewayResponse) SetGuardrails(ctx context.Context, v AiGatewayGuardrails) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["guardrails"]
+	o.Guardrails = types.ListValueMust(t, vs)
+}
+
+// GetInferenceTableConfig returns the value of the InferenceTableConfig field in PutAiGatewayResponse as
+// a AiGatewayInferenceTableConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayResponse) GetInferenceTableConfig(ctx context.Context) (AiGatewayInferenceTableConfig, bool) {
+	var e AiGatewayInferenceTableConfig
+	if o.InferenceTableConfig.IsNull() || o.InferenceTableConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayInferenceTableConfig
+	d := o.InferenceTableConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInferenceTableConfig sets the value of the InferenceTableConfig field in PutAiGatewayResponse.
+func (o *PutAiGatewayResponse) SetInferenceTableConfig(ctx context.Context, v AiGatewayInferenceTableConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inference_table_config"]
+	o.InferenceTableConfig = types.ListValueMust(t, vs)
+}
+
+// GetRateLimits returns the value of the RateLimits field in PutAiGatewayResponse as
+// a slice of AiGatewayRateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayResponse) GetRateLimits(ctx context.Context) ([]AiGatewayRateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []AiGatewayRateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in PutAiGatewayResponse.
+func (o *PutAiGatewayResponse) SetRateLimits(ctx context.Context, v []AiGatewayRateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
+}
+
+// GetUsageTrackingConfig returns the value of the UsageTrackingConfig field in PutAiGatewayResponse as
+// a AiGatewayUsageTrackingConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayResponse) GetUsageTrackingConfig(ctx context.Context) (AiGatewayUsageTrackingConfig, bool) {
+	var e AiGatewayUsageTrackingConfig
+	if o.UsageTrackingConfig.IsNull() || o.UsageTrackingConfig.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayUsageTrackingConfig
+	d := o.UsageTrackingConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUsageTrackingConfig sets the value of the UsageTrackingConfig field in PutAiGatewayResponse.
+func (o *PutAiGatewayResponse) SetUsageTrackingConfig(ctx context.Context, v AiGatewayUsageTrackingConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["usage_tracking_config"]
+	o.UsageTrackingConfig = types.ListValueMust(t, vs)
+}
+
 // Update rate limits of a serving endpoint
 type PutRequest struct {
 	// The name of the serving endpoint whose rate limits are being updated.
@@ -2913,6 +4294,31 @@ func (o PutRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetRateLimits returns the value of the RateLimits field in PutRequest as
+// a slice of RateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutRequest) GetRateLimits(ctx context.Context) ([]RateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []RateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in PutRequest.
+func (o *PutRequest) SetRateLimits(ctx context.Context, v []RateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
+}
+
 type PutResponse struct {
 	// The list of endpoint rate limits.
 	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
@@ -2957,6 +4363,31 @@ func (o PutResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRateLimits returns the value of the RateLimits field in PutResponse as
+// a slice of RateLimit values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutResponse) GetRateLimits(ctx context.Context) ([]RateLimit, bool) {
+	if o.RateLimits.IsNull() || o.RateLimits.IsUnknown() {
+		return nil, false
+	}
+	var v []RateLimit
+	d := o.RateLimits.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRateLimits sets the value of the RateLimits field in PutResponse.
+func (o *PutResponse) SetRateLimits(ctx context.Context, v []RateLimit) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	o.RateLimits = types.ListValueMust(t, vs)
 }
 
 type QueryEndpointInput struct {
@@ -3093,6 +4524,157 @@ func (o QueryEndpointInput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetDataframeRecords returns the value of the DataframeRecords field in QueryEndpointInput as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetDataframeRecords(ctx context.Context) ([]types.Object, bool) {
+	if o.DataframeRecords.IsNull() || o.DataframeRecords.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.DataframeRecords.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDataframeRecords sets the value of the DataframeRecords field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetDataframeRecords(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataframe_records"]
+	o.DataframeRecords = types.ListValueMust(t, vs)
+}
+
+// GetDataframeSplit returns the value of the DataframeSplit field in QueryEndpointInput as
+// a DataframeSplitInput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetDataframeSplit(ctx context.Context) (DataframeSplitInput, bool) {
+	var e DataframeSplitInput
+	if o.DataframeSplit.IsNull() || o.DataframeSplit.IsUnknown() {
+		return e, false
+	}
+	var v []DataframeSplitInput
+	d := o.DataframeSplit.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataframeSplit sets the value of the DataframeSplit field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetDataframeSplit(ctx context.Context, v DataframeSplitInput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataframe_split"]
+	o.DataframeSplit = types.ListValueMust(t, vs)
+}
+
+// GetExtraParams returns the value of the ExtraParams field in QueryEndpointInput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetExtraParams(ctx context.Context) (map[string]types.String, bool) {
+	if o.ExtraParams.IsNull() || o.ExtraParams.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.ExtraParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExtraParams sets the value of the ExtraParams field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetExtraParams(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_params"]
+	o.ExtraParams = types.MapValueMust(t, vs)
+}
+
+// GetInstances returns the value of the Instances field in QueryEndpointInput as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetInstances(ctx context.Context) ([]types.Object, bool) {
+	if o.Instances.IsNull() || o.Instances.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.Instances.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInstances sets the value of the Instances field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetInstances(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instances"]
+	o.Instances = types.ListValueMust(t, vs)
+}
+
+// GetMessages returns the value of the Messages field in QueryEndpointInput as
+// a slice of ChatMessage values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetMessages(ctx context.Context) ([]ChatMessage, bool) {
+	if o.Messages.IsNull() || o.Messages.IsUnknown() {
+		return nil, false
+	}
+	var v []ChatMessage
+	d := o.Messages.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetMessages sets the value of the Messages field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetMessages(ctx context.Context, v []ChatMessage) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
+	o.Messages = types.ListValueMust(t, vs)
+}
+
+// GetStop returns the value of the Stop field in QueryEndpointInput as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointInput) GetStop(ctx context.Context) ([]types.String, bool) {
+	if o.Stop.IsNull() || o.Stop.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Stop.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetStop sets the value of the Stop field in QueryEndpointInput.
+func (o *QueryEndpointInput) SetStop(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stop"]
+	o.Stop = types.ListValueMust(t, vs)
+}
+
 type QueryEndpointResponse struct {
 	// The list of choices returned by the __chat or completions
 	// external/foundation model__ serving endpoint.
@@ -3188,6 +4770,107 @@ func (o QueryEndpointResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetChoices returns the value of the Choices field in QueryEndpointResponse as
+// a slice of V1ResponseChoiceElement values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointResponse) GetChoices(ctx context.Context) ([]V1ResponseChoiceElement, bool) {
+	if o.Choices.IsNull() || o.Choices.IsUnknown() {
+		return nil, false
+	}
+	var v []V1ResponseChoiceElement
+	d := o.Choices.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetChoices sets the value of the Choices field in QueryEndpointResponse.
+func (o *QueryEndpointResponse) SetChoices(ctx context.Context, v []V1ResponseChoiceElement) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["choices"]
+	o.Choices = types.ListValueMust(t, vs)
+}
+
+// GetData returns the value of the Data field in QueryEndpointResponse as
+// a slice of EmbeddingsV1ResponseEmbeddingElement values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointResponse) GetData(ctx context.Context) ([]EmbeddingsV1ResponseEmbeddingElement, bool) {
+	if o.Data.IsNull() || o.Data.IsUnknown() {
+		return nil, false
+	}
+	var v []EmbeddingsV1ResponseEmbeddingElement
+	d := o.Data.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetData sets the value of the Data field in QueryEndpointResponse.
+func (o *QueryEndpointResponse) SetData(ctx context.Context, v []EmbeddingsV1ResponseEmbeddingElement) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	o.Data = types.ListValueMust(t, vs)
+}
+
+// GetPredictions returns the value of the Predictions field in QueryEndpointResponse as
+// a slice of types.Object values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointResponse) GetPredictions(ctx context.Context) ([]types.Object, bool) {
+	if o.Predictions.IsNull() || o.Predictions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Object
+	d := o.Predictions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPredictions sets the value of the Predictions field in QueryEndpointResponse.
+func (o *QueryEndpointResponse) SetPredictions(ctx context.Context, v []types.Object) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["predictions"]
+	o.Predictions = types.ListValueMust(t, vs)
+}
+
+// GetUsage returns the value of the Usage field in QueryEndpointResponse as
+// a ExternalModelUsageElement value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryEndpointResponse) GetUsage(ctx context.Context) (ExternalModelUsageElement, bool) {
+	var e ExternalModelUsageElement
+	if o.Usage.IsNull() || o.Usage.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalModelUsageElement
+	d := o.Usage.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetUsage sets the value of the Usage field in QueryEndpointResponse.
+func (o *QueryEndpointResponse) SetUsage(ctx context.Context, v ExternalModelUsageElement) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["usage"]
+	o.Usage = types.ListValueMust(t, vs)
 }
 
 type RateLimit struct {
@@ -3416,6 +5099,57 @@ func (o ServedEntityInput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEnvironmentVars returns the value of the EnvironmentVars field in ServedEntityInput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityInput) GetEnvironmentVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.EnvironmentVars.IsNull() || o.EnvironmentVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.EnvironmentVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVars sets the value of the EnvironmentVars field in ServedEntityInput.
+func (o *ServedEntityInput) SetEnvironmentVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	o.EnvironmentVars = types.MapValueMust(t, vs)
+}
+
+// GetExternalModel returns the value of the ExternalModel field in ServedEntityInput as
+// a ExternalModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityInput) GetExternalModel(ctx context.Context) (ExternalModel, bool) {
+	var e ExternalModel
+	if o.ExternalModel.IsNull() || o.ExternalModel.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalModel
+	d := o.ExternalModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalModel sets the value of the ExternalModel field in ServedEntityInput.
+func (o *ServedEntityInput) SetExternalModel(ctx context.Context, v ExternalModel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_model"]
+	o.ExternalModel = types.ListValueMust(t, vs)
+}
+
 type ServedEntityOutput struct {
 	// The creation timestamp of the served entity in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
@@ -3557,6 +5291,109 @@ func (o ServedEntityOutput) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetEnvironmentVars returns the value of the EnvironmentVars field in ServedEntityOutput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityOutput) GetEnvironmentVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.EnvironmentVars.IsNull() || o.EnvironmentVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.EnvironmentVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVars sets the value of the EnvironmentVars field in ServedEntityOutput.
+func (o *ServedEntityOutput) SetEnvironmentVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	o.EnvironmentVars = types.MapValueMust(t, vs)
+}
+
+// GetExternalModel returns the value of the ExternalModel field in ServedEntityOutput as
+// a ExternalModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityOutput) GetExternalModel(ctx context.Context) (ExternalModel, bool) {
+	var e ExternalModel
+	if o.ExternalModel.IsNull() || o.ExternalModel.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalModel
+	d := o.ExternalModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalModel sets the value of the ExternalModel field in ServedEntityOutput.
+func (o *ServedEntityOutput) SetExternalModel(ctx context.Context, v ExternalModel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_model"]
+	o.ExternalModel = types.ListValueMust(t, vs)
+}
+
+// GetFoundationModel returns the value of the FoundationModel field in ServedEntityOutput as
+// a FoundationModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityOutput) GetFoundationModel(ctx context.Context) (FoundationModel, bool) {
+	var e FoundationModel
+	if o.FoundationModel.IsNull() || o.FoundationModel.IsUnknown() {
+		return e, false
+	}
+	var v []FoundationModel
+	d := o.FoundationModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFoundationModel sets the value of the FoundationModel field in ServedEntityOutput.
+func (o *ServedEntityOutput) SetFoundationModel(ctx context.Context, v FoundationModel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foundation_model"]
+	o.FoundationModel = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in ServedEntityOutput as
+// a ServedModelState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntityOutput) GetState(ctx context.Context) (ServedModelState, bool) {
+	var e ServedModelState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []ServedModelState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in ServedEntityOutput.
+func (o *ServedEntityOutput) SetState(ctx context.Context, v ServedModelState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
 type ServedEntitySpec struct {
 	// The name of the entity served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
@@ -3629,6 +5466,58 @@ func (o ServedEntitySpec) Type(ctx context.Context) attr.Type {
 			"name": types.StringType,
 		},
 	}
+}
+
+// GetExternalModel returns the value of the ExternalModel field in ServedEntitySpec as
+// a ExternalModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntitySpec) GetExternalModel(ctx context.Context) (ExternalModel, bool) {
+	var e ExternalModel
+	if o.ExternalModel.IsNull() || o.ExternalModel.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalModel
+	d := o.ExternalModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExternalModel sets the value of the ExternalModel field in ServedEntitySpec.
+func (o *ServedEntitySpec) SetExternalModel(ctx context.Context, v ExternalModel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_model"]
+	o.ExternalModel = types.ListValueMust(t, vs)
+}
+
+// GetFoundationModel returns the value of the FoundationModel field in ServedEntitySpec as
+// a FoundationModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedEntitySpec) GetFoundationModel(ctx context.Context) (FoundationModel, bool) {
+	var e FoundationModel
+	if o.FoundationModel.IsNull() || o.FoundationModel.IsUnknown() {
+		return e, false
+	}
+	var v []FoundationModel
+	d := o.FoundationModel.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFoundationModel sets the value of the FoundationModel field in ServedEntitySpec.
+func (o *ServedEntitySpec) SetFoundationModel(ctx context.Context, v FoundationModel) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foundation_model"]
+	o.FoundationModel = types.ListValueMust(t, vs)
 }
 
 type ServedModelInput struct {
@@ -3736,6 +5625,31 @@ func (o ServedModelInput) Type(ctx context.Context) attr.Type {
 			"workload_type":              types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentVars returns the value of the EnvironmentVars field in ServedModelInput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedModelInput) GetEnvironmentVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.EnvironmentVars.IsNull() || o.EnvironmentVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.EnvironmentVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVars sets the value of the EnvironmentVars field in ServedModelInput.
+func (o *ServedModelInput) SetEnvironmentVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	o.EnvironmentVars = types.MapValueMust(t, vs)
 }
 
 type ServedModelOutput struct {
@@ -3846,6 +5760,57 @@ func (o ServedModelOutput) Type(ctx context.Context) attr.Type {
 			"workload_type": types.StringType,
 		},
 	}
+}
+
+// GetEnvironmentVars returns the value of the EnvironmentVars field in ServedModelOutput as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedModelOutput) GetEnvironmentVars(ctx context.Context) (map[string]types.String, bool) {
+	if o.EnvironmentVars.IsNull() || o.EnvironmentVars.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.EnvironmentVars.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEnvironmentVars sets the value of the EnvironmentVars field in ServedModelOutput.
+func (o *ServedModelOutput) SetEnvironmentVars(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	o.EnvironmentVars = types.MapValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in ServedModelOutput as
+// a ServedModelState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServedModelOutput) GetState(ctx context.Context) (ServedModelState, bool) {
+	var e ServedModelState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []ServedModelState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in ServedModelOutput.
+func (o *ServedModelOutput) SetState(ctx context.Context, v ServedModelState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
 }
 
 type ServedModelSpec struct {
@@ -4093,6 +6058,109 @@ func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAiGateway returns the value of the AiGateway field in ServingEndpoint as
+// a AiGatewayConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpoint) GetAiGateway(ctx context.Context) (AiGatewayConfig, bool) {
+	var e AiGatewayConfig
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in ServingEndpoint.
+func (o *ServingEndpoint) SetAiGateway(ctx context.Context, v AiGatewayConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in ServingEndpoint as
+// a EndpointCoreConfigSummary value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpoint) GetConfig(ctx context.Context) (EndpointCoreConfigSummary, bool) {
+	var e EndpointCoreConfigSummary
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointCoreConfigSummary
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in ServingEndpoint.
+func (o *ServingEndpoint) SetConfig(ctx context.Context, v EndpointCoreConfigSummary) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in ServingEndpoint as
+// a EndpointState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpoint) GetState(ctx context.Context) (EndpointState, bool) {
+	var e EndpointState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in ServingEndpoint.
+func (o *ServingEndpoint) SetState(ctx context.Context, v EndpointState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ServingEndpoint as
+// a slice of EndpointTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpoint) GetTags(ctx context.Context) ([]EndpointTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ServingEndpoint.
+func (o *ServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ServingEndpointAccessControlRequest struct {
 	// name of the group
 	GroupName types.String `tfsdk:"group_name" tf:"optional"`
@@ -4207,6 +6275,31 @@ func (o ServingEndpointAccessControlResponse) Type(ctx context.Context) attr.Typ
 			"user_name":              types.StringType,
 		},
 	}
+}
+
+// GetAllPermissions returns the value of the AllPermissions field in ServingEndpointAccessControlResponse as
+// a slice of ServingEndpointPermission values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointAccessControlResponse) GetAllPermissions(ctx context.Context) ([]ServingEndpointPermission, bool) {
+	if o.AllPermissions.IsNull() || o.AllPermissions.IsUnknown() {
+		return nil, false
+	}
+	var v []ServingEndpointPermission
+	d := o.AllPermissions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllPermissions sets the value of the AllPermissions field in ServingEndpointAccessControlResponse.
+func (o *ServingEndpointAccessControlResponse) SetAllPermissions(ctx context.Context, v []ServingEndpointPermission) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
 type ServingEndpointDetailed struct {
@@ -4329,6 +6422,161 @@ func (o ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAiGateway returns the value of the AiGateway field in ServingEndpointDetailed as
+// a AiGatewayConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetAiGateway(ctx context.Context) (AiGatewayConfig, bool) {
+	var e AiGatewayConfig
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetAiGateway(ctx context.Context, v AiGatewayConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in ServingEndpointDetailed as
+// a EndpointCoreConfigOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetConfig(ctx context.Context) (EndpointCoreConfigOutput, bool) {
+	var e EndpointCoreConfigOutput
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointCoreConfigOutput
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetConfig(ctx context.Context, v EndpointCoreConfigOutput) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetDataPlaneInfo returns the value of the DataPlaneInfo field in ServingEndpointDetailed as
+// a ModelDataPlaneInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetDataPlaneInfo(ctx context.Context) (ModelDataPlaneInfo, bool) {
+	var e ModelDataPlaneInfo
+	if o.DataPlaneInfo.IsNull() || o.DataPlaneInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ModelDataPlaneInfo
+	d := o.DataPlaneInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataPlaneInfo sets the value of the DataPlaneInfo field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetDataPlaneInfo(ctx context.Context, v ModelDataPlaneInfo) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_plane_info"]
+	o.DataPlaneInfo = types.ListValueMust(t, vs)
+}
+
+// GetPendingConfig returns the value of the PendingConfig field in ServingEndpointDetailed as
+// a EndpointPendingConfig value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetPendingConfig(ctx context.Context) (EndpointPendingConfig, bool) {
+	var e EndpointPendingConfig
+	if o.PendingConfig.IsNull() || o.PendingConfig.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointPendingConfig
+	d := o.PendingConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPendingConfig sets the value of the PendingConfig field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetPendingConfig(ctx context.Context, v EndpointPendingConfig) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_config"]
+	o.PendingConfig = types.ListValueMust(t, vs)
+}
+
+// GetState returns the value of the State field in ServingEndpointDetailed as
+// a EndpointState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetState(ctx context.Context) (EndpointState, bool) {
+	var e EndpointState
+	if o.State.IsNull() || o.State.IsUnknown() {
+		return e, false
+	}
+	var v []EndpointState
+	d := o.State.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetState sets the value of the State field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetState(ctx context.Context, v EndpointState) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["state"]
+	o.State = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in ServingEndpointDetailed as
+// a slice of EndpointTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointDetailed) GetTags(ctx context.Context) ([]EndpointTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in ServingEndpointDetailed.
+func (o *ServingEndpointDetailed) SetTags(ctx context.Context, v []EndpointTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 type ServingEndpointPermission struct {
 	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
 
@@ -4382,6 +6630,31 @@ func (o ServingEndpointPermission) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetInheritedFromObject returns the value of the InheritedFromObject field in ServingEndpointPermission as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointPermission) GetInheritedFromObject(ctx context.Context) ([]types.String, bool) {
+	if o.InheritedFromObject.IsNull() || o.InheritedFromObject.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.InheritedFromObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetInheritedFromObject sets the value of the InheritedFromObject field in ServingEndpointPermission.
+func (o *ServingEndpointPermission) SetInheritedFromObject(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	o.InheritedFromObject = types.ListValueMust(t, vs)
+}
+
 type ServingEndpointPermissions struct {
 	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
 
@@ -4433,6 +6706,31 @@ func (o ServingEndpointPermissions) Type(ctx context.Context) attr.Type {
 			"object_type": types.StringType,
 		},
 	}
+}
+
+// GetAccessControlList returns the value of the AccessControlList field in ServingEndpointPermissions as
+// a slice of ServingEndpointAccessControlResponse values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointPermissions) GetAccessControlList(ctx context.Context) ([]ServingEndpointAccessControlResponse, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ServingEndpointAccessControlResponse
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ServingEndpointPermissions.
+func (o *ServingEndpointPermissions) SetAccessControlList(ctx context.Context, v []ServingEndpointAccessControlResponse) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
 type ServingEndpointPermissionsDescription struct {
@@ -4529,6 +6827,31 @@ func (o ServingEndpointPermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAccessControlList returns the value of the AccessControlList field in ServingEndpointPermissionsRequest as
+// a slice of ServingEndpointAccessControlRequest values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ServingEndpointPermissionsRequest) GetAccessControlList(ctx context.Context) ([]ServingEndpointAccessControlRequest, bool) {
+	if o.AccessControlList.IsNull() || o.AccessControlList.IsUnknown() {
+		return nil, false
+	}
+	var v []ServingEndpointAccessControlRequest
+	d := o.AccessControlList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAccessControlList sets the value of the AccessControlList field in ServingEndpointPermissionsRequest.
+func (o *ServingEndpointPermissionsRequest) SetAccessControlList(ctx context.Context, v []ServingEndpointAccessControlRequest) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	o.AccessControlList = types.ListValueMust(t, vs)
+}
+
 type TrafficConfig struct {
 	// The list of routes that define traffic to each served entity.
 	Routes types.List `tfsdk:"routes" tf:"optional"`
@@ -4573,6 +6896,31 @@ func (o TrafficConfig) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRoutes returns the value of the Routes field in TrafficConfig as
+// a slice of Route values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TrafficConfig) GetRoutes(ctx context.Context) ([]Route, bool) {
+	if o.Routes.IsNull() || o.Routes.IsUnknown() {
+		return nil, false
+	}
+	var v []Route
+	d := o.Routes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRoutes sets the value of the Routes field in TrafficConfig.
+func (o *TrafficConfig) SetRoutes(ctx context.Context, v []Route) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
+	o.Routes = types.ListValueMust(t, vs)
 }
 
 type V1ResponseChoiceElement struct {
@@ -4637,76 +6985,28 @@ func (o V1ResponseChoiceElement) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Behavior for PII filter. Currently only 'BLOCK' is supported. If 'BLOCK' is
-// set for the input guardrail and the request contains PII, the request is not
-// sent to the model server and 400 status code is returned; if 'BLOCK' is set
-// for the output guardrail and the model response contains PII, the PII info in
-// the response is redacted and 400 status code is returned.
+// GetMessage returns the value of the Message field in V1ResponseChoiceElement as
+// a ChatMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *V1ResponseChoiceElement) GetMessage(ctx context.Context) (ChatMessage, bool) {
+	var e ChatMessage
+	if o.Message.IsNull() || o.Message.IsUnknown() {
+		return e, false
+	}
+	var v []ChatMessage
+	d := o.Message.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
 
-// Key field for a rate limit. Currently, only 'user' and 'endpoint' are
-// supported, with 'endpoint' being the default if not specified.
-
-// Renewal period field for a rate limit. Currently, only 'minute' is supported.
-
-// The underlying provider in Amazon Bedrock. Supported values (case
-// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
-
-// The role of the message. One of [system, user, assistant].
-
-// This will always be 'embedding'.
-
-// The state of an endpoint's config update. This informs the user if the
-// pending_config is in progress, if the update failed, or if there is no update
-// in progress. Note that if the endpoint's config_update state value is
-// IN_PROGRESS, another update can not be made until the update completes or
-// fails."
-
-// The state of an endpoint, indicating whether or not the endpoint is
-// queryable. An endpoint is READY if all of the served entities in its active
-// configuration are ready. If any of the actively served entities are in a
-// non-ready state, the endpoint state will be NOT_READY.
-
-// The name of the provider for the external model. Currently, the supported
-// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
-// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and 'palm'.",
-
-// The type of object returned by the __external/foundation model__ serving
-// endpoint, one of [text_completion, chat.completion, list (of embeddings)].
-
-// Key field for a serving endpoint rate limit. Currently, only 'user' and
-// 'endpoint' are supported, with 'endpoint' being the default if not specified.
-
-// Renewal period field for a serving endpoint rate limit. Currently, only
-// 'minute' is supported.
-
-// The workload size of the served model. The workload size corresponds to a
-// range of provisioned concurrency that the compute will autoscale between. A
-// single unit of provisioned concurrency can process one request at a time.
-// Valid workload sizes are "Small" (4 - 4 provisioned concurrency), "Medium" (8
-// - 16 provisioned concurrency), and "Large" (16 - 64 provisioned concurrency).
-// If scale-to-zero is enabled, the lower bound of the provisioned concurrency
-// for each workload size will be 0.
-
-// The workload type of the served model. The workload type selects which type
-// of compute to use in the endpoint. The default value for this parameter is
-// "CPU". For deep learning workloads, GPU acceleration is available by
-// selecting workload types like GPU_SMALL and others. See the available [GPU
-// types].
-//
-// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-
-// The state of the served entity deployment. DEPLOYMENT_CREATING indicates that
-// the served entity is not ready yet because the deployment is still being
-// created (i.e container image is building, model server is deploying for the
-// first time, etc.). DEPLOYMENT_RECOVERING indicates that the served entity was
-// previously in a ready state but no longer is and is attempting to recover.
-// DEPLOYMENT_READY indicates that the served entity is ready to receive
-// traffic. DEPLOYMENT_FAILED indicates that there was an error trying to bring
-// up the served entity (e.g container image build failed, the model server
-// failed to start due to a model loading error, etc.) DEPLOYMENT_ABORTED
-// indicates that the deployment was terminated likely due to a failure in
-// bringing up another served entity under the same endpoint and config version.
-
-// The permission level of the principal making the request.
-
-// Permission level
+// SetMessage sets the value of the Message field in V1ResponseChoiceElement.
+func (o *V1ResponseChoiceElement) SetMessage(ctx context.Context, v ChatMessage) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["message"]
+	o.Message = types.ListValueMust(t, vs)
+}

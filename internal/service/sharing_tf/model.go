@@ -14,7 +14,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -159,6 +159,58 @@ func (o CreateRecipient) Type(ctx context.Context) attr.Type {
 			"sharing_code": types.StringType,
 		},
 	}
+}
+
+// GetIpAccessList returns the value of the IpAccessList field in CreateRecipient as
+// a IpAccessList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
+	var e IpAccessList
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessList
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in CreateRecipient.
+func (o *CreateRecipient) SetIpAccessList(ctx context.Context, v IpAccessList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
+}
+
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in CreateRecipient as
+// a SecurablePropertiesKvPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
+	var e SecurablePropertiesKvPairs
+	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
+		return e, false
+	}
+	var v []SecurablePropertiesKvPairs
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in CreateRecipient.
+func (o *CreateRecipient) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
 }
 
 type CreateShare struct {
@@ -593,6 +645,31 @@ func (o GetRecipientSharePermissionsResponse) Type(ctx context.Context) attr.Typ
 	}
 }
 
+// GetPermissionsOut returns the value of the PermissionsOut field in GetRecipientSharePermissionsResponse as
+// a slice of ShareToPrivilegeAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetRecipientSharePermissionsResponse) GetPermissionsOut(ctx context.Context) ([]ShareToPrivilegeAssignment, bool) {
+	if o.PermissionsOut.IsNull() || o.PermissionsOut.IsUnknown() {
+		return nil, false
+	}
+	var v []ShareToPrivilegeAssignment
+	d := o.PermissionsOut.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPermissionsOut sets the value of the PermissionsOut field in GetRecipientSharePermissionsResponse.
+func (o *GetRecipientSharePermissionsResponse) SetPermissionsOut(ctx context.Context, v []ShareToPrivilegeAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions_out"]
+	o.PermissionsOut = types.ListValueMust(t, vs)
+}
+
 // Get a share
 type GetShareRequest struct {
 	// Query for data to include in the share.
@@ -686,6 +763,31 @@ func (o IpAccessList) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetAllowedIpAddresses returns the value of the AllowedIpAddresses field in IpAccessList as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *IpAccessList) GetAllowedIpAddresses(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedIpAddresses.IsNull() || o.AllowedIpAddresses.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedIpAddresses.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedIpAddresses sets the value of the AllowedIpAddresses field in IpAccessList.
+func (o *IpAccessList) SetAllowedIpAddresses(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_ip_addresses"]
+	o.AllowedIpAddresses = types.ListValueMust(t, vs)
+}
+
 type ListProviderSharesResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
@@ -736,6 +838,31 @@ func (o ListProviderSharesResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetShares returns the value of the Shares field in ListProviderSharesResponse as
+// a slice of ProviderShare values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListProviderSharesResponse) GetShares(ctx context.Context) ([]ProviderShare, bool) {
+	if o.Shares.IsNull() || o.Shares.IsUnknown() {
+		return nil, false
+	}
+	var v []ProviderShare
+	d := o.Shares.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetShares sets the value of the Shares field in ListProviderSharesResponse.
+func (o *ListProviderSharesResponse) SetShares(ctx context.Context, v []ProviderShare) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shares"]
+	o.Shares = types.ListValueMust(t, vs)
 }
 
 // List providers
@@ -850,6 +977,31 @@ func (o ListProvidersResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProviders returns the value of the Providers field in ListProvidersResponse as
+// a slice of ProviderInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListProvidersResponse) GetProviders(ctx context.Context) ([]ProviderInfo, bool) {
+	if o.Providers.IsNull() || o.Providers.IsUnknown() {
+		return nil, false
+	}
+	var v []ProviderInfo
+	d := o.Providers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProviders sets the value of the Providers field in ListProvidersResponse.
+func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	o.Providers = types.ListValueMust(t, vs)
+}
+
 // List share recipients
 type ListRecipientsRequest struct {
 	// If not provided, all recipients will be returned. If no recipients exist
@@ -960,6 +1112,31 @@ func (o ListRecipientsResponse) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetRecipients returns the value of the Recipients field in ListRecipientsResponse as
+// a slice of RecipientInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListRecipientsResponse) GetRecipients(ctx context.Context) ([]RecipientInfo, bool) {
+	if o.Recipients.IsNull() || o.Recipients.IsUnknown() {
+		return nil, false
+	}
+	var v []RecipientInfo
+	d := o.Recipients.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRecipients sets the value of the Recipients field in ListRecipientsResponse.
+func (o *ListRecipientsResponse) SetRecipients(ctx context.Context, v []RecipientInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["recipients"]
+	o.Recipients = types.ListValueMust(t, vs)
 }
 
 // List shares by Provider
@@ -1073,6 +1250,31 @@ func (o ListSharesResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetShares returns the value of the Shares field in ListSharesResponse as
+// a slice of ShareInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListSharesResponse) GetShares(ctx context.Context) ([]ShareInfo, bool) {
+	if o.Shares.IsNull() || o.Shares.IsUnknown() {
+		return nil, false
+	}
+	var v []ShareInfo
+	d := o.Shares.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetShares sets the value of the Shares field in ListSharesResponse.
+func (o *ListSharesResponse) SetShares(ctx context.Context, v []ShareInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shares"]
+	o.Shares = types.ListValueMust(t, vs)
+}
+
 type Partition struct {
 	// An array of partition values.
 	Values types.List `tfsdk:"value" tf:"optional"`
@@ -1117,6 +1319,31 @@ func (o Partition) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetValues returns the value of the Values field in Partition as
+// a slice of PartitionValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Partition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []PartitionValue
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in Partition.
+func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	o.Values = types.ListValueMust(t, vs)
 }
 
 type PartitionValue struct {
@@ -1227,6 +1454,31 @@ func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPrivileges returns the value of the Privileges field in PrivilegeAssignment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PrivilegeAssignment) GetPrivileges(ctx context.Context) ([]types.String, bool) {
+	if o.Privileges.IsNull() || o.Privileges.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Privileges.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivileges sets the value of the Privileges field in PrivilegeAssignment.
+func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	o.Privileges = types.ListValueMust(t, vs)
+}
+
 type ProviderInfo struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:"optional"`
@@ -1330,6 +1582,32 @@ func (o ProviderInfo) Type(ctx context.Context) attr.Type {
 			"updated_by":            types.StringType,
 		},
 	}
+}
+
+// GetRecipientProfile returns the value of the RecipientProfile field in ProviderInfo as
+// a RecipientProfile value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ProviderInfo) GetRecipientProfile(ctx context.Context) (RecipientProfile, bool) {
+	var e RecipientProfile
+	if o.RecipientProfile.IsNull() || o.RecipientProfile.IsUnknown() {
+		return e, false
+	}
+	var v []RecipientProfile
+	d := o.RecipientProfile.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRecipientProfile sets the value of the RecipientProfile field in ProviderInfo.
+func (o *ProviderInfo) SetRecipientProfile(ctx context.Context, v RecipientProfile) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["recipient_profile"]
+	o.RecipientProfile = types.ListValueMust(t, vs)
 }
 
 type ProviderShare struct {
@@ -1501,6 +1779,83 @@ func (o RecipientInfo) Type(ctx context.Context) attr.Type {
 			"updated_by": types.StringType,
 		},
 	}
+}
+
+// GetIpAccessList returns the value of the IpAccessList field in RecipientInfo as
+// a IpAccessList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RecipientInfo) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
+	var e IpAccessList
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessList
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in RecipientInfo.
+func (o *RecipientInfo) SetIpAccessList(ctx context.Context, v IpAccessList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
+}
+
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in RecipientInfo as
+// a SecurablePropertiesKvPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RecipientInfo) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
+	var e SecurablePropertiesKvPairs
+	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
+		return e, false
+	}
+	var v []SecurablePropertiesKvPairs
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in RecipientInfo.
+func (o *RecipientInfo) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
+}
+
+// GetTokens returns the value of the Tokens field in RecipientInfo as
+// a slice of RecipientTokenInfo values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RecipientInfo) GetTokens(ctx context.Context) ([]RecipientTokenInfo, bool) {
+	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
+		return nil, false
+	}
+	var v []RecipientTokenInfo
+	d := o.Tokens.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTokens sets the value of the Tokens field in RecipientInfo.
+func (o *RecipientInfo) SetTokens(ctx context.Context, v []RecipientTokenInfo) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	o.Tokens = types.ListValueMust(t, vs)
 }
 
 type RecipientProfile struct {
@@ -1814,6 +2169,31 @@ func (o SecurablePropertiesKvPairs) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetProperties returns the value of the Properties field in SecurablePropertiesKvPairs as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SecurablePropertiesKvPairs) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+	if o.Properties.IsNull() || o.Properties.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Properties.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetProperties sets the value of the Properties field in SecurablePropertiesKvPairs.
+func (o *SecurablePropertiesKvPairs) SetProperties(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	o.Properties = types.MapValueMust(t, vs)
+}
+
 type ShareInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -1894,6 +2274,31 @@ func (o ShareInfo) Type(ctx context.Context) attr.Type {
 			"updated_by":       types.StringType,
 		},
 	}
+}
+
+// GetObjects returns the value of the Objects field in ShareInfo as
+// a slice of SharedDataObject values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ShareInfo) GetObjects(ctx context.Context) ([]SharedDataObject, bool) {
+	if o.Objects.IsNull() || o.Objects.IsUnknown() {
+		return nil, false
+	}
+	var v []SharedDataObject
+	d := o.Objects.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetObjects sets the value of the Objects field in ShareInfo.
+func (o *ShareInfo) SetObjects(ctx context.Context, v []SharedDataObject) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["object"]
+	o.Objects = types.ListValueMust(t, vs)
 }
 
 // Get recipient share permissions
@@ -2003,6 +2408,31 @@ func (o ShareToPrivilegeAssignment) Type(ctx context.Context) attr.Type {
 			"share_name": types.StringType,
 		},
 	}
+}
+
+// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment as
+// a slice of PrivilegeAssignment values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ShareToPrivilegeAssignment) GetPrivilegeAssignments(ctx context.Context) ([]PrivilegeAssignment, bool) {
+	if o.PrivilegeAssignments.IsNull() || o.PrivilegeAssignments.IsUnknown() {
+		return nil, false
+	}
+	var v []PrivilegeAssignment
+	d := o.PrivilegeAssignments.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment.
+func (o *ShareToPrivilegeAssignment) SetPrivilegeAssignments(ctx context.Context, v []PrivilegeAssignment) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
 type SharedDataObject struct {
@@ -2120,6 +2550,31 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetPartitions returns the value of the Partitions field in SharedDataObject as
+// a slice of Partition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SharedDataObject) GetPartitions(ctx context.Context) ([]Partition, bool) {
+	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
+		return nil, false
+	}
+	var v []Partition
+	d := o.Partitions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPartitions sets the value of the Partitions field in SharedDataObject.
+func (o *SharedDataObject) SetPartitions(ctx context.Context, v []Partition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["partition"]
+	o.Partitions = types.ListValueMust(t, vs)
+}
+
 type SharedDataObjectUpdate struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
 	Action types.String `tfsdk:"action" tf:"optional"`
@@ -2168,6 +2623,32 @@ func (o SharedDataObjectUpdate) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetDataObject returns the value of the DataObject field in SharedDataObjectUpdate as
+// a SharedDataObject value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SharedDataObjectUpdate) GetDataObject(ctx context.Context) (SharedDataObject, bool) {
+	var e SharedDataObject
+	if o.DataObject.IsNull() || o.DataObject.IsUnknown() {
+		return e, false
+	}
+	var v []SharedDataObject
+	d := o.DataObject.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDataObject sets the value of the DataObject field in SharedDataObjectUpdate.
+func (o *SharedDataObjectUpdate) SetDataObject(ctx context.Context, v SharedDataObject) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_object"]
+	o.DataObject = types.ListValueMust(t, vs)
 }
 
 type UpdatePermissionsResponse struct {
@@ -2341,6 +2822,58 @@ func (o UpdateRecipient) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetIpAccessList returns the value of the IpAccessList field in UpdateRecipient as
+// a IpAccessList value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
+	var e IpAccessList
+	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
+		return e, false
+	}
+	var v []IpAccessList
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetIpAccessList sets the value of the IpAccessList field in UpdateRecipient.
+func (o *UpdateRecipient) SetIpAccessList(ctx context.Context, v IpAccessList) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
+}
+
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in UpdateRecipient as
+// a SecurablePropertiesKvPairs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
+	var e SecurablePropertiesKvPairs
+	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
+		return e, false
+	}
+	var v []SecurablePropertiesKvPairs
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in UpdateRecipient.
+func (o *UpdateRecipient) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
+}
+
 type UpdateResponse struct {
 }
 
@@ -2443,6 +2976,31 @@ func (o UpdateShare) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// GetUpdates returns the value of the Updates field in UpdateShare as
+// a slice of SharedDataObjectUpdate values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateShare) GetUpdates(ctx context.Context) ([]SharedDataObjectUpdate, bool) {
+	if o.Updates.IsNull() || o.Updates.IsUnknown() {
+		return nil, false
+	}
+	var v []SharedDataObjectUpdate
+	d := o.Updates.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUpdates sets the value of the Updates field in UpdateShare.
+func (o *UpdateShare) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["updates"]
+	o.Updates = types.ListValueMust(t, vs)
+}
+
 type UpdateSharePermissions struct {
 	// Array of permission changes.
 	Changes types.List `tfsdk:"changes" tf:"optional"`
@@ -2477,7 +3035,7 @@ func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingSt
 // SDK values.
 func (a UpdateSharePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"changes": reflect.TypeOf(catalog.PermissionsChange{}),
+		"changes": reflect.TypeOf(catalog_tf.PermissionsChange{}),
 	}
 }
 
@@ -2509,15 +3067,27 @@ func (o UpdateSharePermissions) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The delta sharing authentication type.
+// GetChanges returns the value of the Changes field in UpdateSharePermissions as
+// a slice of catalog_tf.PermissionsChange values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateSharePermissions) GetChanges(ctx context.Context) ([]catalog_tf.PermissionsChange, bool) {
+	if o.Changes.IsNull() || o.Changes.IsUnknown() {
+		return nil, false
+	}
+	var v []catalog_tf.PermissionsChange
+	d := o.Changes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
 
-// The operator to apply for the value.
-
-// The type of the data object.
-
-// Whether to enable or disable sharing of data history. If not specified, the
-// default is **DISABLED**.
-
-// One of: **ACTIVE**, **PERMISSION_DENIED**.
-
-// One of: **ADD**, **REMOVE**, **UPDATE**.
+// SetChanges sets the value of the Changes field in UpdateSharePermissions.
+func (o *UpdateSharePermissions) SetChanges(ctx context.Context, v []catalog_tf.PermissionsChange) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	o.Changes = types.ListValueMust(t, vs)
+}

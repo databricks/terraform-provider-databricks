@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"reflect"
-
 )
 
 // ComplexFieldTypeProvider must be implemented by any TFSDK structure that contains

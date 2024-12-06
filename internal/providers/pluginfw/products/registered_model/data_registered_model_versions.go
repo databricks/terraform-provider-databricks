@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -35,15 +34,6 @@ type RegisteredModelVersionsData struct {
 func (RegisteredModelVersionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"model_versions": reflect.TypeOf(catalog_tf.ModelVersionInfo{}),
-	}
-}
-
-func (RegisteredModelVersionsData) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"full_name":      types.StringType,
-			"model_versions": types.ListType{ElemType: catalog_tf.ModelVersionInfo{}.ToObjectType(ctx)},
-		},
 	}
 }
 
@@ -84,7 +74,7 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 		resp.Diagnostics.AddError(fmt.Sprintf("failed to list model versions for registered model %s", modelFullName), err.Error())
 		return
 	}
-	var tfModelVersions []catalog_tf.ModelVersionInfo
+	var tfModelVersions []attr.Value
 	for _, modelVersionSdk := range modelVersions.ModelVersions {
 		var modelVersion catalog_tf.ModelVersionInfo
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, modelVersionSdk, &modelVersion)...)
@@ -93,11 +83,6 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 		}
 		tfModelVersions = append(tfModelVersions, modelVersion)
 	}
-	var dd diag.Diagnostics
-	registeredModelVersions.ModelVersions, dd = types.ListValueFrom(ctx, catalog_tf.ModelVersionInfo{}.ToObjectType(ctx), tfModelVersions)
-	resp.Diagnostics.Append(dd...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	registeredModelVersions.ModelVersions = types.ListValueMust(catalog_tf.ModelVersionInfo{}.Type(ctx), tfModelVersions)
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModelVersions)...)
 }

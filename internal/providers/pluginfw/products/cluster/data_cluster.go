@@ -45,16 +45,6 @@ func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type
 	}
 }
 
-func (ClusterInfo) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"cluster_id":   types.StringType,
-			"cluster_name": types.StringType,
-			"cluster_info": types.ListType{ElemType: compute_tf.ClusterDetails{}.ToObjectType(ctx)},
-		},
-	}
-}
-
 func (d *ClusterDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksStagingName(dataSourceName)
 }
@@ -73,20 +63,6 @@ func (d *ClusterDataSource) Configure(_ context.Context, req datasource.Configur
 	}
 }
 
-func validateClustersList(ctx context.Context, clusters []compute_tf.ClusterDetails, clusterName string) diag.Diagnostics {
-	if len(clusters) == 0 {
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is no cluster with name '%s'", clusterName), "")}
-	}
-	if len(clusters) > 1 {
-		clusterIDs := []string{}
-		for _, cluster := range clusters {
-			clusterIDs = append(clusterIDs, cluster.ClusterId.ValueString())
-		}
-		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is more than one cluster with name '%s'", clusterName), fmt.Sprintf("The IDs of those clusters are: %s. When specifying a cluster name, the name must be unique. Alternatively, specify the cluster by ID using the cluster_id attribute.", strings.Join(clusterIDs, ", ")))}
-	}
-	return nil
-}
-
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourceName)
 	w, diags := d.Client.GetWorkspaceClient()
@@ -100,34 +76,56 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	clusterName := clusterInfo.Name.ValueString()
 	clusterId := clusterInfo.ClusterId.ValueString()
-	c, diag := d.getClusterDetails(ctx, w, clusterName, clusterId)
+	cluster, diag := d.getClusterDetails(ctx, w, clusterName, clusterId)
 	resp.Diagnostics.Append(diag...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	cc := []compute_tf.ClusterDetails{}
-	for _, cluster := range c {
-		var tfCluster compute_tf.ClusterDetails
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
-		cc = append(cc, tfCluster)
-	}
-	resp.Diagnostics.Append(validateClustersList(ctx, cc, clusterName)...)
-	clusterInfo.ClusterId = cc[0].ClusterId
-	clusterInfo.Name = cc[0].ClusterName
+
+	var tfCluster compute_tf.ClusterDetails
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
+
+	clusterInfo.ClusterId = tfCluster.ClusterId
+	clusterInfo.Name = tfCluster.ClusterName
+	clusterInfo.ClusterInfo = types.ListValueMust(tfCluster.Type(ctx), []attr.Value{tfCluster})
 	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
 }
 
-func (d *ClusterDataSource) getClusterDetails(ctx context.Context, w *databricks.WorkspaceClient, clusterName, clusterId string) (c []compute.ClusterDetails, dd diag.Diagnostics) {
+func validateClustersList(_ context.Context, clusters []compute.ClusterDetails, clusterName string) diag.Diagnostics {
+	if len(clusters) == 0 {
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is no cluster with name '%s'", clusterName), "")}
+	}
+	if len(clusters) > 1 {
+		clusterIDs := []string{}
+		for _, cluster := range clusters {
+			clusterIDs = append(clusterIDs, cluster.ClusterId)
+		}
+		return diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is more than one cluster with name '%s'", clusterName), fmt.Sprintf("The IDs of those clusters are: %s. When specifying a cluster name, the name must be unique. Alternatively, specify the cluster by ID using the cluster_id attribute.", strings.Join(clusterIDs, ", ")))}
+	}
+	return nil
+}
+
+func (d *ClusterDataSource) getClusterDetails(ctx context.Context, w *databricks.WorkspaceClient, clusterName, clusterId string) (c compute.ClusterDetails, dd diag.Diagnostics) {
 	if clusterName != "" {
-		var err error
-		c, err = w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
+		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{})
 		if err != nil {
 			dd.AddError("failed to list clusters", err.Error())
 			return
 		}
-		return
+		cc := []compute.ClusterDetails{}
+		for _, cluster := range clusters {
+			if cluster.ClusterName == clusterName {
+				cc = append(cc, cluster)
+			}
+		}
+		dd.Append(validateClustersList(ctx, cc, clusterName)...)
+		if dd.HasError() {
+			return
+		}
+		return cc[0], dd
 	}
 	if clusterId != "" {
 		cluster, err := w.Clusters.GetByClusterId(ctx, clusterId)
@@ -135,8 +133,7 @@ func (d *ClusterDataSource) getClusterDetails(ctx context.Context, w *databricks
 			dd.AddError(fmt.Sprintf("failed to get cluster with cluster id: %s", clusterId), err.Error())
 			return
 		}
-		c = []compute.ClusterDetails{*cluster}
-		return
+		return *cluster, dd
 	}
 
 	dd.AddError("you need to specify either `cluster_name` or `cluster_id`", "")

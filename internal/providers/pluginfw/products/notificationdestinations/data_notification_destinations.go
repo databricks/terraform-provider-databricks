@@ -45,18 +45,6 @@ func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[st
 	}
 }
 
-func (NotificationDestinationsInfo) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"display_name_contains": types.StringType,
-			"type":                  types.StringType,
-			"notification_destinations": types.ListType{
-				ElemType: settings_tf.ListNotificationDestinationsResult{}.ToObjectType(ctx),
-			},
-		},
-	}
-}
-
 func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }
@@ -120,7 +108,7 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	var notificationsTfSdk []settings_tf.ListNotificationDestinationsResult
+	var notificationsTfSdk []attr.Value
 	for _, notification := range notificationsGoSdk {
 		if (notificationType != "" && notification.DestinationType.String() != notificationType) ||
 			(notificationDisplayName != "" && !strings.Contains(strings.ToLower(notification.DisplayName), notificationDisplayName)) {
@@ -134,13 +122,7 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		notificationsTfSdk = append(notificationsTfSdk, notificationDestination)
 	}
 
-	var dd diag.Diagnostics
-	notificationInfo.NotificationDestinations, dd = types.ListValueFrom(ctx, settings_tf.ListNotificationDestinationsResult{}.ToObjectType(ctx), notificationsTfSdk)
-	resp.Diagnostics.Append(dd...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	notificationInfo.NotificationDestinations = types.ListValueMust(settings_tf.ListNotificationDestinationsResult{}.Type(ctx), notificationsTfSdk)
 	resp.Diagnostics.Append(resp.State.Set(ctx, notificationInfo)...)
 
 }

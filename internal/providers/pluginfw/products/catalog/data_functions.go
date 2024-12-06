@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -51,7 +50,7 @@ func (FunctionsData) ToObjectType(ctx context.Context) types.ObjectType {
 			"catalog_name":   types.StringType,
 			"schema_name":    types.StringType,
 			"include_browse": types.BoolType,
-			"functions":      types.ListType{ElemType: catalog_tf.FunctionInfo{}.ToObjectType(ctx)},
+			"functions":      types.ListType{ElemType: pluginfwcommon.NewObjectValuable(catalog_tf.FunctionInfo{}).Type(ctx)},
 		},
 	}
 }
@@ -102,7 +101,7 @@ func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		resp.Diagnostics.AddError(fmt.Sprintf("failed to get functions for %s.%s schema", catalogName, schemaName), err.Error())
 		return
 	}
-	tfFunctions := []catalog_tf.FunctionInfo{}
+	tfFunctions := []attr.Value{}
 	for _, functionSdk := range functionsInfosSdk {
 		var function catalog_tf.FunctionInfo
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, functionSdk, &function)...)
@@ -111,11 +110,6 @@ func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		}
 		tfFunctions = append(tfFunctions, function)
 	}
-	var dd diag.Diagnostics
-	functions.Functions, dd = types.ListValueFrom(ctx, catalog_tf.FunctionInfo{}.ToObjectType(ctx), tfFunctions)
-	resp.Diagnostics.Append(dd...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	functions.Functions = types.ListValueMust(catalog_tf.FunctionInfo{}.Type(ctx), tfFunctions)
 	resp.Diagnostics.Append(resp.State.Set(ctx, functions)...)
 }

@@ -63,10 +63,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 
 	// objectType is the type of the destination struct. Entries from this are used when constructing
 	// plugin framework attr.Values for fields in the object.
-	var objectType types.ObjectType
-	if ot, ok := destVal.Interface().(tfcommon.ObjectTypable); ok {
-		objectType = ot.ToObjectType(ctx)
-	}
+	objectType := tfcommon.NewObjectValuable(tfsdk).Type(ctx).(types.ObjectType)
 
 	var forceSendFieldVal []string
 	forceSendField := srcVal.FieldByName("ForceSendFields")
@@ -85,7 +82,7 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 		if srcFieldTag == "-" {
 			continue
 		}
-		destField := destVal.FieldByName(srcFieldName)
+		destField := destVal.FieldByName(toTfSdkName(srcFieldName))
 		destFieldType, ok := destVal.Type().FieldByName(field.StructField.Name)
 		if !ok {
 			d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination struct does not have field %s. %s", srcFieldName, common.TerraformBugErrorMessage))

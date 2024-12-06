@@ -46,17 +46,6 @@ func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]refl
 	}
 }
 
-func (RegisteredModelData) ToObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"full_name":       types.StringType,
-			"include_aliases": types.BoolType,
-			"include_browse":  types.BoolType,
-			"model_info":      types.ListType{ElemType: catalog_tf.RegisteredModelInfo{}.ToObjectType(ctx)},
-		},
-	}
-}
-
 func (d *RegisteredModelDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
 }
@@ -112,11 +101,6 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 		modelInfo.Aliases, d = basetypes.NewListValueFrom(ctx, modelInfo.Aliases.ElementType(ctx), []catalog_tf.RegisteredModelAlias{})
 		resp.Diagnostics.Append(d...)
 	}
-	var dd diag.Diagnostics
-	registeredModel.ModelInfo, dd = types.ListValueFrom(ctx, catalog_tf.RegisteredModelInfo{}.ToObjectType(ctx), []catalog_tf.RegisteredModelInfo{modelInfo})
-	resp.Diagnostics.Append(dd...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	registeredModel.ModelInfo = types.ListValueMust(catalog_tf.RegisteredModelInfo{}.Type(ctx), []attr.Value{modelInfo})
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

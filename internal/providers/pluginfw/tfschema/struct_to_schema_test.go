@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -81,15 +82,6 @@ type DummyNested struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
-func (DummyNested) ToObjectType(context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":    types.StringType,
-			"enabled": types.BoolType,
-		},
-	}
-}
-
 type TestNestedMapTfSdk struct {
 	NestedMap types.Map `tfsdk:"nested_map" tf:"optional"`
 }
@@ -100,7 +92,7 @@ func (TestNestedMapTfSdk) GetComplexFieldTypes(context.Context) map[string]refle
 	}
 }
 
-var dummyType = DummyNested{}.ToObjectType(context.Background())
+var dummyType = tfcommon.NewObjectValuable(DummyNested{}).Type(context.Background()).(types.ObjectType)
 
 var tests = []struct {
 	name       string
@@ -175,14 +167,20 @@ func StructToSchemaConversionTestCase(t *testing.T, description string, testStru
 		Schema: scm,
 	}
 	// Assert we can properly set the state, this means the schema and the struct are consistent.
-	assert.True(t, !state.Set(context.Background(), testStruct).HasError(), fmt.Sprintf("ResourceStructToSchema - %s", description))
+	d := state.Set(context.Background(), testStruct)
+	if d.HasError() {
+		t.Errorf("ResourceStructToSchema - %s: %s", description, tfcommon.DiagToString(d))
+	}
 
 	data_scm := DataSourceStructToSchema(context.Background(), testStruct, nil)
 	data_state := tfsdk.State{
 		Schema: data_scm,
 	}
 	// Assert we can properly set the state, this means the schema and the struct are consistent.
-	assert.True(t, !data_state.Set(context.Background(), testStruct).HasError(), fmt.Sprintf("DataSourceStructToSchema - %s", description))
+	d = data_state.Set(context.Background(), testStruct)
+	if d.HasError() {
+		t.Errorf("DataSourceStructToSchema - %s: %s", description, tfcommon.DiagToString(d))
+	}
 }
 
 func TestStructToSchemaConversion(t *testing.T) {

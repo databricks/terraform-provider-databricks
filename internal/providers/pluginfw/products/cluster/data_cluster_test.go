@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNoClusterError(t *testing.T) {
 	clusterName := "test-cluster-name"
-	clusters := []compute_tf.ClusterDetails{}
+	clusters := []compute.ClusterDetails{}
 	actualDiagnostics := validateClustersList(context.Background(), clusters, clusterName)
 	expectedDiagnostics := diag.Diagnostics{diag.NewErrorDiagnostic(fmt.Sprintf("there is no cluster with name '%s'", clusterName), "")}
 	assert.True(t, actualDiagnostics.HasError())
@@ -22,14 +21,14 @@ func TestNoClusterError(t *testing.T) {
 
 func TestMultipleClustersError(t *testing.T) {
 	clusterName := "test-cluster-name"
-	clusters := []compute_tf.ClusterDetails{
+	clusters := []compute.ClusterDetails{
 		{
-			ClusterName: types.StringValue("test-cluster-name"),
-			ClusterId:   types.StringValue("123"),
+			ClusterName: "test-cluster-name",
+			ClusterId:   "123",
 		},
 		{
-			ClusterName: types.StringValue("test-cluster-name"),
-			ClusterId:   types.StringValue("456"),
+			ClusterName: "test-cluster-name",
+			ClusterId:   "456",
 		},
 	}
 	actualDiagnostics := validateClustersList(context.Background(), clusters, clusterName)

@@ -119,7 +119,7 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		if AppendDiagAndCheckErrors(resp, converters.GoSdkToTfSdkStruct(ctx, notification, &notificationDestination)) {
 			return
 		}
-		notificationsTfSdk = append(notificationsTfSdk, notificationDestination)
+		notificationsTfSdk = append(notificationsTfSdk, notificationDestination.ToObjectValue(ctx))
 	}
 
 	notificationInfo.NotificationDestinations = types.ListValueMust(settings_tf.ListNotificationDestinationsResult{}.Type(ctx), notificationsTfSdk)

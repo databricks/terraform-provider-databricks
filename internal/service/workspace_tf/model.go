@@ -12,15 +12,11 @@ package workspace_tf
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 type AclItem struct {
@@ -47,52 +43,16 @@ func (a AclItem) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = AclItem{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o AclItem) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o AclItem) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o AclItem) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o AclItem) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o AclItem) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AclItem
+// only implements ToObjectValue() and Type().
+func (o AclItem) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o AclItem) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"permission": o.Permission,
+			"principal":  o.Principal,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -130,52 +90,16 @@ func (a AzureKeyVaultSecretScopeMetadata) GetComplexFieldTypes(ctx context.Conte
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = AzureKeyVaultSecretScopeMetadata{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AzureKeyVaultSecretScopeMetadata
+// only implements ToObjectValue() and Type().
+func (o AzureKeyVaultSecretScopeMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o AzureKeyVaultSecretScopeMetadata) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"dns_name":    o.DnsName,
+			"resource_id": o.ResourceId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -227,52 +151,17 @@ func (a CreateCredentialsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateCredentialsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCredentialsRequest
+// only implements ToObjectValue() and Type().
+func (o CreateCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateCredentialsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"git_provider":          o.GitProvider,
+			"git_username":          o.GitUsername,
+			"personal_access_token": o.PersonalAccessToken,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -313,52 +202,17 @@ func (a CreateCredentialsResponse) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateCredentialsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCredentialsResponse
+// only implements ToObjectValue() and Type().
+func (o CreateCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateCredentialsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id": o.CredentialId,
+			"git_provider":  o.GitProvider,
+			"git_username":  o.GitUsername,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -408,52 +262,18 @@ func (a CreateRepoRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateRepoRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRepoRequest
+// only implements ToObjectValue() and Type().
+func (o CreateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateRepoRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"path":            o.Path,
+			"provider":        o.Provider,
+			"sparse_checkout": o.SparseCheckout,
+			"url":             o.Url,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -507,52 +327,21 @@ func (a CreateRepoResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateRepoResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRepoResponse
+// only implements ToObjectValue() and Type().
+func (o CreateRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateRepoResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"branch":          o.Branch,
+			"head_commit_id":  o.HeadCommitId,
+			"id":              o.Id,
+			"path":            o.Path,
+			"provider":        o.Provider,
+			"sparse_checkout": o.SparseCheckout,
+			"url":             o.Url,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -604,52 +393,18 @@ func (a CreateScope) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateScope{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateScope) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateScope) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateScope) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateScope) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateScope) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateScope
+// only implements ToObjectValue() and Type().
+func (o CreateScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateScope) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"backend_azure_keyvault":   o.BackendAzureKeyvault,
+			"initial_manage_principal": o.InitialManagePrincipal,
+			"scope":                    o.Scope,
+			"scope_backend_type":       o.ScopeBackendType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -686,52 +441,13 @@ func (a CreateScopeResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CreateScopeResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateScopeResponse
+// only implements ToObjectValue() and Type().
+func (o CreateScopeResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CreateScopeResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -768,52 +484,17 @@ func (a CredentialInfo) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = CredentialInfo{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o CredentialInfo) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o CredentialInfo) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o CredentialInfo) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o CredentialInfo) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o CredentialInfo) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CredentialInfo
+// only implements ToObjectValue() and Type().
+func (o CredentialInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o CredentialInfo) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id": o.CredentialId,
+			"git_provider":  o.GitProvider,
+			"git_username":  o.GitUsername,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -854,52 +535,16 @@ func (a Delete) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Delete{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Delete) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Delete) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Delete) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Delete) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Delete) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Delete
+// only implements ToObjectValue() and Type().
+func (o Delete) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Delete) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"path":      o.Path,
+			"recursive": o.Recursive,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -936,52 +581,16 @@ func (a DeleteAcl) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteAcl{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteAcl) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteAcl) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteAcl) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteAcl) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteAcl) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAcl
+// only implements ToObjectValue() and Type().
+func (o DeleteAcl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteAcl) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"principal": o.Principal,
+			"scope":     o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1014,52 +623,13 @@ func (a DeleteAclResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteAclResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAclResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteAclResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteAclResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1092,52 +662,15 @@ func (a DeleteCredentialsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteCredentialsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCredentialsRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteCredentialsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id": o.CredentialId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1169,52 +702,13 @@ func (a DeleteCredentialsResponse) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteCredentialsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCredentialsResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteCredentialsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1247,52 +741,15 @@ func (a DeleteRepoRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteRepoRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRepoRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteRepoRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"repo_id": o.RepoId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1324,52 +781,13 @@ func (a DeleteRepoResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteRepoResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRepoResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteRepoResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1399,52 +817,13 @@ func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1476,52 +855,15 @@ func (a DeleteScope) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteScope{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteScope) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteScope) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteScope) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteScope) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteScope) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteScope
+// only implements ToObjectValue() and Type().
+func (o DeleteScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteScope) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"scope": o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1553,52 +895,13 @@ func (a DeleteScopeResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteScopeResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteScopeResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteScopeResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteScopeResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1632,52 +935,16 @@ func (a DeleteSecret) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteSecret{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteSecret) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteSecret) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteSecret) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteSecret) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteSecret) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSecret
+// only implements ToObjectValue() and Type().
+func (o DeleteSecret) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteSecret) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"key":   o.Key,
+			"scope": o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1710,52 +977,13 @@ func (a DeleteSecretResponse) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = DeleteSecretResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteSecretResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteSecretResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o DeleteSecretResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1804,52 +1032,16 @@ func (a ExportRequest) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ExportRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ExportRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ExportRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ExportRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ExportRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ExportRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExportRequest
+// only implements ToObjectValue() and Type().
+func (o ExportRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ExportRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"format": o.Format,
+			"path":   o.Path,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1887,52 +1079,16 @@ func (a ExportResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ExportResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ExportResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ExportResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ExportResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ExportResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ExportResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExportResponse
+// only implements ToObjectValue() and Type().
+func (o ExportResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ExportResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"content":   o.Content,
+			"file_type": o.FileType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -1970,52 +1126,16 @@ func (a GetAclRequest) GetComplexFieldTypes(ctx context.Context) map[string]refl
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetAclRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetAclRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetAclRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetAclRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetAclRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetAclRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAclRequest
+// only implements ToObjectValue() and Type().
+func (o GetAclRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetAclRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"principal": o.Principal,
+			"scope":     o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2051,52 +1171,15 @@ func (a GetCredentialsRequest) GetComplexFieldTypes(ctx context.Context) map[str
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetCredentialsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsRequest
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetCredentialsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id": o.CredentialId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2135,52 +1218,17 @@ func (a GetCredentialsResponse) GetComplexFieldTypes(ctx context.Context) map[st
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetCredentialsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsResponse
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetCredentialsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id": o.CredentialId,
+			"git_provider":  o.GitProvider,
+			"git_username":  o.GitUsername,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2217,52 +1265,15 @@ func (a GetRepoPermissionLevelsRequest) GetComplexFieldTypes(ctx context.Context
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRepoPermissionLevelsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRepoPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetRepoPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"repo_id": o.RepoId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2298,52 +1309,15 @@ func (a GetRepoPermissionLevelsResponse) GetComplexFieldTypes(ctx context.Contex
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRepoPermissionLevelsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRepoPermissionLevelsResponse
+// only implements ToObjectValue() and Type().
+func (o GetRepoPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionLevelsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"permission_levels": o.PermissionLevels,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2380,52 +1354,15 @@ func (a GetRepoPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRepoPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRepoPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o GetRepoPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRepoPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"repo_id": o.RepoId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2460,52 +1397,15 @@ func (a GetRepoRequest) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRepoRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRepoRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRepoRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRepoRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRepoRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRepoRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRepoRequest
+// only implements ToObjectValue() and Type().
+func (o GetRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRepoRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"repo_id": o.RepoId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2553,52 +1453,21 @@ func (a GetRepoResponse) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetRepoResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetRepoResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetRepoResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetRepoResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetRepoResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetRepoResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRepoResponse
+// only implements ToObjectValue() and Type().
+func (o GetRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetRepoResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"branch":          o.Branch,
+			"head_commit_id":  o.HeadCommitId,
+			"id":              o.Id,
+			"path":            o.Path,
+			"provider":        o.Provider,
+			"sparse_checkout": o.SparseCheckout,
+			"url":             o.Url,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2643,52 +1512,16 @@ func (a GetSecretRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetSecretRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetSecretRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetSecretRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetSecretRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetSecretRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetSecretRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSecretRequest
+// only implements ToObjectValue() and Type().
+func (o GetSecretRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetSecretRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"key":   o.Key,
+			"scope": o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2725,52 +1558,16 @@ func (a GetSecretResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetSecretResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetSecretResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetSecretResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetSecretResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetSecretResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetSecretResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetSecretResponse
+// only implements ToObjectValue() and Type().
+func (o GetSecretResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetSecretResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2806,52 +1603,15 @@ func (a GetStatusRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetStatusRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetStatusRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetStatusRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetStatusRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetStatusRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetStatusRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetStatusRequest
+// only implements ToObjectValue() and Type().
+func (o GetStatusRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetStatusRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"path": o.Path,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2888,52 +1648,16 @@ func (a GetWorkspaceObjectPermissionLevelsRequest) GetComplexFieldTypes(ctx cont
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetWorkspaceObjectPermissionLevelsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceObjectPermissionLevelsRequest
+// only implements ToObjectValue() and Type().
+func (o GetWorkspaceObjectPermissionLevelsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"workspace_object_id":   o.WorkspaceObjectId,
+			"workspace_object_type": o.WorkspaceObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -2970,52 +1694,15 @@ func (a GetWorkspaceObjectPermissionLevelsResponse) GetComplexFieldTypes(ctx con
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetWorkspaceObjectPermissionLevelsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceObjectPermissionLevelsResponse
+// only implements ToObjectValue() and Type().
+func (o GetWorkspaceObjectPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionLevelsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"permission_levels": o.PermissionLevels,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3054,52 +1741,16 @@ func (a GetWorkspaceObjectPermissionsRequest) GetComplexFieldTypes(ctx context.C
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = GetWorkspaceObjectPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetWorkspaceObjectPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o GetWorkspaceObjectPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o GetWorkspaceObjectPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"workspace_object_id":   o.WorkspaceObjectId,
+			"workspace_object_type": o.WorkspaceObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3162,52 +1813,19 @@ func (a Import) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Import{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Import) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Import) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Import) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Import) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Import) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Import
+// only implements ToObjectValue() and Type().
+func (o Import) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Import) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"content":   o.Content,
+			"format":    o.Format,
+			"language":  o.Language,
+			"overwrite": o.Overwrite,
+			"path":      o.Path,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3243,52 +1861,13 @@ func (a ImportResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ImportResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ImportResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ImportResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ImportResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ImportResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ImportResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ImportResponse
+// only implements ToObjectValue() and Type().
+func (o ImportResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ImportResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3321,52 +1900,15 @@ func (a ListAclsRequest) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListAclsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListAclsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListAclsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListAclsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListAclsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListAclsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAclsRequest
+// only implements ToObjectValue() and Type().
+func (o ListAclsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListAclsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"scope": o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3402,52 +1944,15 @@ func (a ListAclsResponse) GetComplexFieldTypes(ctx context.Context) map[string]r
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListAclsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListAclsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListAclsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListAclsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListAclsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListAclsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAclsResponse
+// only implements ToObjectValue() and Type().
+func (o ListAclsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListAclsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"items": o.Items,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3485,52 +1990,15 @@ func (a ListCredentialsResponse) GetComplexFieldTypes(ctx context.Context) map[s
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListCredentialsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCredentialsResponse
+// only implements ToObjectValue() and Type().
+func (o ListCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListCredentialsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credentials": o.Credentials,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3573,52 +2041,16 @@ func (a ListReposRequest) GetComplexFieldTypes(ctx context.Context) map[string]r
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListReposRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListReposRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListReposRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListReposRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListReposRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListReposRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListReposRequest
+// only implements ToObjectValue() and Type().
+func (o ListReposRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListReposRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"path_prefix":     o.PathPrefix,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3658,52 +2090,16 @@ func (a ListReposResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListReposResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListReposResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListReposResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListReposResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListReposResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListReposResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListReposResponse
+// only implements ToObjectValue() and Type().
+func (o ListReposResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListReposResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"repos":           o.Repos,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3742,52 +2138,15 @@ func (a ListResponse) GetComplexFieldTypes(ctx context.Context) map[string]refle
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListResponse
+// only implements ToObjectValue() and Type().
+func (o ListResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"objects": o.Objects,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3825,52 +2184,15 @@ func (a ListScopesResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListScopesResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListScopesResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListScopesResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListScopesResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListScopesResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListScopesResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListScopesResponse
+// only implements ToObjectValue() and Type().
+func (o ListScopesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListScopesResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"scopes": o.Scopes,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3907,52 +2229,15 @@ func (a ListSecretsRequest) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListSecretsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSecretsRequest
+// only implements ToObjectValue() and Type().
+func (o ListSecretsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListSecretsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"scope": o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -3988,52 +2273,15 @@ func (a ListSecretsResponse) GetComplexFieldTypes(ctx context.Context) map[strin
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListSecretsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSecretsResponse
+// only implements ToObjectValue() and Type().
+func (o ListSecretsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListSecretsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"secrets": o.Secrets,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4072,52 +2320,16 @@ func (a ListWorkspaceRequest) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ListWorkspaceRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListWorkspaceRequest
+// only implements ToObjectValue() and Type().
+func (o ListWorkspaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ListWorkspaceRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"notebooks_modified_after": o.NotebooksModifiedAfter,
+			"path":                     o.Path,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4154,52 +2366,15 @@ func (a Mkdirs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = Mkdirs{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o Mkdirs) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o Mkdirs) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o Mkdirs) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o Mkdirs) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o Mkdirs) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Mkdirs
+// only implements ToObjectValue() and Type().
+func (o Mkdirs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o Mkdirs) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"path": o.Path,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4231,52 +2406,13 @@ func (a MkdirsResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = MkdirsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o MkdirsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o MkdirsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o MkdirsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o MkdirsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o MkdirsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, MkdirsResponse
+// only implements ToObjectValue() and Type().
+func (o MkdirsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o MkdirsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4328,52 +2464,22 @@ func (a ObjectInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = ObjectInfo{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o ObjectInfo) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o ObjectInfo) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o ObjectInfo) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o ObjectInfo) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o ObjectInfo) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ObjectInfo
+// only implements ToObjectValue() and Type().
+func (o ObjectInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o ObjectInfo) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"created_at":  o.CreatedAt,
+			"language":    o.Language,
+			"modified_at": o.ModifiedAt,
+			"object_id":   o.ObjectId,
+			"object_type": o.ObjectType,
+			"path":        o.Path,
+			"resource_id": o.ResourceId,
+			"size":        o.Size,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4418,52 +2524,17 @@ func (a PutAcl) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Typ
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PutAcl{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PutAcl) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PutAcl) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PutAcl) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PutAcl) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PutAcl) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PutAcl
+// only implements ToObjectValue() and Type().
+func (o PutAcl) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PutAcl) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"permission": o.Permission,
+			"principal":  o.Principal,
+			"scope":      o.Scope,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4497,52 +2568,13 @@ func (a PutAclResponse) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PutAclResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PutAclResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PutAclResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PutAclResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PutAclResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PutAclResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PutAclResponse
+// only implements ToObjectValue() and Type().
+func (o PutAclResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PutAclResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4580,52 +2612,18 @@ func (a PutSecret) GetComplexFieldTypes(ctx context.Context) map[string]reflect.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PutSecret{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PutSecret) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PutSecret) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PutSecret) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PutSecret) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PutSecret) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PutSecret
+// only implements ToObjectValue() and Type().
+func (o PutSecret) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PutSecret) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"bytes_value":  o.BytesValue,
+			"key":          o.Key,
+			"scope":        o.Scope,
+			"string_value": o.StringValue,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4660,52 +2658,13 @@ func (a PutSecretResponse) GetComplexFieldTypes(ctx context.Context) map[string]
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = PutSecretResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o PutSecretResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o PutSecretResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o PutSecretResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o PutSecretResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o PutSecretResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PutSecretResponse
+// only implements ToObjectValue() and Type().
+func (o PutSecretResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o PutSecretResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4743,52 +2702,18 @@ func (a RepoAccessControlRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoAccessControlRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoAccessControlRequest
+// only implements ToObjectValue() and Type().
+func (o RepoAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoAccessControlRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"group_name":             o.GroupName,
+			"permission_level":       o.PermissionLevel,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4835,52 +2760,19 @@ func (a RepoAccessControlResponse) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoAccessControlResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoAccessControlResponse
+// only implements ToObjectValue() and Type().
+func (o RepoAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoAccessControlResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"all_permissions":        o.AllPermissions,
+			"display_name":           o.DisplayName,
+			"group_name":             o.GroupName,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -4935,52 +2827,21 @@ func (a RepoInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoInfo{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoInfo) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoInfo) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoInfo) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoInfo) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoInfo) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoInfo
+// only implements ToObjectValue() and Type().
+func (o RepoInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoInfo) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"branch":          o.Branch,
+			"head_commit_id":  o.HeadCommitId,
+			"id":              o.Id,
+			"path":            o.Path,
+			"provider":        o.Provider,
+			"sparse_checkout": o.SparseCheckout,
+			"url":             o.Url,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5027,52 +2888,17 @@ func (a RepoPermission) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoPermission{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoPermission) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoPermission) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoPermission) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoPermission) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoPermission) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoPermission
+// only implements ToObjectValue() and Type().
+func (o RepoPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoPermission) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"inherited":             o.Inherited,
+			"inherited_from_object": o.InheritedFromObject,
+			"permission_level":      o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5115,52 +2941,17 @@ func (a RepoPermissions) GetComplexFieldTypes(ctx context.Context) map[string]re
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoPermissions{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoPermissions) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoPermissions) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoPermissions) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoPermissions) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoPermissions) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoPermissions
+// only implements ToObjectValue() and Type().
+func (o RepoPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoPermissions) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"object_id":           o.ObjectId,
+			"object_type":         o.ObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5199,52 +2990,16 @@ func (a RepoPermissionsDescription) GetComplexFieldTypes(ctx context.Context) ma
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoPermissionsDescription{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoPermissionsDescription
+// only implements ToObjectValue() and Type().
+func (o RepoPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoPermissionsDescription) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"description":      o.Description,
+			"permission_level": o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5282,52 +3037,16 @@ func (a RepoPermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[st
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = RepoPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RepoPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o RepoPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o RepoPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"repo_id":             o.RepoId,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5366,52 +3085,16 @@ func (a SecretMetadata) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SecretMetadata{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SecretMetadata) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SecretMetadata) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SecretMetadata) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SecretMetadata) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SecretMetadata) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecretMetadata
+// only implements ToObjectValue() and Type().
+func (o SecretMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SecretMetadata) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"key":                    o.Key,
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5452,52 +3135,17 @@ func (a SecretScope) GetComplexFieldTypes(ctx context.Context) map[string]reflec
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SecretScope{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SecretScope) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SecretScope) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SecretScope) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SecretScope) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SecretScope) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecretScope
+// only implements ToObjectValue() and Type().
+func (o SecretScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SecretScope) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"backend_type":      o.BackendType,
+			"keyvault_metadata": o.KeyvaultMetadata,
+			"name":              o.Name,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5541,52 +3189,15 @@ func (a SparseCheckout) GetComplexFieldTypes(ctx context.Context) map[string]ref
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SparseCheckout{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SparseCheckout) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SparseCheckout) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SparseCheckout) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SparseCheckout) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SparseCheckout) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparseCheckout
+// only implements ToObjectValue() and Type().
+func (o SparseCheckout) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SparseCheckout) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"patterns": o.Patterns,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5628,52 +3239,15 @@ func (a SparseCheckoutUpdate) GetComplexFieldTypes(ctx context.Context) map[stri
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = SparseCheckoutUpdate{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SparseCheckoutUpdate
+// only implements ToObjectValue() and Type().
+func (o SparseCheckoutUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o SparseCheckoutUpdate) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"patterns": o.Patterns,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5728,52 +3302,18 @@ func (a UpdateCredentialsRequest) GetComplexFieldTypes(ctx context.Context) map[
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateCredentialsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCredentialsRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateCredentialsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateCredentialsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"credential_id":         o.CredentialId,
+			"git_provider":          o.GitProvider,
+			"git_username":          o.GitUsername,
+			"personal_access_token": o.PersonalAccessToken,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5808,52 +3348,13 @@ func (a UpdateCredentialsResponse) GetComplexFieldTypes(ctx context.Context) map
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateCredentialsResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCredentialsResponse
+// only implements ToObjectValue() and Type().
+func (o UpdateCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateCredentialsResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5897,52 +3398,18 @@ func (a UpdateRepoRequest) GetComplexFieldTypes(ctx context.Context) map[string]
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateRepoRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRepoRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateRepoRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"branch":          o.Branch,
+			"repo_id":         o.RepoId,
+			"sparse_checkout": o.SparseCheckout,
+			"tag":             o.Tag,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -5979,52 +3446,13 @@ func (a UpdateRepoResponse) GetComplexFieldTypes(ctx context.Context) map[string
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = UpdateRepoResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRepoResponse
+// only implements ToObjectValue() and Type().
+func (o UpdateRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o UpdateRepoResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6062,52 +3490,18 @@ func (a WorkspaceObjectAccessControlRequest) GetComplexFieldTypes(ctx context.Co
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectAccessControlRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectAccessControlRequest
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectAccessControlRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"group_name":             o.GroupName,
+			"permission_level":       o.PermissionLevel,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6154,52 +3548,19 @@ func (a WorkspaceObjectAccessControlResponse) GetComplexFieldTypes(ctx context.C
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectAccessControlResponse{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectAccessControlResponse
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectAccessControlResponse) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"all_permissions":        o.AllPermissions,
+			"display_name":           o.DisplayName,
+			"group_name":             o.GroupName,
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6244,52 +3605,17 @@ func (a WorkspaceObjectPermission) GetComplexFieldTypes(ctx context.Context) map
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectPermission{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectPermission
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermission) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"inherited":             o.Inherited,
+			"inherited_from_object": o.InheritedFromObject,
+			"permission_level":      o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6332,52 +3658,17 @@ func (a WorkspaceObjectPermissions) GetComplexFieldTypes(ctx context.Context) ma
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectPermissions{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectPermissions
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissions) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list": o.AccessControlList,
+			"object_id":           o.ObjectId,
+			"object_type":         o.ObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6416,52 +3707,16 @@ func (a WorkspaceObjectPermissionsDescription) GetComplexFieldTypes(ctx context.
 	return map[string]reflect.Type{}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectPermissionsDescription{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectPermissionsDescription
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectPermissionsDescription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsDescription) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"description":      o.Description,
+			"permission_level": o.PermissionLevel,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -6501,52 +3756,17 @@ func (a WorkspaceObjectPermissionsRequest) GetComplexFieldTypes(ctx context.Cont
 	}
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = WorkspaceObjectPermissionsRequest{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WorkspaceObjectPermissionsRequest
+// only implements ToObjectValue() and Type().
+func (o WorkspaceObjectPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o WorkspaceObjectPermissionsRequest) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+			"access_control_list":   o.AccessControlList,
+			"workspace_object_id":   o.WorkspaceObjectId,
+			"workspace_object_type": o.WorkspaceObjectType,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.

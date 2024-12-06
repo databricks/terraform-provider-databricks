@@ -82,7 +82,7 @@ func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.Re
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		tfEndpoints = append(tfEndpoints, endpointsInfo)
+		tfEndpoints = append(tfEndpoints, endpointsInfo.ToObjectValue(ctx))
 	}
 	endpoints.Endpoints = types.ListValueMust(serving_tf.ServingEndpoint{}.Type(ctx), tfEndpoints)
 	resp.Diagnostics.Append(resp.State.Set(ctx, endpoints)...)

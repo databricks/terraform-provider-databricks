@@ -101,6 +101,6 @@ func (d *RegisteredModelDataSource) Read(ctx context.Context, req datasource.Rea
 		modelInfo.Aliases, d = basetypes.NewListValueFrom(ctx, modelInfo.Aliases.ElementType(ctx), []catalog_tf.RegisteredModelAlias{})
 		resp.Diagnostics.Append(d...)
 	}
-	registeredModel.ModelInfo = types.ListValueMust(catalog_tf.RegisteredModelInfo{}.Type(ctx), []attr.Value{modelInfo})
+	registeredModel.ModelInfo = types.ListValueMust(catalog_tf.RegisteredModelInfo{}.Type(ctx), []attr.Value{modelInfo.ToObjectValue(ctx)})
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModel)...)
 }

@@ -90,7 +90,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	clusterInfo.ClusterId = tfCluster.ClusterId
 	clusterInfo.Name = tfCluster.ClusterName
-	clusterInfo.ClusterInfo = types.ListValueMust(tfCluster.Type(ctx), []attr.Value{tfCluster})
+	clusterInfo.ClusterInfo = types.ListValueMust(tfCluster.Type(ctx), []attr.Value{tfCluster.ToObjectValue(ctx)})
 	resp.Diagnostics.Append(resp.State.Set(ctx, clusterInfo)...)
 }
 

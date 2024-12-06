@@ -80,52 +80,22 @@ func (a {{.PascalName}}) GetComplexFieldTypes(ctx context.Context) map[string]re
   }
 }
 
-// TFSDK types also implement the ObjectValuable interface, so they can be used directly as objects
-// and as elements in lists and maps.
-var _ basetypes.ObjectValuable = {{.PascalName}}{}
-
-// Equal implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) Equal(v attr.Value) bool {
-	ov, d := o.ToObjectValue(context.Background())
-	if d.HasError() {
-		return false
-	}
-	return ov.Equal(v)
-}
-
-// IsNull implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) IsNull() bool {
-	// TF SDK structures are never null.
-	return false
-}
-
-// IsUnknown implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) IsUnknown() bool {
-	// TF SDK structures are never unknown.
-	return false
-}
-
-// String implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) String() string {
-	return fmt.Sprintf("%#v", o)
-}
-
-// ToObjectValue implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	return types.ObjectValueFrom(
-		ctx,
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, {{.PascalName}}
+// only implements ToObjectValue() and Type().
+func (o {{.PascalName}}) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		o,
-	)
-}
-
-// ToTerraformValue implements basetypes.ObjectValuable.
-func (o {{.PascalName}}) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	ov, d := o.ToObjectValue(ctx)
-	if d.HasError() {
-		return tftypes.Value{}, fmt.Errorf("error converting to object value: %s", pluginfwcommon.DiagToString(d))
-	}
-	return ov.ToTerraformValue(ctx)
+		map[string]attr.Value{
+      {{ range .Fields -}}
+      {{- $data := dict "field" . -}}
+      "{{template "tfsdk-name" $data}}": o.{{template "field-name" $data}},
+      {{if and .Entity.Terraform .Entity.Terraform.IsServiceProposedIfEmpty -}}
+        {{- $data := dict "field" . "effective" true }}
+        "{{template "tfsdk-name" $data}}": o.{{template "field-name" $data}},
+      {{- end -}}
+      {{- end}}
+    })
 }
 
 // Type implements basetypes.ObjectValuable.
@@ -154,14 +124,13 @@ func (o {{.PascalName}}) Type(ctx context.Context) attr.Type {
   {{- if .ArrayValue }}{{ template "complex-field-value" .ArrayValue }}
   {{- else if .MapValue }}{{ template "complex-field-value" .MapValue }}
   {{- else -}}
-    {{- if .IsExternal -}}{{.Package.Name}}.{{- end -}}
     {{- if or .IsString .Enum -}}types.String{}
     {{- else if .IsBool -}}types.Bool{}
     {{- else if .IsInt64 -}}types.Int64{}
     {{- else if .IsFloat64 -}}types.Float64{}
     {{- else if .IsInt -}}types.Int64{}
-    {{- else if .IsAny -}}struct{}{}
-    {{- else if or .IsEmpty .IsObject -}}{{.PascalName}}{}
+    {{- else if .IsAny -}}types.Object{}
+    {{- else if or .IsEmpty .IsObject -}}{{if .IsExternal}}{{.Package.Name}}.{{end}}{{.PascalName}}{}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -201,7 +170,11 @@ even when they are called recursively.
 
 
 {{- define "field" -}}
-{{if .effective}}Effective{{end}}{{.field.PascalName}}{{if eq .field.PascalName "Type"}}_{{end}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{template "field-name" .}} {{template "type" .field.Entity}} `{{template "field-tag" . }}`
+{{- end -}}
+
+{{- define "field-name" -}}
+{{if .effective}}Effective{{end}}{{.field.PascalName}}{{if eq .field.PascalName "Type"}}_{{end}}
 {{- end -}}
 
 {{- define "field-tag" -}}
@@ -232,15 +205,15 @@ even when they are called recursively.
 
 {{- define "type" -}}
     {{- if not . }}any /* ERROR */
-    {{- else if .IsExternal }}{{.Package.Name}}.{{.PascalName}}
-    {{- else if .IsAny}}any
+    {{- else if .IsExternal }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}
+    {{- else if .IsAny}}types.Object
     {{- else if .IsEmpty}}types.List
     {{- else if .IsString}}types.String
     {{- else if .IsBool}}types.Bool
     {{- else if .IsInt64}}types.Int64
     {{- else if .IsFloat64}}types.Float64
     {{- else if .IsInt}}types.Int64
-    {{- else if .IsByteStream}}io.ReadCloser
+    {{- else if .IsByteStream}}types.Object
     {{- else if .ArrayValue }}types.List
     {{- else if .MapValue }}types.Map
     {{- else if .IsObject }}types.List{{/* Note: we use types.List for objects for now. TODO: change this to types.Object. */}}

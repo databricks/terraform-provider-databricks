@@ -108,7 +108,7 @@ func (d *FunctionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		tfFunctions = append(tfFunctions, function)
+		tfFunctions = append(tfFunctions, function.ToObjectValue(ctx))
 	}
 	functions.Functions = types.ListValueMust(catalog_tf.FunctionInfo{}.Type(ctx), tfFunctions)
 	resp.Diagnostics.Append(resp.State.Set(ctx, functions)...)

@@ -46,7 +46,7 @@ resource "databricks_storage_credential" "external_mi" {
 }
 
 resource "databricks_grants" "external_creds" {
-  storage_credential = databricks_storage_credential.external.id
+  storage_credential = databricks_storage_credential.external_mi.id
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_EXTERNAL_TABLE"]

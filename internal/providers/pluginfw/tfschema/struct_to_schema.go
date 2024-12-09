@@ -116,7 +116,30 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 					}
 				}
 			}
+		// No other types are supported. Instead, we provide helpful error messages to help users writing
+		// custom TFSDK structures to use the appropriate types.
+		case int, int32, int64:
+			panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.Int intead. %s", value, common.TerraformBugErrorMessage))
+		case float32, float64:
+			panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.Float64 instead. %s", value, common.TerraformBugErrorMessage))
+		case string:
+			panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.String instead. %s", value, common.TerraformBugErrorMessage))
+		case bool:
+			panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.Bool instead. %s", value, common.TerraformBugErrorMessage))
 		default:
+			fieldType := field.Value.Type()
+			if fieldType.Kind() == reflect.Slice {
+				fieldElemType := fieldType.Elem()
+				panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.List instead. To capture the element type, implement the ComplexFieldTypeProvider interface and add the following mapping: \"%s\": reflect.TypeOf(%s). %s", value, fieldName, fieldElemType.Name(), common.TerraformBugErrorMessage))
+			}
+			if fieldType.Kind() == reflect.Map {
+				fieldElemType := fieldType.Elem()
+				panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.Map instead. To capture the element type, implement the ComplexFieldTypeProvider interface and add the following mapping: \"%s\": reflect.TypeOf(%s). %s", value, fieldName, fieldElemType.Name(), common.TerraformBugErrorMessage))
+			}
+			if fieldType.Kind() == reflect.Struct {
+				// TODO: change the recommendation to use types.Object when support is added.
+				panic(fmt.Errorf("unsupported type %T in tfsdk structs. Use types.List instead, and treat the nested object as a list of length 1. To capture the element type, implement the ComplexFieldTypeProvider interface and add the following mapping: \"%s\": reflect.TypeOf(%s). %s", value, fieldName, fieldType.Name(), common.TerraformBugErrorMessage))
+			}
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
 		}
 		// types.List fields of complex types correspond to ListNestedBlock, which don't have optional/required/computed flags.

@@ -82,8 +82,9 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 		if srcFieldTag == "-" {
 			continue
 		}
-		destField := destVal.FieldByName(toTfSdkName(srcFieldName))
-		destFieldType, ok := destVal.Type().FieldByName(field.StructField.Name)
+		destFieldStructName := toTfSdkName(srcFieldName)
+		destField := destVal.FieldByName(destFieldStructName)
+		destFieldType, ok := destVal.Type().FieldByName(destFieldStructName)
 		if !ok {
 			d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination struct does not have field %s. %s", srcFieldName, common.TerraformBugErrorMessage))
 			return
@@ -136,9 +137,19 @@ func goSdkToTfSdkSingleField(
 			return
 		}
 
-		// Otherwise, dereference the pointer and continue.
-		srcField = srcField.Elem()
-		d.Append(goSdkToTfSdkSingleField(ctx, srcField, destField, forceSendField, tfType, innerType)...)
+		// Otherwise, the source field is a non-nil pointer to a struct.
+		// If the target is a list, we treat the source field as a slice with length 1
+		// containing only the dereferenced pointer.
+		if destField.Type() == reflect.TypeOf(types.List{}) {
+			listSrc := reflect.MakeSlice(reflect.SliceOf(srcField.Type().Elem()), 1, 1)
+			listSrc.Index(0).Set(srcField.Elem())
+			d.Append(goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)...)
+			return
+		}
+
+		// Otherwise, the target is an object. Dereference the pointer and convert the underlying struct.
+		d.Append(goSdkToTfSdkSingleField(ctx, srcField.Elem(), destField, forceSendField, tfType, innerType)...)
+		return
 	case reflect.Bool:
 		boolVal := srcField.Interface().(bool)
 		// check if the value is non-zero or if the field is in the forceSendFields list
@@ -186,15 +197,16 @@ func goSdkToTfSdkSingleField(
 		}
 	case reflect.Struct:
 		// This corresponds to either a types.List or types.Object.
-		// If the struct is zero value, set the destination field to the null value of the appropriate type.
-		if srcField.IsZero() {
-			setFieldToNull(destField, tfType)
-			return
-		}
-
 		// If the destination field is a types.List, treat the source field as a slice with length 1
 		// containing only this struct.
 		if destField.Type() == reflect.TypeOf(types.List{}) {
+			// For compatibility, a field consisting of a zero-valued struct that is mapped to lists is treated as an
+			// empty list.
+			if srcField.IsZero() {
+				setFieldToNull(destField, tfType)
+				return
+			}
+
 			listSrc := reflect.MakeSlice(reflect.SliceOf(srcField.Type()), 1, 1)
 			listSrc.Index(0).Set(srcField)
 			d.Append(goSdkToTfSdkSingleField(ctx, listSrc, destField, forceSendField, tfType, innerType)...)

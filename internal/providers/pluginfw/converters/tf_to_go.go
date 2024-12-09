@@ -253,7 +253,20 @@ func tfsdkToGoSdkStructField(
 			return
 		}
 
-		d.Append(TfSdkToGoSdkStruct(ctx, innerValue.Interface(), destField.Addr().Interface())...)
+		destType := destField.Type()
+		if destType.Kind() == reflect.Ptr {
+			destType = destType.Elem()
+		}
+		destValue := reflect.New(destType)
+		d.Append(TfSdkToGoSdkStruct(ctx, innerValue.Interface(), destValue.Interface())...)
+		if d.HasError() {
+			return
+		}
+		if destField.Type().Kind() == reflect.Ptr {
+			destField.Set(destValue)
+		} else {
+			destField.Set(destValue.Elem())
+		}
 	default:
 		d.AddError(tfSdkToGoSdkFieldConversionFailureMessage, fmt.Sprintf("%T is not currently supported as a source field. %s", v, common.TerraformBugErrorMessage))
 		return

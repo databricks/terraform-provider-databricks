@@ -1148,6 +1148,7 @@ func (o *GenieMessage) SetAttachments(ctx context.Context, v []GenieAttachment) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["attachments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Attachments = types.ListValueMust(t, vs)
 }
 
@@ -1675,6 +1676,7 @@ func (o *ListDashboardsResponse) SetDashboards(ctx context.Context, v []Dashboar
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboards"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Dashboards = types.ListValueMust(t, vs)
 }
 
@@ -1804,6 +1806,7 @@ func (o *ListSchedulesResponse) SetSchedules(ctx context.Context, v []Schedule) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedules"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schedules = types.ListValueMust(t, vs)
 }
 
@@ -1937,6 +1940,7 @@ func (o *ListSubscriptionsResponse) SetSubscriptions(ctx context.Context, v []Su
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Subscriptions = types.ListValueMust(t, vs)
 }
 

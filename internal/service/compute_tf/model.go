@@ -783,6 +783,7 @@ func (o *CloudProviderNodeInfo) SetStatus(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Status = types.ListValueMust(t, vs)
 }
 
@@ -924,6 +925,7 @@ func (o *ClusterAccessControlResponse) SetAllPermissions(ctx context.Context, v 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -1277,6 +1279,7 @@ func (o *ClusterAttributes) SetCustomTags(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -1354,6 +1357,7 @@ func (o *ClusterAttributes) SetInitScripts(ctx context.Context, v []InitScriptIn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -1379,6 +1383,7 @@ func (o *ClusterAttributes) SetSparkConf(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -1404,6 +1409,7 @@ func (o *ClusterAttributes) SetSparkEnvVars(ctx context.Context, v map[string]ty
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -1429,6 +1435,7 @@ func (o *ClusterAttributes) SetSshPublicKeys(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -1538,6 +1545,7 @@ func (o *ClusterCompliance) SetViolations(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Violations = types.MapValueMust(t, vs)
 }
 
@@ -2089,6 +2097,7 @@ func (o *ClusterDetails) SetCustomTags(ctx context.Context, v map[string]types.S
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -2114,6 +2123,7 @@ func (o *ClusterDetails) SetDefaultTags(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DefaultTags = types.MapValueMust(t, vs)
 }
 
@@ -2191,6 +2201,7 @@ func (o *ClusterDetails) SetExecutors(ctx context.Context, v []SparkNode) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["executors"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Executors = types.ListValueMust(t, vs)
 }
 
@@ -2242,6 +2253,7 @@ func (o *ClusterDetails) SetInitScripts(ctx context.Context, v []InitScriptInfo)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -2267,6 +2279,7 @@ func (o *ClusterDetails) SetSparkConf(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -2292,6 +2305,7 @@ func (o *ClusterDetails) SetSparkEnvVars(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -2343,6 +2357,7 @@ func (o *ClusterDetails) SetSshPublicKeys(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -2589,6 +2604,7 @@ func (o *ClusterLibraryStatuses) SetLibraryStatuses(ctx context.Context, v []Lib
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library_statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LibraryStatuses = types.ListValueMust(t, vs)
 }
 
@@ -2777,6 +2793,7 @@ func (o *ClusterPermission) SetInheritedFromObject(ctx context.Context, v []type
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -2855,6 +2872,7 @@ func (o *ClusterPermissions) SetAccessControlList(ctx context.Context, v []Clust
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -2974,6 +2992,7 @@ func (o *ClusterPermissionsRequest) SetAccessControlList(ctx context.Context, v 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3115,6 +3134,7 @@ func (o *ClusterPolicyAccessControlResponse) SetAllPermissions(ctx context.Conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -3193,6 +3213,7 @@ func (o *ClusterPolicyPermission) SetInheritedFromObject(ctx context.Context, v 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -3271,6 +3292,7 @@ func (o *ClusterPolicyPermissions) SetAccessControlList(ctx context.Context, v [
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3390,6 +3412,7 @@ func (o *ClusterPolicyPermissionsRequest) SetAccessControlList(ctx context.Conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3942,6 +3965,7 @@ func (o *ClusterSpec) SetCustomTags(ctx context.Context, v map[string]types.Stri
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -4019,6 +4043,7 @@ func (o *ClusterSpec) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -4044,6 +4069,7 @@ func (o *ClusterSpec) SetSparkConf(ctx context.Context, v map[string]types.Strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -4069,6 +4095,7 @@ func (o *ClusterSpec) SetSparkEnvVars(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -4094,6 +4121,7 @@ func (o *ClusterSpec) SetSshPublicKeys(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -4878,6 +4906,7 @@ func (o *CreateCluster) SetCustomTags(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -4955,6 +4984,7 @@ func (o *CreateCluster) SetInitScripts(ctx context.Context, v []InitScriptInfo) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -4980,6 +5010,7 @@ func (o *CreateCluster) SetSparkConf(ctx context.Context, v map[string]types.Str
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -5005,6 +5036,7 @@ func (o *CreateCluster) SetSparkEnvVars(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -5030,6 +5062,7 @@ func (o *CreateCluster) SetSshPublicKeys(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -5360,6 +5393,7 @@ func (o *CreateInstancePool) SetCustomTags(ctx context.Context, v map[string]typ
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -5437,6 +5471,7 @@ func (o *CreateInstancePool) SetPreloadedDockerImages(ctx context.Context, v []D
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedDockerImages = types.ListValueMust(t, vs)
 }
 
@@ -5462,6 +5497,7 @@ func (o *CreateInstancePool) SetPreloadedSparkVersions(ctx context.Context, v []
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
 }
 
@@ -5618,6 +5654,7 @@ func (o *CreatePolicy) SetLibraries(ctx context.Context, v []Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -6920,6 +6957,7 @@ func (o *EditCluster) SetCustomTags(ctx context.Context, v map[string]types.Stri
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -6997,6 +7035,7 @@ func (o *EditCluster) SetInitScripts(ctx context.Context, v []InitScriptInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -7022,6 +7061,7 @@ func (o *EditCluster) SetSparkConf(ctx context.Context, v map[string]types.Strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -7047,6 +7087,7 @@ func (o *EditCluster) SetSparkEnvVars(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -7072,6 +7113,7 @@ func (o *EditCluster) SetSshPublicKeys(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -7246,6 +7288,7 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -7400,6 +7443,7 @@ func (o *EditPolicy) SetLibraries(ctx context.Context, v []Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -7596,6 +7640,7 @@ func (o *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Changes = types.ListValueMust(t, vs)
 }
 
@@ -7682,6 +7727,7 @@ func (o *Environment) SetDependencies(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
@@ -8229,6 +8275,7 @@ func (o *GetClusterComplianceResponse) SetViolations(ctx context.Context, v map[
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Violations = types.MapValueMust(t, vs)
 }
 
@@ -8343,6 +8390,7 @@ func (o *GetClusterPermissionLevelsResponse) SetPermissionLevels(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -8500,6 +8548,7 @@ func (o *GetClusterPolicyPermissionLevelsResponse) SetPermissionLevels(ctx conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -8730,6 +8779,7 @@ func (o *GetEvents) SetEventTypes(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_types"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EventTypes = types.ListValueMust(t, vs)
 }
 
@@ -8814,6 +8864,7 @@ func (o *GetEventsResponse) SetEvents(ctx context.Context, v []ClusterEvent) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 
@@ -9138,6 +9189,7 @@ func (o *GetInstancePool) SetCustomTags(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -9163,6 +9215,7 @@ func (o *GetInstancePool) SetDefaultTags(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DefaultTags = types.MapValueMust(t, vs)
 }
 
@@ -9240,6 +9293,7 @@ func (o *GetInstancePool) SetPreloadedDockerImages(ctx context.Context, v []Dock
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedDockerImages = types.ListValueMust(t, vs)
 }
 
@@ -9265,6 +9319,7 @@ func (o *GetInstancePool) SetPreloadedSparkVersions(ctx context.Context, v []typ
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
 }
 
@@ -9431,6 +9486,7 @@ func (o *GetInstancePoolPermissionLevelsResponse) SetPermissionLevels(ctx contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -9636,6 +9692,7 @@ func (o *GetSparkVersionsResponse) SetVersions(ctx context.Context, v []SparkVer
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Versions = types.ListValueMust(t, vs)
 }
 
@@ -10001,6 +10058,7 @@ func (o *InitScriptEventDetails) SetCluster(ctx context.Context, v []InitScriptI
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Cluster = types.ListValueMust(t, vs)
 }
 
@@ -10026,6 +10084,7 @@ func (o *InitScriptEventDetails) SetGlobal(ctx context.Context, v []InitScriptIn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["global"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Global = types.ListValueMust(t, vs)
 }
 
@@ -10537,6 +10596,7 @@ func (o *InstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -10714,6 +10774,7 @@ func (o *InstancePoolAccessControlResponse) SetAllPermissions(ctx context.Contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -10969,6 +11030,7 @@ func (o *InstancePoolAndStats) SetCustomTags(ctx context.Context, v map[string]t
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -10994,6 +11056,7 @@ func (o *InstancePoolAndStats) SetDefaultTags(ctx context.Context, v map[string]
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["default_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DefaultTags = types.MapValueMust(t, vs)
 }
 
@@ -11071,6 +11134,7 @@ func (o *InstancePoolAndStats) SetPreloadedDockerImages(ctx context.Context, v [
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_docker_images"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedDockerImages = types.ListValueMust(t, vs)
 }
 
@@ -11096,6 +11160,7 @@ func (o *InstancePoolAndStats) SetPreloadedSparkVersions(ctx context.Context, v 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["preloaded_spark_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PreloadedSparkVersions = types.ListValueMust(t, vs)
 }
 
@@ -11421,6 +11486,7 @@ func (o *InstancePoolPermission) SetInheritedFromObject(ctx context.Context, v [
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -11499,6 +11565,7 @@ func (o *InstancePoolPermissions) SetAccessControlList(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -11618,6 +11685,7 @@ func (o *InstancePoolPermissionsRequest) SetAccessControlList(ctx context.Contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -11746,6 +11814,7 @@ func (o *InstancePoolStatus) SetPendingInstanceErrors(ctx context.Context, v []P
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_instance_errors"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PendingInstanceErrors = types.ListValueMust(t, vs)
 }
 
@@ -12096,6 +12165,7 @@ func (o *LibraryFullStatus) SetMessages(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Messages = types.ListValueMust(t, vs)
 }
 
@@ -12167,6 +12237,7 @@ func (o *ListAllClusterLibraryStatusesResponse) SetStatuses(ctx context.Context,
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Statuses = types.ListValueMust(t, vs)
 }
 
@@ -12243,6 +12314,7 @@ func (o *ListAvailableZonesResponse) SetZones(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["zones"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Zones = types.ListValueMust(t, vs)
 }
 
@@ -12379,6 +12451,7 @@ func (o *ListClusterCompliancesResponse) SetClusters(ctx context.Context, v []Cl
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Clusters = types.ListValueMust(t, vs)
 }
 
@@ -12515,6 +12588,7 @@ func (o *ListClustersFilterBy) SetClusterSources(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_sources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ClusterSources = types.ListValueMust(t, vs)
 }
 
@@ -12540,6 +12614,7 @@ func (o *ListClustersFilterBy) SetClusterStates(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_states"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ClusterStates = types.ListValueMust(t, vs)
 }
 
@@ -12739,6 +12814,7 @@ func (o *ListClustersResponse) SetClusters(ctx context.Context, v []ClusterDetai
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Clusters = types.ListValueMust(t, vs)
 }
 
@@ -12857,6 +12933,7 @@ func (o *ListGlobalInitScriptsResponse) SetScripts(ctx context.Context, v []Glob
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scripts = types.ListValueMust(t, vs)
 }
 
@@ -12927,6 +13004,7 @@ func (o *ListInstancePools) SetInstancePools(ctx context.Context, v []InstancePo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instance_pools"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InstancePools = types.ListValueMust(t, vs)
 }
 
@@ -12998,6 +13076,7 @@ func (o *ListInstanceProfilesResponse) SetInstanceProfiles(ctx context.Context, 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instance_profiles"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InstanceProfiles = types.ListValueMust(t, vs)
 }
 
@@ -13069,6 +13148,7 @@ func (o *ListNodeTypesResponse) SetNodeTypes(ctx context.Context, v []NodeType) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_types"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NodeTypes = types.ListValueMust(t, vs)
 }
 
@@ -13140,6 +13220,7 @@ func (o *ListPoliciesResponse) SetPolicies(ctx context.Context, v []Policy) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Policies = types.ListValueMust(t, vs)
 }
 
@@ -13263,6 +13344,7 @@ func (o *ListPolicyFamiliesResponse) SetPolicyFamilies(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policy_families"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PolicyFamilies = types.ListValueMust(t, vs)
 }
 
@@ -13483,6 +13565,7 @@ func (o *MavenLibrary) SetExclusions(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclusions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Exclusions = types.ListValueMust(t, vs)
 }
 
@@ -14062,6 +14145,7 @@ func (o *Policy) SetLibraries(ctx context.Context, v []Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -14615,6 +14699,7 @@ func (o *Results) SetFileNames(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fileNames"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FileNames = types.ListValueMust(t, vs)
 }
 
@@ -14640,6 +14725,7 @@ func (o *Results) SetSchema(ctx context.Context, v []types.Object) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schema"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schema = types.ListValueMust(t, vs)
 }
 
@@ -15079,6 +15165,7 @@ func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.MapValueMust(t, vs)
 }
 
@@ -15154,6 +15241,7 @@ func (o *UninstallLibraries) SetLibraries(ctx context.Context, v []Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -15753,6 +15841,7 @@ func (o *UpdateClusterResource) SetCustomTags(ctx context.Context, v map[string]
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -15830,6 +15919,7 @@ func (o *UpdateClusterResource) SetInitScripts(ctx context.Context, v []InitScri
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -15855,6 +15945,7 @@ func (o *UpdateClusterResource) SetSparkConf(ctx context.Context, v map[string]t
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -15880,6 +15971,7 @@ func (o *UpdateClusterResource) SetSparkEnvVars(ctx context.Context, v map[strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -15905,6 +15997,7 @@ func (o *UpdateClusterResource) SetSshPublicKeys(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 

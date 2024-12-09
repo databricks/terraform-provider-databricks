@@ -162,6 +162,7 @@ func (o *AlertConfiguration) SetActionConfigurations(ctx context.Context, v []Ac
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ActionConfigurations = types.ListValueMust(t, vs)
 }
 
@@ -264,6 +265,7 @@ func (o *BudgetConfiguration) SetAlertConfigurations(ctx context.Context, v []Al
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
@@ -370,6 +372,7 @@ func (o *BudgetConfigurationFilter) SetTags(ctx context.Context, v []BudgetConfi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -470,6 +473,7 @@ func (o *BudgetConfigurationFilterClause) SetValues(ctx context.Context, v []typ
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -619,6 +623,7 @@ func (o *BudgetConfigurationFilterWorkspaceIdClause) SetValues(ctx context.Conte
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -800,6 +805,7 @@ func (o *CreateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
@@ -963,6 +969,7 @@ func (o *CreateBudgetConfigurationBudgetAlertConfigurations) SetActionConfigurat
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["action_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ActionConfigurations = types.ListValueMust(t, vs)
 }
 
@@ -1261,6 +1268,7 @@ func (o *CreateLogDeliveryConfigurationParams) SetWorkspaceIdsFilter(ctx context
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
@@ -1809,6 +1817,7 @@ func (o *ListBudgetConfigurationsResponse) SetBudgets(ctx context.Context, v []B
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["budgets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Budgets = types.ListValueMust(t, vs)
 }
 
@@ -2065,6 +2074,7 @@ func (o *LogDeliveryConfiguration) SetWorkspaceIdsFilter(ctx context.Context, v 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids_filter"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.WorkspaceIdsFilter = types.ListValueMust(t, vs)
 }
 
@@ -2261,6 +2271,7 @@ func (o *UpdateBudgetConfigurationBudget) SetAlertConfigurations(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alert_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AlertConfigurations = types.ListValueMust(t, vs)
 }
 
@@ -2698,5 +2709,6 @@ func (o *WrappedLogDeliveryConfigurations) SetLogDeliveryConfigurations(ctx cont
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_delivery_configurations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LogDeliveryConfigurations = types.ListValueMust(t, vs)
 }

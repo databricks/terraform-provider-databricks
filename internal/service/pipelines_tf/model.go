@@ -222,6 +222,7 @@ func (o *CreatePipeline) SetClusters(ctx context.Context, v []PipelineCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Clusters = types.ListValueMust(t, vs)
 }
 
@@ -247,6 +248,7 @@ func (o *CreatePipeline) SetConfiguration(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Configuration = types.MapValueMust(t, vs)
 }
 
@@ -376,6 +378,7 @@ func (o *CreatePipeline) SetLibraries(ctx context.Context, v []PipelineLibrary) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -401,6 +404,7 @@ func (o *CreatePipeline) SetNotifications(ctx context.Context, v []Notifications
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Notifications = types.ListValueMust(t, vs)
 }
 
@@ -909,6 +913,7 @@ func (o *EditPipeline) SetClusters(ctx context.Context, v []PipelineCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Clusters = types.ListValueMust(t, vs)
 }
 
@@ -934,6 +939,7 @@ func (o *EditPipeline) SetConfiguration(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Configuration = types.MapValueMust(t, vs)
 }
 
@@ -1063,6 +1069,7 @@ func (o *EditPipeline) SetLibraries(ctx context.Context, v []PipelineLibrary) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -1088,6 +1095,7 @@ func (o *EditPipeline) SetNotifications(ctx context.Context, v []Notifications) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Notifications = types.ListValueMust(t, vs)
 }
 
@@ -1251,6 +1259,7 @@ func (o *ErrorDetail) SetExceptions(ctx context.Context, v []SerializedException
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exceptions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Exceptions = types.ListValueMust(t, vs)
 }
 
@@ -1371,6 +1380,7 @@ func (o *Filters) SetExclude(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclude"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Exclude = types.ListValueMust(t, vs)
 }
 
@@ -1396,6 +1406,7 @@ func (o *Filters) SetInclude(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Include = types.ListValueMust(t, vs)
 }
 
@@ -1510,6 +1521,7 @@ func (o *GetPipelinePermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -1715,6 +1727,7 @@ func (o *GetPipelineResponse) SetLatestUpdates(ctx context.Context, v []UpdateSt
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_updates"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LatestUpdates = types.ListValueMust(t, vs)
 }
 
@@ -2156,6 +2169,7 @@ func (o *IngestionPipelineDefinition) SetObjects(ctx context.Context, v []Ingest
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["objects"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Objects = types.ListValueMust(t, vs)
 }
 
@@ -2283,6 +2297,7 @@ func (o *ListPipelineEventsRequest) SetOrderBy(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -2362,6 +2377,7 @@ func (o *ListPipelineEventsResponse) SetEvents(ctx context.Context, v []Pipeline
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 
@@ -2459,6 +2475,7 @@ func (o *ListPipelinesRequest) SetOrderBy(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -2534,6 +2551,7 @@ func (o *ListPipelinesResponse) SetStatuses(ctx context.Context, v []PipelineSta
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Statuses = types.ListValueMust(t, vs)
 }
 
@@ -2670,6 +2688,7 @@ func (o *ListUpdatesResponse) SetUpdates(ctx context.Context, v []UpdateInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["updates"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Updates = types.ListValueMust(t, vs)
 }
 
@@ -2832,6 +2851,7 @@ func (o *Notifications) SetAlerts(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["alerts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Alerts = types.ListValueMust(t, vs)
 }
 
@@ -2857,6 +2877,7 @@ func (o *Notifications) SetEmailRecipients(ctx context.Context, v []types.String
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_recipients"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmailRecipients = types.ListValueMust(t, vs)
 }
 
@@ -3105,6 +3126,7 @@ func (o *PipelineAccessControlResponse) SetAllPermissions(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -3435,6 +3457,7 @@ func (o *PipelineCluster) SetCustomTags(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -3486,6 +3509,7 @@ func (o *PipelineCluster) SetInitScripts(ctx context.Context, v []compute_tf.Ini
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InitScripts = types.ListValueMust(t, vs)
 }
 
@@ -3511,6 +3535,7 @@ func (o *PipelineCluster) SetSparkConf(ctx context.Context, v map[string]types.S
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_conf"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkConf = types.MapValueMust(t, vs)
 }
 
@@ -3536,6 +3561,7 @@ func (o *PipelineCluster) SetSparkEnvVars(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_env_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkEnvVars = types.MapValueMust(t, vs)
 }
 
@@ -3561,6 +3587,7 @@ func (o *PipelineCluster) SetSshPublicKeys(ctx context.Context, v []types.String
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ssh_public_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SshPublicKeys = types.ListValueMust(t, vs)
 }
 
@@ -4052,6 +4079,7 @@ func (o *PipelinePermission) SetInheritedFromObject(ctx context.Context, v []typ
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -4130,6 +4158,7 @@ func (o *PipelinePermissions) SetAccessControlList(ctx context.Context, v []Pipe
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -4249,6 +4278,7 @@ func (o *PipelinePermissionsRequest) SetAccessControlList(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -4444,6 +4474,7 @@ func (o *PipelineSpec) SetClusters(ctx context.Context, v []PipelineCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Clusters = types.ListValueMust(t, vs)
 }
 
@@ -4469,6 +4500,7 @@ func (o *PipelineSpec) SetConfiguration(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Configuration = types.MapValueMust(t, vs)
 }
 
@@ -4598,6 +4630,7 @@ func (o *PipelineSpec) SetLibraries(ctx context.Context, v []PipelineLibrary) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["libraries"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -4623,6 +4656,7 @@ func (o *PipelineSpec) SetNotifications(ctx context.Context, v []Notifications) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notifications"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Notifications = types.ListValueMust(t, vs)
 }
 
@@ -4776,6 +4810,7 @@ func (o *PipelineStateInfo) SetLatestUpdates(ctx context.Context, v []UpdateStat
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_updates"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LatestUpdates = types.ListValueMust(t, vs)
 }
 
@@ -5275,6 +5310,7 @@ func (o *SerializedException) SetStack(ctx context.Context, v []StackFrame) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stack"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stack = types.ListValueMust(t, vs)
 }
 
@@ -5429,6 +5465,7 @@ func (o *StartUpdate) SetFullRefreshSelection(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FullRefreshSelection = types.ListValueMust(t, vs)
 }
 
@@ -5454,6 +5491,7 @@ func (o *StartUpdate) SetRefreshSelection(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RefreshSelection = types.ListValueMust(t, vs)
 }
 
@@ -5762,6 +5800,7 @@ func (o *TableSpecificConfig) SetPrimaryKeys(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrimaryKeys = types.ListValueMust(t, vs)
 }
 
@@ -5787,6 +5826,7 @@ func (o *TableSpecificConfig) SetSequenceBy(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sequence_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SequenceBy = types.ListValueMust(t, vs)
 }
 
@@ -5938,6 +5978,7 @@ func (o *UpdateInfo) SetFullRefreshSelection(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["full_refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FullRefreshSelection = types.ListValueMust(t, vs)
 }
 
@@ -5963,6 +6004,7 @@ func (o *UpdateInfo) SetRefreshSelection(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refresh_selection"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RefreshSelection = types.ListValueMust(t, vs)
 }
 

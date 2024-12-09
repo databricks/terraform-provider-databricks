@@ -269,6 +269,7 @@ func (o *App) SetResources(ctx context.Context, v []AppResource) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
 
@@ -410,6 +411,7 @@ func (o *AppAccessControlResponse) SetAllPermissions(ctx context.Context, v []Ap
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -712,6 +714,7 @@ func (o *AppPermission) SetInheritedFromObject(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -790,6 +793,7 @@ func (o *AppPermissions) SetAccessControlList(ctx context.Context, v []AppAccess
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -909,6 +913,7 @@ func (o *AppPermissionsRequest) SetAccessControlList(ctx context.Context, v []Ap
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -1724,6 +1729,7 @@ func (o *GetAppPermissionLevelsResponse) SetPermissionLevels(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -1937,6 +1943,7 @@ func (o *ListAppDeploymentsResponse) SetAppDeployments(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AppDeployments = types.ListValueMust(t, vs)
 }
 
@@ -2059,6 +2066,7 @@ func (o *ListAppsResponse) SetApps(ctx context.Context, v []App) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Apps = types.ListValueMust(t, vs)
 }
 

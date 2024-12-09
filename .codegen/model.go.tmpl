@@ -159,6 +159,9 @@ func (o *{{ $parent.PascalName}}) Set{{.PascalName}}(ctx context.Context, v {{te
   }
   {{- end}}
   t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["{{template "tfsdk-name" (dict "field" .)}}"]
+  {{- if or .Entity.ArrayValue .Entity.MapValue }}
+	t = t.(attr.TypeWithElementType).ElementType()
+  {{- end }}
   o.{{.PascalName}}{{if eq .PascalName "Type"}}_{{end}} = types.{{if .Entity.MapValue}}Map{{else}}List{{end}}ValueMust(t, vs)
 }
 {{end}}

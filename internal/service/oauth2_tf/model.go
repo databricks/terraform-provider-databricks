@@ -112,6 +112,7 @@ func (o *CreateCustomAppIntegration) SetRedirectUrls(ctx context.Context, v []ty
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RedirectUrls = types.ListValueMust(t, vs)
 }
 
@@ -137,6 +138,7 @@ func (o *CreateCustomAppIntegration) SetScopes(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
@@ -837,6 +839,7 @@ func (o *GetCustomAppIntegrationOutput) SetRedirectUrls(ctx context.Context, v [
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RedirectUrls = types.ListValueMust(t, vs)
 }
 
@@ -862,6 +865,7 @@ func (o *GetCustomAppIntegrationOutput) SetScopes(ctx context.Context, v []types
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
@@ -1006,6 +1010,7 @@ func (o *GetCustomAppIntegrationsOutput) SetApps(ctx context.Context, v []GetCus
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Apps = types.ListValueMust(t, vs)
 }
 
@@ -1215,6 +1220,7 @@ func (o *GetPublishedAppIntegrationsOutput) SetApps(ctx context.Context, v []Get
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Apps = types.ListValueMust(t, vs)
 }
 
@@ -1291,6 +1297,7 @@ func (o *GetPublishedAppsOutput) SetApps(ctx context.Context, v []PublishedAppOu
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["apps"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Apps = types.ListValueMust(t, vs)
 }
 
@@ -1564,6 +1571,7 @@ func (o *ListServicePrincipalSecretsResponse) SetSecrets(ctx context.Context, v 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secrets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Secrets = types.ListValueMust(t, vs)
 }
 
@@ -1664,6 +1672,7 @@ func (o *PublishedAppOutput) SetRedirectUrls(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RedirectUrls = types.ListValueMust(t, vs)
 }
 
@@ -1689,6 +1698,7 @@ func (o *PublishedAppOutput) SetScopes(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
@@ -1875,6 +1885,7 @@ func (o *UpdateCustomAppIntegration) SetRedirectUrls(ctx context.Context, v []ty
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RedirectUrls = types.ListValueMust(t, vs)
 }
 

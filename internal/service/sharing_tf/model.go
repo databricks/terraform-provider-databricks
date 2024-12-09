@@ -667,6 +667,7 @@ func (o *GetRecipientSharePermissionsResponse) SetPermissionsOut(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions_out"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionsOut = types.ListValueMust(t, vs)
 }
 
@@ -785,6 +786,7 @@ func (o *IpAccessList) SetAllowedIpAddresses(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_ip_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllowedIpAddresses = types.ListValueMust(t, vs)
 }
 
@@ -862,6 +864,7 @@ func (o *ListProviderSharesResponse) SetShares(ctx context.Context, v []Provider
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shares"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Shares = types.ListValueMust(t, vs)
 }
 
@@ -999,6 +1002,7 @@ func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderIn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Providers = types.ListValueMust(t, vs)
 }
 
@@ -1136,6 +1140,7 @@ func (o *ListRecipientsResponse) SetRecipients(ctx context.Context, v []Recipien
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["recipients"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Recipients = types.ListValueMust(t, vs)
 }
 
@@ -1272,6 +1277,7 @@ func (o *ListSharesResponse) SetShares(ctx context.Context, v []ShareInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shares"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Shares = types.ListValueMust(t, vs)
 }
 
@@ -1343,6 +1349,7 @@ func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -1476,6 +1483,7 @@ func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Privileges = types.ListValueMust(t, vs)
 }
 
@@ -1855,6 +1863,7 @@ func (o *RecipientInfo) SetTokens(ctx context.Context, v []RecipientTokenInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tokens = types.ListValueMust(t, vs)
 }
 
@@ -2191,6 +2200,7 @@ func (o *SecurablePropertiesKvPairs) SetProperties(ctx context.Context, v map[st
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -2298,6 +2308,7 @@ func (o *ShareInfo) SetObjects(ctx context.Context, v []SharedDataObject) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Objects = types.ListValueMust(t, vs)
 }
 
@@ -2432,6 +2443,7 @@ func (o *ShareToPrivilegeAssignment) SetPrivilegeAssignments(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
@@ -2572,6 +2584,7 @@ func (o *SharedDataObject) SetPartitions(ctx context.Context, v []Partition) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["partition"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Partitions = types.ListValueMust(t, vs)
 }
 
@@ -2998,6 +3011,7 @@ func (o *UpdateShare) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["updates"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Updates = types.ListValueMust(t, vs)
 }
 
@@ -3089,5 +3103,6 @@ func (o *UpdateSharePermissions) SetChanges(ctx context.Context, v []catalog_tf.
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Changes = types.ListValueMust(t, vs)
 }

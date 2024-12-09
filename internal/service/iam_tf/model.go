@@ -158,6 +158,7 @@ func (o *AccessControlResponse) SetAllPermissions(ctx context.Context, v []Permi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -869,6 +870,7 @@ func (o *GetAssignableRolesForResourceResponse) SetRoles(ctx context.Context, v 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Roles = types.ListValueMust(t, vs)
 }
 
@@ -983,6 +985,7 @@ func (o *GetPasswordPermissionLevelsResponse) SetPermissionLevels(ctx context.Co
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -1101,6 +1104,7 @@ func (o *GetPermissionLevelsResponse) SetPermissionLevels(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -1445,6 +1449,7 @@ func (o *GrantRule) SetPrincipals(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["principals"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Principals = types.ListValueMust(t, vs)
 }
 
@@ -1566,6 +1571,7 @@ func (o *Group) SetEntitlements(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Entitlements = types.ListValueMust(t, vs)
 }
 
@@ -1591,6 +1597,7 @@ func (o *Group) SetGroups(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Groups = types.ListValueMust(t, vs)
 }
 
@@ -1616,6 +1623,7 @@ func (o *Group) SetMembers(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["members"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Members = types.ListValueMust(t, vs)
 }
 
@@ -1667,6 +1675,7 @@ func (o *Group) SetRoles(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Roles = types.ListValueMust(t, vs)
 }
 
@@ -1692,6 +1701,7 @@ func (o *Group) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -2076,6 +2086,7 @@ func (o *ListGroupsResponse) SetResources(ctx context.Context, v []Group) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
 
@@ -2101,6 +2112,7 @@ func (o *ListGroupsResponse) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -2192,6 +2204,7 @@ func (o *ListServicePrincipalResponse) SetResources(ctx context.Context, v []Ser
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
 
@@ -2217,6 +2230,7 @@ func (o *ListServicePrincipalResponse) SetSchemas(ctx context.Context, v []types
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -2455,6 +2469,7 @@ func (o *ListUsersResponse) SetResources(ctx context.Context, v []User) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
 
@@ -2480,6 +2495,7 @@ func (o *ListUsersResponse) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -2744,6 +2760,7 @@ func (o *ObjectPermissions) SetAccessControlList(ctx context.Context, v []Access
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -2827,6 +2844,7 @@ func (o *PartialUpdate) SetOperations(ctx context.Context, v []Patch) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["Operations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Operations = types.ListValueMust(t, vs)
 }
 
@@ -2852,6 +2870,7 @@ func (o *PartialUpdate) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -2993,6 +3012,7 @@ func (o *PasswordAccessControlResponse) SetAllPermissions(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -3071,6 +3091,7 @@ func (o *PasswordPermission) SetInheritedFromObject(ctx context.Context, v []typ
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -3149,6 +3170,7 @@ func (o *PasswordPermissions) SetAccessControlList(ctx context.Context, v []Pass
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3264,6 +3286,7 @@ func (o *PasswordPermissionsRequest) SetAccessControlList(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3428,6 +3451,7 @@ func (o *Permission) SetInheritedFromObject(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -3512,6 +3536,7 @@ func (o *PermissionAssignment) SetPermissions(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Permissions = types.ListValueMust(t, vs)
 }
 
@@ -3609,6 +3634,7 @@ func (o *PermissionAssignments) SetPermissionAssignments(ctx context.Context, v 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionAssignments = types.ListValueMust(t, vs)
 }
 
@@ -3782,6 +3808,7 @@ func (o *PermissionsRequest) SetAccessControlList(ctx context.Context, v []Acces
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -4006,6 +4033,7 @@ func (o *RuleSetResponse) SetGrantRules(ctx context.Context, v []GrantRule) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.GrantRules = types.ListValueMust(t, vs)
 }
 
@@ -4087,6 +4115,7 @@ func (o *RuleSetUpdateRequest) SetGrantRules(ctx context.Context, v []GrantRule)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.GrantRules = types.ListValueMust(t, vs)
 }
 
@@ -4202,6 +4231,7 @@ func (o *ServicePrincipal) SetEntitlements(ctx context.Context, v []ComplexValue
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Entitlements = types.ListValueMust(t, vs)
 }
 
@@ -4227,6 +4257,7 @@ func (o *ServicePrincipal) SetGroups(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Groups = types.ListValueMust(t, vs)
 }
 
@@ -4252,6 +4283,7 @@ func (o *ServicePrincipal) SetRoles(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Roles = types.ListValueMust(t, vs)
 }
 
@@ -4277,6 +4309,7 @@ func (o *ServicePrincipal) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -4473,6 +4506,7 @@ func (o *UpdateWorkspaceAssignments) SetPermissions(ctx context.Context, v []typ
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Permissions = types.ListValueMust(t, vs)
 }
 
@@ -4608,6 +4642,7 @@ func (o *User) SetEmails(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["emails"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Emails = types.ListValueMust(t, vs)
 }
 
@@ -4633,6 +4668,7 @@ func (o *User) SetEntitlements(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entitlements"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Entitlements = types.ListValueMust(t, vs)
 }
 
@@ -4658,6 +4694,7 @@ func (o *User) SetGroups(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["groups"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Groups = types.ListValueMust(t, vs)
 }
 
@@ -4709,6 +4746,7 @@ func (o *User) SetRoles(ctx context.Context, v []ComplexValue) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["roles"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Roles = types.ListValueMust(t, vs)
 }
 
@@ -4734,6 +4772,7 @@ func (o *User) SetSchemas(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -4805,5 +4844,6 @@ func (o *WorkspacePermissions) SetPermissions(ctx context.Context, v []Permissio
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Permissions = types.ListValueMust(t, vs)
 }

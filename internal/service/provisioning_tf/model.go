@@ -642,6 +642,7 @@ func (o *CreateCustomerManagedKeyRequest) SetUseCases(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["use_cases"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.UseCases = types.ListValueMust(t, vs)
 }
 
@@ -817,6 +818,7 @@ func (o *CreateNetworkRequest) SetSecurityGroupIds(ctx context.Context, v []type
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["security_group_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SecurityGroupIds = types.ListValueMust(t, vs)
 }
 
@@ -842,6 +844,7 @@ func (o *CreateNetworkRequest) SetSubnetIds(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnet_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SubnetIds = types.ListValueMust(t, vs)
 }
 
@@ -1275,6 +1278,7 @@ func (o *CreateWorkspaceRequest) SetCustomTags(ctx context.Context, v map[string
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -1608,6 +1612,7 @@ func (o *CustomerManagedKey) SetUseCases(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["use_cases"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.UseCases = types.ListValueMust(t, vs)
 }
 
@@ -2743,6 +2748,7 @@ func (o *Network) SetErrorMessages(ctx context.Context, v []NetworkHealth) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_messages"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ErrorMessages = types.ListValueMust(t, vs)
 }
 
@@ -2794,6 +2800,7 @@ func (o *Network) SetSecurityGroupIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["security_group_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SecurityGroupIds = types.ListValueMust(t, vs)
 }
 
@@ -2819,6 +2826,7 @@ func (o *Network) SetSubnetIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnet_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SubnetIds = types.ListValueMust(t, vs)
 }
 
@@ -2870,6 +2878,7 @@ func (o *Network) SetWarningMessages(ctx context.Context, v []NetworkWarning) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warning_messages"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.WarningMessages = types.ListValueMust(t, vs)
 }
 
@@ -3001,6 +3010,7 @@ func (o *NetworkVpcEndpoints) SetDataplaneRelay(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataplane_relay"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataplaneRelay = types.ListValueMust(t, vs)
 }
 
@@ -3026,6 +3036,7 @@ func (o *NetworkVpcEndpoints) SetRestApi(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rest_api"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RestApi = types.ListValueMust(t, vs)
 }
 
@@ -3178,6 +3189,7 @@ func (o *PrivateAccessSettings) SetAllowedVpcEndpointIds(ctx context.Context, v 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
@@ -3547,6 +3559,7 @@ func (o *UpdateWorkspaceRequest) SetCustomTags(ctx context.Context, v map[string
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 
@@ -3661,6 +3674,7 @@ func (o *UpsertPrivateAccessSettingsRequest) SetAllowedVpcEndpointIds(ctx contex
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_vpc_endpoint_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllowedVpcEndpointIds = types.ListValueMust(t, vs)
 }
 
@@ -4063,6 +4077,7 @@ func (o *Workspace) SetCustomTags(ctx context.Context, v map[string]types.String
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
 }
 

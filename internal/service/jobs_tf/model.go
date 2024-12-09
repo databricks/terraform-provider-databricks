@@ -481,6 +481,7 @@ func (o *BaseRun) SetJobClusters(ctx context.Context, v []JobCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobClusters = types.ListValueMust(t, vs)
 }
 
@@ -506,6 +507,7 @@ func (o *BaseRun) SetJobParameters(ctx context.Context, v []JobParameter) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.ListValueMust(t, vs)
 }
 
@@ -557,6 +559,7 @@ func (o *BaseRun) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RepairHistory = types.ListValueMust(t, vs)
 }
 
@@ -660,6 +663,7 @@ func (o *BaseRun) SetTasks(ctx context.Context, v []RunTask) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tasks = types.ListValueMust(t, vs)
 }
 
@@ -999,6 +1003,7 @@ func (o *ClusterSpec) SetLibraries(ctx context.Context, v []compute_tf.Library) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -1395,6 +1400,7 @@ func (o *CreateJob) SetAccessControlList(ctx context.Context, v []JobAccessContr
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -1498,6 +1504,7 @@ func (o *CreateJob) SetEnvironments(ctx context.Context, v []JobEnvironment) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Environments = types.ListValueMust(t, vs)
 }
 
@@ -1575,6 +1582,7 @@ func (o *CreateJob) SetJobClusters(ctx context.Context, v []JobCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobClusters = types.ListValueMust(t, vs)
 }
 
@@ -1626,6 +1634,7 @@ func (o *CreateJob) SetParameters(ctx context.Context, v []JobParameterDefinitio
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -1729,6 +1738,7 @@ func (o *CreateJob) SetTags(ctx context.Context, v map[string]types.String) {
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.MapValueMust(t, vs)
 }
 
@@ -1754,6 +1764,7 @@ func (o *CreateJob) SetTasks(ctx context.Context, v []Task) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tasks = types.ListValueMust(t, vs)
 }
 
@@ -1983,6 +1994,7 @@ func (o *DbtOutput) SetArtifactsHeaders(ctx context.Context, v map[string]types.
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifacts_headers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ArtifactsHeaders = types.MapValueMust(t, vs)
 }
 
@@ -2098,6 +2110,7 @@ func (o *DbtTask) SetCommands(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Commands = types.ListValueMust(t, vs)
 }
 
@@ -2450,6 +2463,7 @@ func (o *EnforcePolicyComplianceResponse) SetJobClusterChanges(ctx context.Conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster_changes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobClusterChanges = types.ListValueMust(t, vs)
 }
 
@@ -2552,6 +2566,7 @@ func (o *ExportRunOutput) SetViews(ctx context.Context, v []ViewItem) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["views"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Views = types.ListValueMust(t, vs)
 }
 
@@ -2733,6 +2748,7 @@ func (o *ForEachStats) SetErrorMessageStats(ctx context.Context, v []ForEachTask
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error_message_stats"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ErrorMessageStats = types.ListValueMust(t, vs)
 }
 
@@ -3070,6 +3086,7 @@ func (o *GetJobPermissionLevelsResponse) SetPermissionLevels(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -3282,6 +3299,7 @@ func (o *GetPolicyComplianceResponse) SetViolations(ctx context.Context, v map[s
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Violations = types.MapValueMust(t, vs)
 }
 
@@ -3817,6 +3835,7 @@ func (o *JobAccessControlResponse) SetAllPermissions(ctx context.Context, v []Jo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -3978,6 +3997,7 @@ func (o *JobCompliance) SetViolations(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["violations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Violations = types.MapValueMust(t, vs)
 }
 
@@ -4150,6 +4170,7 @@ func (o *JobEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx contex
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
@@ -4175,6 +4196,7 @@ func (o *JobEmailNotifications) SetOnFailure(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnFailure = types.ListValueMust(t, vs)
 }
 
@@ -4200,6 +4222,7 @@ func (o *JobEmailNotifications) SetOnStart(ctx context.Context, v []types.String
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStart = types.ListValueMust(t, vs)
 }
 
@@ -4225,6 +4248,7 @@ func (o *JobEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Contex
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
@@ -4250,6 +4274,7 @@ func (o *JobEmailNotifications) SetOnSuccess(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnSuccess = types.ListValueMust(t, vs)
 }
 
@@ -4551,6 +4576,7 @@ func (o *JobPermission) SetInheritedFromObject(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -4629,6 +4655,7 @@ func (o *JobPermissions) SetAccessControlList(ctx context.Context, v []JobAccess
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -4748,6 +4775,7 @@ func (o *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []Jo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -5139,6 +5167,7 @@ func (o *JobSettings) SetEnvironments(ctx context.Context, v []JobEnvironment) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Environments = types.ListValueMust(t, vs)
 }
 
@@ -5216,6 +5245,7 @@ func (o *JobSettings) SetJobClusters(ctx context.Context, v []JobCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_cluster"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobClusters = types.ListValueMust(t, vs)
 }
 
@@ -5267,6 +5297,7 @@ func (o *JobSettings) SetParameters(ctx context.Context, v []JobParameterDefinit
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameter"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -5370,6 +5401,7 @@ func (o *JobSettings) SetTags(ctx context.Context, v map[string]types.String) {
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.MapValueMust(t, vs)
 }
 
@@ -5395,6 +5427,7 @@ func (o *JobSettings) SetTasks(ctx context.Context, v []Task) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tasks = types.ListValueMust(t, vs)
 }
 
@@ -5641,6 +5674,7 @@ func (o *JobsHealthRules) SetRules(ctx context.Context, v []JobsHealthRule) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Rules = types.ListValueMust(t, vs)
 }
 
@@ -5724,6 +5758,7 @@ func (o *ListJobComplianceForPolicyResponse) SetJobs(ctx context.Context, v []Jo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Jobs = types.ListValueMust(t, vs)
 }
 
@@ -5928,6 +5963,7 @@ func (o *ListJobsResponse) SetJobs(ctx context.Context, v []BaseJob) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jobs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Jobs = types.ListValueMust(t, vs)
 }
 
@@ -6110,6 +6146,7 @@ func (o *ListRunsResponse) SetRuns(ctx context.Context, v []BaseRun) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Runs = types.ListValueMust(t, vs)
 }
 
@@ -6274,6 +6311,7 @@ func (o *NotebookTask) SetBaseParameters(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
@@ -6499,6 +6537,7 @@ func (o *PythonWheelTask) SetNamedParameters(ctx context.Context, v map[string]t
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NamedParameters = types.MapValueMust(t, vs)
 }
 
@@ -6524,6 +6563,7 @@ func (o *PythonWheelTask) SetParameters(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -6774,6 +6814,7 @@ func (o *RepairHistoryItem) SetTaskRunIds(ctx context.Context, v []types.Int64) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_run_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TaskRunIds = types.ListValueMust(t, vs)
 }
 
@@ -6996,6 +7037,7 @@ func (o *RepairRun) SetDbtCommands(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DbtCommands = types.ListValueMust(t, vs)
 }
 
@@ -7021,6 +7063,7 @@ func (o *RepairRun) SetJarParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JarParams = types.ListValueMust(t, vs)
 }
 
@@ -7046,6 +7089,7 @@ func (o *RepairRun) SetJobParameters(ctx context.Context, v map[string]types.Str
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.MapValueMust(t, vs)
 }
 
@@ -7071,6 +7115,7 @@ func (o *RepairRun) SetNotebookParams(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NotebookParams = types.MapValueMust(t, vs)
 }
 
@@ -7122,6 +7167,7 @@ func (o *RepairRun) SetPythonNamedParams(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
@@ -7147,6 +7193,7 @@ func (o *RepairRun) SetPythonParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonParams = types.ListValueMust(t, vs)
 }
 
@@ -7172,6 +7219,7 @@ func (o *RepairRun) SetRerunTasks(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rerun_tasks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RerunTasks = types.ListValueMust(t, vs)
 }
 
@@ -7197,6 +7245,7 @@ func (o *RepairRun) SetSparkSubmitParams(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
@@ -7222,6 +7271,7 @@ func (o *RepairRun) SetSqlParams(ctx context.Context, v map[string]types.String)
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlParams = types.MapValueMust(t, vs)
 }
 
@@ -7497,6 +7547,7 @@ func (o *ResolvedDbtTaskValues) SetCommands(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Commands = types.ListValueMust(t, vs)
 }
 
@@ -7567,6 +7618,7 @@ func (o *ResolvedNotebookTaskValues) SetBaseParameters(ctx context.Context, v ma
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
@@ -7637,6 +7689,7 @@ func (o *ResolvedParamPairValues) SetParameters(ctx context.Context, v map[strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.MapValueMust(t, vs)
 }
 
@@ -7714,6 +7767,7 @@ func (o *ResolvedPythonWheelTaskValues) SetNamedParameters(ctx context.Context, 
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["named_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NamedParameters = types.MapValueMust(t, vs)
 }
 
@@ -7739,6 +7793,7 @@ func (o *ResolvedPythonWheelTaskValues) SetParameters(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -7816,6 +7871,7 @@ func (o *ResolvedRunJobTaskValues) SetJobParameters(ctx context.Context, v map[s
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.MapValueMust(t, vs)
 }
 
@@ -7841,6 +7897,7 @@ func (o *ResolvedRunJobTaskValues) SetParameters(ctx context.Context, v map[stri
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.MapValueMust(t, vs)
 }
 
@@ -7911,6 +7968,7 @@ func (o *ResolvedStringParamsValues) SetParameters(ctx context.Context, v []type
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -8659,6 +8717,7 @@ func (o *Run) SetIterations(ctx context.Context, v []RunTask) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["iterations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Iterations = types.ListValueMust(t, vs)
 }
 
@@ -8684,6 +8743,7 @@ func (o *Run) SetJobClusters(ctx context.Context, v []JobCluster) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_clusters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobClusters = types.ListValueMust(t, vs)
 }
 
@@ -8709,6 +8769,7 @@ func (o *Run) SetJobParameters(ctx context.Context, v []JobParameter) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.ListValueMust(t, vs)
 }
 
@@ -8760,6 +8821,7 @@ func (o *Run) SetRepairHistory(ctx context.Context, v []RepairHistoryItem) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repair_history"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RepairHistory = types.ListValueMust(t, vs)
 }
 
@@ -8863,6 +8925,7 @@ func (o *Run) SetTasks(ctx context.Context, v []RunTask) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tasks = types.ListValueMust(t, vs)
 }
 
@@ -9311,6 +9374,7 @@ func (o *RunJobTask) SetDbtCommands(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DbtCommands = types.ListValueMust(t, vs)
 }
 
@@ -9336,6 +9400,7 @@ func (o *RunJobTask) SetJarParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JarParams = types.ListValueMust(t, vs)
 }
 
@@ -9361,6 +9426,7 @@ func (o *RunJobTask) SetJobParameters(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.MapValueMust(t, vs)
 }
 
@@ -9386,6 +9452,7 @@ func (o *RunJobTask) SetNotebookParams(ctx context.Context, v map[string]types.S
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NotebookParams = types.MapValueMust(t, vs)
 }
 
@@ -9437,6 +9504,7 @@ func (o *RunJobTask) SetPythonNamedParams(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
@@ -9462,6 +9530,7 @@ func (o *RunJobTask) SetPythonParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonParams = types.ListValueMust(t, vs)
 }
 
@@ -9487,6 +9556,7 @@ func (o *RunJobTask) SetSparkSubmitParams(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
@@ -9512,6 +9582,7 @@ func (o *RunJobTask) SetSqlParams(ctx context.Context, v map[string]types.String
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlParams = types.MapValueMust(t, vs)
 }
 
@@ -9742,6 +9813,7 @@ func (o *RunNow) SetDbtCommands(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DbtCommands = types.ListValueMust(t, vs)
 }
 
@@ -9767,6 +9839,7 @@ func (o *RunNow) SetJarParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JarParams = types.ListValueMust(t, vs)
 }
 
@@ -9792,6 +9865,7 @@ func (o *RunNow) SetJobParameters(ctx context.Context, v map[string]types.String
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JobParameters = types.MapValueMust(t, vs)
 }
 
@@ -9817,6 +9891,7 @@ func (o *RunNow) SetNotebookParams(ctx context.Context, v map[string]types.Strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NotebookParams = types.MapValueMust(t, vs)
 }
 
@@ -9842,6 +9917,7 @@ func (o *RunNow) SetOnly(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["only"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Only = types.ListValueMust(t, vs)
 }
 
@@ -9893,6 +9969,7 @@ func (o *RunNow) SetPythonNamedParams(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
@@ -9918,6 +9995,7 @@ func (o *RunNow) SetPythonParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonParams = types.ListValueMust(t, vs)
 }
 
@@ -9969,6 +10047,7 @@ func (o *RunNow) SetSparkSubmitParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
@@ -9994,6 +10073,7 @@ func (o *RunNow) SetSqlParams(ctx context.Context, v map[string]types.String) {
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlParams = types.MapValueMust(t, vs)
 }
 
@@ -10469,6 +10549,7 @@ func (o *RunParameters) SetDbtCommands(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbt_commands"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DbtCommands = types.ListValueMust(t, vs)
 }
 
@@ -10494,6 +10575,7 @@ func (o *RunParameters) SetJarParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.JarParams = types.ListValueMust(t, vs)
 }
 
@@ -10519,6 +10601,7 @@ func (o *RunParameters) SetNotebookParams(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.NotebookParams = types.MapValueMust(t, vs)
 }
 
@@ -10570,6 +10653,7 @@ func (o *RunParameters) SetPythonNamedParams(ctx context.Context, v map[string]t
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_named_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonNamedParams = types.MapValueMust(t, vs)
 }
 
@@ -10595,6 +10679,7 @@ func (o *RunParameters) SetPythonParams(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["python_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PythonParams = types.ListValueMust(t, vs)
 }
 
@@ -10620,6 +10705,7 @@ func (o *RunParameters) SetSparkSubmitParams(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spark_submit_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SparkSubmitParams = types.ListValueMust(t, vs)
 }
 
@@ -10645,6 +10731,7 @@ func (o *RunParameters) SetSqlParams(ctx context.Context, v map[string]types.Str
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlParams = types.MapValueMust(t, vs)
 }
 
@@ -11270,6 +11357,7 @@ func (o *RunTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DependsOn = types.ListValueMust(t, vs)
 }
 
@@ -11373,6 +11461,7 @@ func (o *RunTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -11826,6 +11915,7 @@ func (o *SparkJarTask) SetParameters(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -11922,6 +12012,7 @@ func (o *SparkPythonTask) SetParameters(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -11998,6 +12089,7 @@ func (o *SparkSubmitTask) SetParameters(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -12090,6 +12182,7 @@ func (o *SqlAlertOutput) SetSqlStatements(ctx context.Context, v []SqlStatementO
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlStatements = types.ListValueMust(t, vs)
 }
 
@@ -12165,6 +12258,7 @@ func (o *SqlDashboardOutput) SetWidgets(ctx context.Context, v []SqlDashboardWid
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Widgets = types.ListValueMust(t, vs)
 }
 
@@ -12528,6 +12622,7 @@ func (o *SqlQueryOutput) SetSqlStatements(ctx context.Context, v []SqlStatementO
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_statements"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SqlStatements = types.ListValueMust(t, vs)
 }
 
@@ -12756,6 +12851,7 @@ func (o *SqlTask) SetParameters(ctx context.Context, v map[string]types.String) 
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.MapValueMust(t, vs)
 }
 
@@ -12861,6 +12957,7 @@ func (o *SqlTaskAlert) SetSubscriptions(ctx context.Context, v []SqlTaskSubscrip
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
@@ -12945,6 +13042,7 @@ func (o *SqlTaskDashboard) SetSubscriptions(ctx context.Context, v []SqlTaskSubs
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Subscriptions = types.ListValueMust(t, vs)
 }
 
@@ -13273,6 +13371,7 @@ func (o *SubmitRun) SetAccessControlList(ctx context.Context, v []JobAccessContr
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -13324,6 +13423,7 @@ func (o *SubmitRun) SetEnvironments(ctx context.Context, v []JobEnvironment) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Environments = types.ListValueMust(t, vs)
 }
 
@@ -13479,6 +13579,7 @@ func (o *SubmitRun) SetTasks(ctx context.Context, v []SubmitTask) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tasks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tasks = types.ListValueMust(t, vs)
 }
 
@@ -13863,6 +13964,7 @@ func (o *SubmitTask) SetDependsOn(ctx context.Context, v []TaskDependency) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DependsOn = types.ListValueMust(t, vs)
 }
 
@@ -13966,6 +14068,7 @@ func (o *SubmitTask) SetLibraries(ctx context.Context, v []compute_tf.Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -14341,6 +14444,7 @@ func (o *TableUpdateTriggerConfiguration) SetTableNames(ctx context.Context, v [
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TableNames = types.ListValueMust(t, vs)
 }
 
@@ -14689,6 +14793,7 @@ func (o *Task) SetDependsOn(ctx context.Context, v []TaskDependency) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["depends_on"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DependsOn = types.ListValueMust(t, vs)
 }
 
@@ -14792,6 +14897,7 @@ func (o *Task) SetLibraries(ctx context.Context, v []compute_tf.Library) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Libraries = types.ListValueMust(t, vs)
 }
 
@@ -15249,6 +15355,7 @@ func (o *TaskEmailNotifications) SetOnDurationWarningThresholdExceeded(ctx conte
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
@@ -15274,6 +15381,7 @@ func (o *TaskEmailNotifications) SetOnFailure(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnFailure = types.ListValueMust(t, vs)
 }
 
@@ -15299,6 +15407,7 @@ func (o *TaskEmailNotifications) SetOnStart(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStart = types.ListValueMust(t, vs)
 }
 
@@ -15324,6 +15433,7 @@ func (o *TaskEmailNotifications) SetOnStreamingBacklogExceeded(ctx context.Conte
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
@@ -15349,6 +15459,7 @@ func (o *TaskEmailNotifications) SetOnSuccess(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnSuccess = types.ListValueMust(t, vs)
 }
 
@@ -15817,6 +15928,7 @@ func (o *UpdateJob) SetFieldsToRemove(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields_to_remove"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FieldsToRemove = types.ListValueMust(t, vs)
 }
 
@@ -16085,6 +16197,7 @@ func (o *WebhookNotifications) SetOnDurationWarningThresholdExceeded(ctx context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_duration_warning_threshold_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnDurationWarningThresholdExceeded = types.ListValueMust(t, vs)
 }
 
@@ -16110,6 +16223,7 @@ func (o *WebhookNotifications) SetOnFailure(ctx context.Context, v []Webhook) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_failure"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnFailure = types.ListValueMust(t, vs)
 }
 
@@ -16135,6 +16249,7 @@ func (o *WebhookNotifications) SetOnStart(ctx context.Context, v []Webhook) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_start"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStart = types.ListValueMust(t, vs)
 }
 
@@ -16160,6 +16275,7 @@ func (o *WebhookNotifications) SetOnStreamingBacklogExceeded(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_streaming_backlog_exceeded"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnStreamingBacklogExceeded = types.ListValueMust(t, vs)
 }
 
@@ -16185,5 +16301,6 @@ func (o *WebhookNotifications) SetOnSuccess(ctx context.Context, v []Webhook) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnSuccess = types.ListValueMust(t, vs)
 }

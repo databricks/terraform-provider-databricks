@@ -792,6 +792,7 @@ func (o *AlertQuery) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -1550,6 +1551,7 @@ func (o *CreateQueryRequestQuery) SetParameters(ctx context.Context, v []QueryPa
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -1575,6 +1577,7 @@ func (o *CreateQueryRequestQuery) SetTags(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -2273,6 +2276,7 @@ func (o *Dashboard) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -2324,6 +2328,7 @@ func (o *Dashboard) SetWidgets(ctx context.Context, v []Widget) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widgets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Widgets = types.ListValueMust(t, vs)
 }
 
@@ -2409,6 +2414,7 @@ func (o *DashboardEditContent) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -2548,6 +2554,7 @@ func (o *DashboardPostContent) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -4047,6 +4054,7 @@ func (o *EndpointTags) SetCustomTags(ctx context.Context, v []EndpointTagPair) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.ListValueMust(t, vs)
 }
 
@@ -4155,6 +4163,7 @@ func (o *EnumValue) SetValues(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -4367,6 +4376,7 @@ func (o *ExecuteStatementRequest) SetParameters(ctx context.Context, v []Stateme
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -4482,6 +4492,7 @@ func (o *ExternalLink) SetHttpHeaders(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["http_headers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.HttpHeaders = types.MapValueMust(t, vs)
 }
 
@@ -4817,6 +4828,7 @@ func (o *GetResponse) SetAccessControlList(ctx context.Context, v []AccessContro
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -5022,6 +5034,7 @@ func (o *GetWarehousePermissionLevelsResponse) SetPermissionLevels(ctx context.C
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -5554,6 +5567,7 @@ func (o *GetWorkspaceWarehouseConfigResponse) SetDataAccessConfig(ctx context.Co
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_access_config"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataAccessConfig = types.ListValueMust(t, vs)
 }
 
@@ -5579,6 +5593,7 @@ func (o *GetWorkspaceWarehouseConfigResponse) SetEnabledWarehouseTypes(ctx conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enabled_warehouse_types"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnabledWarehouseTypes = types.ListValueMust(t, vs)
 }
 
@@ -6052,6 +6067,7 @@ func (o *LegacyQuery) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6103,6 +6119,7 @@ func (o *LegacyQuery) SetVisualizations(ctx context.Context, v []LegacyVisualiza
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["visualizations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Visualizations = types.ListValueMust(t, vs)
 }
 
@@ -6331,6 +6348,7 @@ func (o *ListAlertsResponse) SetResults(ctx context.Context, v []ListAlertsRespo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -6716,6 +6734,7 @@ func (o *ListQueriesResponse) SetRes(ctx context.Context, v []QueryInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["res"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Res = types.ListValueMust(t, vs)
 }
 
@@ -6880,6 +6899,7 @@ func (o *ListQueryObjectsResponse) SetResults(ctx context.Context, v []ListQuery
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -7016,6 +7036,7 @@ func (o *ListQueryObjectsResponseQuery) SetParameters(ctx context.Context, v []Q
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -7041,6 +7062,7 @@ func (o *ListQueryObjectsResponseQuery) SetTags(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -7124,6 +7146,7 @@ func (o *ListResponse) SetResults(ctx context.Context, v []Dashboard) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -7248,6 +7271,7 @@ func (o *ListVisualizationsForQueryResponse) SetResults(ctx context.Context, v [
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -7363,6 +7387,7 @@ func (o *ListWarehousesResponse) SetWarehouses(ctx context.Context, v []Endpoint
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warehouses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Warehouses = types.ListValueMust(t, vs)
 }
 
@@ -7748,6 +7773,7 @@ func (o *Query) SetParameters(ctx context.Context, v []QueryParameter) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -7773,6 +7799,7 @@ func (o *Query) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -7881,6 +7908,7 @@ func (o *QueryBackedValue) SetValues(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -7989,6 +8017,7 @@ func (o *QueryEditContent) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -8115,6 +8144,7 @@ func (o *QueryFilter) SetStatementIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statement_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.StatementIds = types.ListValueMust(t, vs)
 }
 
@@ -8140,6 +8170,7 @@ func (o *QueryFilter) SetStatuses(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statuses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Statuses = types.ListValueMust(t, vs)
 }
 
@@ -8165,6 +8196,7 @@ func (o *QueryFilter) SetUserIds(ctx context.Context, v []types.Int64) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.UserIds = types.ListValueMust(t, vs)
 }
 
@@ -8190,6 +8222,7 @@ func (o *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["warehouse_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.WarehouseIds = types.ListValueMust(t, vs)
 }
 
@@ -8463,6 +8496,7 @@ func (o *QueryList) SetResults(ctx context.Context, v []LegacyQuery) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -8688,6 +8722,7 @@ func (o *QueryOptions) SetParameters(ctx context.Context, v []Parameter) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -9044,6 +9079,7 @@ func (o *QueryPostContent) SetTags(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -9122,6 +9158,7 @@ func (o *RepeatedEndpointConfPairs) SetConfigPair(ctx context.Context, v []Endpo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config_pair"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ConfigPair = types.ListValueMust(t, vs)
 }
 
@@ -9147,6 +9184,7 @@ func (o *RepeatedEndpointConfPairs) SetConfigurationPairs(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["configuration_pairs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ConfigurationPairs = types.ListValueMust(t, vs)
 }
 
@@ -9379,6 +9417,7 @@ func (o *ResultData) SetDataArray(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_array"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataArray = types.ListValueMust(t, vs)
 }
 
@@ -9404,6 +9443,7 @@ func (o *ResultData) SetExternalLinks(ctx context.Context, v []ExternalLink) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_links"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExternalLinks = types.ListValueMust(t, vs)
 }
 
@@ -9505,6 +9545,7 @@ func (o *ResultManifest) SetChunks(ctx context.Context, v []BaseChunkInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["chunks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Chunks = types.ListValueMust(t, vs)
 }
 
@@ -9606,6 +9647,7 @@ func (o *ResultSchema) SetColumns(ctx context.Context, v []ColumnInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
 }
 
@@ -9731,6 +9773,7 @@ func (o *SetRequest) SetAccessControlList(ctx context.Context, v []AccessControl
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -9809,6 +9852,7 @@ func (o *SetResponse) SetAccessControlList(ctx context.Context, v []AccessContro
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -9986,6 +10030,7 @@ func (o *SetWorkspaceWarehouseConfigRequest) SetDataAccessConfig(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_access_config"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataAccessConfig = types.ListValueMust(t, vs)
 }
 
@@ -10011,6 +10056,7 @@ func (o *SetWorkspaceWarehouseConfigRequest) SetEnabledWarehouseTypes(ctx contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["enabled_warehouse_types"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnabledWarehouseTypes = types.ListValueMust(t, vs)
 }
 
@@ -10662,6 +10708,7 @@ func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]type
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.MapValueMust(t, vs)
 }
 
@@ -11346,6 +11393,7 @@ func (o *UpdateQueryRequestQuery) SetParameters(ctx context.Context, v []QueryPa
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -11371,6 +11419,7 @@ func (o *UpdateQueryRequestQuery) SetTags(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -11811,6 +11860,7 @@ func (o *WarehouseAccessControlResponse) SetAllPermissions(ctx context.Context, 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -11889,6 +11939,7 @@ func (o *WarehousePermission) SetInheritedFromObject(ctx context.Context, v []ty
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -11967,6 +12018,7 @@ func (o *WarehousePermissions) SetAccessControlList(ctx context.Context, v []War
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -12086,6 +12138,7 @@ func (o *WarehousePermissionsRequest) SetAccessControlList(ctx context.Context, 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 

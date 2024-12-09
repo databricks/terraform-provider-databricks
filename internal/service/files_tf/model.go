@@ -1162,6 +1162,7 @@ func (o *ListDirectoryResponse) SetContents(ctx context.Context, v []DirectoryEn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["contents"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Contents = types.ListValueMust(t, vs)
 }
 
@@ -1234,6 +1235,7 @@ func (o *ListStatusResponse) SetFiles(ctx context.Context, v []FileInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Files = types.ListValueMust(t, vs)
 }
 

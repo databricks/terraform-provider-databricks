@@ -381,6 +381,7 @@ func (o *DeleteDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failed_primary_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 
@@ -458,6 +459,7 @@ func (o *DeleteDataVectorIndexRequest) SetPrimaryKeys(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrimaryKeys = types.ListValueMust(t, vs)
 }
 
@@ -803,6 +805,7 @@ func (o *DeltaSyncVectorIndexSpecRequest) SetColumnsToSync(ctx context.Context, 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_sync"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ColumnsToSync = types.ListValueMust(t, vs)
 }
 
@@ -828,6 +831,7 @@ func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingSourceColumns(ctx context.
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
 }
 
@@ -853,6 +857,7 @@ func (o *DeltaSyncVectorIndexSpecRequest) SetEmbeddingVectorColumns(ctx context.
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
 }
 
@@ -955,6 +960,7 @@ func (o *DeltaSyncVectorIndexSpecResponse) SetEmbeddingSourceColumns(ctx context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
 }
 
@@ -980,6 +986,7 @@ func (o *DeltaSyncVectorIndexSpecResponse) SetEmbeddingVectorColumns(ctx context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
 }
 
@@ -1067,6 +1074,7 @@ func (o *DirectAccessVectorIndexSpec) SetEmbeddingSourceColumns(ctx context.Cont
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_source_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingSourceColumns = types.ListValueMust(t, vs)
 }
 
@@ -1092,6 +1100,7 @@ func (o *DirectAccessVectorIndexSpec) SetEmbeddingVectorColumns(ctx context.Cont
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding_vector_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddingVectorColumns = types.ListValueMust(t, vs)
 }
 
@@ -1497,6 +1506,7 @@ func (o *ListEndpointResponse) SetEndpoints(ctx context.Context, v []EndpointInf
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoints"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
@@ -1657,6 +1667,7 @@ func (o *ListValue) SetValues(ctx context.Context, v []Value) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -1733,6 +1744,7 @@ func (o *ListVectorIndexesResponse) SetVectorIndexes(ctx context.Context, v []Mi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["vector_indexes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.VectorIndexes = types.ListValueMust(t, vs)
 }
 
@@ -2034,6 +2046,7 @@ func (o *QueryVectorIndexRequest) SetColumns(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
 }
 
@@ -2059,6 +2072,7 @@ func (o *QueryVectorIndexRequest) SetQueryVector(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_vector"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.QueryVector = types.ListValueMust(t, vs)
 }
 
@@ -2248,6 +2262,7 @@ func (o *ResultData) SetDataArray(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_array"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataArray = types.ListValueMust(t, vs)
 }
 
@@ -2324,6 +2339,7 @@ func (o *ResultManifest) SetColumns(ctx context.Context, v []ColumnInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
 }
 
@@ -2451,6 +2467,7 @@ func (o *ScanVectorIndexResponse) SetData(ctx context.Context, v []Struct) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Data = types.ListValueMust(t, vs)
 }
 
@@ -2522,6 +2539,7 @@ func (o *Struct) SetFields(ctx context.Context, v []MapStringValueEntry) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fields"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Fields = types.ListValueMust(t, vs)
 }
 
@@ -2677,6 +2695,7 @@ func (o *UpsertDataResult) SetFailedPrimaryKeys(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["failed_primary_keys"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FailedPrimaryKeys = types.ListValueMust(t, vs)
 }
 

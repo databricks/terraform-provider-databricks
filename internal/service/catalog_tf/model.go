@@ -772,6 +772,7 @@ func (o *ArtifactAllowlistInfo) SetArtifactMatchers(ctx context.Context, v []Art
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifact_matchers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ArtifactMatchers = types.ListValueMust(t, vs)
 }
 
@@ -1662,6 +1663,7 @@ func (o *CatalogInfo) SetOptions(ctx context.Context, v map[string]types.String)
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.MapValueMust(t, vs)
 }
 
@@ -1687,6 +1689,7 @@ func (o *CatalogInfo) SetProperties(ctx context.Context, v map[string]types.Stri
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -1957,6 +1960,7 @@ func (o *ColumnMask) SetUsingColumnNames(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["using_column_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.UsingColumnNames = types.ListValueMust(t, vs)
 }
 
@@ -2107,6 +2111,7 @@ func (o *ConnectionInfo) SetOptions(ctx context.Context, v map[string]types.Stri
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.MapValueMust(t, vs)
 }
 
@@ -2132,6 +2137,7 @@ func (o *ConnectionInfo) SetProperties(ctx context.Context, v map[string]types.S
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -2348,6 +2354,7 @@ func (o *CreateCatalog) SetOptions(ctx context.Context, v map[string]types.Strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.MapValueMust(t, vs)
 }
 
@@ -2373,6 +2380,7 @@ func (o *CreateCatalog) SetProperties(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -2468,6 +2476,7 @@ func (o *CreateConnection) SetOptions(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.MapValueMust(t, vs)
 }
 
@@ -2493,6 +2502,7 @@ func (o *CreateConnection) SetProperties(ctx context.Context, v map[string]types
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -3340,6 +3350,7 @@ func (o *CreateMonitor) SetCustomMetrics(ctx context.Context, v []MonitorMetric)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomMetrics = types.ListValueMust(t, vs)
 }
 
@@ -3469,6 +3480,7 @@ func (o *CreateMonitor) SetSlicingExprs(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SlicingExprs = types.ListValueMust(t, vs)
 }
 
@@ -3776,6 +3788,7 @@ func (o *CreateSchema) SetProperties(ctx context.Context, v map[string]types.Str
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -4453,6 +4466,7 @@ func (o *CurrentWorkspaceBindings) SetWorkspaces(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Workspaces = types.ListValueMust(t, vs)
 }
 
@@ -5602,6 +5616,7 @@ func (o *DeltaRuntimePropertiesKvPairs) SetDeltaRuntimeProperties(ctx context.Co
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delta_runtime_properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DeltaRuntimeProperties = types.MapValueMust(t, vs)
 }
 
@@ -5781,6 +5796,7 @@ func (o *DependencyList) SetDependencies(ctx context.Context, v []Dependency) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
@@ -5936,6 +5952,7 @@ func (o *EffectivePermissionsList) SetPrivilegeAssignments(ctx context.Context, 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
@@ -6119,6 +6136,7 @@ func (o *EffectivePrivilegeAssignment) SetPrivileges(ctx context.Context, v []Ef
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Privileges = types.ListValueMust(t, vs)
 }
 
@@ -6598,6 +6616,7 @@ func (o *ForeignKeyConstraint) SetChildColumns(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["child_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ChildColumns = types.ListValueMust(t, vs)
 }
 
@@ -6623,6 +6642,7 @@ func (o *ForeignKeyConstraint) SetParentColumns(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parent_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ParentColumns = types.ListValueMust(t, vs)
 }
 
@@ -7078,6 +7098,7 @@ func (o *FunctionParameterInfos) SetParameters(ctx context.Context, v []Function
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Parameters = types.ListValueMust(t, vs)
 }
 
@@ -7246,6 +7267,7 @@ func (o *GenerateTemporaryServiceCredentialAzureOptions) SetResources(ctx contex
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
 }
 
@@ -9045,6 +9067,7 @@ func (o *ListAccountMetastoreAssignmentsResponse) SetWorkspaceIds(ctx context.Co
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.WorkspaceIds = types.ListValueMust(t, vs)
 }
 
@@ -9159,6 +9182,7 @@ func (o *ListAccountStorageCredentialsResponse) SetStorageCredentials(ctx contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["storage_credentials"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
@@ -9296,6 +9320,7 @@ func (o *ListCatalogsResponse) SetCatalogs(ctx context.Context, v []CatalogInfo)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["catalogs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Catalogs = types.ListValueMust(t, vs)
 }
 
@@ -9425,6 +9450,7 @@ func (o *ListConnectionsResponse) SetConnections(ctx context.Context, v []Connec
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["connections"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Connections = types.ListValueMust(t, vs)
 }
 
@@ -9556,6 +9582,7 @@ func (o *ListCredentialsResponse) SetCredentials(ctx context.Context, v []Creden
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credentials"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Credentials = types.ListValueMust(t, vs)
 }
 
@@ -9690,6 +9717,7 @@ func (o *ListExternalLocationsResponse) SetExternalLocations(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["external_locations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExternalLocations = types.ListValueMust(t, vs)
 }
 
@@ -9832,6 +9860,7 @@ func (o *ListFunctionsResponse) SetFunctions(ctx context.Context, v []FunctionIn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["functions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Functions = types.ListValueMust(t, vs)
 }
 
@@ -9903,6 +9932,7 @@ func (o *ListMetastoresResponse) SetMetastores(ctx context.Context, v []Metastor
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metastores"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Metastores = types.ListValueMust(t, vs)
 }
 
@@ -10042,6 +10072,7 @@ func (o *ListModelVersionsResponse) SetModelVersions(ctx context.Context, v []Mo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
@@ -10166,6 +10197,7 @@ func (o *ListQuotasResponse) SetQuotas(ctx context.Context, v []QuotaInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["quotas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Quotas = types.ListValueMust(t, vs)
 }
 
@@ -10363,6 +10395,7 @@ func (o *ListRegisteredModelsResponse) SetRegisteredModels(ctx context.Context, 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RegisteredModels = types.ListValueMust(t, vs)
 }
 
@@ -10501,6 +10534,7 @@ func (o *ListSchemasResponse) SetSchemas(ctx context.Context, v []SchemaInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -10630,6 +10664,7 @@ func (o *ListStorageCredentialsResponse) SetStorageCredentials(ctx context.Conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["storage_credentials"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.StorageCredentials = types.ListValueMust(t, vs)
 }
 
@@ -10834,6 +10869,7 @@ func (o *ListSystemSchemasResponse) SetSchemas(ctx context.Context, v []SystemSc
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schemas"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Schemas = types.ListValueMust(t, vs)
 }
 
@@ -10911,6 +10947,7 @@ func (o *ListTableSummariesResponse) SetTables(ctx context.Context, v []TableSum
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tables = types.ListValueMust(t, vs)
 }
 
@@ -11074,6 +11111,7 @@ func (o *ListTablesResponse) SetTables(ctx context.Context, v []TableInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tables = types.ListValueMust(t, vs)
 }
 
@@ -11223,6 +11261,7 @@ func (o *ListVolumesResponseContent) SetVolumes(ctx context.Context, v []VolumeI
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Volumes = types.ListValueMust(t, vs)
 }
 
@@ -11549,6 +11588,7 @@ func (o *ModelVersionInfo) SetAliases(ctx context.Context, v []RegisteredModelAl
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Aliases = types.ListValueMust(t, vs)
 }
 
@@ -11742,6 +11782,7 @@ func (o *MonitorDestination) SetEmailAddresses(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["email_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmailAddresses = types.ListValueMust(t, vs)
 }
 
@@ -11851,6 +11892,7 @@ func (o *MonitorInferenceLog) SetGranularities(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["granularities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Granularities = types.ListValueMust(t, vs)
 }
 
@@ -12024,6 +12066,7 @@ func (o *MonitorInfo) SetCustomMetrics(ctx context.Context, v []MonitorMetric) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomMetrics = types.ListValueMust(t, vs)
 }
 
@@ -12153,6 +12196,7 @@ func (o *MonitorInfo) SetSlicingExprs(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SlicingExprs = types.ListValueMust(t, vs)
 }
 
@@ -12306,6 +12350,7 @@ func (o *MonitorMetric) SetInputColumns(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InputColumns = types.ListValueMust(t, vs)
 }
 
@@ -12548,6 +12593,7 @@ func (o *MonitorRefreshListResponse) SetRefreshes(ctx context.Context, v []Monit
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["refreshes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Refreshes = types.ListValueMust(t, vs)
 }
 
@@ -12667,6 +12713,7 @@ func (o *MonitorTimeSeries) SetGranularities(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["granularities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Granularities = types.ListValueMust(t, vs)
 }
 
@@ -12941,6 +12988,7 @@ func (o *OnlineTableSpec) SetPrimaryKeyColumns(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["primary_key_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrimaryKeyColumns = types.ListValueMust(t, vs)
 }
 
@@ -13332,6 +13380,7 @@ func (o *PermissionsChange) SetAdd(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Add = types.ListValueMust(t, vs)
 }
 
@@ -13357,6 +13406,7 @@ func (o *PermissionsChange) SetRemove(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remove"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Remove = types.ListValueMust(t, vs)
 }
 
@@ -13428,6 +13478,7 @@ func (o *PermissionsList) SetPrivilegeAssignments(ctx context.Context, v []Privi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privilege_assignments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
@@ -13564,6 +13615,7 @@ func (o *PrimaryKeyConstraint) SetChildColumns(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["child_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ChildColumns = types.ListValueMust(t, vs)
 }
 
@@ -13639,6 +13691,7 @@ func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["privileges"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Privileges = types.ListValueMust(t, vs)
 }
 
@@ -14187,6 +14240,7 @@ func (o *RegisteredModelInfo) SetAliases(ctx context.Context, v []RegisteredMode
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Aliases = types.ListValueMust(t, vs)
 }
 
@@ -14401,6 +14455,7 @@ func (o *SchemaInfo) SetProperties(ctx context.Context, v map[string]types.Strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -14476,6 +14531,7 @@ func (o *SetArtifactAllowlist) SetArtifactMatchers(ctx context.Context, v []Arti
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["artifact_matchers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ArtifactMatchers = types.ListValueMust(t, vs)
 }
 
@@ -15333,6 +15389,7 @@ func (o *TableInfo) SetColumns(ctx context.Context, v []ColumnInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
 }
 
@@ -15436,6 +15493,7 @@ func (o *TableInfo) SetProperties(ctx context.Context, v map[string]types.String
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -15487,6 +15545,7 @@ func (o *TableInfo) SetTableConstraints(ctx context.Context, v []TableConstraint
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_constraints"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TableConstraints = types.ListValueMust(t, vs)
 }
 
@@ -15590,6 +15649,7 @@ func (o *TableRowFilter) SetInputColumnNames(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_column_names"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InputColumnNames = types.ListValueMust(t, vs)
 }
 
@@ -16050,6 +16110,7 @@ func (o *UpdateCatalog) SetProperties(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -16133,6 +16194,7 @@ func (o *UpdateConnection) SetOptions(ctx context.Context, v map[string]types.St
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Options = types.MapValueMust(t, vs)
 }
 
@@ -16798,6 +16860,7 @@ func (o *UpdateMonitor) SetCustomMetrics(ctx context.Context, v []MonitorMetric)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomMetrics = types.ListValueMust(t, vs)
 }
 
@@ -16927,6 +16990,7 @@ func (o *UpdateMonitor) SetSlicingExprs(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["slicing_exprs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SlicingExprs = types.ListValueMust(t, vs)
 }
 
@@ -17058,6 +17122,7 @@ func (o *UpdatePermissions) SetChanges(ctx context.Context, v []PermissionsChang
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["changes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Changes = types.ListValueMust(t, vs)
 }
 
@@ -17240,6 +17305,7 @@ func (o *UpdateSchema) SetProperties(ctx context.Context, v map[string]types.Str
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Properties = types.MapValueMust(t, vs)
 }
 
@@ -17661,6 +17727,7 @@ func (o *UpdateWorkspaceBindings) SetAssignWorkspaces(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assign_workspaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AssignWorkspaces = types.ListValueMust(t, vs)
 }
 
@@ -17686,6 +17753,7 @@ func (o *UpdateWorkspaceBindings) SetUnassignWorkspaces(ctx context.Context, v [
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["unassign_workspaces"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.UnassignWorkspaces = types.ListValueMust(t, vs)
 }
 
@@ -17772,6 +17840,7 @@ func (o *UpdateWorkspaceBindingsParameters) SetAdd(ctx context.Context, v []Work
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Add = types.ListValueMust(t, vs)
 }
 
@@ -17797,6 +17866,7 @@ func (o *UpdateWorkspaceBindingsParameters) SetRemove(ctx context.Context, v []W
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remove"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Remove = types.ListValueMust(t, vs)
 }
 
@@ -18003,6 +18073,7 @@ func (o *ValidateCredentialResponse) SetResults(ctx context.Context, v []Credent
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -18298,6 +18369,7 @@ func (o *ValidateStorageCredentialResponse) SetResults(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -18609,5 +18681,6 @@ func (o *WorkspaceBindingsResponse) SetBindings(ctx context.Context, v []Workspa
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["bindings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Bindings = types.ListValueMust(t, vs)
 }

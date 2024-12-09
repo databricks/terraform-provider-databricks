@@ -217,6 +217,7 @@ func (o *AibiDashboardEmbeddingApprovedDomains) SetApprovedDomains(ctx context.C
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["approved_domains"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ApprovedDomains = types.ListValueMust(t, vs)
 }
 
@@ -885,6 +886,7 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_standards"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
@@ -1262,6 +1264,7 @@ func (o *CreateIpAccessList) SetIpAddresses(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAddresses = types.ListValueMust(t, vs)
 }
 
@@ -1843,6 +1846,7 @@ func (o *CspEnablementAccount) SetComplianceStandards(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_standards"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ComplianceStandards = types.ListValueMust(t, vs)
 }
 
@@ -3291,6 +3295,7 @@ func (o *EmailConfig) SetAddresses(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Addresses = types.ListValueMust(t, vs)
 }
 
@@ -3680,6 +3685,7 @@ func (o *ExchangeToken) SetScopes(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
@@ -3792,6 +3798,7 @@ func (o *ExchangeTokenRequest) SetScopes(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Scopes = types.ListValueMust(t, vs)
 }
 
@@ -3817,6 +3824,7 @@ func (o *ExchangeTokenRequest) SetTokenType(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokenType"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TokenType = types.ListValueMust(t, vs)
 }
 
@@ -3888,6 +3896,7 @@ func (o *ExchangeTokenResponse) SetValues(ctx context.Context, v []ExchangeToken
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Values = types.ListValueMust(t, vs)
 }
 
@@ -4791,6 +4800,7 @@ func (o *GetIpAccessListsResponse) SetIpAccessLists(ctx context.Context, v []IpA
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_lists"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
@@ -5177,6 +5187,7 @@ func (o *GetTokenPermissionLevelsResponse) SetPermissionLevels(ctx context.Conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -5362,6 +5373,7 @@ func (o *IpAccessListInfo) SetIpAddresses(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAddresses = types.ListValueMust(t, vs)
 }
 
@@ -5433,6 +5445,7 @@ func (o *ListIpAccessListResponse) SetIpAccessLists(ctx context.Context, v []IpA
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_lists"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
@@ -5508,6 +5521,7 @@ func (o *ListNccAzurePrivateEndpointRulesResponse) SetItems(ctx context.Context,
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Items = types.ListValueMust(t, vs)
 }
 
@@ -5626,6 +5640,7 @@ func (o *ListNetworkConnectivityConfigurationsResponse) SetItems(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["items"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Items = types.ListValueMust(t, vs)
 }
 
@@ -5747,6 +5762,7 @@ func (o *ListNotificationDestinationsResponse) SetResults(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
 }
 
@@ -5916,6 +5932,7 @@ func (o *ListPublicTokensResponse) SetTokenInfos(ctx context.Context, v []Public
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_infos"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TokenInfos = types.ListValueMust(t, vs)
 }
 
@@ -6035,6 +6052,7 @@ func (o *ListTokensResponse) SetTokenInfos(ctx context.Context, v []TokenInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_infos"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TokenInfos = types.ListValueMust(t, vs)
 }
 
@@ -6155,6 +6173,7 @@ func (o *NccAwsStableIpRule) SetCidrBlocks(ctx context.Context, v []types.String
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cidr_blocks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.CidrBlocks = types.ListValueMust(t, vs)
 }
 
@@ -6334,6 +6353,7 @@ func (o *NccAzureServiceEndpointRule) SetSubnets(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subnets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Subnets = types.ListValueMust(t, vs)
 }
 
@@ -6359,6 +6379,7 @@ func (o *NccAzureServiceEndpointRule) SetTargetServices(ctx context.Context, v [
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["target_services"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TargetServices = types.ListValueMust(t, vs)
 }
 
@@ -6653,6 +6674,7 @@ func (o *NccEgressTargetRules) SetAzurePrivateEndpointRules(ctx context.Context,
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_private_endpoint_rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AzurePrivateEndpointRules = types.ListValueMust(t, vs)
 }
 
@@ -7217,6 +7239,7 @@ func (o *ReplaceIpAccessList) SetIpAddresses(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAddresses = types.ListValueMust(t, vs)
 }
 
@@ -7727,6 +7750,7 @@ func (o *TokenAccessControlResponse) SetAllPermissions(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -7881,6 +7905,7 @@ func (o *TokenPermission) SetInheritedFromObject(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -7959,6 +7984,7 @@ func (o *TokenPermissions) SetAccessControlList(ctx context.Context, v []TokenAc
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -8074,6 +8100,7 @@ func (o *TokenPermissionsRequest) SetAccessControlList(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -9110,6 +9137,7 @@ func (o *UpdateIpAccessList) SetIpAddresses(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAddresses = types.ListValueMust(t, vs)
 }
 

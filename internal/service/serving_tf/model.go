@@ -219,6 +219,7 @@ func (o *AiGatewayConfig) SetRateLimits(ctx context.Context, v []AiGatewayRateLi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -336,6 +337,7 @@ func (o *AiGatewayGuardrailParameters) SetInvalidKeywords(ctx context.Context, v
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["invalid_keywords"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InvalidKeywords = types.ListValueMust(t, vs)
 }
 
@@ -387,6 +389,7 @@ func (o *AiGatewayGuardrailParameters) SetValidTopics(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["valid_topics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ValidTopics = types.ListValueMust(t, vs)
 }
 
@@ -1393,6 +1396,7 @@ func (o *CreateServingEndpoint) SetRateLimits(ctx context.Context, v []RateLimit
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -1418,6 +1422,7 @@ func (o *CreateServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -1563,6 +1568,7 @@ func (o *DataframeSplitInput) SetColumns(ctx context.Context, v []types.Object) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
 }
 
@@ -1588,6 +1594,7 @@ func (o *DataframeSplitInput) SetData(ctx context.Context, v []types.Object) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Data = types.ListValueMust(t, vs)
 }
 
@@ -1613,6 +1620,7 @@ func (o *DataframeSplitInput) SetIndex(ctx context.Context, v []types.Int64) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["index"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Index = types.ListValueMust(t, vs)
 }
 
@@ -1770,6 +1778,7 @@ func (o *EmbeddingsV1ResponseEmbeddingElement) SetEmbedding(ctx context.Context,
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedding"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Embedding = types.ListValueMust(t, vs)
 }
 
@@ -1896,6 +1905,7 @@ func (o *EndpointCoreConfigInput) SetServedEntities(ctx context.Context, v []Ser
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedEntities = types.ListValueMust(t, vs)
 }
 
@@ -1921,6 +1931,7 @@ func (o *EndpointCoreConfigInput) SetServedModels(ctx context.Context, v []Serve
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedModels = types.ListValueMust(t, vs)
 }
 
@@ -2071,6 +2082,7 @@ func (o *EndpointCoreConfigOutput) SetServedEntities(ctx context.Context, v []Se
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedEntities = types.ListValueMust(t, vs)
 }
 
@@ -2096,6 +2108,7 @@ func (o *EndpointCoreConfigOutput) SetServedModels(ctx context.Context, v []Serv
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedModels = types.ListValueMust(t, vs)
 }
 
@@ -2201,6 +2214,7 @@ func (o *EndpointCoreConfigSummary) SetServedEntities(ctx context.Context, v []S
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedEntities = types.ListValueMust(t, vs)
 }
 
@@ -2226,6 +2240,7 @@ func (o *EndpointCoreConfigSummary) SetServedModels(ctx context.Context, v []Ser
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedModels = types.ListValueMust(t, vs)
 }
 
@@ -2356,6 +2371,7 @@ func (o *EndpointPendingConfig) SetServedEntities(ctx context.Context, v []Serve
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedEntities = types.ListValueMust(t, vs)
 }
 
@@ -2381,6 +2397,7 @@ func (o *EndpointPendingConfig) SetServedModels(ctx context.Context, v []ServedM
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ServedModels = types.ListValueMust(t, vs)
 }
 
@@ -3211,6 +3228,7 @@ func (o *GetServingEndpointPermissionLevelsResponse) SetPermissionLevels(ctx con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -3441,6 +3459,7 @@ func (o *ListEndpointsResponse) SetEndpoints(ctx context.Context, v []ServingEnd
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["endpoints"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Endpoints = types.ListValueMust(t, vs)
 }
 
@@ -3808,6 +3827,7 @@ func (o *PatchServingEndpointTags) SetAddTags(ctx context.Context, v []EndpointT
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["add_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AddTags = types.ListValueMust(t, vs)
 }
 
@@ -3833,6 +3853,7 @@ func (o *PatchServingEndpointTags) SetDeleteTags(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["delete_tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DeleteTags = types.ListValueMust(t, vs)
 }
 
@@ -4038,6 +4059,7 @@ func (o *PutAiGatewayRequest) SetRateLimits(ctx context.Context, v []AiGatewayRa
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -4213,6 +4235,7 @@ func (o *PutAiGatewayResponse) SetRateLimits(ctx context.Context, v []AiGatewayR
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -4316,6 +4339,7 @@ func (o *PutRequest) SetRateLimits(ctx context.Context, v []RateLimit) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -4387,6 +4411,7 @@ func (o *PutResponse) SetRateLimits(ctx context.Context, v []RateLimit) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["rate_limits"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RateLimits = types.ListValueMust(t, vs)
 }
 
@@ -4546,6 +4571,7 @@ func (o *QueryEndpointInput) SetDataframeRecords(ctx context.Context, v []types.
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataframe_records"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DataframeRecords = types.ListValueMust(t, vs)
 }
 
@@ -4597,6 +4623,7 @@ func (o *QueryEndpointInput) SetExtraParams(ctx context.Context, v map[string]ty
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["extra_params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExtraParams = types.MapValueMust(t, vs)
 }
 
@@ -4622,6 +4649,7 @@ func (o *QueryEndpointInput) SetInstances(ctx context.Context, v []types.Object)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["instances"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Instances = types.ListValueMust(t, vs)
 }
 
@@ -4647,6 +4675,7 @@ func (o *QueryEndpointInput) SetMessages(ctx context.Context, v []ChatMessage) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["messages"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Messages = types.ListValueMust(t, vs)
 }
 
@@ -4672,6 +4701,7 @@ func (o *QueryEndpointInput) SetStop(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stop"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stop = types.ListValueMust(t, vs)
 }
 
@@ -4794,6 +4824,7 @@ func (o *QueryEndpointResponse) SetChoices(ctx context.Context, v []V1ResponseCh
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["choices"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Choices = types.ListValueMust(t, vs)
 }
 
@@ -4819,6 +4850,7 @@ func (o *QueryEndpointResponse) SetData(ctx context.Context, v []EmbeddingsV1Res
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Data = types.ListValueMust(t, vs)
 }
 
@@ -4844,6 +4876,7 @@ func (o *QueryEndpointResponse) SetPredictions(ctx context.Context, v []types.Ob
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["predictions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Predictions = types.ListValueMust(t, vs)
 }
 
@@ -5121,6 +5154,7 @@ func (o *ServedEntityInput) SetEnvironmentVars(ctx context.Context, v map[string
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnvironmentVars = types.MapValueMust(t, vs)
 }
 
@@ -5313,6 +5347,7 @@ func (o *ServedEntityOutput) SetEnvironmentVars(ctx context.Context, v map[strin
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnvironmentVars = types.MapValueMust(t, vs)
 }
 
@@ -5649,6 +5684,7 @@ func (o *ServedModelInput) SetEnvironmentVars(ctx context.Context, v map[string]
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnvironmentVars = types.MapValueMust(t, vs)
 }
 
@@ -5784,6 +5820,7 @@ func (o *ServedModelOutput) SetEnvironmentVars(ctx context.Context, v map[string
 		vs[k] = e
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["environment_vars"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EnvironmentVars = types.MapValueMust(t, vs)
 }
 
@@ -6158,6 +6195,7 @@ func (o *ServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6299,6 +6337,7 @@ func (o *ServingEndpointAccessControlResponse) SetAllPermissions(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -6574,6 +6613,7 @@ func (o *ServingEndpointDetailed) SetTags(ctx context.Context, v []EndpointTag) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6652,6 +6692,7 @@ func (o *ServingEndpointPermission) SetInheritedFromObject(ctx context.Context, 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -6730,6 +6771,7 @@ func (o *ServingEndpointPermissions) SetAccessControlList(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -6849,6 +6891,7 @@ func (o *ServingEndpointPermissionsRequest) SetAccessControlList(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -6920,6 +6963,7 @@ func (o *TrafficConfig) SetRoutes(ctx context.Context, v []Route) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Routes = types.ListValueMust(t, vs)
 }
 

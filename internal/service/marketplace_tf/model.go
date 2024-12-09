@@ -204,6 +204,7 @@ func (o *BatchGetListingsRequest) SetIds(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Ids = types.ListValueMust(t, vs)
 }
 
@@ -274,6 +275,7 @@ func (o *BatchGetListingsResponse) SetListings(ctx context.Context, v []Listing)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Listings = types.ListValueMust(t, vs)
 }
 
@@ -345,6 +347,7 @@ func (o *BatchGetProvidersRequest) SetIds(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Ids = types.ListValueMust(t, vs)
 }
 
@@ -415,6 +418,7 @@ func (o *BatchGetProvidersResponse) SetProviders(ctx context.Context, v []Provid
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Providers = types.ListValueMust(t, vs)
 }
 
@@ -2004,6 +2008,7 @@ func (o *Exchange) SetFilters(ctx context.Context, v []ExchangeFilter) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Filters = types.ListValueMust(t, vs)
 }
 
@@ -2029,6 +2034,7 @@ func (o *Exchange) SetLinkedListings(ctx context.Context, v []ExchangeListing) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["linked_listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LinkedListings = types.ListValueMust(t, vs)
 }
 
@@ -2712,6 +2718,7 @@ func (o *GetListingContentMetadataResponse) SetSharedDataObjects(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["shared_data_objects"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.SharedDataObjects = types.ListValueMust(t, vs)
 }
 
@@ -2945,6 +2952,7 @@ func (o *GetListingsResponse) SetListings(ctx context.Context, v []Listing) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Listings = types.ListValueMust(t, vs)
 }
 
@@ -3057,6 +3065,7 @@ func (o *GetPersonalizationRequestResponse) SetPersonalizationRequests(ctx conte
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["personalization_requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
@@ -3388,6 +3397,7 @@ func (o *InstallationDetail) SetTokens(ctx context.Context, v []TokenInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tokens"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tokens = types.ListValueMust(t, vs)
 }
 
@@ -3508,6 +3518,7 @@ func (o *ListAllInstallationsResponse) SetInstallations(ctx context.Context, v [
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Installations = types.ListValueMust(t, vs)
 }
 
@@ -3628,6 +3639,7 @@ func (o *ListAllPersonalizationRequestsResponse) SetPersonalizationRequests(ctx 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["personalization_requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PersonalizationRequests = types.ListValueMust(t, vs)
 }
 
@@ -3752,6 +3764,7 @@ func (o *ListExchangeFiltersResponse) SetFilters(ctx context.Context, v []Exchan
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filters"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Filters = types.ListValueMust(t, vs)
 }
 
@@ -3876,6 +3889,7 @@ func (o *ListExchangesForListingResponse) SetExchangeListing(ctx context.Context
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_listing"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExchangeListing = types.ListValueMust(t, vs)
 }
 
@@ -3996,6 +4010,7 @@ func (o *ListExchangesResponse) SetExchanges(ctx context.Context, v []Exchange) 
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchanges"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Exchanges = types.ListValueMust(t, vs)
 }
 
@@ -4150,6 +4165,7 @@ func (o *ListFilesResponse) SetFileInfos(ctx context.Context, v []FileInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_infos"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FileInfos = types.ListValueMust(t, vs)
 }
 
@@ -4274,6 +4290,7 @@ func (o *ListFulfillmentsResponse) SetFulfillments(ctx context.Context, v []List
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fulfillments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Fulfillments = types.ListValueMust(t, vs)
 }
 
@@ -4398,6 +4415,7 @@ func (o *ListInstallationsResponse) SetInstallations(ctx context.Context, v []In
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installations"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Installations = types.ListValueMust(t, vs)
 }
 
@@ -4522,6 +4540,7 @@ func (o *ListListingsForExchangeResponse) SetExchangeListings(ctx context.Contex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExchangeListings = types.ListValueMust(t, vs)
 }
 
@@ -4635,6 +4654,7 @@ func (o *ListListingsRequest) SetAssets(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Assets = types.ListValueMust(t, vs)
 }
 
@@ -4660,6 +4680,7 @@ func (o *ListListingsRequest) SetCategories(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Categories = types.ListValueMust(t, vs)
 }
 
@@ -4685,6 +4706,7 @@ func (o *ListListingsRequest) SetProviderIds(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ProviderIds = types.ListValueMust(t, vs)
 }
 
@@ -4710,6 +4732,7 @@ func (o *ListListingsRequest) SetTags(ctx context.Context, v []ListingTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -4784,6 +4807,7 @@ func (o *ListListingsResponse) SetListings(ctx context.Context, v []Listing) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Listings = types.ListValueMust(t, vs)
 }
 
@@ -4958,6 +4982,7 @@ func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderIn
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["providers"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Providers = types.ListValueMust(t, vs)
 }
 
@@ -5234,6 +5259,7 @@ func (o *ListingDetail) SetAssets(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Assets = types.ListValueMust(t, vs)
 }
 
@@ -5285,6 +5311,7 @@ func (o *ListingDetail) SetEmbeddedNotebookFileInfos(ctx context.Context, v []Fi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["embedded_notebook_file_infos"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.EmbeddedNotebookFileInfos = types.ListValueMust(t, vs)
 }
 
@@ -5310,6 +5337,7 @@ func (o *ListingDetail) SetFileIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.FileIds = types.ListValueMust(t, vs)
 }
 
@@ -5335,6 +5363,7 @@ func (o *ListingDetail) SetTags(ctx context.Context, v []ListingTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -5677,6 +5706,7 @@ func (o *ListingSummary) SetCategories(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Categories = types.ListValueMust(t, vs)
 }
 
@@ -5702,6 +5732,7 @@ func (o *ListingSummary) SetExchangeIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExchangeIds = types.ListValueMust(t, vs)
 }
 
@@ -5882,6 +5913,7 @@ func (o *ListingTag) SetTagValues(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tag_values"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.TagValues = types.ListValueMust(t, vs)
 }
 
@@ -6525,6 +6557,7 @@ func (o *SearchListingsRequest) SetAssets(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["assets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Assets = types.ListValueMust(t, vs)
 }
 
@@ -6550,6 +6583,7 @@ func (o *SearchListingsRequest) SetCategories(ctx context.Context, v []types.Str
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["categories"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Categories = types.ListValueMust(t, vs)
 }
 
@@ -6575,6 +6609,7 @@ func (o *SearchListingsRequest) SetProviderIds(ctx context.Context, v []types.St
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ProviderIds = types.ListValueMust(t, vs)
 }
 
@@ -6649,6 +6684,7 @@ func (o *SearchListingsResponse) SetListings(ctx context.Context, v []Listing) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listings"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Listings = types.ListValueMust(t, vs)
 }
 

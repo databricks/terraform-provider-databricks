@@ -357,6 +357,7 @@ func (o *CommentObject) SetAvailableActions(ctx context.Context, v []types.Strin
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["available_actions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AvailableActions = types.ListValueMust(t, vs)
 }
 
@@ -563,6 +564,7 @@ func (o *CreateExperiment) SetTags(ctx context.Context, v []ExperimentTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -684,6 +686,7 @@ func (o *CreateModelRequest) SetTags(ctx context.Context, v []ModelTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -848,6 +851,7 @@ func (o *CreateModelVersionRequest) SetTags(ctx context.Context, v []ModelVersio
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -1056,6 +1060,7 @@ func (o *CreateRegistryWebhook) SetEvents(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 
@@ -1193,6 +1198,7 @@ func (o *CreateRun) SetTags(ctx context.Context, v []RunTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -1645,6 +1651,7 @@ func (o *DatasetInput) SetTags(ctx context.Context, v []InputTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -2670,6 +2677,7 @@ func (o *Experiment) SetTags(ctx context.Context, v []ExperimentTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -2811,6 +2819,7 @@ func (o *ExperimentAccessControlResponse) SetAllPermissions(ctx context.Context,
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -2889,6 +2898,7 @@ func (o *ExperimentPermission) SetInheritedFromObject(ctx context.Context, v []t
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -2967,6 +2977,7 @@ func (o *ExperimentPermissions) SetAccessControlList(ctx context.Context, v []Ex
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3086,6 +3097,7 @@ func (o *ExperimentPermissionsRequest) SetAccessControlList(ctx context.Context,
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -3339,6 +3351,7 @@ func (o *GetExperimentPermissionLevelsResponse) SetPermissionLevels(ctx context.
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -3634,6 +3647,7 @@ func (o *GetLatestVersionsRequest) SetStages(ctx context.Context, v []types.Stri
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stages"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Stages = types.ListValueMust(t, vs)
 }
 
@@ -3707,6 +3721,7 @@ func (o *GetLatestVersionsResponse) SetModelVersions(ctx context.Context, v []Mo
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
@@ -3783,6 +3798,7 @@ func (o *GetMetricHistoryResponse) SetMetrics(ctx context.Context, v []Metric) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Metrics = types.ListValueMust(t, vs)
 }
 
@@ -4218,6 +4234,7 @@ func (o *GetRegisteredModelPermissionLevelsResponse) SetPermissionLevels(ctx con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["permission_levels"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.PermissionLevels = types.ListValueMust(t, vs)
 }
 
@@ -4786,6 +4803,7 @@ func (o *ListArtifactsResponse) SetFiles(ctx context.Context, v []FileInfo) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["files"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Files = types.ListValueMust(t, vs)
 }
 
@@ -4919,6 +4937,7 @@ func (o *ListExperimentsResponse) SetExperiments(ctx context.Context, v []Experi
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Experiments = types.ListValueMust(t, vs)
 }
 
@@ -5041,6 +5060,7 @@ func (o *ListModelsResponse) SetRegisteredModels(ctx context.Context, v []Model)
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RegisteredModels = types.ListValueMust(t, vs)
 }
 
@@ -5116,6 +5136,7 @@ func (o *ListRegistryWebhooks) SetWebhooks(ctx context.Context, v []RegistryWebh
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["webhooks"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Webhooks = types.ListValueMust(t, vs)
 }
 
@@ -5234,6 +5255,7 @@ func (o *ListTransitionRequestsResponse) SetRequests(ctx context.Context, v []Ac
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["requests"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Requests = types.ListValueMust(t, vs)
 }
 
@@ -5317,6 +5339,7 @@ func (o *ListWebhooksRequest) SetEvents(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 
@@ -5409,6 +5432,7 @@ func (o *LogBatch) SetMetrics(ctx context.Context, v []Metric) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Metrics = types.ListValueMust(t, vs)
 }
 
@@ -5434,6 +5458,7 @@ func (o *LogBatch) SetParams(ctx context.Context, v []Param) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Params = types.ListValueMust(t, vs)
 }
 
@@ -5459,6 +5484,7 @@ func (o *LogBatch) SetTags(ctx context.Context, v []RunTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -5570,6 +5596,7 @@ func (o *LogInputs) SetDatasets(ctx context.Context, v []DatasetInput) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Datasets = types.ListValueMust(t, vs)
 }
 
@@ -6032,6 +6059,7 @@ func (o *Model) SetLatestVersions(ctx context.Context, v []ModelVersion) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LatestVersions = types.ListValueMust(t, vs)
 }
 
@@ -6057,6 +6085,7 @@ func (o *Model) SetTags(ctx context.Context, v []ModelTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6164,6 +6193,7 @@ func (o *ModelDatabricks) SetLatestVersions(ctx context.Context, v []ModelVersio
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["latest_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.LatestVersions = types.ListValueMust(t, vs)
 }
 
@@ -6189,6 +6219,7 @@ func (o *ModelDatabricks) SetTags(ctx context.Context, v []ModelTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6357,6 +6388,7 @@ func (o *ModelVersion) SetTags(ctx context.Context, v []ModelVersionTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6500,6 +6532,7 @@ func (o *ModelVersionDatabricks) SetTags(ctx context.Context, v []ModelVersionTa
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -6733,6 +6766,7 @@ func (o *RegisteredModelAccessControlResponse) SetAllPermissions(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["all_permissions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
@@ -6811,6 +6845,7 @@ func (o *RegisteredModelPermission) SetInheritedFromObject(ctx context.Context, 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["inherited_from_object"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.InheritedFromObject = types.ListValueMust(t, vs)
 }
 
@@ -6889,6 +6924,7 @@ func (o *RegisteredModelPermissions) SetAccessControlList(ctx context.Context, v
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -7008,6 +7044,7 @@ func (o *RegisteredModelPermissionsRequest) SetAccessControlList(ctx context.Con
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["access_control_list"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
@@ -7156,6 +7193,7 @@ func (o *RegistryWebhook) SetEvents(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 
@@ -7933,6 +7971,7 @@ func (o *RunData) SetMetrics(ctx context.Context, v []Metric) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Metrics = types.ListValueMust(t, vs)
 }
 
@@ -7958,6 +7997,7 @@ func (o *RunData) SetParams(ctx context.Context, v []Param) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["params"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Params = types.ListValueMust(t, vs)
 }
 
@@ -7983,6 +8023,7 @@ func (o *RunData) SetTags(ctx context.Context, v []RunTag) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
 }
 
@@ -8134,6 +8175,7 @@ func (o *RunInputs) SetDatasetInputs(ctx context.Context, v []DatasetInput) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataset_inputs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.DatasetInputs = types.ListValueMust(t, vs)
 }
 
@@ -8272,6 +8314,7 @@ func (o *SearchExperiments) SetOrderBy(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -8348,6 +8391,7 @@ func (o *SearchExperimentsResponse) SetExperiments(ctx context.Context, v []Expe
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiments"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Experiments = types.ListValueMust(t, vs)
 }
 
@@ -8436,6 +8480,7 @@ func (o *SearchModelVersionsRequest) SetOrderBy(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -8512,6 +8557,7 @@ func (o *SearchModelVersionsResponse) SetModelVersions(ctx context.Context, v []
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_versions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ModelVersions = types.ListValueMust(t, vs)
 }
 
@@ -8600,6 +8646,7 @@ func (o *SearchModelsRequest) SetOrderBy(ctx context.Context, v []types.String) 
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -8675,6 +8722,7 @@ func (o *SearchModelsResponse) SetRegisteredModels(ctx context.Context, v []Mode
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["registered_models"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.RegisteredModels = types.ListValueMust(t, vs)
 }
 
@@ -8786,6 +8834,7 @@ func (o *SearchRuns) SetExperimentIds(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["experiment_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.ExperimentIds = types.ListValueMust(t, vs)
 }
 
@@ -8811,6 +8860,7 @@ func (o *SearchRuns) SetOrderBy(ctx context.Context, v []types.String) {
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["order_by"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.OrderBy = types.ListValueMust(t, vs)
 }
 
@@ -8886,6 +8936,7 @@ func (o *SearchRunsResponse) SetRuns(ctx context.Context, v []Run) {
 		vs = append(vs, e.ToObjectValue(ctx))
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runs"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Runs = types.ListValueMust(t, vs)
 }
 
@@ -9586,6 +9637,7 @@ func (o *TransitionRequest) SetAvailableActions(ctx context.Context, v []types.S
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["available_actions"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.AvailableActions = types.ListValueMust(t, vs)
 }
 
@@ -10162,6 +10214,7 @@ func (o *UpdateRegistryWebhook) SetEvents(ctx context.Context, v []types.String)
 		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["events"]
+	t = t.(attr.TypeWithElementType).ElementType()
 	o.Events = types.ListValueMust(t, vs)
 }
 

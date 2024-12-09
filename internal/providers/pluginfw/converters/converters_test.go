@@ -32,6 +32,7 @@ type DummyTfSdk struct {
 	SliceStructPtr    types.List    `tfsdk:"slice_struct_ptr" tf:"optional"`
 	Irrelevant        types.String  `tfsdk:"-"`
 	Object            types.Object  `tfsdk:"object" tf:"optional"`
+	ObjectPtr         types.Object  `tfsdk:"object_ptr" tf:"optional"`
 }
 
 func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -43,9 +44,9 @@ func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 		"nested_map":          reflect.TypeOf(DummyNestedTfSdk{}),
 		"repeated":            reflect.TypeOf(types.Int64{}),
 		"attributes":          reflect.TypeOf(types.String{}),
-		"slice_struct":        reflect.TypeOf(DummyNestedTfSdk{}),
 		"slice_struct_ptr":    reflect.TypeOf(DummyNestedTfSdk{}),
 		"object":              reflect.TypeOf(DummyNestedTfSdk{}),
+		"object_ptr":          reflect.TypeOf(DummyNestedTfSdk{}),
 	}
 }
 
@@ -98,8 +99,9 @@ type DummyGoSdk struct {
 	AdditionalField   string                      `json:"additional_field"`
 	DistinctField     string                      `json:"distinct_field"` // distinct field that the tfsdk struct doesn't have
 	SliceStructPtr    *DummyNestedGoSdk           `json:"slice_struct_ptr"`
-	ForceSendFields   []string                    `json:"-"`
 	Object            DummyNestedGoSdk            `json:"object"`
+	ObjectPtr         *DummyNestedGoSdk           `json:"object_ptr"`
+	ForceSendFields   []string                    `json:"-"`
 }
 
 type DummyNestedGoSdk struct {
@@ -112,53 +114,45 @@ type DummyNestedGoSdk struct {
 // This is required because the Go->TF conversion function instantiates list, map, and
 // object fields with empty values, which are not equal to null values in the tfsdk struct.
 func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
-	complexFields := c.GetComplexFieldTypes(context.Background())
-	v := reflect.ValueOf(&c).Elem()
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		// If the field is a simple type, the zero value is OK.
-		switch field.Type() {
-		case reflect.TypeOf(types.Bool{}), reflect.TypeOf(types.Int64{}), reflect.TypeOf(types.Float64{}), reflect.TypeOf(types.String{}):
-			continue
-		}
-		if !field.IsZero() {
-			continue
-		}
-
-		tfsdkName := v.Type().Field(i).Tag.Get("tfsdk")
-		complexType, ok := complexFields[tfsdkName]
-		if !ok {
-			continue
-		}
-
-		var typ attr.Type
-		switch complexType {
-		case reflect.TypeOf(types.Bool{}):
-			typ = types.BoolType
-		case reflect.TypeOf(types.Int64{}):
-			typ = types.Int64Type
-		case reflect.TypeOf(types.Float64{}):
-			typ = types.Float64Type
-		case reflect.TypeOf(types.String{}):
-			typ = types.StringType
-		default:
-			innerVal := reflect.New(complexType).Elem().Interface()
-			typ = tfcommon.NewObjectTyper(innerVal).Type(context.Background())
-		}
-		switch field.Type() {
-		case reflect.TypeOf(types.List{}):
-			value := types.ListNull(typ)
-			field.Set(reflect.ValueOf(value))
-		case reflect.TypeOf(types.Map{}):
-			value := types.MapNull(typ)
-			field.Set(reflect.ValueOf(value))
-		case reflect.TypeOf(types.Object{}):
-			objectType := typ.(types.ObjectType)
-			value := types.ObjectNull(objectType.AttrTypes)
-			field.Set(reflect.ValueOf(value))
-		}
+	if c.NoPointerNested.IsNull() {
+		c.NoPointerNested = types.ListValueMust(dummyType, []attr.Value{
+			types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+				"name":    types.StringNull(),
+				"enabled": types.BoolNull(),
+			}),
+		})
 	}
-	return v.Interface().(DummyTfSdk)
+	if c.NestedList.IsNull() {
+		c.NestedList = types.ListNull(dummyType)
+	}
+	if c.NestedPointerList.IsNull() {
+		c.NestedPointerList = types.ListNull(dummyType)
+	}
+	if c.Map.IsNull() {
+		c.Map = types.MapNull(types.StringType)
+	}
+	if c.NestedMap.IsNull() {
+		c.NestedMap = types.MapNull(dummyType)
+	}
+	if c.Repeated.IsNull() {
+		c.Repeated = types.ListNull(types.Int64Type)
+	}
+	if c.Attributes.IsNull() {
+		c.Attributes = types.MapNull(types.StringType)
+	}
+	if c.SliceStructPtr.IsNull() {
+		c.SliceStructPtr = types.ListNull(dummyType)
+	}
+	if c.Object.IsNull() {
+		c.Object = types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+			"name":    types.StringNull(),
+			"enabled": types.BoolNull(),
+		})
+	}
+	if c.ObjectPtr.IsNull() {
+		c.ObjectPtr = types.ObjectNull(dummyType.AttrTypes)
+	}
+	return c
 }
 
 // Function to construct individual test case with a pair of matching tfSdkStruct and gosdkStruct.

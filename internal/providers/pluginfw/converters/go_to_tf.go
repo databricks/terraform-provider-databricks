@@ -186,12 +186,6 @@ func goSdkToTfSdkSingleField(
 		}
 	case reflect.Struct:
 		// This corresponds to either a types.List or types.Object.
-		// If the struct is zero value, set the destination field to the null value of the appropriate type.
-		if srcField.IsZero() {
-			setFieldToNull(destField, tfType)
-			return
-		}
-
 		// If the destination field is a types.List, treat the source field as a slice with length 1
 		// containing only this struct.
 		if destField.Type() == reflect.TypeOf(types.List{}) {

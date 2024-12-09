@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,6 +35,8 @@ type DummyTfSdk struct {
 	Object            types.Object  `tfsdk:"object" tf:"optional"`
 	ObjectPtr         types.Object  `tfsdk:"object_ptr" tf:"optional"`
 	Type_             types.String  `tfsdk:"type" tf:""` // Test Type_ renaming
+	EmptyStructList   types.List    `tfsdk:"empty_struct_list" tf:"optional"`
+	EmptyStructObject types.Object  `tfsdk:"empty_struct_object" tf:"optional"`
 }
 
 func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -48,6 +51,8 @@ func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.T
 		"slice_struct_ptr":    reflect.TypeOf(DummyNestedTfSdk{}),
 		"object":              reflect.TypeOf(DummyNestedTfSdk{}),
 		"object_ptr":          reflect.TypeOf(DummyNestedTfSdk{}),
+		"empty_struct_list":   reflect.TypeOf(DummyNestedTfSdkEmpty{}),
+		"empty_struct_object": reflect.TypeOf(DummyNestedTfSdkEmpty{}),
 	}
 }
 
@@ -83,6 +88,8 @@ type DummyNestedTfSdk struct {
 	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
 }
 
+type DummyNestedTfSdkEmpty struct{}
+
 type DummyGoSdk struct {
 	Enabled           bool                        `json:"enabled"`
 	Workers           int64                       `json:"workers"`
@@ -103,6 +110,8 @@ type DummyGoSdk struct {
 	Object            DummyNestedGoSdk            `json:"object"`
 	ObjectPtr         *DummyNestedGoSdk           `json:"object_ptr"`
 	Type              string                      `json:"type"` // Test Type_ renaming
+	EmptyStructList   []DummyNestedGoSdkEmpty     `json:"empty_struct_list"`
+	EmptyStructObject *DummyNestedGoSdkEmpty      `json:"empty_struct_object"`
 	ForceSendFields   []string                    `json:"-"`
 }
 
@@ -112,17 +121,14 @@ type DummyNestedGoSdk struct {
 	ForceSendFields []string `json:"-"`
 }
 
+type DummyNestedGoSdkEmpty struct{}
+
 // This function is used to populate empty fields in the tfsdk struct with null values.
 // This is required because the Go->TF conversion function instantiates list, map, and
 // object fields with empty values, which are not equal to null values in the tfsdk struct.
 func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
 	if c.NoPointerNested.IsNull() {
-		c.NoPointerNested = types.ListValueMust(dummyType, []attr.Value{
-			types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-				"name":    types.StringNull(),
-				"enabled": types.BoolNull(),
-			}),
-		})
+		c.NoPointerNested = types.ListNull(dummyType)
 	}
 	if c.NestedList.IsNull() {
 		c.NestedList = types.ListNull(dummyType)
@@ -146,13 +152,21 @@ func populateEmptyFields(c DummyTfSdk) DummyTfSdk {
 		c.SliceStructPtr = types.ListNull(dummyType)
 	}
 	if c.Object.IsNull() {
+		// type.Object fields that correspond to structs are considered never to be null.
 		c.Object = types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
 			"name":    types.StringNull(),
 			"enabled": types.BoolNull(),
 		})
 	}
 	if c.ObjectPtr.IsNull() {
+		// type.Object fields that correspond to pointers are considered null when the Go SDK value is nil.
 		c.ObjectPtr = types.ObjectNull(dummyType.AttrTypes)
+	}
+	if c.EmptyStructList.IsNull() {
+		c.EmptyStructList = types.ListNull(basetypes.ObjectType{AttrTypes: map[string]attr.Type{}})
+	}
+	if c.EmptyStructObject.IsNull() {
+		c.EmptyStructObject = types.ObjectNull(map[string]attr.Type{})
 	}
 	return c
 }
@@ -194,6 +208,7 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 }
 
 var dummyType = tfcommon.NewObjectTyper(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
+var emptyType = basetypes.ObjectType{AttrTypes: map[string]attr.Type{}}
 
 var tests = []struct {
 	name        string
@@ -360,6 +375,24 @@ var tests = []struct {
 		"type name",
 		DummyTfSdk{Type_: types.StringValue("abc")},
 		DummyGoSdk{Type: "abc", ForceSendFields: []string{"Type"}},
+	},
+	{
+		"empty list of empty struct to list conversion",
+		DummyTfSdk{EmptyStructList: types.ListValueMust(emptyType, []attr.Value{})},
+		DummyGoSdk{EmptyStructList: []DummyNestedGoSdkEmpty{}},
+	},
+	{
+		"non-empty list empty struct to list conversion",
+		DummyTfSdk{EmptyStructList: types.ListValueMust(emptyType, []attr.Value{
+			types.ObjectValueMust(map[string]attr.Type{}, map[string]attr.Value{}),
+			types.ObjectValueMust(map[string]attr.Type{}, map[string]attr.Value{}),
+		})},
+		DummyGoSdk{EmptyStructList: []DummyNestedGoSdkEmpty{{}, {}}},
+	},
+	{
+		"non-nil pointer of empty struct to object conversion",
+		DummyTfSdk{EmptyStructObject: types.ObjectValueMust(emptyType.AttrTypes, map[string]attr.Value{})},
+		DummyGoSdk{EmptyStructObject: &DummyNestedGoSdkEmpty{}, ForceSendFields: []string{"EmptyStructObject"}},
 	},
 }
 

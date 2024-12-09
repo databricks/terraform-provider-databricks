@@ -87,6 +87,9 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	var tfCluster compute_tf.ClusterDetails
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	clusterInfo.ClusterId = tfCluster.ClusterId
 	clusterInfo.Name = tfCluster.ClusterName

@@ -82,8 +82,9 @@ func GoSdkToTfSdkStruct(ctx context.Context, gosdk interface{}, tfsdk interface{
 		if srcFieldTag == "-" {
 			continue
 		}
-		destField := destVal.FieldByName(toTfSdkName(srcFieldName))
-		destFieldType, ok := destVal.Type().FieldByName(field.StructField.Name)
+		destFieldStructName := toTfSdkName(srcFieldName)
+		destField := destVal.FieldByName(destFieldStructName)
+		destFieldType, ok := destVal.Type().FieldByName(destFieldStructName)
 		if !ok {
 			d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination struct does not have field %s. %s", srcFieldName, common.TerraformBugErrorMessage))
 			return

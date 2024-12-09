@@ -2271,6 +2271,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Body: resourceOrDataBlockBody,
 		Depends: []reference{
+			{Path: "path", Resource: "databricks_user", Match: "home"},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home"},
 			// TODO: it should try to find longest reference to another directory object that it not itself...
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},

@@ -32,7 +32,7 @@ func (d *ShareDataSource) Metadata(ctx context.Context, req datasource.MetadataR
 }
 
 func (d *ShareDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(sharing_tf.ShareInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, sharing_tf.ShareInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

@@ -33,7 +33,7 @@ type DummyTfSdk struct {
 	Irrelevant        types.String  `tfsdk:"-"`
 	Object            types.Object  `tfsdk:"object" tf:"optional"`
 	ObjectPtr         types.Object  `tfsdk:"object_ptr" tf:"optional"`
-	Type_		      types.String	`tfsdk:"type" tf:""` // Test Type_ renaming
+	Type_             types.String  `tfsdk:"type" tf:""` // Test Type_ renaming
 }
 
 func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -102,7 +102,7 @@ type DummyGoSdk struct {
 	SliceStructPtr    *DummyNestedGoSdk           `json:"slice_struct_ptr"`
 	Object            DummyNestedGoSdk            `json:"object"`
 	ObjectPtr         *DummyNestedGoSdk           `json:"object_ptr"`
-	Type              string					  `json:"type"` // Test Type_ renaming
+	Type              string                      `json:"type"` // Test Type_ renaming
 	ForceSendFields   []string                    `json:"-"`
 }
 

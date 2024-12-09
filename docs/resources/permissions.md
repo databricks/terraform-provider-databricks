@@ -423,7 +423,6 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 A folder could be specified by using either `directory_path` or `directory_id` attribute.  The value for the `directory_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_directory` resource as shown below.
 
-
 ```hcl
 resource "databricks_group" "auto" {
   display_name = "Automation"
@@ -910,6 +909,7 @@ One type argument and at least one access control block argument are required.
 
 Exactly one of the following arguments is required:
 
+- `app_name` - [app](app.md) name
 - `cluster_id` - [cluster](cluster.md) id
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id

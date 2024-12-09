@@ -311,7 +311,8 @@ func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AzureManagedIdentityResponse) SyncEffectiveFieldsDuringRead(existingState AzureManagedIdentityResponse) {
 }
 
-// The Azure service principal configuration.
+// The Azure service principal configuration. Only applicable when purpose is
+// **STORAGE**.
 type AzureServicePrincipal struct {
 	// The application ID of the application registration within the referenced
 	// AAD tenant.
@@ -461,7 +462,7 @@ type ColumnInfo struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
-	// Name of type (INT, STRUCT, MAP, etc.).
+
 	TypeName types.String `tfsdk:"type_name" tf:"optional"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
@@ -616,13 +617,14 @@ type CreateCredentialRequest struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// TODO(UC-978): Document GCP service account key usage for service
-	// credentials.
-	GcpServiceAccountKey []GcpServiceAccountKey `tfsdk:"gcp_service_account_key" tf:"optional,object"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccount `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
 	Name types.String `tfsdk:"name" tf:""`
@@ -949,7 +951,8 @@ type CredentialInfo struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -957,6 +960,9 @@ type CredentialInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccount `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The full name of the credential.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the credential.
@@ -1014,6 +1020,26 @@ func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *CurrentWorkspaceBindings) SyncEffectiveFieldsDuringRead(existingState CurrentWorkspaceBindings) {
+}
+
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
+type DatabricksGcpServiceAccount struct {
+	// The Databricks internal ID that represents this managed identity. This
+	// field is only used to persist the credential_id once it is fetched from
+	// the credentials manager - as we only use the protobuf serializer to store
+	// credentials, this ID gets persisted to the database
+	CredentialId types.String `tfsdk:"credential_id" tf:"optional"`
+	// The email of the service account.
+	Email types.String `tfsdk:"email" tf:"optional"`
+	// The ID that represents the private key for this Service Account
+	PrivateKeyId types.String `tfsdk:"private_key_id" tf:"optional"`
+}
+
+func (newState *DatabricksGcpServiceAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccount) {
+}
+
+func (newState *DatabricksGcpServiceAccount) SyncEffectiveFieldsDuringRead(existingState DatabricksGcpServiceAccount) {
 }
 
 type DatabricksGcpServiceAccountRequest struct {
@@ -1696,7 +1722,7 @@ type FunctionParameterInfo struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
 	// Full data type spec, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
-	// Name of type (INT, STRUCT, MAP, etc.).
+
 	TypeName types.String `tfsdk:"type_name" tf:""`
 	// Digits of precision; required on Create for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
@@ -1736,23 +1762,7 @@ func (newState *GcpOauthToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpO
 func (newState *GcpOauthToken) SyncEffectiveFieldsDuringRead(existingState GcpOauthToken) {
 }
 
-// GCP long-lived credential. GCP Service Account.
-type GcpServiceAccountKey struct {
-	// The email of the service account. [Create:REQ Update:OPT].
-	Email types.String `tfsdk:"email" tf:"optional"`
-	// The service account's RSA private key. [Create:REQ Update:OPT]
-	PrivateKey types.String `tfsdk:"private_key" tf:"optional"`
-	// The ID of the service account's private key. [Create:REQ Update:OPT]
-	PrivateKeyId types.String `tfsdk:"private_key_id" tf:"optional"`
-}
-
-func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpServiceAccountKey) {
-}
-
-func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringRead(existingState GcpServiceAccountKey) {
-}
-
-// Options to customize the requested temporary credential
+// The Azure cloud options to customize the requested temporary credential
 type GenerateTemporaryServiceCredentialAzureOptions struct {
 	// The resources to which the temporary Azure credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
@@ -1766,12 +1776,28 @@ func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFie
 func (newState *GenerateTemporaryServiceCredentialAzureOptions) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialAzureOptions) {
 }
 
+// The GCP cloud options to customize the requested temporary credential
+type GenerateTemporaryServiceCredentialGcpOptions struct {
+	// The scopes to which the temporary GCP credential should apply. These
+	// resources are the scopes that are passed to the token provider (see
+	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials)
+	Scopes []types.String `tfsdk:"scopes" tf:"optional"`
+}
+
+func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialGcpOptions) {
+}
+
+func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialGcpOptions) {
+}
+
 type GenerateTemporaryServiceCredentialRequest struct {
-	// Options to customize the requested temporary credential
+	// The Azure cloud options to customize the requested temporary credential
 	AzureOptions []GenerateTemporaryServiceCredentialAzureOptions `tfsdk:"azure_options" tf:"optional,object"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
+	// The GCP cloud options to customize the requested temporary credential
+	GcpOptions []GenerateTemporaryServiceCredentialGcpOptions `tfsdk:"gcp_options" tf:"optional,object"`
 }
 
 func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest) {
@@ -4032,10 +4058,14 @@ type UpdateCredentialRequest struct {
 	AwsIamRole []AwsIamRole `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity []AzureManagedIdentity `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal []AzureServicePrincipal `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount []DatabricksGcpServiceAccount `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// Force an update even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
 	// purpose is **STORAGE**).

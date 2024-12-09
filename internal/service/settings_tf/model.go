@@ -478,6 +478,78 @@ func (newState *DeleteAccountIpAccessListRequest) SyncEffectiveFieldsDuringCreat
 func (newState *DeleteAccountIpAccessListRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAccountIpAccessListRequest) {
 }
 
+// Delete the AI/BI dashboard embedding access policy
+type DeleteAibiDashboardEmbeddingAccessPolicySettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+// The etag is returned.
+type DeleteAibiDashboardEmbeddingAccessPolicySettingResponse struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag" tf:""`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+}
+
+// Delete AI/BI dashboard embedding approved domains
+type DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+// The etag is returned.
+type DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag" tf:""`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+}
+
 // Delete the default namespace setting
 type DeleteDefaultNamespaceSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -843,6 +915,101 @@ func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *DisableLegacyFeatures) SyncEffectiveFieldsDuringRead(existingState DisableLegacyFeatures) {
+}
+
+// The network policies applying for egress traffic. This message is used by the
+// UI/REST API. We translate this message to the format expected by the
+// dataplane in Lakehouse Network Manager (for the format expected by the
+// dataplane, see networkconfig.textproto).
+type EgressNetworkPolicy struct {
+	// The access policy enforced for egress traffic to the internet.
+	InternetAccess []EgressNetworkPolicyInternetAccessPolicy `tfsdk:"internet_access" tf:"optional,object"`
+}
+
+func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy) {
+}
+
+func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicy) {
+}
+
+type EgressNetworkPolicyInternetAccessPolicy struct {
+	AllowedInternetDestinations []EgressNetworkPolicyInternetAccessPolicyInternetDestination `tfsdk:"allowed_internet_destinations" tf:"optional"`
+
+	AllowedStorageDestinations []EgressNetworkPolicyInternetAccessPolicyStorageDestination `tfsdk:"allowed_storage_destinations" tf:"optional"`
+	// Optional. If not specified, assume the policy is enforced for all
+	// workloads.
+	LogOnlyMode []EgressNetworkPolicyInternetAccessPolicyLogOnlyMode `tfsdk:"log_only_mode" tf:"optional,object"`
+	// At which level can Databricks and Databricks managed compute access
+	// Internet. FULL_ACCESS: Databricks can access Internet. No blocking rules
+	// will apply. RESTRICTED_ACCESS: Databricks can only access explicitly
+	// allowed internet and storage destinations, as well as UC connections and
+	// external locations. PRIVATE_ACCESS_ONLY (not used): Databricks can only
+	// access destinations via private link.
+	RestrictionMode types.String `tfsdk:"restriction_mode" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy) {
+}
+
+// Users can specify accessible internet destinations when outbound access is
+// restricted. We only support domain name (FQDN) destinations for the time
+// being, though going forwards we want to support host names and IP addresses.
+type EgressNetworkPolicyInternetAccessPolicyInternetDestination struct {
+	Destination types.String `tfsdk:"destination" tf:"optional"`
+	// The filtering protocol used by the DP. For private and public preview,
+	// SEG will only support TCP filtering (i.e. DNS based filtering, filtering
+	// by destination IP address), so protocol will be set to TCP by default and
+	// hidden from the user. In the future, users may be able to select HTTP
+	// filtering (i.e. SNI based filtering, filtering by FQDN).
+	Protocol types.String `tfsdk:"protocol" tf:"optional"`
+
+	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+}
+
+type EgressNetworkPolicyInternetAccessPolicyLogOnlyMode struct {
+	LogOnlyModeType types.String `tfsdk:"log_only_mode_type" tf:"optional"`
+
+	Workloads []types.String `tfsdk:"workloads" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+}
+
+// Users can specify accessible storage destinations.
+type EgressNetworkPolicyInternetAccessPolicyStorageDestination struct {
+	AllowedPaths []types.String `tfsdk:"allowed_paths" tf:"optional"`
+
+	AzureContainer types.String `tfsdk:"azure_container" tf:"optional"`
+
+	AzureDnsZone types.String `tfsdk:"azure_dns_zone" tf:"optional"`
+
+	AzureStorageAccount types.String `tfsdk:"azure_storage_account" tf:"optional"`
+
+	AzureStorageService types.String `tfsdk:"azure_storage_service" tf:"optional"`
+
+	BucketName types.String `tfsdk:"bucket_name" tf:"optional"`
+
+	Region types.String `tfsdk:"region" tf:"optional"`
+
+	Type types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
 }
 
 type EmailConfig struct {

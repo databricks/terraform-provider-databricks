@@ -221,6 +221,22 @@ func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
 }
 
+// Stores the run state of the clean room notebook V1 task.
+type CleanRoomTaskRunState struct {
+	// A value indicating the run's current lifecycle state. This field is
+	// always available in the response.
+	LifeCycleState types.String `tfsdk:"life_cycle_state" tf:"optional"`
+	// A value indicating the run's result. This field is only available for
+	// terminal lifecycle states.
+	ResultState types.String `tfsdk:"result_state" tf:"optional"`
+}
+
+func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
+}
+
+func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringRead(existingState CleanRoomTaskRunState) {
+}
+
 type ClusterInstance struct {
 	// The canonical identifier for the cluster used by a run. This field is
 	// always available for runs on existing clusters. For runs on new clusters,
@@ -385,9 +401,8 @@ type CreateJob struct {
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
-	// Write-only setting. Specifies the user, service principal or group that
-	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
-	// user who created the job/pipeline.
+	// Write-only setting. Specifies the user or service principal that the job
+	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.
@@ -1174,9 +1189,8 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
 }
 
-// Write-only setting. Specifies the user, service principal or group that the
-// job/pipeline runs as. If not specified, the job/pipeline runs as the user who
-// created the job/pipeline.
+// Write-only setting. Specifies the user or service principal that the job runs
+// as. If not specified, the job runs as the user who created the job.
 //
 // Either `user_name` or `service_principal_name` should be specified. If not,
 // an error is thrown.
@@ -1269,9 +1283,8 @@ type JobSettings struct {
 	Parameters []JobParameterDefinition `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue []QueueSettings `tfsdk:"queue" tf:"optional,object"`
-	// Write-only setting. Specifies the user, service principal or group that
-	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
-	// user who created the job/pipeline.
+	// Write-only setting. Specifies the user or service principal that the job
+	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.

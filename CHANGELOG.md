@@ -11,7 +11,6 @@
 ### Bug Fixes
 
  * Add client side validation for `volume_type` ([#4289](https://github.com/databricks/terraform-provider-databricks/pull/4289)).
- * Add missing H2 header in `mws_network_connectivity_configs.md` and optimization in `data_mws_network_connectivity_configs` ([#4256](https://github.com/databricks/terraform-provider-databricks/pull/4256)).
  * Forced send `auto_stop_mins` for `databricks_sql_endpoint` resource ([#4265](https://github.com/databricks/terraform-provider-databricks/pull/4265)).
  * Handle deleted cluster gracefully ([#4280](https://github.com/databricks/terraform-provider-databricks/pull/4280)).
  * Remove config drift if Azure SP is used in `databricks_credential` ([#4294](https://github.com/databricks/terraform-provider-databricks/pull/4294)).
@@ -24,6 +23,7 @@
  * Document import support for `databricks_notification_destination` ([#4276](https://github.com/databricks/terraform-provider-databricks/pull/4276)).
  * Update documentation for importing some MWS resources ([#4281](https://github.com/databricks/terraform-provider-databricks/pull/4281)).
  * Update mws_log_delivery.md to add time_sleep ([#4258](https://github.com/databricks/terraform-provider-databricks/pull/4258)).
+ * Add missing H2 header in `mws_network_connectivity_configs.md` and optimization in `data_mws_network_connectivity_configs` ([#4256](https://github.com/databricks/terraform-provider-databricks/pull/4256)).
 
 
 ### Internal Changes

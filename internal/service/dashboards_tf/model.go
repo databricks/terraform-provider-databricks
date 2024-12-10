@@ -575,6 +575,7 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 type QueryAttachment struct {
+	CachedQuerySchema []QuerySchema `tfsdk:"cached_query_schema" tf:"optional,object"`
 	// Description of the query
 	Description types.String `tfsdk:"description" tf:"optional"`
 
@@ -597,6 +598,36 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Qu
 }
 
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
+}
+
+type QuerySchema struct {
+	Columns []QuerySchemaColumn `tfsdk:"columns" tf:"optional"`
+	// Used to determine if the stored query schema is compatible with the
+	// latest run. The service should always clear the schema when the query is
+	// re-executed.
+	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+}
+
+func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchema) {
+}
+
+func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
+}
+
+type QuerySchemaColumn struct {
+	// Populated from
+	// https://docs.databricks.com/sql/language-manual/sql-ref-datatypes.html
+	DataType types.String `tfsdk:"data_type" tf:""`
+
+	Name types.String `tfsdk:"name" tf:""`
+	// Corresponds to type desc
+	TypeText types.String `tfsdk:"type_text" tf:""`
+}
+
+func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchemaColumn) {
+}
+
+func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
 }
 
 type Result struct {

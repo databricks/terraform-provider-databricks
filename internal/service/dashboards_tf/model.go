@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -2148,6 +2149,7 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 }
 
 type QueryAttachment struct {
+	CachedQuerySchema types.List `tfsdk:"cached_query_schema" tf:"optional,object"`
 	// Description of the query
 	Description types.String `tfsdk:"description" tf:"optional"`
 
@@ -2180,7 +2182,9 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState Que
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a QueryAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"cached_query_schema": reflect.TypeOf(QuerySchema{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -2190,6 +2194,7 @@ func (o QueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"cached_query_schema":    o.CachedQuerySchema,
 			"description":            o.Description,
 			"id":                     o.Id,
 			"instruction_id":         o.InstructionId,
@@ -2204,6 +2209,9 @@ func (o QueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o QueryAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"cached_query_schema": basetypes.ListType{
+				ElemType: QuerySchema{}.Type(ctx),
+			},
 			"description":            types.StringType,
 			"id":                     types.StringType,
 			"instruction_id":         types.StringType,
@@ -2211,6 +2219,160 @@ func (o QueryAttachment) Type(ctx context.Context) attr.Type {
 			"last_updated_timestamp": types.Int64Type,
 			"query":                  types.StringType,
 			"title":                  types.StringType,
+		},
+	}
+}
+
+// GetCachedQuerySchema returns the value of the CachedQuerySchema field in QueryAttachment as
+// a QuerySchema value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryAttachment) GetCachedQuerySchema(ctx context.Context) (QuerySchema, bool) {
+	var e QuerySchema
+	if o.CachedQuerySchema.IsNull() || o.CachedQuerySchema.IsUnknown() {
+		return e, false
+	}
+	var v []QuerySchema
+	d := o.CachedQuerySchema.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCachedQuerySchema sets the value of the CachedQuerySchema field in QueryAttachment.
+func (o *QueryAttachment) SetCachedQuerySchema(ctx context.Context, v QuerySchema) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cached_query_schema"]
+	o.CachedQuerySchema = types.ListValueMust(t, vs)
+}
+
+type QuerySchema struct {
+	Columns types.List `tfsdk:"columns" tf:"optional"`
+	// Used to determine if the stored query schema is compatible with the
+	// latest run. The service should always clear the schema when the query is
+	// re-executed.
+	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+}
+
+func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchema) {
+}
+
+func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchema.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QuerySchema) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"columns": reflect.TypeOf(QuerySchemaColumn{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QuerySchema
+// only implements ToObjectValue() and Type().
+func (o QuerySchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"columns":      o.Columns,
+			"statement_id": o.StatementId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o QuerySchema) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"columns": basetypes.ListType{
+				ElemType: QuerySchemaColumn{}.Type(ctx),
+			},
+			"statement_id": types.StringType,
+		},
+	}
+}
+
+// GetColumns returns the value of the Columns field in QuerySchema as
+// a slice of QuerySchemaColumn values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QuerySchema) GetColumns(ctx context.Context) ([]QuerySchemaColumn, bool) {
+	if o.Columns.IsNull() || o.Columns.IsUnknown() {
+		return nil, false
+	}
+	var v []QuerySchemaColumn
+	d := o.Columns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumns sets the value of the Columns field in QuerySchema.
+func (o *QuerySchema) SetColumns(ctx context.Context, v []QuerySchemaColumn) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Columns = types.ListValueMust(t, vs)
+}
+
+type QuerySchemaColumn struct {
+	// Populated from
+	// https://docs.databricks.com/sql/language-manual/sql-ref-datatypes.html
+	DataType types.String `tfsdk:"data_type" tf:""`
+
+	Name types.String `tfsdk:"name" tf:""`
+	// Corresponds to type desc
+	TypeText types.String `tfsdk:"type_text" tf:""`
+}
+
+func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchemaColumn) {
+}
+
+func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchemaColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a QuerySchemaColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, QuerySchemaColumn
+// only implements ToObjectValue() and Type().
+func (o QuerySchemaColumn) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"data_type": o.DataType,
+			"name":      o.Name,
+			"type_text": o.TypeText,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o QuerySchemaColumn) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"data_type": types.StringType,
+			"name":      types.StringType,
+			"type_text": types.StringType,
 		},
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1281,7 +1282,8 @@ func (o AzureManagedIdentityResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The Azure service principal configuration.
+// The Azure service principal configuration. Only applicable when purpose is
+// **STORAGE**.
 type AzureServicePrincipal struct {
 	// The application ID of the application registration within the referenced
 	// AAD tenant.
@@ -1786,7 +1788,7 @@ type ColumnInfo struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
 	// Full data type specification, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
-	// Name of type (INT, STRUCT, MAP, etc.).
+
 	TypeName types.String `tfsdk:"type_name" tf:"optional"`
 	// Digits of precision; required for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
@@ -2511,13 +2513,14 @@ type CreateCredentialRequest struct {
 	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
-	// TODO(UC-978): Document GCP service account key usage for service
-	// credentials.
-	GcpServiceAccountKey types.List `tfsdk:"gcp_service_account_key" tf:"optional,object"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The credential name. The name must be unique among storage and service
 	// credentials within the metastore.
 	Name types.String `tfsdk:"name" tf:""`
@@ -2546,10 +2549,10 @@ func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringRead(existingS
 // SDK values.
 func (a CreateCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_iam_role":            reflect.TypeOf(AwsIamRole{}),
-		"azure_managed_identity":  reflect.TypeOf(AzureManagedIdentity{}),
-		"azure_service_principal": reflect.TypeOf(AzureServicePrincipal{}),
-		"gcp_service_account_key": reflect.TypeOf(GcpServiceAccountKey{}),
+		"aws_iam_role":                   reflect.TypeOf(AwsIamRole{}),
+		"azure_managed_identity":         reflect.TypeOf(AzureManagedIdentity{}),
+		"azure_service_principal":        reflect.TypeOf(AzureServicePrincipal{}),
+		"databricks_gcp_service_account": reflect.TypeOf(DatabricksGcpServiceAccount{}),
 	}
 }
 
@@ -2560,15 +2563,15 @@ func (o CreateCredentialRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aws_iam_role":            o.AwsIamRole,
-			"azure_managed_identity":  o.AzureManagedIdentity,
-			"azure_service_principal": o.AzureServicePrincipal,
-			"comment":                 o.Comment,
-			"gcp_service_account_key": o.GcpServiceAccountKey,
-			"name":                    o.Name,
-			"purpose":                 o.Purpose,
-			"read_only":               o.ReadOnly,
-			"skip_validation":         o.SkipValidation,
+			"aws_iam_role":                   o.AwsIamRole,
+			"azure_managed_identity":         o.AzureManagedIdentity,
+			"azure_service_principal":        o.AzureServicePrincipal,
+			"comment":                        o.Comment,
+			"databricks_gcp_service_account": o.DatabricksGcpServiceAccount,
+			"name":                           o.Name,
+			"purpose":                        o.Purpose,
+			"read_only":                      o.ReadOnly,
+			"skip_validation":                o.SkipValidation,
 		})
 }
 
@@ -2586,8 +2589,8 @@ func (o CreateCredentialRequest) Type(ctx context.Context) attr.Type {
 				ElemType: AzureServicePrincipal{}.Type(ctx),
 			},
 			"comment": types.StringType,
-			"gcp_service_account_key": basetypes.ListType{
-				ElemType: GcpServiceAccountKey{}.Type(ctx),
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
 			},
 			"name":            types.StringType,
 			"purpose":         types.StringType,
@@ -2675,16 +2678,16 @@ func (o *CreateCredentialRequest) SetAzureServicePrincipal(ctx context.Context, 
 	o.AzureServicePrincipal = types.ListValueMust(t, vs)
 }
 
-// GetGcpServiceAccountKey returns the value of the GcpServiceAccountKey field in CreateCredentialRequest as
-// a GcpServiceAccountKey value.
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in CreateCredentialRequest as
+// a DatabricksGcpServiceAccount value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCredentialRequest) GetGcpServiceAccountKey(ctx context.Context) (GcpServiceAccountKey, bool) {
-	var e GcpServiceAccountKey
-	if o.GcpServiceAccountKey.IsNull() || o.GcpServiceAccountKey.IsUnknown() {
+func (o *CreateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccount, bool) {
+	var e DatabricksGcpServiceAccount
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
 		return e, false
 	}
-	var v []GcpServiceAccountKey
-	d := o.GcpServiceAccountKey.ElementsAs(ctx, &v, true)
+	var v []DatabricksGcpServiceAccount
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2694,11 +2697,11 @@ func (o *CreateCredentialRequest) GetGcpServiceAccountKey(ctx context.Context) (
 	return v[0], true
 }
 
-// SetGcpServiceAccountKey sets the value of the GcpServiceAccountKey field in CreateCredentialRequest.
-func (o *CreateCredentialRequest) SetGcpServiceAccountKey(ctx context.Context, v GcpServiceAccountKey) {
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CreateCredentialRequest.
+func (o *CreateCredentialRequest) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccount) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_service_account_key"]
-	o.GcpServiceAccountKey = types.ListValueMust(t, vs)
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
 type CreateExternalLocation struct {
@@ -4158,7 +4161,8 @@ type CredentialInfo struct {
 	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -4166,6 +4170,9 @@ type CredentialInfo struct {
 	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
 	// Username of credential creator.
 	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// The full name of the credential.
 	FullName types.String `tfsdk:"full_name" tf:"optional"`
 	// The unique identifier of the credential.
@@ -4209,9 +4216,10 @@ func (newState *CredentialInfo) SyncEffectiveFieldsDuringRead(existingState Cred
 // SDK values.
 func (a CredentialInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_iam_role":            reflect.TypeOf(AwsIamRole{}),
-		"azure_managed_identity":  reflect.TypeOf(AzureManagedIdentity{}),
-		"azure_service_principal": reflect.TypeOf(AzureServicePrincipal{}),
+		"aws_iam_role":                   reflect.TypeOf(AwsIamRole{}),
+		"azure_managed_identity":         reflect.TypeOf(AzureManagedIdentity{}),
+		"azure_service_principal":        reflect.TypeOf(AzureServicePrincipal{}),
+		"databricks_gcp_service_account": reflect.TypeOf(DatabricksGcpServiceAccount{}),
 	}
 }
 
@@ -4222,23 +4230,24 @@ func (o CredentialInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aws_iam_role":             o.AwsIamRole,
-			"azure_managed_identity":   o.AzureManagedIdentity,
-			"azure_service_principal":  o.AzureServicePrincipal,
-			"comment":                  o.Comment,
-			"created_at":               o.CreatedAt,
-			"created_by":               o.CreatedBy,
-			"full_name":                o.FullName,
-			"id":                       o.Id,
-			"isolation_mode":           o.IsolationMode,
-			"metastore_id":             o.MetastoreId,
-			"name":                     o.Name,
-			"owner":                    o.Owner,
-			"purpose":                  o.Purpose,
-			"read_only":                o.ReadOnly,
-			"updated_at":               o.UpdatedAt,
-			"updated_by":               o.UpdatedBy,
-			"used_for_managed_storage": o.UsedForManagedStorage,
+			"aws_iam_role":                   o.AwsIamRole,
+			"azure_managed_identity":         o.AzureManagedIdentity,
+			"azure_service_principal":        o.AzureServicePrincipal,
+			"comment":                        o.Comment,
+			"created_at":                     o.CreatedAt,
+			"created_by":                     o.CreatedBy,
+			"databricks_gcp_service_account": o.DatabricksGcpServiceAccount,
+			"full_name":                      o.FullName,
+			"id":                             o.Id,
+			"isolation_mode":                 o.IsolationMode,
+			"metastore_id":                   o.MetastoreId,
+			"name":                           o.Name,
+			"owner":                          o.Owner,
+			"purpose":                        o.Purpose,
+			"read_only":                      o.ReadOnly,
+			"updated_at":                     o.UpdatedAt,
+			"updated_by":                     o.UpdatedBy,
+			"used_for_managed_storage":       o.UsedForManagedStorage,
 		})
 }
 
@@ -4255,9 +4264,12 @@ func (o CredentialInfo) Type(ctx context.Context) attr.Type {
 			"azure_service_principal": basetypes.ListType{
 				ElemType: AzureServicePrincipal{}.Type(ctx),
 			},
-			"comment":                  types.StringType,
-			"created_at":               types.Int64Type,
-			"created_by":               types.StringType,
+			"comment":    types.StringType,
+			"created_at": types.Int64Type,
+			"created_by": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+			},
 			"full_name":                types.StringType,
 			"id":                       types.StringType,
 			"isolation_mode":           types.StringType,
@@ -4349,6 +4361,32 @@ func (o *CredentialInfo) SetAzureServicePrincipal(ctx context.Context, v AzureSe
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
 	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in CredentialInfo as
+// a DatabricksGcpServiceAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CredentialInfo) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccount, bool) {
+	var e DatabricksGcpServiceAccount
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccount
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in CredentialInfo.
+func (o *CredentialInfo) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccount) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
 type CredentialValidationResult struct {
@@ -4468,6 +4506,61 @@ func (o *CurrentWorkspaceBindings) SetWorkspaces(ctx context.Context, v []types.
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspaces"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Workspaces = types.ListValueMust(t, vs)
+}
+
+// GCP long-lived credential. Databricks-created Google Cloud Storage service
+// account.
+type DatabricksGcpServiceAccount struct {
+	// The Databricks internal ID that represents this managed identity. This
+	// field is only used to persist the credential_id once it is fetched from
+	// the credentials manager - as we only use the protobuf serializer to store
+	// credentials, this ID gets persisted to the database
+	CredentialId types.String `tfsdk:"credential_id" tf:"optional"`
+	// The email of the service account.
+	Email types.String `tfsdk:"email" tf:"optional"`
+	// The ID that represents the private key for this Service Account
+	PrivateKeyId types.String `tfsdk:"private_key_id" tf:"optional"`
+}
+
+func (newState *DatabricksGcpServiceAccount) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksGcpServiceAccount) {
+}
+
+func (newState *DatabricksGcpServiceAccount) SyncEffectiveFieldsDuringRead(existingState DatabricksGcpServiceAccount) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksGcpServiceAccount.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DatabricksGcpServiceAccount) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DatabricksGcpServiceAccount
+// only implements ToObjectValue() and Type().
+func (o DatabricksGcpServiceAccount) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_id":  o.CredentialId,
+			"email":          o.Email,
+			"private_key_id": o.PrivateKeyId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DatabricksGcpServiceAccount) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_id":  types.StringType,
+			"email":          types.StringType,
+			"private_key_id": types.StringType,
+		},
+	}
 }
 
 type DatabricksGcpServiceAccountRequest struct {
@@ -6960,7 +7053,7 @@ type FunctionParameterInfo struct {
 	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
 	// Full data type spec, JSON-serialized.
 	TypeJson types.String `tfsdk:"type_json" tf:"optional"`
-	// Name of type (INT, STRUCT, MAP, etc.).
+
 	TypeName types.String `tfsdk:"type_name" tf:""`
 	// Digits of precision; required on Create for DecimalTypes.
 	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
@@ -7145,58 +7238,7 @@ func (o GcpOauthToken) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GCP long-lived credential. GCP Service Account.
-type GcpServiceAccountKey struct {
-	// The email of the service account. [Create:REQ Update:OPT].
-	Email types.String `tfsdk:"email" tf:"optional"`
-	// The service account's RSA private key. [Create:REQ Update:OPT]
-	PrivateKey types.String `tfsdk:"private_key" tf:"optional"`
-	// The ID of the service account's private key. [Create:REQ Update:OPT]
-	PrivateKeyId types.String `tfsdk:"private_key_id" tf:"optional"`
-}
-
-func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpServiceAccountKey) {
-}
-
-func (newState *GcpServiceAccountKey) SyncEffectiveFieldsDuringRead(existingState GcpServiceAccountKey) {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpServiceAccountKey.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a GcpServiceAccountKey) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GcpServiceAccountKey
-// only implements ToObjectValue() and Type().
-func (o GcpServiceAccountKey) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"email":          o.Email,
-			"private_key":    o.PrivateKey,
-			"private_key_id": o.PrivateKeyId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o GcpServiceAccountKey) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"email":          types.StringType,
-			"private_key":    types.StringType,
-			"private_key_id": types.StringType,
-		},
-	}
-}
-
-// Options to customize the requested temporary credential
+// The Azure cloud options to customize the requested temporary credential
 type GenerateTemporaryServiceCredentialAzureOptions struct {
 	// The resources to which the temporary Azure credential should apply. These
 	// resources are the scopes that are passed to the token provider (see
@@ -7271,12 +7313,89 @@ func (o *GenerateTemporaryServiceCredentialAzureOptions) SetResources(ctx contex
 	o.Resources = types.ListValueMust(t, vs)
 }
 
+// The GCP cloud options to customize the requested temporary credential
+type GenerateTemporaryServiceCredentialGcpOptions struct {
+	// The scopes to which the temporary GCP credential should apply. These
+	// resources are the scopes that are passed to the token provider (see
+	// https://google-auth.readthedocs.io/en/latest/reference/google.auth.html#google.auth.credentials.Credentials)
+	Scopes types.List `tfsdk:"scopes" tf:"optional"`
+}
+
+func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialGcpOptions) {
+}
+
+func (newState *GenerateTemporaryServiceCredentialGcpOptions) SyncEffectiveFieldsDuringRead(existingState GenerateTemporaryServiceCredentialGcpOptions) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenerateTemporaryServiceCredentialGcpOptions.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenerateTemporaryServiceCredentialGcpOptions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"scopes": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenerateTemporaryServiceCredentialGcpOptions
+// only implements ToObjectValue() and Type().
+func (o GenerateTemporaryServiceCredentialGcpOptions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"scopes": o.Scopes,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenerateTemporaryServiceCredentialGcpOptions) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetScopes returns the value of the Scopes field in GenerateTemporaryServiceCredentialGcpOptions as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryServiceCredentialGcpOptions) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in GenerateTemporaryServiceCredentialGcpOptions.
+func (o *GenerateTemporaryServiceCredentialGcpOptions) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
 type GenerateTemporaryServiceCredentialRequest struct {
-	// Options to customize the requested temporary credential
+	// The Azure cloud options to customize the requested temporary credential
 	AzureOptions types.List `tfsdk:"azure_options" tf:"optional,object"`
 	// The name of the service credential used to generate a temporary
 	// credential
 	CredentialName types.String `tfsdk:"credential_name" tf:""`
+	// The GCP cloud options to customize the requested temporary credential
+	GcpOptions types.List `tfsdk:"gcp_options" tf:"optional,object"`
 }
 
 func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenerateTemporaryServiceCredentialRequest) {
@@ -7295,6 +7414,7 @@ func (newState *GenerateTemporaryServiceCredentialRequest) SyncEffectiveFieldsDu
 func (a GenerateTemporaryServiceCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"azure_options": reflect.TypeOf(GenerateTemporaryServiceCredentialAzureOptions{}),
+		"gcp_options":   reflect.TypeOf(GenerateTemporaryServiceCredentialGcpOptions{}),
 	}
 }
 
@@ -7307,6 +7427,7 @@ func (o GenerateTemporaryServiceCredentialRequest) ToObjectValue(ctx context.Con
 		map[string]attr.Value{
 			"azure_options":   o.AzureOptions,
 			"credential_name": o.CredentialName,
+			"gcp_options":     o.GcpOptions,
 		})
 }
 
@@ -7318,6 +7439,9 @@ func (o GenerateTemporaryServiceCredentialRequest) Type(ctx context.Context) att
 				ElemType: GenerateTemporaryServiceCredentialAzureOptions{}.Type(ctx),
 			},
 			"credential_name": types.StringType,
+			"gcp_options": basetypes.ListType{
+				ElemType: GenerateTemporaryServiceCredentialGcpOptions{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7346,6 +7470,32 @@ func (o *GenerateTemporaryServiceCredentialRequest) SetAzureOptions(ctx context.
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_options"]
 	o.AzureOptions = types.ListValueMust(t, vs)
+}
+
+// GetGcpOptions returns the value of the GcpOptions field in GenerateTemporaryServiceCredentialRequest as
+// a GenerateTemporaryServiceCredentialGcpOptions value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenerateTemporaryServiceCredentialRequest) GetGcpOptions(ctx context.Context) (GenerateTemporaryServiceCredentialGcpOptions, bool) {
+	var e GenerateTemporaryServiceCredentialGcpOptions
+	if o.GcpOptions.IsNull() || o.GcpOptions.IsUnknown() {
+		return e, false
+	}
+	var v []GenerateTemporaryServiceCredentialGcpOptions
+	d := o.GcpOptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpOptions sets the value of the GcpOptions field in GenerateTemporaryServiceCredentialRequest.
+func (o *GenerateTemporaryServiceCredentialRequest) SetGcpOptions(ctx context.Context, v GenerateTemporaryServiceCredentialGcpOptions) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_options"]
+	o.GcpOptions = types.ListValueMust(t, vs)
 }
 
 type GenerateTemporaryTableCredentialRequest struct {
@@ -16203,10 +16353,14 @@ type UpdateCredentialRequest struct {
 	AwsIamRole types.List `tfsdk:"aws_iam_role" tf:"optional,object"`
 	// The Azure managed identity configuration.
 	AzureManagedIdentity types.List `tfsdk:"azure_managed_identity" tf:"optional,object"`
-	// The Azure service principal configuration.
+	// The Azure service principal configuration. Only applicable when purpose
+	// is **STORAGE**.
 	AzureServicePrincipal types.List `tfsdk:"azure_service_principal" tf:"optional,object"`
 	// Comment associated with the credential.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
+	// GCP long-lived credential. Databricks-created Google Cloud Storage
+	// service account.
+	DatabricksGcpServiceAccount types.List `tfsdk:"databricks_gcp_service_account" tf:"optional,object"`
 	// Force an update even if there are dependent services (when purpose is
 	// **SERVICE**) or dependent external locations and external tables (when
 	// purpose is **STORAGE**).
@@ -16243,9 +16397,10 @@ func (newState *UpdateCredentialRequest) SyncEffectiveFieldsDuringRead(existingS
 // SDK values.
 func (a UpdateCredentialRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"aws_iam_role":            reflect.TypeOf(AwsIamRole{}),
-		"azure_managed_identity":  reflect.TypeOf(AzureManagedIdentity{}),
-		"azure_service_principal": reflect.TypeOf(AzureServicePrincipal{}),
+		"aws_iam_role":                   reflect.TypeOf(AwsIamRole{}),
+		"azure_managed_identity":         reflect.TypeOf(AzureManagedIdentity{}),
+		"azure_service_principal":        reflect.TypeOf(AzureServicePrincipal{}),
+		"databricks_gcp_service_account": reflect.TypeOf(DatabricksGcpServiceAccount{}),
 	}
 }
 
@@ -16256,17 +16411,18 @@ func (o UpdateCredentialRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"aws_iam_role":            o.AwsIamRole,
-			"azure_managed_identity":  o.AzureManagedIdentity,
-			"azure_service_principal": o.AzureServicePrincipal,
-			"comment":                 o.Comment,
-			"force":                   o.Force,
-			"isolation_mode":          o.IsolationMode,
-			"name_arg":                o.NameArg,
-			"new_name":                o.NewName,
-			"owner":                   o.Owner,
-			"read_only":               o.ReadOnly,
-			"skip_validation":         o.SkipValidation,
+			"aws_iam_role":                   o.AwsIamRole,
+			"azure_managed_identity":         o.AzureManagedIdentity,
+			"azure_service_principal":        o.AzureServicePrincipal,
+			"comment":                        o.Comment,
+			"databricks_gcp_service_account": o.DatabricksGcpServiceAccount,
+			"force":                          o.Force,
+			"isolation_mode":                 o.IsolationMode,
+			"name_arg":                       o.NameArg,
+			"new_name":                       o.NewName,
+			"owner":                          o.Owner,
+			"read_only":                      o.ReadOnly,
+			"skip_validation":                o.SkipValidation,
 		})
 }
 
@@ -16283,7 +16439,10 @@ func (o UpdateCredentialRequest) Type(ctx context.Context) attr.Type {
 			"azure_service_principal": basetypes.ListType{
 				ElemType: AzureServicePrincipal{}.Type(ctx),
 			},
-			"comment":         types.StringType,
+			"comment": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+			},
 			"force":           types.BoolType,
 			"isolation_mode":  types.StringType,
 			"name_arg":        types.StringType,
@@ -16371,6 +16530,32 @@ func (o *UpdateCredentialRequest) SetAzureServicePrincipal(ctx context.Context, 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_service_principal"]
 	o.AzureServicePrincipal = types.ListValueMust(t, vs)
+}
+
+// GetDatabricksGcpServiceAccount returns the value of the DatabricksGcpServiceAccount field in UpdateCredentialRequest as
+// a DatabricksGcpServiceAccount value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCredentialRequest) GetDatabricksGcpServiceAccount(ctx context.Context) (DatabricksGcpServiceAccount, bool) {
+	var e DatabricksGcpServiceAccount
+	if o.DatabricksGcpServiceAccount.IsNull() || o.DatabricksGcpServiceAccount.IsUnknown() {
+		return e, false
+	}
+	var v []DatabricksGcpServiceAccount
+	d := o.DatabricksGcpServiceAccount.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDatabricksGcpServiceAccount sets the value of the DatabricksGcpServiceAccount field in UpdateCredentialRequest.
+func (o *UpdateCredentialRequest) SetDatabricksGcpServiceAccount(ctx context.Context, v DatabricksGcpServiceAccount) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["databricks_gcp_service_account"]
+	o.DatabricksGcpServiceAccount = types.ListValueMust(t, vs)
 }
 
 type UpdateExternalLocation struct {

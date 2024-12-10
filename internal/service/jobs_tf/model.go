@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -854,6 +855,55 @@ func (o CancelRunResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Stores the run state of the clean room notebook V1 task.
+type CleanRoomTaskRunState struct {
+	// A value indicating the run's current lifecycle state. This field is
+	// always available in the response.
+	LifeCycleState types.String `tfsdk:"life_cycle_state" tf:"optional"`
+	// A value indicating the run's result. This field is only available for
+	// terminal lifecycle states.
+	ResultState types.String `tfsdk:"result_state" tf:"optional"`
+}
+
+func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
+}
+
+func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringRead(existingState CleanRoomTaskRunState) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomTaskRunState.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomTaskRunState) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomTaskRunState
+// only implements ToObjectValue() and Type().
+func (o CleanRoomTaskRunState) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"life_cycle_state": o.LifeCycleState,
+			"result_state":     o.ResultState,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomTaskRunState) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"life_cycle_state": types.StringType,
+			"result_state":     types.StringType,
+		},
+	}
+}
+
 type ClusterInstance struct {
 	// The canonical identifier for the cluster used by a run. This field is
 	// always available for runs on existing clusters. For runs on new clusters,
@@ -1213,9 +1263,8 @@ type CreateJob struct {
 	Parameters types.List `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue" tf:"optional,object"`
-	// Write-only setting. Specifies the user, service principal or group that
-	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
-	// user who created the job/pipeline.
+	// Write-only setting. Specifies the user or service principal that the job
+	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.
@@ -4779,9 +4828,8 @@ func (o *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []Jo
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
-// Write-only setting. Specifies the user, service principal or group that the
-// job/pipeline runs as. If not specified, the job/pipeline runs as the user who
-// created the job/pipeline.
+// Write-only setting. Specifies the user or service principal that the job runs
+// as. If not specified, the job runs as the user who created the job.
 //
 // Either `user_name` or `service_principal_name` should be specified. If not,
 // an error is thrown.
@@ -4907,9 +4955,8 @@ type JobSettings struct {
 	Parameters types.List `tfsdk:"parameter" tf:"optional"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue" tf:"optional,object"`
-	// Write-only setting. Specifies the user, service principal or group that
-	// the job/pipeline runs as. If not specified, the job/pipeline runs as the
-	// user who created the job/pipeline.
+	// Write-only setting. Specifies the user or service principal that the job
+	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.

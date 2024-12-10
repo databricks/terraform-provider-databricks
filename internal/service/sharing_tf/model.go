@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -1353,13 +1354,85 @@ func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
 	o.Values = types.ListValueMust(t, vs)
 }
 
+type PartitionSpecificationPartition struct {
+	// An array of partition values.
+	Values types.List `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionSpecificationPartition) {
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringRead(existingState PartitionSpecificationPartition) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PartitionSpecificationPartition.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PartitionSpecificationPartition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"value": reflect.TypeOf(PartitionValue{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionSpecificationPartition
+// only implements ToObjectValue() and Type().
+func (o PartitionSpecificationPartition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"value": o.Values,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PartitionSpecificationPartition) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"value": basetypes.ListType{
+				ElemType: PartitionValue{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetValues returns the value of the Values field in PartitionSpecificationPartition as
+// a slice of PartitionValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PartitionSpecificationPartition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []PartitionValue
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in PartitionSpecificationPartition.
+func (o *PartitionSpecificationPartition) SetValues(ctx context.Context, v []PartitionValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Values = types.ListValueMust(t, vs)
+}
+
 type PartitionValue struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The operator to apply for the value.
 	Op types.String `tfsdk:"op" tf:"optional"`
 	// The key of a Delta Sharing recipient's property. For example
-	// `databricks-account-id`. When this field is set, field `value` can not be
+	// "databricks-account-id". When this field is set, field `value` can not be
 	// set.
 	RecipientPropertyKey types.String `tfsdk:"recipient_property_key" tf:"optional"`
 	// The value of the partition column. When this value is not set, it means
@@ -2454,7 +2527,8 @@ type SharedDataObject struct {
 	// Username of the sharer.
 	AddedBy types.String `tfsdk:"added_by" tf:"computed,optional"`
 	// Whether to enable cdf or indicate if cdf is enabled on the shared object.
-	CdfEnabled types.Bool `tfsdk:"cdf_enabled" tf:"computed,optional"`
+	CdfEnabled          types.Bool `tfsdk:"cdf_enabled" tf:"optional"`
+	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled" tf:"computed,optional"`
 	// A user-provided comment when adding the data object to the share.
 	// [Update:OPT]
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -2466,7 +2540,8 @@ type SharedDataObject struct {
 	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status" tf:"computed,optional"`
+	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
+	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed,optional"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
@@ -2478,7 +2553,8 @@ type SharedDataObject struct {
 	// new name is not provided, the object's original name will be used as the
 	// `shared_as` name. The `shared_as` name must be unique within a share. For
 	// tables, the new name must follow the format of `<schema>.<table>`.
-	SharedAs types.String `tfsdk:"shared_as" tf:"computed,optional"`
+	SharedAs          types.String `tfsdk:"shared_as" tf:"optional"`
+	EffectiveSharedAs types.String `tfsdk:"effective_shared_as" tf:"computed,optional"`
 	// The start version associated with the object. This allows data providers
 	// to control the lowest object version that is accessible by clients. If
 	// specified, clients can query snapshots or changes for versions >=
@@ -2486,7 +2562,8 @@ type SharedDataObject struct {
 	// version of the object at the time it was added to the share.
 	//
 	// NOTE: The start_version should be <= the `current` version of the object.
-	StartVersion types.Int64 `tfsdk:"start_version" tf:"computed,optional"`
+	StartVersion          types.Int64 `tfsdk:"start_version" tf:"optional"`
+	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version" tf:"computed,optional"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
 	Status types.String `tfsdk:"status" tf:"computed,optional"`
 	// A user-provided new name for the data object within the share. If this
@@ -2498,9 +2575,33 @@ type SharedDataObject struct {
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
+	newState.EffectiveCdfEnabled = newState.CdfEnabled
+	newState.CdfEnabled = plan.CdfEnabled
+	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
+	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
+	newState.EffectiveSharedAs = newState.SharedAs
+	newState.SharedAs = plan.SharedAs
+	newState.EffectiveStartVersion = newState.StartVersion
+	newState.StartVersion = plan.StartVersion
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
+	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
+		newState.CdfEnabled = existingState.CdfEnabled
+	}
+	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
+	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
+		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
+	}
+	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
+	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
+		newState.SharedAs = existingState.SharedAs
+	}
+	newState.EffectiveStartVersion = existingState.EffectiveStartVersion
+	if existingState.EffectiveStartVersion.ValueInt64() == newState.StartVersion.ValueInt64() {
+		newState.StartVersion = existingState.StartVersion
+	}
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharedDataObject.
@@ -2523,19 +2624,23 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"added_at":                    o.AddedAt,
-			"added_by":                    o.AddedBy,
-			"cdf_enabled":                 o.CdfEnabled,
-			"comment":                     o.Comment,
+			"added_at":    o.AddedAt,
+			"added_by":    o.AddedBy,
+			"cdf_enabled": o.CdfEnabled,
+
+			"effective_cdf_enabled": o.EffectiveCdfEnabled, "comment": o.Comment,
 			"content":                     o.Content,
 			"data_object_type":            o.DataObjectType,
 			"history_data_sharing_status": o.HistoryDataSharingStatus,
-			"name":                        o.Name,
-			"partition":                   o.Partitions,
-			"shared_as":                   o.SharedAs,
-			"start_version":               o.StartVersion,
-			"status":                      o.Status,
-			"string_shared_as":            o.StringSharedAs,
+
+			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus, "name": o.Name,
+			"partition": o.Partitions,
+			"shared_as": o.SharedAs,
+
+			"effective_shared_as": o.EffectiveSharedAs, "start_version": o.StartVersion,
+
+			"effective_start_version": o.EffectiveStartVersion, "status": o.Status,
+			"string_shared_as": o.StringSharedAs,
 		})
 }
 

@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -2082,6 +2083,202 @@ func (o DeleteAccountIpAccessListRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Delete the AI/BI dashboard embedding access policy
+type DeleteAibiDashboardEmbeddingAccessPolicySettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingAccessPolicySettingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAibiDashboardEmbeddingAccessPolicySettingRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteAibiDashboardEmbeddingAccessPolicySettingRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteAibiDashboardEmbeddingAccessPolicySettingResponse struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag" tf:""`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingAccessPolicySettingResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAibiDashboardEmbeddingAccessPolicySettingResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteAibiDashboardEmbeddingAccessPolicySettingResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// Delete AI/BI dashboard embedding approved domains
+type DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest
+// only implements ToObjectValue() and Type().
+func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag" tf:""`
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+}
+
+func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse
+// only implements ToObjectValue() and Type().
+func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 // Delete the default namespace setting
 type DeleteDefaultNamespaceSettingRequest struct {
 	// etag used for versioning. The response is at least as fresh as the eTag
@@ -3225,6 +3422,460 @@ func (o *DisableLegacyFeatures) SetDisableLegacyFeatures(ctx context.Context, v 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disable_legacy_features"]
 	o.DisableLegacyFeatures = types.ListValueMust(t, vs)
+}
+
+// The network policies applying for egress traffic. This message is used by the
+// UI/REST API. We translate this message to the format expected by the
+// dataplane in Lakehouse Network Manager (for the format expected by the
+// dataplane, see networkconfig.textproto).
+type EgressNetworkPolicy struct {
+	// The access policy enforced for egress traffic to the internet.
+	InternetAccess types.List `tfsdk:"internet_access" tf:"optional,object"`
+}
+
+func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy) {
+}
+
+func (newState *EgressNetworkPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicy) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EgressNetworkPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"internet_access": reflect.TypeOf(EgressNetworkPolicyInternetAccessPolicy{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EgressNetworkPolicy
+// only implements ToObjectValue() and Type().
+func (o EgressNetworkPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"internet_access": o.InternetAccess,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EgressNetworkPolicy) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"internet_access": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicy{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetInternetAccess returns the value of the InternetAccess field in EgressNetworkPolicy as
+// a EgressNetworkPolicyInternetAccessPolicy value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicy) GetInternetAccess(ctx context.Context) (EgressNetworkPolicyInternetAccessPolicy, bool) {
+	var e EgressNetworkPolicyInternetAccessPolicy
+	if o.InternetAccess.IsNull() || o.InternetAccess.IsUnknown() {
+		return e, false
+	}
+	var v []EgressNetworkPolicyInternetAccessPolicy
+	d := o.InternetAccess.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInternetAccess sets the value of the InternetAccess field in EgressNetworkPolicy.
+func (o *EgressNetworkPolicy) SetInternetAccess(ctx context.Context, v EgressNetworkPolicyInternetAccessPolicy) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["internet_access"]
+	o.InternetAccess = types.ListValueMust(t, vs)
+}
+
+type EgressNetworkPolicyInternetAccessPolicy struct {
+	AllowedInternetDestinations types.List `tfsdk:"allowed_internet_destinations" tf:"optional"`
+
+	AllowedStorageDestinations types.List `tfsdk:"allowed_storage_destinations" tf:"optional"`
+	// Optional. If not specified, assume the policy is enforced for all
+	// workloads.
+	LogOnlyMode types.List `tfsdk:"log_only_mode" tf:"optional,object"`
+	// At which level can Databricks and Databricks managed compute access
+	// Internet. FULL_ACCESS: Databricks can access Internet. No blocking rules
+	// will apply. RESTRICTED_ACCESS: Databricks can only access explicitly
+	// allowed internet and storage destinations, as well as UC connections and
+	// external locations. PRIVATE_ACCESS_ONLY (not used): Databricks can only
+	// access destinations via private link.
+	RestrictionMode types.String `tfsdk:"restriction_mode" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicy) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EgressNetworkPolicyInternetAccessPolicy) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_internet_destinations": reflect.TypeOf(EgressNetworkPolicyInternetAccessPolicyInternetDestination{}),
+		"allowed_storage_destinations":  reflect.TypeOf(EgressNetworkPolicyInternetAccessPolicyStorageDestination{}),
+		"log_only_mode":                 reflect.TypeOf(EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EgressNetworkPolicyInternetAccessPolicy
+// only implements ToObjectValue() and Type().
+func (o EgressNetworkPolicyInternetAccessPolicy) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_internet_destinations": o.AllowedInternetDestinations,
+			"allowed_storage_destinations":  o.AllowedStorageDestinations,
+			"log_only_mode":                 o.LogOnlyMode,
+			"restriction_mode":              o.RestrictionMode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EgressNetworkPolicyInternetAccessPolicy) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_internet_destinations": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyInternetDestination{}.Type(ctx),
+			},
+			"allowed_storage_destinations": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx),
+			},
+			"log_only_mode": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx),
+			},
+			"restriction_mode": types.StringType,
+		},
+	}
+}
+
+// GetAllowedInternetDestinations returns the value of the AllowedInternetDestinations field in EgressNetworkPolicyInternetAccessPolicy as
+// a slice of EgressNetworkPolicyInternetAccessPolicyInternetDestination values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicyInternetAccessPolicy) GetAllowedInternetDestinations(ctx context.Context) ([]EgressNetworkPolicyInternetAccessPolicyInternetDestination, bool) {
+	if o.AllowedInternetDestinations.IsNull() || o.AllowedInternetDestinations.IsUnknown() {
+		return nil, false
+	}
+	var v []EgressNetworkPolicyInternetAccessPolicyInternetDestination
+	d := o.AllowedInternetDestinations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedInternetDestinations sets the value of the AllowedInternetDestinations field in EgressNetworkPolicyInternetAccessPolicy.
+func (o *EgressNetworkPolicyInternetAccessPolicy) SetAllowedInternetDestinations(ctx context.Context, v []EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_internet_destinations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedInternetDestinations = types.ListValueMust(t, vs)
+}
+
+// GetAllowedStorageDestinations returns the value of the AllowedStorageDestinations field in EgressNetworkPolicyInternetAccessPolicy as
+// a slice of EgressNetworkPolicyInternetAccessPolicyStorageDestination values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicyInternetAccessPolicy) GetAllowedStorageDestinations(ctx context.Context) ([]EgressNetworkPolicyInternetAccessPolicyStorageDestination, bool) {
+	if o.AllowedStorageDestinations.IsNull() || o.AllowedStorageDestinations.IsUnknown() {
+		return nil, false
+	}
+	var v []EgressNetworkPolicyInternetAccessPolicyStorageDestination
+	d := o.AllowedStorageDestinations.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedStorageDestinations sets the value of the AllowedStorageDestinations field in EgressNetworkPolicyInternetAccessPolicy.
+func (o *EgressNetworkPolicyInternetAccessPolicy) SetAllowedStorageDestinations(ctx context.Context, v []EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_storage_destinations"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedStorageDestinations = types.ListValueMust(t, vs)
+}
+
+// GetLogOnlyMode returns the value of the LogOnlyMode field in EgressNetworkPolicyInternetAccessPolicy as
+// a EgressNetworkPolicyInternetAccessPolicyLogOnlyMode value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicyInternetAccessPolicy) GetLogOnlyMode(ctx context.Context) (EgressNetworkPolicyInternetAccessPolicyLogOnlyMode, bool) {
+	var e EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
+	if o.LogOnlyMode.IsNull() || o.LogOnlyMode.IsUnknown() {
+		return e, false
+	}
+	var v []EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
+	d := o.LogOnlyMode.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetLogOnlyMode sets the value of the LogOnlyMode field in EgressNetworkPolicyInternetAccessPolicy.
+func (o *EgressNetworkPolicyInternetAccessPolicy) SetLogOnlyMode(ctx context.Context, v EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_only_mode"]
+	o.LogOnlyMode = types.ListValueMust(t, vs)
+}
+
+// Users can specify accessible internet destinations when outbound access is
+// restricted. We only support domain name (FQDN) destinations for the time
+// being, though going forwards we want to support host names and IP addresses.
+type EgressNetworkPolicyInternetAccessPolicyInternetDestination struct {
+	Destination types.String `tfsdk:"destination" tf:"optional"`
+	// The filtering protocol used by the DP. For private and public preview,
+	// SEG will only support TCP filtering (i.e. DNS based filtering, filtering
+	// by destination IP address), so protocol will be set to TCP by default and
+	// hidden from the user. In the future, users may be able to select HTTP
+	// filtering (i.e. SNI based filtering, filtering by FQDN).
+	Protocol types.String `tfsdk:"protocol" tf:"optional"`
+
+	Type_ types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyInternetDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EgressNetworkPolicyInternetAccessPolicyInternetDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EgressNetworkPolicyInternetAccessPolicyInternetDestination
+// only implements ToObjectValue() and Type().
+func (o EgressNetworkPolicyInternetAccessPolicyInternetDestination) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination": o.Destination,
+			"protocol":    o.Protocol,
+			"type":        o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EgressNetworkPolicyInternetAccessPolicyInternetDestination) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination": types.StringType,
+			"protocol":    types.StringType,
+			"type":        types.StringType,
+		},
+	}
+}
+
+type EgressNetworkPolicyInternetAccessPolicyLogOnlyMode struct {
+	LogOnlyModeType types.String `tfsdk:"log_only_mode_type" tf:"optional"`
+
+	Workloads types.List `tfsdk:"workloads" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyLogOnlyMode.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"workloads": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EgressNetworkPolicyInternetAccessPolicyLogOnlyMode
+// only implements ToObjectValue() and Type().
+func (o EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"log_only_mode_type": o.LogOnlyModeType,
+			"workloads":          o.Workloads,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"log_only_mode_type": types.StringType,
+			"workloads": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetWorkloads returns the value of the Workloads field in EgressNetworkPolicyInternetAccessPolicyLogOnlyMode as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) GetWorkloads(ctx context.Context) ([]types.String, bool) {
+	if o.Workloads.IsNull() || o.Workloads.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Workloads.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWorkloads sets the value of the Workloads field in EgressNetworkPolicyInternetAccessPolicyLogOnlyMode.
+func (o *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) SetWorkloads(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workloads"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Workloads = types.ListValueMust(t, vs)
+}
+
+// Users can specify accessible storage destinations.
+type EgressNetworkPolicyInternetAccessPolicyStorageDestination struct {
+	AllowedPaths types.List `tfsdk:"allowed_paths" tf:"optional"`
+
+	AzureContainer types.String `tfsdk:"azure_container" tf:"optional"`
+
+	AzureDnsZone types.String `tfsdk:"azure_dns_zone" tf:"optional"`
+
+	AzureStorageAccount types.String `tfsdk:"azure_storage_account" tf:"optional"`
+
+	AzureStorageService types.String `tfsdk:"azure_storage_service" tf:"optional"`
+
+	BucketName types.String `tfsdk:"bucket_name" tf:"optional"`
+
+	Region types.String `tfsdk:"region" tf:"optional"`
+
+	Type_ types.String `tfsdk:"type" tf:"optional"`
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+}
+
+func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyStorageDestination.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EgressNetworkPolicyInternetAccessPolicyStorageDestination) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"allowed_paths": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EgressNetworkPolicyInternetAccessPolicyStorageDestination
+// only implements ToObjectValue() and Type().
+func (o EgressNetworkPolicyInternetAccessPolicyStorageDestination) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allowed_paths":         o.AllowedPaths,
+			"azure_container":       o.AzureContainer,
+			"azure_dns_zone":        o.AzureDnsZone,
+			"azure_storage_account": o.AzureStorageAccount,
+			"azure_storage_service": o.AzureStorageService,
+			"bucket_name":           o.BucketName,
+			"region":                o.Region,
+			"type":                  o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EgressNetworkPolicyInternetAccessPolicyStorageDestination) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allowed_paths": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"azure_container":       types.StringType,
+			"azure_dns_zone":        types.StringType,
+			"azure_storage_account": types.StringType,
+			"azure_storage_service": types.StringType,
+			"bucket_name":           types.StringType,
+			"region":                types.StringType,
+			"type":                  types.StringType,
+		},
+	}
+}
+
+// GetAllowedPaths returns the value of the AllowedPaths field in EgressNetworkPolicyInternetAccessPolicyStorageDestination as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EgressNetworkPolicyInternetAccessPolicyStorageDestination) GetAllowedPaths(ctx context.Context) ([]types.String, bool) {
+	if o.AllowedPaths.IsNull() || o.AllowedPaths.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.AllowedPaths.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAllowedPaths sets the value of the AllowedPaths field in EgressNetworkPolicyInternetAccessPolicyStorageDestination.
+func (o *EgressNetworkPolicyInternetAccessPolicyStorageDestination) SetAllowedPaths(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["allowed_paths"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AllowedPaths = types.ListValueMust(t, vs)
 }
 
 type EmailConfig struct {

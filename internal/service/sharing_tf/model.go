@@ -2624,23 +2624,23 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"added_at":    o.AddedAt,
-			"added_by":    o.AddedBy,
-			"cdf_enabled": o.CdfEnabled,
-
-			"effective_cdf_enabled": o.EffectiveCdfEnabled, "comment": o.Comment,
-			"content":                     o.Content,
-			"data_object_type":            o.DataObjectType,
-			"history_data_sharing_status": o.HistoryDataSharingStatus,
-
-			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus, "name": o.Name,
-			"partition": o.Partitions,
-			"shared_as": o.SharedAs,
-
-			"effective_shared_as": o.EffectiveSharedAs, "start_version": o.StartVersion,
-
-			"effective_start_version": o.EffectiveStartVersion, "status": o.Status,
-			"string_shared_as": o.StringSharedAs,
+			"added_at":                              o.AddedAt,
+			"added_by":                              o.AddedBy,
+			"cdf_enabled":                           o.CdfEnabled,
+			"effective_cdf_enabled":                 o.EffectiveCdfEnabled,
+			"comment":                               o.Comment,
+			"content":                               o.Content,
+			"data_object_type":                      o.DataObjectType,
+			"history_data_sharing_status":           o.HistoryDataSharingStatus,
+			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus,
+			"name":                                  o.Name,
+			"partition":                             o.Partitions,
+			"shared_as":                             o.SharedAs,
+			"effective_shared_as":                   o.EffectiveSharedAs,
+			"start_version":                         o.StartVersion,
+			"effective_start_version":               o.EffectiveStartVersion,
+			"status":                                o.Status,
+			"string_shared_as":                      o.StringSharedAs,
 		})
 }
 
@@ -2648,21 +2648,25 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":                    types.Int64Type,
-			"added_by":                    types.StringType,
-			"cdf_enabled":                 types.BoolType,
-			"comment":                     types.StringType,
-			"content":                     types.StringType,
-			"data_object_type":            types.StringType,
-			"history_data_sharing_status": types.StringType,
-			"name":                        types.StringType,
+			"added_at":                              types.Int64Type,
+			"added_by":                              types.StringType,
+			"cdf_enabled":                           types.BoolType,
+			"effective_cdf_enabled":                 types.BoolType,
+			"comment":                               types.StringType,
+			"content":                               types.StringType,
+			"data_object_type":                      types.StringType,
+			"history_data_sharing_status":           types.StringType,
+			"effective_history_data_sharing_status": types.StringType,
+			"name":                                  types.StringType,
 			"partition": basetypes.ListType{
 				ElemType: Partition{}.Type(ctx),
 			},
-			"shared_as":        types.StringType,
-			"start_version":    types.Int64Type,
-			"status":           types.StringType,
-			"string_shared_as": types.StringType,
+			"shared_as":               types.StringType,
+			"effective_shared_as":     types.StringType,
+			"start_version":           types.Int64Type,
+			"effective_start_version": types.Int64Type,
+			"status":                  types.StringType,
+			"string_shared_as":        types.StringType,
 		},
 	}
 }

@@ -1534,7 +1534,7 @@ func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"compliance_standards": basetypes.ListType{
-				ElemType: types.StringType,
+				ElemType: types.String{}.Type(ctx),
 			},
 			"is_enabled": types.BoolType,
 		},
@@ -1542,7 +1542,7 @@ func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 }
 
 // GetComplianceStandards returns the value of the ComplianceStandards field in ComplianceSecurityProfile as
-// a slice of settings_tf.ComplianceStandard values.
+// a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
 func (o *ComplianceSecurityProfile) GetComplianceStandards(ctx context.Context) ([]types.String, bool) {
 	if o.ComplianceStandards.IsNull() || o.ComplianceStandards.IsUnknown() {

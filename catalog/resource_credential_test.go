@@ -110,7 +110,7 @@ func TestCreateIsolatedCredential(t *testing.T) {
 			}, nil)
 			w.GetMockWorkspaceBindingsAPI().EXPECT().UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
 				SecurableName: "a",
-				SecurableType: catalog.UpdateBindingsSecurableTypeServiceCredential,
+				SecurableType: UpdateBindingsSecurableTypeCredential,
 				Add: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),

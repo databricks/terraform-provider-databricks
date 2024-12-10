@@ -53,6 +53,9 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 		return m
 	})
 
+// This is a custom securable type for credential - remove after OpenAPI spec is fixed.
+const UpdateBindingsSecurableTypeCredential catalog.UpdateBindingsSecurableType = `credential`
+
 func ResourceCredential() common.Resource {
 	return common.Resource{
 		Schema: credentialSchema,
@@ -83,7 +86,7 @@ func ResourceCredential() common.Resource {
 			}
 
 			// Bind the current workspace if the credential is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, catalog.UpdateBindingsSecurableTypeServiceCredential)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, cred.Name, UpdateBindingsSecurableTypeCredential)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -150,7 +153,7 @@ func ResourceCredential() common.Resource {
 				return err
 			}
 			// Bind the current workspace if the credential is isolated, otherwise the read will fail
-			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCredRequest.NameArg, catalog.UpdateBindingsSecurableTypeServiceCredential)
+			return bindings.AddCurrentWorkspaceBindings(ctx, d, w, updateCredRequest.NameArg, UpdateBindingsSecurableTypeCredential)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			force := d.Get("force_destroy").(bool)

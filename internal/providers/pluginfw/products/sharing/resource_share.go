@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +31,12 @@ func ResourceShare() resource.Resource {
 
 type ShareInfoExtended struct {
 	sharing_tf.ShareInfo
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = ShareInfoExtended{}
+
+func (s ShareInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return s.ShareInfo.GetComplexFieldTypes(ctx)
 }
 
 func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
@@ -137,7 +144,7 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 }
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("name")
 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew
@@ -145,8 +152,8 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "created_by")
 
 		c.SetRequired("object", "data_object_type")
-		c.SetRequired("object", "partitions", "values", "op")
-		c.SetRequired("object", "partitions", "values", "name")
+		c.SetRequired("object", "partition", "value", "op")
+		c.SetRequired("object", "partition", "value", "name")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -213,15 +220,13 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	for i := range newState.Objects {
-		newState.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
+	newState, d := r.syncEffectiveFields(ctx, plan, newState, effectiveFieldsActionCreateOrUpdate{})
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -271,9 +276,10 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	newState.SyncEffectiveFieldsDuringRead(existingState.ShareInfo)
-	for i := range newState.Objects {
-		newState.Objects[i].SyncEffectiveFieldsDuringRead(existingState.Objects[i])
+	newState, d := r.syncEffectiveFields(ctx, existingState, newState, effectiveFieldsActionRead{})
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
@@ -370,9 +376,10 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan.ShareInfo)
-	for i := range state.Objects {
-		state.Objects[i].SyncEffectiveFieldsDuringCreateOrUpdate(plan.Objects[i])
+	state, d := r.syncEffectiveFields(ctx, plan, state, effectiveFieldsActionCreateOrUpdate{})
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -397,4 +404,43 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		resp.Diagnostics.AddError("failed to delete share", err.Error())
 		return
 	}
+}
+
+type effectiveFieldsAction interface {
+	resourceLevel(*ShareInfoExtended, sharing_tf.ShareInfo)
+	objectLevel(*sharing_tf.SharedDataObject, sharing_tf.SharedDataObject)
+}
+
+type effectiveFieldsActionCreateOrUpdate struct{}
+
+func (effectiveFieldsActionCreateOrUpdate) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo) {
+	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+}
+
+func (effectiveFieldsActionCreateOrUpdate) objectLevel(state *sharing_tf.SharedDataObject, plan sharing_tf.SharedDataObject) {
+	state.SyncEffectiveFieldsDuringCreateOrUpdate(plan)
+}
+
+type effectiveFieldsActionRead struct{}
+
+func (effectiveFieldsActionRead) resourceLevel(state *ShareInfoExtended, plan sharing_tf.ShareInfo) {
+	state.SyncEffectiveFieldsDuringRead(plan)
+}
+
+func (effectiveFieldsActionRead) objectLevel(state *sharing_tf.SharedDataObject, plan sharing_tf.SharedDataObject) {
+	state.SyncEffectiveFieldsDuringRead(plan)
+}
+
+func (r *ShareResource) syncEffectiveFields(ctx context.Context, plan, state ShareInfoExtended, mode effectiveFieldsAction) (ShareInfoExtended, diag.Diagnostics) {
+	var d diag.Diagnostics
+	mode.resourceLevel(&state, plan.ShareInfo)
+	planObjects, _ := plan.GetObjects(ctx)
+	stateObjects, _ := state.GetObjects(ctx)
+	finalObjects := []sharing_tf.SharedDataObject{}
+	for i := range stateObjects {
+		mode.objectLevel(&stateObjects[i], planObjects[i])
+		finalObjects = append(finalObjects, stateObjects[i])
+	}
+	state.SetObjects(ctx, finalObjects)
+	return state, d
 }

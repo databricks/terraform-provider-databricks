@@ -2289,7 +2289,7 @@ type ShareInfo struct {
 	// A list of shared data objects within the share.
 	Objects types.List `tfsdk:"object" tf:"optional"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner" tf:"computed"`
+	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location" tf:"optional"`
 	// Storage root URL for the share.

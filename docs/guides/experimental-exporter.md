@@ -137,6 +137,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
+* `uc-credentials` - **listing** exports [databricks_credential](../resources/credential.md) resources on workspace or account level.  *Please note that it will skip storage credentials! Use the `uc-storage-credentials` service for them*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
 * `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
@@ -179,6 +180,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_cluster](../resources/cluster.md) | Yes | No | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No | Yes | No |
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
+| [databricks_credential](../resources/credential.md) | Yes | Yes | Yes | No |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |

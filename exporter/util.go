@@ -437,6 +437,13 @@ func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.
 	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 }
 
+func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "isolation_mode" {
+		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+	}
+	return shouldOmitForUnityCatalog(ic, pathString, as, d)
+}
+
 func appendEndingSlashToDirName(dir string) string {
 	if dir == "" || dir[len(dir)-1] == '/' {
 		return dir

@@ -230,7 +230,7 @@ func (s *CustomizableSchema) ConvertToAttribute(path ...string) *CustomizableSch
 }
 
 // navigateSchemaWithCallback navigates through schema attributes and executes callback on the target, panics if path does not exist or invalid.
-func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) (BaseSchemaBuilder, error) {
+func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) {
 	currentScm := s
 	for i, p := range path {
 		m := attributeToNestedBlockObject(currentScm)
@@ -241,7 +241,7 @@ func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder)
 			if i == len(path)-1 {
 				newV := cb(v).(AttributeBuilder)
 				mAttr[p] = newV
-				return mAttr[p], nil
+				return
 			}
 			castedV := v.(BaseSchemaBuilder)
 			currentScm = &castedV
@@ -249,14 +249,14 @@ func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder)
 			if i == len(path)-1 {
 				newV := cb(v).(BlockBuilder)
 				mBlock[p] = newV
-				return mBlock[p], nil
+				return
 			}
 			castedV := v.(BaseSchemaBuilder)
 			currentScm = &castedV
 		} else {
-			return nil, fmt.Errorf("missing key %s", p)
+			panic(fmt.Errorf("missing key %s", p))
 		}
 
 	}
-	return nil, fmt.Errorf("path %v is incomplete", path)
+	panic(fmt.Errorf("path %v is incomplete", path))
 }

@@ -83,9 +83,8 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 }
 
 func (ic *importContext) emitIfWsfsFile(path string) {
-	if strings.HasPrefix(path, "/Workspace/") {
-		normalPath := strings.TrimPrefix(path, "/Workspace")
-		ic.emitWorkspaceFileOrRepo(normalPath)
+	if hasWorkspacePrefix(path) {
+		ic.emitWorkspaceFileOrRepo(maybeStripWorkspacePrefix(path))
 	}
 }
 

@@ -58,6 +58,7 @@ func importContextForTest() *importContext {
 		allSps:                    map[string]scim.User{},
 		channels:                  makeResourcesChannels(),
 		oldWorkspaceObjectMapping: map[int64]string{},
+		gitInfoCache:              map[string]gitInfoCacheEntry{},
 		exportDeletedUsersAssets:  false,
 		ignoredResources:          map[string]struct{}{},
 		deletedResources:          map[string]struct{}{},
@@ -1525,29 +1526,67 @@ func TestEmitSqlParent(t *testing.T) {
 }
 
 func TestEmitFilesFromSlice(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("storage,notebooks,wsfiles")
-	ic.emitFilesFromSlice([]string{
-		"dbfs:/FileStore/test.txt",
-		"/Workspace/Shared/test.txt",
-		"nothing",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Fgit%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{
+				GitInfo: &sdk_workspace.RepoInfo{
+					Id: 1234,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("storage,notebooks,wsfiles,repos")
+		ic.emitFilesFromSlice([]string{
+			"dbfs:/FileStore/test.txt",
+			"/Workspace/Shared/test.txt",
+			"/Workspace/Shared/git/test.txt",
+			"nothing",
+		})
+		assert.Equal(t, 3, len(ic.testEmits))
+		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
 	})
-	assert.Equal(t, 2, len(ic.testEmits))
-	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
-	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }
 
 func TestEmitFilesFromMap(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("storage,notebooks,wsfiles")
-	ic.emitFilesFromMap(map[string]string{
-		"k1": "dbfs:/FileStore/test.txt",
-		"k2": "/Workspace/Shared/test.txt",
-		"k3": "nothing",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Fgit%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{
+				GitInfo: &sdk_workspace.RepoInfo{
+					Id: 1234,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("storage,notebooks,wsfiles,repos")
+		ic.emitFilesFromMap(map[string]string{
+			"k1": "dbfs:/FileStore/test.txt",
+			"k2": "/Workspace/Shared/test.txt",
+			"k3": "nothing",
+			"k4": "/Workspace/Shared/git/test.txt",
+		})
+		assert.Equal(t, 3, len(ic.testEmits))
+		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
 	})
-	assert.Equal(t, 2, len(ic.testEmits))
-	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
-	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }
 
 func TestStorageCredentialListFails(t *testing.T) {

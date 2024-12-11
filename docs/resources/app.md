@@ -33,7 +33,7 @@ resource "databricks_app" "this" {
       id = "1234"
       permission = "CAN_MANAGE"
     }
-  } 
+  }
 }
 ```
 

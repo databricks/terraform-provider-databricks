@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
@@ -38,8 +39,8 @@ var migratedDataSources = []func() datasource.DataSource{
 
 // List of resources that have been onboarded to the plugin framework - not migrated from sdkv2.
 var pluginFwOnlyResources = []func() resource.Resource{
-	// TODO Add resources here
-	sharing.ResourceShare, // Using the staging name (with pluginframework suffix)
+	sharing.ResourceShare,
+	app.ResourceApp,
 }
 
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.

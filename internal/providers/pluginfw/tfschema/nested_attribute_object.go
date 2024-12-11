@@ -25,3 +25,9 @@ func (a NestedAttributeObject) BuildResourceAttribute() schema.NestedAttributeOb
 		Attributes: resourceAttributes,
 	}
 }
+
+func (a NestedAttributeObject) SetReadOnly() {
+	for attr, attrV := range a.Attributes {
+		a.Attributes[attr] = attrV.SetReadOnly()
+	}
+}

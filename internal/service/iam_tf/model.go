@@ -126,9 +126,7 @@ func (o AccessControlResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: Permission{}.Type(ctx),
-			},
+			"all_permissions":        basetypes.ListType{ElemType: Permission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -842,9 +840,7 @@ func (o GetAssignableRolesForResourceResponse) ToObjectValue(ctx context.Context
 func (o GetAssignableRolesForResourceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"roles": basetypes.ListType{
-				ElemType: Role{}.Type(ctx),
-			},
+			"roles": basetypes.ListType{ElemType: Role{}.Type(ctx)},
 		},
 	}
 }
@@ -957,9 +953,7 @@ func (o GetPasswordPermissionLevelsResponse) ToObjectValue(ctx context.Context) 
 func (o GetPasswordPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: PasswordPermissionsDescription{}.Type(ctx),
-			},
+			"permission_levels": basetypes.ListType{ElemType: PasswordPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -1076,9 +1070,7 @@ func (o GetPermissionLevelsResponse) ToObjectValue(ctx context.Context) basetype
 func (o GetPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: PermissionsDescription{}.Type(ctx),
-			},
+			"permission_levels": basetypes.ListType{ElemType: PermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -1420,10 +1412,8 @@ func (o GrantRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o GrantRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principals": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"role": types.StringType,
+			"principals": basetypes.ListType{ElemType: types.StringType},
+			"role":       types.StringType,
 		},
 	}
 }
@@ -1525,27 +1515,15 @@ func (o Group) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Group) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"displayName": types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"externalId": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"meta": basetypes.ListType{
-				ElemType: ResourceMeta{}.Type(ctx),
-			},
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"displayName":  types.StringType,
+			"entitlements": basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"externalId":   types.StringType,
+			"groups":       basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"id":           types.StringType,
+			"members":      basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"meta":         basetypes.ListType{ElemType: ResourceMeta{}.Type(ctx)},
+			"roles":        basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"schemas":      basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -2053,12 +2031,8 @@ func (o ListGroupsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
-				ElemType: Group{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"Resources":    basetypes.ListType{ElemType: Group{}.Type(ctx)},
+			"schemas":      basetypes.ListType{ElemType: types.StringType},
 			"startIndex":   types.Int64Type,
 			"totalResults": types.Int64Type,
 		},
@@ -2171,12 +2145,8 @@ func (o ListServicePrincipalResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
-				ElemType: ServicePrincipal{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"Resources":    basetypes.ListType{ElemType: ServicePrincipal{}.Type(ctx)},
+			"schemas":      basetypes.ListType{ElemType: types.StringType},
 			"startIndex":   types.Int64Type,
 			"totalResults": types.Int64Type,
 		},
@@ -2436,12 +2406,8 @@ func (o ListUsersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
-			"Resources": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"Resources":    basetypes.ListType{ElemType: User{}.Type(ctx)},
+			"schemas":      basetypes.ListType{ElemType: types.StringType},
 			"startIndex":   types.Int64Type,
 			"totalResults": types.Int64Type,
 		},
@@ -2730,11 +2696,9 @@ func (o ObjectPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o ObjectPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+			"access_control_list": basetypes.ListType{ElemType: AccessControlResponse{}.Type(ctx)},
+			"object_id":           types.StringType,
+			"object_type":         types.StringType,
 		},
 	}
 }
@@ -2812,13 +2776,9 @@ func (o PartialUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o PartialUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"Operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"id":         types.StringType,
+			"Operations": basetypes.ListType{ElemType: Patch{}.Type(ctx)},
+			"schemas":    basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -2980,9 +2940,7 @@ func (o PasswordAccessControlResponse) ToObjectValue(ctx context.Context) basety
 func (o PasswordAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: PasswordPermission{}.Type(ctx),
-			},
+			"all_permissions":        basetypes.ListType{ElemType: PasswordPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -3061,11 +3019,9 @@ func (o PasswordPermission) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o PasswordPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
+			"inherited":             types.BoolType,
+			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
+			"permission_level":      types.StringType,
 		},
 	}
 }
@@ -3140,11 +3096,9 @@ func (o PasswordPermissions) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PasswordPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+			"access_control_list": basetypes.ListType{ElemType: PasswordAccessControlResponse{}.Type(ctx)},
+			"object_id":           types.StringType,
+			"object_type":         types.StringType,
 		},
 	}
 }
@@ -3258,9 +3212,7 @@ func (o PasswordPermissionsRequest) ToObjectValue(ctx context.Context) basetypes
 func (o PasswordPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlRequest{}.Type(ctx),
-			},
+			"access_control_list": basetypes.ListType{ElemType: PasswordAccessControlRequest{}.Type(ctx)},
 		},
 	}
 }
@@ -3421,11 +3373,9 @@ func (o Permission) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Permission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
+			"inherited":             types.BoolType,
+			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
+			"permission_level":      types.StringType,
 		},
 	}
 }
@@ -3504,13 +3454,9 @@ func (o PermissionAssignment) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o PermissionAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"error": types.StringType,
-			"permissions": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"principal": basetypes.ListType{
-				ElemType: PrincipalOutput{}.Type(ctx),
-			},
+			"error":       types.StringType,
+			"permissions": basetypes.ListType{ElemType: types.StringType},
+			"principal":   basetypes.ListType{ElemType: PrincipalOutput{}.Type(ctx)},
 		},
 	}
 }
@@ -3606,9 +3552,7 @@ func (o PermissionAssignments) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o PermissionAssignments) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_assignments": basetypes.ListType{
-				ElemType: PermissionAssignment{}.Type(ctx),
-			},
+			"permission_assignments": basetypes.ListType{ElemType: PermissionAssignment{}.Type(ctx)},
 		},
 	}
 }
@@ -3778,9 +3722,7 @@ func (o PermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o PermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.Type(ctx),
-			},
+			"access_control_list": basetypes.ListType{ElemType: AccessControlRequest{}.Type(ctx)},
 			"request_object_id":   types.StringType,
 			"request_object_type": types.StringType,
 		},
@@ -4003,11 +3945,9 @@ func (o RuleSetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o RuleSetResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag": types.StringType,
-			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
-			},
-			"name": types.StringType,
+			"etag":        types.StringType,
+			"grant_rules": basetypes.ListType{ElemType: GrantRule{}.Type(ctx)},
+			"name":        types.StringType,
 		},
 	}
 }
@@ -4085,11 +4025,9 @@ func (o RuleSetUpdateRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o RuleSetUpdateRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag": types.StringType,
-			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
-			},
-			"name": types.StringType,
+			"etag":        types.StringType,
+			"grant_rules": basetypes.ListType{ElemType: GrantRule{}.Type(ctx)},
+			"name":        types.StringType,
 		},
 	}
 }
@@ -4192,20 +4130,12 @@ func (o ServicePrincipal) Type(ctx context.Context) attr.Type {
 			"active":        types.BoolType,
 			"applicationId": types.StringType,
 			"displayName":   types.StringType,
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"externalId": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"entitlements":  basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"externalId":    types.StringType,
+			"groups":        basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"id":            types.StringType,
+			"roles":         basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"schemas":       basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -4392,10 +4322,8 @@ func (o UpdateRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name": types.StringType,
-			"rule_set": basetypes.ListType{
-				ElemType: RuleSetUpdateRequest{}.Type(ctx),
-			},
+			"name":     types.StringType,
+			"rule_set": basetypes.ListType{ElemType: RuleSetUpdateRequest{}.Type(ctx)},
 		},
 	}
 }
@@ -4476,9 +4404,7 @@ func (o UpdateWorkspaceAssignments) ToObjectValue(ctx context.Context) basetypes
 func (o UpdateWorkspaceAssignments) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permissions": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"permissions":  basetypes.ListType{ElemType: types.StringType},
 			"principal_id": types.Int64Type,
 			"workspace_id": types.Int64Type,
 		},
@@ -4594,29 +4520,17 @@ func (o User) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o User) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"active":      types.BoolType,
-			"displayName": types.StringType,
-			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"externalId": types.StringType,
-			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"name": basetypes.ListType{
-				ElemType: Name{}.Type(ctx),
-			},
-			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
-			},
-			"schemas": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"userName": types.StringType,
+			"active":       types.BoolType,
+			"displayName":  types.StringType,
+			"emails":       basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"entitlements": basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"externalId":   types.StringType,
+			"groups":       basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"id":           types.StringType,
+			"name":         basetypes.ListType{ElemType: Name{}.Type(ctx)},
+			"roles":        basetypes.ListType{ElemType: ComplexValue{}.Type(ctx)},
+			"schemas":      basetypes.ListType{ElemType: types.StringType},
+			"userName":     types.StringType,
 		},
 	}
 }
@@ -4816,9 +4730,7 @@ func (o WorkspacePermissions) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o WorkspacePermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permissions": basetypes.ListType{
-				ElemType: PermissionOutput{}.Type(ctx),
-			},
+			"permissions": basetypes.ListType{ElemType: PermissionOutput{}.Type(ctx)},
 		},
 	}
 }

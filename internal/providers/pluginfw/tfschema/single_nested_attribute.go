@@ -1,6 +1,9 @@
 package tfschema
 
 import (
+	"fmt"
+
+	"github.com/databricks/terraform-provider-databricks/common"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -101,4 +104,8 @@ func (a SingleNestedAttributeBuilder) AddValidator(v validator.Object) Attribute
 func (a SingleNestedAttributeBuilder) AddPlanModifier(v planmodifier.Object) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
+}
+
+func (a SingleNestedAttributeBuilder) ToBlock() BlockBuilder {
+	panic(fmt.Errorf("SingleNestedAttributeBuilder used for legacy resource. This is unexpected. %s", common.TerraformBugErrorMessage))
 }

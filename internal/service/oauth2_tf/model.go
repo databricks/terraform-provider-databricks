@@ -76,17 +76,11 @@ func (o CreateCustomAppIntegration) ToObjectValue(ctx context.Context) basetypes
 func (o CreateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"confidential": types.BoolType,
-			"name":         types.StringType,
-			"redirect_urls": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"scopes": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"confidential":        types.BoolType,
+			"name":                types.StringType,
+			"redirect_urls":       basetypes.ListType{ElemType: types.StringType},
+			"scopes":              basetypes.ListType{ElemType: types.StringType},
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }
@@ -263,10 +257,8 @@ func (o CreatePublishedAppIntegration) ToObjectValue(ctx context.Context) basety
 func (o CreatePublishedAppIntegration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app_id": types.StringType,
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"app_id":              types.StringType,
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }
@@ -798,22 +790,16 @@ func (o GetCustomAppIntegrationOutput) ToObjectValue(ctx context.Context) basety
 func (o GetCustomAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"client_id":        types.StringType,
-			"confidential":     types.BoolType,
-			"create_time":      types.StringType,
-			"created_by":       types.Int64Type,
-			"creator_username": types.StringType,
-			"integration_id":   types.StringType,
-			"name":             types.StringType,
-			"redirect_urls": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"scopes": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"client_id":           types.StringType,
+			"confidential":        types.BoolType,
+			"create_time":         types.StringType,
+			"created_by":          types.Int64Type,
+			"creator_username":    types.StringType,
+			"integration_id":      types.StringType,
+			"name":                types.StringType,
+			"redirect_urls":       basetypes.ListType{ElemType: types.StringType},
+			"scopes":              basetypes.ListType{ElemType: types.StringType},
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }
@@ -981,9 +967,7 @@ func (o GetCustomAppIntegrationsOutput) ToObjectValue(ctx context.Context) baset
 func (o GetCustomAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps": basetypes.ListType{
-				ElemType: GetCustomAppIntegrationOutput{}.Type(ctx),
-			},
+			"apps":            basetypes.ListType{ElemType: GetCustomAppIntegrationOutput{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1069,14 +1053,12 @@ func (o GetPublishedAppIntegrationOutput) ToObjectValue(ctx context.Context) bas
 func (o GetPublishedAppIntegrationOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app_id":         types.StringType,
-			"create_time":    types.StringType,
-			"created_by":     types.Int64Type,
-			"integration_id": types.StringType,
-			"name":           types.StringType,
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"app_id":              types.StringType,
+			"create_time":         types.StringType,
+			"created_by":          types.Int64Type,
+			"integration_id":      types.StringType,
+			"name":                types.StringType,
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }
@@ -1191,9 +1173,7 @@ func (o GetPublishedAppIntegrationsOutput) ToObjectValue(ctx context.Context) ba
 func (o GetPublishedAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps": basetypes.ListType{
-				ElemType: GetPublishedAppIntegrationOutput{}.Type(ctx),
-			},
+			"apps":            basetypes.ListType{ElemType: GetPublishedAppIntegrationOutput{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1268,9 +1248,7 @@ func (o GetPublishedAppsOutput) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o GetPublishedAppsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps": basetypes.ListType{
-				ElemType: PublishedAppOutput{}.Type(ctx),
-			},
+			"apps":            basetypes.ListType{ElemType: PublishedAppOutput{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1543,9 +1521,7 @@ func (o ListServicePrincipalSecretsResponse) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"secrets": basetypes.ListType{
-				ElemType: SecretInfo{}.Type(ctx),
-			},
+			"secrets":         basetypes.ListType{ElemType: SecretInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -1641,12 +1617,8 @@ func (o PublishedAppOutput) Type(ctx context.Context) attr.Type {
 			"description":            types.StringType,
 			"is_confidential_client": types.BoolType,
 			"name":                   types.StringType,
-			"redirect_urls": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"scopes": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"redirect_urls":          basetypes.ListType{ElemType: types.StringType},
+			"scopes":                 basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -1853,13 +1825,9 @@ func (o UpdateCustomAppIntegration) ToObjectValue(ctx context.Context) basetypes
 func (o UpdateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"integration_id": types.StringType,
-			"redirect_urls": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"integration_id":      types.StringType,
+			"redirect_urls":       basetypes.ListType{ElemType: types.StringType},
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }
@@ -1993,10 +1961,8 @@ func (o UpdatePublishedAppIntegration) ToObjectValue(ctx context.Context) basety
 func (o UpdatePublishedAppIntegration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"integration_id": types.StringType,
-			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
-			},
+			"integration_id":      types.StringType,
+			"token_access_policy": basetypes.ListType{ElemType: TokenAccessPolicy{}.Type(ctx)},
 		},
 	}
 }

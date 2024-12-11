@@ -61,9 +61,7 @@ func (o CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
-			},
+			"dashboard": basetypes.ListType{ElemType: Dashboard{}.Type(ctx)},
 		},
 	}
 }
@@ -138,9 +136,7 @@ func (o CreateScheduleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
-			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
-			},
+			"schedule":     basetypes.ListType{ElemType: Schedule{}.Type(ctx)},
 		},
 	}
 }
@@ -219,9 +215,7 @@ func (o CreateSubscriptionRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule_id":  types.StringType,
-			"subscription": basetypes.ListType{
-				ElemType: Subscription{}.Type(ctx),
-			},
+			"subscription": basetypes.ListType{ElemType: Subscription{}.Type(ctx)},
 		},
 	}
 }
@@ -618,12 +612,8 @@ func (o GenieAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GenieAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query": basetypes.ListType{
-				ElemType: QueryAttachment{}.Type(ctx),
-			},
-			"text": basetypes.ListType{
-				ElemType: TextAttachment{}.Type(ctx),
-			},
+			"query": basetypes.ListType{ElemType: QueryAttachment{}.Type(ctx)},
+			"text":  basetypes.ListType{ElemType: TextAttachment{}.Type(ctx)},
 		},
 	}
 }
@@ -987,9 +977,7 @@ func (o GenieGetMessageQueryResultResponse) ToObjectValue(ctx context.Context) b
 func (o GenieGetMessageQueryResultResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"statement_response": basetypes.ListType{
-				ElemType: sql_tf.StatementResponse{}.Type(ctx),
-			},
+			"statement_response": basetypes.ListType{ElemType: sql_tf.StatementResponse{}.Type(ctx)},
 		},
 	}
 }
@@ -1106,23 +1094,17 @@ func (o GenieMessage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o GenieMessage) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attachments": basetypes.ListType{
-				ElemType: GenieAttachment{}.Type(ctx),
-			},
-			"content":           types.StringType,
-			"conversation_id":   types.StringType,
-			"created_timestamp": types.Int64Type,
-			"error": basetypes.ListType{
-				ElemType: MessageError{}.Type(ctx),
-			},
+			"attachments":            basetypes.ListType{ElemType: GenieAttachment{}.Type(ctx)},
+			"content":                types.StringType,
+			"conversation_id":        types.StringType,
+			"created_timestamp":      types.Int64Type,
+			"error":                  basetypes.ListType{ElemType: MessageError{}.Type(ctx)},
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
-			"query_result": basetypes.ListType{
-				ElemType: Result{}.Type(ctx),
-			},
-			"space_id": types.StringType,
-			"status":   types.StringType,
-			"user_id":  types.Int64Type,
+			"query_result":           basetypes.ListType{ElemType: Result{}.Type(ctx)},
+			"space_id":               types.StringType,
+			"status":                 types.StringType,
+			"user_id":                types.Int64Type,
 		},
 	}
 }
@@ -1300,14 +1282,10 @@ func (o GenieStartConversationResponse) ToObjectValue(ctx context.Context) baset
 func (o GenieStartConversationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"conversation": basetypes.ListType{
-				ElemType: GenieConversation{}.Type(ctx),
-			},
+			"conversation":    basetypes.ListType{ElemType: GenieConversation{}.Type(ctx)},
 			"conversation_id": types.StringType,
-			"message": basetypes.ListType{
-				ElemType: GenieMessage{}.Type(ctx),
-			},
-			"message_id": types.StringType,
+			"message":         basetypes.ListType{ElemType: GenieMessage{}.Type(ctx)},
+			"message_id":      types.StringType,
 		},
 	}
 }
@@ -1647,9 +1625,7 @@ func (o ListDashboardsResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o ListDashboardsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboards": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
-			},
+			"dashboards":      basetypes.ListType{ElemType: Dashboard{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1778,9 +1754,7 @@ func (o ListSchedulesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"schedules": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
-			},
+			"schedules":       basetypes.ListType{ElemType: Schedule{}.Type(ctx)},
 		},
 	}
 }
@@ -1912,9 +1886,7 @@ func (o ListSubscriptionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"subscriptions": basetypes.ListType{
-				ElemType: Subscription{}.Type(ctx),
-			},
+			"subscriptions":   basetypes.ListType{ElemType: Subscription{}.Type(ctx)},
 		},
 	}
 }
@@ -2209,9 +2181,7 @@ func (o QueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o QueryAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cached_query_schema": basetypes.ListType{
-				ElemType: QuerySchema{}.Type(ctx),
-			},
+			"cached_query_schema":    basetypes.ListType{ElemType: QuerySchema{}.Type(ctx)},
 			"description":            types.StringType,
 			"id":                     types.StringType,
 			"instruction_id":         types.StringType,
@@ -2292,9 +2262,7 @@ func (o QuerySchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o QuerySchema) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"columns": basetypes.ListType{
-				ElemType: QuerySchemaColumn{}.Type(ctx),
-			},
+			"columns":      basetypes.ListType{ElemType: QuerySchemaColumn{}.Type(ctx)},
 			"statement_id": types.StringType,
 		},
 	}
@@ -2495,17 +2463,15 @@ func (o Schedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Schedule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
-			"cron_schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
-			},
-			"dashboard_id": types.StringType,
-			"display_name": types.StringType,
-			"etag":         types.StringType,
-			"pause_status": types.StringType,
-			"schedule_id":  types.StringType,
-			"update_time":  types.StringType,
-			"warehouse_id": types.StringType,
+			"create_time":   types.StringType,
+			"cron_schedule": basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
+			"dashboard_id":  types.StringType,
+			"display_name":  types.StringType,
+			"etag":          types.StringType,
+			"pause_status":  types.StringType,
+			"schedule_id":   types.StringType,
+			"update_time":   types.StringType,
+			"warehouse_id":  types.StringType,
 		},
 	}
 }
@@ -2581,12 +2547,8 @@ func (o Subscriber) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Subscriber) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"destination_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberDestination{}.Type(ctx),
-			},
-			"user_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberUser{}.Type(ctx),
-			},
+			"destination_subscriber": basetypes.ListType{ElemType: SubscriptionSubscriberDestination{}.Type(ctx)},
+			"user_subscriber":        basetypes.ListType{ElemType: SubscriptionSubscriberUser{}.Type(ctx)},
 		},
 	}
 }
@@ -2712,11 +2674,9 @@ func (o Subscription) Type(ctx context.Context) attr.Type {
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
-			"subscriber": basetypes.ListType{
-				ElemType: Subscriber{}.Type(ctx),
-			},
-			"subscription_id": types.StringType,
-			"update_time":     types.StringType,
+			"subscriber":         basetypes.ListType{ElemType: Subscriber{}.Type(ctx)},
+			"subscription_id":    types.StringType,
+			"update_time":        types.StringType,
 		},
 	}
 }
@@ -3078,9 +3038,7 @@ func (o UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
-			},
+			"dashboard":    basetypes.ListType{ElemType: Dashboard{}.Type(ctx)},
 			"dashboard_id": types.StringType,
 		},
 	}
@@ -3159,10 +3117,8 @@ func (o UpdateScheduleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
-			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
-			},
-			"schedule_id": types.StringType,
+			"schedule":     basetypes.ListType{ElemType: Schedule{}.Type(ctx)},
+			"schedule_id":  types.StringType,
 		},
 	}
 }

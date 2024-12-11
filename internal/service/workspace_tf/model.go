@@ -282,12 +282,10 @@ func (o CreateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o CreateRepoRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"path":     types.StringType,
-			"provider": types.StringType,
-			"sparse_checkout": basetypes.ListType{
-				ElemType: SparseCheckout{}.Type(ctx),
-			},
-			"url": types.StringType,
+			"path":            types.StringType,
+			"provider":        types.StringType,
+			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
+			"url":             types.StringType,
 		},
 	}
 }
@@ -376,15 +374,13 @@ func (o CreateRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateRepoResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":         types.StringType,
-			"head_commit_id": types.StringType,
-			"id":             types.Int64Type,
-			"path":           types.StringType,
-			"provider":       types.StringType,
-			"sparse_checkout": basetypes.ListType{
-				ElemType: SparseCheckout{}.Type(ctx),
-			},
-			"url": types.StringType,
+			"branch":          types.StringType,
+			"head_commit_id":  types.StringType,
+			"id":              types.Int64Type,
+			"path":            types.StringType,
+			"provider":        types.StringType,
+			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
+			"url":             types.StringType,
 		},
 	}
 }
@@ -465,9 +461,7 @@ func (o CreateScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CreateScope) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"backend_azure_keyvault": basetypes.ListType{
-				ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx),
-			},
+			"backend_azure_keyvault":   basetypes.ListType{ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx)},
 			"initial_manage_principal": types.StringType,
 			"scope":                    types.StringType,
 			"scope_backend_type":       types.StringType,
@@ -1404,9 +1398,7 @@ func (o GetRepoPermissionLevelsResponse) ToObjectValue(ctx context.Context) base
 func (o GetRepoPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: RepoPermissionsDescription{}.Type(ctx),
-			},
+			"permission_levels": basetypes.ListType{ElemType: RepoPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -1580,15 +1572,13 @@ func (o GetRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetRepoResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":         types.StringType,
-			"head_commit_id": types.StringType,
-			"id":             types.Int64Type,
-			"path":           types.StringType,
-			"provider":       types.StringType,
-			"sparse_checkout": basetypes.ListType{
-				ElemType: SparseCheckout{}.Type(ctx),
-			},
-			"url": types.StringType,
+			"branch":          types.StringType,
+			"head_commit_id":  types.StringType,
+			"id":              types.Int64Type,
+			"path":            types.StringType,
+			"provider":        types.StringType,
+			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
+			"url":             types.StringType,
 		},
 	}
 }
@@ -1841,9 +1831,7 @@ func (o GetWorkspaceObjectPermissionLevelsResponse) ToObjectValue(ctx context.Co
 func (o GetWorkspaceObjectPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: WorkspaceObjectPermissionsDescription{}.Type(ctx),
-			},
+			"permission_levels": basetypes.ListType{ElemType: WorkspaceObjectPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -2117,9 +2105,7 @@ func (o ListAclsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListAclsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"items": basetypes.ListType{
-				ElemType: AclItem{}.Type(ctx),
-			},
+			"items": basetypes.ListType{ElemType: AclItem{}.Type(ctx)},
 		},
 	}
 }
@@ -2189,9 +2175,7 @@ func (o ListCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListCredentialsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"credentials": basetypes.ListType{
-				ElemType: CredentialInfo{}.Type(ctx),
-			},
+			"credentials": basetypes.ListType{ElemType: CredentialInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -2317,9 +2301,7 @@ func (o ListReposResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"repos": basetypes.ListType{
-				ElemType: RepoInfo{}.Type(ctx),
-			},
+			"repos":           basetypes.ListType{ElemType: RepoInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -2389,9 +2371,7 @@ func (o ListResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"objects": basetypes.ListType{
-				ElemType: ObjectInfo{}.Type(ctx),
-			},
+			"objects": basetypes.ListType{ElemType: ObjectInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -2461,9 +2441,7 @@ func (o ListScopesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ListScopesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"scopes": basetypes.ListType{
-				ElemType: SecretScope{}.Type(ctx),
-			},
+			"scopes": basetypes.ListType{ElemType: SecretScope{}.Type(ctx)},
 		},
 	}
 }
@@ -2576,9 +2554,7 @@ func (o ListSecretsResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o ListSecretsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"secrets": basetypes.ListType{
-				ElemType: SecretMetadata{}.Type(ctx),
-			},
+			"secrets": basetypes.ListType{ElemType: SecretMetadata{}.Type(ctx)},
 		},
 	}
 }
@@ -3093,9 +3069,7 @@ func (o RepoAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o RepoAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: RepoPermission{}.Type(ctx),
-			},
+			"all_permissions":        basetypes.ListType{ElemType: RepoPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -3188,15 +3162,13 @@ func (o RepoInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RepoInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":         types.StringType,
-			"head_commit_id": types.StringType,
-			"id":             types.Int64Type,
-			"path":           types.StringType,
-			"provider":       types.StringType,
-			"sparse_checkout": basetypes.ListType{
-				ElemType: SparseCheckout{}.Type(ctx),
-			},
-			"url": types.StringType,
+			"branch":          types.StringType,
+			"head_commit_id":  types.StringType,
+			"id":              types.Int64Type,
+			"path":            types.StringType,
+			"provider":        types.StringType,
+			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
+			"url":             types.StringType,
 		},
 	}
 }
@@ -3271,11 +3243,9 @@ func (o RepoPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o RepoPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
+			"inherited":             types.BoolType,
+			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
+			"permission_level":      types.StringType,
 		},
 	}
 }
@@ -3350,11 +3320,9 @@ func (o RepoPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o RepoPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: RepoAccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+			"access_control_list": basetypes.ListType{ElemType: RepoAccessControlResponse{}.Type(ctx)},
+			"object_id":           types.StringType,
+			"object_type":         types.StringType,
 		},
 	}
 }
@@ -3471,10 +3439,8 @@ func (o RepoPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o RepoPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: RepoAccessControlRequest{}.Type(ctx),
-			},
-			"repo_id": types.StringType,
+			"access_control_list": basetypes.ListType{ElemType: RepoAccessControlRequest{}.Type(ctx)},
+			"repo_id":             types.StringType,
 		},
 	}
 }
@@ -3596,11 +3562,9 @@ func (o SecretScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SecretScope) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"backend_type": types.StringType,
-			"keyvault_metadata": basetypes.ListType{
-				ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx),
-			},
-			"name": types.StringType,
+			"backend_type":      types.StringType,
+			"keyvault_metadata": basetypes.ListType{ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx)},
+			"name":              types.StringType,
 		},
 	}
 }
@@ -3674,9 +3638,7 @@ func (o SparseCheckout) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o SparseCheckout) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"patterns": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"patterns": basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -3750,9 +3712,7 @@ func (o SparseCheckoutUpdate) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o SparseCheckoutUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"patterns": basetypes.ListType{
-				ElemType: types.StringType,
-			},
+			"patterns": basetypes.ListType{ElemType: types.StringType},
 		},
 	}
 }
@@ -3938,12 +3898,10 @@ func (o UpdateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o UpdateRepoRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":  types.StringType,
-			"repo_id": types.Int64Type,
-			"sparse_checkout": basetypes.ListType{
-				ElemType: SparseCheckoutUpdate{}.Type(ctx),
-			},
-			"tag": types.StringType,
+			"branch":          types.StringType,
+			"repo_id":         types.Int64Type,
+			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckoutUpdate{}.Type(ctx)},
+			"tag":             types.StringType,
 		},
 	}
 }
@@ -4115,9 +4073,7 @@ func (o WorkspaceObjectAccessControlResponse) ToObjectValue(ctx context.Context)
 func (o WorkspaceObjectAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: WorkspaceObjectPermission{}.Type(ctx),
-			},
+			"all_permissions":        basetypes.ListType{ElemType: WorkspaceObjectPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -4196,11 +4152,9 @@ func (o WorkspaceObjectPermission) ToObjectValue(ctx context.Context) basetypes.
 func (o WorkspaceObjectPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
+			"inherited":             types.BoolType,
+			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
+			"permission_level":      types.StringType,
 		},
 	}
 }
@@ -4275,11 +4229,9 @@ func (o WorkspaceObjectPermissions) ToObjectValue(ctx context.Context) basetypes
 func (o WorkspaceObjectPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: WorkspaceObjectAccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+			"access_control_list": basetypes.ListType{ElemType: WorkspaceObjectAccessControlResponse{}.Type(ctx)},
+			"object_id":           types.StringType,
+			"object_type":         types.StringType,
 		},
 	}
 }
@@ -4399,9 +4351,7 @@ func (o WorkspaceObjectPermissionsRequest) ToObjectValue(ctx context.Context) ba
 func (o WorkspaceObjectPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: WorkspaceObjectAccessControlRequest{}.Type(ctx),
-			},
+			"access_control_list":   basetypes.ListType{ElemType: WorkspaceObjectAccessControlRequest{}.Type(ctx)},
 			"workspace_object_id":   types.StringType,
 			"workspace_object_type": types.StringType,
 		},

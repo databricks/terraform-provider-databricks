@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/apps"
@@ -19,9 +18,7 @@ import (
 )
 
 const (
-	resourceName               = "app"
-	defaultAppProvisionTimeout = 10 * time.Minute
-	deleteCallTimeout          = 10 * time.Second
+	resourceName = "app"
 )
 
 func ResourceApp() resource.Resource {
@@ -120,7 +117,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	// Wait for the app to be created
 	finalApp, err := waiter.Get()
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create app", err.Error())
+		resp.Diagnostics.AddError("error waiting for app to be ready", err.Error())
 		return
 	}
 
@@ -151,7 +148,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	appGoSdk, err := w.Apps.GetByName(ctx, app.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("failed to get app", err.Error())
+		resp.Diagnostics.AddError("failed to read app", err.Error())
 		return
 	}
 
@@ -160,8 +157,10 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -197,6 +196,9 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

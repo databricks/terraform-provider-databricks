@@ -123,7 +123,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"description":                 types.StringType,
 			"name":                        types.StringType,
 			"pending_deployment":          AppDeployment{}.Type(ctx),
-			"resources":                   AppResource{}.Type(ctx),
+			"resources":                   basetypes.ListType{ElemType: AppResource{}.Type(ctx)},
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
@@ -377,7 +377,7 @@ func (o AppAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o AppAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        AppPermission{}.Type(ctx),
+			"all_permissions":        basetypes.ListType{ElemType: AppPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -757,7 +757,7 @@ func (o AppPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o AppPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": AppAccessControlResponse{}.Type(ctx),
+			"access_control_list": basetypes.ListType{ElemType: AppAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -876,7 +876,7 @@ func (o AppPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AppPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": AppAccessControlRequest{}.Type(ctx),
+			"access_control_list": basetypes.ListType{ElemType: AppAccessControlRequest{}.Type(ctx)},
 			"app_name":            types.StringType,
 		},
 	}
@@ -1691,7 +1691,7 @@ func (o GetAppPermissionLevelsResponse) ToObjectValue(ctx context.Context) baset
 func (o GetAppPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": AppPermissionsDescription{}.Type(ctx),
+			"permission_levels": basetypes.ListType{ElemType: AppPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -1902,7 +1902,7 @@ func (o ListAppDeploymentsResponse) ToObjectValue(ctx context.Context) basetypes
 func (o ListAppDeploymentsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app_deployments": AppDeployment{}.Type(ctx),
+			"app_deployments": basetypes.ListType{ElemType: AppDeployment{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -2023,7 +2023,7 @@ func (o ListAppsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListAppsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps":            App{}.Type(ctx),
+			"apps":            basetypes.ListType{ElemType: App{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}

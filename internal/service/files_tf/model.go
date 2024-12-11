@@ -1133,7 +1133,7 @@ func (o ListDirectoryResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ListDirectoryResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"contents":        basetypes.ListType{ElemType: DirectoryEntry{}.Type(ctx)},
+			"contents":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: DirectoryEntry{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1205,7 +1205,7 @@ func (o ListStatusResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ListStatusResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"files": basetypes.ListType{ElemType: FileInfo{}.Type(ctx)},
+			"files": basetypes.ListType{ElemType: basetypes.ListType{ElemType: FileInfo{}.Type(ctx)}},
 		},
 	}
 }

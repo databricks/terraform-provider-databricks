@@ -2658,7 +2658,7 @@ func (o Network) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id":         types.StringType,
 			"creation_time":      types.Int64Type,
-			"error_messages":     basetypes.ListType{ElemType: NetworkHealth{}.Type(ctx)},
+			"error_messages":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: NetworkHealth{}.Type(ctx)}},
 			"gcp_network_info":   basetypes.ListType{ElemType: GcpNetworkInfo{}.Type(ctx)},
 			"network_id":         types.StringType,
 			"network_name":       types.StringType,
@@ -2667,7 +2667,7 @@ func (o Network) Type(ctx context.Context) attr.Type {
 			"vpc_endpoints":      basetypes.ListType{ElemType: NetworkVpcEndpoints{}.Type(ctx)},
 			"vpc_id":             types.StringType,
 			"vpc_status":         types.StringType,
-			"warning_messages":   basetypes.ListType{ElemType: NetworkWarning{}.Type(ctx)},
+			"warning_messages":   basetypes.ListType{ElemType: basetypes.ListType{ElemType: NetworkWarning{}.Type(ctx)}},
 			"workspace_id":       types.Int64Type,
 		},
 	}

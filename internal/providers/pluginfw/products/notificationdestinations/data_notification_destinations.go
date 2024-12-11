@@ -36,7 +36,7 @@ type NotificationDestinationsDataSource struct {
 type NotificationDestinationsInfo struct {
 	DisplayNameContains      types.String `tfsdk:"display_name_contains" tf:"optional"`
 	Type                     types.String `tfsdk:"type" tf:"optional"`
-	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"computed"`
+	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"readonly"`
 }
 
 func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

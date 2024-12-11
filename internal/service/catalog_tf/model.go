@@ -723,7 +723,7 @@ func (o ArtifactAllowlistInfo) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ArtifactAllowlistInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"artifact_matchers": basetypes.ListType{ElemType: ArtifactMatcher{}.Type(ctx)},
+			"artifact_matchers": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ArtifactMatcher{}.Type(ctx)}},
 			"created_at":        types.Int64Type,
 			"created_by":        types.StringType,
 			"metastore_id":      types.StringType,
@@ -3233,7 +3233,7 @@ func (o CreateMonitor) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"assets_dir":                 types.StringType,
 			"baseline_table_name":        types.StringType,
-			"custom_metrics":             basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)},
+			"custom_metrics":             basetypes.ListType{ElemType: basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)}},
 			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
 			"inference_log":              basetypes.ListType{ElemType: MonitorInferenceLog{}.Type(ctx)},
 			"notifications":              basetypes.ListType{ElemType: MonitorNotifications{}.Type(ctx)},
@@ -5746,7 +5746,7 @@ func (o DependencyList) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o DependencyList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dependencies": basetypes.ListType{ElemType: Dependency{}.Type(ctx)},
+			"dependencies": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Dependency{}.Type(ctx)}},
 		},
 	}
 }
@@ -5900,7 +5900,7 @@ func (o EffectivePermissionsList) ToObjectValue(ctx context.Context) basetypes.O
 func (o EffectivePermissionsList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"privilege_assignments": basetypes.ListType{ElemType: EffectivePrivilegeAssignment{}.Type(ctx)},
+			"privilege_assignments": basetypes.ListType{ElemType: basetypes.ListType{ElemType: EffectivePrivilegeAssignment{}.Type(ctx)}},
 		},
 	}
 }
@@ -6082,7 +6082,7 @@ func (o EffectivePrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal":  types.StringType,
-			"privileges": basetypes.ListType{ElemType: EffectivePrivilege{}.Type(ctx)},
+			"privileges": basetypes.ListType{ElemType: basetypes.ListType{ElemType: EffectivePrivilege{}.Type(ctx)}},
 		},
 	}
 }
@@ -7028,7 +7028,7 @@ func (o FunctionParameterInfos) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o FunctionParameterInfos) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parameters": basetypes.ListType{ElemType: FunctionParameterInfo{}.Type(ctx)},
+			"parameters": basetypes.ListType{ElemType: basetypes.ListType{ElemType: FunctionParameterInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -9145,7 +9145,7 @@ func (o ListAccountStorageCredentialsResponse) ToObjectValue(ctx context.Context
 func (o ListAccountStorageCredentialsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"storage_credentials": basetypes.ListType{ElemType: StorageCredentialInfo{}.Type(ctx)},
+			"storage_credentials": basetypes.ListType{ElemType: basetypes.ListType{ElemType: StorageCredentialInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -9280,7 +9280,7 @@ func (o ListCatalogsResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListCatalogsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalogs":        basetypes.ListType{ElemType: CatalogInfo{}.Type(ctx)},
+			"catalogs":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: CatalogInfo{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -9408,7 +9408,7 @@ func (o ListConnectionsResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListConnectionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"connections":     basetypes.ListType{ElemType: ConnectionInfo{}.Type(ctx)},
+			"connections":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: ConnectionInfo{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -9538,7 +9538,7 @@ func (o ListCredentialsResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListCredentialsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"credentials":     basetypes.ListType{ElemType: CredentialInfo{}.Type(ctx)},
+			"credentials":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: CredentialInfo{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -9671,7 +9671,7 @@ func (o ListExternalLocationsResponse) ToObjectValue(ctx context.Context) basety
 func (o ListExternalLocationsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"external_locations": basetypes.ListType{ElemType: ExternalLocationInfo{}.Type(ctx)},
+			"external_locations": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExternalLocationInfo{}.Type(ctx)}},
 			"next_page_token":    types.StringType,
 		},
 	}
@@ -9812,7 +9812,7 @@ func (o ListFunctionsResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ListFunctionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"functions":       basetypes.ListType{ElemType: FunctionInfo{}.Type(ctx)},
+			"functions":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: FunctionInfo{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -9883,7 +9883,7 @@ func (o ListMetastoresResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o ListMetastoresResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastores": basetypes.ListType{ElemType: MetastoreInfo{}.Type(ctx)},
+			"metastores": basetypes.ListType{ElemType: basetypes.ListType{ElemType: MetastoreInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10020,7 +10020,7 @@ func (o ListModelVersionsResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o ListModelVersionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_versions":  basetypes.ListType{ElemType: ModelVersionInfo{}.Type(ctx)},
+			"model_versions":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersionInfo{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -10144,7 +10144,7 @@ func (o ListQuotasResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"quotas":          basetypes.ListType{ElemType: QuotaInfo{}.Type(ctx)},
+			"quotas":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: QuotaInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10340,7 +10340,7 @@ func (o ListRegisteredModelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token":   types.StringType,
-			"registered_models": basetypes.ListType{ElemType: RegisteredModelInfo{}.Type(ctx)},
+			"registered_models": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10477,7 +10477,7 @@ func (o ListSchemasResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"schemas":         basetypes.ListType{ElemType: SchemaInfo{}.Type(ctx)},
+			"schemas":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: SchemaInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10605,7 +10605,7 @@ func (o ListStorageCredentialsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token":     types.StringType,
-			"storage_credentials": basetypes.ListType{ElemType: StorageCredentialInfo{}.Type(ctx)},
+			"storage_credentials": basetypes.ListType{ElemType: basetypes.ListType{ElemType: StorageCredentialInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10808,7 +10808,7 @@ func (o ListSystemSchemasResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"schemas":         basetypes.ListType{ElemType: SystemSchemaInfo{}.Type(ctx)},
+			"schemas":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: SystemSchemaInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -10884,7 +10884,7 @@ func (o ListTableSummariesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"tables":          basetypes.ListType{ElemType: TableSummary{}.Type(ctx)},
+			"tables":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: TableSummary{}.Type(ctx)}},
 		},
 	}
 }
@@ -11046,7 +11046,7 @@ func (o ListTablesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"tables":          basetypes.ListType{ElemType: TableInfo{}.Type(ctx)},
+			"tables":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: TableInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -11194,7 +11194,7 @@ func (o ListVolumesResponseContent) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"volumes":         basetypes.ListType{ElemType: VolumeInfo{}.Type(ctx)},
+			"volumes":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: VolumeInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -11499,7 +11499,7 @@ func (o ModelVersionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ModelVersionInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aliases":                    basetypes.ListType{ElemType: RegisteredModelAlias{}.Type(ctx)},
+			"aliases":                    basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelAlias{}.Type(ctx)}},
 			"browse_only":                types.BoolType,
 			"catalog_name":               types.StringType,
 			"comment":                    types.StringType,
@@ -11960,7 +11960,7 @@ func (o MonitorInfo) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"assets_dir":                 types.StringType,
 			"baseline_table_name":        types.StringType,
-			"custom_metrics":             basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)},
+			"custom_metrics":             basetypes.ListType{ElemType: basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)}},
 			"dashboard_id":               types.StringType,
 			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
 			"drift_metrics_table_name":   types.StringType,
@@ -12494,7 +12494,7 @@ func (o MonitorRefreshListResponse) ToObjectValue(ctx context.Context) basetypes
 func (o MonitorRefreshListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"refreshes": basetypes.ListType{ElemType: MonitorRefreshInfo{}.Type(ctx)},
+			"refreshes": basetypes.ListType{ElemType: basetypes.ListType{ElemType: MonitorRefreshInfo{}.Type(ctx)}},
 		},
 	}
 }
@@ -13353,7 +13353,7 @@ func (o PermissionsList) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o PermissionsList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"privilege_assignments": basetypes.ListType{ElemType: PrivilegeAssignment{}.Type(ctx)},
+			"privilege_assignments": basetypes.ListType{ElemType: basetypes.ListType{ElemType: PrivilegeAssignment{}.Type(ctx)}},
 		},
 	}
 }
@@ -14094,7 +14094,7 @@ func (o RegisteredModelInfo) ToObjectValue(ctx context.Context) basetypes.Object
 func (o RegisteredModelInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aliases":          basetypes.ListType{ElemType: RegisteredModelAlias{}.Type(ctx)},
+			"aliases":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelAlias{}.Type(ctx)}},
 			"browse_only":      types.BoolType,
 			"catalog_name":     types.StringType,
 			"comment":          types.StringType,
@@ -14391,7 +14391,7 @@ func (o SetArtifactAllowlist) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o SetArtifactAllowlist) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"artifact_matchers": basetypes.ListType{ElemType: ArtifactMatcher{}.Type(ctx)},
+			"artifact_matchers": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ArtifactMatcher{}.Type(ctx)}},
 			"artifact_type":     types.StringType,
 		},
 	}
@@ -15190,7 +15190,7 @@ func (o TableInfo) Type(ctx context.Context) attr.Type {
 			"access_point":                           types.StringType,
 			"browse_only":                            types.BoolType,
 			"catalog_name":                           types.StringType,
-			"columns":                                basetypes.ListType{ElemType: ColumnInfo{}.Type(ctx)},
+			"columns":                                basetypes.ListType{ElemType: basetypes.ListType{ElemType: ColumnInfo{}.Type(ctx)}},
 			"comment":                                types.StringType,
 			"created_at":                             types.Int64Type,
 			"created_by":                             types.StringType,
@@ -15212,7 +15212,7 @@ func (o TableInfo) Type(ctx context.Context) attr.Type {
 			"sql_path":                               types.StringType,
 			"storage_credential_name":                types.StringType,
 			"storage_location":                       types.StringType,
-			"table_constraints":                      basetypes.ListType{ElemType: TableConstraint{}.Type(ctx)},
+			"table_constraints":                      basetypes.ListType{ElemType: basetypes.ListType{ElemType: TableConstraint{}.Type(ctx)}},
 			"table_id":                               types.StringType,
 			"table_type":                             types.StringType,
 			"updated_at":                             types.Int64Type,
@@ -16676,7 +16676,7 @@ func (o UpdateMonitor) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"baseline_table_name":        types.StringType,
-			"custom_metrics":             basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)},
+			"custom_metrics":             basetypes.ListType{ElemType: basetypes.ListType{ElemType: MonitorMetric{}.Type(ctx)}},
 			"dashboard_id":               types.StringType,
 			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
 			"inference_log":              basetypes.ListType{ElemType: MonitorInferenceLog{}.Type(ctx)},
@@ -16944,7 +16944,7 @@ func (o UpdatePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o UpdatePermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"changes":        basetypes.ListType{ElemType: PermissionsChange{}.Type(ctx)},
+			"changes":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: PermissionsChange{}.Type(ctx)}},
 			"full_name":      types.StringType,
 			"securable_type": types.StringType,
 		},
@@ -17641,8 +17641,8 @@ func (o UpdateWorkspaceBindingsParameters) ToObjectValue(ctx context.Context) ba
 func (o UpdateWorkspaceBindingsParameters) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"add":            basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)},
-			"remove":         basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)},
+			"add":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)}},
+			"remove":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)}},
 			"securable_name": types.StringType,
 			"securable_type": types.StringType,
 		},
@@ -17871,7 +17871,7 @@ func (o ValidateCredentialResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"isDir":   types.BoolType,
-			"results": basetypes.ListType{ElemType: CredentialValidationResult{}.Type(ctx)},
+			"results": basetypes.ListType{ElemType: basetypes.ListType{ElemType: CredentialValidationResult{}.Type(ctx)}},
 		},
 	}
 }
@@ -18155,7 +18155,7 @@ func (o ValidateStorageCredentialResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"isDir":   types.BoolType,
-			"results": basetypes.ListType{ElemType: ValidationResult{}.Type(ctx)},
+			"results": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ValidationResult{}.Type(ctx)}},
 		},
 	}
 }
@@ -18462,7 +18462,7 @@ func (o WorkspaceBindingsResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o WorkspaceBindingsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"bindings":        basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)},
+			"bindings":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: WorkspaceBinding{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}

@@ -20,6 +20,7 @@ import (
 type structTag struct {
 	optional     bool
 	computed     bool
+	readonly     bool
 	singleObject bool
 }
 
@@ -49,6 +50,9 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 		}
 		if structTag.computed {
 			attr = attr.SetComputed()
+		}
+		if structTag.readonly {
+			attr = attr.SetReadOnly()
 		}
 		scmAttr[fieldName] = attr
 	}
@@ -164,6 +168,7 @@ func getStructTag(field reflect.StructField) structTag {
 	return structTag{
 		optional:     strings.Contains(tagValue, "optional"),
 		computed:     strings.Contains(tagValue, "computed"),
+		readonly:     strings.Contains(tagValue, "readonly"),
 		singleObject: strings.Contains(tagValue, "object"),
 	}
 }

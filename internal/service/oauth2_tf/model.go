@@ -967,7 +967,7 @@ func (o GetCustomAppIntegrationsOutput) ToObjectValue(ctx context.Context) baset
 func (o GetCustomAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps":            basetypes.ListType{ElemType: GetCustomAppIntegrationOutput{}.Type(ctx)},
+			"apps":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: GetCustomAppIntegrationOutput{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1173,7 +1173,7 @@ func (o GetPublishedAppIntegrationsOutput) ToObjectValue(ctx context.Context) ba
 func (o GetPublishedAppIntegrationsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps":            basetypes.ListType{ElemType: GetPublishedAppIntegrationOutput{}.Type(ctx)},
+			"apps":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: GetPublishedAppIntegrationOutput{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1248,7 +1248,7 @@ func (o GetPublishedAppsOutput) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o GetPublishedAppsOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps":            basetypes.ListType{ElemType: PublishedAppOutput{}.Type(ctx)},
+			"apps":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: PublishedAppOutput{}.Type(ctx)}},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1521,7 +1521,7 @@ func (o ListServicePrincipalSecretsResponse) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"secrets":         basetypes.ListType{ElemType: SecretInfo{}.Type(ctx)},
+			"secrets":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: SecretInfo{}.Type(ctx)}},
 		},
 	}
 }

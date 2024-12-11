@@ -75,7 +75,7 @@ func TestCustomizeSchemaSetRequired(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["enabled"].IsRequired())
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
@@ -93,7 +93,7 @@ func TestCustomizeSchemaSetSensitive(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["name"].IsSensitive())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["name"].IsSensitive())
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {
@@ -138,12 +138,13 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
+	assert.True(t, len(scm.Attributes["nested_slice_object"].(schema.ListNestedAttribute).Validators) == 1)
 }
 
 func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureForSdkV2Migration()
 			c.SetRequired("nested")
 			return c
 		})
@@ -153,6 +154,7 @@ func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureForSdkV2Migration()
 			c.SetOptional("nested")
 			return c
 		})
@@ -162,6 +164,7 @@ func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureForSdkV2Migration()
 			c.SetSensitive("nested")
 			return c
 		})
@@ -171,6 +174,7 @@ func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureForSdkV2Migration()
 			c.SetReadOnly("nested")
 			return c
 		})
@@ -180,6 +184,7 @@ func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureForSdkV2Migration()
 			c.SetComputed("nested")
 			return c
 		})

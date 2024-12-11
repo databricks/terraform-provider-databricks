@@ -107,11 +107,15 @@ func (o CleanRoom) Type(ctx context.Context) attr.Type {
 			"created_at":               types.Int64Type,
 			"local_collaborator_alias": types.StringType,
 			"name":                     types.StringType,
-			"output_catalog":           basetypes.ListType{ElemType: CleanRoomOutputCatalog{}.Type(ctx)},
-			"owner":                    types.StringType,
-			"remote_detailed_info":     basetypes.ListType{ElemType: CleanRoomRemoteDetail{}.Type(ctx)},
-			"status":                   types.StringType,
-			"updated_at":               types.Int64Type,
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+			},
+			"owner": types.StringType,
+			"remote_detailed_info": basetypes.ListType{
+				ElemType: CleanRoomRemoteDetail{}.Type(ctx),
+			},
+			"status":     types.StringType,
+			"updated_at": types.Int64Type,
 		},
 	}
 }
@@ -265,19 +269,35 @@ func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o CleanRoomAsset) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":                    types.Int64Type,
-			"asset_type":                  types.StringType,
-			"foreign_table":               basetypes.ListType{ElemType: CleanRoomAssetForeignTable{}.Type(ctx)},
-			"foreign_table_local_details": basetypes.ListType{ElemType: CleanRoomAssetForeignTableLocalDetails{}.Type(ctx)},
-			"name":                        types.StringType,
-			"notebook":                    basetypes.ListType{ElemType: CleanRoomAssetNotebook{}.Type(ctx)},
-			"owner_collaborator_alias":    types.StringType,
-			"status":                      types.StringType,
-			"table":                       basetypes.ListType{ElemType: CleanRoomAssetTable{}.Type(ctx)},
-			"table_local_details":         basetypes.ListType{ElemType: CleanRoomAssetTableLocalDetails{}.Type(ctx)},
-			"view":                        basetypes.ListType{ElemType: CleanRoomAssetView{}.Type(ctx)},
-			"view_local_details":          basetypes.ListType{ElemType: CleanRoomAssetViewLocalDetails{}.Type(ctx)},
-			"volume_local_details":        basetypes.ListType{ElemType: CleanRoomAssetVolumeLocalDetails{}.Type(ctx)},
+			"added_at":   types.Int64Type,
+			"asset_type": types.StringType,
+			"foreign_table": basetypes.ListType{
+				ElemType: CleanRoomAssetForeignTable{}.Type(ctx),
+			},
+			"foreign_table_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"notebook": basetypes.ListType{
+				ElemType: CleanRoomAssetNotebook{}.Type(ctx),
+			},
+			"owner_collaborator_alias": types.StringType,
+			"status":                   types.StringType,
+			"table": basetypes.ListType{
+				ElemType: CleanRoomAssetTable{}.Type(ctx),
+			},
+			"table_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetTableLocalDetails{}.Type(ctx),
+			},
+			"view": basetypes.ListType{
+				ElemType: CleanRoomAssetView{}.Type(ctx),
+			},
+			"view_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetViewLocalDetails{}.Type(ctx),
+			},
+			"volume_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetVolumeLocalDetails{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1103,8 +1123,12 @@ func (o CleanRoomNotebookTaskRun) ToObjectValue(ctx context.Context) basetypes.O
 func (o CleanRoomNotebookTaskRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"collaborator_job_run_info":     basetypes.ListType{ElemType: CollaboratorJobRunInfo{}.Type(ctx)},
-			"notebook_job_run_state":        basetypes.ListType{ElemType: jobs_tf.CleanRoomTaskRunState{}.Type(ctx)},
+			"collaborator_job_run_info": basetypes.ListType{
+				ElemType: CollaboratorJobRunInfo{}.Type(ctx),
+			},
+			"notebook_job_run_state": basetypes.ListType{
+				ElemType: jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
+			},
 			"notebook_name":                 types.StringType,
 			"output_schema_expiration_time": types.Int64Type,
 			"output_schema_name":            types.StringType,
@@ -1288,10 +1312,16 @@ func (o CleanRoomRemoteDetail) Type(ctx context.Context) attr.Type {
 			"collaborators": basetypes.ListType{
 				ElemType: CleanRoomCollaborator{}.Type(ctx),
 			},
-			"compliance_security_profile": basetypes.ListType{ElemType: ComplianceSecurityProfile{}.Type(ctx)},
-			"creator":                     basetypes.ListType{ElemType: CleanRoomCollaborator{}.Type(ctx)},
-			"egress_network_policy":       basetypes.ListType{ElemType: settings_tf.EgressNetworkPolicy{}.Type(ctx)},
-			"region":                      types.StringType,
+			"compliance_security_profile": basetypes.ListType{
+				ElemType: ComplianceSecurityProfile{}.Type(ctx),
+			},
+			"creator": basetypes.ListType{
+				ElemType: CleanRoomCollaborator{}.Type(ctx),
+			},
+			"egress_network_policy": basetypes.ListType{
+				ElemType: settings_tf.EgressNetworkPolicy{}.Type(ctx),
+			},
+			"region": types.StringType,
 		},
 	}
 }
@@ -1580,7 +1610,9 @@ func (o CreateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o CreateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset":           basetypes.ListType{ElemType: CleanRoomAsset{}.Type(ctx)},
+			"asset": basetypes.ListType{
+				ElemType: CleanRoomAsset{}.Type(ctx),
+			},
 			"clean_room_name": types.StringType,
 		},
 	}
@@ -1656,7 +1688,9 @@ func (o CreateCleanRoomOutputCatalogRequest) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
-			"output_catalog":  basetypes.ListType{ElemType: CleanRoomOutputCatalog{}.Type(ctx)},
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1725,7 +1759,9 @@ func (o CreateCleanRoomOutputCatalogResponse) ToObjectValue(ctx context.Context)
 func (o CreateCleanRoomOutputCatalogResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"output_catalog": basetypes.ListType{ElemType: CleanRoomOutputCatalog{}.Type(ctx)},
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1795,7 +1831,9 @@ func (o CreateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": basetypes.ListType{ElemType: CleanRoom{}.Type(ctx)},
+			"clean_room": basetypes.ListType{
+				ElemType: CleanRoom{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2527,7 +2565,9 @@ func (o UpdateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o UpdateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset":           basetypes.ListType{ElemType: CleanRoomAsset{}.Type(ctx)},
+			"asset": basetypes.ListType{
+				ElemType: CleanRoomAsset{}.Type(ctx),
+			},
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
 			"name":            types.StringType,
@@ -2602,8 +2642,10 @@ func (o UpdateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": basetypes.ListType{ElemType: CleanRoom{}.Type(ctx)},
-			"name":       types.StringType,
+			"clean_room": basetypes.ListType{
+				ElemType: CleanRoom{}.Type(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }

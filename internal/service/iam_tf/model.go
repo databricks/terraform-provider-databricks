@@ -1537,7 +1537,9 @@ func (o Group) Type(ctx context.Context) attr.Type {
 			"members": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
-			"meta": basetypes.ListType{ElemType: ResourceMeta{}.Type(ctx)},
+			"meta": basetypes.ListType{
+				ElemType: ResourceMeta{}.Type(ctx),
+			},
 			"roles": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
@@ -3506,7 +3508,9 @@ func (o PermissionAssignment) Type(ctx context.Context) attr.Type {
 			"permissions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"principal": basetypes.ListType{ElemType: PrincipalOutput{}.Type(ctx)},
+			"principal": basetypes.ListType{
+				ElemType: PrincipalOutput{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4388,8 +4392,10 @@ func (o UpdateRuleSetRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o UpdateRuleSetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"rule_set": basetypes.ListType{ElemType: RuleSetUpdateRequest{}.Type(ctx)},
+			"name": types.StringType,
+			"rule_set": basetypes.ListType{
+				ElemType: RuleSetUpdateRequest{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4600,8 +4606,10 @@ func (o User) Type(ctx context.Context) attr.Type {
 			"groups": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},
-			"id":   types.StringType,
-			"name": basetypes.ListType{ElemType: Name{}.Type(ctx)},
+			"id": types.StringType,
+			"name": basetypes.ListType{
+				ElemType: Name{}.Type(ctx),
+			},
 			"roles": basetypes.ListType{
 				ElemType: ComplexValue{}.Type(ctx),
 			},

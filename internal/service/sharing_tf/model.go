@@ -149,11 +149,15 @@ func (o CreateRecipient) Type(ctx context.Context) attr.Type {
 			"comment":                            types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
-			"ip_access_list":                     basetypes.ListType{ElemType: IpAccessList{}.Type(ctx)},
-			"name":                               types.StringType,
-			"owner":                              types.StringType,
-			"properties_kvpairs":                 basetypes.ListType{ElemType: SecurablePropertiesKvPairs{}.Type(ctx)},
-			"sharing_code":                       types.StringType,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList{}.Type(ctx),
+			},
+			"name":  types.StringType,
+			"owner": types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+			},
+			"sharing_code": types.StringType,
 		},
 	}
 }
@@ -1650,11 +1654,13 @@ func (o ProviderInfo) Type(ctx context.Context) attr.Type {
 			"metastore_id":                      types.StringType,
 			"name":                              types.StringType,
 			"owner":                             types.StringType,
-			"recipient_profile":                 basetypes.ListType{ElemType: RecipientProfile{}.Type(ctx)},
-			"recipient_profile_str":             types.StringType,
-			"region":                            types.StringType,
-			"updated_at":                        types.Int64Type,
-			"updated_by":                        types.StringType,
+			"recipient_profile": basetypes.ListType{
+				ElemType: RecipientProfile{}.Type(ctx),
+			},
+			"recipient_profile_str": types.StringType,
+			"region":                types.StringType,
+			"updated_at":            types.Int64Type,
+			"updated_by":            types.StringType,
 		},
 	}
 }
@@ -1836,13 +1842,17 @@ func (o RecipientInfo) Type(ctx context.Context) attr.Type {
 			"created_at":                         types.Int64Type,
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
-			"ip_access_list":                     basetypes.ListType{ElemType: IpAccessList{}.Type(ctx)},
-			"metastore_id":                       types.StringType,
-			"name":                               types.StringType,
-			"owner":                              types.StringType,
-			"properties_kvpairs":                 basetypes.ListType{ElemType: SecurablePropertiesKvPairs{}.Type(ctx)},
-			"region":                             types.StringType,
-			"sharing_code":                       types.StringType,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList{}.Type(ctx),
+			},
+			"metastore_id": types.StringType,
+			"name":         types.StringType,
+			"owner":        types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+			},
+			"region":       types.StringType,
+			"sharing_code": types.StringType,
 			"tokens": basetypes.ListType{
 				ElemType: RecipientTokenInfo{}.Type(ctx),
 			},
@@ -2729,8 +2739,10 @@ func (o SharedDataObjectUpdate) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o SharedDataObjectUpdate) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"action":      types.StringType,
-			"data_object": basetypes.ListType{ElemType: SharedDataObject{}.Type(ctx)},
+			"action": types.StringType,
+			"data_object": basetypes.ListType{
+				ElemType: SharedDataObject{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2917,13 +2929,17 @@ func (o UpdateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o UpdateRecipient) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":            types.StringType,
-			"expiration_time":    types.Int64Type,
-			"ip_access_list":     basetypes.ListType{ElemType: IpAccessList{}.Type(ctx)},
-			"name":               types.StringType,
-			"new_name":           types.StringType,
-			"owner":              types.StringType,
-			"properties_kvpairs": basetypes.ListType{ElemType: SecurablePropertiesKvPairs{}.Type(ctx)},
+			"comment":         types.StringType,
+			"expiration_time": types.Int64Type,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList{}.Type(ctx),
+			},
+			"name":     types.StringType,
+			"new_name": types.StringType,
+			"owner":    types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+			},
 		},
 	}
 }

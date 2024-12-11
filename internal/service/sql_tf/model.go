@@ -165,7 +165,9 @@ func (o Alert) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Alert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition":            basetypes.ListType{ElemType: AlertCondition{}.Type(ctx)},
+			"condition": basetypes.ListType{
+				ElemType: AlertCondition{}.Type(ctx),
+			},
 			"create_time":          types.StringType,
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
@@ -262,8 +264,12 @@ func (o AlertCondition) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"empty_result_state": types.StringType,
 			"op":                 types.StringType,
-			"operand":            basetypes.ListType{ElemType: AlertConditionOperand{}.Type(ctx)},
-			"threshold":          basetypes.ListType{ElemType: AlertConditionThreshold{}.Type(ctx)},
+			"operand": basetypes.ListType{
+				ElemType: AlertConditionOperand{}.Type(ctx),
+			},
+			"threshold": basetypes.ListType{
+				ElemType: AlertConditionThreshold{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -358,7 +364,9 @@ func (o AlertConditionOperand) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AlertConditionOperand) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"column": basetypes.ListType{ElemType: AlertOperandColumn{}.Type(ctx)},
+			"column": basetypes.ListType{
+				ElemType: AlertOperandColumn{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -427,7 +435,9 @@ func (o AlertConditionThreshold) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o AlertConditionThreshold) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"value": basetypes.ListType{ElemType: AlertOperandValue{}.Type(ctx)},
+			"value": basetypes.ListType{
+				ElemType: AlertOperandValue{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -722,8 +732,10 @@ func (o AlertQuery) Type(ctx context.Context) attr.Type {
 			"is_draft":       types.BoolType,
 			"is_safe":        types.BoolType,
 			"name":           types.StringType,
-			"options":        basetypes.ListType{ElemType: QueryOptions{}.Type(ctx)},
-			"query":          types.StringType,
+			"options": basetypes.ListType{
+				ElemType: QueryOptions{}.Type(ctx),
+			},
+			"query": types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -1139,8 +1151,10 @@ func (o CreateAlert) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CreateAlert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":     types.StringType,
-			"options":  basetypes.ListType{ElemType: AlertOptions{}.Type(ctx)},
+			"name": types.StringType,
+			"options": basetypes.ListType{
+				ElemType: AlertOptions{}.Type(ctx),
+			},
 			"parent":   types.StringType,
 			"query_id": types.StringType,
 			"rearm":    types.Int64Type,
@@ -1212,7 +1226,9 @@ func (o CreateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateAlertRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert": basetypes.ListType{ElemType: CreateAlertRequestAlert{}.Type(ctx)},
+			"alert": basetypes.ListType{
+				ElemType: CreateAlertRequestAlert{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1312,7 +1328,9 @@ func (o CreateAlertRequestAlert) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o CreateAlertRequestAlert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition":            basetypes.ListType{ElemType: AlertCondition{}.Type(ctx)},
+			"condition": basetypes.ListType{
+				ElemType: AlertCondition{}.Type(ctx),
+			},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -1388,7 +1406,9 @@ func (o CreateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateQueryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query": basetypes.ListType{ElemType: CreateQueryRequestQuery{}.Type(ctx)},
+			"query": basetypes.ListType{
+				ElemType: CreateQueryRequestQuery{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1663,7 +1683,9 @@ func (o CreateVisualizationRequest) ToObjectValue(ctx context.Context) basetypes
 func (o CreateVisualizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"visualization": basetypes.ListType{ElemType: CreateVisualizationRequestVisualization{}.Type(ctx)},
+			"visualization": basetypes.ListType{
+				ElemType: CreateVisualizationRequestVisualization{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1867,8 +1889,10 @@ func (o CreateWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateWarehouseRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   basetypes.ListType{ElemType: Channel{}.Type(ctx)},
+			"auto_stop_mins": types.Int64Type,
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
@@ -1878,8 +1902,10 @@ func (o CreateWarehouseRequest) Type(ctx context.Context) attr.Type {
 			"min_num_clusters":          types.Int64Type,
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
-			"tags":                      basetypes.ListType{ElemType: EndpointTags{}.Type(ctx)},
-			"warehouse_type":            types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTags{}.Type(ctx),
+			},
+			"warehouse_type": types.StringType,
 		},
 	}
 }
@@ -2034,9 +2060,11 @@ func (o CreateWidget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CreateWidget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard_id":     types.StringType,
-			"id":               types.StringType,
-			"options":          basetypes.ListType{ElemType: WidgetOptions{}.Type(ctx)},
+			"dashboard_id": types.StringType,
+			"id":           types.StringType,
+			"options": basetypes.ListType{
+				ElemType: WidgetOptions{}.Type(ctx),
+			},
 			"text":             types.StringType,
 			"visualization_id": types.StringType,
 			"width":            types.Int64Type,
@@ -2180,16 +2208,20 @@ func (o Dashboard) Type(ctx context.Context) attr.Type {
 			"is_draft":                  types.BoolType,
 			"is_favorite":               types.BoolType,
 			"name":                      types.StringType,
-			"options":                   basetypes.ListType{ElemType: DashboardOptions{}.Type(ctx)},
-			"parent":                    types.StringType,
-			"permission_tier":           types.StringType,
-			"slug":                      types.StringType,
+			"options": basetypes.ListType{
+				ElemType: DashboardOptions{}.Type(ctx),
+			},
+			"parent":          types.StringType,
+			"permission_tier": types.StringType,
+			"slug":            types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"updated_at": types.StringType,
-			"user":       basetypes.ListType{ElemType: User{}.Type(ctx)},
-			"user_id":    types.Int64Type,
+			"user": basetypes.ListType{
+				ElemType: User{}.Type(ctx),
+			},
+			"user_id": types.Int64Type,
 			"widgets": basetypes.ListType{
 				ElemType: Widget{}.Type(ctx),
 			},
@@ -2702,7 +2734,9 @@ func (o DateRangeValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o DateRangeValue) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"date_range_value":         basetypes.ListType{ElemType: DateRange{}.Type(ctx)},
+			"date_range_value": basetypes.ListType{
+				ElemType: DateRange{}.Type(ctx),
+			},
 			"dynamic_date_range_value": types.StringType,
 			"precision":                types.StringType,
 			"start_day_of_week":        types.Int64Type,
@@ -3210,7 +3244,9 @@ func (o EditAlert) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alert_id": types.StringType,
 			"name":     types.StringType,
-			"options":  basetypes.ListType{ElemType: AlertOptions{}.Type(ctx)},
+			"options": basetypes.ListType{
+				ElemType: AlertOptions{}.Type(ctx),
+			},
 			"query_id": types.StringType,
 			"rearm":    types.Int64Type,
 		},
@@ -3355,8 +3391,10 @@ func (o EditWarehouseRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o EditWarehouseRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   basetypes.ListType{ElemType: Channel{}.Type(ctx)},
+			"auto_stop_mins": types.Int64Type,
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
@@ -3367,8 +3405,10 @@ func (o EditWarehouseRequest) Type(ctx context.Context) attr.Type {
 			"min_num_clusters":          types.Int64Type,
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
-			"tags":                      basetypes.ListType{ElemType: EndpointTags{}.Type(ctx)},
-			"warehouse_type":            types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTags{}.Type(ctx),
+			},
+			"warehouse_type": types.StringType,
 		},
 	}
 }
@@ -3597,11 +3637,13 @@ func (o EndpointHealth) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o EndpointHealth) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"details":        types.StringType,
-			"failure_reason": basetypes.ListType{ElemType: TerminationReason{}.Type(ctx)},
-			"message":        types.StringType,
-			"status":         types.StringType,
-			"summary":        types.StringType,
+			"details": types.StringType,
+			"failure_reason": basetypes.ListType{
+				ElemType: TerminationReason{}.Type(ctx),
+			},
+			"message": types.StringType,
+			"status":  types.StringType,
+			"summary": types.StringType,
 		},
 	}
 }
@@ -3765,26 +3807,34 @@ func (o EndpointInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EndpointInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   basetypes.ListType{ElemType: Channel{}.Type(ctx)},
+			"auto_stop_mins": types.Int64Type,
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
-			"health":                    basetypes.ListType{ElemType: EndpointHealth{}.Type(ctx)},
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"jdbc_url":                  types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"num_active_sessions":       types.Int64Type,
-			"num_clusters":              types.Int64Type,
-			"odbc_params":               basetypes.ListType{ElemType: OdbcParams{}.Type(ctx)},
-			"spot_instance_policy":      types.StringType,
-			"state":                     types.StringType,
-			"tags":                      basetypes.ListType{ElemType: EndpointTags{}.Type(ctx)},
-			"warehouse_type":            types.StringType,
+			"health": basetypes.ListType{
+				ElemType: EndpointHealth{}.Type(ctx),
+			},
+			"id":                   types.StringType,
+			"instance_profile_arn": types.StringType,
+			"jdbc_url":             types.StringType,
+			"max_num_clusters":     types.Int64Type,
+			"min_num_clusters":     types.Int64Type,
+			"name":                 types.StringType,
+			"num_active_sessions":  types.Int64Type,
+			"num_clusters":         types.Int64Type,
+			"odbc_params": basetypes.ListType{
+				ElemType: OdbcParams{}.Type(ctx),
+			},
+			"spot_instance_policy": types.StringType,
+			"state":                types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTags{}.Type(ctx),
+			},
+			"warehouse_type": types.StringType,
 		},
 	}
 }
@@ -4055,8 +4105,10 @@ func (o EnumValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EnumValue) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"enum_options":         types.StringType,
-			"multi_values_options": basetypes.ListType{ElemType: MultiValuesOptions{}.Type(ctx)},
+			"enum_options": types.StringType,
+			"multi_values_options": basetypes.ListType{
+				ElemType: MultiValuesOptions{}.Type(ctx),
+			},
 			"values": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -5206,26 +5258,34 @@ func (o GetWarehouseResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o GetWarehouseResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_stop_mins":            types.Int64Type,
-			"channel":                   basetypes.ListType{ElemType: Channel{}.Type(ctx)},
+			"auto_stop_mins": types.Int64Type,
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
-			"health":                    basetypes.ListType{ElemType: EndpointHealth{}.Type(ctx)},
-			"id":                        types.StringType,
-			"instance_profile_arn":      types.StringType,
-			"jdbc_url":                  types.StringType,
-			"max_num_clusters":          types.Int64Type,
-			"min_num_clusters":          types.Int64Type,
-			"name":                      types.StringType,
-			"num_active_sessions":       types.Int64Type,
-			"num_clusters":              types.Int64Type,
-			"odbc_params":               basetypes.ListType{ElemType: OdbcParams{}.Type(ctx)},
-			"spot_instance_policy":      types.StringType,
-			"state":                     types.StringType,
-			"tags":                      basetypes.ListType{ElemType: EndpointTags{}.Type(ctx)},
-			"warehouse_type":            types.StringType,
+			"health": basetypes.ListType{
+				ElemType: EndpointHealth{}.Type(ctx),
+			},
+			"id":                   types.StringType,
+			"instance_profile_arn": types.StringType,
+			"jdbc_url":             types.StringType,
+			"max_num_clusters":     types.Int64Type,
+			"min_num_clusters":     types.Int64Type,
+			"name":                 types.StringType,
+			"num_active_sessions":  types.Int64Type,
+			"num_clusters":         types.Int64Type,
+			"odbc_params": basetypes.ListType{
+				ElemType: OdbcParams{}.Type(ctx),
+			},
+			"spot_instance_policy": types.StringType,
+			"state":                types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTags{}.Type(ctx),
+			},
+			"warehouse_type": types.StringType,
 		},
 	}
 }
@@ -5409,19 +5469,27 @@ func (o GetWorkspaceWarehouseConfigResponse) ToObjectValue(ctx context.Context) 
 func (o GetWorkspaceWarehouseConfigResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"channel":      basetypes.ListType{ElemType: Channel{}.Type(ctx)},
-			"config_param": basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
+			"config_param": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
 			"data_access_config": basetypes.ListType{
 				ElemType: EndpointConfPair{}.Type(ctx),
 			},
 			"enabled_warehouse_types": basetypes.ListType{
 				ElemType: WarehouseTypePair{}.Type(ctx),
 			},
-			"global_param":                 basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
-			"google_service_account":       types.StringType,
-			"instance_profile_arn":         types.StringType,
-			"security_policy":              types.StringType,
-			"sql_configuration_parameters": basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
+			"global_param": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
+			"google_service_account": types.StringType,
+			"instance_profile_arn":   types.StringType,
+			"security_policy":        types.StringType,
+			"sql_configuration_parameters": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5661,13 +5729,19 @@ func (o LegacyAlert) Type(ctx context.Context) attr.Type {
 			"id":                types.StringType,
 			"last_triggered_at": types.StringType,
 			"name":              types.StringType,
-			"options":           basetypes.ListType{ElemType: AlertOptions{}.Type(ctx)},
-			"parent":            types.StringType,
-			"query":             basetypes.ListType{ElemType: AlertQuery{}.Type(ctx)},
-			"rearm":             types.Int64Type,
-			"state":             types.StringType,
-			"updated_at":        types.StringType,
-			"user":              basetypes.ListType{ElemType: User{}.Type(ctx)},
+			"options": basetypes.ListType{
+				ElemType: AlertOptions{}.Type(ctx),
+			},
+			"parent": types.StringType,
+			"query": basetypes.ListType{
+				ElemType: AlertQuery{}.Type(ctx),
+			},
+			"rearm":      types.Int64Type,
+			"state":      types.StringType,
+			"updated_at": types.StringType,
+			"user": basetypes.ListType{
+				ElemType: User{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5882,31 +5956,37 @@ func (o LegacyQuery) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o LegacyQuery) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"can_edit":             types.BoolType,
-			"created_at":           types.StringType,
-			"data_source_id":       types.StringType,
-			"description":          types.StringType,
-			"id":                   types.StringType,
-			"is_archived":          types.BoolType,
-			"is_draft":             types.BoolType,
-			"is_favorite":          types.BoolType,
-			"is_safe":              types.BoolType,
-			"last_modified_by":     basetypes.ListType{ElemType: User{}.Type(ctx)},
+			"can_edit":       types.BoolType,
+			"created_at":     types.StringType,
+			"data_source_id": types.StringType,
+			"description":    types.StringType,
+			"id":             types.StringType,
+			"is_archived":    types.BoolType,
+			"is_draft":       types.BoolType,
+			"is_favorite":    types.BoolType,
+			"is_safe":        types.BoolType,
+			"last_modified_by": basetypes.ListType{
+				ElemType: User{}.Type(ctx),
+			},
 			"last_modified_by_id":  types.Int64Type,
 			"latest_query_data_id": types.StringType,
 			"name":                 types.StringType,
-			"options":              basetypes.ListType{ElemType: QueryOptions{}.Type(ctx)},
-			"parent":               types.StringType,
-			"permission_tier":      types.StringType,
-			"query":                types.StringType,
-			"query_hash":           types.StringType,
-			"run_as_role":          types.StringType,
+			"options": basetypes.ListType{
+				ElemType: QueryOptions{}.Type(ctx),
+			},
+			"parent":          types.StringType,
+			"permission_tier": types.StringType,
+			"query":           types.StringType,
+			"query_hash":      types.StringType,
+			"run_as_role":     types.StringType,
 			"tags": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"updated_at": types.StringType,
-			"user":       basetypes.ListType{ElemType: User{}.Type(ctx)},
-			"user_id":    types.Int64Type,
+			"user": basetypes.ListType{
+				ElemType: User{}.Type(ctx),
+			},
+			"user_id": types.Int64Type,
 			"visualizations": basetypes.ListType{
 				ElemType: LegacyVisualization{}.Type(ctx),
 			},
@@ -6117,9 +6197,11 @@ func (o LegacyVisualization) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"name":        types.StringType,
 			"options":     types.ObjectType{},
-			"query":       basetypes.ListType{ElemType: LegacyQuery{}.Type(ctx)},
-			"type":        types.StringType,
-			"updated_at":  types.StringType,
+			"query": basetypes.ListType{
+				ElemType: LegacyQuery{}.Type(ctx),
+			},
+			"type":       types.StringType,
+			"updated_at": types.StringType,
 		},
 	}
 }
@@ -6362,7 +6444,9 @@ func (o ListAlertsResponseAlert) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListAlertsResponseAlert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition":            basetypes.ListType{ElemType: AlertCondition{}.Type(ctx)},
+			"condition": basetypes.ListType{
+				ElemType: AlertCondition{}.Type(ctx),
+			},
 			"create_time":          types.StringType,
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
@@ -6709,7 +6793,9 @@ func (o ListQueryHistoryRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListQueryHistoryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter_by":       basetypes.ListType{ElemType: QueryFilter{}.Type(ctx)},
+			"filter_by": basetypes.ListType{
+				ElemType: QueryFilter{}.Type(ctx),
+			},
 			"include_metrics": types.BoolType,
 			"max_results":     types.Int64Type,
 			"page_token":      types.StringType,
@@ -7512,13 +7598,15 @@ func (o Parameter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Parameter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"enumOptions":        types.StringType,
-			"multiValuesOptions": basetypes.ListType{ElemType: MultiValuesOptions{}.Type(ctx)},
-			"name":               types.StringType,
-			"queryId":            types.StringType,
-			"title":              types.StringType,
-			"type":               types.StringType,
-			"value":              types.ObjectType{},
+			"enumOptions": types.StringType,
+			"multiValuesOptions": basetypes.ListType{
+				ElemType: MultiValuesOptions{}.Type(ctx),
+			},
+			"name":    types.StringType,
+			"queryId": types.StringType,
+			"title":   types.StringType,
+			"type":    types.StringType,
+			"value":   types.ObjectType{},
 		},
 	}
 }
@@ -7762,8 +7850,10 @@ func (o QueryBackedValue) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o QueryBackedValue) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"multi_values_options": basetypes.ListType{ElemType: MultiValuesOptions{}.Type(ctx)},
-			"query_id":             types.StringType,
+			"multi_values_options": basetypes.ListType{
+				ElemType: MultiValuesOptions{}.Type(ctx),
+			},
+			"query_id": types.StringType,
 			"values": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -7988,7 +8078,9 @@ func (o QueryFilter) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o QueryFilter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query_start_time_range": basetypes.ListType{ElemType: TimeRange{}.Type(ctx)},
+			"query_start_time_range": basetypes.ListType{
+				ElemType: TimeRange{}.Type(ctx),
+			},
 			"statement_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -8243,7 +8335,9 @@ func (o QueryInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o QueryInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"channel_used":          basetypes.ListType{ElemType: ChannelInfo{}.Type(ctx)},
+			"channel_used": basetypes.ListType{
+				ElemType: ChannelInfo{}.Type(ctx),
+			},
 			"duration":              types.Int64Type,
 			"endpoint_id":           types.StringType,
 			"error_message":         types.StringType,
@@ -8252,19 +8346,21 @@ func (o QueryInfo) Type(ctx context.Context) attr.Type {
 			"execution_end_time_ms": types.Int64Type,
 			"is_final":              types.BoolType,
 			"lookup_key":            types.StringType,
-			"metrics":               basetypes.ListType{ElemType: QueryMetrics{}.Type(ctx)},
-			"plans_state":           types.StringType,
-			"query_end_time_ms":     types.Int64Type,
-			"query_id":              types.StringType,
-			"query_start_time_ms":   types.Int64Type,
-			"query_text":            types.StringType,
-			"rows_produced":         types.Int64Type,
-			"spark_ui_url":          types.StringType,
-			"statement_type":        types.StringType,
-			"status":                types.StringType,
-			"user_id":               types.Int64Type,
-			"user_name":             types.StringType,
-			"warehouse_id":          types.StringType,
+			"metrics": basetypes.ListType{
+				ElemType: QueryMetrics{}.Type(ctx),
+			},
+			"plans_state":         types.StringType,
+			"query_end_time_ms":   types.Int64Type,
+			"query_id":            types.StringType,
+			"query_start_time_ms": types.Int64Type,
+			"query_text":          types.StringType,
+			"rows_produced":       types.Int64Type,
+			"spark_ui_url":        types.StringType,
+			"statement_type":      types.StringType,
+			"status":              types.StringType,
+			"user_id":             types.Int64Type,
+			"user_name":           types.StringType,
+			"warehouse_id":        types.StringType,
 		},
 	}
 }
@@ -8699,14 +8795,26 @@ func (o QueryParameter) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o QueryParameter) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"date_range_value":   basetypes.ListType{ElemType: DateRangeValue{}.Type(ctx)},
-			"date_value":         basetypes.ListType{ElemType: DateValue{}.Type(ctx)},
-			"enum_value":         basetypes.ListType{ElemType: EnumValue{}.Type(ctx)},
-			"name":               types.StringType,
-			"numeric_value":      basetypes.ListType{ElemType: NumericValue{}.Type(ctx)},
-			"query_backed_value": basetypes.ListType{ElemType: QueryBackedValue{}.Type(ctx)},
-			"text_value":         basetypes.ListType{ElemType: TextValue{}.Type(ctx)},
-			"title":              types.StringType,
+			"date_range_value": basetypes.ListType{
+				ElemType: DateRangeValue{}.Type(ctx),
+			},
+			"date_value": basetypes.ListType{
+				ElemType: DateValue{}.Type(ctx),
+			},
+			"enum_value": basetypes.ListType{
+				ElemType: EnumValue{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"numeric_value": basetypes.ListType{
+				ElemType: NumericValue{}.Type(ctx),
+			},
+			"query_backed_value": basetypes.ListType{
+				ElemType: QueryBackedValue{}.Type(ctx),
+			},
+			"text_value": basetypes.ListType{
+				ElemType: TextValue{}.Type(ctx),
+			},
+			"title": types.StringType,
 		},
 	}
 }
@@ -9404,8 +9512,10 @@ func (o ResultManifest) Type(ctx context.Context) attr.Type {
 			"chunks": basetypes.ListType{
 				ElemType: BaseChunkInfo{}.Type(ctx),
 			},
-			"format":            types.StringType,
-			"schema":            basetypes.ListType{ElemType: ResultSchema{}.Type(ctx)},
+			"format": types.StringType,
+			"schema": basetypes.ListType{
+				ElemType: ResultSchema{}.Type(ctx),
+			},
 			"total_byte_count":  types.Int64Type,
 			"total_chunk_count": types.Int64Type,
 			"total_row_count":   types.Int64Type,
@@ -9822,19 +9932,27 @@ func (o SetWorkspaceWarehouseConfigRequest) ToObjectValue(ctx context.Context) b
 func (o SetWorkspaceWarehouseConfigRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"channel":      basetypes.ListType{ElemType: Channel{}.Type(ctx)},
-			"config_param": basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
+			"channel": basetypes.ListType{
+				ElemType: Channel{}.Type(ctx),
+			},
+			"config_param": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
 			"data_access_config": basetypes.ListType{
 				ElemType: EndpointConfPair{}.Type(ctx),
 			},
 			"enabled_warehouse_types": basetypes.ListType{
 				ElemType: WarehouseTypePair{}.Type(ctx),
 			},
-			"global_param":                 basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
-			"google_service_account":       types.StringType,
-			"instance_profile_arn":         types.StringType,
-			"security_policy":              types.StringType,
-			"sql_configuration_parameters": basetypes.ListType{ElemType: RepeatedEndpointConfPairs{}.Type(ctx)},
+			"global_param": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
+			"google_service_account": types.StringType,
+			"instance_profile_arn":   types.StringType,
+			"security_policy":        types.StringType,
+			"sql_configuration_parameters": basetypes.ListType{
+				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10219,10 +10337,16 @@ func (o StatementResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o StatementResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"manifest":     basetypes.ListType{ElemType: ResultManifest{}.Type(ctx)},
-			"result":       basetypes.ListType{ElemType: ResultData{}.Type(ctx)},
+			"manifest": basetypes.ListType{
+				ElemType: ResultManifest{}.Type(ctx),
+			},
+			"result": basetypes.ListType{
+				ElemType: ResultData{}.Type(ctx),
+			},
 			"statement_id": types.StringType,
-			"status":       basetypes.ListType{ElemType: StatementStatus{}.Type(ctx)},
+			"status": basetypes.ListType{
+				ElemType: StatementStatus{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10354,7 +10478,9 @@ func (o StatementStatus) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o StatementStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"error": basetypes.ListType{ElemType: ServiceError{}.Type(ctx)},
+			"error": basetypes.ListType{
+				ElemType: ServiceError{}.Type(ctx),
+			},
 			"state": types.StringType,
 		},
 	}
@@ -10762,8 +10888,10 @@ func (o TransferOwnershipRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o TransferOwnershipRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"new_owner":  types.StringType,
-			"objectId":   basetypes.ListType{ElemType: TransferOwnershipObjectId{}.Type(ctx)},
+			"new_owner": types.StringType,
+			"objectId": basetypes.ListType{
+				ElemType: TransferOwnershipObjectId{}.Type(ctx),
+			},
 			"objectType": types.StringType,
 		},
 	}
@@ -10926,7 +11054,9 @@ func (o UpdateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o UpdateAlertRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert":       basetypes.ListType{ElemType: UpdateAlertRequestAlert{}.Type(ctx)},
+			"alert": basetypes.ListType{
+				ElemType: UpdateAlertRequestAlert{}.Type(ctx),
+			},
 			"id":          types.StringType,
 			"update_mask": types.StringType,
 		},
@@ -11029,7 +11159,9 @@ func (o UpdateAlertRequestAlert) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o UpdateAlertRequestAlert) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition":            basetypes.ListType{ElemType: AlertCondition{}.Type(ctx)},
+			"condition": basetypes.ListType{
+				ElemType: AlertCondition{}.Type(ctx),
+			},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
 			"display_name":         types.StringType,
@@ -11114,8 +11246,10 @@ func (o UpdateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o UpdateQueryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":          types.StringType,
-			"query":       basetypes.ListType{ElemType: UpdateQueryRequestQuery{}.Type(ctx)},
+			"id": types.StringType,
+			"query": basetypes.ListType{
+				ElemType: UpdateQueryRequestQuery{}.Type(ctx),
+			},
 			"update_mask": types.StringType,
 		},
 	}
@@ -11373,9 +11507,11 @@ func (o UpdateVisualizationRequest) ToObjectValue(ctx context.Context) basetypes
 func (o UpdateVisualizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":            types.StringType,
-			"update_mask":   types.StringType,
-			"visualization": basetypes.ListType{ElemType: UpdateVisualizationRequestVisualization{}.Type(ctx)},
+			"id":          types.StringType,
+			"update_mask": types.StringType,
+			"visualization": basetypes.ListType{
+				ElemType: UpdateVisualizationRequestVisualization{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12107,10 +12243,14 @@ func (o Widget) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Widget) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":            types.StringType,
-			"options":       basetypes.ListType{ElemType: WidgetOptions{}.Type(ctx)},
-			"visualization": basetypes.ListType{ElemType: LegacyVisualization{}.Type(ctx)},
-			"width":         types.Int64Type,
+			"id": types.StringType,
+			"options": basetypes.ListType{
+				ElemType: WidgetOptions{}.Type(ctx),
+			},
+			"visualization": basetypes.ListType{
+				ElemType: LegacyVisualization{}.Type(ctx),
+			},
+			"width": types.Int64Type,
 		},
 	}
 }
@@ -12231,9 +12371,11 @@ func (o WidgetOptions) Type(ctx context.Context) attr.Type {
 			"description":       types.StringType,
 			"isHidden":          types.BoolType,
 			"parameterMappings": types.ObjectType{},
-			"position":          basetypes.ListType{ElemType: WidgetPosition{}.Type(ctx)},
-			"title":             types.StringType,
-			"updated_at":        types.StringType,
+			"position": basetypes.ListType{
+				ElemType: WidgetPosition{}.Type(ctx),
+			},
+			"title":      types.StringType,
+			"updated_at": types.StringType,
 		},
 	}
 }

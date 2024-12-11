@@ -130,12 +130,18 @@ func (o AiGatewayConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o AiGatewayConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
-			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.Type(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+			},
 			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.Type(ctx),
 			},
-			"usage_tracking_config": basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -299,7 +305,9 @@ func (o AiGatewayGuardrailParameters) Type(ctx context.Context) attr.Type {
 			"invalid_keywords": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"pii":    basetypes.ListType{ElemType: AiGatewayGuardrailPiiBehavior{}.Type(ctx)},
+			"pii": basetypes.ListType{
+				ElemType: AiGatewayGuardrailPiiBehavior{}.Type(ctx),
+			},
 			"safety": types.BoolType,
 			"valid_topics": basetypes.ListType{
 				ElemType: types.StringType,
@@ -476,8 +484,12 @@ func (o AiGatewayGuardrails) ToObjectValue(ctx context.Context) basetypes.Object
 func (o AiGatewayGuardrails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"input":  basetypes.ListType{ElemType: AiGatewayGuardrailParameters{}.Type(ctx)},
-			"output": basetypes.ListType{ElemType: AiGatewayGuardrailParameters{}.Type(ctx)},
+			"input": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.Type(ctx),
+			},
+			"output": basetypes.ListType{
+				ElemType: AiGatewayGuardrailParameters{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -929,10 +941,12 @@ func (o AutoCaptureConfigOutput) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o AutoCaptureConfigOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog_name":      types.StringType,
-			"enabled":           types.BoolType,
-			"schema_name":       types.StringType,
-			"state":             basetypes.ListType{ElemType: AutoCaptureState{}.Type(ctx)},
+			"catalog_name": types.StringType,
+			"enabled":      types.BoolType,
+			"schema_name":  types.StringType,
+			"state": basetypes.ListType{
+				ElemType: AutoCaptureState{}.Type(ctx),
+			},
 			"table_name_prefix": types.StringType,
 		},
 	}
@@ -1002,7 +1016,9 @@ func (o AutoCaptureState) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o AutoCaptureState) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"payload_table": basetypes.ListType{ElemType: PayloadTable{}.Type(ctx)},
+			"payload_table": basetypes.ListType{
+				ElemType: PayloadTable{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1289,9 +1305,13 @@ func (o CreateServingEndpoint) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateServingEndpoint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ai_gateway": basetypes.ListType{ElemType: AiGatewayConfig{}.Type(ctx)},
-			"config":     basetypes.ListType{ElemType: EndpointCoreConfigInput{}.Type(ctx)},
-			"name":       types.StringType,
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.Type(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigInput{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
 				ElemType: RateLimit{}.Type(ctx),
 			},
@@ -1821,15 +1841,19 @@ func (o EndpointCoreConfigInput) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o EndpointCoreConfigInput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigInput{}.Type(ctx)},
-			"name":                types.StringType,
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigInput{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityInput{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
 				ElemType: ServedModelInput{}.Type(ctx),
 			},
-			"traffic_config": basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1994,15 +2018,19 @@ func (o EndpointCoreConfigOutput) ToObjectValue(ctx context.Context) basetypes.O
 func (o EndpointCoreConfigOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigOutput{}.Type(ctx)},
-			"config_version":      types.Int64Type,
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.Type(ctx),
+			},
+			"config_version": types.Int64Type,
 			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.Type(ctx),
 			},
-			"traffic_config": basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2278,16 +2306,20 @@ func (o EndpointPendingConfig) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o EndpointPendingConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigOutput{}.Type(ctx)},
-			"config_version":      types.Int64Type,
+			"auto_capture_config": basetypes.ListType{
+				ElemType: AutoCaptureConfigOutput{}.Type(ctx),
+			},
+			"config_version": types.Int64Type,
 			"served_entities": basetypes.ListType{
 				ElemType: ServedEntityOutput{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
 				ElemType: ServedModelOutput{}.Type(ctx),
 			},
-			"start_time":     types.Int64Type,
-			"traffic_config": basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
+			"start_time": types.Int64Type,
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2661,17 +2693,33 @@ func (o ExternalModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o ExternalModel) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ai21labs_config":                 basetypes.ListType{ElemType: Ai21LabsConfig{}.Type(ctx)},
-			"amazon_bedrock_config":           basetypes.ListType{ElemType: AmazonBedrockConfig{}.Type(ctx)},
-			"anthropic_config":                basetypes.ListType{ElemType: AnthropicConfig{}.Type(ctx)},
-			"cohere_config":                   basetypes.ListType{ElemType: CohereConfig{}.Type(ctx)},
-			"databricks_model_serving_config": basetypes.ListType{ElemType: DatabricksModelServingConfig{}.Type(ctx)},
-			"google_cloud_vertex_ai_config":   basetypes.ListType{ElemType: GoogleCloudVertexAiConfig{}.Type(ctx)},
-			"name":                            types.StringType,
-			"openai_config":                   basetypes.ListType{ElemType: OpenAiConfig{}.Type(ctx)},
-			"palm_config":                     basetypes.ListType{ElemType: PaLmConfig{}.Type(ctx)},
-			"provider":                        types.StringType,
-			"task":                            types.StringType,
+			"ai21labs_config": basetypes.ListType{
+				ElemType: Ai21LabsConfig{}.Type(ctx),
+			},
+			"amazon_bedrock_config": basetypes.ListType{
+				ElemType: AmazonBedrockConfig{}.Type(ctx),
+			},
+			"anthropic_config": basetypes.ListType{
+				ElemType: AnthropicConfig{}.Type(ctx),
+			},
+			"cohere_config": basetypes.ListType{
+				ElemType: CohereConfig{}.Type(ctx),
+			},
+			"databricks_model_serving_config": basetypes.ListType{
+				ElemType: DatabricksModelServingConfig{}.Type(ctx),
+			},
+			"google_cloud_vertex_ai_config": basetypes.ListType{
+				ElemType: GoogleCloudVertexAiConfig{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"openai_config": basetypes.ListType{
+				ElemType: OpenAiConfig{}.Type(ctx),
+			},
+			"palm_config": basetypes.ListType{
+				ElemType: PaLmConfig{}.Type(ctx),
+			},
+			"provider": types.StringType,
+			"task":     types.StringType,
 		},
 	}
 }
@@ -3504,7 +3552,9 @@ func (o ModelDataPlaneInfo) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ModelDataPlaneInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query_info": basetypes.ListType{ElemType: oauth2_tf.DataPlaneInfo{}.Type(ctx)},
+			"query_info": basetypes.ListType{
+				ElemType: oauth2_tf.DataPlaneInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3919,13 +3969,19 @@ func (o PutAiGatewayRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PutAiGatewayRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
-			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
-			"name":                   types.StringType,
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.Type(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+			},
+			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.Type(ctx),
 			},
-			"usage_tracking_config": basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4090,12 +4146,18 @@ func (o PutAiGatewayResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o PutAiGatewayResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
-			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
+			"guardrails": basetypes.ListType{
+				ElemType: AiGatewayGuardrails{}.Type(ctx),
+			},
+			"inference_table_config": basetypes.ListType{
+				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+			},
 			"rate_limits": basetypes.ListType{
 				ElemType: AiGatewayRateLimit{}.Type(ctx),
 			},
-			"usage_tracking_config": basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
+			"usage_tracking_config": basetypes.ListType{
+				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4461,7 +4523,9 @@ func (o QueryEndpointInput) Type(ctx context.Context) attr.Type {
 			"dataframe_records": basetypes.ListType{
 				ElemType: types.ObjectType{},
 			},
-			"dataframe_split": basetypes.ListType{ElemType: DataframeSplitInput{}.Type(ctx)},
+			"dataframe_split": basetypes.ListType{
+				ElemType: DataframeSplitInput{}.Type(ctx),
+			},
 			"extra_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -4732,7 +4796,9 @@ func (o QueryEndpointResponse) Type(ctx context.Context) attr.Type {
 				ElemType: types.ObjectType{},
 			},
 			"served-model-name": types.StringType,
-			"usage":             basetypes.ListType{ElemType: ExternalModelUsageElement{}.Type(ctx)},
+			"usage": basetypes.ListType{
+				ElemType: ExternalModelUsageElement{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5053,7 +5119,9 @@ func (o ServedEntityInput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"external_model":             basetypes.ListType{ElemType: ExternalModel{}.Type(ctx)},
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.Type(ctx),
+			},
 			"instance_profile_arn":       types.StringType,
 			"max_provisioned_throughput": types.Int64Type,
 			"min_provisioned_throughput": types.Int64Type,
@@ -5238,16 +5306,22 @@ func (o ServedEntityOutput) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"external_model":             basetypes.ListType{ElemType: ExternalModel{}.Type(ctx)},
-			"foundation_model":           basetypes.ListType{ElemType: FoundationModel{}.Type(ctx)},
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.Type(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.Type(ctx),
+			},
 			"instance_profile_arn":       types.StringType,
 			"max_provisioned_throughput": types.Int64Type,
 			"min_provisioned_throughput": types.Int64Type,
 			"name":                       types.StringType,
 			"scale_to_zero_enabled":      types.BoolType,
-			"state":                      basetypes.ListType{ElemType: ServedModelState{}.Type(ctx)},
-			"workload_size":              types.StringType,
-			"workload_type":              types.StringType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.Type(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -5417,11 +5491,15 @@ func (o ServedEntitySpec) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ServedEntitySpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entity_name":      types.StringType,
-			"entity_version":   types.StringType,
-			"external_model":   basetypes.ListType{ElemType: ExternalModel{}.Type(ctx)},
-			"foundation_model": basetypes.ListType{ElemType: FoundationModel{}.Type(ctx)},
-			"name":             types.StringType,
+			"entity_name":    types.StringType,
+			"entity_version": types.StringType,
+			"external_model": basetypes.ListType{
+				ElemType: ExternalModel{}.Type(ctx),
+			},
+			"foundation_model": basetypes.ListType{
+				ElemType: FoundationModel{}.Type(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
@@ -5712,9 +5790,11 @@ func (o ServedModelOutput) Type(ctx context.Context) attr.Type {
 			"model_version":         types.StringType,
 			"name":                  types.StringType,
 			"scale_to_zero_enabled": types.BoolType,
-			"state":                 basetypes.ListType{ElemType: ServedModelState{}.Type(ctx)},
-			"workload_size":         types.StringType,
-			"workload_type":         types.StringType,
+			"state": basetypes.ListType{
+				ElemType: ServedModelState{}.Type(ctx),
+			},
+			"workload_size": types.StringType,
+			"workload_type": types.StringType,
 		},
 	}
 }
@@ -5994,14 +6074,20 @@ func (o ServingEndpoint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ai_gateway":             basetypes.ListType{ElemType: AiGatewayConfig{}.Type(ctx)},
-			"config":                 basetypes.ListType{ElemType: EndpointCoreConfigSummary{}.Type(ctx)},
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.Type(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigSummary{}.Type(ctx),
+			},
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
-			"state":                  basetypes.ListType{ElemType: EndpointState{}.Type(ctx)},
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.Type(ctx),
+			},
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
@@ -6345,19 +6431,29 @@ func (o ServingEndpointDetailed) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ai_gateway":             basetypes.ListType{ElemType: AiGatewayConfig{}.Type(ctx)},
-			"config":                 basetypes.ListType{ElemType: EndpointCoreConfigOutput{}.Type(ctx)},
-			"creation_timestamp":     types.Int64Type,
-			"creator":                types.StringType,
-			"data_plane_info":        basetypes.ListType{ElemType: ModelDataPlaneInfo{}.Type(ctx)},
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig{}.Type(ctx),
+			},
+			"config": basetypes.ListType{
+				ElemType: EndpointCoreConfigOutput{}.Type(ctx),
+			},
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"data_plane_info": basetypes.ListType{
+				ElemType: ModelDataPlaneInfo{}.Type(ctx),
+			},
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
-			"pending_config":         basetypes.ListType{ElemType: EndpointPendingConfig{}.Type(ctx)},
-			"permission_level":       types.StringType,
-			"route_optimized":        types.BoolType,
-			"state":                  basetypes.ListType{ElemType: EndpointState{}.Type(ctx)},
+			"pending_config": basetypes.ListType{
+				ElemType: EndpointPendingConfig{}.Type(ctx),
+			},
+			"permission_level": types.StringType,
+			"route_optimized":  types.BoolType,
+			"state": basetypes.ListType{
+				ElemType: EndpointState{}.Type(ctx),
+			},
 			"tags": basetypes.ListType{
 				ElemType: EndpointTag{}.Type(ctx),
 			},
@@ -6926,8 +7022,10 @@ func (o V1ResponseChoiceElement) Type(ctx context.Context) attr.Type {
 			"finishReason": types.StringType,
 			"index":        types.Int64Type,
 			"logprobs":     types.Int64Type,
-			"message":      basetypes.ListType{ElemType: ChatMessage{}.Type(ctx)},
-			"text":         types.StringType,
+			"message": basetypes.ListType{
+				ElemType: ChatMessage{}.Type(ctx),
+			},
+			"text": types.StringType,
 		},
 	}
 }

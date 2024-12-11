@@ -236,8 +236,10 @@ func (o BudgetConfiguration) Type(ctx context.Context) attr.Type {
 			"budget_configuration_id": types.StringType,
 			"create_time":             types.Int64Type,
 			"display_name":            types.StringType,
-			"filter":                  basetypes.ListType{ElemType: BudgetConfigurationFilter{}.Type(ctx)},
-			"update_time":             types.Int64Type,
+			"filter": basetypes.ListType{
+				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+			},
+			"update_time": types.Int64Type,
 		},
 	}
 }
@@ -342,7 +344,9 @@ func (o BudgetConfigurationFilter) Type(ctx context.Context) attr.Type {
 			"tags": basetypes.ListType{
 				ElemType: BudgetConfigurationFilterTagClause{}.Type(ctx),
 			},
-			"workspace_id": basetypes.ListType{ElemType: BudgetConfigurationFilterWorkspaceIdClause{}.Type(ctx)},
+			"workspace_id": basetypes.ListType{
+				ElemType: BudgetConfigurationFilterWorkspaceIdClause{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -515,8 +519,10 @@ func (o BudgetConfigurationFilterTagClause) ToObjectValue(ctx context.Context) b
 func (o BudgetConfigurationFilterTagClause) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":   types.StringType,
-			"value": basetypes.ListType{ElemType: BudgetConfigurationFilterClause{}.Type(ctx)},
+			"key": types.StringType,
+			"value": basetypes.ListType{
+				ElemType: BudgetConfigurationFilterClause{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -771,7 +777,9 @@ func (o CreateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.Type(ctx),
 			},
 			"display_name": types.StringType,
-			"filter":       basetypes.ListType{ElemType: BudgetConfigurationFilter{}.Type(ctx)},
+			"filter": basetypes.ListType{
+				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1005,7 +1013,9 @@ func (o CreateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) bas
 func (o CreateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget": basetypes.ListType{ElemType: CreateBudgetConfigurationBudget{}.Type(ctx)},
+			"budget": basetypes.ListType{
+				ElemType: CreateBudgetConfigurationBudget{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1075,7 +1085,9 @@ func (o CreateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) ba
 func (o CreateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget": basetypes.ListType{ElemType: BudgetConfiguration{}.Type(ctx)},
+			"budget": basetypes.ListType{
+				ElemType: BudgetConfiguration{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1613,7 +1625,9 @@ func (o GetBudgetConfigurationResponse) ToObjectValue(ctx context.Context) baset
 func (o GetBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget": basetypes.ListType{ElemType: BudgetConfiguration{}.Type(ctx)},
+			"budget": basetypes.ListType{
+				ElemType: BudgetConfiguration{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1991,14 +2005,16 @@ func (o LogDeliveryConfiguration) ToObjectValue(ctx context.Context) basetypes.O
 func (o LogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":               types.StringType,
-			"config_id":                types.StringType,
-			"config_name":              types.StringType,
-			"creation_time":            types.Int64Type,
-			"credentials_id":           types.StringType,
-			"delivery_path_prefix":     types.StringType,
-			"delivery_start_time":      types.StringType,
-			"log_delivery_status":      basetypes.ListType{ElemType: LogDeliveryStatus{}.Type(ctx)},
+			"account_id":           types.StringType,
+			"config_id":            types.StringType,
+			"config_name":          types.StringType,
+			"creation_time":        types.Int64Type,
+			"credentials_id":       types.StringType,
+			"delivery_path_prefix": types.StringType,
+			"delivery_start_time":  types.StringType,
+			"log_delivery_status": basetypes.ListType{
+				ElemType: LogDeliveryStatus{}.Type(ctx),
+			},
 			"log_type":                 types.StringType,
 			"output_format":            types.StringType,
 			"status":                   types.StringType,
@@ -2227,7 +2243,9 @@ func (o UpdateBudgetConfigurationBudget) Type(ctx context.Context) attr.Type {
 			},
 			"budget_configuration_id": types.StringType,
 			"display_name":            types.StringType,
-			"filter":                  basetypes.ListType{ElemType: BudgetConfigurationFilter{}.Type(ctx)},
+			"filter": basetypes.ListType{
+				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2327,7 +2345,9 @@ func (o UpdateBudgetConfigurationRequest) ToObjectValue(ctx context.Context) bas
 func (o UpdateBudgetConfigurationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget":    basetypes.ListType{ElemType: UpdateBudgetConfigurationBudget{}.Type(ctx)},
+			"budget": basetypes.ListType{
+				ElemType: UpdateBudgetConfigurationBudget{}.Type(ctx),
+			},
 			"budget_id": types.StringType,
 		},
 	}
@@ -2398,7 +2418,9 @@ func (o UpdateBudgetConfigurationResponse) ToObjectValue(ctx context.Context) ba
 func (o UpdateBudgetConfigurationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget": basetypes.ListType{ElemType: BudgetConfiguration{}.Type(ctx)},
+			"budget": basetypes.ListType{
+				ElemType: BudgetConfiguration{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2517,7 +2539,9 @@ func (o WrappedCreateLogDeliveryConfiguration) ToObjectValue(ctx context.Context
 func (o WrappedCreateLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"log_delivery_configuration": basetypes.ListType{ElemType: CreateLogDeliveryConfigurationParams{}.Type(ctx)},
+			"log_delivery_configuration": basetypes.ListType{
+				ElemType: CreateLogDeliveryConfigurationParams{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2586,7 +2610,9 @@ func (o WrappedLogDeliveryConfiguration) ToObjectValue(ctx context.Context) base
 func (o WrappedLogDeliveryConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"log_delivery_configuration": basetypes.ListType{ElemType: LogDeliveryConfiguration{}.Type(ctx)},
+			"log_delivery_configuration": basetypes.ListType{
+				ElemType: LogDeliveryConfiguration{}.Type(ctx),
+			},
 		},
 	}
 }

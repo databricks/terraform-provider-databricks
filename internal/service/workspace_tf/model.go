@@ -282,10 +282,12 @@ func (o CreateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o CreateRepoRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"path":            types.StringType,
-			"provider":        types.StringType,
-			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
-			"url":             types.StringType,
+			"path":     types.StringType,
+			"provider": types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -374,13 +376,15 @@ func (o CreateRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateRepoResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":          types.StringType,
-			"head_commit_id":  types.StringType,
-			"id":              types.Int64Type,
-			"path":            types.StringType,
-			"provider":        types.StringType,
-			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
-			"url":             types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -461,7 +465,9 @@ func (o CreateScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CreateScope) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"backend_azure_keyvault":   basetypes.ListType{ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx)},
+			"backend_azure_keyvault": basetypes.ListType{
+				ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx),
+			},
 			"initial_manage_principal": types.StringType,
 			"scope":                    types.StringType,
 			"scope_backend_type":       types.StringType,
@@ -1574,13 +1580,15 @@ func (o GetRepoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetRepoResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":          types.StringType,
-			"head_commit_id":  types.StringType,
-			"id":              types.Int64Type,
-			"path":            types.StringType,
-			"provider":        types.StringType,
-			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
-			"url":             types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -3180,13 +3188,15 @@ func (o RepoInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RepoInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":          types.StringType,
-			"head_commit_id":  types.StringType,
-			"id":              types.Int64Type,
-			"path":            types.StringType,
-			"provider":        types.StringType,
-			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckout{}.Type(ctx)},
-			"url":             types.StringType,
+			"branch":         types.StringType,
+			"head_commit_id": types.StringType,
+			"id":             types.Int64Type,
+			"path":           types.StringType,
+			"provider":       types.StringType,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckout{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -3586,9 +3596,11 @@ func (o SecretScope) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SecretScope) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"backend_type":      types.StringType,
-			"keyvault_metadata": basetypes.ListType{ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx)},
-			"name":              types.StringType,
+			"backend_type": types.StringType,
+			"keyvault_metadata": basetypes.ListType{
+				ElemType: AzureKeyVaultSecretScopeMetadata{}.Type(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
@@ -3926,10 +3938,12 @@ func (o UpdateRepoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o UpdateRepoRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":          types.StringType,
-			"repo_id":         types.Int64Type,
-			"sparse_checkout": basetypes.ListType{ElemType: SparseCheckoutUpdate{}.Type(ctx)},
-			"tag":             types.StringType,
+			"branch":  types.StringType,
+			"repo_id": types.Int64Type,
+			"sparse_checkout": basetypes.ListType{
+				ElemType: SparseCheckoutUpdate{}.Type(ctx),
+			},
+			"tag": types.StringType,
 		},
 	}
 }

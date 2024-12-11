@@ -236,7 +236,9 @@ func (o ApproveTransitionRequestResponse) ToObjectValue(ctx context.Context) bas
 func (o ApproveTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"activity": basetypes.ListType{ElemType: Activity{}.Type(ctx)},
+			"activity": basetypes.ListType{
+				ElemType: Activity{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -449,7 +451,9 @@ func (o CreateCommentResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateCommentResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment": basetypes.ListType{ElemType: CommentObject{}.Type(ctx)},
+			"comment": basetypes.ListType{
+				ElemType: CommentObject{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -725,7 +729,9 @@ func (o CreateModelResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o CreateModelResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"registered_model": basetypes.ListType{ElemType: Model{}.Type(ctx)},
+			"registered_model": basetypes.ListType{
+				ElemType: Model{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -889,7 +895,9 @@ func (o CreateModelVersionResponse) ToObjectValue(ctx context.Context) basetypes
 func (o CreateModelVersionResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_version": basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
+			"model_version": basetypes.ListType{
+				ElemType: ModelVersion{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1019,10 +1027,14 @@ func (o CreateRegistryWebhook) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"http_url_spec": basetypes.ListType{ElemType: HttpUrlSpec{}.Type(ctx)},
-			"job_spec":      basetypes.ListType{ElemType: JobSpec{}.Type(ctx)},
-			"model_name":    types.StringType,
-			"status":        types.StringType,
+			"http_url_spec": basetypes.ListType{
+				ElemType: HttpUrlSpec{}.Type(ctx),
+			},
+			"job_spec": basetypes.ListType{
+				ElemType: JobSpec{}.Type(ctx),
+			},
+			"model_name": types.StringType,
+			"status":     types.StringType,
 		},
 	}
 }
@@ -1230,7 +1242,9 @@ func (o CreateRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o CreateRunResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"run": basetypes.ListType{ElemType: Run{}.Type(ctx)},
+			"run": basetypes.ListType{
+				ElemType: Run{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1362,7 +1376,9 @@ func (o CreateTransitionRequestResponse) ToObjectValue(ctx context.Context) base
 func (o CreateTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"request": basetypes.ListType{ElemType: TransitionRequest{}.Type(ctx)},
+			"request": basetypes.ListType{
+				ElemType: TransitionRequest{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1431,7 +1447,9 @@ func (o CreateWebhookResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateWebhookResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"webhook": basetypes.ListType{ElemType: RegistryWebhook{}.Type(ctx)},
+			"webhook": basetypes.ListType{
+				ElemType: RegistryWebhook{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1576,7 +1594,9 @@ func (o DatasetInput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o DatasetInput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dataset": basetypes.ListType{ElemType: Dataset{}.Type(ctx)},
+			"dataset": basetypes.ListType{
+				ElemType: Dataset{}.Type(ctx),
+			},
 			"tags": basetypes.ListType{
 				ElemType: InputTag{}.Type(ctx),
 			},
@@ -3461,7 +3481,9 @@ func (o GetExperimentResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o GetExperimentResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"experiment": basetypes.ListType{ElemType: Experiment{}.Type(ctx)},
+			"experiment": basetypes.ListType{
+				ElemType: Experiment{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3862,7 +3884,9 @@ func (o GetModelResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o GetModelResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"registered_model_databricks": basetypes.ListType{ElemType: ModelDatabricks{}.Type(ctx)},
+			"registered_model_databricks": basetypes.ListType{
+				ElemType: ModelDatabricks{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4067,7 +4091,9 @@ func (o GetModelVersionResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o GetModelVersionResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_version": basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
+			"model_version": basetypes.ListType{
+				ElemType: ModelVersion{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4344,7 +4370,9 @@ func (o GetRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o GetRunResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"run": basetypes.ListType{ElemType: Run{}.Type(ctx)},
+			"run": basetypes.ListType{
+				ElemType: Run{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7130,9 +7158,13 @@ func (o RegistryWebhook) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"http_url_spec":          basetypes.ListType{ElemType: HttpUrlSpecWithoutSecret{}.Type(ctx)},
-			"id":                     types.StringType,
-			"job_spec":               basetypes.ListType{ElemType: JobSpecWithoutSecret{}.Type(ctx)},
+			"http_url_spec": basetypes.ListType{
+				ElemType: HttpUrlSpecWithoutSecret{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"job_spec": basetypes.ListType{
+				ElemType: JobSpecWithoutSecret{}.Type(ctx),
+			},
 			"last_updated_timestamp": types.Int64Type,
 			"model_name":             types.StringType,
 			"status":                 types.StringType,
@@ -7319,7 +7351,9 @@ func (o RejectTransitionRequestResponse) ToObjectValue(ctx context.Context) base
 func (o RejectTransitionRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"activity": basetypes.ListType{ElemType: Activity{}.Type(ctx)},
+			"activity": basetypes.ListType{
+				ElemType: Activity{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7434,7 +7468,9 @@ func (o RenameModelResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o RenameModelResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"registered_model": basetypes.ListType{ElemType: Model{}.Type(ctx)},
+			"registered_model": basetypes.ListType{
+				ElemType: Model{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7763,9 +7799,15 @@ func (o Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Run) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"data":   basetypes.ListType{ElemType: RunData{}.Type(ctx)},
-			"info":   basetypes.ListType{ElemType: RunInfo{}.Type(ctx)},
-			"inputs": basetypes.ListType{ElemType: RunInputs{}.Type(ctx)},
+			"data": basetypes.ListType{
+				ElemType: RunData{}.Type(ctx),
+			},
+			"info": basetypes.ListType{
+				ElemType: RunInfo{}.Type(ctx),
+			},
+			"inputs": basetypes.ListType{
+				ElemType: RunInputs{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9402,7 +9444,9 @@ func (o TestRegistryWebhookResponse) ToObjectValue(ctx context.Context) basetype
 func (o TestRegistryWebhookResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"webhook": basetypes.ListType{ElemType: TestRegistryWebhook{}.Type(ctx)},
+			"webhook": basetypes.ListType{
+				ElemType: TestRegistryWebhook{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9636,7 +9680,9 @@ func (o TransitionStageResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o TransitionStageResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_version": basetypes.ListType{ElemType: ModelVersionDatabricks{}.Type(ctx)},
+			"model_version": basetypes.ListType{
+				ElemType: ModelVersionDatabricks{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9752,7 +9798,9 @@ func (o UpdateCommentResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateCommentResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment": basetypes.ListType{ElemType: CommentObject{}.Type(ctx)},
+			"comment": basetypes.ListType{
+				ElemType: CommentObject{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10133,10 +10181,14 @@ func (o UpdateRegistryWebhook) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"http_url_spec": basetypes.ListType{ElemType: HttpUrlSpec{}.Type(ctx)},
-			"id":            types.StringType,
-			"job_spec":      basetypes.ListType{ElemType: JobSpec{}.Type(ctx)},
-			"status":        types.StringType,
+			"http_url_spec": basetypes.ListType{
+				ElemType: HttpUrlSpec{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"job_spec": basetypes.ListType{
+				ElemType: JobSpec{}.Type(ctx),
+			},
+			"status": types.StringType,
 		},
 	}
 }
@@ -10313,7 +10365,9 @@ func (o UpdateRunResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o UpdateRunResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"run_info": basetypes.ListType{ElemType: RunInfo{}.Type(ctx)},
+			"run_info": basetypes.ListType{
+				ElemType: RunInfo{}.Type(ctx),
+			},
 		},
 	}
 }

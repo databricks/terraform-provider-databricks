@@ -116,9 +116,11 @@ func (o AibiDashboardEmbeddingAccessPolicySetting) ToObjectValue(ctx context.Con
 func (o AibiDashboardEmbeddingAccessPolicySetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aibi_dashboard_embedding_access_policy": basetypes.ListType{ElemType: AibiDashboardEmbeddingAccessPolicy{}.Type(ctx)},
-			"etag":                                   types.StringType,
-			"setting_name":                           types.StringType,
+			"aibi_dashboard_embedding_access_policy": basetypes.ListType{
+				ElemType: AibiDashboardEmbeddingAccessPolicy{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -274,7 +276,9 @@ func (o AibiDashboardEmbeddingApprovedDomainsSetting) ToObjectValue(ctx context.
 func (o AibiDashboardEmbeddingApprovedDomainsSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aibi_dashboard_embedding_approved_domains": basetypes.ListType{ElemType: AibiDashboardEmbeddingApprovedDomains{}.Type(ctx)},
+			"aibi_dashboard_embedding_approved_domains": basetypes.ListType{
+				ElemType: AibiDashboardEmbeddingApprovedDomains{}.Type(ctx),
+			},
 			"etag":         types.StringType,
 			"setting_name": types.StringType,
 		},
@@ -361,9 +365,11 @@ func (o AutomaticClusterUpdateSetting) ToObjectValue(ctx context.Context) basety
 func (o AutomaticClusterUpdateSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"automatic_cluster_update_workspace": basetypes.ListType{ElemType: ClusterAutoRestartMessage{}.Type(ctx)},
-			"etag":                               types.StringType,
-			"setting_name":                       types.StringType,
+			"automatic_cluster_update_workspace": basetypes.ListType{
+				ElemType: ClusterAutoRestartMessage{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -491,10 +497,14 @@ func (o ClusterAutoRestartMessage) ToObjectValue(ctx context.Context) basetypes.
 func (o ClusterAutoRestartMessage) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"can_toggle":                           types.BoolType,
-			"enabled":                              types.BoolType,
-			"enablement_details":                   basetypes.ListType{ElemType: ClusterAutoRestartMessageEnablementDetails{}.Type(ctx)},
-			"maintenance_window":                   basetypes.ListType{ElemType: ClusterAutoRestartMessageMaintenanceWindow{}.Type(ctx)},
+			"can_toggle": types.BoolType,
+			"enabled":    types.BoolType,
+			"enablement_details": basetypes.ListType{
+				ElemType: ClusterAutoRestartMessageEnablementDetails{}.Type(ctx),
+			},
+			"maintenance_window": basetypes.ListType{
+				ElemType: ClusterAutoRestartMessageMaintenanceWindow{}.Type(ctx),
+			},
 			"restart_even_if_no_updates_available": types.BoolType,
 		},
 	}
@@ -647,7 +657,9 @@ func (o ClusterAutoRestartMessageMaintenanceWindow) ToObjectValue(ctx context.Co
 func (o ClusterAutoRestartMessageMaintenanceWindow) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"week_day_based_schedule": basetypes.ListType{ElemType: ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule{}.Type(ctx)},
+			"week_day_based_schedule": basetypes.ListType{
+				ElemType: ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -722,9 +734,11 @@ func (o ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) ToObject
 func (o ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"day_of_week":       types.StringType,
-			"frequency":         types.StringType,
-			"window_start_time": basetypes.ListType{ElemType: ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{}.Type(ctx)},
+			"day_of_week": types.StringType,
+			"frequency":   types.StringType,
+			"window_start_time": basetypes.ListType{
+				ElemType: ClusterAutoRestartMessageMaintenanceWindowWindowStartTime{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -932,9 +946,11 @@ func (o ComplianceSecurityProfileSetting) ToObjectValue(ctx context.Context) bas
 func (o ComplianceSecurityProfileSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"compliance_security_profile_workspace": basetypes.ListType{ElemType: ComplianceSecurityProfile{}.Type(ctx)},
-			"etag":                                  types.StringType,
-			"setting_name":                          types.StringType,
+			"compliance_security_profile_workspace": basetypes.ListType{
+				ElemType: ComplianceSecurityProfile{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -1019,11 +1035,21 @@ func (o Config) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Config) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"email":           basetypes.ListType{ElemType: EmailConfig{}.Type(ctx)},
-			"generic_webhook": basetypes.ListType{ElemType: GenericWebhookConfig{}.Type(ctx)},
-			"microsoft_teams": basetypes.ListType{ElemType: MicrosoftTeamsConfig{}.Type(ctx)},
-			"pagerduty":       basetypes.ListType{ElemType: PagerdutyConfig{}.Type(ctx)},
-			"slack":           basetypes.ListType{ElemType: SlackConfig{}.Type(ctx)},
+			"email": basetypes.ListType{
+				ElemType: EmailConfig{}.Type(ctx),
+			},
+			"generic_webhook": basetypes.ListType{
+				ElemType: GenericWebhookConfig{}.Type(ctx),
+			},
+			"microsoft_teams": basetypes.ListType{
+				ElemType: MicrosoftTeamsConfig{}.Type(ctx),
+			},
+			"pagerduty": basetypes.ListType{
+				ElemType: PagerdutyConfig{}.Type(ctx),
+			},
+			"slack": basetypes.ListType{
+				ElemType: SlackConfig{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1283,7 +1309,9 @@ func (o CreateIpAccessListResponse) ToObjectValue(ctx context.Context) basetypes
 func (o CreateIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_list": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1408,7 +1436,9 @@ func (o CreateNotificationDestinationRequest) ToObjectValue(ctx context.Context)
 func (o CreateNotificationDestinationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"config":       basetypes.ListType{ElemType: Config{}.Type(ctx)},
+			"config": basetypes.ListType{
+				ElemType: Config{}.Type(ctx),
+			},
 			"display_name": types.StringType,
 		},
 	}
@@ -1533,7 +1563,9 @@ func (o CreateOboTokenResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateOboTokenResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_info":  basetypes.ListType{ElemType: TokenInfo{}.Type(ctx)},
+			"token_info": basetypes.ListType{
+				ElemType: TokenInfo{}.Type(ctx),
+			},
 			"token_value": types.StringType,
 		},
 	}
@@ -1707,7 +1739,9 @@ func (o CreateTokenResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o CreateTokenResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_info":  basetypes.ListType{ElemType: PublicTokenInfo{}.Type(ctx)},
+			"token_info": basetypes.ListType{
+				ElemType: PublicTokenInfo{}.Type(ctx),
+			},
 			"token_value": types.StringType,
 		},
 	}
@@ -1872,9 +1906,11 @@ func (o CspEnablementAccountSetting) ToObjectValue(ctx context.Context) basetype
 func (o CspEnablementAccountSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"csp_enablement_account": basetypes.ListType{ElemType: CspEnablementAccount{}.Type(ctx)},
-			"etag":                   types.StringType,
-			"setting_name":           types.StringType,
+			"csp_enablement_account": basetypes.ListType{
+				ElemType: CspEnablementAccount{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -1969,8 +2005,10 @@ func (o DefaultNamespaceSetting) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o DefaultNamespaceSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag":         types.StringType,
-			"namespace":    basetypes.ListType{ElemType: StringMessage{}.Type(ctx)},
+			"etag": types.StringType,
+			"namespace": basetypes.ListType{
+				ElemType: StringMessage{}.Type(ctx),
+			},
 			"setting_name": types.StringType,
 		},
 	}
@@ -3173,9 +3211,11 @@ func (o DisableLegacyAccess) ToObjectValue(ctx context.Context) basetypes.Object
 func (o DisableLegacyAccess) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"disable_legacy_access": basetypes.ListType{ElemType: BooleanMessage{}.Type(ctx)},
-			"etag":                  types.StringType,
-			"setting_name":          types.StringType,
+			"disable_legacy_access": basetypes.ListType{
+				ElemType: BooleanMessage{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -3260,9 +3300,11 @@ func (o DisableLegacyDbfs) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o DisableLegacyDbfs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"disable_legacy_dbfs": basetypes.ListType{ElemType: BooleanMessage{}.Type(ctx)},
-			"etag":                types.StringType,
-			"setting_name":        types.StringType,
+			"disable_legacy_dbfs": basetypes.ListType{
+				ElemType: BooleanMessage{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -3347,9 +3389,11 @@ func (o DisableLegacyFeatures) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o DisableLegacyFeatures) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"disable_legacy_features": basetypes.ListType{ElemType: BooleanMessage{}.Type(ctx)},
-			"etag":                    types.StringType,
-			"setting_name":            types.StringType,
+			"disable_legacy_features": basetypes.ListType{
+				ElemType: BooleanMessage{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -3423,7 +3467,9 @@ func (o EgressNetworkPolicy) ToObjectValue(ctx context.Context) basetypes.Object
 func (o EgressNetworkPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"internet_access": basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicy{}.Type(ctx)},
+			"internet_access": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicy{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3515,7 +3561,9 @@ func (o EgressNetworkPolicyInternetAccessPolicy) Type(ctx context.Context) attr.
 			"allowed_storage_destinations": basetypes.ListType{
 				ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx),
 			},
-			"log_only_mode":    basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx)},
+			"log_only_mode": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx),
+			},
 			"restriction_mode": types.StringType,
 		},
 	}
@@ -4035,9 +4083,11 @@ func (o EnhancedSecurityMonitoringSetting) ToObjectValue(ctx context.Context) ba
 func (o EnhancedSecurityMonitoringSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"enhanced_security_monitoring_workspace": basetypes.ListType{ElemType: EnhancedSecurityMonitoring{}.Type(ctx)},
-			"etag":                                   types.StringType,
-			"setting_name":                           types.StringType,
+			"enhanced_security_monitoring_workspace": basetypes.ListType{
+				ElemType: EnhancedSecurityMonitoring{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -4165,9 +4215,11 @@ func (o EsmEnablementAccountSetting) ToObjectValue(ctx context.Context) basetype
 func (o EsmEnablementAccountSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"esm_enablement_account": basetypes.ListType{ElemType: EsmEnablementAccount{}.Type(ctx)},
-			"etag":                   types.StringType,
-			"setting_name":           types.StringType,
+			"esm_enablement_account": basetypes.ListType{
+				ElemType: EsmEnablementAccount{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -4336,7 +4388,9 @@ func (o ExchangeTokenRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ExchangeTokenRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"partitionId": basetypes.ListType{ElemType: PartitionId{}.Type(ctx)},
+			"partitionId": basetypes.ListType{
+				ElemType: PartitionId{}.Type(ctx),
+			},
 			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -4537,7 +4591,9 @@ func (o FetchIpAccessListResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o FetchIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_list": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5294,7 +5350,9 @@ func (o GetIpAccessListResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o GetIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_list": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5823,7 +5881,9 @@ func (o GetTokenResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o GetTokenResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_info": basetypes.ListType{ElemType: TokenInfo{}.Type(ctx)},
+			"token_info": basetypes.ListType{
+				ElemType: TokenInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7022,8 +7082,12 @@ func (o NccEgressConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o NccEgressConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"default_rules": basetypes.ListType{ElemType: NccEgressDefaultRules{}.Type(ctx)},
-			"target_rules":  basetypes.ListType{ElemType: NccEgressTargetRules{}.Type(ctx)},
+			"default_rules": basetypes.ListType{
+				ElemType: NccEgressDefaultRules{}.Type(ctx),
+			},
+			"target_rules": basetypes.ListType{
+				ElemType: NccEgressTargetRules{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7130,8 +7194,12 @@ func (o NccEgressDefaultRules) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o NccEgressDefaultRules) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_stable_ip_rule":          basetypes.ListType{ElemType: NccAwsStableIpRule{}.Type(ctx)},
-			"azure_service_endpoint_rule": basetypes.ListType{ElemType: NccAzureServiceEndpointRule{}.Type(ctx)},
+			"aws_stable_ip_rule": basetypes.ListType{
+				ElemType: NccAwsStableIpRule{}.Type(ctx),
+			},
+			"azure_service_endpoint_rule": basetypes.ListType{
+				ElemType: NccAzureServiceEndpointRule{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7324,9 +7392,11 @@ func (o NetworkConnectivityConfiguration) ToObjectValue(ctx context.Context) bas
 func (o NetworkConnectivityConfiguration) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":                     types.StringType,
-			"creation_time":                  types.Int64Type,
-			"egress_config":                  basetypes.ListType{ElemType: NccEgressConfig{}.Type(ctx)},
+			"account_id":    types.StringType,
+			"creation_time": types.Int64Type,
+			"egress_config": basetypes.ListType{
+				ElemType: NccEgressConfig{}.Type(ctx),
+			},
 			"name":                           types.StringType,
 			"network_connectivity_config_id": types.StringType,
 			"region":                         types.StringType,
@@ -7412,7 +7482,9 @@ func (o NotificationDestination) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o NotificationDestination) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"config":           basetypes.ListType{ElemType: Config{}.Type(ctx)},
+			"config": basetypes.ListType{
+				ElemType: Config{}.Type(ctx),
+			},
 			"destination_type": types.StringType,
 			"display_name":     types.StringType,
 			"id":               types.StringType,
@@ -7638,9 +7710,11 @@ func (o PersonalComputeSetting) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o PersonalComputeSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag":             types.StringType,
-			"personal_compute": basetypes.ListType{ElemType: PersonalComputeMessage{}.Type(ctx)},
-			"setting_name":     types.StringType,
+			"etag": types.StringType,
+			"personal_compute": basetypes.ListType{
+				ElemType: PersonalComputeMessage{}.Type(ctx),
+			},
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -7952,9 +8026,11 @@ func (o RestrictWorkspaceAdminsSetting) ToObjectValue(ctx context.Context) baset
 func (o RestrictWorkspaceAdminsSetting) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"etag":                      types.StringType,
-			"restrict_workspace_admins": basetypes.ListType{ElemType: RestrictWorkspaceAdminsMessage{}.Type(ctx)},
-			"setting_name":              types.StringType,
+			"etag": types.StringType,
+			"restrict_workspace_admins": basetypes.ListType{
+				ElemType: RestrictWorkspaceAdminsMessage{}.Type(ctx),
+			},
+			"setting_name": types.StringType,
 		},
 	}
 }
@@ -8731,7 +8807,9 @@ func (o UpdateAibiDashboardEmbeddingAccessPolicySettingRequest) Type(ctx context
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: AibiDashboardEmbeddingAccessPolicySetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: AibiDashboardEmbeddingAccessPolicySetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -8814,7 +8892,9 @@ func (o UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest) Type(ctx cont
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: AibiDashboardEmbeddingApprovedDomainsSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: AibiDashboardEmbeddingApprovedDomainsSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -8897,7 +8977,9 @@ func (o UpdateAutomaticClusterUpdateSettingRequest) Type(ctx context.Context) at
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: AutomaticClusterUpdateSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: AutomaticClusterUpdateSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -8980,7 +9062,9 @@ func (o UpdateComplianceSecurityProfileSettingRequest) Type(ctx context.Context)
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: ComplianceSecurityProfileSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: ComplianceSecurityProfileSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9063,7 +9147,9 @@ func (o UpdateCspEnablementAccountSettingRequest) Type(ctx context.Context) attr
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: CspEnablementAccountSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: CspEnablementAccountSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9154,7 +9240,9 @@ func (o UpdateDefaultNamespaceSettingRequest) Type(ctx context.Context) attr.Typ
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: DefaultNamespaceSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: DefaultNamespaceSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9237,7 +9325,9 @@ func (o UpdateDisableLegacyAccessRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: DisableLegacyAccess{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: DisableLegacyAccess{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9320,7 +9410,9 @@ func (o UpdateDisableLegacyDbfsRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: DisableLegacyDbfs{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: DisableLegacyDbfs{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9403,7 +9495,9 @@ func (o UpdateDisableLegacyFeaturesRequest) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: DisableLegacyFeatures{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: DisableLegacyFeatures{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9486,7 +9580,9 @@ func (o UpdateEnhancedSecurityMonitoringSettingRequest) Type(ctx context.Context
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: EnhancedSecurityMonitoringSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: EnhancedSecurityMonitoringSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9569,7 +9665,9 @@ func (o UpdateEsmEnablementAccountSettingRequest) Type(ctx context.Context) attr
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: EsmEnablementAccountSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: EsmEnablementAccountSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9740,7 +9838,9 @@ func (o UpdateNotificationDestinationRequest) ToObjectValue(ctx context.Context)
 func (o UpdateNotificationDestinationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"config":       basetypes.ListType{ElemType: Config{}.Type(ctx)},
+			"config": basetypes.ListType{
+				ElemType: Config{}.Type(ctx),
+			},
 			"display_name": types.StringType,
 			"id":           types.StringType,
 		},
@@ -9825,7 +9925,9 @@ func (o UpdatePersonalComputeSettingRequest) Type(ctx context.Context) attr.Type
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: PersonalComputeSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: PersonalComputeSetting{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9944,7 +10046,9 @@ func (o UpdateRestrictWorkspaceAdminsSettingRequest) Type(ctx context.Context) a
 		AttrTypes: map[string]attr.Type{
 			"allow_missing": types.BoolType,
 			"field_mask":    types.StringType,
-			"setting":       basetypes.ListType{ElemType: RestrictWorkspaceAdminsSetting{}.Type(ctx)},
+			"setting": basetypes.ListType{
+				ElemType: RestrictWorkspaceAdminsSetting{}.Type(ctx),
+			},
 		},
 	}
 }

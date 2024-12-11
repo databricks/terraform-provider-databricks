@@ -426,9 +426,11 @@ func (o AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o AzureAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"availability":       types.StringType,
-			"first_on_demand":    types.Int64Type,
-			"log_analytics_info": basetypes.ListType{ElemType: LogAnalyticsInfo{}.Type(ctx)},
+			"availability":    types.StringType,
+			"first_on_demand": types.Int64Type,
+			"log_analytics_info": basetypes.ListType{
+				ElemType: LogAnalyticsInfo{}.Type(ctx),
+			},
 			"spot_bid_max_price": types.Float64Type,
 		},
 	}
@@ -1129,20 +1131,30 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes":          basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":        basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"cluster_log_conf":        basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_name":            types.StringType,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode":           types.StringType,
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
+			"data_security_mode": types.StringType,
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -1161,7 +1173,9 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1847,18 +1861,28 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale":               basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes":          basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":        basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"cluster_cores":           types.Float64Type,
-			"cluster_id":              types.StringType,
-			"cluster_log_conf":        basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_log_status":      basetypes.ListType{ElemType: LogSyncStatus{}.Type(ctx)},
-			"cluster_memory_mb":       types.Int64Type,
-			"cluster_name":            types.StringType,
-			"cluster_source":          types.StringType,
-			"creator_user_name":       types.StringType,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"cluster_cores": types.Float64Type,
+			"cluster_id":    types.StringType,
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_log_status": basetypes.ListType{
+				ElemType: LogSyncStatus{}.Type(ctx),
+			},
+			"cluster_memory_mb": types.Int64Type,
+			"cluster_name":      types.StringType,
+			"cluster_source":    types.StringType,
+			"creator_user_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -1866,8 +1890,12 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
-			"driver":                       basetypes.ListType{ElemType: SparkNode{}.Type(ctx)},
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
+			"driver": basetypes.ListType{
+				ElemType: SparkNode{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
@@ -1875,7 +1903,9 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"executors": basetypes.ListType{
 				ElemType: SparkNode{}.Type(ctx),
 			},
-			"gcp_attributes": basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -1896,16 +1926,22 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"spark_version": types.StringType,
-			"spec":          basetypes.ListType{ElemType: ClusterSpec{}.Type(ctx)},
+			"spec": basetypes.ListType{
+				ElemType: ClusterSpec{}.Type(ctx),
+			},
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"start_time":         types.Int64Type,
-			"state":              types.StringType,
-			"state_message":      types.StringType,
-			"terminated_time":    types.Int64Type,
-			"termination_reason": basetypes.ListType{ElemType: TerminationReason{}.Type(ctx)},
-			"workload_type":      basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"start_time":      types.Int64Type,
+			"state":           types.StringType,
+			"state_message":   types.StringType,
+			"terminated_time": types.Int64Type,
+			"termination_reason": basetypes.ListType{
+				ElemType: TerminationReason{}.Type(ctx),
+			},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2432,11 +2468,15 @@ func (o ClusterEvent) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ClusterEvent) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster_id":               types.StringType,
-			"data_plane_event_details": basetypes.ListType{ElemType: DataPlaneEventDetails{}.Type(ctx)},
-			"details":                  basetypes.ListType{ElemType: EventDetails{}.Type(ctx)},
-			"timestamp":                types.Int64Type,
-			"type":                     types.StringType,
+			"cluster_id": types.StringType,
+			"data_plane_event_details": basetypes.ListType{
+				ElemType: DataPlaneEventDetails{}.Type(ctx),
+			},
+			"details": basetypes.ListType{
+				ElemType: EventDetails{}.Type(ctx),
+			},
+			"timestamp": types.Int64Type,
+			"type":      types.StringType,
 		},
 	}
 }
@@ -2617,8 +2657,12 @@ func (o ClusterLogConf) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ClusterLogConf) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbfs": basetypes.ListType{ElemType: DbfsStorageInfo{}.Type(ctx)},
-			"s3":   basetypes.ListType{ElemType: S3StorageInfo{}.Type(ctx)},
+			"dbfs": basetypes.ListType{
+				ElemType: DbfsStorageInfo{}.Type(ctx),
+			},
+			"s3": basetypes.ListType{
+				ElemType: S3StorageInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3484,7 +3528,9 @@ func (o ClusterSize) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ClusterSize) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale":   basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
 			"num_workers": types.Int64Type,
 		},
 	}
@@ -3740,22 +3786,34 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale":                   basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
-			"autotermination_minutes":     types.Int64Type,
-			"aws_attributes":              basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":            basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"cluster_log_conf":            basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_name":                types.StringType,
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
+			"autotermination_minutes": types.Int64Type,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode":           types.StringType,
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
+			"data_security_mode": types.StringType,
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -3775,7 +3833,9 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -4283,9 +4343,11 @@ func (o CommandStatusResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CommandStatusResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":      types.StringType,
-			"results": basetypes.ListType{ElemType: Results{}.Type(ctx)},
-			"status":  types.StringType,
+			"id": types.StringType,
+			"results": basetypes.ListType{
+				ElemType: Results{}.Type(ctx),
+			},
+			"status": types.StringType,
 		},
 	}
 }
@@ -4636,23 +4698,37 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale":                   basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
-			"autotermination_minutes":     types.Int64Type,
-			"aws_attributes":              basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":            basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"clone_from":                  basetypes.ListType{ElemType: CloneCluster{}.Type(ctx)},
-			"cluster_log_conf":            basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_name":                types.StringType,
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
+			"autotermination_minutes": types.Int64Type,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"clone_from": basetypes.ListType{
+				ElemType: CloneCluster{}.Type(ctx),
+			},
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode":           types.StringType,
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
+			"data_security_mode": types.StringType,
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -4672,7 +4748,9 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5211,14 +5289,22 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes":   basetypes.ListType{ElemType: InstancePoolAwsAttributes{}.Type(ctx)},
-			"azure_attributes": basetypes.ListType{ElemType: InstancePoolAzureAttributes{}.Type(ctx)},
+			"aws_attributes": basetypes.ListType{
+				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
+			},
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec":                             basetypes.ListType{ElemType: DiskSpec{}.Type(ctx)},
-			"enable_elastic_disk":                   types.BoolType,
-			"gcp_attributes":                        basetypes.ListType{ElemType: InstancePoolGcpAttributes{}.Type(ctx)},
+			"disk_spec": basetypes.ListType{
+				ElemType: DiskSpec{}.Type(ctx),
+			},
+			"enable_elastic_disk": types.BoolType,
+			"gcp_attributes": basetypes.ListType{
+				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
+			},
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
@@ -6265,7 +6351,9 @@ func (o DiskSpec) Type(ctx context.Context) attr.Type {
 			"disk_iops":       types.Int64Type,
 			"disk_size":       types.Int64Type,
 			"disk_throughput": types.Int64Type,
-			"disk_type":       basetypes.ListType{ElemType: DiskType{}.Type(ctx)},
+			"disk_type": basetypes.ListType{
+				ElemType: DiskType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6428,8 +6516,10 @@ func (o DockerImage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o DockerImage) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"basic_auth": basetypes.ListType{ElemType: DockerBasicAuth{}.Type(ctx)},
-			"url":        types.StringType,
+			"basic_auth": basetypes.ListType{
+				ElemType: DockerBasicAuth{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -6687,23 +6777,35 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale":                   basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
-			"autotermination_minutes":     types.Int64Type,
-			"aws_attributes":              basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":            basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"cluster_id":                  types.StringType,
-			"cluster_log_conf":            basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_name":                types.StringType,
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
+			"autotermination_minutes": types.Int64Type,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"cluster_id": types.StringType,
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode":           types.StringType,
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
+			"data_security_mode": types.StringType,
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -6723,7 +6825,9 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7737,26 +7841,38 @@ func (o EventDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EventDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes":            basetypes.ListType{ElemType: ClusterAttributes{}.Type(ctx)},
-			"cause":                 types.StringType,
-			"cluster_size":          basetypes.ListType{ElemType: ClusterSize{}.Type(ctx)},
-			"current_num_vcpus":     types.Int64Type,
-			"current_num_workers":   types.Int64Type,
-			"did_not_expand_reason": types.StringType,
-			"disk_size":             types.Int64Type,
-			"driver_state_message":  types.StringType,
+			"attributes": basetypes.ListType{
+				ElemType: ClusterAttributes{}.Type(ctx),
+			},
+			"cause": types.StringType,
+			"cluster_size": basetypes.ListType{
+				ElemType: ClusterSize{}.Type(ctx),
+			},
+			"current_num_vcpus":                       types.Int64Type,
+			"current_num_workers":                     types.Int64Type,
+			"did_not_expand_reason":                   types.StringType,
+			"disk_size":                               types.Int64Type,
+			"driver_state_message":                    types.StringType,
 			"enable_termination_for_node_blocklisted": types.BoolType,
-			"free_space":            types.Int64Type,
-			"init_scripts":          basetypes.ListType{ElemType: InitScriptEventDetails{}.Type(ctx)},
-			"instance_id":           types.StringType,
-			"job_run_name":          types.StringType,
-			"previous_attributes":   basetypes.ListType{ElemType: ClusterAttributes{}.Type(ctx)},
-			"previous_cluster_size": basetypes.ListType{ElemType: ClusterSize{}.Type(ctx)},
-			"previous_disk_size":    types.Int64Type,
-			"reason":                basetypes.ListType{ElemType: TerminationReason{}.Type(ctx)},
-			"target_num_vcpus":      types.Int64Type,
-			"target_num_workers":    types.Int64Type,
-			"user":                  types.StringType,
+			"free_space":                              types.Int64Type,
+			"init_scripts": basetypes.ListType{
+				ElemType: InitScriptEventDetails{}.Type(ctx),
+			},
+			"instance_id":  types.StringType,
+			"job_run_name": types.StringType,
+			"previous_attributes": basetypes.ListType{
+				ElemType: ClusterAttributes{}.Type(ctx),
+			},
+			"previous_cluster_size": basetypes.ListType{
+				ElemType: ClusterSize{}.Type(ctx),
+			},
+			"previous_disk_size": types.Int64Type,
+			"reason": basetypes.ListType{
+				ElemType: TerminationReason{}.Type(ctx),
+			},
+			"target_num_vcpus":   types.Int64Type,
+			"target_num_workers": types.Int64Type,
+			"user":               types.StringType,
 		},
 	}
 }
@@ -8719,7 +8835,9 @@ func (o GetEventsResponse) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: ClusterEvent{}.Type(ctx),
 			},
-			"next_page":   basetypes.ListType{ElemType: GetEvents{}.Type(ctx)},
+			"next_page": basetypes.ListType{
+				ElemType: GetEvents{}.Type(ctx),
+			},
 			"total_count": types.Int64Type,
 		},
 	}
@@ -8956,17 +9074,25 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes":   basetypes.ListType{ElemType: InstancePoolAwsAttributes{}.Type(ctx)},
-			"azure_attributes": basetypes.ListType{ElemType: InstancePoolAzureAttributes{}.Type(ctx)},
+			"aws_attributes": basetypes.ListType{
+				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
+			},
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec":                             basetypes.ListType{ElemType: DiskSpec{}.Type(ctx)},
-			"enable_elastic_disk":                   types.BoolType,
-			"gcp_attributes":                        basetypes.ListType{ElemType: InstancePoolGcpAttributes{}.Type(ctx)},
+			"disk_spec": basetypes.ListType{
+				ElemType: DiskSpec{}.Type(ctx),
+			},
+			"enable_elastic_disk": types.BoolType,
+			"gcp_attributes": basetypes.ListType{
+				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
+			},
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
@@ -8979,9 +9105,13 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state":  types.StringType,
-			"stats":  basetypes.ListType{ElemType: InstancePoolStats{}.Type(ctx)},
-			"status": basetypes.ListType{ElemType: InstancePoolStatus{}.Type(ctx)},
+			"state": types.StringType,
+			"stats": basetypes.ListType{
+				ElemType: InstancePoolStats{}.Type(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: InstancePoolStatus{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10083,13 +10213,27 @@ func (o InitScriptInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o InitScriptInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"abfss":     basetypes.ListType{ElemType: Adlsgen2Info{}.Type(ctx)},
-			"dbfs":      basetypes.ListType{ElemType: DbfsStorageInfo{}.Type(ctx)},
-			"file":      basetypes.ListType{ElemType: LocalFileInfo{}.Type(ctx)},
-			"gcs":       basetypes.ListType{ElemType: GcsStorageInfo{}.Type(ctx)},
-			"s3":        basetypes.ListType{ElemType: S3StorageInfo{}.Type(ctx)},
-			"volumes":   basetypes.ListType{ElemType: VolumesStorageInfo{}.Type(ctx)},
-			"workspace": basetypes.ListType{ElemType: WorkspaceStorageInfo{}.Type(ctx)},
+			"abfss": basetypes.ListType{
+				ElemType: Adlsgen2Info{}.Type(ctx),
+			},
+			"dbfs": basetypes.ListType{
+				ElemType: DbfsStorageInfo{}.Type(ctx),
+			},
+			"file": basetypes.ListType{
+				ElemType: LocalFileInfo{}.Type(ctx),
+			},
+			"gcs": basetypes.ListType{
+				ElemType: GcsStorageInfo{}.Type(ctx),
+			},
+			"s3": basetypes.ListType{
+				ElemType: S3StorageInfo{}.Type(ctx),
+			},
+			"volumes": basetypes.ListType{
+				ElemType: VolumesStorageInfo{}.Type(ctx),
+			},
+			"workspace": basetypes.ListType{
+				ElemType: WorkspaceStorageInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10319,8 +10463,12 @@ func (o InitScriptInfoAndExecutionDetails) ToObjectValue(ctx context.Context) ba
 func (o InitScriptInfoAndExecutionDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"execution_details": basetypes.ListType{ElemType: InitScriptExecutionDetails{}.Type(ctx)},
-			"script":            basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
+			"execution_details": basetypes.ListType{
+				ElemType: InitScriptExecutionDetails{}.Type(ctx),
+			},
+			"script": basetypes.ListType{
+				ElemType: InitScriptInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -10767,17 +10915,25 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes":   basetypes.ListType{ElemType: InstancePoolAwsAttributes{}.Type(ctx)},
-			"azure_attributes": basetypes.ListType{ElemType: InstancePoolAzureAttributes{}.Type(ctx)},
+			"aws_attributes": basetypes.ListType{
+				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
+			},
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec":                             basetypes.ListType{ElemType: DiskSpec{}.Type(ctx)},
-			"enable_elastic_disk":                   types.BoolType,
-			"gcp_attributes":                        basetypes.ListType{ElemType: InstancePoolGcpAttributes{}.Type(ctx)},
+			"disk_spec": basetypes.ListType{
+				ElemType: DiskSpec{}.Type(ctx),
+			},
+			"enable_elastic_disk": types.BoolType,
+			"gcp_attributes": basetypes.ListType{
+				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
+			},
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
@@ -10790,9 +10946,13 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state":  types.StringType,
-			"stats":  basetypes.ListType{ElemType: InstancePoolStats{}.Type(ctx)},
-			"status": basetypes.ListType{ElemType: InstancePoolStatus{}.Type(ctx)},
+			"state": types.StringType,
+			"stats": basetypes.ListType{
+				ElemType: InstancePoolStats{}.Type(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: InstancePoolStatus{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -11799,11 +11959,17 @@ func (o Library) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Library) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cran":         basetypes.ListType{ElemType: RCranLibrary{}.Type(ctx)},
-			"egg":          types.StringType,
-			"jar":          types.StringType,
-			"maven":        basetypes.ListType{ElemType: MavenLibrary{}.Type(ctx)},
-			"pypi":         basetypes.ListType{ElemType: PythonPyPiLibrary{}.Type(ctx)},
+			"cran": basetypes.ListType{
+				ElemType: RCranLibrary{}.Type(ctx),
+			},
+			"egg": types.StringType,
+			"jar": types.StringType,
+			"maven": basetypes.ListType{
+				ElemType: MavenLibrary{}.Type(ctx),
+			},
+			"pypi": basetypes.ListType{
+				ElemType: PythonPyPiLibrary{}.Type(ctx),
+			},
 			"requirements": types.StringType,
 			"whl":          types.StringType,
 		},
@@ -11941,7 +12107,9 @@ func (o LibraryFullStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_library_for_all_clusters": types.BoolType,
-			"library":                     basetypes.ListType{ElemType: Library{}.Type(ctx)},
+			"library": basetypes.ListType{
+				ElemType: Library{}.Type(ctx),
+			},
 			"messages": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -12504,10 +12672,14 @@ func (o ListClustersRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (o ListClustersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter_by":  basetypes.ListType{ElemType: ListClustersFilterBy{}.Type(ctx)},
+			"filter_by": basetypes.ListType{
+				ElemType: ListClustersFilterBy{}.Type(ctx),
+			},
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
-			"sort_by":    basetypes.ListType{ElemType: ListClustersSortBy{}.Type(ctx)},
+			"sort_by": basetypes.ListType{
+				ElemType: ListClustersSortBy{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -13570,8 +13742,12 @@ func (o NodeType) Type(ctx context.Context) attr.Type {
 			"is_hidden":               types.BoolType,
 			"is_io_cache_enabled":     types.BoolType,
 			"memory_mb":               types.Int64Type,
-			"node_info":               basetypes.ListType{ElemType: CloudProviderNodeInfo{}.Type(ctx)},
-			"node_instance_type":      basetypes.ListType{ElemType: NodeInstanceType{}.Type(ctx)},
+			"node_info": basetypes.ListType{
+				ElemType: CloudProviderNodeInfo{}.Type(ctx),
+			},
+			"node_instance_type": basetypes.ListType{
+				ElemType: NodeInstanceType{}.Type(ctx),
+			},
 			"node_type_id":            types.StringType,
 			"num_cores":               types.Float64Type,
 			"num_gpus":                types.Int64Type,
@@ -14261,7 +14437,9 @@ func (o ResizeCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o ResizeCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale":   basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
 			"cluster_id":  types.StringType,
 			"num_workers": types.Int64Type,
 		},
@@ -14702,13 +14880,15 @@ func (o SparkNode) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SparkNode) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"host_private_ip":     types.StringType,
-			"instance_id":         types.StringType,
-			"node_aws_attributes": basetypes.ListType{ElemType: SparkNodeAwsAttributes{}.Type(ctx)},
-			"node_id":             types.StringType,
-			"private_ip":          types.StringType,
-			"public_dns":          types.StringType,
-			"start_timestamp":     types.Int64Type,
+			"host_private_ip": types.StringType,
+			"instance_id":     types.StringType,
+			"node_aws_attributes": basetypes.ListType{
+				ElemType: SparkNodeAwsAttributes{}.Type(ctx),
+			},
+			"node_id":         types.StringType,
+			"private_ip":      types.StringType,
+			"public_dns":      types.StringType,
+			"start_timestamp": types.Int64Type,
 		},
 	}
 }
@@ -15229,7 +15409,9 @@ func (o UpdateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o UpdateCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster":     basetypes.ListType{ElemType: UpdateClusterResource{}.Type(ctx)},
+			"cluster": basetypes.ListType{
+				ElemType: UpdateClusterResource{}.Type(ctx),
+			},
 			"cluster_id":  types.StringType,
 			"update_mask": types.StringType,
 		},
@@ -15480,22 +15662,34 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale":               basetypes.ListType{ElemType: AutoScale{}.Type(ctx)},
+			"autoscale": basetypes.ListType{
+				ElemType: AutoScale{}.Type(ctx),
+			},
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes":          basetypes.ListType{ElemType: AwsAttributes{}.Type(ctx)},
-			"azure_attributes":        basetypes.ListType{ElemType: AzureAttributes{}.Type(ctx)},
-			"cluster_log_conf":        basetypes.ListType{ElemType: ClusterLogConf{}.Type(ctx)},
-			"cluster_name":            types.StringType,
+			"aws_attributes": basetypes.ListType{
+				ElemType: AwsAttributes{}.Type(ctx),
+			},
+			"azure_attributes": basetypes.ListType{
+				ElemType: AzureAttributes{}.Type(ctx),
+			},
+			"cluster_log_conf": basetypes.ListType{
+				ElemType: ClusterLogConf{}.Type(ctx),
+			},
+			"cluster_name": types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode":           types.StringType,
-			"docker_image":                 basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
+			"data_security_mode": types.StringType,
+			"docker_image": basetypes.ListType{
+				ElemType: DockerImage{}.Type(ctx),
+			},
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
+			"gcp_attributes": basetypes.ListType{
+				ElemType: GcpAttributes{}.Type(ctx),
+			},
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
@@ -15515,7 +15709,9 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{ElemType: WorkloadType{}.Type(ctx)},
+			"workload_type": basetypes.ListType{
+				ElemType: WorkloadType{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -15985,7 +16181,9 @@ func (o WorkloadType) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o WorkloadType) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clients": basetypes.ListType{ElemType: ClientsTypes{}.Type(ctx)},
+			"clients": basetypes.ListType{
+				ElemType: ClientsTypes{}.Type(ctx),
+			},
 		},
 	}
 }

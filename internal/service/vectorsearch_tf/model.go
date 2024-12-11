@@ -172,12 +172,16 @@ func (o CreateVectorIndexRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o CreateVectorIndexRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"delta_sync_index_spec":    basetypes.ListType{ElemType: DeltaSyncVectorIndexSpecRequest{}.Type(ctx)},
-			"direct_access_index_spec": basetypes.ListType{ElemType: DirectAccessVectorIndexSpec{}.Type(ctx)},
-			"endpoint_name":            types.StringType,
-			"index_type":               types.StringType,
-			"name":                     types.StringType,
-			"primary_key":              types.StringType,
+			"delta_sync_index_spec": basetypes.ListType{
+				ElemType: DeltaSyncVectorIndexSpecRequest{}.Type(ctx),
+			},
+			"direct_access_index_spec": basetypes.ListType{
+				ElemType: DirectAccessVectorIndexSpec{}.Type(ctx),
+			},
+			"endpoint_name": types.StringType,
+			"index_type":    types.StringType,
+			"name":          types.StringType,
+			"primary_key":   types.StringType,
 		},
 	}
 }
@@ -272,7 +276,9 @@ func (o CreateVectorIndexResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o CreateVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"vector_index": basetypes.ListType{ElemType: VectorIndex{}.Type(ctx)},
+			"vector_index": basetypes.ListType{
+				ElemType: VectorIndex{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -501,7 +507,9 @@ func (o DeleteDataVectorIndexResponse) ToObjectValue(ctx context.Context) basety
 func (o DeleteDataVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"result": basetypes.ListType{ElemType: DeleteDataResult{}.Type(ctx)},
+			"result": basetypes.ListType{
+				ElemType: DeleteDataResult{}.Type(ctx),
+			},
 			"status": types.StringType,
 		},
 	}
@@ -1252,9 +1260,11 @@ func (o EndpointInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EndpointInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"creation_timestamp":     types.Int64Type,
-			"creator":                types.StringType,
-			"endpoint_status":        basetypes.ListType{ElemType: EndpointStatus{}.Type(ctx)},
+			"creation_timestamp": types.Int64Type,
+			"creator":            types.StringType,
+			"endpoint_status": basetypes.ListType{
+				ElemType: EndpointStatus{}.Type(ctx),
+			},
 			"endpoint_type":          types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
@@ -1782,8 +1792,10 @@ func (o MapStringValueEntry) ToObjectValue(ctx context.Context) basetypes.Object
 func (o MapStringValueEntry) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":   types.StringType,
-			"value": basetypes.ListType{ElemType: Value{}.Type(ctx)},
+			"key": types.StringType,
+			"value": basetypes.ListType{
+				ElemType: Value{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2113,9 +2125,13 @@ func (o QueryVectorIndexResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o QueryVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"manifest":        basetypes.ListType{ElemType: ResultManifest{}.Type(ctx)},
+			"manifest": basetypes.ListType{
+				ElemType: ResultManifest{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
-			"result":          basetypes.ListType{ElemType: ResultData{}.Type(ctx)},
+			"result": basetypes.ListType{
+				ElemType: ResultData{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2775,7 +2791,9 @@ func (o UpsertDataVectorIndexResponse) ToObjectValue(ctx context.Context) basety
 func (o UpsertDataVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"result": basetypes.ListType{ElemType: UpsertDataResult{}.Type(ctx)},
+			"result": basetypes.ListType{
+				ElemType: UpsertDataResult{}.Type(ctx),
+			},
 			"status": types.StringType,
 		},
 	}
@@ -2861,12 +2879,16 @@ func (o Value) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Value) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"bool_value":   types.BoolType,
-			"list_value":   basetypes.ListType{ElemType: ListValue{}.Type(ctx)},
+			"bool_value": types.BoolType,
+			"list_value": basetypes.ListType{
+				ElemType: ListValue{}.Type(ctx),
+			},
 			"null_value":   types.StringType,
 			"number_value": types.Float64Type,
 			"string_value": types.StringType,
-			"struct_value": basetypes.ListType{ElemType: Struct{}.Type(ctx)},
+			"struct_value": basetypes.ListType{
+				ElemType: Struct{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2991,14 +3013,20 @@ func (o VectorIndex) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o VectorIndex) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"creator":                  types.StringType,
-			"delta_sync_index_spec":    basetypes.ListType{ElemType: DeltaSyncVectorIndexSpecResponse{}.Type(ctx)},
-			"direct_access_index_spec": basetypes.ListType{ElemType: DirectAccessVectorIndexSpec{}.Type(ctx)},
-			"endpoint_name":            types.StringType,
-			"index_type":               types.StringType,
-			"name":                     types.StringType,
-			"primary_key":              types.StringType,
-			"status":                   basetypes.ListType{ElemType: VectorIndexStatus{}.Type(ctx)},
+			"creator": types.StringType,
+			"delta_sync_index_spec": basetypes.ListType{
+				ElemType: DeltaSyncVectorIndexSpecResponse{}.Type(ctx),
+			},
+			"direct_access_index_spec": basetypes.ListType{
+				ElemType: DirectAccessVectorIndexSpec{}.Type(ctx),
+			},
+			"endpoint_name": types.StringType,
+			"index_type":    types.StringType,
+			"name":          types.StringType,
+			"primary_key":   types.StringType,
+			"status": basetypes.ListType{
+				ElemType: VectorIndexStatus{}.Type(ctx),
+			},
 		},
 	}
 }

@@ -104,7 +104,9 @@ func (o AddExchangeForListingResponse) ToObjectValue(ctx context.Context) basety
 func (o AddExchangeForListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange_for_listing": basetypes.ListType{ElemType: ExchangeListing{}.Type(ctx)},
+			"exchange_for_listing": basetypes.ListType{
+				ElemType: ExchangeListing{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -555,7 +557,9 @@ func (o CreateExchangeFilterRequest) ToObjectValue(ctx context.Context) basetype
 func (o CreateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{ElemType: ExchangeFilter{}.Type(ctx)},
+			"filter": basetypes.ListType{
+				ElemType: ExchangeFilter{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -665,7 +669,9 @@ func (o CreateExchangeRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateExchangeRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{ElemType: Exchange{}.Type(ctx)},
+			"exchange": basetypes.ListType{
+				ElemType: Exchange{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -784,8 +790,10 @@ func (o CreateFileRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o CreateFileRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"display_name":          types.StringType,
-			"file_parent":           basetypes.ListType{ElemType: FileParent{}.Type(ctx)},
+			"display_name": types.StringType,
+			"file_parent": basetypes.ListType{
+				ElemType: FileParent{}.Type(ctx),
+			},
 			"marketplace_file_type": types.StringType,
 			"mime_type":             types.StringType,
 		},
@@ -859,7 +867,9 @@ func (o CreateFileResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateFileResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_info":  basetypes.ListType{ElemType: FileInfo{}.Type(ctx)},
+			"file_info": basetypes.ListType{
+				ElemType: FileInfo{}.Type(ctx),
+			},
 			"upload_url": types.StringType,
 		},
 	}
@@ -945,12 +955,16 @@ func (o CreateInstallationRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o CreateInstallationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accepted_consumer_terms": basetypes.ListType{ElemType: ConsumerTerms{}.Type(ctx)},
-			"catalog_name":            types.StringType,
-			"listing_id":              types.StringType,
-			"recipient_type":          types.StringType,
-			"repo_detail":             basetypes.ListType{ElemType: RepoInstallation{}.Type(ctx)},
-			"share_name":              types.StringType,
+			"accepted_consumer_terms": basetypes.ListType{
+				ElemType: ConsumerTerms{}.Type(ctx),
+			},
+			"catalog_name":   types.StringType,
+			"listing_id":     types.StringType,
+			"recipient_type": types.StringType,
+			"repo_detail": basetypes.ListType{
+				ElemType: RepoInstallation{}.Type(ctx),
+			},
+			"share_name": types.StringType,
 		},
 	}
 }
@@ -1045,7 +1059,9 @@ func (o CreateListingRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CreateListingRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{ElemType: Listing{}.Type(ctx)},
+			"listing": basetypes.ListType{
+				ElemType: Listing{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1180,15 +1196,17 @@ func (o CreatePersonalizationRequest) ToObjectValue(ctx context.Context) basetyp
 func (o CreatePersonalizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accepted_consumer_terms": basetypes.ListType{ElemType: ConsumerTerms{}.Type(ctx)},
-			"comment":                 types.StringType,
-			"company":                 types.StringType,
-			"first_name":              types.StringType,
-			"intended_use":            types.StringType,
-			"is_from_lighthouse":      types.BoolType,
-			"last_name":               types.StringType,
-			"listing_id":              types.StringType,
-			"recipient_type":          types.StringType,
+			"accepted_consumer_terms": basetypes.ListType{
+				ElemType: ConsumerTerms{}.Type(ctx),
+			},
+			"comment":            types.StringType,
+			"company":            types.StringType,
+			"first_name":         types.StringType,
+			"intended_use":       types.StringType,
+			"is_from_lighthouse": types.BoolType,
+			"last_name":          types.StringType,
+			"listing_id":         types.StringType,
+			"recipient_type":     types.StringType,
 		},
 	}
 }
@@ -1298,7 +1316,9 @@ func (o CreateProviderRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateProviderRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{ElemType: ProviderInfo{}.Type(ctx)},
+			"provider": basetypes.ListType{
+				ElemType: ProviderInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2223,10 +2243,12 @@ func (o FileInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o FileInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"created_at":            types.Int64Type,
-			"display_name":          types.StringType,
-			"download_link":         types.StringType,
-			"file_parent":           basetypes.ListType{ElemType: FileParent{}.Type(ctx)},
+			"created_at":    types.Int64Type,
+			"display_name":  types.StringType,
+			"download_link": types.StringType,
+			"file_parent": basetypes.ListType{
+				ElemType: FileParent{}.Type(ctx),
+			},
 			"id":                    types.StringType,
 			"marketplace_file_type": types.StringType,
 			"mime_type":             types.StringType,
@@ -2388,7 +2410,9 @@ func (o GetExchangeResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetExchangeResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{ElemType: Exchange{}.Type(ctx)},
+			"exchange": basetypes.ListType{
+				ElemType: Exchange{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2499,7 +2523,9 @@ func (o GetFileResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetFileResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_info": basetypes.ListType{ElemType: FileInfo{}.Type(ctx)},
+			"file_info": basetypes.ListType{
+				ElemType: FileInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2777,7 +2803,9 @@ func (o GetListingResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o GetListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{ElemType: Listing{}.Type(ctx)},
+			"listing": basetypes.ListType{
+				ElemType: Listing{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3122,7 +3150,9 @@ func (o GetProviderResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetProviderResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{ElemType: ProviderInfo{}.Type(ctx)},
+			"provider": basetypes.ListType{
+				ElemType: ProviderInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3191,7 +3221,9 @@ func (o Installation) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Installation) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation": basetypes.ListType{ElemType: InstallationDetail{}.Type(ctx)},
+			"installation": basetypes.ListType{
+				ElemType: InstallationDetail{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3308,7 +3340,9 @@ func (o InstallationDetail) Type(ctx context.Context) attr.Type {
 			"repo_path":      types.StringType,
 			"share_name":     types.StringType,
 			"status":         types.StringType,
-			"token_detail":   basetypes.ListType{ElemType: TokenDetail{}.Type(ctx)},
+			"token_detail": basetypes.ListType{
+				ElemType: TokenDetail{}.Type(ctx),
+			},
 			"tokens": basetypes.ListType{
 				ElemType: TokenInfo{}.Type(ctx),
 			},
@@ -4026,9 +4060,11 @@ func (o ListFilesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListFilesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_parent": basetypes.ListType{ElemType: FileParent{}.Type(ctx)},
-			"page_size":   types.Int64Type,
-			"page_token":  types.StringType,
+			"file_parent": basetypes.ListType{
+				ElemType: FileParent{}.Type(ctx),
+			},
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -4996,9 +5032,13 @@ func (o Listing) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Listing) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"detail":  basetypes.ListType{ElemType: ListingDetail{}.Type(ctx)},
-			"id":      types.StringType,
-			"summary": basetypes.ListType{ElemType: ListingSummary{}.Type(ctx)},
+			"detail": basetypes.ListType{
+				ElemType: ListingDetail{}.Type(ctx),
+			},
+			"id": types.StringType,
+			"summary": basetypes.ListType{
+				ElemType: ListingSummary{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5166,13 +5206,15 @@ func (o ListingDetail) Type(ctx context.Context) attr.Type {
 			"assets": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"collection_date_end":    types.Int64Type,
-			"collection_date_start":  types.Int64Type,
-			"collection_granularity": basetypes.ListType{ElemType: DataRefreshInfo{}.Type(ctx)},
-			"cost":                   types.StringType,
-			"data_source":            types.StringType,
-			"description":            types.StringType,
-			"documentation_link":     types.StringType,
+			"collection_date_end":   types.Int64Type,
+			"collection_date_start": types.Int64Type,
+			"collection_granularity": basetypes.ListType{
+				ElemType: DataRefreshInfo{}.Type(ctx),
+			},
+			"cost":               types.StringType,
+			"data_source":        types.StringType,
+			"description":        types.StringType,
+			"documentation_link": types.StringType,
 			"embedded_notebook_file_infos": basetypes.ListType{
 				ElemType: FileInfo{}.Type(ctx),
 			},
@@ -5189,7 +5231,9 @@ func (o ListingDetail) Type(ctx context.Context) attr.Type {
 				ElemType: ListingTag{}.Type(ctx),
 			},
 			"terms_of_service": types.StringType,
-			"update_frequency": basetypes.ListType{ElemType: DataRefreshInfo{}.Type(ctx)},
+			"update_frequency": basetypes.ListType{
+				ElemType: DataRefreshInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5404,8 +5448,12 @@ func (o ListingFulfillment) Type(ctx context.Context) attr.Type {
 			"fulfillment_type": types.StringType,
 			"listing_id":       types.StringType,
 			"recipient_type":   types.StringType,
-			"repo_info":        basetypes.ListType{ElemType: RepoInfo{}.Type(ctx)},
-			"share_info":       basetypes.ListType{ElemType: ShareInfo{}.Type(ctx)},
+			"repo_info": basetypes.ListType{
+				ElemType: RepoInfo{}.Type(ctx),
+			},
+			"share_info": basetypes.ListType{
+				ElemType: ShareInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5611,20 +5659,28 @@ func (o ListingSummary) Type(ctx context.Context) attr.Type {
 			"exchange_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"git_repo":        basetypes.ListType{ElemType: RepoInfo{}.Type(ctx)},
-			"listingType":     types.StringType,
-			"name":            types.StringType,
-			"provider_id":     types.StringType,
-			"provider_region": basetypes.ListType{ElemType: RegionInfo{}.Type(ctx)},
-			"published_at":    types.Int64Type,
-			"published_by":    types.StringType,
-			"setting":         basetypes.ListType{ElemType: ListingSetting{}.Type(ctx)},
-			"share":           basetypes.ListType{ElemType: ShareInfo{}.Type(ctx)},
-			"status":          types.StringType,
-			"subtitle":        types.StringType,
-			"updated_at":      types.Int64Type,
-			"updated_by":      types.StringType,
-			"updated_by_id":   types.Int64Type,
+			"git_repo": basetypes.ListType{
+				ElemType: RepoInfo{}.Type(ctx),
+			},
+			"listingType": types.StringType,
+			"name":        types.StringType,
+			"provider_id": types.StringType,
+			"provider_region": basetypes.ListType{
+				ElemType: RegionInfo{}.Type(ctx),
+			},
+			"published_at": types.Int64Type,
+			"published_by": types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: ListingSetting{}.Type(ctx),
+			},
+			"share": basetypes.ListType{
+				ElemType: ShareInfo{}.Type(ctx),
+			},
+			"status":        types.StringType,
+			"subtitle":      types.StringType,
+			"updated_at":    types.Int64Type,
+			"updated_by":    types.StringType,
+			"updated_by_id": types.Int64Type,
 		},
 	}
 }
@@ -5948,9 +6004,13 @@ func (o PersonalizationRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o PersonalizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":            types.StringType,
-			"consumer_region":    basetypes.ListType{ElemType: RegionInfo{}.Type(ctx)},
-			"contact_info":       basetypes.ListType{ElemType: ContactInfo{}.Type(ctx)},
+			"comment": types.StringType,
+			"consumer_region": basetypes.ListType{
+				ElemType: RegionInfo{}.Type(ctx),
+			},
+			"contact_info": basetypes.ListType{
+				ElemType: ContactInfo{}.Type(ctx),
+			},
 			"created_at":         types.Int64Type,
 			"id":                 types.StringType,
 			"intended_use":       types.StringType,
@@ -5960,10 +6020,12 @@ func (o PersonalizationRequest) Type(ctx context.Context) attr.Type {
 			"metastore_id":       types.StringType,
 			"provider_id":        types.StringType,
 			"recipient_type":     types.StringType,
-			"share":              basetypes.ListType{ElemType: ShareInfo{}.Type(ctx)},
-			"status":             types.StringType,
-			"status_message":     types.StringType,
-			"updated_at":         types.Int64Type,
+			"share": basetypes.ListType{
+				ElemType: ShareInfo{}.Type(ctx),
+			},
+			"status":         types.StringType,
+			"status_message": types.StringType,
+			"updated_at":     types.Int64Type,
 		},
 	}
 }
@@ -6882,8 +6944,10 @@ func (o UpdateExchangeFilterRequest) ToObjectValue(ctx context.Context) basetype
 func (o UpdateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{ElemType: ExchangeFilter{}.Type(ctx)},
-			"id":     types.StringType,
+			"filter": basetypes.ListType{
+				ElemType: ExchangeFilter{}.Type(ctx),
+			},
+			"id": types.StringType,
 		},
 	}
 }
@@ -6952,7 +7016,9 @@ func (o UpdateExchangeFilterResponse) ToObjectValue(ctx context.Context) basetyp
 func (o UpdateExchangeFilterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{ElemType: ExchangeFilter{}.Type(ctx)},
+			"filter": basetypes.ListType{
+				ElemType: ExchangeFilter{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7024,8 +7090,10 @@ func (o UpdateExchangeRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateExchangeRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{ElemType: Exchange{}.Type(ctx)},
-			"id":       types.StringType,
+			"exchange": basetypes.ListType{
+				ElemType: Exchange{}.Type(ctx),
+			},
+			"id": types.StringType,
 		},
 	}
 }
@@ -7094,7 +7162,9 @@ func (o UpdateExchangeResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateExchangeResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{ElemType: Exchange{}.Type(ctx)},
+			"exchange": basetypes.ListType{
+				ElemType: Exchange{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7172,7 +7242,9 @@ func (o UpdateInstallationRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o UpdateInstallationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation":    basetypes.ListType{ElemType: InstallationDetail{}.Type(ctx)},
+			"installation": basetypes.ListType{
+				ElemType: InstallationDetail{}.Type(ctx),
+			},
 			"installation_id": types.StringType,
 			"listing_id":      types.StringType,
 			"rotate_token":    types.BoolType,
@@ -7244,7 +7316,9 @@ func (o UpdateInstallationResponse) ToObjectValue(ctx context.Context) basetypes
 func (o UpdateInstallationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation": basetypes.ListType{ElemType: InstallationDetail{}.Type(ctx)},
+			"installation": basetypes.ListType{
+				ElemType: InstallationDetail{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7316,8 +7390,10 @@ func (o UpdateListingRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o UpdateListingRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":      types.StringType,
-			"listing": basetypes.ListType{ElemType: Listing{}.Type(ctx)},
+			"id": types.StringType,
+			"listing": basetypes.ListType{
+				ElemType: Listing{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7386,7 +7462,9 @@ func (o UpdateListingResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{ElemType: Listing{}.Type(ctx)},
+			"listing": basetypes.ListType{
+				ElemType: Listing{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7470,8 +7548,10 @@ func (o UpdatePersonalizationRequestRequest) Type(ctx context.Context) attr.Type
 			"listing_id": types.StringType,
 			"reason":     types.StringType,
 			"request_id": types.StringType,
-			"share":      basetypes.ListType{ElemType: ShareInfo{}.Type(ctx)},
-			"status":     types.StringType,
+			"share": basetypes.ListType{
+				ElemType: ShareInfo{}.Type(ctx),
+			},
+			"status": types.StringType,
 		},
 	}
 }
@@ -7540,7 +7620,9 @@ func (o UpdatePersonalizationRequestResponse) ToObjectValue(ctx context.Context)
 func (o UpdatePersonalizationRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"request": basetypes.ListType{ElemType: PersonalizationRequest{}.Type(ctx)},
+			"request": basetypes.ListType{
+				ElemType: PersonalizationRequest{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7710,8 +7792,10 @@ func (o UpdateProviderRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateProviderRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":       types.StringType,
-			"provider": basetypes.ListType{ElemType: ProviderInfo{}.Type(ctx)},
+			"id": types.StringType,
+			"provider": basetypes.ListType{
+				ElemType: ProviderInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7780,7 +7864,9 @@ func (o UpdateProviderResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateProviderResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{ElemType: ProviderInfo{}.Type(ctx)},
+			"provider": basetypes.ListType{
+				ElemType: ProviderInfo{}.Type(ctx),
+			},
 		},
 	}
 }

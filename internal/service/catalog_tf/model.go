@@ -59,7 +59,9 @@ func (o AccountsCreateMetastore) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o AccountsCreateMetastore) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_info": basetypes.ListType{ElemType: CreateMetastore{}.Type(ctx)},
+			"metastore_info": basetypes.ListType{
+				ElemType: CreateMetastore{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -134,9 +136,11 @@ func (o AccountsCreateMetastoreAssignment) ToObjectValue(ctx context.Context) ba
 func (o AccountsCreateMetastoreAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_assignment": basetypes.ListType{ElemType: CreateMetastoreAssignment{}.Type(ctx)},
-			"metastore_id":         types.StringType,
-			"workspace_id":         types.Int64Type,
+			"metastore_assignment": basetypes.ListType{
+				ElemType: CreateMetastoreAssignment{}.Type(ctx),
+			},
+			"metastore_id": types.StringType,
+			"workspace_id": types.Int64Type,
 		},
 	}
 }
@@ -208,8 +212,10 @@ func (o AccountsCreateStorageCredential) ToObjectValue(ctx context.Context) base
 func (o AccountsCreateStorageCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"credential_info": basetypes.ListType{ElemType: CreateStorageCredential{}.Type(ctx)},
-			"metastore_id":    types.StringType,
+			"credential_info": basetypes.ListType{
+				ElemType: CreateStorageCredential{}.Type(ctx),
+			},
+			"metastore_id": types.StringType,
 		},
 	}
 }
@@ -278,7 +284,9 @@ func (o AccountsMetastoreAssignment) ToObjectValue(ctx context.Context) basetype
 func (o AccountsMetastoreAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_assignment": basetypes.ListType{ElemType: MetastoreAssignment{}.Type(ctx)},
+			"metastore_assignment": basetypes.ListType{
+				ElemType: MetastoreAssignment{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -347,7 +355,9 @@ func (o AccountsMetastoreInfo) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AccountsMetastoreInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_info": basetypes.ListType{ElemType: MetastoreInfo{}.Type(ctx)},
+			"metastore_info": basetypes.ListType{
+				ElemType: MetastoreInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -416,7 +426,9 @@ func (o AccountsStorageCredentialInfo) ToObjectValue(ctx context.Context) basety
 func (o AccountsStorageCredentialInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"credential_info": basetypes.ListType{ElemType: StorageCredentialInfo{}.Type(ctx)},
+			"credential_info": basetypes.ListType{
+				ElemType: StorageCredentialInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -489,8 +501,10 @@ func (o AccountsUpdateMetastore) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o AccountsUpdateMetastore) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_id":   types.StringType,
-			"metastore_info": basetypes.ListType{ElemType: UpdateMetastore{}.Type(ctx)},
+			"metastore_id": types.StringType,
+			"metastore_info": basetypes.ListType{
+				ElemType: UpdateMetastore{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -565,9 +579,11 @@ func (o AccountsUpdateMetastoreAssignment) ToObjectValue(ctx context.Context) ba
 func (o AccountsUpdateMetastoreAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metastore_assignment": basetypes.ListType{ElemType: UpdateMetastoreAssignment{}.Type(ctx)},
-			"metastore_id":         types.StringType,
-			"workspace_id":         types.Int64Type,
+			"metastore_assignment": basetypes.ListType{
+				ElemType: UpdateMetastoreAssignment{}.Type(ctx),
+			},
+			"metastore_id": types.StringType,
+			"workspace_id": types.Int64Type,
 		},
 	}
 }
@@ -642,7 +658,9 @@ func (o AccountsUpdateStorageCredential) ToObjectValue(ctx context.Context) base
 func (o AccountsUpdateStorageCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"credential_info":         basetypes.ListType{ElemType: UpdateStorageCredential{}.Type(ctx)},
+			"credential_info": basetypes.ListType{
+				ElemType: UpdateStorageCredential{}.Type(ctx),
+			},
 			"metastore_id":            types.StringType,
 			"storage_credential_name": types.StringType,
 		},
@@ -1563,18 +1581,20 @@ func (o CatalogInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CatalogInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":                            types.BoolType,
-			"catalog_type":                           types.StringType,
-			"comment":                                types.StringType,
-			"connection_name":                        types.StringType,
-			"created_at":                             types.Int64Type,
-			"created_by":                             types.StringType,
-			"effective_predictive_optimization_flag": basetypes.ListType{ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx)},
-			"enable_predictive_optimization":         types.StringType,
-			"full_name":                              types.StringType,
-			"isolation_mode":                         types.StringType,
-			"metastore_id":                           types.StringType,
-			"name":                                   types.StringType,
+			"browse_only":     types.BoolType,
+			"catalog_type":    types.StringType,
+			"comment":         types.StringType,
+			"connection_name": types.StringType,
+			"created_at":      types.Int64Type,
+			"created_by":      types.StringType,
+			"effective_predictive_optimization_flag": basetypes.ListType{
+				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+			},
+			"enable_predictive_optimization": types.StringType,
+			"full_name":                      types.StringType,
+			"isolation_mode":                 types.StringType,
+			"metastore_id":                   types.StringType,
+			"name":                           types.StringType,
 			"options": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -1582,15 +1602,17 @@ func (o CatalogInfo) Type(ctx context.Context) attr.Type {
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"provider_name":     types.StringType,
-			"provisioning_info": basetypes.ListType{ElemType: ProvisioningInfo{}.Type(ctx)},
-			"securable_kind":    types.StringType,
-			"securable_type":    types.StringType,
-			"share_name":        types.StringType,
-			"storage_location":  types.StringType,
-			"storage_root":      types.StringType,
-			"updated_at":        types.Int64Type,
-			"updated_by":        types.StringType,
+			"provider_name": types.StringType,
+			"provisioning_info": basetypes.ListType{
+				ElemType: ProvisioningInfo{}.Type(ctx),
+			},
+			"securable_kind":   types.StringType,
+			"securable_type":   types.StringType,
+			"share_name":       types.StringType,
+			"storage_location": types.StringType,
+			"storage_root":     types.StringType,
+			"updated_at":       types.Int64Type,
+			"updated_by":       types.StringType,
 		},
 	}
 }
@@ -1821,8 +1843,10 @@ func (o ColumnInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ColumnInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":            types.StringType,
-			"mask":               basetypes.ListType{ElemType: ColumnMask{}.Type(ctx)},
+			"comment": types.StringType,
+			"mask": basetypes.ListType{
+				ElemType: ColumnMask{}.Type(ctx),
+			},
 			"name":               types.StringType,
 			"nullable":           types.BoolType,
 			"partition_index":    types.Int64Type,
@@ -2054,13 +2078,15 @@ func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"provisioning_info": basetypes.ListType{ElemType: ProvisioningInfo{}.Type(ctx)},
-			"read_only":         types.BoolType,
-			"securable_kind":    types.StringType,
-			"securable_type":    types.StringType,
-			"updated_at":        types.Int64Type,
-			"updated_by":        types.StringType,
-			"url":               types.StringType,
+			"provisioning_info": basetypes.ListType{
+				ElemType: ProvisioningInfo{}.Type(ctx),
+			},
+			"read_only":      types.BoolType,
+			"securable_kind": types.StringType,
+			"securable_type": types.StringType,
+			"updated_at":     types.Int64Type,
+			"updated_by":     types.StringType,
+			"url":            types.StringType,
 		},
 	}
 }
@@ -2193,9 +2219,11 @@ func (o ContinuousUpdateStatus) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o ContinuousUpdateStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"initial_pipeline_sync_progress": basetypes.ListType{ElemType: PipelineProgress{}.Type(ctx)},
-			"last_processed_commit_version":  types.Int64Type,
-			"timestamp":                      types.StringType,
+			"initial_pipeline_sync_progress": basetypes.ListType{
+				ElemType: PipelineProgress{}.Type(ctx),
+			},
+			"last_processed_commit_version": types.Int64Type,
+			"timestamp":                     types.StringType,
 		},
 	}
 }
@@ -2551,15 +2579,23 @@ func (o CreateCredentialRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o CreateCredentialRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRole{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentity{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccount{}.Type(ctx)},
-			"name":                           types.StringType,
-			"purpose":                        types.StringType,
-			"read_only":                      types.BoolType,
-			"skip_validation":                types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRole{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentity{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"comment": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+			},
+			"name":            types.StringType,
+			"purpose":         types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
 		},
 	}
 }
@@ -2734,15 +2770,17 @@ func (o CreateExternalLocation) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateExternalLocation) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_point":       types.StringType,
-			"comment":            types.StringType,
-			"credential_name":    types.StringType,
-			"encryption_details": basetypes.ListType{ElemType: EncryptionDetails{}.Type(ctx)},
-			"fallback":           types.BoolType,
-			"name":               types.StringType,
-			"read_only":          types.BoolType,
-			"skip_validation":    types.BoolType,
-			"url":                types.StringType,
+			"access_point":    types.StringType,
+			"comment":         types.StringType,
+			"credential_name": types.StringType,
+			"encryption_details": basetypes.ListType{
+				ElemType: EncryptionDetails{}.Type(ctx),
+			},
+			"fallback":        types.BoolType,
+			"name":            types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
+			"url":             types.StringType,
 		},
 	}
 }
@@ -2878,27 +2916,33 @@ func (o CreateFunction) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o CreateFunction) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog_name":         types.StringType,
-			"comment":              types.StringType,
-			"data_type":            types.StringType,
-			"external_language":    types.StringType,
-			"external_name":        types.StringType,
-			"full_data_type":       types.StringType,
-			"input_params":         basetypes.ListType{ElemType: FunctionParameterInfos{}.Type(ctx)},
-			"is_deterministic":     types.BoolType,
-			"is_null_call":         types.BoolType,
-			"name":                 types.StringType,
-			"parameter_style":      types.StringType,
-			"properties":           types.StringType,
-			"return_params":        basetypes.ListType{ElemType: FunctionParameterInfos{}.Type(ctx)},
-			"routine_body":         types.StringType,
-			"routine_definition":   types.StringType,
-			"routine_dependencies": basetypes.ListType{ElemType: DependencyList{}.Type(ctx)},
-			"schema_name":          types.StringType,
-			"security_type":        types.StringType,
-			"specific_name":        types.StringType,
-			"sql_data_access":      types.StringType,
-			"sql_path":             types.StringType,
+			"catalog_name":      types.StringType,
+			"comment":           types.StringType,
+			"data_type":         types.StringType,
+			"external_language": types.StringType,
+			"external_name":     types.StringType,
+			"full_data_type":    types.StringType,
+			"input_params": basetypes.ListType{
+				ElemType: FunctionParameterInfos{}.Type(ctx),
+			},
+			"is_deterministic": types.BoolType,
+			"is_null_call":     types.BoolType,
+			"name":             types.StringType,
+			"parameter_style":  types.StringType,
+			"properties":       types.StringType,
+			"return_params": basetypes.ListType{
+				ElemType: FunctionParameterInfos{}.Type(ctx),
+			},
+			"routine_body":       types.StringType,
+			"routine_definition": types.StringType,
+			"routine_dependencies": basetypes.ListType{
+				ElemType: DependencyList{}.Type(ctx),
+			},
+			"schema_name":     types.StringType,
+			"security_type":   types.StringType,
+			"specific_name":   types.StringType,
+			"sql_data_access": types.StringType,
+			"sql_path":        types.StringType,
 		},
 	}
 }
@@ -3020,7 +3064,9 @@ func (o CreateFunctionRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateFunctionRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"function_info": basetypes.ListType{ElemType: CreateFunction{}.Type(ctx)},
+			"function_info": basetypes.ListType{
+				ElemType: CreateFunction{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3256,18 +3302,30 @@ func (o CreateMonitor) Type(ctx context.Context) attr.Type {
 			"custom_metrics": basetypes.ListType{
 				ElemType: MonitorMetric{}.Type(ctx),
 			},
-			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
-			"inference_log":              basetypes.ListType{ElemType: MonitorInferenceLog{}.Type(ctx)},
-			"notifications":              basetypes.ListType{ElemType: MonitorNotifications{}.Type(ctx)},
-			"output_schema_name":         types.StringType,
-			"schedule":                   basetypes.ListType{ElemType: MonitorCronSchedule{}.Type(ctx)},
-			"skip_builtin_dashboard":     types.BoolType,
+			"data_classification_config": basetypes.ListType{
+				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+			},
+			"inference_log": basetypes.ListType{
+				ElemType: MonitorInferenceLog{}.Type(ctx),
+			},
+			"notifications": basetypes.ListType{
+				ElemType: MonitorNotifications{}.Type(ctx),
+			},
+			"output_schema_name": types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: MonitorCronSchedule{}.Type(ctx),
+			},
+			"skip_builtin_dashboard": types.BoolType,
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"snapshot":     basetypes.ListType{ElemType: MonitorSnapshot{}.Type(ctx)},
-			"table_name":   types.StringType,
-			"time_series":  basetypes.ListType{ElemType: MonitorTimeSeries{}.Type(ctx)},
+			"snapshot": basetypes.ListType{
+				ElemType: MonitorSnapshot{}.Type(ctx),
+			},
+			"table_name": types.StringType,
+			"time_series": basetypes.ListType{
+				ElemType: MonitorTimeSeries{}.Type(ctx),
+			},
 			"warehouse_id": types.StringType,
 		},
 	}
@@ -3521,7 +3579,9 @@ func (o CreateOnlineTableRequest) ToObjectValue(ctx context.Context) basetypes.O
 func (o CreateOnlineTableRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"table": basetypes.ListType{ElemType: OnlineTable{}.Type(ctx)},
+			"table": basetypes.ListType{
+				ElemType: OnlineTable{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3803,15 +3863,25 @@ func (o CreateStorageCredential) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o CreateStorageCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRoleRequest{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentityRequest{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"cloudflare_api_token":           basetypes.ListType{ElemType: CloudflareApiToken{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx)},
-			"name":                           types.StringType,
-			"read_only":                      types.BoolType,
-			"skip_validation":                types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRoleRequest{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentityRequest{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"cloudflare_api_token": basetypes.ListType{
+				ElemType: CloudflareApiToken{}.Type(ctx),
+			},
+			"comment": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+			},
+			"name":            types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
 		},
 	}
 }
@@ -3990,7 +4060,9 @@ func (o CreateTableConstraint) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateTableConstraint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"constraint":    basetypes.ListType{ElemType: TableConstraint{}.Type(ctx)},
+			"constraint": basetypes.ListType{
+				ElemType: TableConstraint{}.Type(ctx),
+			},
 			"full_name_arg": types.StringType,
 		},
 	}
@@ -4183,24 +4255,32 @@ func (o CredentialInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o CredentialInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRole{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentity{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"created_at":                     types.Int64Type,
-			"created_by":                     types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccount{}.Type(ctx)},
-			"full_name":                      types.StringType,
-			"id":                             types.StringType,
-			"isolation_mode":                 types.StringType,
-			"metastore_id":                   types.StringType,
-			"name":                           types.StringType,
-			"owner":                          types.StringType,
-			"purpose":                        types.StringType,
-			"read_only":                      types.BoolType,
-			"updated_at":                     types.Int64Type,
-			"updated_by":                     types.StringType,
-			"used_for_managed_storage":       types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRole{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentity{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"comment":    types.StringType,
+			"created_at": types.Int64Type,
+			"created_by": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+			},
+			"full_name":                types.StringType,
+			"id":                       types.StringType,
+			"isolation_mode":           types.StringType,
+			"metastore_id":             types.StringType,
+			"name":                     types.StringType,
+			"owner":                    types.StringType,
+			"purpose":                  types.StringType,
+			"read_only":                types.BoolType,
+			"updated_at":               types.Int64Type,
+			"updated_by":               types.StringType,
+			"used_for_managed_storage": types.BoolType,
 		},
 	}
 }
@@ -5678,8 +5758,12 @@ func (o Dependency) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Dependency) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"function": basetypes.ListType{ElemType: FunctionDependency{}.Type(ctx)},
-			"table":    basetypes.ListType{ElemType: TableDependency{}.Type(ctx)},
+			"function": basetypes.ListType{
+				ElemType: FunctionDependency{}.Type(ctx),
+			},
+			"table": basetypes.ListType{
+				ElemType: TableDependency{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6272,7 +6356,9 @@ func (o EncryptionDetails) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o EncryptionDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"sse_encryption_details": basetypes.ListType{ElemType: SseEncryptionDetails{}.Type(ctx)},
+			"sse_encryption_details": basetypes.ListType{
+				ElemType: SseEncryptionDetails{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6438,23 +6524,25 @@ func (o ExternalLocationInfo) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ExternalLocationInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_point":       types.StringType,
-			"browse_only":        types.BoolType,
-			"comment":            types.StringType,
-			"created_at":         types.Int64Type,
-			"created_by":         types.StringType,
-			"credential_id":      types.StringType,
-			"credential_name":    types.StringType,
-			"encryption_details": basetypes.ListType{ElemType: EncryptionDetails{}.Type(ctx)},
-			"fallback":           types.BoolType,
-			"isolation_mode":     types.StringType,
-			"metastore_id":       types.StringType,
-			"name":               types.StringType,
-			"owner":              types.StringType,
-			"read_only":          types.BoolType,
-			"updated_at":         types.Int64Type,
-			"updated_by":         types.StringType,
-			"url":                types.StringType,
+			"access_point":    types.StringType,
+			"browse_only":     types.BoolType,
+			"comment":         types.StringType,
+			"created_at":      types.Int64Type,
+			"created_by":      types.StringType,
+			"credential_id":   types.StringType,
+			"credential_name": types.StringType,
+			"encryption_details": basetypes.ListType{
+				ElemType: EncryptionDetails{}.Type(ctx),
+			},
+			"fallback":       types.BoolType,
+			"isolation_mode": types.StringType,
+			"metastore_id":   types.StringType,
+			"name":           types.StringType,
+			"owner":          types.StringType,
+			"read_only":      types.BoolType,
+			"updated_at":     types.Int64Type,
+			"updated_by":     types.StringType,
+			"url":            types.StringType,
 		},
 	}
 }
@@ -6830,36 +6918,42 @@ func (o FunctionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o FunctionInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":          types.BoolType,
-			"catalog_name":         types.StringType,
-			"comment":              types.StringType,
-			"created_at":           types.Int64Type,
-			"created_by":           types.StringType,
-			"data_type":            types.StringType,
-			"external_language":    types.StringType,
-			"external_name":        types.StringType,
-			"full_data_type":       types.StringType,
-			"full_name":            types.StringType,
-			"function_id":          types.StringType,
-			"input_params":         basetypes.ListType{ElemType: FunctionParameterInfos{}.Type(ctx)},
-			"is_deterministic":     types.BoolType,
-			"is_null_call":         types.BoolType,
-			"metastore_id":         types.StringType,
-			"name":                 types.StringType,
-			"owner":                types.StringType,
-			"parameter_style":      types.StringType,
-			"properties":           types.StringType,
-			"return_params":        basetypes.ListType{ElemType: FunctionParameterInfos{}.Type(ctx)},
-			"routine_body":         types.StringType,
-			"routine_definition":   types.StringType,
-			"routine_dependencies": basetypes.ListType{ElemType: DependencyList{}.Type(ctx)},
-			"schema_name":          types.StringType,
-			"security_type":        types.StringType,
-			"specific_name":        types.StringType,
-			"sql_data_access":      types.StringType,
-			"sql_path":             types.StringType,
-			"updated_at":           types.Int64Type,
-			"updated_by":           types.StringType,
+			"browse_only":       types.BoolType,
+			"catalog_name":      types.StringType,
+			"comment":           types.StringType,
+			"created_at":        types.Int64Type,
+			"created_by":        types.StringType,
+			"data_type":         types.StringType,
+			"external_language": types.StringType,
+			"external_name":     types.StringType,
+			"full_data_type":    types.StringType,
+			"full_name":         types.StringType,
+			"function_id":       types.StringType,
+			"input_params": basetypes.ListType{
+				ElemType: FunctionParameterInfos{}.Type(ctx),
+			},
+			"is_deterministic": types.BoolType,
+			"is_null_call":     types.BoolType,
+			"metastore_id":     types.StringType,
+			"name":             types.StringType,
+			"owner":            types.StringType,
+			"parameter_style":  types.StringType,
+			"properties":       types.StringType,
+			"return_params": basetypes.ListType{
+				ElemType: FunctionParameterInfos{}.Type(ctx),
+			},
+			"routine_body":       types.StringType,
+			"routine_definition": types.StringType,
+			"routine_dependencies": basetypes.ListType{
+				ElemType: DependencyList{}.Type(ctx),
+			},
+			"schema_name":     types.StringType,
+			"security_type":   types.StringType,
+			"specific_name":   types.StringType,
+			"sql_data_access": types.StringType,
+			"sql_path":        types.StringType,
+			"updated_at":      types.Int64Type,
+			"updated_by":      types.StringType,
 		},
 	}
 }
@@ -7341,9 +7435,13 @@ func (o GenerateTemporaryServiceCredentialRequest) ToObjectValue(ctx context.Con
 func (o GenerateTemporaryServiceCredentialRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"azure_options":   basetypes.ListType{ElemType: GenerateTemporaryServiceCredentialAzureOptions{}.Type(ctx)},
+			"azure_options": basetypes.ListType{
+				ElemType: GenerateTemporaryServiceCredentialAzureOptions{}.Type(ctx),
+			},
 			"credential_name": types.StringType,
-			"gcp_options":     basetypes.ListType{ElemType: GenerateTemporaryServiceCredentialGcpOptions{}.Type(ctx)},
+			"gcp_options": basetypes.ListType{
+				ElemType: GenerateTemporaryServiceCredentialGcpOptions{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7516,13 +7614,23 @@ func (o GenerateTemporaryTableCredentialResponse) ToObjectValue(ctx context.Cont
 func (o GenerateTemporaryTableCredentialResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_temp_credentials":      basetypes.ListType{ElemType: AwsCredentials{}.Type(ctx)},
-			"azure_aad":                 basetypes.ListType{ElemType: AzureActiveDirectoryToken{}.Type(ctx)},
-			"azure_user_delegation_sas": basetypes.ListType{ElemType: AzureUserDelegationSas{}.Type(ctx)},
-			"expiration_time":           types.Int64Type,
-			"gcp_oauth_token":           basetypes.ListType{ElemType: GcpOauthToken{}.Type(ctx)},
-			"r2_temp_credentials":       basetypes.ListType{ElemType: R2Credentials{}.Type(ctx)},
-			"url":                       types.StringType,
+			"aws_temp_credentials": basetypes.ListType{
+				ElemType: AwsCredentials{}.Type(ctx),
+			},
+			"azure_aad": basetypes.ListType{
+				ElemType: AzureActiveDirectoryToken{}.Type(ctx),
+			},
+			"azure_user_delegation_sas": basetypes.ListType{
+				ElemType: AzureUserDelegationSas{}.Type(ctx),
+			},
+			"expiration_time": types.Int64Type,
+			"gcp_oauth_token": basetypes.ListType{
+				ElemType: GcpOauthToken{}.Type(ctx),
+			},
+			"r2_temp_credentials": basetypes.ListType{
+				ElemType: R2Credentials{}.Type(ctx),
+			},
+			"url": types.StringType,
 		},
 	}
 }
@@ -8676,7 +8784,9 @@ func (o GetQuotaResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o GetQuotaResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"quota_info": basetypes.ListType{ElemType: QuotaInfo{}.Type(ctx)},
+			"quota_info": basetypes.ListType{
+				ElemType: QuotaInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -11582,24 +11692,26 @@ func (o ModelVersionInfo) Type(ctx context.Context) attr.Type {
 			"aliases": basetypes.ListType{
 				ElemType: RegisteredModelAlias{}.Type(ctx),
 			},
-			"browse_only":                types.BoolType,
-			"catalog_name":               types.StringType,
-			"comment":                    types.StringType,
-			"created_at":                 types.Int64Type,
-			"created_by":                 types.StringType,
-			"id":                         types.StringType,
-			"metastore_id":               types.StringType,
-			"model_name":                 types.StringType,
-			"model_version_dependencies": basetypes.ListType{ElemType: DependencyList{}.Type(ctx)},
-			"run_id":                     types.StringType,
-			"run_workspace_id":           types.Int64Type,
-			"schema_name":                types.StringType,
-			"source":                     types.StringType,
-			"status":                     types.StringType,
-			"storage_location":           types.StringType,
-			"updated_at":                 types.Int64Type,
-			"updated_by":                 types.StringType,
-			"version":                    types.Int64Type,
+			"browse_only":  types.BoolType,
+			"catalog_name": types.StringType,
+			"comment":      types.StringType,
+			"created_at":   types.Int64Type,
+			"created_by":   types.StringType,
+			"id":           types.StringType,
+			"metastore_id": types.StringType,
+			"model_name":   types.StringType,
+			"model_version_dependencies": basetypes.ListType{
+				ElemType: DependencyList{}.Type(ctx),
+			},
+			"run_id":           types.StringType,
+			"run_workspace_id": types.Int64Type,
+			"schema_name":      types.StringType,
+			"source":           types.StringType,
+			"status":           types.StringType,
+			"storage_location": types.StringType,
+			"updated_at":       types.Int64Type,
+			"updated_by":       types.StringType,
+			"version":          types.Int64Type,
 		},
 	}
 }
@@ -12049,23 +12161,35 @@ func (o MonitorInfo) Type(ctx context.Context) attr.Type {
 			"custom_metrics": basetypes.ListType{
 				ElemType: MonitorMetric{}.Type(ctx),
 			},
-			"dashboard_id":               types.StringType,
-			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
-			"drift_metrics_table_name":   types.StringType,
-			"inference_log":              basetypes.ListType{ElemType: MonitorInferenceLog{}.Type(ctx)},
+			"dashboard_id": types.StringType,
+			"data_classification_config": basetypes.ListType{
+				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+			},
+			"drift_metrics_table_name": types.StringType,
+			"inference_log": basetypes.ListType{
+				ElemType: MonitorInferenceLog{}.Type(ctx),
+			},
 			"latest_monitor_failure_msg": types.StringType,
 			"monitor_version":            types.StringType,
-			"notifications":              basetypes.ListType{ElemType: MonitorNotifications{}.Type(ctx)},
+			"notifications": basetypes.ListType{
+				ElemType: MonitorNotifications{}.Type(ctx),
+			},
 			"output_schema_name":         types.StringType,
 			"profile_metrics_table_name": types.StringType,
-			"schedule":                   basetypes.ListType{ElemType: MonitorCronSchedule{}.Type(ctx)},
+			"schedule": basetypes.ListType{
+				ElemType: MonitorCronSchedule{}.Type(ctx),
+			},
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"snapshot":    basetypes.ListType{ElemType: MonitorSnapshot{}.Type(ctx)},
-			"status":      types.StringType,
-			"table_name":  types.StringType,
-			"time_series": basetypes.ListType{ElemType: MonitorTimeSeries{}.Type(ctx)},
+			"snapshot": basetypes.ListType{
+				ElemType: MonitorSnapshot{}.Type(ctx),
+			},
+			"status":     types.StringType,
+			"table_name": types.StringType,
+			"time_series": basetypes.ListType{
+				ElemType: MonitorTimeSeries{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12424,8 +12548,12 @@ func (o MonitorNotifications) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o MonitorNotifications) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"on_failure":                         basetypes.ListType{ElemType: MonitorDestination{}.Type(ctx)},
-			"on_new_classification_tag_detected": basetypes.ListType{ElemType: MonitorDestination{}.Type(ctx)},
+			"on_failure": basetypes.ListType{
+				ElemType: MonitorDestination{}.Type(ctx),
+			},
+			"on_new_classification_tag_detected": basetypes.ListType{
+				ElemType: MonitorDestination{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12837,9 +12965,13 @@ func (o OnlineTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o OnlineTable) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"name":                             types.StringType,
-			"spec":                             basetypes.ListType{ElemType: OnlineTableSpec{}.Type(ctx)},
-			"status":                           basetypes.ListType{ElemType: OnlineTableStatus{}.Type(ctx)},
+			"name": types.StringType,
+			"spec": basetypes.ListType{
+				ElemType: OnlineTableSpec{}.Type(ctx),
+			},
+			"status": basetypes.ListType{
+				ElemType: OnlineTableStatus{}.Type(ctx),
+			},
 			"table_serving_url":                types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
 		},
@@ -12972,8 +13104,12 @@ func (o OnlineTableSpec) Type(ctx context.Context) attr.Type {
 			"primary_key_columns": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"run_continuously":       basetypes.ListType{ElemType: OnlineTableSpecContinuousSchedulingPolicy{}.Type(ctx)},
-			"run_triggered":          basetypes.ListType{ElemType: OnlineTableSpecTriggeredSchedulingPolicy{}.Type(ctx)},
+			"run_continuously": basetypes.ListType{
+				ElemType: OnlineTableSpecContinuousSchedulingPolicy{}.Type(ctx),
+			},
+			"run_triggered": basetypes.ListType{
+				ElemType: OnlineTableSpecTriggeredSchedulingPolicy{}.Type(ctx),
+			},
 			"source_table_full_name": types.StringType,
 			"timeseries_key":         types.StringType,
 		},
@@ -13193,12 +13329,20 @@ func (o OnlineTableStatus) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o OnlineTableStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"continuous_update_status": basetypes.ListType{ElemType: ContinuousUpdateStatus{}.Type(ctx)},
-			"detailed_state":           types.StringType,
-			"failed_status":            basetypes.ListType{ElemType: FailedStatus{}.Type(ctx)},
-			"message":                  types.StringType,
-			"provisioning_status":      basetypes.ListType{ElemType: ProvisioningStatus{}.Type(ctx)},
-			"triggered_update_status":  basetypes.ListType{ElemType: TriggeredUpdateStatus{}.Type(ctx)},
+			"continuous_update_status": basetypes.ListType{
+				ElemType: ContinuousUpdateStatus{}.Type(ctx),
+			},
+			"detailed_state": types.StringType,
+			"failed_status": basetypes.ListType{
+				ElemType: FailedStatus{}.Type(ctx),
+			},
+			"message": types.StringType,
+			"provisioning_status": basetypes.ListType{
+				ElemType: ProvisioningStatus{}.Type(ctx),
+			},
+			"triggered_update_status": basetypes.ListType{
+				ElemType: TriggeredUpdateStatus{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -13785,7 +13929,9 @@ func (o ProvisioningStatus) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ProvisioningStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"initial_pipeline_sync_progress": basetypes.ListType{ElemType: PipelineProgress{}.Type(ctx)},
+			"initial_pipeline_sync_progress": basetypes.ListType{
+				ElemType: PipelineProgress{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -14385,18 +14531,20 @@ func (o SchemaInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SchemaInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"browse_only":                            types.BoolType,
-			"catalog_name":                           types.StringType,
-			"catalog_type":                           types.StringType,
-			"comment":                                types.StringType,
-			"created_at":                             types.Int64Type,
-			"created_by":                             types.StringType,
-			"effective_predictive_optimization_flag": basetypes.ListType{ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx)},
-			"enable_predictive_optimization":         types.StringType,
-			"full_name":                              types.StringType,
-			"metastore_id":                           types.StringType,
-			"name":                                   types.StringType,
-			"owner":                                  types.StringType,
+			"browse_only":  types.BoolType,
+			"catalog_name": types.StringType,
+			"catalog_type": types.StringType,
+			"comment":      types.StringType,
+			"created_at":   types.Int64Type,
+			"created_by":   types.StringType,
+			"effective_predictive_optimization_flag": basetypes.ListType{
+				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+			},
+			"enable_predictive_optimization": types.StringType,
+			"full_name":                      types.StringType,
+			"metastore_id":                   types.StringType,
+			"name":                           types.StringType,
+			"owner":                          types.StringType,
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -14730,24 +14878,34 @@ func (o StorageCredentialInfo) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o StorageCredentialInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRoleResponse{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentityResponse{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"cloudflare_api_token":           basetypes.ListType{ElemType: CloudflareApiToken{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"created_at":                     types.Int64Type,
-			"created_by":                     types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccountResponse{}.Type(ctx)},
-			"full_name":                      types.StringType,
-			"id":                             types.StringType,
-			"isolation_mode":                 types.StringType,
-			"metastore_id":                   types.StringType,
-			"name":                           types.StringType,
-			"owner":                          types.StringType,
-			"read_only":                      types.BoolType,
-			"updated_at":                     types.Int64Type,
-			"updated_by":                     types.StringType,
-			"used_for_managed_storage":       types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRoleResponse{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentityResponse{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"cloudflare_api_token": basetypes.ListType{
+				ElemType: CloudflareApiToken{}.Type(ctx),
+			},
+			"comment":    types.StringType,
+			"created_at": types.Int64Type,
+			"created_by": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccountResponse{}.Type(ctx),
+			},
+			"full_name":                types.StringType,
+			"id":                       types.StringType,
+			"isolation_mode":           types.StringType,
+			"metastore_id":             types.StringType,
+			"name":                     types.StringType,
+			"owner":                    types.StringType,
+			"read_only":                types.BoolType,
+			"updated_at":               types.Int64Type,
+			"updated_by":               types.StringType,
+			"used_for_managed_storage": types.BoolType,
 		},
 	}
 }
@@ -14978,9 +15136,15 @@ func (o TableConstraint) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o TableConstraint) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"foreign_key_constraint": basetypes.ListType{ElemType: ForeignKeyConstraint{}.Type(ctx)},
-			"named_table_constraint": basetypes.ListType{ElemType: NamedTableConstraint{}.Type(ctx)},
-			"primary_key_constraint": basetypes.ListType{ElemType: PrimaryKeyConstraint{}.Type(ctx)},
+			"foreign_key_constraint": basetypes.ListType{
+				ElemType: ForeignKeyConstraint{}.Type(ctx),
+			},
+			"named_table_constraint": basetypes.ListType{
+				ElemType: NamedTableConstraint{}.Type(ctx),
+			},
+			"primary_key_constraint": basetypes.ListType{
+				ElemType: PrimaryKeyConstraint{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -15307,25 +15471,33 @@ func (o TableInfo) Type(ctx context.Context) attr.Type {
 			"columns": basetypes.ListType{
 				ElemType: ColumnInfo{}.Type(ctx),
 			},
-			"comment":                                types.StringType,
-			"created_at":                             types.Int64Type,
-			"created_by":                             types.StringType,
-			"data_access_configuration_id":           types.StringType,
-			"data_source_format":                     types.StringType,
-			"deleted_at":                             types.Int64Type,
-			"delta_runtime_properties_kvpairs":       basetypes.ListType{ElemType: DeltaRuntimePropertiesKvPairs{}.Type(ctx)},
-			"effective_predictive_optimization_flag": basetypes.ListType{ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx)},
-			"enable_predictive_optimization":         types.StringType,
-			"encryption_details":                     basetypes.ListType{ElemType: EncryptionDetails{}.Type(ctx)},
-			"full_name":                              types.StringType,
-			"metastore_id":                           types.StringType,
-			"name":                                   types.StringType,
-			"owner":                                  types.StringType,
-			"pipeline_id":                            types.StringType,
+			"comment":                      types.StringType,
+			"created_at":                   types.Int64Type,
+			"created_by":                   types.StringType,
+			"data_access_configuration_id": types.StringType,
+			"data_source_format":           types.StringType,
+			"deleted_at":                   types.Int64Type,
+			"delta_runtime_properties_kvpairs": basetypes.ListType{
+				ElemType: DeltaRuntimePropertiesKvPairs{}.Type(ctx),
+			},
+			"effective_predictive_optimization_flag": basetypes.ListType{
+				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+			},
+			"enable_predictive_optimization": types.StringType,
+			"encryption_details": basetypes.ListType{
+				ElemType: EncryptionDetails{}.Type(ctx),
+			},
+			"full_name":    types.StringType,
+			"metastore_id": types.StringType,
+			"name":         types.StringType,
+			"owner":        types.StringType,
+			"pipeline_id":  types.StringType,
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"row_filter":              basetypes.ListType{ElemType: TableRowFilter{}.Type(ctx)},
+			"row_filter": basetypes.ListType{
+				ElemType: TableRowFilter{}.Type(ctx),
+			},
 			"schema_name":             types.StringType,
 			"sql_path":                types.StringType,
 			"storage_credential_name": types.StringType,
@@ -15333,12 +15505,14 @@ func (o TableInfo) Type(ctx context.Context) attr.Type {
 			"table_constraints": basetypes.ListType{
 				ElemType: TableConstraint{}.Type(ctx),
 			},
-			"table_id":          types.StringType,
-			"table_type":        types.StringType,
-			"updated_at":        types.Int64Type,
-			"updated_by":        types.StringType,
-			"view_definition":   types.StringType,
-			"view_dependencies": basetypes.ListType{ElemType: DependencyList{}.Type(ctx)},
+			"table_id":        types.StringType,
+			"table_type":      types.StringType,
+			"updated_at":      types.Int64Type,
+			"updated_by":      types.StringType,
+			"view_definition": types.StringType,
+			"view_dependencies": basetypes.ListType{
+				ElemType: DependencyList{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -15725,9 +15899,13 @@ func (o TemporaryCredentials) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o TemporaryCredentials) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_temp_credentials": basetypes.ListType{ElemType: AwsCredentials{}.Type(ctx)},
-			"azure_aad":            basetypes.ListType{ElemType: AzureActiveDirectoryToken{}.Type(ctx)},
-			"expiration_time":      types.Int64Type,
+			"aws_temp_credentials": basetypes.ListType{
+				ElemType: AwsCredentials{}.Type(ctx),
+			},
+			"azure_aad": basetypes.ListType{
+				ElemType: AzureActiveDirectoryToken{}.Type(ctx),
+			},
+			"expiration_time": types.Int64Type,
 		},
 	}
 }
@@ -15836,7 +16014,9 @@ func (o TriggeredUpdateStatus) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"last_processed_commit_version": types.Int64Type,
 			"timestamp":                     types.StringType,
-			"triggered_update_progress":     basetypes.ListType{ElemType: PipelineProgress{}.Type(ctx)},
+			"triggered_update_progress": basetypes.ListType{
+				ElemType: PipelineProgress{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -16250,18 +16430,26 @@ func (o UpdateCredentialRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o UpdateCredentialRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRole{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentity{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccount{}.Type(ctx)},
-			"force":                          types.BoolType,
-			"isolation_mode":                 types.StringType,
-			"name_arg":                       types.StringType,
-			"new_name":                       types.StringType,
-			"owner":                          types.StringType,
-			"read_only":                      types.BoolType,
-			"skip_validation":                types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRole{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentity{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"comment": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+			},
+			"force":           types.BoolType,
+			"isolation_mode":  types.StringType,
+			"name_arg":        types.StringType,
+			"new_name":        types.StringType,
+			"owner":           types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
 		},
 	}
 }
@@ -16449,19 +16637,21 @@ func (o UpdateExternalLocation) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateExternalLocation) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_point":       types.StringType,
-			"comment":            types.StringType,
-			"credential_name":    types.StringType,
-			"encryption_details": basetypes.ListType{ElemType: EncryptionDetails{}.Type(ctx)},
-			"fallback":           types.BoolType,
-			"force":              types.BoolType,
-			"isolation_mode":     types.StringType,
-			"name":               types.StringType,
-			"new_name":           types.StringType,
-			"owner":              types.StringType,
-			"read_only":          types.BoolType,
-			"skip_validation":    types.BoolType,
-			"url":                types.StringType,
+			"access_point":    types.StringType,
+			"comment":         types.StringType,
+			"credential_name": types.StringType,
+			"encryption_details": basetypes.ListType{
+				ElemType: EncryptionDetails{}.Type(ctx),
+			},
+			"fallback":        types.BoolType,
+			"force":           types.BoolType,
+			"isolation_mode":  types.StringType,
+			"name":            types.StringType,
+			"new_name":        types.StringType,
+			"owner":           types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
+			"url":             types.StringType,
 		},
 	}
 }
@@ -16805,18 +16995,30 @@ func (o UpdateMonitor) Type(ctx context.Context) attr.Type {
 			"custom_metrics": basetypes.ListType{
 				ElemType: MonitorMetric{}.Type(ctx),
 			},
-			"dashboard_id":               types.StringType,
-			"data_classification_config": basetypes.ListType{ElemType: MonitorDataClassificationConfig{}.Type(ctx)},
-			"inference_log":              basetypes.ListType{ElemType: MonitorInferenceLog{}.Type(ctx)},
-			"notifications":              basetypes.ListType{ElemType: MonitorNotifications{}.Type(ctx)},
-			"output_schema_name":         types.StringType,
-			"schedule":                   basetypes.ListType{ElemType: MonitorCronSchedule{}.Type(ctx)},
+			"dashboard_id": types.StringType,
+			"data_classification_config": basetypes.ListType{
+				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+			},
+			"inference_log": basetypes.ListType{
+				ElemType: MonitorInferenceLog{}.Type(ctx),
+			},
+			"notifications": basetypes.ListType{
+				ElemType: MonitorNotifications{}.Type(ctx),
+			},
+			"output_schema_name": types.StringType,
+			"schedule": basetypes.ListType{
+				ElemType: MonitorCronSchedule{}.Type(ctx),
+			},
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"snapshot":    basetypes.ListType{ElemType: MonitorSnapshot{}.Type(ctx)},
-			"table_name":  types.StringType,
-			"time_series": basetypes.ListType{ElemType: MonitorTimeSeries{}.Type(ctx)},
+			"snapshot": basetypes.ListType{
+				ElemType: MonitorSnapshot{}.Type(ctx),
+			},
+			"table_name": types.StringType,
+			"time_series": basetypes.ListType{
+				ElemType: MonitorTimeSeries{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -17373,19 +17575,29 @@ func (o UpdateStorageCredential) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o UpdateStorageCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRoleRequest{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentityResponse{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"cloudflare_api_token":           basetypes.ListType{ElemType: CloudflareApiToken{}.Type(ctx)},
-			"comment":                        types.StringType,
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx)},
-			"force":                          types.BoolType,
-			"isolation_mode":                 types.StringType,
-			"name":                           types.StringType,
-			"new_name":                       types.StringType,
-			"owner":                          types.StringType,
-			"read_only":                      types.BoolType,
-			"skip_validation":                types.BoolType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRoleRequest{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentityResponse{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"cloudflare_api_token": basetypes.ListType{
+				ElemType: CloudflareApiToken{}.Type(ctx),
+			},
+			"comment": types.StringType,
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+			},
+			"force":           types.BoolType,
+			"isolation_mode":  types.StringType,
+			"name":            types.StringType,
+			"new_name":        types.StringType,
+			"owner":           types.StringType,
+			"read_only":       types.BoolType,
+			"skip_validation": types.BoolType,
 		},
 	}
 }
@@ -17906,8 +18118,12 @@ func (o ValidateCredentialRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o ValidateCredentialRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":           basetypes.ListType{ElemType: AwsIamRole{}.Type(ctx)},
-			"azure_managed_identity": basetypes.ListType{ElemType: AzureManagedIdentity{}.Type(ctx)},
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRole{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentity{}.Type(ctx),
+			},
 			"credential_name":        types.StringType,
 			"external_location_name": types.StringType,
 			"purpose":                types.StringType,
@@ -18113,15 +18329,25 @@ func (o ValidateStorageCredential) ToObjectValue(ctx context.Context) basetypes.
 func (o ValidateStorageCredential) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_iam_role":                   basetypes.ListType{ElemType: AwsIamRoleRequest{}.Type(ctx)},
-			"azure_managed_identity":         basetypes.ListType{ElemType: AzureManagedIdentityRequest{}.Type(ctx)},
-			"azure_service_principal":        basetypes.ListType{ElemType: AzureServicePrincipal{}.Type(ctx)},
-			"cloudflare_api_token":           basetypes.ListType{ElemType: CloudflareApiToken{}.Type(ctx)},
-			"databricks_gcp_service_account": basetypes.ListType{ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx)},
-			"external_location_name":         types.StringType,
-			"read_only":                      types.BoolType,
-			"storage_credential_name":        types.StringType,
-			"url":                            types.StringType,
+			"aws_iam_role": basetypes.ListType{
+				ElemType: AwsIamRoleRequest{}.Type(ctx),
+			},
+			"azure_managed_identity": basetypes.ListType{
+				ElemType: AzureManagedIdentityRequest{}.Type(ctx),
+			},
+			"azure_service_principal": basetypes.ListType{
+				ElemType: AzureServicePrincipal{}.Type(ctx),
+			},
+			"cloudflare_api_token": basetypes.ListType{
+				ElemType: CloudflareApiToken{}.Type(ctx),
+			},
+			"databricks_gcp_service_account": basetypes.ListType{
+				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+			},
+			"external_location_name":  types.StringType,
+			"read_only":               types.BoolType,
+			"storage_credential_name": types.StringType,
+			"url":                     types.StringType,
 		},
 	}
 }
@@ -18471,23 +18697,25 @@ func (o VolumeInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o VolumeInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_point":       types.StringType,
-			"browse_only":        types.BoolType,
-			"catalog_name":       types.StringType,
-			"comment":            types.StringType,
-			"created_at":         types.Int64Type,
-			"created_by":         types.StringType,
-			"encryption_details": basetypes.ListType{ElemType: EncryptionDetails{}.Type(ctx)},
-			"full_name":          types.StringType,
-			"metastore_id":       types.StringType,
-			"name":               types.StringType,
-			"owner":              types.StringType,
-			"schema_name":        types.StringType,
-			"storage_location":   types.StringType,
-			"updated_at":         types.Int64Type,
-			"updated_by":         types.StringType,
-			"volume_id":          types.StringType,
-			"volume_type":        types.StringType,
+			"access_point": types.StringType,
+			"browse_only":  types.BoolType,
+			"catalog_name": types.StringType,
+			"comment":      types.StringType,
+			"created_at":   types.Int64Type,
+			"created_by":   types.StringType,
+			"encryption_details": basetypes.ListType{
+				ElemType: EncryptionDetails{}.Type(ctx),
+			},
+			"full_name":        types.StringType,
+			"metastore_id":     types.StringType,
+			"name":             types.StringType,
+			"owner":            types.StringType,
+			"schema_name":      types.StringType,
+			"storage_location": types.StringType,
+			"updated_at":       types.Int64Type,
+			"updated_by":       types.StringType,
+			"volume_id":        types.StringType,
+			"volume_type":      types.StringType,
 		},
 	}
 }

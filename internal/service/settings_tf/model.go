@@ -3501,8 +3501,8 @@ func (o EgressNetworkPolicyInternetAccessPolicy) ToObjectValue(ctx context.Conte
 func (o EgressNetworkPolicyInternetAccessPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"allowed_internet_destinations": basetypes.ListType{ElemType: basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyInternetDestination{}.Type(ctx)}},
-			"allowed_storage_destinations":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx)}},
+			"allowed_internet_destinations": basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyInternetDestination{}.Type(ctx)},
+			"allowed_storage_destinations":  basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx)},
 			"log_only_mode":                 basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx)},
 			"restriction_mode":              types.StringType,
 		},
@@ -4440,7 +4440,7 @@ func (o ExchangeTokenResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ExchangeTokenResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"values": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExchangeToken{}.Type(ctx)}},
+			"values": basetypes.ListType{ElemType: ExchangeToken{}.Type(ctx)},
 		},
 	}
 }
@@ -5338,7 +5338,7 @@ func (o GetIpAccessListsResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetIpAccessListsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_lists": basetypes.ListType{ElemType: basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)}},
+			"ip_access_lists": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -5723,7 +5723,7 @@ func (o GetTokenPermissionLevelsResponse) ToObjectValue(ctx context.Context) bas
 func (o GetTokenPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: TokenPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: TokenPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -5975,7 +5975,7 @@ func (o ListIpAccessListResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o ListIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_lists": basetypes.ListType{ElemType: basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)}},
+			"ip_access_lists": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -6048,7 +6048,7 @@ func (o ListNccAzurePrivateEndpointRulesResponse) ToObjectValue(ctx context.Cont
 func (o ListNccAzurePrivateEndpointRulesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"items":           basetypes.ListType{ElemType: basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)}},
+			"items":           basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -6165,7 +6165,7 @@ func (o ListNetworkConnectivityConfigurationsResponse) ToObjectValue(ctx context
 func (o ListNetworkConnectivityConfigurationsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"items":           basetypes.ListType{ElemType: basetypes.ListType{ElemType: NetworkConnectivityConfiguration{}.Type(ctx)}},
+			"items":           basetypes.ListType{ElemType: NetworkConnectivityConfiguration{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -6286,7 +6286,7 @@ func (o ListNotificationDestinationsResponse) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"results":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: ListNotificationDestinationsResult{}.Type(ctx)}},
+			"results":         basetypes.ListType{ElemType: ListNotificationDestinationsResult{}.Type(ctx)},
 		},
 	}
 }
@@ -6454,7 +6454,7 @@ func (o ListPublicTokensResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o ListPublicTokensResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_infos": basetypes.ListType{ElemType: basetypes.ListType{ElemType: PublicTokenInfo{}.Type(ctx)}},
+			"token_infos": basetypes.ListType{ElemType: PublicTokenInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -6572,7 +6572,7 @@ func (o ListTokensResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ListTokensResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_infos": basetypes.ListType{ElemType: basetypes.ListType{ElemType: TokenInfo{}.Type(ctx)}},
+			"token_infos": basetypes.ListType{ElemType: TokenInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -7178,7 +7178,7 @@ func (o NccEgressTargetRules) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o NccEgressTargetRules) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"azure_private_endpoint_rules": basetypes.ListType{ElemType: basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)}},
+			"azure_private_endpoint_rules": basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)},
 		},
 	}
 }
@@ -8238,7 +8238,7 @@ func (o TokenAccessControlResponse) ToObjectValue(ctx context.Context) basetypes
 func (o TokenAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: TokenPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: TokenPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -8470,7 +8470,7 @@ func (o TokenPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o TokenPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: TokenAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: TokenAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -8586,7 +8586,7 @@ func (o TokenPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o TokenPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: TokenAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: TokenAccessControlRequest{}.Type(ctx)},
 		},
 	}
 }

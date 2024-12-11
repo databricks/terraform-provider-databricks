@@ -1094,7 +1094,7 @@ func (o GenieMessage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o GenieMessage) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attachments":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: GenieAttachment{}.Type(ctx)}},
+			"attachments":            basetypes.ListType{ElemType: GenieAttachment{}.Type(ctx)},
 			"content":                types.StringType,
 			"conversation_id":        types.StringType,
 			"created_timestamp":      types.Int64Type,
@@ -1625,7 +1625,7 @@ func (o ListDashboardsResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o ListDashboardsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboards":      basetypes.ListType{ElemType: basetypes.ListType{ElemType: Dashboard{}.Type(ctx)}},
+			"dashboards":      basetypes.ListType{ElemType: Dashboard{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1754,7 +1754,7 @@ func (o ListSchedulesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"schedules":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: Schedule{}.Type(ctx)}},
+			"schedules":       basetypes.ListType{ElemType: Schedule{}.Type(ctx)},
 		},
 	}
 }
@@ -1886,7 +1886,7 @@ func (o ListSubscriptionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"subscriptions":   basetypes.ListType{ElemType: basetypes.ListType{ElemType: Subscription{}.Type(ctx)}},
+			"subscriptions":   basetypes.ListType{ElemType: Subscription{}.Type(ctx)},
 		},
 	}
 }
@@ -2262,7 +2262,7 @@ func (o QuerySchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o QuerySchema) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"columns":      basetypes.ListType{ElemType: basetypes.ListType{ElemType: QuerySchemaColumn{}.Type(ctx)}},
+			"columns":      basetypes.ListType{ElemType: QuerySchemaColumn{}.Type(ctx)},
 			"statement_id": types.StringType,
 		},
 	}

@@ -530,7 +530,7 @@ func (o CreateExperiment) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"artifact_location": types.StringType,
 			"name":              types.StringType,
-			"tags":              basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentTag{}.Type(ctx)}},
+			"tags":              basetypes.ListType{ElemType: ExperimentTag{}.Type(ctx)},
 		},
 	}
 }
@@ -650,7 +650,7 @@ func (o CreateModelRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"description": types.StringType,
 			"name":        types.StringType,
-			"tags":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelTag{}.Type(ctx)}},
+			"tags":        basetypes.ListType{ElemType: ModelTag{}.Type(ctx)},
 		},
 	}
 }
@@ -811,7 +811,7 @@ func (o CreateModelVersionRequest) Type(ctx context.Context) attr.Type {
 			"run_id":      types.StringType,
 			"run_link":    types.StringType,
 			"source":      types.StringType,
-			"tags":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)}},
+			"tags":        basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)},
 		},
 	}
 }
@@ -1147,7 +1147,7 @@ func (o CreateRun) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"experiment_id": types.StringType,
 			"start_time":    types.Int64Type,
-			"tags":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: RunTag{}.Type(ctx)}},
+			"tags":          basetypes.ListType{ElemType: RunTag{}.Type(ctx)},
 			"user_id":       types.StringType,
 		},
 	}
@@ -1565,7 +1565,7 @@ func (o DatasetInput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dataset": basetypes.ListType{ElemType: Dataset{}.Type(ctx)},
-			"tags":    basetypes.ListType{ElemType: basetypes.ListType{ElemType: InputTag{}.Type(ctx)}},
+			"tags":    basetypes.ListType{ElemType: InputTag{}.Type(ctx)},
 		},
 	}
 }
@@ -2615,7 +2615,7 @@ func (o Experiment) Type(ctx context.Context) attr.Type {
 			"last_update_time":  types.Int64Type,
 			"lifecycle_stage":   types.StringType,
 			"name":              types.StringType,
-			"tags":              basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentTag{}.Type(ctx)}},
+			"tags":              basetypes.ListType{ElemType: ExperimentTag{}.Type(ctx)},
 		},
 	}
 }
@@ -2751,7 +2751,7 @@ func (o ExperimentAccessControlResponse) ToObjectValue(ctx context.Context) base
 func (o ExperimentAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: ExperimentPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -2907,7 +2907,7 @@ func (o ExperimentPermissions) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ExperimentPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ExperimentAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -3026,7 +3026,7 @@ func (o ExperimentPermissionsRequest) ToObjectValue(ctx context.Context) basetyp
 func (o ExperimentPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ExperimentAccessControlRequest{}.Type(ctx)},
 			"experiment_id":       types.StringType,
 		},
 	}
@@ -3279,7 +3279,7 @@ func (o GetExperimentPermissionLevelsResponse) ToObjectValue(ctx context.Context
 func (o GetExperimentPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ExperimentPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: ExperimentPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -3643,7 +3643,7 @@ func (o GetLatestVersionsResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o GetLatestVersionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_versions": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)}},
+			"model_versions": basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
 		},
 	}
 }
@@ -3717,7 +3717,7 @@ func (o GetMetricHistoryResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetMetricHistoryResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metrics":         basetypes.ListType{ElemType: basetypes.ListType{ElemType: Metric{}.Type(ctx)}},
+			"metrics":         basetypes.ListType{ElemType: Metric{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -4148,7 +4148,7 @@ func (o GetRegisteredModelPermissionLevelsResponse) ToObjectValue(ctx context.Co
 func (o GetRegisteredModelPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: RegisteredModelPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -4711,7 +4711,7 @@ func (o ListArtifactsResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ListArtifactsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"files":           basetypes.ListType{ElemType: basetypes.ListType{ElemType: FileInfo{}.Type(ctx)}},
+			"files":           basetypes.ListType{ElemType: FileInfo{}.Type(ctx)},
 			"next_page_token": types.StringType,
 			"root_uri":        types.StringType,
 		},
@@ -4844,7 +4844,7 @@ func (o ListExperimentsResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ListExperimentsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"experiments":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: Experiment{}.Type(ctx)}},
+			"experiments":     basetypes.ListType{ElemType: Experiment{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -4966,7 +4966,7 @@ func (o ListModelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token":   types.StringType,
-			"registered_models": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Model{}.Type(ctx)}},
+			"registered_models": basetypes.ListType{ElemType: Model{}.Type(ctx)},
 		},
 	}
 }
@@ -5040,7 +5040,7 @@ func (o ListRegistryWebhooks) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"webhooks":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegistryWebhook{}.Type(ctx)}},
+			"webhooks":        basetypes.ListType{ElemType: RegistryWebhook{}.Type(ctx)},
 		},
 	}
 }
@@ -5157,7 +5157,7 @@ func (o ListTransitionRequestsResponse) ToObjectValue(ctx context.Context) baset
 func (o ListTransitionRequestsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"requests": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Activity{}.Type(ctx)}},
+			"requests": basetypes.ListType{ElemType: Activity{}.Type(ctx)},
 		},
 	}
 }
@@ -5323,10 +5323,10 @@ func (o LogBatch) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o LogBatch) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metrics": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Metric{}.Type(ctx)}},
-			"params":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: Param{}.Type(ctx)}},
+			"metrics": basetypes.ListType{ElemType: Metric{}.Type(ctx)},
+			"params":  basetypes.ListType{ElemType: Param{}.Type(ctx)},
 			"run_id":  types.StringType,
-			"tags":    basetypes.ListType{ElemType: basetypes.ListType{ElemType: RunTag{}.Type(ctx)}},
+			"tags":    basetypes.ListType{ElemType: RunTag{}.Type(ctx)},
 		},
 	}
 }
@@ -5487,7 +5487,7 @@ func (o LogInputs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o LogInputs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"datasets": basetypes.ListType{ElemType: basetypes.ListType{ElemType: DatasetInput{}.Type(ctx)}},
+			"datasets": basetypes.ListType{ElemType: DatasetInput{}.Type(ctx)},
 			"run_id":   types.StringType,
 		},
 	}
@@ -5944,9 +5944,9 @@ func (o Model) Type(ctx context.Context) attr.Type {
 			"creation_timestamp":     types.Int64Type,
 			"description":            types.StringType,
 			"last_updated_timestamp": types.Int64Type,
-			"latest_versions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)}},
+			"latest_versions":        basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
 			"name":                   types.StringType,
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: ModelTag{}.Type(ctx)},
 			"user_id":                types.StringType,
 		},
 	}
@@ -6073,10 +6073,10 @@ func (o ModelDatabricks) Type(ctx context.Context) attr.Type {
 			"description":            types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
-			"latest_versions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)}},
+			"latest_versions":        basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
 			"name":                   types.StringType,
 			"permission_level":       types.StringType,
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: ModelTag{}.Type(ctx)},
 			"user_id":                types.StringType,
 		},
 	}
@@ -6268,7 +6268,7 @@ func (o ModelVersion) Type(ctx context.Context) attr.Type {
 			"source":                 types.StringType,
 			"status":                 types.StringType,
 			"status_message":         types.StringType,
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)},
 			"user_id":                types.StringType,
 			"version":                types.StringType,
 		},
@@ -6410,7 +6410,7 @@ func (o ModelVersionDatabricks) Type(ctx context.Context) attr.Type {
 			"source":                 types.StringType,
 			"status":                 types.StringType,
 			"status_message":         types.StringType,
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: ModelVersionTag{}.Type(ctx)},
 			"user_id":                types.StringType,
 			"version":                types.StringType,
 		},
@@ -6640,7 +6640,7 @@ func (o RegisteredModelAccessControlResponse) ToObjectValue(ctx context.Context)
 func (o RegisteredModelAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: RegisteredModelPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -6796,7 +6796,7 @@ func (o RegisteredModelPermissions) ToObjectValue(ctx context.Context) basetypes
 func (o RegisteredModelPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: RegisteredModelAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -6915,7 +6915,7 @@ func (o RegisteredModelPermissionsRequest) ToObjectValue(ctx context.Context) ba
 func (o RegisteredModelPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RegisteredModelAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: RegisteredModelAccessControlRequest{}.Type(ctx)},
 			"registered_model_id": types.StringType,
 		},
 	}
@@ -7819,9 +7819,9 @@ func (o RunData) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunData) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"metrics": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Metric{}.Type(ctx)}},
-			"params":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: Param{}.Type(ctx)}},
-			"tags":    basetypes.ListType{ElemType: basetypes.ListType{ElemType: RunTag{}.Type(ctx)}},
+			"metrics": basetypes.ListType{ElemType: Metric{}.Type(ctx)},
+			"params":  basetypes.ListType{ElemType: Param{}.Type(ctx)},
+			"tags":    basetypes.ListType{ElemType: RunTag{}.Type(ctx)},
 		},
 	}
 }
@@ -8023,7 +8023,7 @@ func (o RunInputs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunInputs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dataset_inputs": basetypes.ListType{ElemType: basetypes.ListType{ElemType: DatasetInput{}.Type(ctx)}},
+			"dataset_inputs": basetypes.ListType{ElemType: DatasetInput{}.Type(ctx)},
 		},
 	}
 }
@@ -8234,7 +8234,7 @@ func (o SearchExperimentsResponse) ToObjectValue(ctx context.Context) basetypes.
 func (o SearchExperimentsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"experiments":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: Experiment{}.Type(ctx)}},
+			"experiments":     basetypes.ListType{ElemType: Experiment{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -8396,7 +8396,7 @@ func (o SearchModelVersionsResponse) ToObjectValue(ctx context.Context) basetype
 func (o SearchModelVersionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"model_versions":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)}},
+			"model_versions":  basetypes.ListType{ElemType: ModelVersion{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -8558,7 +8558,7 @@ func (o SearchModelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token":   types.StringType,
-			"registered_models": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Model{}.Type(ctx)}},
+			"registered_models": basetypes.ListType{ElemType: Model{}.Type(ctx)},
 		},
 	}
 }
@@ -8766,7 +8766,7 @@ func (o SearchRunsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"runs":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: Run{}.Type(ctx)}},
+			"runs":            basetypes.ListType{ElemType: Run{}.Type(ctx)},
 		},
 	}
 }

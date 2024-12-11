@@ -757,8 +757,8 @@ func (o DeltaSyncVectorIndexSpecRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns_to_sync":           basetypes.ListType{ElemType: types.StringType},
-			"embedding_source_columns":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)}},
-			"embedding_vector_columns":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)}},
+			"embedding_source_columns":  basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)},
+			"embedding_vector_columns":  basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_type":             types.StringType,
 			"source_table":              types.StringType,
@@ -907,8 +907,8 @@ func (o DeltaSyncVectorIndexSpecResponse) ToObjectValue(ctx context.Context) bas
 func (o DeltaSyncVectorIndexSpecResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"embedding_source_columns":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)}},
-			"embedding_vector_columns":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)}},
+			"embedding_source_columns":  basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)},
+			"embedding_vector_columns":  basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_id":               types.StringType,
 			"pipeline_type":             types.StringType,
@@ -1020,8 +1020,8 @@ func (o DirectAccessVectorIndexSpec) ToObjectValue(ctx context.Context) basetype
 func (o DirectAccessVectorIndexSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"embedding_source_columns": basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)}},
-			"embedding_vector_columns": basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)}},
+			"embedding_source_columns": basetypes.ListType{ElemType: EmbeddingSourceColumn{}.Type(ctx)},
+			"embedding_vector_columns": basetypes.ListType{ElemType: EmbeddingVectorColumn{}.Type(ctx)},
 			"schema_json":              types.StringType,
 		},
 	}
@@ -1449,7 +1449,7 @@ func (o ListEndpointResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListEndpointResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoints":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: EndpointInfo{}.Type(ctx)}},
+			"endpoints":       basetypes.ListType{ElemType: EndpointInfo{}.Type(ctx)},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -1609,7 +1609,7 @@ func (o ListValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ListValue) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"values": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Value{}.Type(ctx)}},
+			"values": basetypes.ListType{ElemType: Value{}.Type(ctx)},
 		},
 	}
 }
@@ -1684,7 +1684,7 @@ func (o ListVectorIndexesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"vector_indexes":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: MiniVectorIndex{}.Type(ctx)}},
+			"vector_indexes":  basetypes.ListType{ElemType: MiniVectorIndex{}.Type(ctx)},
 		},
 	}
 }
@@ -2263,7 +2263,7 @@ func (o ResultManifest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"column_count": types.Int64Type,
-			"columns":      basetypes.ListType{ElemType: basetypes.ListType{ElemType: ColumnInfo{}.Type(ctx)}},
+			"columns":      basetypes.ListType{ElemType: ColumnInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -2388,7 +2388,7 @@ func (o ScanVectorIndexResponse) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ScanVectorIndexResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"data":             basetypes.ListType{ElemType: basetypes.ListType{ElemType: Struct{}.Type(ctx)}},
+			"data":             basetypes.ListType{ElemType: Struct{}.Type(ctx)},
 			"last_primary_key": types.StringType,
 		},
 	}
@@ -2459,7 +2459,7 @@ func (o Struct) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Struct) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"fields": basetypes.ListType{ElemType: basetypes.ListType{ElemType: MapStringValueEntry{}.Type(ctx)}},
+			"fields": basetypes.ListType{ElemType: MapStringValueEntry{}.Type(ctx)},
 		},
 	}
 }

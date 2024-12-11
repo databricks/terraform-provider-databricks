@@ -127,7 +127,7 @@ func (testTfSdkListNestedAttribute) GetComplexFieldTypes(context.Context) map[st
 
 func TestCustomizeSchemaSetReadOnly_RecursivelySetsFieldsOfListNestedAttributes(t *testing.T) {
 	scm := ResourceStructToSchema(context.Background(), testTfSdkListNestedAttribute{}, func(c CustomizableSchema) CustomizableSchema {
-		c.ConvertToAttribute("list").SetReadOnly("list")
+		c.SetReadOnly("list")
 		return c
 	})
 	for _, field := range []string{"name", "enabled"} {

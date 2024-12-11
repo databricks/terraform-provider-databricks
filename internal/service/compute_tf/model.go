@@ -889,7 +889,7 @@ func (o ClusterAccessControlResponse) ToObjectValue(ctx context.Context) basetyp
 func (o ClusterAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: ClusterPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -1137,7 +1137,7 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"node_type_id":                 types.StringType,
 			"policy_id":                    types.StringType,
@@ -1852,9 +1852,9 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"executors":                    basetypes.ListType{ElemType: basetypes.ListType{ElemType: SparkNode{}.Type(ctx)}},
+			"executors":                    basetypes.ListType{ElemType: SparkNode{}.Type(ctx)},
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"jdbc_port":                    types.Int64Type,
 			"last_restarted_time":          types.Int64Type,
@@ -2506,7 +2506,7 @@ func (o ClusterLibraryStatuses) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id":       types.StringType,
-			"library_statuses": basetypes.ListType{ElemType: basetypes.ListType{ElemType: LibraryFullStatus{}.Type(ctx)}},
+			"library_statuses": basetypes.ListType{ElemType: LibraryFullStatus{}.Type(ctx)},
 		},
 	}
 }
@@ -2764,7 +2764,7 @@ func (o ClusterPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ClusterPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ClusterAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -2883,7 +2883,7 @@ func (o ClusterPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o ClusterPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ClusterAccessControlRequest{}.Type(ctx)},
 			"cluster_id":          types.StringType,
 		},
 	}
@@ -3020,7 +3020,7 @@ func (o ClusterPolicyAccessControlResponse) ToObjectValue(ctx context.Context) b
 func (o ClusterPolicyAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPolicyPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: ClusterPolicyPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -3176,7 +3176,7 @@ func (o ClusterPolicyPermissions) ToObjectValue(ctx context.Context) basetypes.O
 func (o ClusterPolicyPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPolicyAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ClusterPolicyAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -3295,7 +3295,7 @@ func (o ClusterPolicyPermissionsRequest) ToObjectValue(ctx context.Context) base
 func (o ClusterPolicyPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPolicyAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ClusterPolicyAccessControlRequest{}.Type(ctx)},
 			"cluster_policy_id":   types.StringType,
 		},
 	}
@@ -3708,7 +3708,7 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"node_type_id":                 types.StringType,
 			"num_workers":                  types.Int64Type,
@@ -4595,7 +4595,7 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"node_type_id":                 types.StringType,
 			"num_workers":                  types.Int64Type,
@@ -5156,7 +5156,7 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
 			"node_type_id":                          types.StringType,
-			"preloaded_docker_images":               basetypes.ListType{ElemType: basetypes.ListType{ElemType: DockerImage{}.Type(ctx)}},
+			"preloaded_docker_images":               basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
 			"preloaded_spark_versions":              basetypes.ListType{ElemType: types.StringType},
 		},
 	}
@@ -5464,7 +5464,7 @@ func (o CreatePolicy) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"definition":                         types.StringType,
 			"description":                        types.StringType,
-			"libraries":                          basetypes.ListType{ElemType: basetypes.ListType{ElemType: Library{}.Type(ctx)}},
+			"libraries":                          basetypes.ListType{ElemType: Library{}.Type(ctx)},
 			"max_clusters_per_user":              types.Int64Type,
 			"name":                               types.StringType,
 			"policy_family_definition_overrides": types.StringType,
@@ -6628,7 +6628,7 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"node_type_id":                 types.StringType,
 			"num_workers":                  types.Int64Type,
@@ -7220,7 +7220,7 @@ func (o EditPolicy) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"definition":                         types.StringType,
 			"description":                        types.StringType,
-			"libraries":                          basetypes.ListType{ElemType: basetypes.ListType{ElemType: Library{}.Type(ctx)}},
+			"libraries":                          basetypes.ListType{ElemType: Library{}.Type(ctx)},
 			"max_clusters_per_user":              types.Int64Type,
 			"name":                               types.StringType,
 			"policy_family_definition_overrides": types.StringType,
@@ -7419,7 +7419,7 @@ func (o EnforceClusterComplianceResponse) ToObjectValue(ctx context.Context) bas
 func (o EnforceClusterComplianceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"changes":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterSettingsChange{}.Type(ctx)}},
+			"changes":     basetypes.ListType{ElemType: ClusterSettingsChange{}.Type(ctx)},
 			"has_changes": types.BoolType,
 		},
 	}
@@ -8152,7 +8152,7 @@ func (o GetClusterPermissionLevelsResponse) ToObjectValue(ctx context.Context) b
 func (o GetClusterPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: ClusterPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -8308,7 +8308,7 @@ func (o GetClusterPolicyPermissionLevelsResponse) ToObjectValue(ctx context.Cont
 func (o GetClusterPolicyPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterPolicyPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: ClusterPolicyPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -8616,7 +8616,7 @@ func (o GetEventsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o GetEventsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"events":      basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterEvent{}.Type(ctx)}},
+			"events":      basetypes.ListType{ElemType: ClusterEvent{}.Type(ctx)},
 			"next_page":   basetypes.ListType{ElemType: GetEvents{}.Type(ctx)},
 			"total_count": types.Int64Type,
 		},
@@ -8867,7 +8867,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
 			"node_type_id":                          types.StringType,
-			"preloaded_docker_images":               basetypes.ListType{ElemType: basetypes.ListType{ElemType: DockerImage{}.Type(ctx)}},
+			"preloaded_docker_images":               basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
 			"preloaded_spark_versions":              basetypes.ListType{ElemType: types.StringType},
 			"state":                                 types.StringType,
 			"stats":                                 basetypes.ListType{ElemType: InstancePoolStats{}.Type(ctx)},
@@ -9218,7 +9218,7 @@ func (o GetInstancePoolPermissionLevelsResponse) ToObjectValue(ctx context.Conte
 func (o GetInstancePoolPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstancePoolPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: InstancePoolPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -9422,7 +9422,7 @@ func (o GetSparkVersionsResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetSparkVersionsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"versions": basetypes.ListType{ElemType: basetypes.ListType{ElemType: SparkVersion{}.Type(ctx)}},
+			"versions": basetypes.ListType{ElemType: SparkVersion{}.Type(ctx)},
 		},
 	}
 }
@@ -9782,8 +9782,8 @@ func (o InitScriptEventDetails) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o InitScriptEventDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster":           basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfoAndExecutionDetails{}.Type(ctx)}},
-			"global":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfoAndExecutionDetails{}.Type(ctx)}},
+			"cluster":           basetypes.ListType{ElemType: InitScriptInfoAndExecutionDetails{}.Type(ctx)},
+			"global":            basetypes.ListType{ElemType: InitScriptInfoAndExecutionDetails{}.Type(ctx)},
 			"reported_for_node": types.StringType,
 		},
 	}
@@ -10302,7 +10302,7 @@ func (o InstallLibraries) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id": types.StringType,
-			"libraries":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: Library{}.Type(ctx)}},
+			"libraries":  basetypes.ListType{ElemType: Library{}.Type(ctx)},
 		},
 	}
 }
@@ -10474,7 +10474,7 @@ func (o InstancePoolAccessControlResponse) ToObjectValue(ctx context.Context) ba
 func (o InstancePoolAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstancePoolPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: InstancePoolPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -10658,7 +10658,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
 			"node_type_id":                          types.StringType,
-			"preloaded_docker_images":               basetypes.ListType{ElemType: basetypes.ListType{ElemType: DockerImage{}.Type(ctx)}},
+			"preloaded_docker_images":               basetypes.ListType{ElemType: DockerImage{}.Type(ctx)},
 			"preloaded_spark_versions":              basetypes.ListType{ElemType: types.StringType},
 			"state":                                 types.StringType,
 			"stats":                                 basetypes.ListType{ElemType: InstancePoolStats{}.Type(ctx)},
@@ -11243,7 +11243,7 @@ func (o InstancePoolPermissions) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o InstancePoolPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstancePoolAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: InstancePoolAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -11362,7 +11362,7 @@ func (o InstancePoolPermissionsRequest) ToObjectValue(ctx context.Context) baset
 func (o InstancePoolPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstancePoolAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: InstancePoolAccessControlRequest{}.Type(ctx)},
 			"instance_pool_id":    types.StringType,
 		},
 	}
@@ -11490,7 +11490,7 @@ func (o InstancePoolStatus) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o InstancePoolStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"pending_instance_errors": basetypes.ListType{ElemType: basetypes.ListType{ElemType: PendingInstanceError{}.Type(ctx)}},
+			"pending_instance_errors": basetypes.ListType{ElemType: PendingInstanceError{}.Type(ctx)},
 		},
 	}
 }
@@ -11901,7 +11901,7 @@ func (o ListAllClusterLibraryStatusesResponse) ToObjectValue(ctx context.Context
 func (o ListAllClusterLibraryStatusesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"statuses": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterLibraryStatuses{}.Type(ctx)}},
+			"statuses": basetypes.ListType{ElemType: ClusterLibraryStatuses{}.Type(ctx)},
 		},
 	}
 }
@@ -12109,7 +12109,7 @@ func (o ListClusterCompliancesResponse) ToObjectValue(ctx context.Context) baset
 func (o ListClusterCompliancesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clusters":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterCompliance{}.Type(ctx)}},
+			"clusters":        basetypes.ListType{ElemType: ClusterCompliance{}.Type(ctx)},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 		},
@@ -12462,7 +12462,7 @@ func (o ListClustersResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListClustersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clusters":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ClusterDetails{}.Type(ctx)}},
+			"clusters":        basetypes.ListType{ElemType: ClusterDetails{}.Type(ctx)},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 		},
@@ -12581,7 +12581,7 @@ func (o ListGlobalInitScriptsResponse) ToObjectValue(ctx context.Context) basety
 func (o ListGlobalInitScriptsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"scripts": basetypes.ListType{ElemType: basetypes.ListType{ElemType: GlobalInitScriptDetails{}.Type(ctx)}},
+			"scripts": basetypes.ListType{ElemType: GlobalInitScriptDetails{}.Type(ctx)},
 		},
 	}
 }
@@ -12650,7 +12650,7 @@ func (o ListInstancePools) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o ListInstancePools) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"instance_pools": basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstancePoolAndStats{}.Type(ctx)}},
+			"instance_pools": basetypes.ListType{ElemType: InstancePoolAndStats{}.Type(ctx)},
 		},
 	}
 }
@@ -12720,7 +12720,7 @@ func (o ListInstanceProfilesResponse) ToObjectValue(ctx context.Context) basetyp
 func (o ListInstanceProfilesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"instance_profiles": basetypes.ListType{ElemType: basetypes.ListType{ElemType: InstanceProfile{}.Type(ctx)}},
+			"instance_profiles": basetypes.ListType{ElemType: InstanceProfile{}.Type(ctx)},
 		},
 	}
 }
@@ -12790,7 +12790,7 @@ func (o ListNodeTypesResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ListNodeTypesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"node_types": basetypes.ListType{ElemType: basetypes.ListType{ElemType: NodeType{}.Type(ctx)}},
+			"node_types": basetypes.ListType{ElemType: NodeType{}.Type(ctx)},
 		},
 	}
 }
@@ -12860,7 +12860,7 @@ func (o ListPoliciesResponse) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o ListPoliciesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"policies": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Policy{}.Type(ctx)}},
+			"policies": basetypes.ListType{ElemType: Policy{}.Type(ctx)},
 		},
 	}
 }
@@ -12982,7 +12982,7 @@ func (o ListPolicyFamiliesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"policy_families": basetypes.ListType{ElemType: basetypes.ListType{ElemType: PolicyFamily{}.Type(ctx)}},
+			"policy_families": basetypes.ListType{ElemType: PolicyFamily{}.Type(ctx)},
 		},
 	}
 }
@@ -13770,7 +13770,7 @@ func (o Policy) Type(ctx context.Context) attr.Type {
 			"definition":                         types.StringType,
 			"description":                        types.StringType,
 			"is_default":                         types.BoolType,
-			"libraries":                          basetypes.ListType{ElemType: basetypes.ListType{ElemType: Library{}.Type(ctx)}},
+			"libraries":                          basetypes.ListType{ElemType: Library{}.Type(ctx)},
 			"max_clusters_per_user":              types.Int64Type,
 			"name":                               types.StringType,
 			"policy_family_definition_overrides": types.StringType,
@@ -14857,7 +14857,7 @@ func (o UninstallLibraries) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cluster_id": types.StringType,
-			"libraries":  basetypes.ListType{ElemType: basetypes.ListType{ElemType: Library{}.Type(ctx)}},
+			"libraries":  basetypes.ListType{ElemType: Library{}.Type(ctx)},
 		},
 	}
 }
@@ -15316,7 +15316,7 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes":               basetypes.ListType{ElemType: GcpAttributes{}.Type(ctx)},
-			"init_scripts":                 basetypes.ListType{ElemType: basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)}},
+			"init_scripts":                 basetypes.ListType{ElemType: InitScriptInfo{}.Type(ctx)},
 			"instance_pool_id":             types.StringType,
 			"node_type_id":                 types.StringType,
 			"num_workers":                  types.Int64Type,

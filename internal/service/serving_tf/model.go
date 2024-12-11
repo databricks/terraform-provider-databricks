@@ -132,7 +132,7 @@ func (o AiGatewayConfig) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
 			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
-			"rate_limits":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)}},
+			"rate_limits":            basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)},
 			"usage_tracking_config":  basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
 		},
 	}
@@ -1286,9 +1286,9 @@ func (o CreateServingEndpoint) Type(ctx context.Context) attr.Type {
 			"ai_gateway":      basetypes.ListType{ElemType: AiGatewayConfig{}.Type(ctx)},
 			"config":          basetypes.ListType{ElemType: EndpointCoreConfigInput{}.Type(ctx)},
 			"name":            types.StringType,
-			"rate_limits":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: RateLimit{}.Type(ctx)}},
+			"rate_limits":     basetypes.ListType{ElemType: RateLimit{}.Type(ctx)},
 			"route_optimized": types.BoolType,
-			"tags":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)}},
+			"tags":            basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)},
 		},
 	}
 }
@@ -1805,8 +1805,8 @@ func (o EndpointCoreConfigInput) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigInput{}.Type(ctx)},
 			"name":                types.StringType,
-			"served_entities":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedEntityInput{}.Type(ctx)}},
-			"served_models":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedModelInput{}.Type(ctx)}},
+			"served_entities":     basetypes.ListType{ElemType: ServedEntityInput{}.Type(ctx)},
+			"served_models":       basetypes.ListType{ElemType: ServedModelInput{}.Type(ctx)},
 			"traffic_config":      basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
 		},
 	}
@@ -1974,8 +1974,8 @@ func (o EndpointCoreConfigOutput) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigOutput{}.Type(ctx)},
 			"config_version":      types.Int64Type,
-			"served_entities":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedEntityOutput{}.Type(ctx)}},
-			"served_models":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedModelOutput{}.Type(ctx)}},
+			"served_entities":     basetypes.ListType{ElemType: ServedEntityOutput{}.Type(ctx)},
+			"served_models":       basetypes.ListType{ElemType: ServedModelOutput{}.Type(ctx)},
 			"traffic_config":      basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
 		},
 	}
@@ -2129,8 +2129,8 @@ func (o EndpointCoreConfigSummary) ToObjectValue(ctx context.Context) basetypes.
 func (o EndpointCoreConfigSummary) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"served_entities": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedEntitySpec{}.Type(ctx)}},
-			"served_models":   basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedModelSpec{}.Type(ctx)}},
+			"served_entities": basetypes.ListType{ElemType: ServedEntitySpec{}.Type(ctx)},
+			"served_models":   basetypes.ListType{ElemType: ServedModelSpec{}.Type(ctx)},
 		},
 	}
 }
@@ -2250,8 +2250,8 @@ func (o EndpointPendingConfig) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{ElemType: AutoCaptureConfigOutput{}.Type(ctx)},
 			"config_version":      types.Int64Type,
-			"served_entities":     basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedEntityOutput{}.Type(ctx)}},
-			"served_models":       basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServedModelOutput{}.Type(ctx)}},
+			"served_entities":     basetypes.ListType{ElemType: ServedEntityOutput{}.Type(ctx)},
+			"served_models":       basetypes.ListType{ElemType: ServedModelOutput{}.Type(ctx)},
 			"start_time":          types.Int64Type,
 			"traffic_config":      basetypes.ListType{ElemType: TrafficConfig{}.Type(ctx)},
 		},
@@ -3118,7 +3118,7 @@ func (o GetServingEndpointPermissionLevelsResponse) ToObjectValue(ctx context.Co
 func (o GetServingEndpointPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServingEndpointPermissionsDescription{}.Type(ctx)}},
+			"permission_levels": basetypes.ListType{ElemType: ServingEndpointPermissionsDescription{}.Type(ctx)},
 		},
 	}
 }
@@ -3347,7 +3347,7 @@ func (o ListEndpointsResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ListEndpointsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoints": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServingEndpoint{}.Type(ctx)}},
+			"endpoints": basetypes.ListType{ElemType: ServingEndpoint{}.Type(ctx)},
 		},
 	}
 }
@@ -3707,7 +3707,7 @@ func (o PatchServingEndpointTags) ToObjectValue(ctx context.Context) basetypes.O
 func (o PatchServingEndpointTags) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"add_tags":    basetypes.ListType{ElemType: basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)}},
+			"add_tags":    basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)},
 			"delete_tags": basetypes.ListType{ElemType: types.StringType},
 			"name":        types.StringType,
 		},
@@ -3880,7 +3880,7 @@ func (o PutAiGatewayRequest) Type(ctx context.Context) attr.Type {
 			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
 			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
 			"name":                   types.StringType,
-			"rate_limits":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)}},
+			"rate_limits":            basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)},
 			"usage_tracking_config":  basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
 		},
 	}
@@ -4048,7 +4048,7 @@ func (o PutAiGatewayResponse) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"guardrails":             basetypes.ListType{ElemType: AiGatewayGuardrails{}.Type(ctx)},
 			"inference_table_config": basetypes.ListType{ElemType: AiGatewayInferenceTableConfig{}.Type(ctx)},
-			"rate_limits":            basetypes.ListType{ElemType: basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)}},
+			"rate_limits":            basetypes.ListType{ElemType: AiGatewayRateLimit{}.Type(ctx)},
 			"usage_tracking_config":  basetypes.ListType{ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx)},
 		},
 	}
@@ -4203,7 +4203,7 @@ func (o PutRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":        types.StringType,
-			"rate_limits": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RateLimit{}.Type(ctx)}},
+			"rate_limits": basetypes.ListType{ElemType: RateLimit{}.Type(ctx)},
 		},
 	}
 }
@@ -4273,7 +4273,7 @@ func (o PutResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o PutResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"rate_limits": basetypes.ListType{ElemType: basetypes.ListType{ElemType: RateLimit{}.Type(ctx)}},
+			"rate_limits": basetypes.ListType{ElemType: RateLimit{}.Type(ctx)},
 		},
 	}
 }
@@ -4415,7 +4415,7 @@ func (o QueryEndpointInput) Type(ctx context.Context) attr.Type {
 			"inputs":            types.ObjectType{},
 			"instances":         basetypes.ListType{ElemType: types.ObjectType{}},
 			"max_tokens":        types.Int64Type,
-			"messages":          basetypes.ListType{ElemType: basetypes.ListType{ElemType: ChatMessage{}.Type(ctx)}},
+			"messages":          basetypes.ListType{ElemType: ChatMessage{}.Type(ctx)},
 			"n":                 types.Int64Type,
 			"name":              types.StringType,
 			"prompt":            types.ObjectType{},
@@ -4658,9 +4658,9 @@ func (o QueryEndpointResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o QueryEndpointResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"choices":           basetypes.ListType{ElemType: basetypes.ListType{ElemType: V1ResponseChoiceElement{}.Type(ctx)}},
+			"choices":           basetypes.ListType{ElemType: V1ResponseChoiceElement{}.Type(ctx)},
 			"created":           types.Int64Type,
-			"data":              basetypes.ListType{ElemType: basetypes.ListType{ElemType: EmbeddingsV1ResponseEmbeddingElement{}.Type(ctx)}},
+			"data":              basetypes.ListType{ElemType: EmbeddingsV1ResponseEmbeddingElement{}.Type(ctx)},
 			"id":                types.StringType,
 			"model":             types.StringType,
 			"object":            types.StringType,
@@ -5928,7 +5928,7 @@ func (o ServingEndpoint) Type(ctx context.Context) attr.Type {
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
 			"state":                  basetypes.ListType{ElemType: EndpointState{}.Type(ctx)},
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)},
 			"task":                   types.StringType,
 		},
 	}
@@ -6143,7 +6143,7 @@ func (o ServingEndpointAccessControlResponse) ToObjectValue(ctx context.Context)
 func (o ServingEndpointAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServingEndpointPermission{}.Type(ctx)}},
+			"all_permissions":        basetypes.ListType{ElemType: ServingEndpointPermission{}.Type(ctx)},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -6280,7 +6280,7 @@ func (o ServingEndpointDetailed) Type(ctx context.Context) attr.Type {
 			"permission_level":       types.StringType,
 			"route_optimized":        types.BoolType,
 			"state":                  basetypes.ListType{ElemType: EndpointState{}.Type(ctx)},
-			"tags":                   basetypes.ListType{ElemType: basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)}},
+			"tags":                   basetypes.ListType{ElemType: EndpointTag{}.Type(ctx)},
 			"task":                   types.StringType,
 		},
 	}
@@ -6563,7 +6563,7 @@ func (o ServingEndpointPermissions) ToObjectValue(ctx context.Context) basetypes
 func (o ServingEndpointPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServingEndpointAccessControlResponse{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ServingEndpointAccessControlResponse{}.Type(ctx)},
 			"object_id":           types.StringType,
 			"object_type":         types.StringType,
 		},
@@ -6682,7 +6682,7 @@ func (o ServingEndpointPermissionsRequest) ToObjectValue(ctx context.Context) ba
 func (o ServingEndpointPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: basetypes.ListType{ElemType: ServingEndpointAccessControlRequest{}.Type(ctx)}},
+			"access_control_list": basetypes.ListType{ElemType: ServingEndpointAccessControlRequest{}.Type(ctx)},
 			"serving_endpoint_id": types.StringType,
 		},
 	}
@@ -6753,7 +6753,7 @@ func (o TrafficConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o TrafficConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"routes": basetypes.ListType{ElemType: basetypes.ListType{ElemType: Route{}.Type(ctx)}},
+			"routes": basetypes.ListType{ElemType: Route{}.Type(ctx)},
 		},
 	}
 }

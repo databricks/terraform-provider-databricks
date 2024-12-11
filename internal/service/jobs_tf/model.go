@@ -321,37 +321,45 @@ func (o BaseRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o BaseRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attempt_number":          types.Int64Type,
-			"cleanup_duration":        types.Int64Type,
-			"cluster_instance":        basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
-			"cluster_spec":            basetypes.ListType{ElemType: ClusterSpec{}.Type(ctx)},
-			"creator_user_name":       types.StringType,
-			"description":             types.StringType,
-			"end_time":                types.Int64Type,
-			"execution_duration":      types.Int64Type,
-			"git_source":              basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
-			"job_clusters":            basetypes.ListType{ElemType: JobCluster{}.Type(ctx)},
-			"job_id":                  types.Int64Type,
-			"job_parameters":          basetypes.ListType{ElemType: JobParameter{}.Type(ctx)},
+			"attempt_number":     types.Int64Type,
+			"cleanup_duration":   types.Int64Type,
+			"cluster_instance":   basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
+			"cluster_spec":       basetypes.ListType{ElemType: ClusterSpec{}.Type(ctx)},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source":         basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
+			"job_clusters": basetypes.ListType{
+				ElemType: JobCluster{}.Type(ctx),
+			},
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
+				ElemType: JobParameter{}.Type(ctx),
+			},
 			"job_run_id":              types.Int64Type,
 			"number_in_job":           types.Int64Type,
 			"original_attempt_run_id": types.Int64Type,
 			"overriding_parameters":   basetypes.ListType{ElemType: RunParameters{}.Type(ctx)},
 			"queue_duration":          types.Int64Type,
-			"repair_history":          basetypes.ListType{ElemType: RepairHistoryItem{}.Type(ctx)},
-			"run_duration":            types.Int64Type,
-			"run_id":                  types.Int64Type,
-			"run_name":                types.StringType,
-			"run_page_url":            types.StringType,
-			"run_type":                types.StringType,
-			"schedule":                basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
-			"setup_duration":          types.Int64Type,
-			"start_time":              types.Int64Type,
-			"state":                   basetypes.ListType{ElemType: RunState{}.Type(ctx)},
-			"status":                  basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
-			"tasks":                   basetypes.ListType{ElemType: RunTask{}.Type(ctx)},
-			"trigger":                 types.StringType,
-			"trigger_info":            basetypes.ListType{ElemType: TriggerInfo{}.Type(ctx)},
+			"repair_history": basetypes.ListType{
+				ElemType: RepairHistoryItem{}.Type(ctx),
+			},
+			"run_duration":   types.Int64Type,
+			"run_id":         types.Int64Type,
+			"run_name":       types.StringType,
+			"run_page_url":   types.StringType,
+			"run_type":       types.StringType,
+			"schedule":       basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state":          basetypes.ListType{ElemType: RunState{}.Type(ctx)},
+			"status":         basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
+			"tasks": basetypes.ListType{
+				ElemType: RunTask{}.Type(ctx),
+			},
+			"trigger":      types.StringType,
+			"trigger_info": basetypes.ListType{ElemType: TriggerInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -995,8 +1003,10 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"existing_cluster_id": types.StringType,
 			"job_cluster_key":     types.StringType,
-			"library":             basetypes.ListType{ElemType: compute_tf.Library{}.Type(ctx)},
-			"new_cluster":         basetypes.ListType{ElemType: compute_tf.ClusterSpec{}.Type(ctx)},
+			"library": basetypes.ListType{
+				ElemType: compute_tf.Library{}.Type(ctx),
+			},
+			"new_cluster": basetypes.ListType{ElemType: compute_tf.ClusterSpec{}.Type(ctx)},
 		},
 	}
 }
@@ -1335,27 +1345,39 @@ func (o CreateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o CreateJob) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list":   basetypes.ListType{ElemType: JobAccessControlRequest{}.Type(ctx)},
-			"budget_policy_id":      types.StringType,
-			"continuous":            basetypes.ListType{ElemType: Continuous{}.Type(ctx)},
-			"deployment":            basetypes.ListType{ElemType: JobDeployment{}.Type(ctx)},
-			"description":           types.StringType,
-			"edit_mode":             types.StringType,
-			"email_notifications":   basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
-			"environment":           basetypes.ListType{ElemType: JobEnvironment{}.Type(ctx)},
-			"format":                types.StringType,
-			"git_source":            basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
-			"health":                basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
-			"job_cluster":           basetypes.ListType{ElemType: JobCluster{}.Type(ctx)},
+			"access_control_list": basetypes.ListType{
+				ElemType: JobAccessControlRequest{}.Type(ctx),
+			},
+			"budget_policy_id":    types.StringType,
+			"continuous":          basetypes.ListType{ElemType: Continuous{}.Type(ctx)},
+			"deployment":          basetypes.ListType{ElemType: JobDeployment{}.Type(ctx)},
+			"description":         types.StringType,
+			"edit_mode":           types.StringType,
+			"email_notifications": basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
+			"environment": basetypes.ListType{
+				ElemType: JobEnvironment{}.Type(ctx),
+			},
+			"format":     types.StringType,
+			"git_source": basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
+			"health":     basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
+			"job_cluster": basetypes.ListType{
+				ElemType: JobCluster{}.Type(ctx),
+			},
 			"max_concurrent_runs":   types.Int64Type,
 			"name":                  types.StringType,
 			"notification_settings": basetypes.ListType{ElemType: JobNotificationSettings{}.Type(ctx)},
-			"parameter":             basetypes.ListType{ElemType: JobParameterDefinition{}.Type(ctx)},
-			"queue":                 basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
-			"run_as":                basetypes.ListType{ElemType: JobRunAs{}.Type(ctx)},
-			"schedule":              basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
-			"tags":                  basetypes.MapType{ElemType: types.StringType},
-			"task":                  basetypes.ListType{ElemType: Task{}.Type(ctx)},
+			"parameter": basetypes.ListType{
+				ElemType: JobParameterDefinition{}.Type(ctx),
+			},
+			"queue":    basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
+			"run_as":   basetypes.ListType{ElemType: JobRunAs{}.Type(ctx)},
+			"schedule": basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"task": basetypes.ListType{
+				ElemType: Task{}.Type(ctx),
+			},
 			"timeout_seconds":       types.Int64Type,
 			"trigger":               basetypes.ListType{ElemType: TriggerSettings{}.Type(ctx)},
 			"webhook_notifications": basetypes.ListType{ElemType: WebhookNotifications{}.Type(ctx)},
@@ -1949,8 +1971,10 @@ func (o DbtOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o DbtOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"artifacts_headers": basetypes.MapType{ElemType: types.StringType},
-			"artifacts_link":    types.StringType,
+			"artifacts_headers": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"artifacts_link": types.StringType,
 		},
 	}
 }
@@ -2058,8 +2082,10 @@ func (o DbtTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o DbtTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"catalog":            types.StringType,
-			"commands":           basetypes.ListType{ElemType: types.StringType},
+			"catalog": types.StringType,
+			"commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"profiles_directory": types.StringType,
 			"project_directory":  types.StringType,
 			"schema":             types.StringType,
@@ -2411,9 +2437,11 @@ func (o EnforcePolicyComplianceResponse) ToObjectValue(ctx context.Context) base
 func (o EnforcePolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"has_changes":         types.BoolType,
-			"job_cluster_changes": basetypes.ListType{ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.Type(ctx)},
-			"settings":            basetypes.ListType{ElemType: JobSettings{}.Type(ctx)},
+			"has_changes": types.BoolType,
+			"job_cluster_changes": basetypes.ListType{
+				ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.Type(ctx),
+			},
+			"settings": basetypes.ListType{ElemType: JobSettings{}.Type(ctx)},
 		},
 	}
 }
@@ -2514,7 +2542,9 @@ func (o ExportRunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o ExportRunOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"views": basetypes.ListType{ElemType: ViewItem{}.Type(ctx)},
+			"views": basetypes.ListType{
+				ElemType: ViewItem{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -2691,8 +2721,10 @@ func (o ForEachStats) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ForEachStats) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"error_message_stats": basetypes.ListType{ElemType: ForEachTaskErrorMessageStats{}.Type(ctx)},
-			"task_run_stats":      basetypes.ListType{ElemType: ForEachTaskTaskRunStats{}.Type(ctx)},
+			"error_message_stats": basetypes.ListType{
+				ElemType: ForEachTaskErrorMessageStats{}.Type(ctx),
+			},
+			"task_run_stats": basetypes.ListType{ElemType: ForEachTaskTaskRunStats{}.Type(ctx)},
 		},
 	}
 }
@@ -3026,7 +3058,9 @@ func (o GetJobPermissionLevelsResponse) ToObjectValue(ctx context.Context) baset
 func (o GetJobPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: JobPermissionsDescription{}.Type(ctx)},
+			"permission_levels": basetypes.ListType{
+				ElemType: JobPermissionsDescription{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3237,7 +3271,9 @@ func (o GetPolicyComplianceResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_compliant": types.BoolType,
-			"violations":   basetypes.MapType{ElemType: types.StringType},
+			"violations": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -3761,7 +3797,9 @@ func (o JobAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o JobAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: JobPermission{}.Type(ctx)},
+			"all_permissions": basetypes.ListType{
+				ElemType: JobPermission{}.Type(ctx),
+			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -3923,7 +3961,9 @@ func (o JobCompliance) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"is_compliant": types.BoolType,
 			"job_id":       types.Int64Type,
-			"violations":   basetypes.MapType{ElemType: types.StringType},
+			"violations": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -4081,12 +4121,22 @@ func (o JobEmailNotifications) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o JobEmailNotifications) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"no_alert_for_skipped_runs":              types.BoolType,
-			"on_duration_warning_threshold_exceeded": basetypes.ListType{ElemType: types.StringType},
-			"on_failure":                             basetypes.ListType{ElemType: types.StringType},
-			"on_start":                               basetypes.ListType{ElemType: types.StringType},
-			"on_streaming_backlog_exceeded":          basetypes.ListType{ElemType: types.StringType},
-			"on_success":                             basetypes.ListType{ElemType: types.StringType},
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_failure": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_start": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_streaming_backlog_exceeded": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_success": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -4486,9 +4536,11 @@ func (o JobPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o JobPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited":             types.BoolType,
-			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
-			"permission_level":      types.StringType,
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -4563,9 +4615,11 @@ func (o JobPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o JobPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: JobAccessControlResponse{}.Type(ctx)},
-			"object_id":           types.StringType,
-			"object_type":         types.StringType,
+			"access_control_list": basetypes.ListType{
+				ElemType: JobAccessControlResponse{}.Type(ctx),
+			},
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -4682,8 +4736,10 @@ func (o JobPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o JobPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: JobAccessControlRequest{}.Type(ctx)},
-			"job_id":              types.StringType,
+			"access_control_list": basetypes.ListType{
+				ElemType: JobAccessControlRequest{}.Type(ctx),
+			},
+			"job_id": types.StringType,
 		},
 	}
 }
@@ -4941,26 +4997,36 @@ func (o JobSettings) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o JobSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"budget_policy_id":      types.StringType,
-			"continuous":            basetypes.ListType{ElemType: Continuous{}.Type(ctx)},
-			"deployment":            basetypes.ListType{ElemType: JobDeployment{}.Type(ctx)},
-			"description":           types.StringType,
-			"edit_mode":             types.StringType,
-			"email_notifications":   basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
-			"environment":           basetypes.ListType{ElemType: JobEnvironment{}.Type(ctx)},
-			"format":                types.StringType,
-			"git_source":            basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
-			"health":                basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
-			"job_cluster":           basetypes.ListType{ElemType: JobCluster{}.Type(ctx)},
+			"budget_policy_id":    types.StringType,
+			"continuous":          basetypes.ListType{ElemType: Continuous{}.Type(ctx)},
+			"deployment":          basetypes.ListType{ElemType: JobDeployment{}.Type(ctx)},
+			"description":         types.StringType,
+			"edit_mode":           types.StringType,
+			"email_notifications": basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
+			"environment": basetypes.ListType{
+				ElemType: JobEnvironment{}.Type(ctx),
+			},
+			"format":     types.StringType,
+			"git_source": basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
+			"health":     basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
+			"job_cluster": basetypes.ListType{
+				ElemType: JobCluster{}.Type(ctx),
+			},
 			"max_concurrent_runs":   types.Int64Type,
 			"name":                  types.StringType,
 			"notification_settings": basetypes.ListType{ElemType: JobNotificationSettings{}.Type(ctx)},
-			"parameter":             basetypes.ListType{ElemType: JobParameterDefinition{}.Type(ctx)},
-			"queue":                 basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
-			"run_as":                basetypes.ListType{ElemType: JobRunAs{}.Type(ctx)},
-			"schedule":              basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
-			"tags":                  basetypes.MapType{ElemType: types.StringType},
-			"task":                  basetypes.ListType{ElemType: Task{}.Type(ctx)},
+			"parameter": basetypes.ListType{
+				ElemType: JobParameterDefinition{}.Type(ctx),
+			},
+			"queue":    basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
+			"run_as":   basetypes.ListType{ElemType: JobRunAs{}.Type(ctx)},
+			"schedule": basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"task": basetypes.ListType{
+				ElemType: Task{}.Type(ctx),
+			},
 			"timeout_seconds":       types.Int64Type,
 			"trigger":               basetypes.ListType{ElemType: TriggerSettings{}.Type(ctx)},
 			"webhook_notifications": basetypes.ListType{ElemType: WebhookNotifications{}.Type(ctx)},
@@ -5546,7 +5612,9 @@ func (o JobsHealthRules) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o JobsHealthRules) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"rules": basetypes.ListType{ElemType: JobsHealthRule{}.Type(ctx)},
+			"rules": basetypes.ListType{
+				ElemType: JobsHealthRule{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5626,7 +5694,9 @@ func (o ListJobComplianceForPolicyResponse) ToObjectValue(ctx context.Context) b
 func (o ListJobComplianceForPolicyResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"jobs":            basetypes.ListType{ElemType: JobCompliance{}.Type(ctx)},
+			"jobs": basetypes.ListType{
+				ElemType: JobCompliance{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 		},
@@ -5828,8 +5898,10 @@ func (o ListJobsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListJobsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"has_more":        types.BoolType,
-			"jobs":            basetypes.ListType{ElemType: BaseJob{}.Type(ctx)},
+			"has_more": types.BoolType,
+			"jobs": basetypes.ListType{
+				ElemType: BaseJob{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 		},
@@ -6012,7 +6084,9 @@ func (o ListRunsResponse) Type(ctx context.Context) attr.Type {
 			"has_more":        types.BoolType,
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
-			"runs":            basetypes.ListType{ElemType: BaseRun{}.Type(ctx)},
+			"runs": basetypes.ListType{
+				ElemType: BaseRun{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6172,10 +6246,12 @@ func (o NotebookTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o NotebookTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"base_parameters": basetypes.MapType{ElemType: types.StringType},
-			"notebook_path":   types.StringType,
-			"source":          types.StringType,
-			"warehouse_id":    types.StringType,
+			"base_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"notebook_path": types.StringType,
+			"source":        types.StringType,
+			"warehouse_id":  types.StringType,
 		},
 	}
 }
@@ -6394,10 +6470,14 @@ func (o PythonWheelTask) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o PythonWheelTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"entry_point":      types.StringType,
-			"named_parameters": basetypes.MapType{ElemType: types.StringType},
-			"package_name":     types.StringType,
-			"parameters":       basetypes.ListType{ElemType: types.StringType},
+			"entry_point": types.StringType,
+			"named_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"package_name": types.StringType,
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -6610,13 +6690,15 @@ func (o RepairHistoryItem) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o RepairHistoryItem) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"end_time":     types.Int64Type,
-			"id":           types.Int64Type,
-			"start_time":   types.Int64Type,
-			"state":        basetypes.ListType{ElemType: RunState{}.Type(ctx)},
-			"status":       basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
-			"task_run_ids": basetypes.ListType{ElemType: types.Int64Type},
-			"type":         types.StringType,
+			"end_time":   types.Int64Type,
+			"id":         types.Int64Type,
+			"start_time": types.Int64Type,
+			"state":      basetypes.ListType{ElemType: RunState{}.Type(ctx)},
+			"status":     basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
+			"task_run_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
+			"type": types.StringType,
 		},
 	}
 }
@@ -6858,20 +6940,38 @@ func (o RepairRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RepairRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbt_commands":           basetypes.ListType{ElemType: types.StringType},
-			"jar_params":             basetypes.ListType{ElemType: types.StringType},
-			"job_parameters":         basetypes.MapType{ElemType: types.StringType},
-			"latest_repair_id":       types.Int64Type,
-			"notebook_params":        basetypes.MapType{ElemType: types.StringType},
-			"pipeline_params":        basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
-			"python_named_params":    basetypes.MapType{ElemType: types.StringType},
-			"python_params":          basetypes.ListType{ElemType: types.StringType},
+			"dbt_commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jar_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"job_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"latest_repair_id": types.Int64Type,
+			"notebook_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"pipeline_params": basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
+			"python_named_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"python_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"rerun_all_failed_tasks": types.BoolType,
 			"rerun_dependent_tasks":  types.BoolType,
-			"rerun_tasks":            basetypes.ListType{ElemType: types.StringType},
-			"run_id":                 types.Int64Type,
-			"spark_submit_params":    basetypes.ListType{ElemType: types.StringType},
-			"sql_params":             basetypes.MapType{ElemType: types.StringType},
+			"rerun_tasks": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"run_id": types.Int64Type,
+			"spark_submit_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sql_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7377,7 +7477,9 @@ func (o ResolvedDbtTaskValues) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ResolvedDbtTaskValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"commands": basetypes.ListType{ElemType: types.StringType},
+			"commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7446,7 +7548,9 @@ func (o ResolvedNotebookTaskValues) ToObjectValue(ctx context.Context) basetypes
 func (o ResolvedNotebookTaskValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"base_parameters": basetypes.MapType{ElemType: types.StringType},
+			"base_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7515,7 +7619,9 @@ func (o ResolvedParamPairValues) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o ResolvedParamPairValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parameters": basetypes.MapType{ElemType: types.StringType},
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7588,8 +7694,12 @@ func (o ResolvedPythonWheelTaskValues) ToObjectValue(ctx context.Context) basety
 func (o ResolvedPythonWheelTaskValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"named_parameters": basetypes.MapType{ElemType: types.StringType},
-			"parameters":       basetypes.ListType{ElemType: types.StringType},
+			"named_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7688,8 +7798,12 @@ func (o ResolvedRunJobTaskValues) ToObjectValue(ctx context.Context) basetypes.O
 func (o ResolvedRunJobTaskValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_parameters": basetypes.MapType{ElemType: types.StringType},
-			"parameters":     basetypes.MapType{ElemType: types.StringType},
+			"job_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7784,7 +7898,9 @@ func (o ResolvedStringParamsValues) ToObjectValue(ctx context.Context) basetypes
 func (o ResolvedStringParamsValues) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parameters": basetypes.ListType{ElemType: types.StringType},
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -8377,39 +8493,49 @@ func (o Run) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Run) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attempt_number":          types.Int64Type,
-			"cleanup_duration":        types.Int64Type,
-			"cluster_instance":        basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
-			"cluster_spec":            basetypes.ListType{ElemType: ClusterSpec{}.Type(ctx)},
-			"creator_user_name":       types.StringType,
-			"description":             types.StringType,
-			"end_time":                types.Int64Type,
-			"execution_duration":      types.Int64Type,
-			"git_source":              basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
-			"iterations":              basetypes.ListType{ElemType: RunTask{}.Type(ctx)},
-			"job_clusters":            basetypes.ListType{ElemType: JobCluster{}.Type(ctx)},
-			"job_id":                  types.Int64Type,
-			"job_parameters":          basetypes.ListType{ElemType: JobParameter{}.Type(ctx)},
+			"attempt_number":     types.Int64Type,
+			"cleanup_duration":   types.Int64Type,
+			"cluster_instance":   basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
+			"cluster_spec":       basetypes.ListType{ElemType: ClusterSpec{}.Type(ctx)},
+			"creator_user_name":  types.StringType,
+			"description":        types.StringType,
+			"end_time":           types.Int64Type,
+			"execution_duration": types.Int64Type,
+			"git_source":         basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
+			"iterations": basetypes.ListType{
+				ElemType: RunTask{}.Type(ctx),
+			},
+			"job_clusters": basetypes.ListType{
+				ElemType: JobCluster{}.Type(ctx),
+			},
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.ListType{
+				ElemType: JobParameter{}.Type(ctx),
+			},
 			"job_run_id":              types.Int64Type,
 			"next_page_token":         types.StringType,
 			"number_in_job":           types.Int64Type,
 			"original_attempt_run_id": types.Int64Type,
 			"overriding_parameters":   basetypes.ListType{ElemType: RunParameters{}.Type(ctx)},
 			"queue_duration":          types.Int64Type,
-			"repair_history":          basetypes.ListType{ElemType: RepairHistoryItem{}.Type(ctx)},
-			"run_duration":            types.Int64Type,
-			"run_id":                  types.Int64Type,
-			"run_name":                types.StringType,
-			"run_page_url":            types.StringType,
-			"run_type":                types.StringType,
-			"schedule":                basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
-			"setup_duration":          types.Int64Type,
-			"start_time":              types.Int64Type,
-			"state":                   basetypes.ListType{ElemType: RunState{}.Type(ctx)},
-			"status":                  basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
-			"tasks":                   basetypes.ListType{ElemType: RunTask{}.Type(ctx)},
-			"trigger":                 types.StringType,
-			"trigger_info":            basetypes.ListType{ElemType: TriggerInfo{}.Type(ctx)},
+			"repair_history": basetypes.ListType{
+				ElemType: RepairHistoryItem{}.Type(ctx),
+			},
+			"run_duration":   types.Int64Type,
+			"run_id":         types.Int64Type,
+			"run_name":       types.StringType,
+			"run_page_url":   types.StringType,
+			"run_type":       types.StringType,
+			"schedule":       basetypes.ListType{ElemType: CronSchedule{}.Type(ctx)},
+			"setup_duration": types.Int64Type,
+			"start_time":     types.Int64Type,
+			"state":          basetypes.ListType{ElemType: RunState{}.Type(ctx)},
+			"status":         basetypes.ListType{ElemType: RunStatus{}.Type(ctx)},
+			"tasks": basetypes.ListType{
+				ElemType: RunTask{}.Type(ctx),
+			},
+			"trigger":      types.StringType,
+			"trigger_info": basetypes.ListType{ElemType: TriggerInfo{}.Type(ctx)},
 		},
 	}
 }
@@ -9113,16 +9239,32 @@ func (o RunJobTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunJobTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbt_commands":        basetypes.ListType{ElemType: types.StringType},
-			"jar_params":          basetypes.ListType{ElemType: types.StringType},
-			"job_id":              types.Int64Type,
-			"job_parameters":      basetypes.MapType{ElemType: types.StringType},
-			"notebook_params":     basetypes.MapType{ElemType: types.StringType},
-			"pipeline_params":     basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
-			"python_named_params": basetypes.MapType{ElemType: types.StringType},
-			"python_params":       basetypes.ListType{ElemType: types.StringType},
-			"spark_submit_params": basetypes.ListType{ElemType: types.StringType},
-			"sql_params":          basetypes.MapType{ElemType: types.StringType},
+			"dbt_commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jar_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"notebook_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"pipeline_params": basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
+			"python_named_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"python_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"spark_submit_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sql_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -9527,19 +9669,37 @@ func (o RunNow) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunNow) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbt_commands":        basetypes.ListType{ElemType: types.StringType},
-			"idempotency_token":   types.StringType,
-			"jar_params":          basetypes.ListType{ElemType: types.StringType},
-			"job_id":              types.Int64Type,
-			"job_parameters":      basetypes.MapType{ElemType: types.StringType},
-			"notebook_params":     basetypes.MapType{ElemType: types.StringType},
-			"only":                basetypes.ListType{ElemType: types.StringType},
-			"pipeline_params":     basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
-			"python_named_params": basetypes.MapType{ElemType: types.StringType},
-			"python_params":       basetypes.ListType{ElemType: types.StringType},
-			"queue":               basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
-			"spark_submit_params": basetypes.ListType{ElemType: types.StringType},
-			"sql_params":          basetypes.MapType{ElemType: types.StringType},
+			"dbt_commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"idempotency_token": types.StringType,
+			"jar_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"job_id": types.Int64Type,
+			"job_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"notebook_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"only": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"pipeline_params": basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
+			"python_named_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"python_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"queue": basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
+			"spark_submit_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sql_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -10242,14 +10402,28 @@ func (o RunParameters) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o RunParameters) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbt_commands":        basetypes.ListType{ElemType: types.StringType},
-			"jar_params":          basetypes.ListType{ElemType: types.StringType},
-			"notebook_params":     basetypes.MapType{ElemType: types.StringType},
-			"pipeline_params":     basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
-			"python_named_params": basetypes.MapType{ElemType: types.StringType},
-			"python_params":       basetypes.ListType{ElemType: types.StringType},
-			"spark_submit_params": basetypes.ListType{ElemType: types.StringType},
-			"sql_params":          basetypes.MapType{ElemType: types.StringType},
+			"dbt_commands": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jar_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"notebook_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"pipeline_params": basetypes.ListType{ElemType: PipelineParams{}.Type(ctx)},
+			"python_named_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"python_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"spark_submit_params": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"sql_params": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -10893,22 +11067,26 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attempt_number":        types.Int64Type,
-			"cleanup_duration":      types.Int64Type,
-			"cluster_instance":      basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
-			"condition_task":        basetypes.ListType{ElemType: RunConditionTask{}.Type(ctx)},
-			"dbt_task":              basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
-			"depends_on":            basetypes.ListType{ElemType: TaskDependency{}.Type(ctx)},
-			"description":           types.StringType,
-			"email_notifications":   basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
-			"end_time":              types.Int64Type,
-			"environment_key":       types.StringType,
-			"execution_duration":    types.Int64Type,
-			"existing_cluster_id":   types.StringType,
-			"for_each_task":         basetypes.ListType{ElemType: RunForEachTask{}.Type(ctx)},
-			"git_source":            basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
-			"job_cluster_key":       types.StringType,
-			"library":               basetypes.ListType{ElemType: compute_tf.Library{}.Type(ctx)},
+			"attempt_number":   types.Int64Type,
+			"cleanup_duration": types.Int64Type,
+			"cluster_instance": basetypes.ListType{ElemType: ClusterInstance{}.Type(ctx)},
+			"condition_task":   basetypes.ListType{ElemType: RunConditionTask{}.Type(ctx)},
+			"dbt_task":         basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
+			"depends_on": basetypes.ListType{
+				ElemType: TaskDependency{}.Type(ctx),
+			},
+			"description":         types.StringType,
+			"email_notifications": basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
+			"end_time":            types.Int64Type,
+			"environment_key":     types.StringType,
+			"execution_duration":  types.Int64Type,
+			"existing_cluster_id": types.StringType,
+			"for_each_task":       basetypes.ListType{ElemType: RunForEachTask{}.Type(ctx)},
+			"git_source":          basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
+			"job_cluster_key":     types.StringType,
+			"library": basetypes.ListType{
+				ElemType: compute_tf.Library{}.Type(ctx),
+			},
 			"new_cluster":           basetypes.ListType{ElemType: compute_tf.ClusterSpec{}.Type(ctx)},
 			"notebook_task":         basetypes.ListType{ElemType: NotebookTask{}.Type(ctx)},
 			"notification_settings": basetypes.ListType{ElemType: TaskNotificationSettings{}.Type(ctx)},
@@ -11565,7 +11743,9 @@ func (o SparkJarTask) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"jar_uri":         types.StringType,
 			"main_class_name": types.StringType,
-			"parameters":      basetypes.ListType{ElemType: types.StringType},
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -11658,7 +11838,9 @@ func (o SparkPythonTask) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o SparkPythonTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parameters":  basetypes.ListType{ElemType: types.StringType},
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"python_file": types.StringType,
 			"source":      types.StringType,
 		},
@@ -11735,7 +11917,9 @@ func (o SparkSubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o SparkSubmitTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"parameters": basetypes.ListType{ElemType: types.StringType},
+			"parameters": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -11822,11 +12006,13 @@ func (o SqlAlertOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o SqlAlertOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert_state":    types.StringType,
-			"output_link":    types.StringType,
-			"query_text":     types.StringType,
-			"sql_statements": basetypes.ListType{ElemType: SqlStatementOutput{}.Type(ctx)},
-			"warehouse_id":   types.StringType,
+			"alert_state": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
+				ElemType: SqlStatementOutput{}.Type(ctx),
+			},
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -11900,7 +12086,9 @@ func (o SqlDashboardOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"warehouse_id": types.StringType,
-			"widgets":      basetypes.ListType{ElemType: SqlDashboardWidgetOutput{}.Type(ctx)},
+			"widgets": basetypes.ListType{
+				ElemType: SqlDashboardWidgetOutput{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12250,11 +12438,13 @@ func (o SqlQueryOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o SqlQueryOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"endpoint_id":    types.StringType,
-			"output_link":    types.StringType,
-			"query_text":     types.StringType,
-			"sql_statements": basetypes.ListType{ElemType: SqlStatementOutput{}.Type(ctx)},
-			"warehouse_id":   types.StringType,
+			"endpoint_id": types.StringType,
+			"output_link": types.StringType,
+			"query_text":  types.StringType,
+			"sql_statements": basetypes.ListType{
+				ElemType: SqlStatementOutput{}.Type(ctx),
+			},
+			"warehouse_id": types.StringType,
 		},
 	}
 }
@@ -12390,10 +12580,12 @@ func (o SqlTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SqlTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert":        basetypes.ListType{ElemType: SqlTaskAlert{}.Type(ctx)},
-			"dashboard":    basetypes.ListType{ElemType: SqlTaskDashboard{}.Type(ctx)},
-			"file":         basetypes.ListType{ElemType: SqlTaskFile{}.Type(ctx)},
-			"parameters":   basetypes.MapType{ElemType: types.StringType},
+			"alert":     basetypes.ListType{ElemType: SqlTaskAlert{}.Type(ctx)},
+			"dashboard": basetypes.ListType{ElemType: SqlTaskDashboard{}.Type(ctx)},
+			"file":      basetypes.ListType{ElemType: SqlTaskFile{}.Type(ctx)},
+			"parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"query":        basetypes.ListType{ElemType: SqlTaskQuery{}.Type(ctx)},
 			"warehouse_id": types.StringType,
 		},
@@ -12577,7 +12769,9 @@ func (o SqlTaskAlert) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"alert_id":            types.StringType,
 			"pause_subscriptions": types.BoolType,
-			"subscriptions":       basetypes.ListType{ElemType: SqlTaskSubscription{}.Type(ctx)},
+			"subscriptions": basetypes.ListType{
+				ElemType: SqlTaskSubscription{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12660,7 +12854,9 @@ func (o SqlTaskDashboard) Type(ctx context.Context) attr.Type {
 			"custom_subject":      types.StringType,
 			"dashboard_id":        types.StringType,
 			"pause_subscriptions": types.BoolType,
-			"subscriptions":       basetypes.ListType{ElemType: SqlTaskSubscription{}.Type(ctx)},
+			"subscriptions": basetypes.ListType{
+				ElemType: SqlTaskSubscription{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -12956,10 +13152,14 @@ func (o SubmitRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SubmitRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list":   basetypes.ListType{ElemType: JobAccessControlRequest{}.Type(ctx)},
-			"budget_policy_id":      types.StringType,
-			"email_notifications":   basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
-			"environments":          basetypes.ListType{ElemType: JobEnvironment{}.Type(ctx)},
+			"access_control_list": basetypes.ListType{
+				ElemType: JobAccessControlRequest{}.Type(ctx),
+			},
+			"budget_policy_id":    types.StringType,
+			"email_notifications": basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
+			"environments": basetypes.ListType{
+				ElemType: JobEnvironment{}.Type(ctx),
+			},
 			"git_source":            basetypes.ListType{ElemType: GitSource{}.Type(ctx)},
 			"health":                basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
 			"idempotency_token":     types.StringType,
@@ -12967,7 +13167,9 @@ func (o SubmitRun) Type(ctx context.Context) attr.Type {
 			"queue":                 basetypes.ListType{ElemType: QueueSettings{}.Type(ctx)},
 			"run_as":                basetypes.ListType{ElemType: JobRunAs{}.Type(ctx)},
 			"run_name":              types.StringType,
-			"tasks":                 basetypes.ListType{ElemType: SubmitTask{}.Type(ctx)},
+			"tasks": basetypes.ListType{
+				ElemType: SubmitTask{}.Type(ctx),
+			},
 			"timeout_seconds":       types.Int64Type,
 			"webhook_notifications": basetypes.ListType{ElemType: WebhookNotifications{}.Type(ctx)},
 		},
@@ -13451,16 +13653,20 @@ func (o SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SubmitTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition_task":        basetypes.ListType{ElemType: ConditionTask{}.Type(ctx)},
-			"dbt_task":              basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
-			"depends_on":            basetypes.ListType{ElemType: TaskDependency{}.Type(ctx)},
-			"description":           types.StringType,
-			"email_notifications":   basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
-			"environment_key":       types.StringType,
-			"existing_cluster_id":   types.StringType,
-			"for_each_task":         basetypes.ListType{ElemType: ForEachTask{}.Type(ctx)},
-			"health":                basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
-			"library":               basetypes.ListType{ElemType: compute_tf.Library{}.Type(ctx)},
+			"condition_task": basetypes.ListType{ElemType: ConditionTask{}.Type(ctx)},
+			"dbt_task":       basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
+			"depends_on": basetypes.ListType{
+				ElemType: TaskDependency{}.Type(ctx),
+			},
+			"description":         types.StringType,
+			"email_notifications": basetypes.ListType{ElemType: JobEmailNotifications{}.Type(ctx)},
+			"environment_key":     types.StringType,
+			"existing_cluster_id": types.StringType,
+			"for_each_task":       basetypes.ListType{ElemType: ForEachTask{}.Type(ctx)},
+			"health":              basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
+			"library": basetypes.ListType{
+				ElemType: compute_tf.Library{}.Type(ctx),
+			},
 			"new_cluster":           basetypes.ListType{ElemType: compute_tf.ClusterSpec{}.Type(ctx)},
 			"notebook_task":         basetypes.ListType{ElemType: NotebookTask{}.Type(ctx)},
 			"notification_settings": basetypes.ListType{ElemType: TaskNotificationSettings{}.Type(ctx)},
@@ -14003,8 +14209,10 @@ func (o TableUpdateTriggerConfiguration) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"condition":                         types.StringType,
 			"min_time_between_triggers_seconds": types.Int64Type,
-			"table_names":                       basetypes.ListType{ElemType: types.StringType},
-			"wait_after_last_change_seconds":    types.Int64Type,
+			"table_names": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"wait_after_last_change_seconds": types.Int64Type,
 		},
 	}
 }
@@ -14237,9 +14445,11 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Task) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"condition_task":            basetypes.ListType{ElemType: ConditionTask{}.Type(ctx)},
-			"dbt_task":                  basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
-			"depends_on":                basetypes.ListType{ElemType: TaskDependency{}.Type(ctx)},
+			"condition_task": basetypes.ListType{ElemType: ConditionTask{}.Type(ctx)},
+			"dbt_task":       basetypes.ListType{ElemType: DbtTask{}.Type(ctx)},
+			"depends_on": basetypes.ListType{
+				ElemType: TaskDependency{}.Type(ctx),
+			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
 			"email_notifications":       basetypes.ListType{ElemType: TaskEmailNotifications{}.Type(ctx)},
@@ -14248,7 +14458,9 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			"for_each_task":             basetypes.ListType{ElemType: ForEachTask{}.Type(ctx)},
 			"health":                    basetypes.ListType{ElemType: JobsHealthRules{}.Type(ctx)},
 			"job_cluster_key":           types.StringType,
-			"library":                   basetypes.ListType{ElemType: compute_tf.Library{}.Type(ctx)},
+			"library": basetypes.ListType{
+				ElemType: compute_tf.Library{}.Type(ctx),
+			},
 			"max_retries":               types.Int64Type,
 			"min_retry_interval_millis": types.Int64Type,
 			"new_cluster":               basetypes.ListType{ElemType: compute_tf.ClusterSpec{}.Type(ctx)},
@@ -14864,12 +15076,22 @@ func (o TaskEmailNotifications) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o TaskEmailNotifications) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"no_alert_for_skipped_runs":              types.BoolType,
-			"on_duration_warning_threshold_exceeded": basetypes.ListType{ElemType: types.StringType},
-			"on_failure":                             basetypes.ListType{ElemType: types.StringType},
-			"on_start":                               basetypes.ListType{ElemType: types.StringType},
-			"on_streaming_backlog_exceeded":          basetypes.ListType{ElemType: types.StringType},
-			"on_success":                             basetypes.ListType{ElemType: types.StringType},
+			"no_alert_for_skipped_runs": types.BoolType,
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_failure": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_start": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_streaming_backlog_exceeded": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"on_success": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -15428,9 +15650,11 @@ func (o UpdateJob) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o UpdateJob) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"fields_to_remove": basetypes.ListType{ElemType: types.StringType},
-			"job_id":           types.Int64Type,
-			"new_settings":     basetypes.ListType{ElemType: JobSettings{}.Type(ctx)},
+			"fields_to_remove": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"job_id":       types.Int64Type,
+			"new_settings": basetypes.ListType{ElemType: JobSettings{}.Type(ctx)},
 		},
 	}
 }
@@ -15685,11 +15909,21 @@ func (o WebhookNotifications) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o WebhookNotifications) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"on_duration_warning_threshold_exceeded": basetypes.ListType{ElemType: Webhook{}.Type(ctx)},
-			"on_failure":                             basetypes.ListType{ElemType: Webhook{}.Type(ctx)},
-			"on_start":                               basetypes.ListType{ElemType: Webhook{}.Type(ctx)},
-			"on_streaming_backlog_exceeded":          basetypes.ListType{ElemType: Webhook{}.Type(ctx)},
-			"on_success":                             basetypes.ListType{ElemType: Webhook{}.Type(ctx)},
+			"on_duration_warning_threshold_exceeded": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_failure": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_start": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_streaming_backlog_exceeded": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
+			"on_success": basetypes.ListType{
+				ElemType: Webhook{}.Type(ctx),
+			},
 		},
 	}
 }

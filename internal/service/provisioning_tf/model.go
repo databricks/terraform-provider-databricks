@@ -550,7 +550,9 @@ func (o CreateCustomerManagedKeyRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"aws_key_info": basetypes.ListType{ElemType: CreateAwsKeyInfo{}.Type(ctx)},
 			"gcp_key_info": basetypes.ListType{ElemType: CreateGcpKeyInfo{}.Type(ctx)},
-			"use_cases":    basetypes.ListType{ElemType: types.StringType},
+			"use_cases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -739,12 +741,16 @@ func (o CreateNetworkRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CreateNetworkRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"gcp_network_info":   basetypes.ListType{ElemType: GcpNetworkInfo{}.Type(ctx)},
-			"network_name":       types.StringType,
-			"security_group_ids": basetypes.ListType{ElemType: types.StringType},
-			"subnet_ids":         basetypes.ListType{ElemType: types.StringType},
-			"vpc_endpoints":      basetypes.ListType{ElemType: NetworkVpcEndpoints{}.Type(ctx)},
-			"vpc_id":             types.StringType,
+			"gcp_network_info": basetypes.ListType{ElemType: GcpNetworkInfo{}.Type(ctx)},
+			"network_name":     types.StringType,
+			"security_group_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"subnet_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"vpc_endpoints": basetypes.ListType{ElemType: NetworkVpcEndpoints{}.Type(ctx)},
+			"vpc_id":        types.StringType,
 		},
 	}
 }
@@ -1176,23 +1182,25 @@ func (o CreateWorkspaceRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateWorkspaceRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_region":                 types.StringType,
-			"cloud":                      types.StringType,
-			"cloud_resource_container":   basetypes.ListType{ElemType: CloudResourceContainer{}.Type(ctx)},
-			"credentials_id":             types.StringType,
-			"custom_tags":                basetypes.MapType{ElemType: types.StringType},
-			"deployment_name":            types.StringType,
-			"gcp_managed_network_config": basetypes.ListType{ElemType: GcpManagedNetworkConfig{}.Type(ctx)},
-			"gke_config":                 basetypes.ListType{ElemType: GkeConfig{}.Type(ctx)},
-			"is_no_public_ip_enabled":    types.BoolType,
-			"location":                   types.StringType,
+			"aws_region":               types.StringType,
+			"cloud":                    types.StringType,
+			"cloud_resource_container": basetypes.ListType{ElemType: CloudResourceContainer{}.Type(ctx)},
+			"credentials_id":           types.StringType,
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"deployment_name":                          types.StringType,
+			"gcp_managed_network_config":               basetypes.ListType{ElemType: GcpManagedNetworkConfig{}.Type(ctx)},
+			"gke_config":                               basetypes.ListType{ElemType: GkeConfig{}.Type(ctx)},
+			"is_no_public_ip_enabled":                  types.BoolType,
+			"location":                                 types.StringType,
 			"managed_services_customer_managed_key_id": types.StringType,
-			"network_id":                      types.StringType,
-			"pricing_tier":                    types.StringType,
-			"private_access_settings_id":      types.StringType,
-			"storage_configuration_id":        types.StringType,
-			"storage_customer_managed_key_id": types.StringType,
-			"workspace_name":                  types.StringType,
+			"network_id":                               types.StringType,
+			"pricing_tier":                             types.StringType,
+			"private_access_settings_id":               types.StringType,
+			"storage_configuration_id":                 types.StringType,
+			"storage_customer_managed_key_id":          types.StringType,
+			"workspace_name":                           types.StringType,
 		},
 	}
 }
@@ -1492,7 +1500,9 @@ func (o CustomerManagedKey) Type(ctx context.Context) attr.Type {
 			"creation_time":           types.Int64Type,
 			"customer_managed_key_id": types.StringType,
 			"gcp_key_info":            basetypes.ListType{ElemType: GcpKeyInfo{}.Type(ctx)},
-			"use_cases":               basetypes.ListType{ElemType: types.StringType},
+			"use_cases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -2656,19 +2666,27 @@ func (o Network) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Network) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":         types.StringType,
-			"creation_time":      types.Int64Type,
-			"error_messages":     basetypes.ListType{ElemType: NetworkHealth{}.Type(ctx)},
-			"gcp_network_info":   basetypes.ListType{ElemType: GcpNetworkInfo{}.Type(ctx)},
-			"network_id":         types.StringType,
-			"network_name":       types.StringType,
-			"security_group_ids": basetypes.ListType{ElemType: types.StringType},
-			"subnet_ids":         basetypes.ListType{ElemType: types.StringType},
-			"vpc_endpoints":      basetypes.ListType{ElemType: NetworkVpcEndpoints{}.Type(ctx)},
-			"vpc_id":             types.StringType,
-			"vpc_status":         types.StringType,
-			"warning_messages":   basetypes.ListType{ElemType: NetworkWarning{}.Type(ctx)},
-			"workspace_id":       types.Int64Type,
+			"account_id":    types.StringType,
+			"creation_time": types.Int64Type,
+			"error_messages": basetypes.ListType{
+				ElemType: NetworkHealth{}.Type(ctx),
+			},
+			"gcp_network_info": basetypes.ListType{ElemType: GcpNetworkInfo{}.Type(ctx)},
+			"network_id":       types.StringType,
+			"network_name":     types.StringType,
+			"security_group_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"subnet_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"vpc_endpoints": basetypes.ListType{ElemType: NetworkVpcEndpoints{}.Type(ctx)},
+			"vpc_id":        types.StringType,
+			"vpc_status":    types.StringType,
+			"warning_messages": basetypes.ListType{
+				ElemType: NetworkWarning{}.Type(ctx),
+			},
+			"workspace_id": types.Int64Type,
 		},
 	}
 }
@@ -2925,8 +2943,12 @@ func (o NetworkVpcEndpoints) ToObjectValue(ctx context.Context) basetypes.Object
 func (o NetworkVpcEndpoints) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dataplane_relay": basetypes.ListType{ElemType: types.StringType},
-			"rest_api":        basetypes.ListType{ElemType: types.StringType},
+			"dataplane_relay": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"rest_api": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -3097,8 +3119,10 @@ func (o PrivateAccessSettings) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o PrivateAccessSettings) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":                   types.StringType,
-			"allowed_vpc_endpoint_ids":     basetypes.ListType{ElemType: types.StringType},
+			"account_id": types.StringType,
+			"allowed_vpc_endpoint_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"private_access_level":         types.StringType,
 			"private_access_settings_id":   types.StringType,
 			"private_access_settings_name": types.StringType,
@@ -3462,7 +3486,9 @@ func (o UpdateWorkspaceRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"aws_region":     types.StringType,
 			"credentials_id": types.StringType,
-			"custom_tags":    basetypes.MapType{ElemType: types.StringType},
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 			"managed_services_customer_managed_key_id": types.StringType,
 			"network_connectivity_config_id":           types.StringType,
 			"network_id":                               types.StringType,
@@ -3577,7 +3603,9 @@ func (o UpsertPrivateAccessSettingsRequest) ToObjectValue(ctx context.Context) b
 func (o UpsertPrivateAccessSettingsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"allowed_vpc_endpoint_ids":     basetypes.ListType{ElemType: types.StringType},
+			"allowed_vpc_endpoint_ids": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"private_access_level":         types.StringType,
 			"private_access_settings_id":   types.StringType,
 			"private_access_settings_name": types.StringType,
@@ -3896,30 +3924,32 @@ func (o Workspace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Workspace) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"account_id":                 types.StringType,
-			"aws_region":                 types.StringType,
-			"azure_workspace_info":       basetypes.ListType{ElemType: AzureWorkspaceInfo{}.Type(ctx)},
-			"cloud":                      types.StringType,
-			"cloud_resource_container":   basetypes.ListType{ElemType: CloudResourceContainer{}.Type(ctx)},
-			"creation_time":              types.Int64Type,
-			"credentials_id":             types.StringType,
-			"custom_tags":                basetypes.MapType{ElemType: types.StringType},
-			"deployment_name":            types.StringType,
-			"external_customer_info":     basetypes.ListType{ElemType: ExternalCustomerInfo{}.Type(ctx)},
-			"gcp_managed_network_config": basetypes.ListType{ElemType: GcpManagedNetworkConfig{}.Type(ctx)},
-			"gke_config":                 basetypes.ListType{ElemType: GkeConfig{}.Type(ctx)},
-			"is_no_public_ip_enabled":    types.BoolType,
-			"location":                   types.StringType,
+			"account_id":               types.StringType,
+			"aws_region":               types.StringType,
+			"azure_workspace_info":     basetypes.ListType{ElemType: AzureWorkspaceInfo{}.Type(ctx)},
+			"cloud":                    types.StringType,
+			"cloud_resource_container": basetypes.ListType{ElemType: CloudResourceContainer{}.Type(ctx)},
+			"creation_time":            types.Int64Type,
+			"credentials_id":           types.StringType,
+			"custom_tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"deployment_name":                          types.StringType,
+			"external_customer_info":                   basetypes.ListType{ElemType: ExternalCustomerInfo{}.Type(ctx)},
+			"gcp_managed_network_config":               basetypes.ListType{ElemType: GcpManagedNetworkConfig{}.Type(ctx)},
+			"gke_config":                               basetypes.ListType{ElemType: GkeConfig{}.Type(ctx)},
+			"is_no_public_ip_enabled":                  types.BoolType,
+			"location":                                 types.StringType,
 			"managed_services_customer_managed_key_id": types.StringType,
-			"network_id":                      types.StringType,
-			"pricing_tier":                    types.StringType,
-			"private_access_settings_id":      types.StringType,
-			"storage_configuration_id":        types.StringType,
-			"storage_customer_managed_key_id": types.StringType,
-			"workspace_id":                    types.Int64Type,
-			"workspace_name":                  types.StringType,
-			"workspace_status":                types.StringType,
-			"workspace_status_message":        types.StringType,
+			"network_id":                               types.StringType,
+			"pricing_tier":                             types.StringType,
+			"private_access_settings_id":               types.StringType,
+			"storage_configuration_id":                 types.StringType,
+			"storage_customer_managed_key_id":          types.StringType,
+			"workspace_id":                             types.Int64Type,
+			"workspace_name":                           types.StringType,
+			"workspace_status":                         types.StringType,
+			"workspace_status_message":                 types.StringType,
 		},
 	}
 }

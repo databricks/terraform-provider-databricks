@@ -187,7 +187,9 @@ func (o AibiDashboardEmbeddingApprovedDomains) ToObjectValue(ctx context.Context
 func (o AibiDashboardEmbeddingApprovedDomains) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"approved_domains": basetypes.ListType{ElemType: types.StringType},
+			"approved_domains": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -841,8 +843,10 @@ func (o ComplianceSecurityProfile) ToObjectValue(ctx context.Context) basetypes.
 func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"compliance_standards": basetypes.ListType{ElemType: types.StringType},
-			"is_enabled":           types.BoolType,
+			"compliance_standards": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"is_enabled": types.BoolType,
 		},
 	}
 }
@@ -1204,9 +1208,11 @@ func (o CreateIpAccessList) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateIpAccessList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_addresses": basetypes.ListType{ElemType: types.StringType},
-			"label":        types.StringType,
-			"list_type":    types.StringType,
+			"ip_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"label":     types.StringType,
+			"list_type": types.StringType,
 		},
 	}
 }
@@ -1777,8 +1783,10 @@ func (o CspEnablementAccount) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CspEnablementAccount) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"compliance_standards": basetypes.ListType{ElemType: types.StringType},
-			"is_enforced":          types.BoolType,
+			"compliance_standards": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"is_enforced": types.BoolType,
 		},
 	}
 }
@@ -3501,10 +3509,14 @@ func (o EgressNetworkPolicyInternetAccessPolicy) ToObjectValue(ctx context.Conte
 func (o EgressNetworkPolicyInternetAccessPolicy) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"allowed_internet_destinations": basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyInternetDestination{}.Type(ctx)},
-			"allowed_storage_destinations":  basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx)},
-			"log_only_mode":                 basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx)},
-			"restriction_mode":              types.StringType,
+			"allowed_internet_destinations": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyInternetDestination{}.Type(ctx),
+			},
+			"allowed_storage_destinations": basetypes.ListType{
+				ElemType: EgressNetworkPolicyInternetAccessPolicyStorageDestination{}.Type(ctx),
+			},
+			"log_only_mode":    basetypes.ListType{ElemType: EgressNetworkPolicyInternetAccessPolicyLogOnlyMode{}.Type(ctx)},
+			"restriction_mode": types.StringType,
 		},
 	}
 }
@@ -3685,7 +3697,9 @@ func (o EgressNetworkPolicyInternetAccessPolicyLogOnlyMode) Type(ctx context.Con
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_only_mode_type": types.StringType,
-			"workloads":          basetypes.ListType{ElemType: types.StringType},
+			"workloads": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -3776,7 +3790,9 @@ func (o EgressNetworkPolicyInternetAccessPolicyStorageDestination) ToObjectValue
 func (o EgressNetworkPolicyInternetAccessPolicyStorageDestination) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"allowed_paths":         basetypes.ListType{ElemType: types.StringType},
+			"allowed_paths": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"azure_container":       types.StringType,
 			"azure_dns_zone":        types.StringType,
 			"azure_storage_account": types.StringType,
@@ -3853,7 +3869,9 @@ func (o EmailConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EmailConfig) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"addresses": basetypes.ListType{ElemType: types.StringType},
+			"addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -4236,8 +4254,10 @@ func (o ExchangeToken) Type(ctx context.Context) attr.Type {
 			"credential":        types.StringType,
 			"credentialEolTime": types.Int64Type,
 			"ownerId":           types.Int64Type,
-			"scopes":            basetypes.ListType{ElemType: types.StringType},
-			"tokenType":         types.StringType,
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"tokenType": types.StringType,
 		},
 	}
 }
@@ -4317,8 +4337,12 @@ func (o ExchangeTokenRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"partitionId": basetypes.ListType{ElemType: PartitionId{}.Type(ctx)},
-			"scopes":      basetypes.ListType{ElemType: types.StringType},
-			"tokenType":   basetypes.ListType{ElemType: types.StringType},
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"tokenType": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -4440,7 +4464,9 @@ func (o ExchangeTokenResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o ExchangeTokenResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"values": basetypes.ListType{ElemType: ExchangeToken{}.Type(ctx)},
+			"values": basetypes.ListType{
+				ElemType: ExchangeToken{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5338,7 +5364,9 @@ func (o GetIpAccessListsResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o GetIpAccessListsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_lists": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
+			"ip_access_lists": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5723,7 +5751,9 @@ func (o GetTokenPermissionLevelsResponse) ToObjectValue(ctx context.Context) bas
 func (o GetTokenPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{ElemType: TokenPermissionsDescription{}.Type(ctx)},
+			"permission_levels": basetypes.ListType{
+				ElemType: TokenPermissionsDescription{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -5900,12 +5930,14 @@ func (o IpAccessListInfo) Type(ctx context.Context) attr.Type {
 			"created_at":    types.Int64Type,
 			"created_by":    types.Int64Type,
 			"enabled":       types.BoolType,
-			"ip_addresses":  basetypes.ListType{ElemType: types.StringType},
-			"label":         types.StringType,
-			"list_id":       types.StringType,
-			"list_type":     types.StringType,
-			"updated_at":    types.Int64Type,
-			"updated_by":    types.Int64Type,
+			"ip_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"label":      types.StringType,
+			"list_id":    types.StringType,
+			"list_type":  types.StringType,
+			"updated_at": types.Int64Type,
+			"updated_by": types.Int64Type,
 		},
 	}
 }
@@ -5975,7 +6007,9 @@ func (o ListIpAccessListResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o ListIpAccessListResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"ip_access_lists": basetypes.ListType{ElemType: IpAccessListInfo{}.Type(ctx)},
+			"ip_access_lists": basetypes.ListType{
+				ElemType: IpAccessListInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6048,7 +6082,9 @@ func (o ListNccAzurePrivateEndpointRulesResponse) ToObjectValue(ctx context.Cont
 func (o ListNccAzurePrivateEndpointRulesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"items":           basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)},
+			"items": basetypes.ListType{
+				ElemType: NccAzurePrivateEndpointRule{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -6165,7 +6201,9 @@ func (o ListNetworkConnectivityConfigurationsResponse) ToObjectValue(ctx context
 func (o ListNetworkConnectivityConfigurationsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"items":           basetypes.ListType{ElemType: NetworkConnectivityConfiguration{}.Type(ctx)},
+			"items": basetypes.ListType{
+				ElemType: NetworkConnectivityConfiguration{}.Type(ctx),
+			},
 			"next_page_token": types.StringType,
 		},
 	}
@@ -6286,7 +6324,9 @@ func (o ListNotificationDestinationsResponse) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"results":         basetypes.ListType{ElemType: ListNotificationDestinationsResult{}.Type(ctx)},
+			"results": basetypes.ListType{
+				ElemType: ListNotificationDestinationsResult{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6454,7 +6494,9 @@ func (o ListPublicTokensResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o ListPublicTokensResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_infos": basetypes.ListType{ElemType: PublicTokenInfo{}.Type(ctx)},
+			"token_infos": basetypes.ListType{
+				ElemType: PublicTokenInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6572,7 +6614,9 @@ func (o ListTokensResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o ListTokensResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"token_infos": basetypes.ListType{ElemType: TokenInfo{}.Type(ctx)},
+			"token_infos": basetypes.ListType{
+				ElemType: TokenInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -6691,7 +6735,9 @@ func (o NccAwsStableIpRule) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o NccAwsStableIpRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cidr_blocks": basetypes.ListType{ElemType: types.StringType},
+			"cidr_blocks": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -6865,9 +6911,13 @@ func (o NccAzureServiceEndpointRule) ToObjectValue(ctx context.Context) basetype
 func (o NccAzureServiceEndpointRule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"subnets":         basetypes.ListType{ElemType: types.StringType},
-			"target_region":   types.StringType,
-			"target_services": basetypes.ListType{ElemType: types.StringType},
+			"subnets": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"target_region": types.StringType,
+			"target_services": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -7178,7 +7228,9 @@ func (o NccEgressTargetRules) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o NccEgressTargetRules) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"azure_private_endpoint_rules": basetypes.ListType{ElemType: NccAzurePrivateEndpointRule{}.Type(ctx)},
+			"azure_private_endpoint_rules": basetypes.ListType{
+				ElemType: NccAzurePrivateEndpointRule{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -7733,9 +7785,11 @@ func (o ReplaceIpAccessList) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"enabled":           types.BoolType,
 			"ip_access_list_id": types.StringType,
-			"ip_addresses":      basetypes.ListType{ElemType: types.StringType},
-			"label":             types.StringType,
-			"list_type":         types.StringType,
+			"ip_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"label":     types.StringType,
+			"list_type": types.StringType,
 		},
 	}
 }
@@ -8238,7 +8292,9 @@ func (o TokenAccessControlResponse) ToObjectValue(ctx context.Context) basetypes
 func (o TokenAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions":        basetypes.ListType{ElemType: TokenPermission{}.Type(ctx)},
+			"all_permissions": basetypes.ListType{
+				ElemType: TokenPermission{}.Type(ctx),
+			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -8393,9 +8449,11 @@ func (o TokenPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o TokenPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited":             types.BoolType,
-			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
-			"permission_level":      types.StringType,
+			"inherited": types.BoolType,
+			"inherited_from_object": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"permission_level": types.StringType,
 		},
 	}
 }
@@ -8470,9 +8528,11 @@ func (o TokenPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o TokenPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: TokenAccessControlResponse{}.Type(ctx)},
-			"object_id":           types.StringType,
-			"object_type":         types.StringType,
+			"access_control_list": basetypes.ListType{
+				ElemType: TokenAccessControlResponse{}.Type(ctx),
+			},
+			"object_id":   types.StringType,
+			"object_type": types.StringType,
 		},
 	}
 }
@@ -8586,7 +8646,9 @@ func (o TokenPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o TokenPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{ElemType: TokenAccessControlRequest{}.Type(ctx)},
+			"access_control_list": basetypes.ListType{
+				ElemType: TokenAccessControlRequest{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -9597,9 +9659,11 @@ func (o UpdateIpAccessList) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"enabled":           types.BoolType,
 			"ip_access_list_id": types.StringType,
-			"ip_addresses":      basetypes.ListType{ElemType: types.StringType},
-			"label":             types.StringType,
-			"list_type":         types.StringType,
+			"ip_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"label":     types.StringType,
+			"list_type": types.StringType,
 		},
 	}
 }

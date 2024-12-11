@@ -635,7 +635,9 @@ func (o GetRecipientSharePermissionsResponse) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"permissions_out": basetypes.ListType{ElemType: ShareToPrivilegeAssignment{}.Type(ctx)},
+			"permissions_out": basetypes.ListType{
+				ElemType: ShareToPrivilegeAssignment{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -752,7 +754,9 @@ func (o IpAccessList) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o IpAccessList) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"allowed_ip_addresses": basetypes.ListType{ElemType: types.StringType},
+			"allowed_ip_addresses": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -828,7 +832,9 @@ func (o ListProviderSharesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"shares":          basetypes.ListType{ElemType: ProviderShare{}.Type(ctx)},
+			"shares": basetypes.ListType{
+				ElemType: ProviderShare{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -964,7 +970,9 @@ func (o ListProvidersResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"providers":       basetypes.ListType{ElemType: ProviderInfo{}.Type(ctx)},
+			"providers": basetypes.ListType{
+				ElemType: ProviderInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1100,7 +1108,9 @@ func (o ListRecipientsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"recipients":      basetypes.ListType{ElemType: RecipientInfo{}.Type(ctx)},
+			"recipients": basetypes.ListType{
+				ElemType: RecipientInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1235,7 +1245,9 @@ func (o ListSharesResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
-			"shares":          basetypes.ListType{ElemType: ShareInfo{}.Type(ctx)},
+			"shares": basetypes.ListType{
+				ElemType: ShareInfo{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1305,7 +1317,9 @@ func (o Partition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Partition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"value": basetypes.ListType{ElemType: PartitionValue{}.Type(ctx)},
+			"value": basetypes.ListType{
+				ElemType: PartitionValue{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1375,7 +1389,9 @@ func (o PartitionSpecificationPartition) ToObjectValue(ctx context.Context) base
 func (o PartitionSpecificationPartition) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"value": basetypes.ListType{ElemType: PartitionValue{}.Type(ctx)},
+			"value": basetypes.ListType{
+				ElemType: PartitionValue{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -1506,8 +1522,10 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"principal":  types.StringType,
-			"privileges": basetypes.ListType{ElemType: types.StringType},
+			"principal": types.StringType,
+			"privileges": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -1825,9 +1843,11 @@ func (o RecipientInfo) Type(ctx context.Context) attr.Type {
 			"properties_kvpairs":                 basetypes.ListType{ElemType: SecurablePropertiesKvPairs{}.Type(ctx)},
 			"region":                             types.StringType,
 			"sharing_code":                       types.StringType,
-			"tokens":                             basetypes.ListType{ElemType: RecipientTokenInfo{}.Type(ctx)},
-			"updated_at":                         types.Int64Type,
-			"updated_by":                         types.StringType,
+			"tokens": basetypes.ListType{
+				ElemType: RecipientTokenInfo{}.Type(ctx),
+			},
+			"updated_at": types.Int64Type,
+			"updated_by": types.StringType,
 		},
 	}
 }
@@ -2214,7 +2234,9 @@ func (o SecurablePropertiesKvPairs) ToObjectValue(ctx context.Context) basetypes
 func (o SecurablePropertiesKvPairs) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"properties": basetypes.MapType{ElemType: types.StringType},
+			"properties": basetypes.MapType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -2311,11 +2333,13 @@ func (o ShareInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ShareInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":          types.StringType,
-			"created_at":       types.Int64Type,
-			"created_by":       types.StringType,
-			"name":             types.StringType,
-			"object":           basetypes.ListType{ElemType: SharedDataObject{}.Type(ctx)},
+			"comment":    types.StringType,
+			"created_at": types.Int64Type,
+			"created_by": types.StringType,
+			"name":       types.StringType,
+			"object": basetypes.ListType{
+				ElemType: SharedDataObject{}.Type(ctx),
+			},
 			"owner":            types.StringType,
 			"storage_location": types.StringType,
 			"storage_root":     types.StringType,
@@ -2452,8 +2476,10 @@ func (o ShareToPrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes
 func (o ShareToPrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"privilege_assignments": basetypes.ListType{ElemType: PrivilegeAssignment{}.Type(ctx)},
-			"share_name":            types.StringType,
+			"privilege_assignments": basetypes.ListType{
+				ElemType: PrivilegeAssignment{}.Type(ctx),
+			},
+			"share_name": types.StringType,
 		},
 	}
 }
@@ -2622,13 +2648,15 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 			"history_data_sharing_status":           types.StringType,
 			"effective_history_data_sharing_status": types.StringType,
 			"name":                                  types.StringType,
-			"partition":                             basetypes.ListType{ElemType: Partition{}.Type(ctx)},
-			"shared_as":                             types.StringType,
-			"effective_shared_as":                   types.StringType,
-			"start_version":                         types.Int64Type,
-			"effective_start_version":               types.Int64Type,
-			"status":                                types.StringType,
-			"string_shared_as":                      types.StringType,
+			"partition": basetypes.ListType{
+				ElemType: Partition{}.Type(ctx),
+			},
+			"shared_as":               types.StringType,
+			"effective_shared_as":     types.StringType,
+			"start_version":           types.Int64Type,
+			"effective_start_version": types.Int64Type,
+			"status":                  types.StringType,
+			"string_shared_as":        types.StringType,
 		},
 	}
 }
@@ -3047,7 +3075,9 @@ func (o UpdateShare) Type(ctx context.Context) attr.Type {
 			"new_name":     types.StringType,
 			"owner":        types.StringType,
 			"storage_root": types.StringType,
-			"updates":      basetypes.ListType{ElemType: SharedDataObjectUpdate{}.Type(ctx)},
+			"updates": basetypes.ListType{
+				ElemType: SharedDataObjectUpdate{}.Type(ctx),
+			},
 		},
 	}
 }
@@ -3134,7 +3164,9 @@ func (o UpdateSharePermissions) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateSharePermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"changes":     basetypes.ListType{ElemType: catalog_tf.PermissionsChange{}.Type(ctx)},
+			"changes": basetypes.ListType{
+				ElemType: catalog_tf.PermissionsChange{}.Type(ctx),
+			},
 			"max_results": types.Int64Type,
 			"name":        types.StringType,
 			"page_token":  types.StringType,

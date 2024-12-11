@@ -145,6 +145,7 @@ func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataReque
 
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, ShareInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureForSdkV2Migration()
 		c.SetRequired("name")
 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name") // ForceNew

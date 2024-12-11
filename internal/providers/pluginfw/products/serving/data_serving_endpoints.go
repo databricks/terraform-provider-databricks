@@ -27,7 +27,7 @@ type ServingEndpointsDataSource struct {
 }
 
 type ServingEndpointsData struct {
-	Endpoints types.List `tfsdk:"endpoints" tf:"optional,computed"`
+	Endpoints types.List `tfsdk:"endpoints" tf:"readonly"`
 }
 
 func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

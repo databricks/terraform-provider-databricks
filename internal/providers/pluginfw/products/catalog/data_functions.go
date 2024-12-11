@@ -35,7 +35,7 @@ type FunctionsData struct {
 	CatalogName   types.String `tfsdk:"catalog_name"`
 	SchemaName    types.String `tfsdk:"schema_name"`
 	IncludeBrowse types.Bool   `tfsdk:"include_browse" tf:"optional"`
-	Functions     types.List   `tfsdk:"functions" tf:"optional,computed"`
+	Functions     types.List   `tfsdk:"functions" tf:"readonly"`
 }
 
 func (FunctionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

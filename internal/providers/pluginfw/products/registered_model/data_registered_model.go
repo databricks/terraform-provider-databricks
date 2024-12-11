@@ -37,7 +37,7 @@ type RegisteredModelData struct {
 	FullName       types.String `tfsdk:"full_name"`
 	IncludeAliases types.Bool   `tfsdk:"include_aliases" tf:"optional"`
 	IncludeBrowse  types.Bool   `tfsdk:"include_browse" tf:"optional"`
-	ModelInfo      types.List   `tfsdk:"model_info" tf:"optional,computed"`
+	ModelInfo      types.List   `tfsdk:"model_info" tf:"readonly"`
 }
 
 func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

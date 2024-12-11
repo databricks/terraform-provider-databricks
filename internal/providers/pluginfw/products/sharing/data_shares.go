@@ -18,7 +18,7 @@ import (
 const dataSourceNameShares = "shares"
 
 type SharesList struct {
-	Shares types.List `tfsdk:"shares" tf:"computed,optional,slice_set"`
+	Shares types.List `tfsdk:"shares" tf:"readonly,slice_set"`
 }
 
 func (SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

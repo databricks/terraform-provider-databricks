@@ -33,7 +33,7 @@ type VolumesDataSource struct {
 type VolumesList struct {
 	CatalogName types.String `tfsdk:"catalog_name"`
 	SchemaName  types.String `tfsdk:"schema_name"`
-	Ids         types.List   `tfsdk:"ids" tf:"optional,computed"`
+	Ids         types.List   `tfsdk:"ids" tf:"readonly"`
 }
 
 func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

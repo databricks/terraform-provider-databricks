@@ -36,7 +36,7 @@ type ClusterDataSource struct {
 type ClusterInfo struct {
 	ClusterId   types.String `tfsdk:"cluster_id" tf:"optional,computed"`
 	Name        types.String `tfsdk:"cluster_name" tf:"optional,computed"`
-	ClusterInfo types.List   `tfsdk:"cluster_info" tf:"optional,computed"`
+	ClusterInfo types.List   `tfsdk:"cluster_info" tf:"readonly"`
 }
 
 func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

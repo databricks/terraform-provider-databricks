@@ -323,6 +323,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
@@ -470,6 +472,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.notebook_task.base_parameters", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path",
@@ -491,6 +495,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -579,8 +585,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 					if task.DbtTask.Source == "WORKSPACE" {
 						directory := task.DbtTask.ProjectDirectory
-						if strings.HasPrefix(directory, "/Repos") {
-							ic.emitRepoByPath(directory)
+						if ic.isInRepoOrGitFolder(directory, true) {
+							ic.emitRepoOrGitFolder(directory, true)
 						} else {
 							// Traverse the dbt project directory and emit all objects found in it
 							nbAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1456,40 +1462,51 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nameNormalizationRegex.ReplaceAllString(name[7:], "_") + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
-			reposAPI := repos.NewReposAPI(ic.Context, ic.Client)
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			repoDir, err := notebooksAPI.Read(r.Value)
+			repoDir, err := ic.workspaceClient.Workspace.GetStatusByPath(ic.Context, r.Value)
 			if err != nil {
 				return err
 			}
-			repo, err := reposAPI.Read(fmt.Sprintf("%d", repoDir.ObjectID))
-			if err != nil {
-				return err
+			if repoDir.ObjectType != sdk_workspace.ObjectTypeRepo {
+				return fmt.Errorf("object %s is not a repo", r.Value)
 			}
-			r.ID = fmt.Sprintf("%d", repo.ID)
+			if repoDir.ResourceId != "" {
+				r.ID = repoDir.ResourceId
+			} else {
+				r.ID = strconv.FormatInt(repoDir.ObjectId, 10)
+			}
 			return nil
 		},
 		List: func(ic *importContext) error {
-			objList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
-			if err != nil {
-				return err
-			}
-			for offset, repo := range objList {
+			it := ic.workspaceClient.Repos.List(ic.Context, sdk_workspace.ListReposRequest{PathPrefix: "/Workspace"})
+			i := 1
+			for it.HasNext(ic.Context) {
+				repo, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
-						ID:       fmt.Sprintf("%d", repo.ID),
+						ID:       strconv.FormatInt(repo.Id, 10),
 					})
 				} else {
 					log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", repo.Path)
 					ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", repo.Path))
 				}
-				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
+				if i%50 == 0 {
+					log.Printf("[INFO] Scanned %d repos", i)
+				}
+				i++
 			}
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.emitUserOrServicePrincipalForPath(r.Data.Get("path").(string), "/Repos")
+			path := maybeStripWorkspacePrefix(r.Data.Get("path").(string))
+			if strings.HasPrefix(path, "/Repos") {
+				ic.emitUserOrServicePrincipalForPath(path, "/Repos")
+			} else if strings.HasPrefix(path, "/Users") {
+				ic.emitUserOrServicePrincipalForPath(path, "/Users")
+			}
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/repos/%s", r.ID),
 				"repo_"+ic.Importables["databricks_repo"].Name(ic, r.Data))
 			return nil
@@ -1518,11 +1535,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldIgnore
 		},
-
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "repos",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "repos",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_user", Match: "home",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},
@@ -2235,6 +2255,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.file.path", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},
@@ -3436,8 +3458,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			path := r.Data.Get("path").(string)
-			if strings.HasPrefix(path, "/Repos") {
-				ic.emitRepoByPath(path)
+			if ic.isInRepoOrGitFolder(path, false) {
+				ic.emitRepoOrGitFolder(path, false)
 				return nil
 			}
 			parts := strings.Split(path, "/")
@@ -3459,10 +3481,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				"dashboard_"+ic.Importables["databricks_dashboard"].Name(ic, r.Data))
 			parentPath := r.Data.Get("parent_path").(string)
 			if parentPath != "" && parentPath != "/" {
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       parentPath,
-				})
+				ic.emitDirectoryOrRepo(parentPath)
 			}
 			warehouseId := r.Data.Get("warehouse_id").(string)
 			if warehouseId != "" {
@@ -3478,7 +3497,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "dashboard_change_detected" || shouldOmitMd5Field(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			return strings.HasPrefix(r.Data.Get("path").(string), "/Repos") || strings.HasPrefix(r.Data.Get("parent_path").(string), "/Repos")
+			return ic.isInRepoOrGitFolder(r.Data.Get("path").(string), false) || ic.isInRepoOrGitFolder(r.Data.Get("parent_path").(string), true)
 		},
 		Depends: []reference{
 			{Path: "file_path", File: true},

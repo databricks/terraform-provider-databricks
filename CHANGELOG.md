@@ -1,5 +1,55 @@
 # Version changelog
 
+## [Release] Release v1.60.0
+
+### New Features and Improvements
+
+ * Add `databricks_credential` resource ([#4219](https://github.com/databricks/terraform-provider-databricks/pull/4219)).
+ * Allow to filter jobs by name in `databricks_jobs` data source ([#3395](https://github.com/databricks/terraform-provider-databricks/pull/3395)).
+
+
+### Bug Fixes
+
+ * Add client side validation for `volume_type` ([#4289](https://github.com/databricks/terraform-provider-databricks/pull/4289)).
+ * Forced send `auto_stop_mins` for `databricks_sql_endpoint` resource ([#4265](https://github.com/databricks/terraform-provider-databricks/pull/4265)).
+ * Handle deleted cluster gracefully ([#4280](https://github.com/databricks/terraform-provider-databricks/pull/4280)).
+ * Remove config drift if Azure SP is used in `databricks_credential` ([#4294](https://github.com/databricks/terraform-provider-databricks/pull/4294)).
+ * Use correct domain for Azure Gov and China ([#4274](https://github.com/databricks/terraform-provider-databricks/pull/4274)).
+ * don't start cluster if `warehouse_id` is specified for `databricks_sql_table` resource ([#4259](https://github.com/databricks/terraform-provider-databricks/pull/4259)).
+
+
+### Documentation
+
+ * Document import support for `databricks_notification_destination` ([#4276](https://github.com/databricks/terraform-provider-databricks/pull/4276)).
+ * Update documentation for importing some MWS resources ([#4281](https://github.com/databricks/terraform-provider-databricks/pull/4281)).
+ * Update mws_log_delivery.md to add time_sleep ([#4258](https://github.com/databricks/terraform-provider-databricks/pull/4258)).
+ * Add missing H2 header in `mws_network_connectivity_configs.md` and optimization in `data_mws_network_connectivity_configs` ([#4256](https://github.com/databricks/terraform-provider-databricks/pull/4256)).
+
+
+### Internal Changes
+
+ * Add ConvertToAttribute() to convert blocks in a resource/data source schema to attributes ([#4284](https://github.com/databricks/terraform-provider-databricks/pull/4284)).
+ * Bump Go SDK and generate TF structs ([#4300](https://github.com/databricks/terraform-provider-databricks/pull/4300)).
+ * Generate effective fields based of isServiceProposedIfEmpty ([#4282](https://github.com/databricks/terraform-provider-databricks/pull/4282)).
+ * Ignore Databricks Go SDK updates by dependabot ([#4253](https://github.com/databricks/terraform-provider-databricks/pull/4253)).
+ * Move TFSDK model template to universe ([#4303](https://github.com/databricks/terraform-provider-databricks/pull/4303)).
+ * Remove unused configuration from blocks ([#4283](https://github.com/databricks/terraform-provider-databricks/pull/4283)).
+ * Use isServiceProposedIfEmpty annotations for effective fields ([#4270](https://github.com/databricks/terraform-provider-databricks/pull/4270)).
+ * Use tf_v1 genkit mode ([#4278](https://github.com/databricks/terraform-provider-databricks/pull/4278)).
+
+
+### Dependency Updates
+
+ * Bump github.com/stretchr/testify from 1.9.0 to 1.10.0 ([#4269](https://github.com/databricks/terraform-provider-databricks/pull/4269)).
+ * Bump github.com/zclconf/go-cty from 1.15.0 to 1.15.1 ([#4273](https://github.com/databricks/terraform-provider-databricks/pull/4273)).
+
+
+### Exporter
+
+ * Fix generation of references to users for user directories ([#4297](https://github.com/databricks/terraform-provider-databricks/pull/4297)).
+ * better handling of online tables/vsis in listing ([#4288](https://github.com/databricks/terraform-provider-databricks/pull/4288)).
+
+
 ## [Release] Release v1.59.0
 
 ### New Features and Improvements

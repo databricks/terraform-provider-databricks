@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -1353,13 +1354,85 @@ func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
 	o.Values = types.ListValueMust(t, vs)
 }
 
+type PartitionSpecificationPartition struct {
+	// An array of partition values.
+	Values types.List `tfsdk:"value" tf:"optional"`
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionSpecificationPartition) {
+}
+
+func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringRead(existingState PartitionSpecificationPartition) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PartitionSpecificationPartition.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PartitionSpecificationPartition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"value": reflect.TypeOf(PartitionValue{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionSpecificationPartition
+// only implements ToObjectValue() and Type().
+func (o PartitionSpecificationPartition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"value": o.Values,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PartitionSpecificationPartition) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"value": basetypes.ListType{
+				ElemType: PartitionValue{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetValues returns the value of the Values field in PartitionSpecificationPartition as
+// a slice of PartitionValue values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PartitionSpecificationPartition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
+	if o.Values.IsNull() || o.Values.IsUnknown() {
+		return nil, false
+	}
+	var v []PartitionValue
+	d := o.Values.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetValues sets the value of the Values field in PartitionSpecificationPartition.
+func (o *PartitionSpecificationPartition) SetValues(ctx context.Context, v []PartitionValue) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["value"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Values = types.ListValueMust(t, vs)
+}
+
 type PartitionValue struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The operator to apply for the value.
 	Op types.String `tfsdk:"op" tf:"optional"`
 	// The key of a Delta Sharing recipient's property. For example
-	// `databricks-account-id`. When this field is set, field `value` can not be
+	// "databricks-account-id". When this field is set, field `value` can not be
 	// set.
 	RecipientPropertyKey types.String `tfsdk:"recipient_property_key" tf:"optional"`
 	// The value of the partition column. When this value is not set, it means
@@ -2558,6 +2631,99 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 			"start_version":    types.Int64Type,
 			"status":           types.StringType,
 			"string_shared_as": types.StringType,
+		},
+	}
+}
+
+// GetPartitions returns the value of the Partitions field in SharedDataObject as
+// a slice of Partition values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SharedDataObject) GetPartitions(ctx context.Context) ([]Partition, bool) {
+	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
+		return nil, false
+	}
+	var v []Partition
+	d := o.Partitions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPartitions sets the value of the Partitions field in SharedDataObject.
+func (o *SharedDataObject) SetPartitions(ctx context.Context, v []Partition) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["partition"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Partitions = types.ListValueMust(t, vs)
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SharedDataObject.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SharedDataObject) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"partition": reflect.TypeOf(Partition{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SharedDataObject
+// only implements ToObjectValue() and Type().
+func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"added_at":                              o.AddedAt,
+			"added_by":                              o.AddedBy,
+			"cdf_enabled":                           o.CdfEnabled,
+			"effective_cdf_enabled":                 o.EffectiveCdfEnabled,
+			"comment":                               o.Comment,
+			"content":                               o.Content,
+			"data_object_type":                      o.DataObjectType,
+			"history_data_sharing_status":           o.HistoryDataSharingStatus,
+			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus,
+			"name":                                  o.Name,
+			"partition":                             o.Partitions,
+			"shared_as":                             o.SharedAs,
+			"effective_shared_as":                   o.EffectiveSharedAs,
+			"start_version":                         o.StartVersion,
+			"effective_start_version":               o.EffectiveStartVersion,
+			"status":                                o.Status,
+			"string_shared_as":                      o.StringSharedAs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SharedDataObject) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"added_at":                              types.Int64Type,
+			"added_by":                              types.StringType,
+			"cdf_enabled":                           types.BoolType,
+			"effective_cdf_enabled":                 types.BoolType,
+			"comment":                               types.StringType,
+			"content":                               types.StringType,
+			"data_object_type":                      types.StringType,
+			"history_data_sharing_status":           types.StringType,
+			"effective_history_data_sharing_status": types.StringType,
+			"name":                                  types.StringType,
+			"partition": basetypes.ListType{
+				ElemType: Partition{}.Type(ctx),
+			},
+			"shared_as":               types.StringType,
+			"effective_shared_as":     types.StringType,
+			"start_version":           types.Int64Type,
+			"effective_start_version": types.Int64Type,
+			"status":                  types.StringType,
+			"string_shared_as":        types.StringType,
 		},
 	}
 }

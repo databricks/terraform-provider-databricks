@@ -22,18 +22,18 @@ func checkCurrentConfig(t *testing.T, cloudType string, isAccount string) func(s
 }
 
 func TestAccDataCurrentConfig(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isAws(t) {
+	LoadWorkspaceEnv(t)
+	if IsAws(t) {
 		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "aws", "false"),
 		})
-	} else if isAzure(t) {
+	} else if IsAzure(t) {
 		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "azure", "false"),
 		})
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		WorkspaceLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "gcp", "false"),
@@ -42,18 +42,18 @@ func TestAccDataCurrentConfig(t *testing.T) {
 }
 
 func TestMwsAccDataCurrentConfig(t *testing.T) {
-	loadAccountEnv(t)
-	if isAws(t) {
+	LoadAccountEnv(t)
+	if IsAws(t) {
 		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "aws", "true"),
 		})
-	} else if isAzure(t) {
+	} else if IsAzure(t) {
 		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "azure", "true"),
 		})
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		AccountLevel(t, Step{
 			Template: `data "databricks_current_config" "this" {}`,
 			Check:    checkCurrentConfig(t, "gcp", "true"),

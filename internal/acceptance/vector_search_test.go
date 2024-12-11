@@ -8,8 +8,8 @@ import (
 )
 
 func TestUcAccVectorSearchEndpoint(t *testing.T) {
-	loadUcwsEnv(t)
-	if isGcp(t) {
+	LoadUcwsEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 

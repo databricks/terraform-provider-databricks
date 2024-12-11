@@ -8,8 +8,8 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 
@@ -86,8 +86,8 @@ func TestAccModelServing(t *testing.T) {
 }
 
 func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 
@@ -161,8 +161,8 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 }
 
 func TestAccModelServingExternalModel(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 

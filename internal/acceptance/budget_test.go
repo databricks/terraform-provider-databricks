@@ -41,8 +41,8 @@ var (
 )
 
 func TestMwsAccBudgetCreate(t *testing.T) {
-	loadAccountEnv(t)
-	if isGcp(t) {
+	LoadAccountEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 	AccountLevel(t, Step{
@@ -51,8 +51,8 @@ func TestMwsAccBudgetCreate(t *testing.T) {
 }
 
 func TestMwsAccBudgetUpdate(t *testing.T) {
-	loadAccountEnv(t)
-	if isGcp(t) {
+	LoadAccountEnv(t)
+	if IsGcp(t) {
 		skipf(t)("not available on GCP")
 	}
 	AccountLevel(t, Step{

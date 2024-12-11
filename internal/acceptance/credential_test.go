@@ -5,8 +5,8 @@ import (
 )
 
 func TestUcAccCredential(t *testing.T) {
-	loadUcwsEnv(t)
-	if isAws(t) {
+	LoadUcwsEnv(t)
+	if IsAws(t) {
 		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_credential" "external" {

@@ -37,22 +37,22 @@ func init() {
 }
 
 func WorkspaceLevel(t *testing.T, steps ...Step) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	run(t, steps)
 }
 
 func AccountLevel(t *testing.T, steps ...Step) {
-	loadAccountEnv(t)
+	LoadAccountEnv(t)
 	run(t, steps)
 }
 
 func UnityWorkspaceLevel(t *testing.T, steps ...Step) {
-	loadUcwsEnv(t)
+	LoadUcwsEnv(t)
 	run(t, steps)
 }
 
 func UnityAccountLevel(t *testing.T, steps ...Step) {
-	loadUcacctEnv(t)
+	LoadUcacctEnv(t)
 	run(t, steps)
 }
 
@@ -359,21 +359,21 @@ func setDebugLogger() {
 	}
 }
 
-func loadWorkspaceEnv(t *testing.T) {
+func LoadWorkspaceEnv(t *testing.T) {
 	initTest(t, "workspace")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
 		skipf(t)("Skipping workspace test on account level")
 	}
 }
 
-func loadAccountEnv(t *testing.T) {
+func LoadAccountEnv(t *testing.T) {
 	initTest(t, "account")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
 		skipf(t)("Skipping account test on workspace level")
 	}
 }
 
-func loadUcwsEnv(t *testing.T) {
+func LoadUcwsEnv(t *testing.T) {
 	initTest(t, "ucws")
 	if os.Getenv("TEST_METASTORE_ID") == "" {
 		skipf(t)("Skipping non-Unity Catalog test")
@@ -383,7 +383,7 @@ func loadUcwsEnv(t *testing.T) {
 	}
 }
 
-func loadUcacctEnv(t *testing.T) {
+func LoadUcacctEnv(t *testing.T) {
 	initTest(t, "ucacct")
 	if os.Getenv("TEST_METASTORE_ID") == "" {
 		skipf(t)("Skipping non-Unity Catalog test")
@@ -393,17 +393,17 @@ func loadUcacctEnv(t *testing.T) {
 	}
 }
 
-func isAws(t *testing.T) bool {
+func IsAws(t *testing.T) bool {
 	awsCloudEnvs := []string{"MWS", "aws", "ucws", "ucacct"}
 	return isCloudEnvInList(t, awsCloudEnvs)
 }
 
-func isAzure(t *testing.T) bool {
+func IsAzure(t *testing.T) bool {
 	azureCloudEnvs := []string{"azure", "azure-ucacct"}
 	return isCloudEnvInList(t, azureCloudEnvs)
 }
 
-func isGcp(t *testing.T) bool {
+func IsGcp(t *testing.T) bool {
 	gcpCloudEnvs := []string{"gcp-accounts", "gcp-ucacct", "gcp-ucws", "gcp"}
 	return isCloudEnvInList(t, gcpCloudEnvs)
 }

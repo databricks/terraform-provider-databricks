@@ -68,7 +68,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 		skipCreation:    true,
 	}
 	return func(config *makePermissionsConfig) {
-		if isGcp(t) {
+		if IsGcp(t) {
 			config.user = append(config.user, settings)
 		} else {
 			config.servicePrincipal = append(config.servicePrincipal, settings)
@@ -77,7 +77,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 }
 
 func currentPrincipalType(t *testing.T) string {
-	if isGcp(t) {
+	if IsGcp(t) {
 		return "user"
 	}
 	return "service_principal"
@@ -833,7 +833,7 @@ func TestAccPermissions_RegisteredModel_Root(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
+	if IsGcp(t) {
 		skipf(t)("Serving endpoints are not supported on GCP")
 	}
 	endpointTemplate := `

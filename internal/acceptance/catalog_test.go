@@ -6,7 +6,7 @@ import (
 )
 
 func TestUcAccCatalog(t *testing.T) {
-	loadUcwsEnv(t)
+	LoadUcwsEnv(t)
 	UnityWorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {
@@ -54,7 +54,7 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 }
 
 func TestUcAccCatalogUpdate(t *testing.T) {
-	loadUcwsEnv(t)
+	LoadUcwsEnv(t)
 	UnityWorkspaceLevel(t, Step{
 		Template: fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {

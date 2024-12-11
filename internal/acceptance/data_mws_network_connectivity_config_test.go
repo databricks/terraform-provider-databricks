@@ -8,14 +8,14 @@ import (
 )
 
 func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
 		skipf(t)("GCP not supported")
 	}
 	var sourceRegion string
-	if isAzure(t) {
+	if IsAzure(t) {
 		sourceRegion = "eastus2"
-	} else if isAws(t) {
+	} else if IsAws(t) {
 		sourceRegion = "us-east-2"
 	}
 	AccountLevel(t,

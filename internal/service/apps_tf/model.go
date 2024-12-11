@@ -24,11 +24,11 @@ import (
 type App struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
-	ActiveDeployment types.List `tfsdk:"active_deployment" tf:"optional,object"`
+	ActiveDeployment types.Object `tfsdk:"active_deployment" tf:"optional,object"`
 
-	AppStatus types.List `tfsdk:"app_status" tf:"optional,object"`
+	AppStatus types.Object `tfsdk:"app_status" tf:"optional,object"`
 
-	ComputeStatus types.List `tfsdk:"compute_status" tf:"optional,object"`
+	ComputeStatus types.Object `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
 	// The email of the user that created the app.
@@ -44,7 +44,7 @@ type App struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
-	PendingDeployment types.List `tfsdk:"pending_deployment" tf:"optional,object"`
+	PendingDeployment types.Object `tfsdk:"pending_deployment" tf:"optional,object"`
 	// Resources for the app.
 	Resources types.List `tfsdk:"resources" tf:"optional"`
 
@@ -114,26 +114,16 @@ func (o App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o App) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"active_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
-			},
-			"app_status": basetypes.ListType{
-				ElemType: ApplicationStatus{}.Type(ctx),
-			},
-			"compute_status": basetypes.ListType{
-				ElemType: ComputeStatus{}.Type(ctx),
-			},
-			"create_time":              types.StringType,
-			"creator":                  types.StringType,
-			"default_source_code_path": types.StringType,
-			"description":              types.StringType,
-			"name":                     types.StringType,
-			"pending_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
-			},
-			"resources": basetypes.ListType{
-				ElemType: AppResource{}.Type(ctx),
-			},
+			"active_deployment":           AppDeployment{}.Type(ctx),
+			"app_status":                  ApplicationStatus{}.Type(ctx),
+			"compute_status":              ComputeStatus{}.Type(ctx),
+			"create_time":                 types.StringType,
+			"creator":                     types.StringType,
+			"default_source_code_path":    types.StringType,
+			"description":                 types.StringType,
+			"name":                        types.StringType,
+			"pending_deployment":          AppDeployment{}.Type(ctx),
+			"resources":                   AppResource{}.Type(ctx),
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
 			"service_principal_name":      types.StringType,
@@ -153,7 +143,10 @@ func (o *App) GetActiveDeployment(ctx context.Context) (AppDeployment, bool) {
 		return e, false
 	}
 	var v []AppDeployment
-	d := o.ActiveDeployment.ElementsAs(ctx, &v, true)
+	d := o.ActiveDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -165,9 +158,8 @@ func (o *App) GetActiveDeployment(ctx context.Context) (AppDeployment, bool) {
 
 // SetActiveDeployment sets the value of the ActiveDeployment field in App.
 func (o *App) SetActiveDeployment(ctx context.Context, v AppDeployment) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["active_deployment"]
-	o.ActiveDeployment = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ActiveDeployment = vs
 }
 
 // GetAppStatus returns the value of the AppStatus field in App as
@@ -179,7 +171,10 @@ func (o *App) GetAppStatus(ctx context.Context) (ApplicationStatus, bool) {
 		return e, false
 	}
 	var v []ApplicationStatus
-	d := o.AppStatus.ElementsAs(ctx, &v, true)
+	d := o.AppStatus.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -191,9 +186,8 @@ func (o *App) GetAppStatus(ctx context.Context) (ApplicationStatus, bool) {
 
 // SetAppStatus sets the value of the AppStatus field in App.
 func (o *App) SetAppStatus(ctx context.Context, v ApplicationStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_status"]
-	o.AppStatus = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AppStatus = vs
 }
 
 // GetComputeStatus returns the value of the ComputeStatus field in App as
@@ -205,7 +199,10 @@ func (o *App) GetComputeStatus(ctx context.Context) (ComputeStatus, bool) {
 		return e, false
 	}
 	var v []ComputeStatus
-	d := o.ComputeStatus.ElementsAs(ctx, &v, true)
+	d := o.ComputeStatus.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -217,9 +214,8 @@ func (o *App) GetComputeStatus(ctx context.Context) (ComputeStatus, bool) {
 
 // SetComputeStatus sets the value of the ComputeStatus field in App.
 func (o *App) SetComputeStatus(ctx context.Context, v ComputeStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compute_status"]
-	o.ComputeStatus = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ComputeStatus = vs
 }
 
 // GetPendingDeployment returns the value of the PendingDeployment field in App as
@@ -231,7 +227,10 @@ func (o *App) GetPendingDeployment(ctx context.Context) (AppDeployment, bool) {
 		return e, false
 	}
 	var v []AppDeployment
-	d := o.PendingDeployment.ElementsAs(ctx, &v, true)
+	d := o.PendingDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -243,9 +242,8 @@ func (o *App) GetPendingDeployment(ctx context.Context) (AppDeployment, bool) {
 
 // SetPendingDeployment sets the value of the PendingDeployment field in App.
 func (o *App) SetPendingDeployment(ctx context.Context, v AppDeployment) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pending_deployment"]
-	o.PendingDeployment = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.PendingDeployment = vs
 }
 
 // GetResources returns the value of the Resources field in App as
@@ -379,9 +377,7 @@ func (o AppAccessControlResponse) ToObjectValue(ctx context.Context) basetypes.O
 func (o AppAccessControlResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"all_permissions": basetypes.ListType{
-				ElemType: AppPermission{}.Type(ctx),
-			},
+			"all_permissions":        AppPermission{}.Type(ctx),
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
 			"service_principal_name": types.StringType,
@@ -422,7 +418,7 @@ type AppDeployment struct {
 	// The email of the user creates the deployment.
 	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts" tf:"optional,object"`
+	DeploymentArtifacts types.Object `tfsdk:"deployment_artifacts" tf:"optional,object"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
@@ -436,7 +432,7 @@ type AppDeployment struct {
 	// the deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 	// Status and status message of the deployment
-	Status types.List `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"optional,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
 }
@@ -483,18 +479,14 @@ func (o AppDeployment) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o AppDeployment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
-			"creator":     types.StringType,
-			"deployment_artifacts": basetypes.ListType{
-				ElemType: AppDeploymentArtifacts{}.Type(ctx),
-			},
-			"deployment_id":    types.StringType,
-			"mode":             types.StringType,
-			"source_code_path": types.StringType,
-			"status": basetypes.ListType{
-				ElemType: AppDeploymentStatus{}.Type(ctx),
-			},
-			"update_time": types.StringType,
+			"create_time":          types.StringType,
+			"creator":              types.StringType,
+			"deployment_artifacts": AppDeploymentArtifacts{}.Type(ctx),
+			"deployment_id":        types.StringType,
+			"mode":                 types.StringType,
+			"source_code_path":     types.StringType,
+			"status":               AppDeploymentStatus{}.Type(ctx),
+			"update_time":          types.StringType,
 		},
 	}
 }
@@ -508,7 +500,10 @@ func (o *AppDeployment) GetDeploymentArtifacts(ctx context.Context) (AppDeployme
 		return e, false
 	}
 	var v []AppDeploymentArtifacts
-	d := o.DeploymentArtifacts.ElementsAs(ctx, &v, true)
+	d := o.DeploymentArtifacts.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -520,9 +515,8 @@ func (o *AppDeployment) GetDeploymentArtifacts(ctx context.Context) (AppDeployme
 
 // SetDeploymentArtifacts sets the value of the DeploymentArtifacts field in AppDeployment.
 func (o *AppDeployment) SetDeploymentArtifacts(ctx context.Context, v AppDeploymentArtifacts) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment_artifacts"]
-	o.DeploymentArtifacts = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DeploymentArtifacts = vs
 }
 
 // GetStatus returns the value of the Status field in AppDeployment as
@@ -534,7 +528,10 @@ func (o *AppDeployment) GetStatus(ctx context.Context) (AppDeploymentStatus, boo
 		return e, false
 	}
 	var v []AppDeploymentStatus
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -546,9 +543,8 @@ func (o *AppDeployment) GetStatus(ctx context.Context) (AppDeploymentStatus, boo
 
 // SetStatus sets the value of the Status field in AppDeployment.
 func (o *AppDeployment) SetStatus(ctx context.Context, v AppDeploymentStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Status = vs
 }
 
 type AppDeploymentArtifacts struct {
@@ -684,11 +680,9 @@ func (o AppPermission) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o AppPermission) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"inherited": types.BoolType,
-			"inherited_from_object": basetypes.ListType{
-				ElemType: types.StringType,
-			},
-			"permission_level": types.StringType,
+			"inherited":             types.BoolType,
+			"inherited_from_object": basetypes.ListType{ElemType: types.StringType},
+			"permission_level":      types.StringType,
 		},
 	}
 }
@@ -763,11 +757,9 @@ func (o AppPermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o AppPermissions) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AppAccessControlResponse{}.Type(ctx),
-			},
-			"object_id":   types.StringType,
-			"object_type": types.StringType,
+			"access_control_list": AppAccessControlResponse{}.Type(ctx),
+			"object_id":           types.StringType,
+			"object_type":         types.StringType,
 		},
 	}
 }
@@ -884,10 +876,8 @@ func (o AppPermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AppPermissionsRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"access_control_list": basetypes.ListType{
-				ElemType: AppAccessControlRequest{}.Type(ctx),
-			},
-			"app_name": types.StringType,
+			"access_control_list": AppAccessControlRequest{}.Type(ctx),
+			"app_name":            types.StringType,
 		},
 	}
 }
@@ -922,15 +912,15 @@ type AppResource struct {
 	// Description of the App Resource.
 	Description types.String `tfsdk:"description" tf:"optional"`
 
-	Job types.List `tfsdk:"job" tf:"optional,object"`
+	Job types.Object `tfsdk:"job" tf:"optional,object"`
 	// Name of the App Resource.
 	Name types.String `tfsdk:"name" tf:""`
 
-	Secret types.List `tfsdk:"secret" tf:"optional,object"`
+	Secret types.Object `tfsdk:"secret" tf:"optional,object"`
 
-	ServingEndpoint types.List `tfsdk:"serving_endpoint" tf:"optional,object"`
+	ServingEndpoint types.Object `tfsdk:"serving_endpoint" tf:"optional,object"`
 
-	SqlWarehouse types.List `tfsdk:"sql_warehouse" tf:"optional,object"`
+	SqlWarehouse types.Object `tfsdk:"sql_warehouse" tf:"optional,object"`
 }
 
 func (newState *AppResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource) {
@@ -975,20 +965,12 @@ func (o AppResource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o AppResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"description": types.StringType,
-			"job": basetypes.ListType{
-				ElemType: AppResourceJob{}.Type(ctx),
-			},
-			"name": types.StringType,
-			"secret": basetypes.ListType{
-				ElemType: AppResourceSecret{}.Type(ctx),
-			},
-			"serving_endpoint": basetypes.ListType{
-				ElemType: AppResourceServingEndpoint{}.Type(ctx),
-			},
-			"sql_warehouse": basetypes.ListType{
-				ElemType: AppResourceSqlWarehouse{}.Type(ctx),
-			},
+			"description":      types.StringType,
+			"job":              AppResourceJob{}.Type(ctx),
+			"name":             types.StringType,
+			"secret":           AppResourceSecret{}.Type(ctx),
+			"serving_endpoint": AppResourceServingEndpoint{}.Type(ctx),
+			"sql_warehouse":    AppResourceSqlWarehouse{}.Type(ctx),
 		},
 	}
 }
@@ -1002,7 +984,10 @@ func (o *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
 		return e, false
 	}
 	var v []AppResourceJob
-	d := o.Job.ElementsAs(ctx, &v, true)
+	d := o.Job.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1014,9 +999,8 @@ func (o *AppResource) GetJob(ctx context.Context) (AppResourceJob, bool) {
 
 // SetJob sets the value of the Job field in AppResource.
 func (o *AppResource) SetJob(ctx context.Context, v AppResourceJob) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job"]
-	o.Job = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Job = vs
 }
 
 // GetSecret returns the value of the Secret field in AppResource as
@@ -1028,7 +1012,10 @@ func (o *AppResource) GetSecret(ctx context.Context) (AppResourceSecret, bool) {
 		return e, false
 	}
 	var v []AppResourceSecret
-	d := o.Secret.ElementsAs(ctx, &v, true)
+	d := o.Secret.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1040,9 +1027,8 @@ func (o *AppResource) GetSecret(ctx context.Context) (AppResourceSecret, bool) {
 
 // SetSecret sets the value of the Secret field in AppResource.
 func (o *AppResource) SetSecret(ctx context.Context, v AppResourceSecret) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["secret"]
-	o.Secret = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Secret = vs
 }
 
 // GetServingEndpoint returns the value of the ServingEndpoint field in AppResource as
@@ -1054,7 +1040,10 @@ func (o *AppResource) GetServingEndpoint(ctx context.Context) (AppResourceServin
 		return e, false
 	}
 	var v []AppResourceServingEndpoint
-	d := o.ServingEndpoint.ElementsAs(ctx, &v, true)
+	d := o.ServingEndpoint.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1066,9 +1055,8 @@ func (o *AppResource) GetServingEndpoint(ctx context.Context) (AppResourceServin
 
 // SetServingEndpoint sets the value of the ServingEndpoint field in AppResource.
 func (o *AppResource) SetServingEndpoint(ctx context.Context, v AppResourceServingEndpoint) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["serving_endpoint"]
-	o.ServingEndpoint = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ServingEndpoint = vs
 }
 
 // GetSqlWarehouse returns the value of the SqlWarehouse field in AppResource as
@@ -1080,7 +1068,10 @@ func (o *AppResource) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWareho
 		return e, false
 	}
 	var v []AppResourceSqlWarehouse
-	d := o.SqlWarehouse.ElementsAs(ctx, &v, true)
+	d := o.SqlWarehouse.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1092,9 +1083,8 @@ func (o *AppResource) GetSqlWarehouse(ctx context.Context) (AppResourceSqlWareho
 
 // SetSqlWarehouse sets the value of the SqlWarehouse field in AppResource.
 func (o *AppResource) SetSqlWarehouse(ctx context.Context, v AppResourceSqlWarehouse) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sql_warehouse"]
-	o.SqlWarehouse = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.SqlWarehouse = vs
 }
 
 type AppResourceJob struct {
@@ -1383,7 +1373,7 @@ func (o ComputeStatus) Type(ctx context.Context) attr.Type {
 
 // Create an app deployment
 type CreateAppDeploymentRequest struct {
-	AppDeployment types.List `tfsdk:"app_deployment" tf:"optional,object"`
+	AppDeployment types.Object `tfsdk:"app_deployment" tf:"optional,object"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
 }
@@ -1423,10 +1413,8 @@ func (o CreateAppDeploymentRequest) ToObjectValue(ctx context.Context) basetypes
 func (o CreateAppDeploymentRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
-			},
-			"app_name": types.StringType,
+			"app_deployment": AppDeployment{}.Type(ctx),
+			"app_name":       types.StringType,
 		},
 	}
 }
@@ -1440,7 +1428,10 @@ func (o *CreateAppDeploymentRequest) GetAppDeployment(ctx context.Context) (AppD
 		return e, false
 	}
 	var v []AppDeployment
-	d := o.AppDeployment.ElementsAs(ctx, &v, true)
+	d := o.AppDeployment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1452,14 +1443,13 @@ func (o *CreateAppDeploymentRequest) GetAppDeployment(ctx context.Context) (AppD
 
 // SetAppDeployment sets the value of the AppDeployment field in CreateAppDeploymentRequest.
 func (o *CreateAppDeploymentRequest) SetAppDeployment(ctx context.Context, v AppDeployment) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app_deployment"]
-	o.AppDeployment = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AppDeployment = vs
 }
 
 // Create an app
 type CreateAppRequest struct {
-	App types.List `tfsdk:"app" tf:"optional,object"`
+	App types.Object `tfsdk:"app" tf:"optional,object"`
 }
 
 func (newState *CreateAppRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest) {
@@ -1496,9 +1486,7 @@ func (o CreateAppRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o CreateAppRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
-			},
+			"app": App{}.Type(ctx),
 		},
 	}
 }
@@ -1512,7 +1500,10 @@ func (o *CreateAppRequest) GetApp(ctx context.Context) (App, bool) {
 		return e, false
 	}
 	var v []App
-	d := o.App.ElementsAs(ctx, &v, true)
+	d := o.App.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1524,9 +1515,8 @@ func (o *CreateAppRequest) GetApp(ctx context.Context) (App, bool) {
 
 // SetApp sets the value of the App field in CreateAppRequest.
 func (o *CreateAppRequest) SetApp(ctx context.Context, v App) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
-	o.App = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.App = vs
 }
 
 // Delete an app
@@ -1701,9 +1691,7 @@ func (o GetAppPermissionLevelsResponse) ToObjectValue(ctx context.Context) baset
 func (o GetAppPermissionLevelsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"permission_levels": basetypes.ListType{
-				ElemType: AppPermissionsDescription{}.Type(ctx),
-			},
+			"permission_levels": AppPermissionsDescription{}.Type(ctx),
 		},
 	}
 }
@@ -1914,9 +1902,7 @@ func (o ListAppDeploymentsResponse) ToObjectValue(ctx context.Context) basetypes
 func (o ListAppDeploymentsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app_deployments": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
-			},
+			"app_deployments": AppDeployment{}.Type(ctx),
 			"next_page_token": types.StringType,
 		},
 	}
@@ -2037,9 +2023,7 @@ func (o ListAppsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListAppsResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"apps": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
-			},
+			"apps":            App{}.Type(ctx),
 			"next_page_token": types.StringType,
 		},
 	}
@@ -2157,7 +2141,7 @@ func (o StopAppRequest) Type(ctx context.Context) attr.Type {
 
 // Update an app
 type UpdateAppRequest struct {
-	App types.List `tfsdk:"app" tf:"optional,object"`
+	App types.Object `tfsdk:"app" tf:"optional,object"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"-"`
@@ -2198,9 +2182,7 @@ func (o UpdateAppRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o UpdateAppRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"app": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
-			},
+			"app":  App{}.Type(ctx),
 			"name": types.StringType,
 		},
 	}
@@ -2215,7 +2197,10 @@ func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 		return e, false
 	}
 	var v []App
-	d := o.App.ElementsAs(ctx, &v, true)
+	d := o.App.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2227,7 +2212,6 @@ func (o *UpdateAppRequest) GetApp(ctx context.Context) (App, bool) {
 
 // SetApp sets the value of the App field in UpdateAppRequest.
 func (o *UpdateAppRequest) SetApp(ctx context.Context, v App) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["app"]
-	o.App = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.App = vs
 }

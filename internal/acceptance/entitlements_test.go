@@ -84,9 +84,9 @@ func makePreconfig(t *testing.T, r entitlementResource) func() {
 }
 
 func entitlementsTest(t *testing.T, f func(*testing.T, entitlementResource)) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	sp := &servicePrincipalResource{}
-	if isAzure(t) {
+	if IsAzure(t) {
 		// A long-lived application is used in Azure.
 		sp.applicationId = GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 		sp.cleanup = false

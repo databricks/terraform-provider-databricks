@@ -5,7 +5,7 @@ import (
 )
 
 func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
-	if isAzure(t) {
+	if IsAzure(t) {
 		AccountLevel(t, Step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {
@@ -34,7 +34,7 @@ func TestMwsAccNetworkConnectivityConfig(t *testing.T) {
 			`,
 		})
 	}
-	if isAws(t) {
+	if IsAws(t) {
 		AccountLevel(t, Step{
 			Template: `
 			resource "databricks_mws_network_connectivity_config" "this" {

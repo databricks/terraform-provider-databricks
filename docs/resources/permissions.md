@@ -643,6 +643,8 @@ resource "databricks_permissions" "ml_serving_usage" {
 
 Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
 
+-> You need to use the `endpoint_id` attribute of `databricks_vector_search_endpoint` as value for `vector_search_endpoint_id`, not the `id`!
+
 ```hcl
 resource "databricks_vector_search_endpoint" "this" {
   name          = "vector-search-test"

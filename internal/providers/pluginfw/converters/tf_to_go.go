@@ -25,6 +25,7 @@ const tfSdkToGoSdkFieldConversionFailureMessage = "tfsdk to gosdk field conversi
 //	types.Bool -> bool
 //	types.Int64 -> int64
 //	types.Float64 -> float64
+//	types.String -> string
 //
 // NOTE:
 //

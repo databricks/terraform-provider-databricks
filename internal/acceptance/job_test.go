@@ -396,7 +396,7 @@ func TestUcAccJobRunAsMutations(t *testing.T) {
 }
 
 func TestAccRemoveWebhooks(t *testing.T) {
-	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
+	Skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
 	WorkspaceLevel(t, Step{
 		Template: `
 		resource databricks_job test {

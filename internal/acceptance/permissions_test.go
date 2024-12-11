@@ -583,7 +583,7 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 }
 
 func TestAccPermissions_Authorization_Passwords(t *testing.T) {
-	skipf(t)("ACLs for passwords are disabled on testing workspaces")
+	Skipf(t)("ACLs for passwords are disabled on testing workspaces")
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	WorkspaceLevel(t, Step{
 		Template: makePermissionsTestStage("authorization", "\"passwords\"", groupPermissions("CAN_USE")),
@@ -834,7 +834,7 @@ func TestAccPermissions_RegisteredModel_Root(t *testing.T) {
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	if IsGcp(t) {
-		skipf(t)("Serving endpoints are not supported on GCP")
+		Skipf(t)("Serving endpoints are not supported on GCP")
 	}
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {

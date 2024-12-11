@@ -51,7 +51,7 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 func TestAccSQLGlobalConfigServerless(t *testing.T) {
 	LoadWorkspaceEnv(t)
 	if IsGcp(t) {
-		skipf(t)("GCP does not support serverless compute")
+		Skipf(t)("GCP does not support serverless compute")
 	}
 
 	checkServerlessEnabled := func(enabled bool) func(state *terraform.State) error {

@@ -302,7 +302,7 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
 
 func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 	if !IsAws(t) {
-		skipf(t)("TestMwsAccAwsChangeToServicePrincipal should only run on AWS")
+		Skipf(t)("TestMwsAccAwsChangeToServicePrincipal should only run on AWS")
 	}
 	workspaceTemplate := func(tokenBlock string) string {
 		return `

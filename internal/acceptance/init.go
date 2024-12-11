@@ -125,7 +125,7 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 		"RANDOM_UUID": createUuid(),
 	}
 	if len(otherVars) > 1 {
-		skipf(t)("cannot have more than one custom variable map")
+		Skipf(t)("cannot have more than one custom variable map")
 	}
 	if len(otherVars) == 1 {
 		for k, v := range otherVars[0] {
@@ -147,14 +147,14 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 			value = vars[varName]
 		}
 		if value == "" {
-			skipf(t)("Missing %s %s variable.", varType, varName)
+			Skipf(t)("Missing %s %s variable.", varType, varName)
 			missing++
 			continue
 		}
 		template = strings.ReplaceAll(template, `{`+varType+`.`+varName+`}`, value)
 	}
 	if missing > 0 {
-		skipf(t)("please set %d variables and restart", missing)
+		Skipf(t)("please set %d variables and restart", missing)
 	}
 	return commands.TrimLeadingWhitespace(template)
 }
@@ -291,7 +291,7 @@ const hexCharset = "0123456789abcdef"
 func GetEnvOrSkipTest(t *testing.T, name string) string {
 	value := os.Getenv(name)
 	if value == "" {
-		skipf(t)("Environment variable %s is missing", name)
+		Skipf(t)("Environment variable %s is missing", name)
 	}
 	return value
 }
@@ -300,7 +300,7 @@ func GetEnvInt64OrSkipTest(t *testing.T, name string) int64 {
 	v := GetEnvOrSkipTest(t, name)
 	i, err := strconv.ParseInt(v, 10, 64)
 	if err != nil {
-		skipf(t)("`%s` is not int64: %s", v, err)
+		Skipf(t)("`%s` is not int64: %s", v, err)
 	}
 	return i
 }
@@ -338,7 +338,7 @@ func RandomHex(prefix string, randLen int) string {
 	return string(b)
 }
 
-func skipf(t *testing.T) func(format string, args ...any) {
+func Skipf(t *testing.T) func(format string, args ...any) {
 	if isInDebug() {
 		// VSCode "debug test" feature doesn't show dlv logs,
 		// so that we fail here for maintainer productivity.
@@ -362,34 +362,34 @@ func setDebugLogger() {
 func LoadWorkspaceEnv(t *testing.T) {
 	initTest(t, "workspace")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
+		Skipf(t)("Skipping workspace test on account level")
 	}
 }
 
 func LoadAccountEnv(t *testing.T) {
 	initTest(t, "account")
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
-		skipf(t)("Skipping account test on workspace level")
+		Skipf(t)("Skipping account test on workspace level")
 	}
 }
 
 func LoadUcwsEnv(t *testing.T) {
 	initTest(t, "ucws")
 	if os.Getenv("TEST_METASTORE_ID") == "" {
-		skipf(t)("Skipping non-Unity Catalog test")
+		Skipf(t)("Skipping non-Unity Catalog test")
 	}
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") != "" {
-		skipf(t)("Skipping workspace test on account level")
+		Skipf(t)("Skipping workspace test on account level")
 	}
 }
 
 func LoadUcacctEnv(t *testing.T) {
 	initTest(t, "ucacct")
 	if os.Getenv("TEST_METASTORE_ID") == "" {
-		skipf(t)("Skipping non-Unity Catalog test")
+		Skipf(t)("Skipping non-Unity Catalog test")
 	}
 	if os.Getenv("DATABRICKS_ACCOUNT_ID") == "" {
-		skipf(t)("Skipping account test on workspace level")
+		Skipf(t)("Skipping account test on workspace level")
 	}
 }
 
@@ -411,7 +411,7 @@ func IsGcp(t *testing.T) bool {
 func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
 	cloudEnv := os.Getenv("CLOUD_ENV")
 	if cloudEnv == "" {
-		skipf(t)("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
+		Skipf(t)("Acceptance tests skipped unless env 'CLOUD_ENV' is set")
 	}
 	return slices.Contains(cloudEnvs, cloudEnv)
 }

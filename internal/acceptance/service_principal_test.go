@@ -24,7 +24,7 @@ const awsSpn = `resource "databricks_service_principal" "this" {
 func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 	LoadWorkspaceEnv(t)
 	if !IsAzure(t) {
-		skipf(t)("Test only valid for Azure")
+		Skipf(t)("Test only valid for Azure")
 	}
 	uuid := createUuid()
 	template := `
@@ -60,7 +60,7 @@ func TestAccServicePrincipalHomeDeleteSuccess(t *testing.T) {
 func TestAccServicePrinicpalHomeDeleteNotDeleted(t *testing.T) {
 	LoadWorkspaceEnv(t)
 	if !IsAzure(t) {
-		skipf(t)("Test only valid for Azure")
+		Skipf(t)("Test only valid for Azure")
 	}
 	uuid := createUuid()
 	template := `

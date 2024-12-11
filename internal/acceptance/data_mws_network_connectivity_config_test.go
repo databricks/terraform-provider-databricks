@@ -10,7 +10,7 @@ import (
 func TestAccDataSourceMwsNetworkConnectivityConfigTest(t *testing.T) {
 	LoadWorkspaceEnv(t)
 	if IsGcp(t) {
-		skipf(t)("GCP not supported")
+		Skipf(t)("GCP not supported")
 	}
 	var sourceRegion string
 	if IsAzure(t) {

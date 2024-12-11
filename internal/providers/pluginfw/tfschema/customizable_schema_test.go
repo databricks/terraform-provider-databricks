@@ -115,6 +115,28 @@ func TestCustomizeSchemaSetReadOnly(t *testing.T) {
 	assert.True(t, scm.Attributes["map"].IsComputed())
 }
 
+type testTfSdkListNestedAttribute struct {
+	List types.List `tfsdk:"list"`
+}
+
+func (testTfSdkListNestedAttribute) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"list": reflect.TypeOf(NestedTfSdk{}),
+	}
+}
+
+func TestCustomizeSchemaSetReadOnly_RecursivelySetsFieldsOfListNestedAttributes(t *testing.T) {
+	scm := ResourceStructToSchema(context.Background(), testTfSdkListNestedAttribute{}, func(c CustomizableSchema) CustomizableSchema {
+		c.ConvertToAttribute("list").SetReadOnly("list")
+		return c
+	})
+	for _, field := range []string{"name", "enabled"} {
+		assert.True(t, !scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsOptional())
+		assert.True(t, !scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsRequired())
+		assert.True(t, scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsComputed())
+	}
+}
+
 func TestCustomizeSchemaAddValidator(t *testing.T) {
 	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.AddValidator(stringLengthBetweenValidator{}, "description")

@@ -85,6 +85,7 @@ func (a ListNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	a.Computed = true
 	a.Optional = false
 	a.Required = false
+	a.NestedObject.SetReadOnly()
 	return a
 }
 

@@ -61,6 +61,8 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 			return a.AddValidator(v.(validator.List))
 		case ListNestedAttributeBuilder:
 			return a.AddValidator(v.(validator.List))
+		case ListNestedBlockBuilder:
+			return a.AddValidator(v.(validator.List))
 		case MapAttributeBuilder:
 			return a.AddValidator(v.(validator.Map))
 		case MapNestedAttributeBuilder:

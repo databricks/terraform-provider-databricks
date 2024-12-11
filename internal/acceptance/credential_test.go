@@ -10,11 +10,23 @@ func TestUcAccCredential(t *testing.T) {
 		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_credential" "external" {
-					name = "cred-{var.RANDOM}"
+					name = "service-cred-{var.RANDOM}"
 					aws_iam_role {
 						role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 					}
 					purpose = "SERVICE"
+					skip_validation = true
+					comment = "Managed by TF"
+				}`,
+		})
+	} else if isGcp(t) {
+		UnityWorkspaceLevel(t, Step{
+			// TODO: update purpose to SERVICE when it's released
+			Template: `
+				resource "databricks_credential" "external" {
+					name = "storage-cred-{var.RANDOM}"
+					databricks_gcp_service_account {}
+					purpose = "STORAGE"
 					skip_validation = true
 					comment = "Managed by TF"
 				}`,

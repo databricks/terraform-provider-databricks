@@ -36,13 +36,6 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = tfschema.ResourceStructToSchema(ctx, apps_tf.App{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
-		// All pointers are treated as list blocks to be compatible with resources implemented in SDKv2.
-		// The plugin framework requires that the number of blocks in the config and plan match. This means that
-		// it isn't possible to have a computed list block that is not part of the config. To work around this,
-		// we need to treat these blocks as attributes in the schema, which allows us to set them as computed.
-		for _, p := range []string{"active_deployment", "app_status", "compute_status", "pending_deployment"} {
-			cs.ConvertToAttribute(p)
-		}
 		// Computed fields
 		for _, p := range []string{
 			"active_deployment",

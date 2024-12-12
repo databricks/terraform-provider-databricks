@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	resourceName = "app"
+	resourceName       = "app"
+	resourceNamePlural = "apps"
 )
 
 func ResourceApp() resource.Resource {

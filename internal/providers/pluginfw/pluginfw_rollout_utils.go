@@ -49,6 +49,8 @@ var pluginFwOnlyResources = []func() resource.Resource{
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
 // Keep this list sorted.
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
+	app.DataSourceApp,
+	app.DataSourceApps,
 	catalog.DataSourceFunctions,
 	notificationdestinations.DataSourceNotificationDestinations,
 	registered_model.DataSourceRegisteredModel,

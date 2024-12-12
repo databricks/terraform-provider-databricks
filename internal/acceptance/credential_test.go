@@ -19,7 +19,7 @@ func TestUcAccCredential(t *testing.T) {
 					comment = "Managed by TF"
 				}`,
 		})
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		UnityWorkspaceLevel(t, Step{
 			// TODO: update purpose to SERVICE when it's released
 			Template: `

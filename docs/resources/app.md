@@ -13,27 +13,27 @@ subcategory: "Apps"
 resource "databricks_app" "this" {
   name             = "my-custom-app"
   description      = "My app"
-  resource {
+  resources = [{
     name = "sql-warehouse"
-    sql_warehouse {
+    sql_warehouse = {
       id = "e9ca293f79a74b5c"
       permission = "CAN_MANAGE"
     }
-  }
-  resource {
+  },
+  {
     name = "serving-endpoint"
-    serving_endpoint {
+    serving_endpoint = {
       name = "databricks-meta-llama-3-1-70b-instruct"
       permission = "CAN_MANAGE"
     }
-  }
-  resource {
+  },
+  {
     name = "job"
-    job {
+    job = {
       id = "1234"
       permission = "CAN_MANAGE"
     }
-  }
+  }]
 }
 ```
 
@@ -43,9 +43,9 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
-* `resource` - (Optional) A list of resources that the app have access to.
+* `resources` - (Optional) A list of resources that the app have access to.
 
-### resource Configuration Block
+### resources Configuration Attribute
 
 This block describes individual resource.
 
@@ -54,17 +54,17 @@ This block describes individual resource.
 
 Exactly one of the specific blocks described below is required:
 
-* `secret` block
+* `secret` attribute
   * `scope` - Scope of the secret to grant permission on.
   * `key` - Key of the secret to grant permission on.
   * `permission` - Permission to grant on the secret scope. For secrets, only one permission is allowed. Permission must be one of: `READ`, `WRITE`, `MANAGE`.
-* `sql_warehouse` block
+* `sql_warehouse` attribute
   * `id` - Id of the SQL warehouse to grant permission on.
   * `permission` - Permission to grant on the SQL warehouse. Supported permissions are: `CAN_MANAGE`, `CAN_USE`, `IS_OWNER`.
-* `serving_endpoint` block
+* `serving_endpoint` attribute
   * `name` - Name of the serving endpoint to grant permission on.
   * `permission` - Permission to grant on the serving endpoint. Supported permissions are: `CAN_MANAGE`, `CAN_QUERY`, `CAN_VIEW`.
-* `job` block
+* `job` attribute
   * `id` - Id of the job to grant permission on.
   * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
 
@@ -72,10 +72,10 @@ Exactly one of the specific blocks described below is required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `compute_status` block
+* `compute_status` attribute
   * `state` - State of the app compute.
   * `message` - Compute status message
-* `app_status` block
+* `app_status` attribute
   * `state` - State of the application.
   * `message` - Application status message
 * `url` - The URL of the app once it is deployed.
@@ -90,6 +90,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by name:
+
+```hcl
+import {
+  to = databricks_app.this
+  id = "<app_name>"
+}
+```
+
+or using the `terraform` CLI:
 
 ```bash
 terraform import databricks_app.this <app_name>

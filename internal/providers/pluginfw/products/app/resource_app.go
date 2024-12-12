@@ -216,4 +216,9 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
+func (a *resourceApp) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+}
+
 var _ resource.ResourceWithConfigure = &resourceApp{}
+var _ resource.ResourceWithImportState = &resourceApp{}

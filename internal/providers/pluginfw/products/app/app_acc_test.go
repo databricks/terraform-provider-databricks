@@ -19,35 +19,35 @@ const baseResources = `
 		string_value = "secret"
 	}
 
-# resource "databricks_sql_endpoint" "this" {
-# 	name = "tf-{var.STICKY_RANDOM}"
-# 	cluster_size = "2X-Small"
-# 	max_num_clusters = 1
+	resource "databricks_sql_endpoint" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+		cluster_size = "2X-Small"
+		max_num_clusters = 1
 
-# 	tags {
-# 		custom_tags {
-# 			key   = "Owner"
-# 			value = "eng-dev-ecosystem-team_at_databricks.com"
-# 		}
-# 	}
-# }
+		tags {
+			custom_tags {
+				key   = "Owner"
+				value = "eng-dev-ecosystem-team_at_databricks.com"
+			}
+		}
+	}
 
-# resource "databricks_job" "this" {
-# 	name = "tf-{var.STICKY_RANDOM}"
-# }
+	resource "databricks_job" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
 
-# resource "databricks_model_serving" "this" {
-# 	name = "tf-{var.STICKY_RANDOM}"
-# 	config {
-# 		served_models {
-# 			name = "prod_model"
-# 			model_name = "experiment-fixture-model"
-# 			model_version = "1"
-# 			workload_size = "Small"
-# 			scale_to_zero_enabled = true
-# 		}
-# 	}
-# }
+	resource "databricks_model_serving" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+		config {
+			served_models {
+				name = "prod_model"
+				model_name = "experiment-fixture-model"
+				model_version = "1"
+				workload_size = "Small"
+				scale_to_zero_enabled = true
+			}
+		}
+	}
 `
 
 func makeTemplate(description string) string {
@@ -64,32 +64,32 @@ func makeTemplate(description string) string {
 				permission = "MANAGE"
 			}
 		}]
-#	resources {
-#		name = "warehouse"
-#		description = "warehouse for app"
-#		job {
-#			id = databricks_job.this.id
-#			permission = "CAN_MANAGE"
-#		}
-#	}
+    	resources {
+    		name = "warehouse"
+    		description = "warehouse for app"
+    		job {
+    			id = databricks_job.this.id
+    			permission = "CAN_MANAGE"
+    		}
+    	}
 
-#	resources {
-#		name = "serving endpoint"
-#		description = "serving endpoint for app"
-#		serving_endpoint {
-#			name = databricks_model_serving.this.name
-#			permission = "CAN_MANAGE"
-#		}
-#	}
+		resources {
+			name = "serving endpoint"
+			description = "serving endpoint for app"
+			serving_endpoint {
+				name = databricks_model_serving.this.name
+				permission = "CAN_MANAGE"
+			}
+		}
 
-#	resources {
-#		name = "sql warehouse"
-#		description = "sql warehouse for app"
-#		sql_warehouse {
-#			id = databricks_sql_endpoint.this.id
-#			permission = "CAN_MANAGE"
-#		}
-#	}
+		resources {
+			name = "sql warehouse"
+			description = "sql warehouse for app"
+			sql_warehouse {
+				id = databricks_sql_endpoint.this.id
+				permission = "CAN_MANAGE"
+			}
+		}
 	}`
 	return fmt.Sprintf(appTemplate, description)
 }

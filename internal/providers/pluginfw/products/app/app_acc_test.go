@@ -93,19 +93,19 @@ var templateWithInvalidResource = `
 	resource "databricks_app" "this" {
 		name = "{var.STICKY_RANDOM}"
 		description = "My app"
-		resources {
+		resources = [{
 			name = "invalid resource"
 			description = "invalid resource for app"
-			secret {
+			secret = {
 				permission = "CAN_MANAGE"
 				key = "test"
 				scope = "test"
 			}
-			sql_warehouse {
+			sql_warehouse = {
 				id = "123"
 				permission = "CAN_MANAGE"
 			}
-		}
+		}]
 	}`
 
 func TestAccApp_InvalidResource(t *testing.T) {
@@ -126,5 +126,11 @@ func TestAccApp(t *testing.T) {
 		Template: makeTemplate("My app"),
 	}, acceptance.Step{
 		Template: makeTemplate("My new app"),
+	}, acceptance.Step{
+		ImportState:                          true,
+		ResourceName:                         "databricks_app.this",
+		ImportStateIdFunc:                    acceptance.BuildImportStateIdFunc("databricks_app.this", "name"),
+		ImportStateVerify:                    true,
+		ImportStateVerifyIdentifierAttribute: "name",
 	})
 }

@@ -24,11 +24,11 @@ import (
 type App struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
-	ActiveDeployment types.Object `tfsdk:"active_deployment" tf:"optional,object"`
+	ActiveDeployment types.Object `tfsdk:"active_deployment" tf:"computed,object"`
 
-	AppStatus types.Object `tfsdk:"app_status" tf:"optional,object"`
+	AppStatus types.Object `tfsdk:"app_status" tf:"computed,object"`
 
-	ComputeStatus types.Object `tfsdk:"compute_status" tf:"optional,object"`
+	ComputeStatus types.Object `tfsdk:"compute_status" tf:"computed,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
 	// The email of the user that created the app.
@@ -36,7 +36,7 @@ type App struct {
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
-	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"optional"`
+	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"computed"`
 	// The description of the app.
 	Description types.String `tfsdk:"description" tf:"optional"`
 	// The name of the app. The name must contain only lowercase alphanumeric
@@ -44,7 +44,7 @@ type App struct {
 	Name types.String `tfsdk:"name" tf:""`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
-	PendingDeployment types.Object `tfsdk:"pending_deployment" tf:"optional,object"`
+	PendingDeployment types.Object `tfsdk:"pending_deployment" tf:"computed,object"`
 	// Resources for the app.
 	Resources types.List `tfsdk:"resources" tf:"optional"`
 
@@ -422,7 +422,7 @@ type AppDeployment struct {
 	// The email of the user creates the deployment.
 	Creator types.String `tfsdk:"creator" tf:"computed"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts types.Object `tfsdk:"deployment_artifacts" tf:"optional,object"`
+	DeploymentArtifacts types.Object `tfsdk:"deployment_artifacts" tf:"computed,object"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
 	// The mode of which the deployment will manage the source code.
@@ -436,7 +436,7 @@ type AppDeployment struct {
 	// the deployment.
 	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
 	// Status and status message of the deployment
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status" tf:"computed,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
 	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
 }
@@ -598,7 +598,7 @@ type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
 	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the deployment.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"computed"`
 }
 
 func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus) {
@@ -1293,7 +1293,7 @@ type ApplicationStatus struct {
 	// Application status message
 	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the application.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"computed"`
 }
 
 func (newState *ApplicationStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus) {
@@ -1339,7 +1339,7 @@ type ComputeStatus struct {
 	// Compute status message
 	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the app compute.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state" tf:"computed"`
 }
 
 func (newState *ComputeStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus) {

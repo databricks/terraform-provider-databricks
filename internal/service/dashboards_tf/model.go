@@ -316,7 +316,7 @@ type Dashboard struct {
 	// field is excluded in List Dashboards responses.
 	Etag types.String `tfsdk:"etag" tf:"computed"`
 	// The state of the dashboard resource. Used for tracking trashed status.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"computed"`
 	// The workspace path of the folder containing the dashboard. Includes
 	// leading slash and no trailing slash. This field is excluded in List
 	// Dashboards responses.

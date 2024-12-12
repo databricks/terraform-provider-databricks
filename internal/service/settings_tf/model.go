@@ -7040,7 +7040,7 @@ type NccEgressConfig struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules types.List `tfsdk:"default_rules" tf:"computed"`
+	DefaultRules types.List `tfsdk:"default_rules" tf:"computed,object"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
 	TargetRules types.List `tfsdk:"target_rules" tf:"optional,object"`

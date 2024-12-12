@@ -1534,7 +1534,7 @@ func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"compliance_standards": basetypes.ListType{
-				ElemType: types.String{}.Type(ctx),
+				ElemType: types.StringType,
 			},
 			"is_enabled": types.BoolType,
 		},

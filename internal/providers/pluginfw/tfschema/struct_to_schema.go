@@ -25,7 +25,6 @@ type structTag struct {
 
 func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 	scmAttr := map[string]AttributeBuilder{}
-	scmBlock := map[string]BlockBuilder{}
 	rk := v.Kind()
 	if rk == reflect.Ptr {
 		v = v.Elem()
@@ -88,9 +87,8 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 					scmAttr[fieldName] = MapAttributeBuilder{ElementType: containerType.ElementType()}
 				}
 			default:
-				// The element type is a TFSDK type. Map fields are treated as MapNestedAttributes. For compatibility,
-				// list fields are treated as ListNestedBlocks.
-				// TODO: Change the default for lists to ListNestedAttribute.
+				// The element type is a TFSDK type. Map fields are treated as MapNestedAttributes, and list
+				// fields are treated as ListNestedAttributes. Object fields are treated as SingleNestedAttributes.
 				fieldValue := reflect.New(fieldType).Elem()
 
 				// Generate the nested block schema
@@ -101,9 +99,8 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 					if structTag.singleObject {
 						validators = append(validators, listvalidator.SizeAtMost(1))
 					}
-					// Note that this is being added to the block map, not the attribute map.
-					scmBlock[fieldName] = ListNestedBlockBuilder{
-						NestedObject: nestedSchema,
+					scmAttr[fieldName] = ListNestedAttributeBuilder{
+						NestedObject: nestedSchema.ToNestedAttributeObject(),
 						Validators:   validators,
 					}
 				case types.Map:
@@ -142,22 +139,24 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			}
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
 		}
-		// types.List fields of complex types correspond to ListNestedBlock, which don't have optional/required/computed flags.
-		// When these fields are later changed to use ListNestedAttribute, we can inline the if statement below, as all fields
-		// will be attributes.
-		if attr, ok := scmAttr[fieldName]; ok {
+		attr := scmAttr[fieldName]
+		if structTag.computed {
+			// Computed attributes are always computed and may be optional.
+			attr = attr.SetComputed()
+			if structTag.optional {
+				attr = attr.SetOptional()
+			}
+		} else {
+			// Non-computed attributes must be either optional or required.
 			if structTag.optional {
 				attr = attr.SetOptional()
 			} else {
 				attr = attr.SetRequired()
 			}
-			if structTag.computed {
-				attr = attr.SetComputed()
-			}
-			scmAttr[fieldName] = attr
 		}
+		scmAttr[fieldName] = attr
 	}
-	return NestedBlockObject{Attributes: scmAttr, Blocks: scmBlock}
+	return NestedBlockObject{Attributes: scmAttr}
 }
 
 func getStructTag(field reflect.StructField) structTag {

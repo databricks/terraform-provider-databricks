@@ -103,3 +103,12 @@ func (a ListNestedAttributeBuilder) AddPlanModifier(v planmodifier.List) BaseSch
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }
+
+func (a ListNestedAttributeBuilder) ToBlock() BlockBuilder {
+	return ListNestedBlockBuilder{
+		NestedObject:       convertAttributesToBlocks(a.NestedObject.Attributes, nil),
+		DeprecationMessage: a.DeprecationMessage,
+		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
+	}
+}

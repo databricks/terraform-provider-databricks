@@ -36,7 +36,7 @@ type NotificationDestinationsDataSource struct {
 type NotificationDestinationsInfo struct {
 	DisplayNameContains      types.String `tfsdk:"display_name_contains" tf:"optional"`
 	Type                     types.String `tfsdk:"type" tf:"optional"`
-	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"readonly"`
+	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"computed"`
 }
 
 func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -50,7 +50,10 @@ func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req d
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		cs.SetReadOnly("notification_destinations")
+		return cs
+	})
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

@@ -78,6 +78,7 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("assets_dir")
 		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")

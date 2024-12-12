@@ -88,6 +88,7 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureAsSdkV2Compatible()
 		for field, attribute := range c.ToNestedBlockObject().Attributes {
 			switch attribute.(type) {
 			case tfschema.StringAttributeBuilder:

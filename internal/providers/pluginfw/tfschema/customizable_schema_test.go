@@ -75,7 +75,7 @@ func TestCustomizeSchemaSetRequired(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["enabled"].IsRequired())
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
@@ -93,7 +93,7 @@ func TestCustomizeSchemaSetSensitive(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["name"].IsSensitive())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["name"].IsSensitive())
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {
@@ -127,7 +127,7 @@ func (testTfSdkListNestedAttribute) GetComplexFieldTypes(context.Context) map[st
 
 func TestCustomizeSchemaSetReadOnly_RecursivelySetsFieldsOfListNestedAttributes(t *testing.T) {
 	scm := ResourceStructToSchema(context.Background(), testTfSdkListNestedAttribute{}, func(c CustomizableSchema) CustomizableSchema {
-		c.ConvertToAttribute("list").SetReadOnly("list")
+		c.SetReadOnly("list")
 		return c
 	})
 	for _, field := range []string{"name", "enabled"} {
@@ -160,12 +160,13 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 		return c
 	})
 
-	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
+	assert.True(t, len(scm.Attributes["nested_slice_object"].(schema.ListNestedAttribute).Validators) == 1)
 }
 
 func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
 			c.SetRequired("nested")
 			return c
 		})
@@ -175,6 +176,7 @@ func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
 			c.SetOptional("nested")
 			return c
 		})
@@ -184,6 +186,7 @@ func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
 			c.SetSensitive("nested")
 			return c
 		})
@@ -193,6 +196,7 @@ func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
 			c.SetReadOnly("nested")
 			return c
 		})
@@ -202,6 +206,7 @@ func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
 			c.SetComputed("nested")
 			return c
 		})
@@ -258,168 +263,110 @@ func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, 
 var _ validator.List = mockValidator{}
 var _ validator.Object = mockValidator{}
 
-// func TestCustomizeSchema_ConvertToAttribute(t *testing.T) {
-// 	v := mockValidator{}
-// 	pm := mockPlanModifier{}
-// 	testCases := []struct {
-// 		name        string
-// 		baseSchema  NestedBlockObject
-// 		path        []string
-// 		want        NestedBlockObject
-// 		expectPanic bool
-// 	}{
-// 		{
-// 			name: "ListNestedBlock",
-// 			baseSchema: NestedBlockObject{
-// 				Blocks: map[string]BlockBuilder{
-// 					"list": ListNestedBlockBuilder{
-// 						NestedObject: NestedBlockObject{
-// 							Attributes: map[string]AttributeBuilder{
-// 								"attr": StringAttributeBuilder{},
-// 							},
-// 						},
-// 						DeprecationMessage: "deprecated",
-// 						Validators:         []validator.List{v},
-// 						PlanModifiers:      []planmodifier.List{pm},
-// 					},
-// 				},
-// 			},
-// 			path: []string{"list"},
-// 			want: NestedBlockObject{
-// 				Attributes: map[string]AttributeBuilder{
-// 					"list": ListNestedAttributeBuilder{
-// 						NestedObject: NestedAttributeObject{
-// 							Attributes: map[string]AttributeBuilder{
-// 								"attr": StringAttributeBuilder{},
-// 							},
-// 						},
-// 						DeprecationMessage: "deprecated",
-// 						Validators:         []validator.List{v},
-// 						PlanModifiers:      []planmodifier.List{pm},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "ListNestedBlock/CalledOnInnerBlock",
-// 			baseSchema: NestedBlockObject{
-// 				Blocks: map[string]BlockBuilder{
-// 					"list": ListNestedBlockBuilder{
-// 						NestedObject: NestedBlockObject{
-// 							Blocks: map[string]BlockBuilder{
-// 								"nested_block": ListNestedBlockBuilder{
-// 									NestedObject: NestedBlockObject{
-// 										Attributes: map[string]AttributeBuilder{
-// 											"attr": StringAttributeBuilder{},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			path: []string{"list", "nested_block"},
-// 			want: NestedBlockObject{
-// 				Blocks: map[string]BlockBuilder{
-// 					"list": ListNestedBlockBuilder{
-// 						NestedObject: NestedBlockObject{
-// 							Attributes: map[string]AttributeBuilder{
-// 								"nested_block": ListNestedAttributeBuilder{
-// 									NestedObject: NestedAttributeObject{
-// 										Attributes: map[string]AttributeBuilder{
-// 											"attr": StringAttributeBuilder{},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "SingleNestedBlock",
-// 			baseSchema: NestedBlockObject{
-// 				Blocks: map[string]BlockBuilder{
-// 					"single": SingleNestedBlockBuilder{
-// 						NestedObject: NestedBlockObject{
-// 							Attributes: map[string]AttributeBuilder{
-// 								"attr": StringAttributeBuilder{},
-// 							},
-// 						},
-// 						DeprecationMessage: "deprecated",
-// 						Validators:         []validator.Object{v},
-// 						PlanModifiers:      []planmodifier.Object{pm},
-// 					},
-// 				},
-// 			},
-// 			path: []string{"single"},
-// 			want: NestedBlockObject{
-// 				Attributes: map[string]AttributeBuilder{
-// 					"single": SingleNestedAttributeBuilder{
-// 						Attributes: map[string]AttributeBuilder{
-// 							"attr": StringAttributeBuilder{},
-// 						},
-// 						DeprecationMessage: "deprecated",
-// 						Validators:         []validator.Object{v},
-// 						PlanModifiers:      []planmodifier.Object{pm},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "SingleNestedBlock/RecursiveBlocks",
-// 			baseSchema: NestedBlockObject{
-// 				Blocks: map[string]BlockBuilder{
-// 					"single": SingleNestedBlockBuilder{
-// 						NestedObject: NestedBlockObject{
-// 							Blocks: map[string]BlockBuilder{
-// 								"nested_block": ListNestedBlockBuilder{
-// 									NestedObject: NestedBlockObject{
-// 										Attributes: map[string]AttributeBuilder{
-// 											"attr": StringAttributeBuilder{},
-// 										},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 			path: []string{"single"},
-// 			want: NestedBlockObject{
-// 				Attributes: map[string]AttributeBuilder{
-// 					"single": SingleNestedAttributeBuilder{
-// 						Attributes: map[string]AttributeBuilder{
-// 							"nested_block": ListNestedAttributeBuilder{
-// 								NestedObject: NestedAttributeObject{
-// 									Attributes: map[string]AttributeBuilder{
-// 										"attr": StringAttributeBuilder{},
-// 									},
-// 								},
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name:        "PanicOnEmptyPath",
-// 			path:        nil,
-// 			expectPanic: true,
-// 		},
-// 	}
-// 	for _, c := range testCases {
-// 		t.Run(c.name, func(t *testing.T) {
-// 			if c.expectPanic {
-// 				assert.Panics(t, func() {
-// 					ConstructCustomizableSchema(c.baseSchema).ConvertToAttribute(c.path...)
-// 				})
-// 			} else {
-// 				got := ConstructCustomizableSchema(c.baseSchema).ConvertToAttribute(c.path...)
-// 				assert.Equal(t, c.want, got.attr.(SingleNestedBlockBuilder).NestedObject)
-// 			}
-// 		})
-// 	}
-// }
+func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
+	v := mockValidator{}
+	pm := mockPlanModifier{}
+	testCases := []struct {
+		name        string
+		baseSchema  NestedBlockObject
+		want        NestedBlockObject
+		expectPanic bool
+	}{
+		{
+			name: "ListNestedAttribute",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"list": ListNestedAttributeBuilder{
+						NestedObject: NestedAttributeObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+			want: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+		},
+		{
+			name: "ListNestedAttribute/RecursiveBlocks",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"list": ListNestedAttributeBuilder{
+						NestedObject: NestedAttributeObject{
+							Attributes: map[string]AttributeBuilder{
+								"nested_block": ListNestedAttributeBuilder{
+									NestedObject: NestedAttributeObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Blocks: map[string]BlockBuilder{
+								"nested_block": ListNestedBlockBuilder{
+									NestedObject: NestedBlockObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "SingleNestedBlock/Panics",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"single": SingleNestedAttributeBuilder{
+						Attributes: map[string]AttributeBuilder{
+							"attr": StringAttributeBuilder{},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.Object{v},
+						PlanModifiers:      []planmodifier.Object{pm},
+					},
+				},
+			},
+			expectPanic: true,
+		},
+	}
+	for _, c := range testCases {
+		t.Run(c.name, func(t *testing.T) {
+			if c.expectPanic {
+				assert.Panics(t, func() {
+					ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
+				})
+			} else {
+				got := ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
+				assert.Equal(t, c.want, got.attr.(SingleNestedBlockBuilder).NestedObject)
+			}
+		})
+	}
+}

@@ -107,5 +107,5 @@ func (a SingleNestedAttributeBuilder) AddPlanModifier(v planmodifier.Object) Att
 }
 
 func (a SingleNestedAttributeBuilder) ToBlock() BlockBuilder {
-	panic(fmt.Errorf("SingleNestedAttributeBuilder used for legacy resource. This is unexpected. %s", common.TerraformBugErrorMessage))
+	panic(fmt.Errorf("ToBlock() called on SingleNestedAttributeBuilder. This means that the corresponding field is a types.Object, which should never happen for legacy resources. %s", common.TerraformBugErrorMessage))
 }

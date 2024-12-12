@@ -21,6 +21,12 @@ func convertAttributesToBlocks(attributes map[string]AttributeBuilder, blocks ma
 	for name, block := range blocks {
 		newBlocks[name] = block
 	}
+	if len(newAttributes) == 0 {
+		newAttributes = nil
+	}
+	if len(newBlocks) == 0 {
+		newBlocks = nil
+	}
 	return NestedBlockObject{
 		Attributes: newAttributes,
 		Blocks:     newBlocks,

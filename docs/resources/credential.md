@@ -58,13 +58,13 @@ resource "databricks_grants" "external_creds" {
 }
 ```
 
-For GCP
+For GCP (only applicable when purpose is `STORAGE`)
 
 ```hcl
 resource "databricks_credential" "external_gcp_sa" {
   name = "gcp_sa_credential"
   databricks_gcp_service_account {}
-  purpose = "SERVICE"
+  purpose = "STORAGE"
   comment = "GCP SA credential managed by TF"
 }
 

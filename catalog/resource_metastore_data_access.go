@@ -90,13 +90,8 @@ func ResourceMetastoreDataAccess() common.Resource {
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
 
-			tmpSchema := removeGcpSaField(dacSchema)
 			var create catalog.CreateStorageCredential
-			common.DataToStructPointer(d, tmpSchema, &create)
-			//manually add empty struct back for databricks_gcp_service_account
-			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
-				create.DatabricksGcpServiceAccount = &catalog.DatabricksGcpServiceAccountRequest{}
-			}
+			common.DataToStructPointer(d, dacSchema, &create)
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				dac, err := acc.StorageCredentials.Create(ctx,

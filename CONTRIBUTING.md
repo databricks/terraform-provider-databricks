@@ -139,10 +139,10 @@ There must not be any behaviour change or schema change when migrating a resourc
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
 - Integration tests shouldn't require any major changes.   
 
-By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, call `cs.ConfigureForSdkV2Migration()` in the `ResourceStructToSchema` callback:
+By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
 ```go
 resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-    cs.ConfigureForSdkV2Migration()
+    cs.ConfigureAsSdkV2Compatible()
     // Add any additional configuration here
     return cs
 })

@@ -166,7 +166,7 @@ func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
 func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
-			c.ConfigureForSdkV2Migration()
+			c.ConfigureAsSdkV2Compatible()
 			c.SetRequired("nested")
 			return c
 		})
@@ -176,7 +176,7 @@ func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
-			c.ConfigureForSdkV2Migration()
+			c.ConfigureAsSdkV2Compatible()
 			c.SetOptional("nested")
 			return c
 		})
@@ -186,7 +186,7 @@ func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
-			c.ConfigureForSdkV2Migration()
+			c.ConfigureAsSdkV2Compatible()
 			c.SetSensitive("nested")
 			return c
 		})
@@ -196,7 +196,7 @@ func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
-			c.ConfigureForSdkV2Migration()
+			c.ConfigureAsSdkV2Compatible()
 			c.SetReadOnly("nested")
 			return c
 		})
@@ -206,7 +206,7 @@ func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
 func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
 	assert.Panics(t, func() {
 		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
-			c.ConfigureForSdkV2Migration()
+			c.ConfigureAsSdkV2Compatible()
 			c.SetComputed("nested")
 			return c
 		})
@@ -263,7 +263,7 @@ func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, 
 var _ validator.List = mockValidator{}
 var _ validator.Object = mockValidator{}
 
-func TestCustomizeSchema_ConfigureForSdkV2Migration(t *testing.T) {
+func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
 	v := mockValidator{}
 	pm := mockPlanModifier{}
 	testCases := []struct {
@@ -361,10 +361,10 @@ func TestCustomizeSchema_ConfigureForSdkV2Migration(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			if c.expectPanic {
 				assert.Panics(t, func() {
-					ConstructCustomizableSchema(c.baseSchema).ConfigureForSdkV2Migration()
+					ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
 				})
 			} else {
-				got := ConstructCustomizableSchema(c.baseSchema).ConfigureForSdkV2Migration()
+				got := ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
 				assert.Equal(t, c.want, got.attr.(SingleNestedBlockBuilder).NestedObject)
 			}
 		})

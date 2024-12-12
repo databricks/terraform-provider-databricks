@@ -2281,9 +2281,9 @@ type ShareInfo struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this share was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"computed,optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at" tf:"computed"`
 	// Username of share creator.
-	CreatedBy types.String `tfsdk:"created_by" tf:"computed,optional"`
+	CreatedBy types.String `tfsdk:"created_by" tf:"computed"`
 	// Name of the share.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// A list of shared data objects within the share.
@@ -2295,9 +2295,9 @@ type ShareInfo struct {
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Time at which this share was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed,optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed"`
 	// Username of share updater.
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"computed,optional"`
+	UpdatedBy types.String `tfsdk:"updated_by" tf:"computed"`
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
@@ -2523,12 +2523,12 @@ func (o *ShareToPrivilegeAssignment) SetPrivilegeAssignments(ctx context.Context
 type SharedDataObject struct {
 	// The time when this data object is added to the share, in epoch
 	// milliseconds.
-	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed,optional"`
+	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed"`
 	// Username of the sharer.
-	AddedBy types.String `tfsdk:"added_by" tf:"computed,optional"`
+	AddedBy types.String `tfsdk:"added_by" tf:"computed"`
 	// Whether to enable cdf or indicate if cdf is enabled on the shared object.
 	CdfEnabled          types.Bool `tfsdk:"cdf_enabled" tf:"optional"`
-	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled" tf:"computed,optional"`
+	EffectiveCdfEnabled types.Bool `tfsdk:"effective_cdf_enabled" tf:"computed"`
 	// A user-provided comment when adding the data object to the share.
 	// [Update:OPT]
 	Comment types.String `tfsdk:"comment" tf:"optional"`
@@ -2541,7 +2541,7 @@ type SharedDataObject struct {
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
 	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status" tf:"optional"`
-	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed,optional"`
+	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status" tf:"computed"`
 	// A fully qualified name that uniquely identifies a data object.
 	//
 	// For example, a table's fully qualified name is in the format of
@@ -2554,7 +2554,7 @@ type SharedDataObject struct {
 	// `shared_as` name. The `shared_as` name must be unique within a share. For
 	// tables, the new name must follow the format of `<schema>.<table>`.
 	SharedAs          types.String `tfsdk:"shared_as" tf:"optional"`
-	EffectiveSharedAs types.String `tfsdk:"effective_shared_as" tf:"computed,optional"`
+	EffectiveSharedAs types.String `tfsdk:"effective_shared_as" tf:"computed"`
 	// The start version associated with the object. This allows data providers
 	// to control the lowest object version that is accessible by clients. If
 	// specified, clients can query snapshots or changes for versions >=
@@ -2563,9 +2563,9 @@ type SharedDataObject struct {
 	//
 	// NOTE: The start_version should be <= the `current` version of the object.
 	StartVersion          types.Int64 `tfsdk:"start_version" tf:"optional"`
-	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version" tf:"computed,optional"`
+	EffectiveStartVersion types.Int64 `tfsdk:"effective_start_version" tf:"computed"`
 	// One of: **ACTIVE**, **PERMISSION_DENIED**.
-	Status types.String `tfsdk:"status" tf:"computed,optional"`
+	Status types.String `tfsdk:"status" tf:"computed"`
 	// A user-provided new name for the data object within the share. If this
 	// new name is not provided, the object's original name will be used as the
 	// `string_shared_as` name. The `string_shared_as` name must be unique
@@ -3040,7 +3040,7 @@ type UpdateShare struct {
 	// New name for the share.
 	NewName types.String `tfsdk:"new_name" tf:"optional"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner" tf:"computed,optional"`
+	Owner types.String `tfsdk:"owner" tf:"computed"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 	// Array of shared data object updates.

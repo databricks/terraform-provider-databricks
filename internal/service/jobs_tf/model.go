@@ -35,7 +35,7 @@ type BaseJob struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// Settings for this job and all of its runs. These settings can be updated
@@ -3653,7 +3653,7 @@ type Job struct {
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed,optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
 	// The email of an active workspace user or the application ID of a service

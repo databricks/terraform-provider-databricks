@@ -30,9 +30,9 @@ type App struct {
 
 	ComputeStatus types.Object `tfsdk:"compute_status" tf:"optional,object"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
 	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
+	Creator types.String `tfsdk:"creator" tf:"computed"`
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
@@ -48,17 +48,17 @@ type App struct {
 	// Resources for the app.
 	Resources types.List `tfsdk:"resources" tf:"optional"`
 
-	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id" tf:"computed,optional"`
+	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id" tf:"computed"`
 
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"computed,optional"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"computed"`
 
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"computed,optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"computed"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
 	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater" tf:"computed,optional"`
+	Updater types.String `tfsdk:"updater" tf:"computed"`
 	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url" tf:"computed,optional"`
+	Url types.String `tfsdk:"url" tf:"computed"`
 }
 
 func (newState *App) SyncEffectiveFieldsDuringCreateOrUpdate(plan App) {
@@ -418,9 +418,9 @@ func (o *AppAccessControlResponse) SetAllPermissions(ctx context.Context, v []Ap
 
 type AppDeployment struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed,optional"`
+	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
 	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator" tf:"computed,optional"`
+	Creator types.String `tfsdk:"creator" tf:"computed"`
 	// The deployment artifacts for an app.
 	DeploymentArtifacts types.Object `tfsdk:"deployment_artifacts" tf:"optional,object"`
 	// The unique id of the deployment.
@@ -438,7 +438,7 @@ type AppDeployment struct {
 	// Status and status message of the deployment
 	Status types.Object `tfsdk:"status" tf:"optional,object"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed,optional"`
+	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
 }
 
 func (newState *AppDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment) {
@@ -596,7 +596,7 @@ func (o AppDeploymentArtifacts) Type(ctx context.Context) attr.Type {
 
 type AppDeploymentStatus struct {
 	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the deployment.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
@@ -1291,7 +1291,7 @@ func (o AppResourceSqlWarehouse) Type(ctx context.Context) attr.Type {
 
 type ApplicationStatus struct {
 	// Application status message
-	Message types.String `tfsdk:"message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the application.
 	State types.String `tfsdk:"state" tf:"optional"`
 }
@@ -1337,7 +1337,7 @@ func (o ApplicationStatus) Type(ctx context.Context) attr.Type {
 
 type ComputeStatus struct {
 	// Compute status message
-	Message types.String `tfsdk:"message" tf:"computed,optional"`
+	Message types.String `tfsdk:"message" tf:"computed"`
 	// State of the app compute.
 	State types.String `tfsdk:"state" tf:"optional"`
 }

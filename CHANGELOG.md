@@ -1,5 +1,28 @@
 # Version changelog
 
+## [Release] Release v1.61.0
+
+### New Features and Improvements
+
+ * Add `databricks_app` resource and data source ([#4099](https://github.com/databricks/terraform-provider-databricks/pull/4099)).
+
+
+### Documentation
+
+ * Add a warning that attribute should be used in `databricks_permissions` for `databricks_vector_search_endpoint` ([#4312](https://github.com/databricks/terraform-provider-databricks/pull/4312)).
+
+
+### Internal Changes
+
+ * Added TF Plugin Framework checkbox item to PR template and removed checkbox for integration tests passing ([#4227](https://github.com/databricks/terraform-provider-databricks/pull/4227)).
+ * Expose several integration test helpers for use in plugin framework integration tests ([#4310](https://github.com/databricks/terraform-provider-databricks/pull/4310)).
+ * Fix ReadOnly() for ListNestedAttribute and Validators for ListNestedBlock ([#4313](https://github.com/databricks/terraform-provider-databricks/pull/4313)).
+ * Panic if the provided path is invalid ([#4309](https://github.com/databricks/terraform-provider-databricks/pull/4309)).
+ * Simplify `databricks_storage_credential` code ([#4301](https://github.com/databricks/terraform-provider-databricks/pull/4301)).
+ * Use Attributes by default for List Objects ([#4315](https://github.com/databricks/terraform-provider-databricks/pull/4315)).
+ * Use Plugin Framework types internally in generated TF SDK structures ([#4291](https://github.com/databricks/terraform-provider-databricks/pull/4291)).
+
+
 ## [Release] Release v1.60.0
 
 ### New Features and Improvements

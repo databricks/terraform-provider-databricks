@@ -140,13 +140,19 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
 		}
 		attr := scmAttr[fieldName]
-		if structTag.optional {
-			attr = attr.SetOptional()
-		} else {
-			attr = attr.SetRequired()
-		}
 		if structTag.computed {
+			// Computed attributes are always computed and may be optional.
 			attr = attr.SetComputed()
+			if structTag.optional {
+				attr = attr.SetOptional()
+			}
+		} else {
+			// Non-computed attributes must be either optional or required.
+			if structTag.optional {
+				attr = attr.SetOptional()
+			} else {
+				attr = attr.SetRequired()
+			}
 		}
 		scmAttr[fieldName] = attr
 	}

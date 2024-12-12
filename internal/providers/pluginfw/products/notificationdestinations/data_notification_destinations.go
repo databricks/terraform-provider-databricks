@@ -50,10 +50,7 @@ func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req d
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		cs.SetReadOnly("notification_destinations")
-		return cs
-	})
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

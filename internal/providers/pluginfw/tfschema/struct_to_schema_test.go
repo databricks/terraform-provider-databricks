@@ -265,10 +265,11 @@ func TestStructToSchemaExpectedError(t *testing.T) {
 }
 
 func TestComputedField(t *testing.T) {
-	// Test that ComputedTag field is computed and required
+	// Test that ComputedTag field is computed
 	scm := ResourceStructToSchema(context.Background(), TestComputedTfSdk{}, nil)
 	assert.True(t, scm.Attributes["computedtag"].IsComputed())
-	assert.True(t, scm.Attributes["computedtag"].IsRequired())
+	// Computed fields can never be required
+	assert.False(t, scm.Attributes["computedtag"].IsRequired())
 
 	// Test that MultipleTags field is computed and optional
 	assert.True(t, scm.Attributes["multipletags"].IsComputed())

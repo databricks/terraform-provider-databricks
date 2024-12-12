@@ -202,6 +202,9 @@ func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	return s
 }
 
+// ConfigureForSdkV2Migration modifies the underlying schema to be compatible with SDKv2. This method must
+// be called on all resources that were originally implemented using the SDKv2 and are migrated to the plugin
+// framework.
 func (s *CustomizableSchema) ConfigureForSdkV2Migration() *CustomizableSchema {
 	nbo := s.attr.(SingleNestedBlockBuilder).NestedObject
 	s.attr = SingleNestedBlockBuilder{NestedObject: convertAttributesToBlocks(nbo.Attributes, nbo.Blocks)}

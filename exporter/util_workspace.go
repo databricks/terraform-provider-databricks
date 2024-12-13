@@ -52,8 +52,8 @@ func hasWorkspacePrefix(path string) bool {
 }
 
 func maybeStripWorkspacePrefix(path string) string {
-	if hasWorkspacePrefix(path) {
-		return path[10:]
+	if strings.HasPrefix(path, "/Workspace/") {
+		return strings.TrimPrefix(path, "/Workspace")
 	}
 	return path
 }

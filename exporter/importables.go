@@ -89,7 +89,8 @@ var (
 		"storage_credential": {`CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`},
 		"foreign_connection": {`CREATE_FOREIGN_CATALOG`},
 	}
-	ParentDirectoryExtraKey = "parent_directory"
+	ParentDirectoryExtraKey   = "parent_directory"
+	dbManagedExternalLocation = "__databricks_managed_storage_location"
 )
 
 func generateMountBody(ic *importContext, body *hclwrite.Body, r *resource) error {
@@ -899,9 +900,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
-		// TODO: special formatting required, where JSON is written line by line
-		// so that we're able to do the references
-		Body: resourceOrDataBlockBody,
+		// TODO: implement a custom Body that will write with special formatting, where
+		// JSON is written line by line so that we're able to do the references
 	},
 	"databricks_group": {
 		Service:        "groups",
@@ -1051,7 +1051,6 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			return nil
 		},
-		Body: resourceOrDataBlockBody,
 	},
 	"databricks_group_member": {
 		Service:        "groups",
@@ -2291,7 +2290,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		Body: resourceOrDataBlockBody,
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "home"},
 			{Path: "path", Resource: "databricks_service_principal", Match: "home"},
@@ -2964,6 +2962,14 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-storage-credentials",
 		Import: func(ic *importContext, r *resource) error {
+			if r.ID == "__databricks_managed_storage_credential" {
+				// it's created by default and can't be imported
+				// TODO: add check for "securable_kind":"STORAGE_CREDENTIAL_DB_AWS_IAM" when we get it in the credential
+				r.Mode = "data"
+				data := tfcatalog.ResourceStorageCredential().ToResource().TestResourceData()
+				obj := tfcatalog.StorageCredentialInfo{Name: r.ID}
+				r.Data = ic.generateNewData(data, "databricks_storage_credential", r.ID, obj)
+			}
 			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
 			if r.Data != nil {
 				isolationMode := r.Data.Get("isolation_mode").(string)
@@ -3036,6 +3042,14 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-external-locations",
 		Import: func(ic *importContext, r *resource) error {
+			if r.ID == dbManagedExternalLocation {
+				// it's created by default and can't be imported
+				// TODO: add check for "securable_kind":"EXTERNAL_LOCATION_DB_STORAGE" when we get it in the credential
+				r.Mode = "data"
+				data := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
+				obj := tfcatalog.ExternalLocationInfo{Name: r.ID}
+				r.Data = ic.generateNewData(data, "databricks_external_location", r.ID, obj)
+			}
 			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)
 			credentialName := r.Data.Get("credential_name").(string)
 			ic.Emit(&resource{
@@ -3067,7 +3081,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: shouldOmitWithIsolationMode,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if (pathString == "url" || pathString == "credential_name") && d.Get("name").(string) == dbManagedExternalLocation {
+				return true
+			}
+			if pathString == "isolation_mode" {
+				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+			}
+			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
 		// This external location is automatically created when metastore is created with the `storage_root`
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.ID == "metastore_default_location"

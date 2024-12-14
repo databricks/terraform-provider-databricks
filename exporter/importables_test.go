@@ -2017,6 +2017,44 @@ func TestListExternalLocations(t *testing.T) {
 	})
 }
 
+func TestServiceCredentials(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/credentials?",
+			Response: catalog.ListCredentialsResponse{
+				Credentials: []catalog.CredentialInfo{
+					{
+						Name:    "test-storage",
+						Purpose: catalog.CredentialPurposeStorage,
+					},
+					{
+						Name:    "test-service",
+						Purpose: catalog.CredentialPurposeService,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-credentials,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
+		err := resourcesMap["databricks_credential"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_credential[<unknown>] (id: test-service)"])
+		// Test import
+		err = resourcesMap["databricks_credential"].Import(ic, &resource{
+			ID: "1234",
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: credential/1234)"])
+	})
+}
+
 func TestStorageCredentials(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

@@ -2987,12 +2987,47 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "isolation_mode" {
-				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-			}
-			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		ShouldOmitField: shouldOmitWithIsolationMode,
+		Depends: []reference{
+			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
+	},
+	"databricks_credential": {
+		WorkspaceLevel: true,
+		Service:        "uc-credentials",
+		Import: func(ic *importContext, r *resource) error {
+			ic.emitUCGrantsWithOwner("credential/"+r.ID, r)
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					purpose := r.Data.Get("purpose").(string)
+					if purpose == "SERVICE" {
+						ic.emitWorkspaceBindings("credential", r.ID)
+					} else if purpose == "STORAGE" {
+						ic.emitWorkspaceBindings("storage_credential", r.ID)
+					}
+				}
+			}
+			return nil
+		},
+		List: func(ic *importContext) error {
+			it := ic.workspaceClient.Credentials.ListCredentials(ic.Context, catalog.ListCredentialsRequest{})
+			for it.HasNext(ic.Context) {
+				v, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				if v.Purpose == catalog.CredentialPurposeStorage {
+					continue // we're handling storage credentials separately
+				}
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
+					Resource: "databricks_credential",
+					ID:       v.Name,
+				}, v.Name, v.UpdatedAt, fmt.Sprintf("credential %s", v.Name))
+			}
+			return nil
+		},
+		ShouldOmitField: shouldOmitWithIsolationMode,
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
@@ -3032,12 +3067,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "isolation_mode" {
-				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-			}
-			return shouldOmitForUnityCatalog(ic, pathString, as, d)
-		},
+		ShouldOmitField: shouldOmitWithIsolationMode,
 		// This external location is automatically created when metastore is created with the `storage_root`
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.ID == "metastore_default_location"

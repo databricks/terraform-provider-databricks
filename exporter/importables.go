@@ -249,7 +249,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_instance_pool", "instance_pool_name"),
 	},
 	"databricks_instance_profile": {
-		Service: "access",
+		Service:        "access",
+		WorkspaceLevel: true,
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			arn := d.Get("instance_profile_arn").(string)
 			splits := strings.Split(arn, "/")
@@ -761,12 +762,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return d.Get("name").(string)
 		},
 		List: func(ic *importContext) error {
-			w, err := ic.Client.WorkspaceClient()
-			if err != nil {
-				return err
-			}
 			builtInClusterPolicies := ic.getBuiltinPolicyFamilies()
-			it := w.ClusterPolicies.List(ic.Context, compute.ListClusterPoliciesRequest{})
+			it := ic.workspaceClient.ClusterPolicies.List(ic.Context, compute.ListClusterPoliciesRequest{})
 			i := 0
 			for it.HasNext(ic.Context) {
 				policy, err := it.Next(ic.Context)
@@ -2380,6 +2377,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						}
 						if se.ExternalModel.OpenaiConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.OpenaiConfig.OpenaiApiKey)
+							ic.emitSecretsFromSecretPathString(se.ExternalModel.OpenaiConfig.MicrosoftEntraClientSecret)
 						}
 						if se.ExternalModel.PalmConfig != nil {
 							ic.emitSecretsFromSecretPathString(se.ExternalModel.PalmConfig.PalmApiKey)
@@ -2392,6 +2390,15 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.Emit(&resource{
 					Resource: "databricks_schema",
 					ID:       mse.Config.AutoCaptureConfig.CatalogName + "." + mse.Config.AutoCaptureConfig.SchemaName,
+				})
+			}
+			// TODO: add auto-capture for AI Gateway
+			if mse.AiGateway != nil && mse.AiGateway.InferenceTableConfig != nil &&
+				mse.AiGateway.InferenceTableConfig.CatalogName != "" &&
+				mse.AiGateway.InferenceTableConfig.SchemaName != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_schema",
+					ID:       mse.AiGateway.InferenceTableConfig.CatalogName + "." + mse.AiGateway.InferenceTableConfig.SchemaName,
 				})
 			}
 			return nil
@@ -2431,14 +2438,22 @@ var resourcesMap map[string]importable = map[string]importable{
 				extModelBlockCoordinate := strings.Replace(pathString, ".scale_to_zero_enabled", ".external_model", 1)
 				return d.Get(extModelBlockCoordinate+".#").(int) == 0
 			}
-			return pathString == "config.0.auto_capture_config.0.enabled"
+			return pathString == "config.0.auto_capture_config.0.enabled" || pathString == "ai_gateway.0.inference_table_config.0.enabled"
 		},
 		Depends: []reference{
 			{Path: "config.served_entities.entity_name", Resource: "databricks_registered_model"},
+			{Path: "config.served_entities.instance_profile_arn", Resource: "databricks_instance_profile",
+				Match: "instance_profile_arn"},
 			{Path: "config.auto_capture_config.catalog_name", Resource: "databricks_catalog"},
 			{Path: "config.auto_capture_config.schema_name", Resource: "databricks_schema", Match: "name",
-				IsValidApproximation: createIsMatchingCatalogAndSchema("config.0.auto_capture_config.0.catalog_name", "config.0.auto_capture_config.0.schema_name"),
-				SkipDirectLookup:     true},
+				IsValidApproximation: createIsMatchingCatalogAndSchema("config.0.auto_capture_config.0.catalog_name",
+					"config.0.auto_capture_config.0.schema_name"),
+				SkipDirectLookup: true},
+			{Path: "ai_gateway.inference_table_config.catalog_name", Resource: "databricks_catalog"},
+			{Path: "ai_gateway.inference_table_config.schema_name", Resource: "databricks_schema", Match: "name",
+				IsValidApproximation: createIsMatchingCatalogAndSchema("ai_gateway.0.inference_table_config.0.catalog_name",
+					"ai_gateway.0.inference_table_config.0.schema_name"),
+				SkipDirectLookup: true},
 		},
 	},
 	"databricks_mlflow_webhook": {

@@ -323,6 +323,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		List: func(ic *importContext) error {
 			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
@@ -470,6 +472,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.notebook_task.base_parameters", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path",
@@ -491,6 +495,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -579,8 +585,8 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 					if task.DbtTask.Source == "WORKSPACE" {
 						directory := task.DbtTask.ProjectDirectory
-						if strings.HasPrefix(directory, "/Repos") {
-							ic.emitRepoByPath(directory)
+						if ic.isInRepoOrGitFolder(directory, true) {
+							ic.emitRepoOrGitFolder(directory, true)
 						} else {
 							// Traverse the dbt project directory and emit all objects found in it
 							nbAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
@@ -1456,40 +1462,51 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nameNormalizationRegex.ReplaceAllString(name[7:], "_") + "_" + d.Id()
 		},
 		Search: func(ic *importContext, r *resource) error {
-			reposAPI := repos.NewReposAPI(ic.Context, ic.Client)
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			repoDir, err := notebooksAPI.Read(r.Value)
+			repoDir, err := ic.workspaceClient.Workspace.GetStatusByPath(ic.Context, r.Value)
 			if err != nil {
 				return err
 			}
-			repo, err := reposAPI.Read(fmt.Sprintf("%d", repoDir.ObjectID))
-			if err != nil {
-				return err
+			if repoDir.ObjectType != sdk_workspace.ObjectTypeRepo {
+				return fmt.Errorf("object %s is not a repo", r.Value)
 			}
-			r.ID = fmt.Sprintf("%d", repo.ID)
+			if repoDir.ResourceId != "" {
+				r.ID = repoDir.ResourceId
+			} else {
+				r.ID = strconv.FormatInt(repoDir.ObjectId, 10)
+			}
 			return nil
 		},
 		List: func(ic *importContext) error {
-			objList, err := repos.NewReposAPI(ic.Context, ic.Client).ListAll()
-			if err != nil {
-				return err
-			}
-			for offset, repo := range objList {
+			it := ic.workspaceClient.Repos.List(ic.Context, sdk_workspace.ListReposRequest{PathPrefix: "/Workspace"})
+			i := 1
+			for it.HasNext(ic.Context) {
+				repo, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
 				if repo.Url != "" {
 					ic.Emit(&resource{
 						Resource: "databricks_repo",
-						ID:       fmt.Sprintf("%d", repo.ID),
+						ID:       strconv.FormatInt(repo.Id, 10),
 					})
 				} else {
 					log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", repo.Path)
 					ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", repo.Path))
 				}
-				log.Printf("[INFO] Scanned %d of %d repos", offset+1, len(objList))
+				if i%50 == 0 {
+					log.Printf("[INFO] Scanned %d repos", i)
+				}
+				i++
 			}
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			ic.emitUserOrServicePrincipalForPath(r.Data.Get("path").(string), "/Repos")
+			path := maybeStripWorkspacePrefix(r.Data.Get("path").(string))
+			if strings.HasPrefix(path, "/Repos") {
+				ic.emitUserOrServicePrincipalForPath(path, "/Repos")
+			} else if strings.HasPrefix(path, "/Users") {
+				ic.emitUserOrServicePrincipalForPath(path, "/Users")
+			}
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/repos/%s", r.ID),
 				"repo_"+ic.Importables["databricks_repo"].Name(ic, r.Data))
 			return nil
@@ -1518,11 +1535,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldIgnore
 		},
-
 		Depends: []reference{
 			{Path: "path", Resource: "databricks_user", Match: "repos",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "path", Resource: "databricks_service_principal", Match: "repos",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_user", Match: "home",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},
@@ -2236,6 +2256,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},
 	"databricks_directory": {
@@ -2271,6 +2293,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Body: resourceOrDataBlockBody,
 		Depends: []reference{
+			{Path: "path", Resource: "databricks_user", Match: "home"},
+			{Path: "path", Resource: "databricks_service_principal", Match: "home"},
 			// TODO: it should try to find longest reference to another directory object that it not itself...
 			{Path: "path", Resource: "databricks_user", Match: "home",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
@@ -2747,8 +2771,10 @@ var resourcesMap map[string]importable = map[string]importable{
 					}, volume.UpdatedAt, fmt.Sprintf("volume '%s'", volume.FullName))
 				}
 			}
-			if ic.isServiceInListing("uc-tables") {
-				// list tables
+			isTablesListingEnabled := ic.isServiceInListing("uc-tables")
+			isOnlineTablesListingEnabled := ic.isServiceInListing("uc-online-tables")
+			isVectorSearchListingEnabled := ic.isServiceInListing("vector-search")
+			if isTablesListingEnabled || isOnlineTablesListingEnabled || isVectorSearchListingEnabled {
 				it := ic.workspaceClient.Tables.List(ic.Context, catalog.ListTablesRequest{
 					CatalogName: catalogName,
 					SchemaName:  schemaName,
@@ -2760,25 +2786,31 @@ var resourcesMap map[string]importable = map[string]importable{
 					}
 					switch table.TableType {
 					case "MANAGED", "EXTERNAL", "VIEW":
-						ic.EmitIfUpdatedAfterMillis(&resource{
-							Resource:  "databricks_sql_table",
-							ID:        table.FullName,
-							DependsOn: dependsOn,
-						}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						if isTablesListingEnabled {
+							ic.EmitIfUpdatedAfterMillis(&resource{
+								Resource:  "databricks_sql_table",
+								ID:        table.FullName,
+								DependsOn: dependsOn,
+							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+						}
 					case "FOREIGN":
 						// TODO: it's better to use SecurableKind if it will be added to the Go SDK
 						switch table.DataSourceFormat {
 						case "VECTOR_INDEX_FORMAT":
-							ic.Emit(&resource{
-								Resource: "databricks_vector_search_index",
-								ID:       table.FullName,
-							})
+							if isVectorSearchListingEnabled {
+								ic.Emit(&resource{
+									Resource: "databricks_vector_search_index",
+									ID:       table.FullName,
+								})
+							}
 						case "MYSQL_FORMAT":
-							ic.EmitIfUpdatedAfterMillis(&resource{
-								Resource:  "databricks_online_table",
-								ID:        table.FullName,
-								DependsOn: dependsOn,
-							}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+							if isOnlineTablesListingEnabled {
+								ic.EmitIfUpdatedAfterMillis(&resource{
+									Resource:  "databricks_online_table",
+									ID:        table.FullName,
+									DependsOn: dependsOn,
+								}, table.UpdatedAt, fmt.Sprintf("table '%s'", table.FullName))
+							}
 						default:
 							log.Printf("[DEBUG] Skipping foreign table %s of format %s", table.FullName, table.DataSourceFormat)
 						}
@@ -2955,12 +2987,47 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "isolation_mode" {
-				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-			}
-			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		ShouldOmitField: shouldOmitWithIsolationMode,
+		Depends: []reference{
+			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
+	},
+	"databricks_credential": {
+		WorkspaceLevel: true,
+		Service:        "uc-credentials",
+		Import: func(ic *importContext, r *resource) error {
+			ic.emitUCGrantsWithOwner("credential/"+r.ID, r)
+			if r.Data != nil {
+				isolationMode := r.Data.Get("isolation_mode").(string)
+				if isolationMode == "ISOLATION_MODE_ISOLATED" {
+					purpose := r.Data.Get("purpose").(string)
+					if purpose == "SERVICE" {
+						ic.emitWorkspaceBindings("credential", r.ID)
+					} else if purpose == "STORAGE" {
+						ic.emitWorkspaceBindings("storage_credential", r.ID)
+					}
+				}
+			}
+			return nil
+		},
+		List: func(ic *importContext) error {
+			it := ic.workspaceClient.Credentials.ListCredentials(ic.Context, catalog.ListCredentialsRequest{})
+			for it.HasNext(ic.Context) {
+				v, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				if v.Purpose == catalog.CredentialPurposeStorage {
+					continue // we're handling storage credentials separately
+				}
+				ic.EmitIfUpdatedAfterMillisAndNameMatches(&resource{
+					Resource: "databricks_credential",
+					ID:       v.Name,
+				}, v.Name, v.UpdatedAt, fmt.Sprintf("credential %s", v.Name))
+			}
+			return nil
+		},
+		ShouldOmitField: shouldOmitWithIsolationMode,
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
 		},
@@ -3000,12 +3067,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			if pathString == "isolation_mode" {
-				return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-			}
-			return shouldOmitForUnityCatalog(ic, pathString, as, d)
-		},
+		ShouldOmitField: shouldOmitWithIsolationMode,
 		// This external location is automatically created when metastore is created with the `storage_root`
 		Ignore: func(ic *importContext, r *resource) bool {
 			return r.ID == "metastore_default_location"
@@ -3426,8 +3488,8 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			path := r.Data.Get("path").(string)
-			if strings.HasPrefix(path, "/Repos") {
-				ic.emitRepoByPath(path)
+			if ic.isInRepoOrGitFolder(path, false) {
+				ic.emitRepoOrGitFolder(path, false)
 				return nil
 			}
 			parts := strings.Split(path, "/")
@@ -3449,10 +3511,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				"dashboard_"+ic.Importables["databricks_dashboard"].Name(ic, r.Data))
 			parentPath := r.Data.Get("parent_path").(string)
 			if parentPath != "" && parentPath != "/" {
-				ic.Emit(&resource{
-					Resource: "databricks_directory",
-					ID:       parentPath,
-				})
+				ic.emitDirectoryOrRepo(parentPath)
 			}
 			warehouseId := r.Data.Get("warehouse_id").(string)
 			if warehouseId != "" {
@@ -3468,7 +3527,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return pathString == "dashboard_change_detected" || shouldOmitMd5Field(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			return strings.HasPrefix(r.Data.Get("path").(string), "/Repos") || strings.HasPrefix(r.Data.Get("parent_path").(string), "/Repos")
+			return ic.isInRepoOrGitFolder(r.Data.Get("path").(string), false) || ic.isInRepoOrGitFolder(r.Data.Get("parent_path").(string), true)
 		},
 		Depends: []reference{
 			{Path: "file_path", File: true},

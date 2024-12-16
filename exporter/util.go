@@ -83,9 +83,8 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 }
 
 func (ic *importContext) emitIfWsfsFile(path string) {
-	if strings.HasPrefix(path, "/Workspace/") {
-		normalPath := strings.TrimPrefix(path, "/Workspace")
-		ic.emitWorkspaceFileOrRepo(normalPath)
+	if hasWorkspacePrefix(path) {
+		ic.emitWorkspaceFileOrRepo(maybeStripWorkspacePrefix(path))
 	}
 }
 
@@ -435,6 +434,13 @@ func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.
 		return d.Get(pathString).(string) == ""
 	}
 	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "isolation_mode" {
+		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+	}
+	return shouldOmitForUnityCatalog(ic, pathString, as, d)
 }
 
 func appendEndingSlashToDirName(dir string) string {

@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccTableACL(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	tableName := qa.RandomName("table_acl_")
 	clusterId := GetEnvOrSkipTest(t, "TEST_TABLE_ACL_CLUSTER_ID")
 	ctx := context.Background()

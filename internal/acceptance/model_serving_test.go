@@ -8,9 +8,9 @@ import (
 )
 
 func TestAccModelServing(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
-		skipf(t)("not available on GCP")
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
 	}
 
 	name := fmt.Sprintf("terraform-test-model-serving-%s",
@@ -86,9 +86,9 @@ func TestAccModelServing(t *testing.T) {
 }
 
 func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
-		skipf(t)("not available on GCP")
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
 	}
 
 	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
@@ -161,9 +161,9 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 }
 
 func TestAccModelServingExternalModel(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
-		skipf(t)("not available on GCP")
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
 	}
 
 	name := fmt.Sprintf("terraform-test-model-serving-em-%s",

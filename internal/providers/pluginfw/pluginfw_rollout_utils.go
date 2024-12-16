@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/app"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/cluster"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/products/library"
@@ -26,30 +27,38 @@ import (
 )
 
 // List of resources that have been migrated from SDK V2 to plugin framework
+// Keep this list sorted.
 var migratedResources = []func() resource.Resource{
-	qualitymonitor.ResourceQualityMonitor,
 	library.ResourceLibrary,
+	qualitymonitor.ResourceQualityMonitor,
 }
 
 // List of data sources that have been migrated from SDK V2 to plugin framework
+// Keep this list sorted.
 var migratedDataSources = []func() datasource.DataSource{
 	volume.DataSourceVolumes,
 }
 
 // List of resources that have been onboarded to the plugin framework - not migrated from sdkv2.
+// Keep this list sorted.
 var pluginFwOnlyResources = []func() resource.Resource{
 	// TODO Add resources here
 	sharing.ResourceShare, // Using the staging name (with pluginframework suffix)
 	catalog.ResourceFunction,
+	app.ResourceApp,
+	sharing.ResourceShare,
 }
 
 // List of data sources that have been onboarded to the plugin framework - not migrated from sdkv2.
+// Keep this list sorted.
 var pluginFwOnlyDataSources = []func() datasource.DataSource{
-	serving.DataSourceServingEndpoints,
+	app.DataSourceApp,
+	app.DataSourceApps,
+	catalog.DataSourceFunctions,
+	notificationdestinations.DataSourceNotificationDestinations,
 	registered_model.DataSourceRegisteredModel,
 	registered_model.DataSourceRegisteredModelVersions,
-	notificationdestinations.DataSourceNotificationDestinations,
-	catalog.DataSourceFunctions,
+	serving.DataSourceServingEndpoints,
 	// TODO: Add DataSourceCluster into migratedDataSources after fixing unit tests.
 	cluster.DataSourceCluster, // Using the staging name (with pluginframework suffix)
 	sharing.DataSourceShare,   // Using the staging name (with pluginframework suffix)

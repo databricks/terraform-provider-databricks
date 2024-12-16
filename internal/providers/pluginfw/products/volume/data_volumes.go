@@ -3,6 +3,7 @@ package volume
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -11,6 +12,7 @@ import (
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,9 +31,15 @@ type VolumesDataSource struct {
 }
 
 type VolumesList struct {
-	CatalogName types.String   `tfsdk:"catalog_name"`
-	SchemaName  types.String   `tfsdk:"schema_name"`
-	Ids         []types.String `tfsdk:"ids" tf:"optional,computed"`
+	CatalogName types.String `tfsdk:"catalog_name"`
+	SchemaName  types.String `tfsdk:"schema_name"`
+	Ids         types.List   `tfsdk:"ids" tf:"optional,computed"`
+}
+
+func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ids": reflect.TypeOf(types.String{}),
+	}
 }
 
 func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -39,7 +47,7 @@ func (d *VolumesDataSource) Metadata(ctx context.Context, req datasource.Metadat
 }
 
 func (d *VolumesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(VolumesList{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, VolumesList{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,
@@ -76,8 +84,10 @@ func (d *VolumesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		resp.Diagnostics.AddError(fmt.Sprintf("failed to get volumes for the catalog:%s and schema%s", listVolumesRequest.CatalogName, listVolumesRequest.SchemaName), err.Error())
 		return
 	}
+	ids := []attr.Value{}
 	for _, v := range volumes {
-		volumesList.Ids = append(volumesList.Ids, types.StringValue(v.FullName))
+		ids = append(ids, types.StringValue(v.FullName))
 	}
+	volumesList.Ids = types.ListValueMust(types.StringType, ids)
 	resp.Diagnostics.Append(resp.State.Set(ctx, volumesList)...)
 }

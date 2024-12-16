@@ -18,14 +18,14 @@ var (
 )
 
 func TestMwsAccCustomAppIntegrationCreate(t *testing.T) {
-	loadAccountEnv(t)
+	LoadAccountEnv(t)
 	AccountLevel(t, Step{
 		Template: fmt.Sprintf(customAppIntegrationTemplate, "30"),
 	})
 }
 
 func TestMwsAccCustomAppIntegrationUpdate(t *testing.T) {
-	loadAccountEnv(t)
+	LoadAccountEnv(t)
 	AccountLevel(t, Step{
 		Template: fmt.Sprintf(customAppIntegrationTemplate, "30"),
 	}, Step{

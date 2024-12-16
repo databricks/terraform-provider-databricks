@@ -11,7 +11,8 @@ import (
 
 var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal"}
+		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
+			"databricks_gcp_service_account"}
 		for _, cred := range alofServiceCreds {
 			common.CustomizeSchemaPath(m, cred).SetExactlyOneOf(alofServiceCreds)
 		}
@@ -25,6 +26,10 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			common.CustomizeSchemaPath(m, computed).SetComputed()
 		}
 
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "email").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "credential_id").SetComputed()
+		common.CustomizeSchemaPath(m, "databricks_gcp_service_account", "private_key_id").SetComputed()
 		common.MustSchemaPath(m, "aws_iam_role", "external_id").Computed = true
 		common.MustSchemaPath(m, "aws_iam_role", "unity_catalog_iam_arn").Computed = true
 		common.MustSchemaPath(m, "azure_managed_identity", "credential_id").Computed = true
@@ -93,6 +98,14 @@ func ResourceCredential() common.Resource {
 			cred, err := w.Credentials.GetCredentialByNameArg(ctx, d.Id())
 			if err != nil {
 				return err
+			}
+			// azure client secret is sensitive, so we need to preserve it
+			var credOrig catalog.CredentialInfo
+			common.DataToStructPointer(d, credentialSchema, &credOrig)
+			if credOrig.AzureServicePrincipal != nil {
+				if credOrig.AzureServicePrincipal.ClientSecret != "" {
+					cred.AzureServicePrincipal.ClientSecret = credOrig.AzureServicePrincipal.ClientSecret
+				}
 			}
 			d.Set("credential_id", cred.Id)
 			return common.StructToData(cred, credentialSchema, d)

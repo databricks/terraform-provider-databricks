@@ -34,12 +34,14 @@ func (r *FunctionResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(catalog_tf.FunctionInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ToNestedBlockObject()
+
 		c.SetRequired("name")
 		c.SetRequired("catalog_name")
 		c.SetRequired("schema_name")
 		c.SetRequired("input_params")
 		c.SetRequired("data_type")
-		c.setRequired("full_data_type")
+		c.SetRequired("full_data_type")
 		c.SetRequired("routine_defintion")
 		c.SetRequired("is_deterministic")
 		c.SetRequired("is_null_call")

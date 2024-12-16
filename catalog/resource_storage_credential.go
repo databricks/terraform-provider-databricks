@@ -26,22 +26,14 @@ type StorageCredentialInfo struct {
 	IsolationMode               string                                       `json:"isolation_mode,omitempty" tf:"computed"`
 }
 
-func removeGcpSaField(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
-	//common.DataToStructPointer(d, s, &create) will error out because of DatabricksGcpServiceAccount any
-	tmpSchema := make(map[string]*schema.Schema)
-	for k, v := range originalSchema {
-		tmpSchema[k] = v
-	}
-	delete(tmpSchema, "databricks_gcp_service_account")
-	return tmpSchema
-}
-
 var storageCredentialSchema = common.StructToSchema(StorageCredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
 		m["storage_credential_id"] = &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		common.MustSchemaPath(m, "databricks_gcp_service_account", "email").Computed = true
+		common.MustSchemaPath(m, "databricks_gcp_service_account", "credential_id").Computed = true
 		return adjustDataAccessSchema(m)
 	})
 
@@ -50,18 +42,12 @@ func ResourceStorageCredential() common.Resource {
 		Schema: storageCredentialSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			metastoreId := d.Get("metastore_id").(string)
-			tmpSchema := removeGcpSaField(storageCredentialSchema)
 
 			var create catalog.CreateStorageCredential
 			var update catalog.UpdateStorageCredential
-			common.DataToStructPointer(d, tmpSchema, &create)
-			common.DataToStructPointer(d, tmpSchema, &update)
+			common.DataToStructPointer(d, storageCredentialSchema, &create)
+			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Get("name").(string)
-
-			//manually add empty struct back for databricks_gcp_service_account
-			if _, ok := d.GetOk("databricks_gcp_service_account"); ok {
-				create.DatabricksGcpServiceAccount = &catalog.DatabricksGcpServiceAccountRequest{}
-			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,

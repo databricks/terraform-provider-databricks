@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"golang.org/x/exp/slices"
@@ -246,14 +245,7 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj
 				data = workspace.ResourceDirectory().ToResource().TestResourceData()
 			}
 			if data != nil {
-				scm := ic.Resources[resourceType].Schema
-				data.MarkNewResource()
-				data.SetId(path)
-				err := common.StructToData(obj, scm, data)
-				if err != nil {
-					log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
-					data = nil
-				}
+				data = ic.generateNewData(data, resourceType, path, obj)
 			}
 		}
 		ic.Emit(&resource{

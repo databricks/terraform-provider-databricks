@@ -1341,7 +1341,7 @@ type Credential struct {
 
 	AwsCredentials types.List `tfsdk:"aws_credentials" tf:"optional,object"`
 	// Time in epoch milliseconds when the credential was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
 	// Databricks credential configuration ID.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The human-readable name of the credential configuration object.
@@ -1473,7 +1473,7 @@ type CustomerManagedKey struct {
 
 	AwsKeyInfo types.List `tfsdk:"aws_key_info" tf:"optional,object"`
 	// Time in epoch milliseconds when the customer key was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
 	// ID of the encryption key configuration object.
 	CustomerManagedKeyId types.String `tfsdk:"customer_managed_key_id" tf:"optional"`
 
@@ -2615,9 +2615,9 @@ type Network struct {
 	// The Databricks account ID associated with this network configuration.
 	AccountId types.String `tfsdk:"account_id" tf:"optional"`
 	// Time in epoch milliseconds when the network was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
 	// Array of error messages about the network configuration.
-	ErrorMessages types.List `tfsdk:"error_messages" tf:"computed,optional"`
+	ErrorMessages types.List `tfsdk:"error_messages" tf:"computed"`
 	// The Google Cloud specific information for this network (for example, the
 	// VPC ID, subnet ID, and secondary IP ranges).
 	GcpNetworkInfo types.List `tfsdk:"gcp_network_info" tf:"optional,object"`
@@ -2640,9 +2640,9 @@ type Network struct {
 	// The status of this network configuration object in terms of its use in a
 	// workspace: * `UNATTACHED`: Unattached. * `VALID`: Valid. * `BROKEN`:
 	// Broken. * `WARNED`: Warned.
-	VpcStatus types.String `tfsdk:"vpc_status" tf:"computed,optional"`
+	VpcStatus types.String `tfsdk:"vpc_status" tf:"computed"`
 	// Array of warning messages about the network configuration.
-	WarningMessages types.List `tfsdk:"warning_messages" tf:"computed,optional"`
+	WarningMessages types.List `tfsdk:"warning_messages" tf:"computed"`
 	// Workspace ID associated with this network configuration.
 	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
 }
@@ -3275,9 +3275,9 @@ func (o RootBucketInfo) Type(ctx context.Context) attr.Type {
 
 type StorageConfiguration struct {
 	// The Databricks account ID that hosts the credential.
-	AccountId types.String `tfsdk:"account_id" tf:"computed,optional"`
+	AccountId types.String `tfsdk:"account_id" tf:"computed"`
 	// Time in epoch milliseconds when the storage configuration was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
 	// Root S3 bucket information.
 	RootBucketInfo types.List `tfsdk:"root_bucket_info" tf:"optional,object"`
 	// Databricks storage configuration ID.
@@ -3815,7 +3815,7 @@ type Workspace struct {
 	// providers.
 	CloudResourceContainer types.List `tfsdk:"cloud_resource_container" tf:"optional,object"`
 	// Time in epoch milliseconds when the workspace was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed,optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
 	// ID of the workspace's credential configuration object.
 	CredentialsId types.String `tfsdk:"credentials_id" tf:"optional"`
 	// The custom tags key-value pairing that is attached to this workspace. The
@@ -3897,9 +3897,9 @@ type Workspace struct {
 	// The status of the workspace. For workspace creation, usually it is set to
 	// `PROVISIONING` initially. Continue to check the status until the status
 	// is `RUNNING`.
-	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"computed,optional"`
+	WorkspaceStatus types.String `tfsdk:"workspace_status" tf:"computed"`
 	// Message describing the current workspace status.
-	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"computed,optional"`
+	WorkspaceStatusMessage types.String `tfsdk:"workspace_status_message" tf:"computed"`
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspace) {

@@ -29,13 +29,13 @@ type CleanRoom struct {
 	// Whether clean room access is restricted due to [CSP]
 	//
 	// [CSP]: https://docs.databricks.com/en/security/privacy/security-profile.html
-	AccessRestricted types.String `tfsdk:"access_restricted" tf:"optional"`
+	AccessRestricted types.String `tfsdk:"access_restricted" tf:"computed"`
 
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// When the clean room was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at" tf:"computed"`
 	// The alias of the collaborator tied to the local clean room.
-	LocalCollaboratorAlias types.String `tfsdk:"local_collaborator_alias" tf:"optional"`
+	LocalCollaboratorAlias types.String `tfsdk:"local_collaborator_alias" tf:"computed"`
 	// The name of the clean room. It should follow [UC securable naming
 	// requirements].
 	//
@@ -44,7 +44,7 @@ type CleanRoom struct {
 	// Output catalog of the clean room. It is an output only field. Output
 	// catalog is manipulated using the separate CreateCleanRoomOutputCatalog
 	// API.
-	OutputCatalog types.List `tfsdk:"output_catalog" tf:"optional,object"`
+	OutputCatalog types.List `tfsdk:"output_catalog" tf:"computed,object"`
 	// This is Databricks username of the owner of the local clean room
 	// securable for permission management.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
@@ -53,9 +53,9 @@ type CleanRoom struct {
 	// will not be filled in the ListCleanRooms call.
 	RemoteDetailedInfo types.List `tfsdk:"remote_detailed_info" tf:"optional,object"`
 	// Clean room status.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"computed"`
 	// When the clean room was last updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed"`
 }
 
 func (newState *CleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoom) {
@@ -175,7 +175,7 @@ func (o *CleanRoom) SetRemoteDetailedInfo(ctx context.Context, v CleanRoomRemote
 // Metadata of the clean room asset
 type CleanRoomAsset struct {
 	// When the asset is added to the clean room, in epoch milliseconds.
-	AddedAt types.Int64 `tfsdk:"added_at" tf:"optional"`
+	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type" tf:"optional"`
 	// Foreign table details available to all collaborators of the clean room.
@@ -196,9 +196,9 @@ type CleanRoomAsset struct {
 	// Present if and only if **asset_type** is **NOTEBOOK_FILE**
 	Notebook types.List `tfsdk:"notebook" tf:"optional,object"`
 	// The alias of the collaborator who owns this asset
-	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias" tf:"optional"`
+	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias" tf:"computed"`
 	// Status of the asset
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"computed"`
 	// Table details available to all collaborators of the clean room. Present
 	// if and only if **asset_type** is **TABLE**
 	Table types.List `tfsdk:"table" tf:"optional,object"`
@@ -512,7 +512,7 @@ func (o *CleanRoomAsset) SetVolumeLocalDetails(ctx context.Context, v CleanRoomA
 
 type CleanRoomAssetForeignTable struct {
 	// The metadata information of the columns in the foreign table
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
 func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable) {
@@ -627,7 +627,7 @@ func (o CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.T
 
 type CleanRoomAssetNotebook struct {
 	// Server generated checksum that represents the notebook version.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag" tf:"computed"`
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
 	NotebookContent types.String `tfsdk:"notebook_content" tf:"optional"`
@@ -674,7 +674,7 @@ func (o CleanRoomAssetNotebook) Type(ctx context.Context) attr.Type {
 
 type CleanRoomAssetTable struct {
 	// The metadata information of the columns in the table
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
 func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable) {
@@ -823,7 +823,7 @@ func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v [
 
 type CleanRoomAssetView struct {
 	// The metadata information of the columns in the view
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
 func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetView) {
@@ -993,7 +993,7 @@ type CleanRoomCollaborator struct {
 	// metastore clean room, it is the clean room name. For x-metastore clean
 	// rooms, it is the organization name of the metastore. It is not restricted
 	// to these values and could change in the future
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name" tf:"computed"`
 	// The global Unity Catalog metastore id of the collaborator. The identifier
 	// is of format cloud:region:metastore-uuid.
 	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
@@ -1009,7 +1009,7 @@ type CleanRoomCollaborator struct {
 	// [Organization
 	// name](:method:metastores/list#metastores-delta_sharing_organization_name)
 	// configured in the metastore
-	OrganizationName types.String `tfsdk:"organization_name" tf:"optional"`
+	OrganizationName types.String `tfsdk:"organization_name" tf:"computed"`
 }
 
 func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator) {
@@ -1197,7 +1197,7 @@ type CleanRoomOutputCatalog struct {
 	// [UC securable naming requirements]: https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements
 	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status" tf:"computed"`
 }
 
 func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog) {
@@ -1242,7 +1242,7 @@ func (o CleanRoomOutputCatalog) Type(ctx context.Context) attr.Type {
 // Publicly visible central clean room details.
 type CleanRoomRemoteDetail struct {
 	// Central clean room ID.
-	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id" tf:"optional"`
+	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id" tf:"computed"`
 	// Cloud vendor (aws,azure,gcp) of the central clean room.
 	CloudVendor types.String `tfsdk:"cloud_vendor" tf:"optional"`
 	// Collaborators in the central clean room. There should one and only one
@@ -1257,7 +1257,7 @@ type CleanRoomRemoteDetail struct {
 	// compliance standards.
 	ComplianceSecurityProfile types.List `tfsdk:"compliance_security_profile" tf:"optional,object"`
 	// Collaborator who creates the clean room.
-	Creator types.List `tfsdk:"creator" tf:"optional,object"`
+	Creator types.List `tfsdk:"creator" tf:"computed,object"`
 	// Egress network policy to apply to the central clean room workspace.
 	EgressNetworkPolicy types.List `tfsdk:"egress_network_policy" tf:"optional,object"`
 	// Region of the central clean room.

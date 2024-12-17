@@ -37,24 +37,6 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = tfschema.ResourceStructToSchema(ctx, apps_tf.App{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
-		// Computed fields
-		for _, p := range []string{
-			"active_deployment",
-			"app_status",
-			"compute_status",
-			"create_time",
-			"creator",
-			"default_source_code_path",
-			"pending_deployment",
-			"service_principal_client_id",
-			"service_principal_id",
-			"service_principal_name",
-			"update_time",
-			"updater",
-			"url",
-		} {
-			cs.SetReadOnly(p)
-		}
 		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse"}
 		paths := path.Expressions{}
 		for _, field := range exclusiveFields[1:] {

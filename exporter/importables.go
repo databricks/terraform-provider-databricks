@@ -444,16 +444,23 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_query"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
-			{Path: "task.webhook_notifications.on_duration_warning_threshold_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "task.webhook_notifications.on_duration_warning_threshold_exceeded.id",
+				Resource: "databricks_notification_destination"},
 			{Path: "task.webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
 			{Path: "task.webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
 			{Path: "task.webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
 			{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
+			{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
 			{Path: "task.email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "task.email_notifications.on_start", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "task.email_notifications.on_success", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name",
+				MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_start", Resource: "databricks_user", Match: "user_name",
+				MatchType: MatchCaseInsensitive},
+			{Path: "task.email_notifications.on_success", Resource: "databricks_user", Match: "user_name",
+				MatchType: MatchCaseInsensitive},
 			{Path: "task.email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
@@ -497,7 +504,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+			{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path"},
+			{Path: "parameter.default", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		Import: func(ic *importContext, r *resource) error {
@@ -668,6 +676,10 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnDurationWarningThresholdExceeded)
 				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStart)
 				ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStreamingBacklogExceeded)
+			}
+			for _, param := range job.Parameters {
+				ic.emitIfWsfsFile(param.Default)
+				ic.emitIfVolumeFile(param.Default)
 			}
 
 			return ic.importLibraries(r.Data, s)

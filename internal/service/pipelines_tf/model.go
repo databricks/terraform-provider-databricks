@@ -5014,7 +5014,7 @@ type RestartWindow struct {
 	// Days of week in which the restart is allowed to happen (within a
 	// five-hour window starting at start_hour). If not specified all days of
 	// the week will be used.
-	DaysOfWeek types.String `tfsdk:"days_of_week" tf:"optional"`
+	DaysOfWeek types.List `tfsdk:"days_of_week" tf:"optional"`
 	// An integer between 0 and 23 denoting the start hour for the restart
 	// window in the 24-hour day. Continuous pipeline restart is triggered only
 	// within a five-hour window starting at this hour.
@@ -5039,7 +5039,9 @@ func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState Resta
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a RestartWindow) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"days_of_week": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -5059,11 +5061,39 @@ func (o RestartWindow) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o RestartWindow) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"days_of_week": types.StringType,
+			"days_of_week": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"start_hour":   types.Int64Type,
 			"time_zone_id": types.StringType,
 		},
 	}
+}
+
+// GetDaysOfWeek returns the value of the DaysOfWeek field in RestartWindow as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RestartWindow) GetDaysOfWeek(ctx context.Context) ([]types.String, bool) {
+	if o.DaysOfWeek.IsNull() || o.DaysOfWeek.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.DaysOfWeek.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetDaysOfWeek sets the value of the DaysOfWeek field in RestartWindow.
+func (o *RestartWindow) SetDaysOfWeek(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["days_of_week"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.DaysOfWeek = types.ListValueMust(t, vs)
 }
 
 type SchemaSpec struct {

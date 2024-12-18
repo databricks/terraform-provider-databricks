@@ -1,5 +1,37 @@
 # Version changelog
 
+## [Release] Release v1.62.0
+
+### New Features and Improvements
+
+ * Allow to use GCP SA in `databricks_credential` (storage only) ([#4302](https://github.com/databricks/terraform-provider-databricks/pull/4302)).
+
+
+### Bug Fixes
+
+ * Bump Golang x/crypto to 0.31 ([#4319](https://github.com/databricks/terraform-provider-databricks/pull/4319)).
+
+
+### Internal Changes
+
+ * Generate models with correctly computed annotations ([#4316](https://github.com/databricks/terraform-provider-databricks/pull/4316)).
+ * Update Go SDK to 0.54.0 ([#4328](https://github.com/databricks/terraform-provider-databricks/pull/4328)).
+
+
+### Dependency Updates
+
+ * Bump github.com/hashicorp/terraform-plugin-framework-validators from 0.15.0 to 0.16.0 ([#4320](https://github.com/databricks/terraform-provider-databricks/pull/4320)).
+
+
+### Exporter
+
+ * Correctly handle DB-managed UC objects ([#4323](https://github.com/databricks/terraform-provider-databricks/pull/4323)).
+ * Emit WSFS/UC files from `parameters` in the jobs ([#4318](https://github.com/databricks/terraform-provider-databricks/pull/4318)).
+ * Improve support of `databricks_model_serving` ([#4324](https://github.com/databricks/terraform-provider-databricks/pull/4324)).
+ * add support for `databricks_credential` ([#4292](https://github.com/databricks/terraform-provider-databricks/pull/4292)).
+ * export `databricks_repo` for Git Folders outside of `/Repos` ([#4308](https://github.com/databricks/terraform-provider-databricks/pull/4308)).
+
+
 ## [Release] Release v1.61.0
 
 ### New Features and Improvements

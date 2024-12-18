@@ -42,6 +42,9 @@ var migratedDataSources = []func() datasource.DataSource{
 // List of resources that have been onboarded to the plugin framework - not migrated from sdkv2.
 // Keep this list sorted.
 var pluginFwOnlyResources = []func() resource.Resource{
+	// TODO Add resources here
+	sharing.ResourceShare, // Using the staging name (with pluginframework suffix)
+	catalog.ResourceFunction,
 	app.ResourceApp,
 	sharing.ResourceShare,
 }

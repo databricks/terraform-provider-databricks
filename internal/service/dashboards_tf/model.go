@@ -1998,6 +1998,10 @@ type MigrateDashboardRequest struct {
 	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
 	// UUID of the dashboard to be migrated.
 	SourceDashboardId types.String `tfsdk:"source_dashboard_id" tf:""`
+	// Flag to indicate if mustache parameter syntax ({{ param }}) should be
+	// auto-updated to named syntax (:param) when converting datasets in the
+	// dashboard.
+	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax" tf:"optional"`
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest) {
@@ -2024,9 +2028,10 @@ func (o MigrateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name":        o.DisplayName,
-			"parent_path":         o.ParentPath,
-			"source_dashboard_id": o.SourceDashboardId,
+			"display_name":            o.DisplayName,
+			"parent_path":             o.ParentPath,
+			"source_dashboard_id":     o.SourceDashboardId,
+			"update_parameter_syntax": o.UpdateParameterSyntax,
 		})
 }
 
@@ -2034,9 +2039,10 @@ func (o MigrateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o MigrateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"display_name":        types.StringType,
-			"parent_path":         types.StringType,
-			"source_dashboard_id": types.StringType,
+			"display_name":            types.StringType,
+			"parent_path":             types.StringType,
+			"source_dashboard_id":     types.StringType,
+			"update_parameter_syntax": types.BoolType,
 		},
 	}
 }

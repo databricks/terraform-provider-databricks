@@ -965,9 +965,16 @@ type ClusterAttributes struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -1012,6 +1019,19 @@ type ClusterAttributes struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -1059,6 +1079,12 @@ type ClusterAttributes struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -1114,6 +1140,8 @@ func (o ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"policy_id":                    o.PolicyId,
 			"runtime_engine":               o.RuntimeEngine,
@@ -1122,6 +1150,7 @@ func (o ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -1159,6 +1188,8 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"policy_id":        types.StringType,
 			"runtime_engine":   types.StringType,
@@ -1173,6 +1204,7 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},
@@ -1607,9 +1639,16 @@ type ClusterDetails struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -1673,9 +1712,22 @@ type ClusterDetails struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
 	// Port on which Spark JDBC server is listening, in the driver nod. No
 	// service will be listeningon on this port in executor nodes.
 	JdbcPort types.Int64 `tfsdk:"jdbc_port" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// the timestamp that the cluster was started/restarted
 	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time" tf:"optional"`
 	// Time when the cluster driver last lost its state (due to a restart or
@@ -1762,6 +1814,12 @@ type ClusterDetails struct {
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.List `tfsdk:"termination_reason" tf:"optional,object"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -1834,7 +1892,9 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
 			"jdbc_port":                    o.JdbcPort,
+			"kind":                         o.Kind,
 			"last_restarted_time":          o.LastRestartedTime,
 			"last_state_loss_time":         o.LastStateLossTime,
 			"node_type_id":                 o.NodeTypeId,
@@ -1853,6 +1913,7 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"state_message":                o.StateMessage,
 			"terminated_time":              o.TerminatedTime,
 			"termination_reason":           o.TerminationReason,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -1910,7 +1971,9 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id":     types.StringType,
+			"is_single_node":       types.BoolType,
 			"jdbc_port":            types.Int64Type,
+			"kind":                 types.StringType,
 			"last_restarted_time":  types.Int64Type,
 			"last_state_loss_time": types.Int64Type,
 			"node_type_id":         types.StringType,
@@ -1939,6 +2002,7 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"termination_reason": basetypes.ListType{
 				ElemType: TerminationReason{}.Type(ctx),
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},
@@ -3605,9 +3669,16 @@ type ClusterSpec struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -3652,6 +3723,19 @@ type ClusterSpec struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -3710,6 +3794,12 @@ type ClusterSpec struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -3768,6 +3858,8 @@ func (o ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -3777,6 +3869,7 @@ func (o ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -3818,6 +3911,8 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -3833,6 +3928,7 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},
@@ -4515,9 +4611,16 @@ type CreateCluster struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -4562,6 +4665,19 @@ type CreateCluster struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -4620,6 +4736,12 @@ type CreateCluster struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -4680,6 +4802,8 @@ func (o CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -4689,6 +4813,7 @@ func (o CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -4733,6 +4858,8 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -4748,6 +4875,7 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},
@@ -6595,9 +6723,16 @@ type EditCluster struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -6642,6 +6777,19 @@ type EditCluster struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -6700,6 +6848,12 @@ type EditCluster struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -6759,6 +6913,8 @@ func (o EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -6768,6 +6924,7 @@ func (o EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -6810,6 +6967,8 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -6825,6 +6984,7 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},
@@ -15483,9 +15643,16 @@ type UpdateClusterResource struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -15530,6 +15697,19 @@ type UpdateClusterResource struct {
 	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node" tf:"optional"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind" tf:"optional"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -15588,6 +15768,12 @@ type UpdateClusterResource struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime" tf:"optional"`
 
 	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
 }
@@ -15645,6 +15831,8 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -15654,6 +15842,7 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -15694,6 +15883,8 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -15709,6 +15900,7 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"use_ml_runtime": types.BoolType,
 			"workload_type": basetypes.ListType{
 				ElemType: WorkloadType{}.Type(ctx),
 			},

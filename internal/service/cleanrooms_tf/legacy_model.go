@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-type CleanRoom struct {
+type CleanRoom_SdkV2 struct {
 	// Whether clean room access is restricted due to [CSP]
 	//
 	// [CSP]: https://docs.databricks.com/en/security/privacy/security-profile.html
@@ -44,24 +44,24 @@ type CleanRoom struct {
 	// Output catalog of the clean room. It is an output only field. Output
 	// catalog is manipulated using the separate CreateCleanRoomOutputCatalog
 	// API.
-	OutputCatalog types.Object `tfsdk:"output_catalog" tf:"computed,object"`
+	OutputCatalog types.List `tfsdk:"output_catalog" tf:"computed,object"`
 	// This is Databricks username of the owner of the local clean room
 	// securable for permission management.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Central clean room details. During creation, users need to specify
 	// cloud_vendor, region, and collaborators.global_metastore_id. This field
 	// will not be filled in the ListCleanRooms call.
-	RemoteDetailedInfo types.Object `tfsdk:"remote_detailed_info" tf:"optional,object"`
+	RemoteDetailedInfo types.List `tfsdk:"remote_detailed_info" tf:"optional,object"`
 	// Clean room status.
 	Status types.String `tfsdk:"status" tf:"computed"`
 	// When the clean room was last updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed"`
 }
 
-func (newState *CleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoom) {
+func (newState *CleanRoom_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoom_SdkV2) {
 }
 
-func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom) {
+func (newState *CleanRoom_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoom_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoom.
@@ -71,17 +71,17 @@ func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoom) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoom_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"output_catalog":       reflect.TypeOf(CleanRoomOutputCatalog{}),
-		"remote_detailed_info": reflect.TypeOf(CleanRoomRemoteDetail{}),
+		"output_catalog":       reflect.TypeOf(CleanRoomOutputCatalog_SdkV2{}),
+		"remote_detailed_info": reflect.TypeOf(CleanRoomRemoteDetail_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoom
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoom_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoom) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoom_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -99,7 +99,7 @@ func (o CleanRoom) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoom) Type(ctx context.Context) attr.Type {
+func (o CleanRoom_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_restricted":        types.StringType,
@@ -107,28 +107,29 @@ func (o CleanRoom) Type(ctx context.Context) attr.Type {
 			"created_at":               types.Int64Type,
 			"local_collaborator_alias": types.StringType,
 			"name":                     types.StringType,
-			"output_catalog":           CleanRoomOutputCatalog{}.Type(ctx),
-			"owner":                    types.StringType,
-			"remote_detailed_info":     CleanRoomRemoteDetail{}.Type(ctx),
-			"status":                   types.StringType,
-			"updated_at":               types.Int64Type,
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
+			},
+			"owner": types.StringType,
+			"remote_detailed_info": basetypes.ListType{
+				ElemType: CleanRoomRemoteDetail_SdkV2{}.Type(ctx),
+			},
+			"status":     types.StringType,
+			"updated_at": types.Int64Type,
 		},
 	}
 }
 
-// GetOutputCatalog returns the value of the OutputCatalog field in CleanRoom as
-// a CleanRoomOutputCatalog value.
+// GetOutputCatalog returns the value of the OutputCatalog field in CleanRoom_SdkV2 as
+// a CleanRoomOutputCatalog_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoom) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog, bool) {
-	var e CleanRoomOutputCatalog
+func (o *CleanRoom_SdkV2) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog_SdkV2, bool) {
+	var e CleanRoomOutputCatalog_SdkV2
 	if o.OutputCatalog.IsNull() || o.OutputCatalog.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomOutputCatalog_SdkV2
+	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -138,25 +139,23 @@ func (o *CleanRoom) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalo
 	return v[0], true
 }
 
-// SetOutputCatalog sets the value of the OutputCatalog field in CleanRoom.
-func (o *CleanRoom) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := v.ToObjectValue(ctx)
-	o.OutputCatalog = vs
+// SetOutputCatalog sets the value of the OutputCatalog field in CleanRoom_SdkV2.
+func (o *CleanRoom_SdkV2) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
+	o.OutputCatalog = types.ListValueMust(t, vs)
 }
 
-// GetRemoteDetailedInfo returns the value of the RemoteDetailedInfo field in CleanRoom as
-// a CleanRoomRemoteDetail value.
+// GetRemoteDetailedInfo returns the value of the RemoteDetailedInfo field in CleanRoom_SdkV2 as
+// a CleanRoomRemoteDetail_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoom) GetRemoteDetailedInfo(ctx context.Context) (CleanRoomRemoteDetail, bool) {
-	var e CleanRoomRemoteDetail
+func (o *CleanRoom_SdkV2) GetRemoteDetailedInfo(ctx context.Context) (CleanRoomRemoteDetail_SdkV2, bool) {
+	var e CleanRoomRemoteDetail_SdkV2
 	if o.RemoteDetailedInfo.IsNull() || o.RemoteDetailedInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomRemoteDetail
-	d := o.RemoteDetailedInfo.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomRemoteDetail_SdkV2
+	d := o.RemoteDetailedInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -166,24 +165,25 @@ func (o *CleanRoom) GetRemoteDetailedInfo(ctx context.Context) (CleanRoomRemoteD
 	return v[0], true
 }
 
-// SetRemoteDetailedInfo sets the value of the RemoteDetailedInfo field in CleanRoom.
-func (o *CleanRoom) SetRemoteDetailedInfo(ctx context.Context, v CleanRoomRemoteDetail) {
-	vs := v.ToObjectValue(ctx)
-	o.RemoteDetailedInfo = vs
+// SetRemoteDetailedInfo sets the value of the RemoteDetailedInfo field in CleanRoom_SdkV2.
+func (o *CleanRoom_SdkV2) SetRemoteDetailedInfo(ctx context.Context, v CleanRoomRemoteDetail_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remote_detailed_info"]
+	o.RemoteDetailedInfo = types.ListValueMust(t, vs)
 }
 
 // Metadata of the clean room asset
-type CleanRoomAsset struct {
+type CleanRoomAsset_SdkV2 struct {
 	// When the asset is added to the clean room, in epoch milliseconds.
 	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"asset_type" tf:"optional"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
-	ForeignTable types.Object `tfsdk:"foreign_table" tf:"optional,object"`
+	ForeignTable types.List `tfsdk:"foreign_table" tf:"optional,object"`
 	// Local details for a foreign that are only available to its owner. Present
 	// if and only if **asset_type** is **FOREIGN_TABLE**
-	ForeignTableLocalDetails types.Object `tfsdk:"foreign_table_local_details" tf:"optional,object"`
+	ForeignTableLocalDetails types.List `tfsdk:"foreign_table_local_details" tf:"optional,object"`
 	// A fully qualified name that uniquely identifies the asset within the
 	// clean room. This is also the name displayed in the clean room UI.
 	//
@@ -194,32 +194,32 @@ type CleanRoomAsset struct {
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Notebook details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **NOTEBOOK_FILE**
-	Notebook types.Object `tfsdk:"notebook" tf:"optional,object"`
+	Notebook types.List `tfsdk:"notebook" tf:"optional,object"`
 	// The alias of the collaborator who owns this asset
 	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias" tf:"computed"`
 	// Status of the asset
 	Status types.String `tfsdk:"status" tf:"computed"`
 	// Table details available to all collaborators of the clean room. Present
 	// if and only if **asset_type** is **TABLE**
-	Table types.Object `tfsdk:"table" tf:"optional,object"`
+	Table types.List `tfsdk:"table" tf:"optional,object"`
 	// Local details for a table that are only available to its owner. Present
 	// if and only if **asset_type** is **TABLE**
-	TableLocalDetails types.Object `tfsdk:"table_local_details" tf:"optional,object"`
+	TableLocalDetails types.List `tfsdk:"table_local_details" tf:"optional,object"`
 	// View details available to all collaborators of the clean room. Present if
 	// and only if **asset_type** is **VIEW**
-	View types.Object `tfsdk:"view" tf:"optional,object"`
+	View types.List `tfsdk:"view" tf:"optional,object"`
 	// Local details for a view that are only available to its owner. Present if
 	// and only if **asset_type** is **VIEW**
-	ViewLocalDetails types.Object `tfsdk:"view_local_details" tf:"optional,object"`
+	ViewLocalDetails types.List `tfsdk:"view_local_details" tf:"optional,object"`
 	// Local details for a volume that are only available to its owner. Present
 	// if and only if **asset_type** is **VOLUME**
-	VolumeLocalDetails types.Object `tfsdk:"volume_local_details" tf:"optional,object"`
+	VolumeLocalDetails types.List `tfsdk:"volume_local_details" tf:"optional,object"`
 }
 
-func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAsset) {
+func (newState *CleanRoomAsset_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAsset_SdkV2) {
 }
 
-func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState CleanRoomAsset) {
+func (newState *CleanRoomAsset_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAsset_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAsset.
@@ -229,23 +229,23 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState Clea
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAsset) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAsset_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"foreign_table":               reflect.TypeOf(CleanRoomAssetForeignTable{}),
-		"foreign_table_local_details": reflect.TypeOf(CleanRoomAssetForeignTableLocalDetails{}),
-		"notebook":                    reflect.TypeOf(CleanRoomAssetNotebook{}),
-		"table":                       reflect.TypeOf(CleanRoomAssetTable{}),
-		"table_local_details":         reflect.TypeOf(CleanRoomAssetTableLocalDetails{}),
-		"view":                        reflect.TypeOf(CleanRoomAssetView{}),
-		"view_local_details":          reflect.TypeOf(CleanRoomAssetViewLocalDetails{}),
-		"volume_local_details":        reflect.TypeOf(CleanRoomAssetVolumeLocalDetails{}),
+		"foreign_table":               reflect.TypeOf(CleanRoomAssetForeignTable_SdkV2{}),
+		"foreign_table_local_details": reflect.TypeOf(CleanRoomAssetForeignTableLocalDetails_SdkV2{}),
+		"notebook":                    reflect.TypeOf(CleanRoomAssetNotebook_SdkV2{}),
+		"table":                       reflect.TypeOf(CleanRoomAssetTable_SdkV2{}),
+		"table_local_details":         reflect.TypeOf(CleanRoomAssetTableLocalDetails_SdkV2{}),
+		"view":                        reflect.TypeOf(CleanRoomAssetView_SdkV2{}),
+		"view_local_details":          reflect.TypeOf(CleanRoomAssetViewLocalDetails_SdkV2{}),
+		"volume_local_details":        reflect.TypeOf(CleanRoomAssetVolumeLocalDetails_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAsset
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAsset_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAsset_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -266,39 +266,52 @@ func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAsset) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAsset_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":                    types.Int64Type,
-			"asset_type":                  types.StringType,
-			"foreign_table":               CleanRoomAssetForeignTable{}.Type(ctx),
-			"foreign_table_local_details": CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
-			"name":                        types.StringType,
-			"notebook":                    CleanRoomAssetNotebook{}.Type(ctx),
-			"owner_collaborator_alias":    types.StringType,
-			"status":                      types.StringType,
-			"table":                       CleanRoomAssetTable{}.Type(ctx),
-			"table_local_details":         CleanRoomAssetTableLocalDetails{}.Type(ctx),
-			"view":                        CleanRoomAssetView{}.Type(ctx),
-			"view_local_details":          CleanRoomAssetViewLocalDetails{}.Type(ctx),
-			"volume_local_details":        CleanRoomAssetVolumeLocalDetails{}.Type(ctx),
+			"added_at":   types.Int64Type,
+			"asset_type": types.StringType,
+			"foreign_table": basetypes.ListType{
+				ElemType: CleanRoomAssetForeignTable_SdkV2{}.Type(ctx),
+			},
+			"foreign_table_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetForeignTableLocalDetails_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"notebook": basetypes.ListType{
+				ElemType: CleanRoomAssetNotebook_SdkV2{}.Type(ctx),
+			},
+			"owner_collaborator_alias": types.StringType,
+			"status":                   types.StringType,
+			"table": basetypes.ListType{
+				ElemType: CleanRoomAssetTable_SdkV2{}.Type(ctx),
+			},
+			"table_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetTableLocalDetails_SdkV2{}.Type(ctx),
+			},
+			"view": basetypes.ListType{
+				ElemType: CleanRoomAssetView_SdkV2{}.Type(ctx),
+			},
+			"view_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetViewLocalDetails_SdkV2{}.Type(ctx),
+			},
+			"volume_local_details": basetypes.ListType{
+				ElemType: CleanRoomAssetVolumeLocalDetails_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetForeignTable returns the value of the ForeignTable field in CleanRoomAsset as
-// a CleanRoomAssetForeignTable value.
+// GetForeignTable returns the value of the ForeignTable field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetForeignTable_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetForeignTable(ctx context.Context) (CleanRoomAssetForeignTable, bool) {
-	var e CleanRoomAssetForeignTable
+func (o *CleanRoomAsset_SdkV2) GetForeignTable(ctx context.Context) (CleanRoomAssetForeignTable_SdkV2, bool) {
+	var e CleanRoomAssetForeignTable_SdkV2
 	if o.ForeignTable.IsNull() || o.ForeignTable.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetForeignTable
-	d := o.ForeignTable.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetForeignTable_SdkV2
+	d := o.ForeignTable.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -308,25 +321,23 @@ func (o *CleanRoomAsset) GetForeignTable(ctx context.Context) (CleanRoomAssetFor
 	return v[0], true
 }
 
-// SetForeignTable sets the value of the ForeignTable field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetForeignTable(ctx context.Context, v CleanRoomAssetForeignTable) {
-	vs := v.ToObjectValue(ctx)
-	o.ForeignTable = vs
+// SetForeignTable sets the value of the ForeignTable field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetForeignTable(ctx context.Context, v CleanRoomAssetForeignTable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foreign_table"]
+	o.ForeignTable = types.ListValueMust(t, vs)
 }
 
-// GetForeignTableLocalDetails returns the value of the ForeignTableLocalDetails field in CleanRoomAsset as
-// a CleanRoomAssetForeignTableLocalDetails value.
+// GetForeignTableLocalDetails returns the value of the ForeignTableLocalDetails field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetForeignTableLocalDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetForeignTableLocalDetails(ctx context.Context) (CleanRoomAssetForeignTableLocalDetails, bool) {
-	var e CleanRoomAssetForeignTableLocalDetails
+func (o *CleanRoomAsset_SdkV2) GetForeignTableLocalDetails(ctx context.Context) (CleanRoomAssetForeignTableLocalDetails_SdkV2, bool) {
+	var e CleanRoomAssetForeignTableLocalDetails_SdkV2
 	if o.ForeignTableLocalDetails.IsNull() || o.ForeignTableLocalDetails.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetForeignTableLocalDetails
-	d := o.ForeignTableLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetForeignTableLocalDetails_SdkV2
+	d := o.ForeignTableLocalDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -336,25 +347,23 @@ func (o *CleanRoomAsset) GetForeignTableLocalDetails(ctx context.Context) (Clean
 	return v[0], true
 }
 
-// SetForeignTableLocalDetails sets the value of the ForeignTableLocalDetails field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetForeignTableLocalDetails(ctx context.Context, v CleanRoomAssetForeignTableLocalDetails) {
-	vs := v.ToObjectValue(ctx)
-	o.ForeignTableLocalDetails = vs
+// SetForeignTableLocalDetails sets the value of the ForeignTableLocalDetails field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetForeignTableLocalDetails(ctx context.Context, v CleanRoomAssetForeignTableLocalDetails_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foreign_table_local_details"]
+	o.ForeignTableLocalDetails = types.ListValueMust(t, vs)
 }
 
-// GetNotebook returns the value of the Notebook field in CleanRoomAsset as
-// a CleanRoomAssetNotebook value.
+// GetNotebook returns the value of the Notebook field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetNotebook_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetNotebook(ctx context.Context) (CleanRoomAssetNotebook, bool) {
-	var e CleanRoomAssetNotebook
+func (o *CleanRoomAsset_SdkV2) GetNotebook(ctx context.Context) (CleanRoomAssetNotebook_SdkV2, bool) {
+	var e CleanRoomAssetNotebook_SdkV2
 	if o.Notebook.IsNull() || o.Notebook.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetNotebook
-	d := o.Notebook.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetNotebook_SdkV2
+	d := o.Notebook.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -364,25 +373,23 @@ func (o *CleanRoomAsset) GetNotebook(ctx context.Context) (CleanRoomAssetNoteboo
 	return v[0], true
 }
 
-// SetNotebook sets the value of the Notebook field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetNotebook(ctx context.Context, v CleanRoomAssetNotebook) {
-	vs := v.ToObjectValue(ctx)
-	o.Notebook = vs
+// SetNotebook sets the value of the Notebook field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetNotebook(ctx context.Context, v CleanRoomAssetNotebook_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook"]
+	o.Notebook = types.ListValueMust(t, vs)
 }
 
-// GetTable returns the value of the Table field in CleanRoomAsset as
-// a CleanRoomAssetTable value.
+// GetTable returns the value of the Table field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetTable_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetTable(ctx context.Context) (CleanRoomAssetTable, bool) {
-	var e CleanRoomAssetTable
+func (o *CleanRoomAsset_SdkV2) GetTable(ctx context.Context) (CleanRoomAssetTable_SdkV2, bool) {
+	var e CleanRoomAssetTable_SdkV2
 	if o.Table.IsNull() || o.Table.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetTable
-	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetTable_SdkV2
+	d := o.Table.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -392,25 +399,23 @@ func (o *CleanRoomAsset) GetTable(ctx context.Context) (CleanRoomAssetTable, boo
 	return v[0], true
 }
 
-// SetTable sets the value of the Table field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetTable(ctx context.Context, v CleanRoomAssetTable) {
-	vs := v.ToObjectValue(ctx)
-	o.Table = vs
+// SetTable sets the value of the Table field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetTable(ctx context.Context, v CleanRoomAssetTable_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
+	o.Table = types.ListValueMust(t, vs)
 }
 
-// GetTableLocalDetails returns the value of the TableLocalDetails field in CleanRoomAsset as
-// a CleanRoomAssetTableLocalDetails value.
+// GetTableLocalDetails returns the value of the TableLocalDetails field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetTableLocalDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetTableLocalDetails(ctx context.Context) (CleanRoomAssetTableLocalDetails, bool) {
-	var e CleanRoomAssetTableLocalDetails
+func (o *CleanRoomAsset_SdkV2) GetTableLocalDetails(ctx context.Context) (CleanRoomAssetTableLocalDetails_SdkV2, bool) {
+	var e CleanRoomAssetTableLocalDetails_SdkV2
 	if o.TableLocalDetails.IsNull() || o.TableLocalDetails.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetTableLocalDetails
-	d := o.TableLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetTableLocalDetails_SdkV2
+	d := o.TableLocalDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -420,25 +425,23 @@ func (o *CleanRoomAsset) GetTableLocalDetails(ctx context.Context) (CleanRoomAss
 	return v[0], true
 }
 
-// SetTableLocalDetails sets the value of the TableLocalDetails field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetTableLocalDetails(ctx context.Context, v CleanRoomAssetTableLocalDetails) {
-	vs := v.ToObjectValue(ctx)
-	o.TableLocalDetails = vs
+// SetTableLocalDetails sets the value of the TableLocalDetails field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetTableLocalDetails(ctx context.Context, v CleanRoomAssetTableLocalDetails_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_local_details"]
+	o.TableLocalDetails = types.ListValueMust(t, vs)
 }
 
-// GetView returns the value of the View field in CleanRoomAsset as
-// a CleanRoomAssetView value.
+// GetView returns the value of the View field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetView_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetView(ctx context.Context) (CleanRoomAssetView, bool) {
-	var e CleanRoomAssetView
+func (o *CleanRoomAsset_SdkV2) GetView(ctx context.Context) (CleanRoomAssetView_SdkV2, bool) {
+	var e CleanRoomAssetView_SdkV2
 	if o.View.IsNull() || o.View.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetView
-	d := o.View.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetView_SdkV2
+	d := o.View.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -448,25 +451,23 @@ func (o *CleanRoomAsset) GetView(ctx context.Context) (CleanRoomAssetView, bool)
 	return v[0], true
 }
 
-// SetView sets the value of the View field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetView(ctx context.Context, v CleanRoomAssetView) {
-	vs := v.ToObjectValue(ctx)
-	o.View = vs
+// SetView sets the value of the View field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetView(ctx context.Context, v CleanRoomAssetView_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["view"]
+	o.View = types.ListValueMust(t, vs)
 }
 
-// GetViewLocalDetails returns the value of the ViewLocalDetails field in CleanRoomAsset as
-// a CleanRoomAssetViewLocalDetails value.
+// GetViewLocalDetails returns the value of the ViewLocalDetails field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetViewLocalDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetViewLocalDetails(ctx context.Context) (CleanRoomAssetViewLocalDetails, bool) {
-	var e CleanRoomAssetViewLocalDetails
+func (o *CleanRoomAsset_SdkV2) GetViewLocalDetails(ctx context.Context) (CleanRoomAssetViewLocalDetails_SdkV2, bool) {
+	var e CleanRoomAssetViewLocalDetails_SdkV2
 	if o.ViewLocalDetails.IsNull() || o.ViewLocalDetails.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetViewLocalDetails
-	d := o.ViewLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetViewLocalDetails_SdkV2
+	d := o.ViewLocalDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -476,25 +477,23 @@ func (o *CleanRoomAsset) GetViewLocalDetails(ctx context.Context) (CleanRoomAsse
 	return v[0], true
 }
 
-// SetViewLocalDetails sets the value of the ViewLocalDetails field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetViewLocalDetails(ctx context.Context, v CleanRoomAssetViewLocalDetails) {
-	vs := v.ToObjectValue(ctx)
-	o.ViewLocalDetails = vs
+// SetViewLocalDetails sets the value of the ViewLocalDetails field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetViewLocalDetails(ctx context.Context, v CleanRoomAssetViewLocalDetails_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["view_local_details"]
+	o.ViewLocalDetails = types.ListValueMust(t, vs)
 }
 
-// GetVolumeLocalDetails returns the value of the VolumeLocalDetails field in CleanRoomAsset as
-// a CleanRoomAssetVolumeLocalDetails value.
+// GetVolumeLocalDetails returns the value of the VolumeLocalDetails field in CleanRoomAsset_SdkV2 as
+// a CleanRoomAssetVolumeLocalDetails_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAsset) GetVolumeLocalDetails(ctx context.Context) (CleanRoomAssetVolumeLocalDetails, bool) {
-	var e CleanRoomAssetVolumeLocalDetails
+func (o *CleanRoomAsset_SdkV2) GetVolumeLocalDetails(ctx context.Context) (CleanRoomAssetVolumeLocalDetails_SdkV2, bool) {
+	var e CleanRoomAssetVolumeLocalDetails_SdkV2
 	if o.VolumeLocalDetails.IsNull() || o.VolumeLocalDetails.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAssetVolumeLocalDetails
-	d := o.VolumeLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAssetVolumeLocalDetails_SdkV2
+	d := o.VolumeLocalDetails.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -504,21 +503,22 @@ func (o *CleanRoomAsset) GetVolumeLocalDetails(ctx context.Context) (CleanRoomAs
 	return v[0], true
 }
 
-// SetVolumeLocalDetails sets the value of the VolumeLocalDetails field in CleanRoomAsset.
-func (o *CleanRoomAsset) SetVolumeLocalDetails(ctx context.Context, v CleanRoomAssetVolumeLocalDetails) {
-	vs := v.ToObjectValue(ctx)
-	o.VolumeLocalDetails = vs
+// SetVolumeLocalDetails sets the value of the VolumeLocalDetails field in CleanRoomAsset_SdkV2.
+func (o *CleanRoomAsset_SdkV2) SetVolumeLocalDetails(ctx context.Context, v CleanRoomAssetVolumeLocalDetails_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volume_local_details"]
+	o.VolumeLocalDetails = types.ListValueMust(t, vs)
 }
 
-type CleanRoomAssetForeignTable struct {
+type CleanRoomAssetForeignTable_SdkV2 struct {
 	// The metadata information of the columns in the foreign table
 	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
-func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable) {
+func (newState *CleanRoomAssetForeignTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable_SdkV2) {
 }
 
-func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTable) {
+func (newState *CleanRoomAssetForeignTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTable_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTable.
@@ -528,16 +528,16 @@ func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringRead(existi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetForeignTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetForeignTable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns": reflect.TypeOf(catalog_tf.ColumnInfo{}),
+		"columns": reflect.TypeOf(catalog_tf.ColumnInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetForeignTable
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetForeignTable_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetForeignTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetForeignTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -546,24 +546,24 @@ func (o CleanRoomAssetForeignTable) ToObjectValue(ctx context.Context) basetypes
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetForeignTable) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetForeignTable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetColumns returns the value of the Columns field in CleanRoomAssetForeignTable as
-// a slice of catalog_tf.ColumnInfo values.
+// GetColumns returns the value of the Columns field in CleanRoomAssetForeignTable_SdkV2 as
+// a slice of catalog_tf.ColumnInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetForeignTable) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo, bool) {
+func (o *CleanRoomAssetForeignTable_SdkV2) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo_SdkV2, bool) {
 	if o.Columns.IsNull() || o.Columns.IsUnknown() {
 		return nil, false
 	}
-	var v []catalog_tf.ColumnInfo
+	var v []catalog_tf.ColumnInfo_SdkV2
 	d := o.Columns.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -571,8 +571,8 @@ func (o *CleanRoomAssetForeignTable) GetColumns(ctx context.Context) ([]catalog_
 	return v, true
 }
 
-// SetColumns sets the value of the Columns field in CleanRoomAssetForeignTable.
-func (o *CleanRoomAssetForeignTable) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo) {
+// SetColumns sets the value of the Columns field in CleanRoomAssetForeignTable_SdkV2.
+func (o *CleanRoomAssetForeignTable_SdkV2) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -582,16 +582,16 @@ func (o *CleanRoomAssetForeignTable) SetColumns(ctx context.Context, v []catalog
 	o.Columns = types.ListValueMust(t, vs)
 }
 
-type CleanRoomAssetForeignTableLocalDetails struct {
+type CleanRoomAssetForeignTableLocalDetails_SdkV2 struct {
 	// The fully qualified name of the foreign table in its owner's local
 	// metastore, in the format of *catalog*.*schema*.*foreign_table_name*
 	LocalName types.String `tfsdk:"local_name" tf:"optional"`
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails) {
+func (newState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails) {
+func (newState *CleanRoomAssetForeignTableLocalDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTableLocalDetails.
@@ -601,14 +601,14 @@ func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDurin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetForeignTableLocalDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetForeignTableLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetForeignTableLocalDetails
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetForeignTableLocalDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetForeignTableLocalDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetForeignTableLocalDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -617,7 +617,7 @@ func (o CleanRoomAssetForeignTableLocalDetails) ToObjectValue(ctx context.Contex
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetForeignTableLocalDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
@@ -625,7 +625,7 @@ func (o CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.T
 	}
 }
 
-type CleanRoomAssetNotebook struct {
+type CleanRoomAssetNotebook_SdkV2 struct {
 	// Server generated checksum that represents the notebook version.
 	Etag types.String `tfsdk:"etag" tf:"computed"`
 	// Base 64 representation of the notebook contents. This is the same format
@@ -633,10 +633,10 @@ type CleanRoomAssetNotebook struct {
 	NotebookContent types.String `tfsdk:"notebook_content" tf:"optional"`
 }
 
-func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook) {
+func (newState *CleanRoomAssetNotebook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook_SdkV2) {
 }
 
-func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetNotebook) {
+func (newState *CleanRoomAssetNotebook_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetNotebook_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetNotebook.
@@ -646,14 +646,14 @@ func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetNotebook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetNotebook_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetNotebook
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetNotebook_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetNotebook) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetNotebook_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -663,7 +663,7 @@ func (o CleanRoomAssetNotebook) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetNotebook) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetNotebook_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"etag":             types.StringType,
@@ -672,15 +672,15 @@ func (o CleanRoomAssetNotebook) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CleanRoomAssetTable struct {
+type CleanRoomAssetTable_SdkV2 struct {
 	// The metadata information of the columns in the table
 	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
-func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable) {
+func (newState *CleanRoomAssetTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable_SdkV2) {
 }
 
-func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTable) {
+func (newState *CleanRoomAssetTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTable_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTable.
@@ -690,16 +690,16 @@ func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringRead(existingState
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetTable_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns": reflect.TypeOf(catalog_tf.ColumnInfo{}),
+		"columns": reflect.TypeOf(catalog_tf.ColumnInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetTable
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetTable_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetTable_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -708,24 +708,24 @@ func (o CleanRoomAssetTable) ToObjectValue(ctx context.Context) basetypes.Object
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetTable) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetTable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetColumns returns the value of the Columns field in CleanRoomAssetTable as
-// a slice of catalog_tf.ColumnInfo values.
+// GetColumns returns the value of the Columns field in CleanRoomAssetTable_SdkV2 as
+// a slice of catalog_tf.ColumnInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetTable) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo, bool) {
+func (o *CleanRoomAssetTable_SdkV2) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo_SdkV2, bool) {
 	if o.Columns.IsNull() || o.Columns.IsUnknown() {
 		return nil, false
 	}
-	var v []catalog_tf.ColumnInfo
+	var v []catalog_tf.ColumnInfo_SdkV2
 	d := o.Columns.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -733,8 +733,8 @@ func (o *CleanRoomAssetTable) GetColumns(ctx context.Context) ([]catalog_tf.Colu
 	return v, true
 }
 
-// SetColumns sets the value of the Columns field in CleanRoomAssetTable.
-func (o *CleanRoomAssetTable) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo) {
+// SetColumns sets the value of the Columns field in CleanRoomAssetTable_SdkV2.
+func (o *CleanRoomAssetTable_SdkV2) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -744,7 +744,7 @@ func (o *CleanRoomAssetTable) SetColumns(ctx context.Context, v []catalog_tf.Col
 	o.Columns = types.ListValueMust(t, vs)
 }
 
-type CleanRoomAssetTableLocalDetails struct {
+type CleanRoomAssetTableLocalDetails_SdkV2 struct {
 	// The fully qualified name of the table in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*table_name*
 	LocalName types.String `tfsdk:"local_name" tf:"optional"`
@@ -752,10 +752,10 @@ type CleanRoomAssetTableLocalDetails struct {
 	Partitions types.List `tfsdk:"partitions" tf:"optional"`
 }
 
-func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails) {
+func (newState *CleanRoomAssetTableLocalDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails) {
+func (newState *CleanRoomAssetTableLocalDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTableLocalDetails.
@@ -765,16 +765,16 @@ func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(e
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetTableLocalDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetTableLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"partitions": reflect.TypeOf(sharing_tf.PartitionSpecificationPartition{}),
+		"partitions": reflect.TypeOf(sharing_tf.PartitionSpecificationPartition_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetTableLocalDetails
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetTableLocalDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetTableLocalDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetTableLocalDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -784,25 +784,25 @@ func (o CleanRoomAssetTableLocalDetails) ToObjectValue(ctx context.Context) base
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetTableLocalDetails) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetTableLocalDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
 			"partitions": basetypes.ListType{
-				ElemType: sharing_tf.PartitionSpecificationPartition{}.Type(ctx),
+				ElemType: sharing_tf.PartitionSpecificationPartition_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetPartitions returns the value of the Partitions field in CleanRoomAssetTableLocalDetails as
-// a slice of sharing_tf.PartitionSpecificationPartition values.
+// GetPartitions returns the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2 as
+// a slice of sharing_tf.PartitionSpecificationPartition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetTableLocalDetails) GetPartitions(ctx context.Context) ([]sharing_tf.PartitionSpecificationPartition, bool) {
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Context) ([]sharing_tf.PartitionSpecificationPartition_SdkV2, bool) {
 	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
 		return nil, false
 	}
-	var v []sharing_tf.PartitionSpecificationPartition
+	var v []sharing_tf.PartitionSpecificationPartition_SdkV2
 	d := o.Partitions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -810,8 +810,8 @@ func (o *CleanRoomAssetTableLocalDetails) GetPartitions(ctx context.Context) ([]
 	return v, true
 }
 
-// SetPartitions sets the value of the Partitions field in CleanRoomAssetTableLocalDetails.
-func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v []sharing_tf.PartitionSpecificationPartition) {
+// SetPartitions sets the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2.
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) SetPartitions(ctx context.Context, v []sharing_tf.PartitionSpecificationPartition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -821,15 +821,15 @@ func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v [
 	o.Partitions = types.ListValueMust(t, vs)
 }
 
-type CleanRoomAssetView struct {
+type CleanRoomAssetView_SdkV2 struct {
 	// The metadata information of the columns in the view
 	Columns types.List `tfsdk:"columns" tf:"computed"`
 }
 
-func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetView) {
+func (newState *CleanRoomAssetView_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetView_SdkV2) {
 }
 
-func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetView) {
+func (newState *CleanRoomAssetView_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetView_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetView.
@@ -839,16 +839,16 @@ func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringRead(existingState 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetView) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetView_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns": reflect.TypeOf(catalog_tf.ColumnInfo{}),
+		"columns": reflect.TypeOf(catalog_tf.ColumnInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetView
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetView_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetView) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetView_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -857,24 +857,24 @@ func (o CleanRoomAssetView) ToObjectValue(ctx context.Context) basetypes.ObjectV
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetView) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetView_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetColumns returns the value of the Columns field in CleanRoomAssetView as
-// a slice of catalog_tf.ColumnInfo values.
+// GetColumns returns the value of the Columns field in CleanRoomAssetView_SdkV2 as
+// a slice of catalog_tf.ColumnInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetView) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo, bool) {
+func (o *CleanRoomAssetView_SdkV2) GetColumns(ctx context.Context) ([]catalog_tf.ColumnInfo_SdkV2, bool) {
 	if o.Columns.IsNull() || o.Columns.IsUnknown() {
 		return nil, false
 	}
-	var v []catalog_tf.ColumnInfo
+	var v []catalog_tf.ColumnInfo_SdkV2
 	d := o.Columns.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -882,8 +882,8 @@ func (o *CleanRoomAssetView) GetColumns(ctx context.Context) ([]catalog_tf.Colum
 	return v, true
 }
 
-// SetColumns sets the value of the Columns field in CleanRoomAssetView.
-func (o *CleanRoomAssetView) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo) {
+// SetColumns sets the value of the Columns field in CleanRoomAssetView_SdkV2.
+func (o *CleanRoomAssetView_SdkV2) SetColumns(ctx context.Context, v []catalog_tf.ColumnInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -893,16 +893,16 @@ func (o *CleanRoomAssetView) SetColumns(ctx context.Context, v []catalog_tf.Colu
 	o.Columns = types.ListValueMust(t, vs)
 }
 
-type CleanRoomAssetViewLocalDetails struct {
+type CleanRoomAssetViewLocalDetails_SdkV2 struct {
 	// The fully qualified name of the view in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*view_name*
 	LocalName types.String `tfsdk:"local_name" tf:"optional"`
 }
 
-func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails) {
+func (newState *CleanRoomAssetViewLocalDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails) {
+func (newState *CleanRoomAssetViewLocalDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetViewLocalDetails.
@@ -912,14 +912,14 @@ func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(ex
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetViewLocalDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetViewLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetViewLocalDetails
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetViewLocalDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetViewLocalDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetViewLocalDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -928,7 +928,7 @@ func (o CleanRoomAssetViewLocalDetails) ToObjectValue(ctx context.Context) baset
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetViewLocalDetails) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetViewLocalDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
@@ -936,16 +936,16 @@ func (o CleanRoomAssetViewLocalDetails) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CleanRoomAssetVolumeLocalDetails struct {
+type CleanRoomAssetVolumeLocalDetails_SdkV2 struct {
 	// The fully qualified name of the volume in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*volume_name*
 	LocalName types.String `tfsdk:"local_name" tf:"optional"`
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails) {
+func (newState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
-func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails) {
+func (newState *CleanRoomAssetVolumeLocalDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetVolumeLocalDetails.
@@ -955,14 +955,14 @@ func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomAssetVolumeLocalDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomAssetVolumeLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetVolumeLocalDetails
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomAssetVolumeLocalDetails_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomAssetVolumeLocalDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomAssetVolumeLocalDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -971,7 +971,7 @@ func (o CleanRoomAssetVolumeLocalDetails) ToObjectValue(ctx context.Context) bas
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomAssetVolumeLocalDetails) Type(ctx context.Context) attr.Type {
+func (o CleanRoomAssetVolumeLocalDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
@@ -980,7 +980,7 @@ func (o CleanRoomAssetVolumeLocalDetails) Type(ctx context.Context) attr.Type {
 }
 
 // Publicly visible clean room collaborator.
-type CleanRoomCollaborator struct {
+type CleanRoomCollaborator_SdkV2 struct {
 	// Collaborator alias specified by the clean room creator. It is unique
 	// across all collaborators of this clean room, and used to derive multiple
 	// values internally such as catalog alias and clean room name for single
@@ -1012,10 +1012,10 @@ type CleanRoomCollaborator struct {
 	OrganizationName types.String `tfsdk:"organization_name" tf:"computed"`
 }
 
-func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator) {
+func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator_SdkV2) {
 }
 
-func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaborator) {
+func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaborator_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomCollaborator.
@@ -1025,14 +1025,14 @@ func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomCollaborator) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomCollaborator_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomCollaborator
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomCollaborator_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomCollaborator) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomCollaborator_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1046,7 +1046,7 @@ func (o CleanRoomCollaborator) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomCollaborator) Type(ctx context.Context) attr.Type {
+func (o CleanRoomCollaborator_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"collaborator_alias":            types.StringType,
@@ -1060,14 +1060,14 @@ func (o CleanRoomCollaborator) Type(ctx context.Context) attr.Type {
 }
 
 // Stores information about a single task run.
-type CleanRoomNotebookTaskRun struct {
+type CleanRoomNotebookTaskRun_SdkV2 struct {
 	// Job run info of the task in the runner's local workspace. This field is
 	// only included in the LIST API. if the task was run within the same
 	// workspace the API is being called. If the task run was in a different
 	// workspace under the same metastore, only the workspace_id is included.
-	CollaboratorJobRunInfo types.Object `tfsdk:"collaborator_job_run_info" tf:"optional,object"`
+	CollaboratorJobRunInfo types.List `tfsdk:"collaborator_job_run_info" tf:"optional,object"`
 	// State of the task run.
-	NotebookJobRunState types.Object `tfsdk:"notebook_job_run_state" tf:"optional,object"`
+	NotebookJobRunState types.List `tfsdk:"notebook_job_run_state" tf:"optional,object"`
 	// Asset name of the notebook executed in this task run.
 	NotebookName types.String `tfsdk:"notebook_name" tf:"optional"`
 	// Expiration time of the output schema of the task run (if any), in epoch
@@ -1082,10 +1082,10 @@ type CleanRoomNotebookTaskRun struct {
 	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
 }
 
-func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun) {
+func (newState *CleanRoomNotebookTaskRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun_SdkV2) {
 }
 
-func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookTaskRun) {
+func (newState *CleanRoomNotebookTaskRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookTaskRun_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomNotebookTaskRun.
@@ -1095,17 +1095,17 @@ func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existing
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomNotebookTaskRun) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomNotebookTaskRun_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"collaborator_job_run_info": reflect.TypeOf(CollaboratorJobRunInfo{}),
-		"notebook_job_run_state":    reflect.TypeOf(jobs_tf.CleanRoomTaskRunState{}),
+		"collaborator_job_run_info": reflect.TypeOf(CollaboratorJobRunInfo_SdkV2{}),
+		"notebook_job_run_state":    reflect.TypeOf(jobs_tf.CleanRoomTaskRunState_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomNotebookTaskRun
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomNotebookTaskRun_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomNotebookTaskRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomNotebookTaskRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1120,11 +1120,15 @@ func (o CleanRoomNotebookTaskRun) ToObjectValue(ctx context.Context) basetypes.O
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomNotebookTaskRun) Type(ctx context.Context) attr.Type {
+func (o CleanRoomNotebookTaskRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"collaborator_job_run_info":     CollaboratorJobRunInfo{}.Type(ctx),
-			"notebook_job_run_state":        jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
+			"collaborator_job_run_info": basetypes.ListType{
+				ElemType: CollaboratorJobRunInfo_SdkV2{}.Type(ctx),
+			},
+			"notebook_job_run_state": basetypes.ListType{
+				ElemType: jobs_tf.CleanRoomTaskRunState_SdkV2{}.Type(ctx),
+			},
 			"notebook_name":                 types.StringType,
 			"output_schema_expiration_time": types.Int64Type,
 			"output_schema_name":            types.StringType,
@@ -1134,19 +1138,16 @@ func (o CleanRoomNotebookTaskRun) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetCollaboratorJobRunInfo returns the value of the CollaboratorJobRunInfo field in CleanRoomNotebookTaskRun as
-// a CollaboratorJobRunInfo value.
+// GetCollaboratorJobRunInfo returns the value of the CollaboratorJobRunInfo field in CleanRoomNotebookTaskRun_SdkV2 as
+// a CollaboratorJobRunInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomNotebookTaskRun) GetCollaboratorJobRunInfo(ctx context.Context) (CollaboratorJobRunInfo, bool) {
-	var e CollaboratorJobRunInfo
+func (o *CleanRoomNotebookTaskRun_SdkV2) GetCollaboratorJobRunInfo(ctx context.Context) (CollaboratorJobRunInfo_SdkV2, bool) {
+	var e CollaboratorJobRunInfo_SdkV2
 	if o.CollaboratorJobRunInfo.IsNull() || o.CollaboratorJobRunInfo.IsUnknown() {
 		return e, false
 	}
-	var v []CollaboratorJobRunInfo
-	d := o.CollaboratorJobRunInfo.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CollaboratorJobRunInfo_SdkV2
+	d := o.CollaboratorJobRunInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1156,25 +1157,23 @@ func (o *CleanRoomNotebookTaskRun) GetCollaboratorJobRunInfo(ctx context.Context
 	return v[0], true
 }
 
-// SetCollaboratorJobRunInfo sets the value of the CollaboratorJobRunInfo field in CleanRoomNotebookTaskRun.
-func (o *CleanRoomNotebookTaskRun) SetCollaboratorJobRunInfo(ctx context.Context, v CollaboratorJobRunInfo) {
-	vs := v.ToObjectValue(ctx)
-	o.CollaboratorJobRunInfo = vs
+// SetCollaboratorJobRunInfo sets the value of the CollaboratorJobRunInfo field in CleanRoomNotebookTaskRun_SdkV2.
+func (o *CleanRoomNotebookTaskRun_SdkV2) SetCollaboratorJobRunInfo(ctx context.Context, v CollaboratorJobRunInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["collaborator_job_run_info"]
+	o.CollaboratorJobRunInfo = types.ListValueMust(t, vs)
 }
 
-// GetNotebookJobRunState returns the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun as
-// a jobs_tf.CleanRoomTaskRunState value.
+// GetNotebookJobRunState returns the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun_SdkV2 as
+// a jobs_tf.CleanRoomTaskRunState_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomNotebookTaskRun) GetNotebookJobRunState(ctx context.Context) (jobs_tf.CleanRoomTaskRunState, bool) {
-	var e jobs_tf.CleanRoomTaskRunState
+func (o *CleanRoomNotebookTaskRun_SdkV2) GetNotebookJobRunState(ctx context.Context) (jobs_tf.CleanRoomTaskRunState_SdkV2, bool) {
+	var e jobs_tf.CleanRoomTaskRunState_SdkV2
 	if o.NotebookJobRunState.IsNull() || o.NotebookJobRunState.IsUnknown() {
 		return e, false
 	}
-	var v []jobs_tf.CleanRoomTaskRunState
-	d := o.NotebookJobRunState.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []jobs_tf.CleanRoomTaskRunState_SdkV2
+	d := o.NotebookJobRunState.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1184,13 +1183,14 @@ func (o *CleanRoomNotebookTaskRun) GetNotebookJobRunState(ctx context.Context) (
 	return v[0], true
 }
 
-// SetNotebookJobRunState sets the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun.
-func (o *CleanRoomNotebookTaskRun) SetNotebookJobRunState(ctx context.Context, v jobs_tf.CleanRoomTaskRunState) {
-	vs := v.ToObjectValue(ctx)
-	o.NotebookJobRunState = vs
+// SetNotebookJobRunState sets the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun_SdkV2.
+func (o *CleanRoomNotebookTaskRun_SdkV2) SetNotebookJobRunState(ctx context.Context, v jobs_tf.CleanRoomTaskRunState_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_job_run_state"]
+	o.NotebookJobRunState = types.ListValueMust(t, vs)
 }
 
-type CleanRoomOutputCatalog struct {
+type CleanRoomOutputCatalog_SdkV2 struct {
 	// The name of the output catalog in UC. It should follow [UC securable
 	// naming requirements]. The field will always exist if status is CREATED.
 	//
@@ -1200,10 +1200,10 @@ type CleanRoomOutputCatalog struct {
 	Status types.String `tfsdk:"status" tf:"computed"`
 }
 
-func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog) {
+func (newState *CleanRoomOutputCatalog_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog_SdkV2) {
 }
 
-func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomOutputCatalog) {
+func (newState *CleanRoomOutputCatalog_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomOutputCatalog_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomOutputCatalog.
@@ -1213,14 +1213,14 @@ func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomOutputCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomOutputCatalog_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomOutputCatalog
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomOutputCatalog_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomOutputCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomOutputCatalog_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1230,7 +1230,7 @@ func (o CleanRoomOutputCatalog) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomOutputCatalog) Type(ctx context.Context) attr.Type {
+func (o CleanRoomOutputCatalog_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"catalog_name": types.StringType,
@@ -1240,7 +1240,7 @@ func (o CleanRoomOutputCatalog) Type(ctx context.Context) attr.Type {
 }
 
 // Publicly visible central clean room details.
-type CleanRoomRemoteDetail struct {
+type CleanRoomRemoteDetail_SdkV2 struct {
 	// Central clean room ID.
 	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id" tf:"computed"`
 	// Cloud vendor (aws,azure,gcp) of the central clean room.
@@ -1255,19 +1255,19 @@ type CleanRoomRemoteDetail struct {
 	Collaborators types.List `tfsdk:"collaborators" tf:"optional"`
 	// The compliance security profile used to process regulated data following
 	// compliance standards.
-	ComplianceSecurityProfile types.Object `tfsdk:"compliance_security_profile" tf:"optional,object"`
+	ComplianceSecurityProfile types.List `tfsdk:"compliance_security_profile" tf:"optional,object"`
 	// Collaborator who creates the clean room.
-	Creator types.Object `tfsdk:"creator" tf:"computed,object"`
+	Creator types.List `tfsdk:"creator" tf:"computed,object"`
 	// Egress network policy to apply to the central clean room workspace.
-	EgressNetworkPolicy types.Object `tfsdk:"egress_network_policy" tf:"optional,object"`
+	EgressNetworkPolicy types.List `tfsdk:"egress_network_policy" tf:"optional,object"`
 	// Region of the central clean room.
 	Region types.String `tfsdk:"region" tf:"optional"`
 }
 
-func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail) {
+func (newState *CleanRoomRemoteDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail_SdkV2) {
 }
 
-func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingState CleanRoomRemoteDetail) {
+func (newState *CleanRoomRemoteDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomRemoteDetail_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomRemoteDetail.
@@ -1277,19 +1277,19 @@ func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CleanRoomRemoteDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CleanRoomRemoteDetail_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"collaborators":               reflect.TypeOf(CleanRoomCollaborator{}),
-		"compliance_security_profile": reflect.TypeOf(ComplianceSecurityProfile{}),
-		"creator":                     reflect.TypeOf(CleanRoomCollaborator{}),
-		"egress_network_policy":       reflect.TypeOf(settings_tf.EgressNetworkPolicy{}),
+		"collaborators":               reflect.TypeOf(CleanRoomCollaborator_SdkV2{}),
+		"compliance_security_profile": reflect.TypeOf(ComplianceSecurityProfile_SdkV2{}),
+		"creator":                     reflect.TypeOf(CleanRoomCollaborator_SdkV2{}),
+		"egress_network_policy":       reflect.TypeOf(settings_tf.EgressNetworkPolicy_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomRemoteDetail
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomRemoteDetail_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CleanRoomRemoteDetail) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CleanRoomRemoteDetail_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1304,30 +1304,36 @@ func (o CleanRoomRemoteDetail) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CleanRoomRemoteDetail) Type(ctx context.Context) attr.Type {
+func (o CleanRoomRemoteDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"central_clean_room_id": types.StringType,
 			"cloud_vendor":          types.StringType,
 			"collaborators": basetypes.ListType{
-				ElemType: CleanRoomCollaborator{}.Type(ctx),
+				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
 			},
-			"compliance_security_profile": ComplianceSecurityProfile{}.Type(ctx),
-			"creator":                     CleanRoomCollaborator{}.Type(ctx),
-			"egress_network_policy":       settings_tf.EgressNetworkPolicy{}.Type(ctx),
-			"region":                      types.StringType,
+			"compliance_security_profile": basetypes.ListType{
+				ElemType: ComplianceSecurityProfile_SdkV2{}.Type(ctx),
+			},
+			"creator": basetypes.ListType{
+				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
+			},
+			"egress_network_policy": basetypes.ListType{
+				ElemType: settings_tf.EgressNetworkPolicy_SdkV2{}.Type(ctx),
+			},
+			"region": types.StringType,
 		},
 	}
 }
 
-// GetCollaborators returns the value of the Collaborators field in CleanRoomRemoteDetail as
-// a slice of CleanRoomCollaborator values.
+// GetCollaborators returns the value of the Collaborators field in CleanRoomRemoteDetail_SdkV2 as
+// a slice of CleanRoomCollaborator_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomRemoteDetail) GetCollaborators(ctx context.Context) ([]CleanRoomCollaborator, bool) {
+func (o *CleanRoomRemoteDetail_SdkV2) GetCollaborators(ctx context.Context) ([]CleanRoomCollaborator_SdkV2, bool) {
 	if o.Collaborators.IsNull() || o.Collaborators.IsUnknown() {
 		return nil, false
 	}
-	var v []CleanRoomCollaborator
+	var v []CleanRoomCollaborator_SdkV2
 	d := o.Collaborators.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1335,8 +1341,8 @@ func (o *CleanRoomRemoteDetail) GetCollaborators(ctx context.Context) ([]CleanRo
 	return v, true
 }
 
-// SetCollaborators sets the value of the Collaborators field in CleanRoomRemoteDetail.
-func (o *CleanRoomRemoteDetail) SetCollaborators(ctx context.Context, v []CleanRoomCollaborator) {
+// SetCollaborators sets the value of the Collaborators field in CleanRoomRemoteDetail_SdkV2.
+func (o *CleanRoomRemoteDetail_SdkV2) SetCollaborators(ctx context.Context, v []CleanRoomCollaborator_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1346,19 +1352,16 @@ func (o *CleanRoomRemoteDetail) SetCollaborators(ctx context.Context, v []CleanR
 	o.Collaborators = types.ListValueMust(t, vs)
 }
 
-// GetComplianceSecurityProfile returns the value of the ComplianceSecurityProfile field in CleanRoomRemoteDetail as
-// a ComplianceSecurityProfile value.
+// GetComplianceSecurityProfile returns the value of the ComplianceSecurityProfile field in CleanRoomRemoteDetail_SdkV2 as
+// a ComplianceSecurityProfile_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomRemoteDetail) GetComplianceSecurityProfile(ctx context.Context) (ComplianceSecurityProfile, bool) {
-	var e ComplianceSecurityProfile
+func (o *CleanRoomRemoteDetail_SdkV2) GetComplianceSecurityProfile(ctx context.Context) (ComplianceSecurityProfile_SdkV2, bool) {
+	var e ComplianceSecurityProfile_SdkV2
 	if o.ComplianceSecurityProfile.IsNull() || o.ComplianceSecurityProfile.IsUnknown() {
 		return e, false
 	}
-	var v []ComplianceSecurityProfile
-	d := o.ComplianceSecurityProfile.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []ComplianceSecurityProfile_SdkV2
+	d := o.ComplianceSecurityProfile.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1368,25 +1371,23 @@ func (o *CleanRoomRemoteDetail) GetComplianceSecurityProfile(ctx context.Context
 	return v[0], true
 }
 
-// SetComplianceSecurityProfile sets the value of the ComplianceSecurityProfile field in CleanRoomRemoteDetail.
-func (o *CleanRoomRemoteDetail) SetComplianceSecurityProfile(ctx context.Context, v ComplianceSecurityProfile) {
-	vs := v.ToObjectValue(ctx)
-	o.ComplianceSecurityProfile = vs
+// SetComplianceSecurityProfile sets the value of the ComplianceSecurityProfile field in CleanRoomRemoteDetail_SdkV2.
+func (o *CleanRoomRemoteDetail_SdkV2) SetComplianceSecurityProfile(ctx context.Context, v ComplianceSecurityProfile_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_security_profile"]
+	o.ComplianceSecurityProfile = types.ListValueMust(t, vs)
 }
 
-// GetCreator returns the value of the Creator field in CleanRoomRemoteDetail as
-// a CleanRoomCollaborator value.
+// GetCreator returns the value of the Creator field in CleanRoomRemoteDetail_SdkV2 as
+// a CleanRoomCollaborator_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomRemoteDetail) GetCreator(ctx context.Context) (CleanRoomCollaborator, bool) {
-	var e CleanRoomCollaborator
+func (o *CleanRoomRemoteDetail_SdkV2) GetCreator(ctx context.Context) (CleanRoomCollaborator_SdkV2, bool) {
+	var e CleanRoomCollaborator_SdkV2
 	if o.Creator.IsNull() || o.Creator.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomCollaborator
-	d := o.Creator.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomCollaborator_SdkV2
+	d := o.Creator.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1396,25 +1397,23 @@ func (o *CleanRoomRemoteDetail) GetCreator(ctx context.Context) (CleanRoomCollab
 	return v[0], true
 }
 
-// SetCreator sets the value of the Creator field in CleanRoomRemoteDetail.
-func (o *CleanRoomRemoteDetail) SetCreator(ctx context.Context, v CleanRoomCollaborator) {
-	vs := v.ToObjectValue(ctx)
-	o.Creator = vs
+// SetCreator sets the value of the Creator field in CleanRoomRemoteDetail_SdkV2.
+func (o *CleanRoomRemoteDetail_SdkV2) SetCreator(ctx context.Context, v CleanRoomCollaborator_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["creator"]
+	o.Creator = types.ListValueMust(t, vs)
 }
 
-// GetEgressNetworkPolicy returns the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail as
-// a settings_tf.EgressNetworkPolicy value.
+// GetEgressNetworkPolicy returns the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail_SdkV2 as
+// a settings_tf.EgressNetworkPolicy_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomRemoteDetail) GetEgressNetworkPolicy(ctx context.Context) (settings_tf.EgressNetworkPolicy, bool) {
-	var e settings_tf.EgressNetworkPolicy
+func (o *CleanRoomRemoteDetail_SdkV2) GetEgressNetworkPolicy(ctx context.Context) (settings_tf.EgressNetworkPolicy_SdkV2, bool) {
+	var e settings_tf.EgressNetworkPolicy_SdkV2
 	if o.EgressNetworkPolicy.IsNull() || o.EgressNetworkPolicy.IsUnknown() {
 		return e, false
 	}
-	var v []settings_tf.EgressNetworkPolicy
-	d := o.EgressNetworkPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []settings_tf.EgressNetworkPolicy_SdkV2
+	d := o.EgressNetworkPolicy.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1424,13 +1423,14 @@ func (o *CleanRoomRemoteDetail) GetEgressNetworkPolicy(ctx context.Context) (set
 	return v[0], true
 }
 
-// SetEgressNetworkPolicy sets the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail.
-func (o *CleanRoomRemoteDetail) SetEgressNetworkPolicy(ctx context.Context, v settings_tf.EgressNetworkPolicy) {
-	vs := v.ToObjectValue(ctx)
-	o.EgressNetworkPolicy = vs
+// SetEgressNetworkPolicy sets the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail_SdkV2.
+func (o *CleanRoomRemoteDetail_SdkV2) SetEgressNetworkPolicy(ctx context.Context, v settings_tf.EgressNetworkPolicy_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["egress_network_policy"]
+	o.EgressNetworkPolicy = types.ListValueMust(t, vs)
 }
 
-type CollaboratorJobRunInfo struct {
+type CollaboratorJobRunInfo_SdkV2 struct {
 	// Alias of the collaborator that triggered the task run.
 	CollaboratorAlias types.String `tfsdk:"collaborator_alias" tf:"optional"`
 	// Job ID of the task run in the collaborator's workspace.
@@ -1443,10 +1443,10 @@ type CollaboratorJobRunInfo struct {
 	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id" tf:"optional"`
 }
 
-func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo) {
+func (newState *CollaboratorJobRunInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo_SdkV2) {
 }
 
-func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringRead(existingState CollaboratorJobRunInfo) {
+func (newState *CollaboratorJobRunInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState CollaboratorJobRunInfo_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CollaboratorJobRunInfo.
@@ -1456,14 +1456,14 @@ func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CollaboratorJobRunInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CollaboratorJobRunInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CollaboratorJobRunInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CollaboratorJobRunInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CollaboratorJobRunInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CollaboratorJobRunInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1476,7 +1476,7 @@ func (o CollaboratorJobRunInfo) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CollaboratorJobRunInfo) Type(ctx context.Context) attr.Type {
+func (o CollaboratorJobRunInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"collaborator_alias":        types.StringType,
@@ -1490,7 +1490,7 @@ func (o CollaboratorJobRunInfo) Type(ctx context.Context) attr.Type {
 
 // The compliance security profile used to process regulated data following
 // compliance standards.
-type ComplianceSecurityProfile struct {
+type ComplianceSecurityProfile_SdkV2 struct {
 	// The list of compliance standards that the compliance security profile is
 	// configured to enforce.
 	ComplianceStandards types.List `tfsdk:"compliance_standards" tf:"optional"`
@@ -1498,10 +1498,10 @@ type ComplianceSecurityProfile struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled" tf:"optional"`
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile_SdkV2) {
 }
 
-func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+func (newState *ComplianceSecurityProfile_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplianceSecurityProfile.
@@ -1511,16 +1511,16 @@ func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ComplianceSecurityProfile) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ComplianceSecurityProfile_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"compliance_standards": reflect.TypeOf(types.String{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ComplianceSecurityProfile
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ComplianceSecurityProfile_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ComplianceSecurityProfile) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ComplianceSecurityProfile_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1530,7 +1530,7 @@ func (o ComplianceSecurityProfile) ToObjectValue(ctx context.Context) basetypes.
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
+func (o ComplianceSecurityProfile_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"compliance_standards": basetypes.ListType{
@@ -1541,10 +1541,10 @@ func (o ComplianceSecurityProfile) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetComplianceStandards returns the value of the ComplianceStandards field in ComplianceSecurityProfile as
+// GetComplianceStandards returns the value of the ComplianceStandards field in ComplianceSecurityProfile_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ComplianceSecurityProfile) GetComplianceStandards(ctx context.Context) ([]types.String, bool) {
+func (o *ComplianceSecurityProfile_SdkV2) GetComplianceStandards(ctx context.Context) ([]types.String, bool) {
 	if o.ComplianceStandards.IsNull() || o.ComplianceStandards.IsUnknown() {
 		return nil, false
 	}
@@ -1556,8 +1556,8 @@ func (o *ComplianceSecurityProfile) GetComplianceStandards(ctx context.Context) 
 	return v, true
 }
 
-// SetComplianceStandards sets the value of the ComplianceStandards field in ComplianceSecurityProfile.
-func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, v []types.String) {
+// SetComplianceStandards sets the value of the ComplianceStandards field in ComplianceSecurityProfile_SdkV2.
+func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
@@ -1568,17 +1568,17 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 }
 
 // Create an asset
-type CreateCleanRoomAssetRequest struct {
+type CreateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
-	Asset types.Object `tfsdk:"asset" tf:"optional,object"`
+	Asset types.List `tfsdk:"asset" tf:"optional,object"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetRequest) {
+func (newState *CreateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetRequest_SdkV2) {
 }
 
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomAssetRequest) {
+func (newState *CreateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomAssetRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
@@ -1588,16 +1588,16 @@ func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(exist
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCleanRoomAssetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateCleanRoomAssetRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"asset": reflect.TypeOf(CleanRoomAsset{}),
+		"asset": reflect.TypeOf(CleanRoomAsset_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomAssetRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomAssetRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1607,28 +1607,27 @@ func (o CreateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
+func (o CreateCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset":           CleanRoomAsset{}.Type(ctx),
+			"asset": basetypes.ListType{
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
+			},
 			"clean_room_name": types.StringType,
 		},
 	}
 }
 
-// GetAsset returns the value of the Asset field in CreateCleanRoomAssetRequest as
-// a CleanRoomAsset value.
+// GetAsset returns the value of the Asset field in CreateCleanRoomAssetRequest_SdkV2 as
+// a CleanRoomAsset_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAsset, bool) {
-	var e CleanRoomAsset
+func (o *CreateCleanRoomAssetRequest_SdkV2) GetAsset(ctx context.Context) (CleanRoomAsset_SdkV2, bool) {
+	var e CleanRoomAsset_SdkV2
 	if o.Asset.IsNull() || o.Asset.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAsset
-	d := o.Asset.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAsset_SdkV2
+	d := o.Asset.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1638,24 +1637,25 @@ func (o *CreateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 	return v[0], true
 }
 
-// SetAsset sets the value of the Asset field in CreateCleanRoomAssetRequest.
-func (o *CreateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
-	vs := v.ToObjectValue(ctx)
-	o.Asset = vs
+// SetAsset sets the value of the Asset field in CreateCleanRoomAssetRequest_SdkV2.
+func (o *CreateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v CleanRoomAsset_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["asset"]
+	o.Asset = types.ListValueMust(t, vs)
 }
 
 // Create an output catalog
-type CreateCleanRoomOutputCatalogRequest struct {
+type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 
-	OutputCatalog types.Object `tfsdk:"output_catalog" tf:"optional,object"`
+	OutputCatalog types.List `tfsdk:"output_catalog" tf:"optional,object"`
 }
 
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogRequest) {
+func (newState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogRequest_SdkV2) {
 }
 
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogRequest) {
+func (newState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
@@ -1665,16 +1665,16 @@ func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringRe
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCleanRoomOutputCatalogRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateCleanRoomOutputCatalogRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"output_catalog": reflect.TypeOf(CleanRoomOutputCatalog{}),
+		"output_catalog": reflect.TypeOf(CleanRoomOutputCatalog_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomOutputCatalogRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomOutputCatalogRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCleanRoomOutputCatalogRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateCleanRoomOutputCatalogRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1684,28 +1684,27 @@ func (o CreateCleanRoomOutputCatalogRequest) ToObjectValue(ctx context.Context) 
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCleanRoomOutputCatalogRequest) Type(ctx context.Context) attr.Type {
+func (o CreateCleanRoomOutputCatalogRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
-			"output_catalog":  CleanRoomOutputCatalog{}.Type(ctx),
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetOutputCatalog returns the value of the OutputCatalog field in CreateCleanRoomOutputCatalogRequest as
-// a CleanRoomOutputCatalog value.
+// GetOutputCatalog returns the value of the OutputCatalog field in CreateCleanRoomOutputCatalogRequest_SdkV2 as
+// a CleanRoomOutputCatalog_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCleanRoomOutputCatalogRequest) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog, bool) {
-	var e CleanRoomOutputCatalog
+func (o *CreateCleanRoomOutputCatalogRequest_SdkV2) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog_SdkV2, bool) {
+	var e CleanRoomOutputCatalog_SdkV2
 	if o.OutputCatalog.IsNull() || o.OutputCatalog.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomOutputCatalog_SdkV2
+	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1715,20 +1714,21 @@ func (o *CreateCleanRoomOutputCatalogRequest) GetOutputCatalog(ctx context.Conte
 	return v[0], true
 }
 
-// SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogRequest.
-func (o *CreateCleanRoomOutputCatalogRequest) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := v.ToObjectValue(ctx)
-	o.OutputCatalog = vs
+// SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogRequest_SdkV2.
+func (o *CreateCleanRoomOutputCatalogRequest_SdkV2) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
+	o.OutputCatalog = types.ListValueMust(t, vs)
 }
 
-type CreateCleanRoomOutputCatalogResponse struct {
-	OutputCatalog types.Object `tfsdk:"output_catalog" tf:"optional,object"`
+type CreateCleanRoomOutputCatalogResponse_SdkV2 struct {
+	OutputCatalog types.List `tfsdk:"output_catalog" tf:"optional,object"`
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse) {
+func (newState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse_SdkV2) {
 }
 
-func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse) {
+func (newState *CreateCleanRoomOutputCatalogResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogResponse.
@@ -1738,16 +1738,16 @@ func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringR
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCleanRoomOutputCatalogResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateCleanRoomOutputCatalogResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"output_catalog": reflect.TypeOf(CleanRoomOutputCatalog{}),
+		"output_catalog": reflect.TypeOf(CleanRoomOutputCatalog_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomOutputCatalogResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomOutputCatalogResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCleanRoomOutputCatalogResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateCleanRoomOutputCatalogResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1756,27 +1756,26 @@ func (o CreateCleanRoomOutputCatalogResponse) ToObjectValue(ctx context.Context)
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCleanRoomOutputCatalogResponse) Type(ctx context.Context) attr.Type {
+func (o CreateCleanRoomOutputCatalogResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"output_catalog": CleanRoomOutputCatalog{}.Type(ctx),
+			"output_catalog": basetypes.ListType{
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetOutputCatalog returns the value of the OutputCatalog field in CreateCleanRoomOutputCatalogResponse as
-// a CleanRoomOutputCatalog value.
+// GetOutputCatalog returns the value of the OutputCatalog field in CreateCleanRoomOutputCatalogResponse_SdkV2 as
+// a CleanRoomOutputCatalog_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCleanRoomOutputCatalogResponse) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog, bool) {
-	var e CleanRoomOutputCatalog
+func (o *CreateCleanRoomOutputCatalogResponse_SdkV2) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalog_SdkV2, bool) {
+	var e CleanRoomOutputCatalog_SdkV2
 	if o.OutputCatalog.IsNull() || o.OutputCatalog.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomOutputCatalog_SdkV2
+	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1786,21 +1785,22 @@ func (o *CreateCleanRoomOutputCatalogResponse) GetOutputCatalog(ctx context.Cont
 	return v[0], true
 }
 
-// SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogResponse.
-func (o *CreateCleanRoomOutputCatalogResponse) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := v.ToObjectValue(ctx)
-	o.OutputCatalog = vs
+// SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogResponse_SdkV2.
+func (o *CreateCleanRoomOutputCatalogResponse_SdkV2) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
+	o.OutputCatalog = types.ListValueMust(t, vs)
 }
 
 // Create a clean room
-type CreateCleanRoomRequest struct {
-	CleanRoom types.Object `tfsdk:"clean_room" tf:"optional,object"`
+type CreateCleanRoomRequest_SdkV2 struct {
+	CleanRoom types.List `tfsdk:"clean_room" tf:"optional,object"`
 }
 
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomRequest) {
+func (newState *CreateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomRequest_SdkV2) {
 }
 
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomRequest) {
+func (newState *CreateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
@@ -1810,16 +1810,16 @@ func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateCleanRoomRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateCleanRoomRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"clean_room": reflect.TypeOf(CleanRoom{}),
+		"clean_room": reflect.TypeOf(CleanRoom_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateCleanRoomRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateCleanRoomRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1828,27 +1828,26 @@ func (o CreateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateCleanRoomRequest) Type(ctx context.Context) attr.Type {
+func (o CreateCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": CleanRoom{}.Type(ctx),
+			"clean_room": basetypes.ListType{
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetCleanRoom returns the value of the CleanRoom field in CreateCleanRoomRequest as
-// a CleanRoom value.
+// GetCleanRoom returns the value of the CleanRoom field in CreateCleanRoomRequest_SdkV2 as
+// a CleanRoom_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, bool) {
-	var e CleanRoom
+func (o *CreateCleanRoomRequest_SdkV2) GetCleanRoom(ctx context.Context) (CleanRoom_SdkV2, bool) {
+	var e CleanRoom_SdkV2
 	if o.CleanRoom.IsNull() || o.CleanRoom.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoom
-	d := o.CleanRoom.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoom_SdkV2
+	d := o.CleanRoom.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1858,14 +1857,15 @@ func (o *CreateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 	return v[0], true
 }
 
-// SetCleanRoom sets the value of the CleanRoom field in CreateCleanRoomRequest.
-func (o *CreateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) {
-	vs := v.ToObjectValue(ctx)
-	o.CleanRoom = vs
+// SetCleanRoom sets the value of the CleanRoom field in CreateCleanRoomRequest_SdkV2.
+func (o *CreateCleanRoomRequest_SdkV2) SetCleanRoom(ctx context.Context, v CleanRoom_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room"]
+	o.CleanRoom = types.ListValueMust(t, vs)
 }
 
 // Delete an asset
-type DeleteCleanRoomAssetRequest struct {
+type DeleteCleanRoomAssetRequest_SdkV2 struct {
 	// The fully qualified name of the asset, it is same as the name field in
 	// CleanRoomAsset.
 	AssetFullName types.String `tfsdk:"-"`
@@ -1875,10 +1875,10 @@ type DeleteCleanRoomAssetRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetRequest) {
+func (newState *DeleteCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetRequest_SdkV2) {
 }
 
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetRequest) {
+func (newState *DeleteCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -1888,14 +1888,14 @@ func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(exist
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteCleanRoomAssetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteCleanRoomAssetRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomAssetRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomAssetRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1906,7 +1906,7 @@ func (o DeleteCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
+func (o DeleteCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"asset_full_name": types.StringType,
@@ -1918,13 +1918,13 @@ func (o DeleteCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 
 // Response for delete clean room request. Using an empty message since the
 // generic Empty proto does not externd UnshadedMessageMarker.
-type DeleteCleanRoomAssetResponse struct {
+type DeleteCleanRoomAssetResponse_SdkV2 struct {
 }
 
-func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetResponse) {
+func (newState *DeleteCleanRoomAssetResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
-func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetResponse) {
+func (newState *DeleteCleanRoomAssetResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetResponse.
@@ -1934,36 +1934,36 @@ func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringRead(exis
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteCleanRoomAssetResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteCleanRoomAssetResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomAssetResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomAssetResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteCleanRoomAssetResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteCleanRoomAssetResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
+func (o DeleteCleanRoomAssetResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
 // Delete a clean room
-type DeleteCleanRoomRequest struct {
+type DeleteCleanRoomRequest_SdkV2 struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest) {
+func (newState *DeleteCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest_SdkV2) {
 }
 
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest) {
+func (newState *DeleteCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
@@ -1973,14 +1973,14 @@ func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteCleanRoomRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteCleanRoomRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteCleanRoomRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteCleanRoomRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1989,7 +1989,7 @@ func (o DeleteCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteCleanRoomRequest) Type(ctx context.Context) attr.Type {
+func (o DeleteCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -1997,13 +1997,13 @@ func (o DeleteCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse struct {
+type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -2013,28 +2013,28 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
+func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
 // Get an asset
-type GetCleanRoomAssetRequest struct {
+type GetCleanRoomAssetRequest_SdkV2 struct {
 	// The fully qualified name of the asset, it is same as the name field in
 	// CleanRoomAsset.
 	AssetFullName types.String `tfsdk:"-"`
@@ -2044,10 +2044,10 @@ type GetCleanRoomAssetRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomAssetRequest) {
+func (newState *GetCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomAssetRequest_SdkV2) {
 }
 
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomAssetRequest) {
+func (newState *GetCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomAssetRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2057,14 +2057,14 @@ func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existing
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetCleanRoomAssetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetCleanRoomAssetRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomAssetRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomAssetRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2075,7 +2075,7 @@ func (o GetCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.O
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
+func (o GetCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"asset_full_name": types.StringType,
@@ -2086,14 +2086,14 @@ func (o GetCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Get a clean room
-type GetCleanRoomRequest struct {
+type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest) {
+func (newState *GetCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest_SdkV2) {
 }
 
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest) {
+func (newState *GetCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
@@ -2103,14 +2103,14 @@ func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetCleanRoomRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetCleanRoomRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCleanRoomRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetCleanRoomRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2119,7 +2119,7 @@ func (o GetCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Object
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
+func (o GetCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -2128,17 +2128,17 @@ func (o GetCleanRoomRequest) Type(ctx context.Context) attr.Type {
 }
 
 // List assets
-type ListCleanRoomAssetsRequest struct {
+type ListCleanRoomAssetsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsRequest) {
+func (newState *ListCleanRoomAssetsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsRequest_SdkV2) {
 }
 
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsRequest) {
+func (newState *ListCleanRoomAssetsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
@@ -2148,14 +2148,14 @@ func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringRead(existi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomAssetsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomAssetsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetsRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomAssetsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomAssetsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2165,7 +2165,7 @@ func (o ListCleanRoomAssetsRequest) ToObjectValue(ctx context.Context) basetypes
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomAssetsRequest) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomAssetsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
@@ -2174,7 +2174,7 @@ func (o ListCleanRoomAssetsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListCleanRoomAssetsResponse struct {
+type ListCleanRoomAssetsResponse_SdkV2 struct {
 	// Assets in the clean room.
 	Assets types.List `tfsdk:"assets" tf:"optional"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
@@ -2183,10 +2183,10 @@ type ListCleanRoomAssetsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
-func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse) {
+func (newState *ListCleanRoomAssetsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsResponse) {
+func (newState *ListCleanRoomAssetsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsResponse.
@@ -2196,16 +2196,16 @@ func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringRead(exist
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomAssetsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomAssetsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"assets": reflect.TypeOf(CleanRoomAsset{}),
+		"assets": reflect.TypeOf(CleanRoomAsset_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomAssetsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomAssetsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomAssetsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2215,25 +2215,25 @@ func (o ListCleanRoomAssetsResponse) ToObjectValue(ctx context.Context) basetype
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomAssetsResponse) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomAssetsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"assets": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
 	}
 }
 
-// GetAssets returns the value of the Assets field in ListCleanRoomAssetsResponse as
-// a slice of CleanRoomAsset values.
+// GetAssets returns the value of the Assets field in ListCleanRoomAssetsResponse_SdkV2 as
+// a slice of CleanRoomAsset_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListCleanRoomAssetsResponse) GetAssets(ctx context.Context) ([]CleanRoomAsset, bool) {
+func (o *ListCleanRoomAssetsResponse_SdkV2) GetAssets(ctx context.Context) ([]CleanRoomAsset_SdkV2, bool) {
 	if o.Assets.IsNull() || o.Assets.IsUnknown() {
 		return nil, false
 	}
-	var v []CleanRoomAsset
+	var v []CleanRoomAsset_SdkV2
 	d := o.Assets.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2241,8 +2241,8 @@ func (o *ListCleanRoomAssetsResponse) GetAssets(ctx context.Context) ([]CleanRoo
 	return v, true
 }
 
-// SetAssets sets the value of the Assets field in ListCleanRoomAssetsResponse.
-func (o *ListCleanRoomAssetsResponse) SetAssets(ctx context.Context, v []CleanRoomAsset) {
+// SetAssets sets the value of the Assets field in ListCleanRoomAssetsResponse_SdkV2.
+func (o *ListCleanRoomAssetsResponse_SdkV2) SetAssets(ctx context.Context, v []CleanRoomAsset_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2253,7 +2253,7 @@ func (o *ListCleanRoomAssetsResponse) SetAssets(ctx context.Context, v []CleanRo
 }
 
 // List notebook task runs
-type ListCleanRoomNotebookTaskRunsRequest struct {
+type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 	// Notebook name
@@ -2264,10 +2264,10 @@ type ListCleanRoomNotebookTaskRunsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsRequest) {
+func (newState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsRequest) {
+func (newState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
@@ -2277,14 +2277,14 @@ func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringR
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomNotebookTaskRunsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomNotebookTaskRunsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomNotebookTaskRunsRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomNotebookTaskRunsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomNotebookTaskRunsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomNotebookTaskRunsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2296,7 +2296,7 @@ func (o ListCleanRoomNotebookTaskRunsRequest) ToObjectValue(ctx context.Context)
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomNotebookTaskRunsRequest) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomNotebookTaskRunsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
@@ -2307,7 +2307,7 @@ func (o ListCleanRoomNotebookTaskRunsRequest) Type(ctx context.Context) attr.Typ
 	}
 }
 
-type ListCleanRoomNotebookTaskRunsResponse struct {
+type ListCleanRoomNotebookTaskRunsResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. page_token should be set to this value for the next request
 	// (for the next page of results).
@@ -2316,10 +2316,10 @@ type ListCleanRoomNotebookTaskRunsResponse struct {
 	Runs types.List `tfsdk:"runs" tf:"optional"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse) {
+func (newState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse) {
+func (newState *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsResponse.
@@ -2329,16 +2329,16 @@ func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuring
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomNotebookTaskRunsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomNotebookTaskRunsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"runs": reflect.TypeOf(CleanRoomNotebookTaskRun{}),
+		"runs": reflect.TypeOf(CleanRoomNotebookTaskRun_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomNotebookTaskRunsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomNotebookTaskRunsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomNotebookTaskRunsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomNotebookTaskRunsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2348,25 +2348,25 @@ func (o ListCleanRoomNotebookTaskRunsResponse) ToObjectValue(ctx context.Context
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomNotebookTaskRunsResponse) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomNotebookTaskRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"runs": basetypes.ListType{
-				ElemType: CleanRoomNotebookTaskRun{}.Type(ctx),
+				ElemType: CleanRoomNotebookTaskRun_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetRuns returns the value of the Runs field in ListCleanRoomNotebookTaskRunsResponse as
-// a slice of CleanRoomNotebookTaskRun values.
+// GetRuns returns the value of the Runs field in ListCleanRoomNotebookTaskRunsResponse_SdkV2 as
+// a slice of CleanRoomNotebookTaskRun_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListCleanRoomNotebookTaskRunsResponse) GetRuns(ctx context.Context) ([]CleanRoomNotebookTaskRun, bool) {
+func (o *ListCleanRoomNotebookTaskRunsResponse_SdkV2) GetRuns(ctx context.Context) ([]CleanRoomNotebookTaskRun_SdkV2, bool) {
 	if o.Runs.IsNull() || o.Runs.IsUnknown() {
 		return nil, false
 	}
-	var v []CleanRoomNotebookTaskRun
+	var v []CleanRoomNotebookTaskRun_SdkV2
 	d := o.Runs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2374,8 +2374,8 @@ func (o *ListCleanRoomNotebookTaskRunsResponse) GetRuns(ctx context.Context) ([]
 	return v, true
 }
 
-// SetRuns sets the value of the Runs field in ListCleanRoomNotebookTaskRunsResponse.
-func (o *ListCleanRoomNotebookTaskRunsResponse) SetRuns(ctx context.Context, v []CleanRoomNotebookTaskRun) {
+// SetRuns sets the value of the Runs field in ListCleanRoomNotebookTaskRunsResponse_SdkV2.
+func (o *ListCleanRoomNotebookTaskRunsResponse_SdkV2) SetRuns(ctx context.Context, v []CleanRoomNotebookTaskRun_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2386,7 +2386,7 @@ func (o *ListCleanRoomNotebookTaskRunsResponse) SetRuns(ctx context.Context, v [
 }
 
 // List clean rooms
-type ListCleanRoomsRequest struct {
+type ListCleanRoomsRequest_SdkV2 struct {
 	// Maximum number of clean rooms to return (i.e., the page length). Defaults
 	// to 100.
 	PageSize types.Int64 `tfsdk:"-"`
@@ -2394,10 +2394,10 @@ type ListCleanRoomsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest) {
+func (newState *ListCleanRoomsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest_SdkV2) {
 }
 
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest) {
+func (newState *ListCleanRoomsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
@@ -2407,14 +2407,14 @@ func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomsRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2424,7 +2424,7 @@ func (o ListCleanRoomsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomsRequest) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"page_size":  types.Int64Type,
@@ -2433,7 +2433,7 @@ func (o ListCleanRoomsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListCleanRoomsResponse struct {
+type ListCleanRoomsResponse_SdkV2 struct {
 	CleanRooms types.List `tfsdk:"clean_rooms" tf:"optional"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. page_token should be set to this value for the next request
@@ -2441,10 +2441,10 @@ type ListCleanRoomsResponse struct {
 	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
 }
 
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
+func (newState *ListCleanRoomsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse_SdkV2) {
 }
 
-func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
+func (newState *ListCleanRoomsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsResponse.
@@ -2454,16 +2454,16 @@ func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListCleanRoomsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListCleanRoomsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"clean_rooms": reflect.TypeOf(CleanRoom{}),
+		"clean_rooms": reflect.TypeOf(CleanRoom_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListCleanRoomsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListCleanRoomsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListCleanRoomsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2473,25 +2473,25 @@ func (o ListCleanRoomsResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListCleanRoomsResponse) Type(ctx context.Context) attr.Type {
+func (o ListCleanRoomsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
 	}
 }
 
-// GetCleanRooms returns the value of the CleanRooms field in ListCleanRoomsResponse as
-// a slice of CleanRoom values.
+// GetCleanRooms returns the value of the CleanRooms field in ListCleanRoomsResponse_SdkV2 as
+// a slice of CleanRoom_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListCleanRoomsResponse) GetCleanRooms(ctx context.Context) ([]CleanRoom, bool) {
+func (o *ListCleanRoomsResponse_SdkV2) GetCleanRooms(ctx context.Context) ([]CleanRoom_SdkV2, bool) {
 	if o.CleanRooms.IsNull() || o.CleanRooms.IsUnknown() {
 		return nil, false
 	}
-	var v []CleanRoom
+	var v []CleanRoom_SdkV2
 	d := o.CleanRooms.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2499,8 +2499,8 @@ func (o *ListCleanRoomsResponse) GetCleanRooms(ctx context.Context) ([]CleanRoom
 	return v, true
 }
 
-// SetCleanRooms sets the value of the CleanRooms field in ListCleanRoomsResponse.
-func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoom) {
+// SetCleanRooms sets the value of the CleanRooms field in ListCleanRoomsResponse_SdkV2.
+func (o *ListCleanRoomsResponse_SdkV2) SetCleanRooms(ctx context.Context, v []CleanRoom_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2511,9 +2511,9 @@ func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoo
 }
 
 // Update an asset
-type UpdateCleanRoomAssetRequest struct {
+type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	// Metadata of the clean room asset
-	Asset types.Object `tfsdk:"asset" tf:"optional,object"`
+	Asset types.List `tfsdk:"asset" tf:"optional,object"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
@@ -2528,10 +2528,10 @@ type UpdateCleanRoomAssetRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomAssetRequest) {
+func (newState *UpdateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomAssetRequest_SdkV2) {
 }
 
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomAssetRequest) {
+func (newState *UpdateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomAssetRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.
@@ -2541,16 +2541,16 @@ func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(exist
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateCleanRoomAssetRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateCleanRoomAssetRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"asset": reflect.TypeOf(CleanRoomAsset{}),
+		"asset": reflect.TypeOf(CleanRoomAsset_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCleanRoomAssetRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCleanRoomAssetRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateCleanRoomAssetRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2562,10 +2562,12 @@ func (o UpdateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
+func (o UpdateCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset":           CleanRoomAsset{}.Type(ctx),
+			"asset": basetypes.ListType{
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
+			},
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
 			"name":            types.StringType,
@@ -2573,19 +2575,16 @@ func (o UpdateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetAsset returns the value of the Asset field in UpdateCleanRoomAssetRequest as
-// a CleanRoomAsset value.
+// GetAsset returns the value of the Asset field in UpdateCleanRoomAssetRequest_SdkV2 as
+// a CleanRoomAsset_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAsset, bool) {
-	var e CleanRoomAsset
+func (o *UpdateCleanRoomAssetRequest_SdkV2) GetAsset(ctx context.Context) (CleanRoomAsset_SdkV2, bool) {
+	var e CleanRoomAsset_SdkV2
 	if o.Asset.IsNull() || o.Asset.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoomAsset
-	d := o.Asset.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoomAsset_SdkV2
+	d := o.Asset.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2595,22 +2594,23 @@ func (o *UpdateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 	return v[0], true
 }
 
-// SetAsset sets the value of the Asset field in UpdateCleanRoomAssetRequest.
-func (o *UpdateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
-	vs := v.ToObjectValue(ctx)
-	o.Asset = vs
+// SetAsset sets the value of the Asset field in UpdateCleanRoomAssetRequest_SdkV2.
+func (o *UpdateCleanRoomAssetRequest_SdkV2) SetAsset(ctx context.Context, v CleanRoomAsset_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["asset"]
+	o.Asset = types.ListValueMust(t, vs)
 }
 
-type UpdateCleanRoomRequest struct {
-	CleanRoom types.Object `tfsdk:"clean_room" tf:"optional,object"`
+type UpdateCleanRoomRequest_SdkV2 struct {
+	CleanRoom types.List `tfsdk:"clean_room" tf:"optional,object"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomRequest) {
+func (newState *UpdateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomRequest_SdkV2) {
 }
 
-func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest) {
+func (newState *UpdateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.
@@ -2620,16 +2620,16 @@ func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateCleanRoomRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateCleanRoomRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"clean_room": reflect.TypeOf(CleanRoom{}),
+		"clean_room": reflect.TypeOf(CleanRoom_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCleanRoomRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateCleanRoomRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateCleanRoomRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2639,28 +2639,27 @@ func (o UpdateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateCleanRoomRequest) Type(ctx context.Context) attr.Type {
+func (o UpdateCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": CleanRoom{}.Type(ctx),
-			"name":       types.StringType,
+			"clean_room": basetypes.ListType{
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
 		},
 	}
 }
 
-// GetCleanRoom returns the value of the CleanRoom field in UpdateCleanRoomRequest as
-// a CleanRoom value.
+// GetCleanRoom returns the value of the CleanRoom field in UpdateCleanRoomRequest_SdkV2 as
+// a CleanRoom_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, bool) {
-	var e CleanRoom
+func (o *UpdateCleanRoomRequest_SdkV2) GetCleanRoom(ctx context.Context) (CleanRoom_SdkV2, bool) {
+	var e CleanRoom_SdkV2
 	if o.CleanRoom.IsNull() || o.CleanRoom.IsUnknown() {
 		return e, false
 	}
-	var v []CleanRoom
-	d := o.CleanRoom.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []CleanRoom_SdkV2
+	d := o.CleanRoom.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2670,8 +2669,9 @@ func (o *UpdateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 	return v[0], true
 }
 
-// SetCleanRoom sets the value of the CleanRoom field in UpdateCleanRoomRequest.
-func (o *UpdateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) {
-	vs := v.ToObjectValue(ctx)
-	o.CleanRoom = vs
+// SetCleanRoom sets the value of the CleanRoom field in UpdateCleanRoomRequest_SdkV2.
+func (o *UpdateCleanRoomRequest_SdkV2) SetCleanRoom(ctx context.Context, v CleanRoom_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room"]
+	o.CleanRoom = types.ListValueMust(t, vs)
 }

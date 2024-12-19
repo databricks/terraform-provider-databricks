@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-type CreateProvider struct {
+type CreateProvider_SdkV2 struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
 	// Description about the provider.
@@ -34,10 +34,10 @@ type CreateProvider struct {
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
 }
 
-func (newState *CreateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProvider) {
+func (newState *CreateProvider_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProvider_SdkV2) {
 }
 
-func (newState *CreateProvider) SyncEffectiveFieldsDuringRead(existingState CreateProvider) {
+func (newState *CreateProvider_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateProvider_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProvider.
@@ -47,14 +47,14 @@ func (newState *CreateProvider) SyncEffectiveFieldsDuringRead(existingState Crea
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateProvider) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateProvider_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateProvider
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateProvider_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateProvider) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateProvider_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -66,7 +66,7 @@ func (o CreateProvider) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateProvider) Type(ctx context.Context) attr.Type {
+func (o CreateProvider_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"authentication_type":   types.StringType,
@@ -77,7 +77,7 @@ func (o CreateProvider) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CreateRecipient struct {
+type CreateRecipient_SdkV2 struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:""`
 	// Description about the recipient.
@@ -90,22 +90,22 @@ type CreateRecipient struct {
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of Recipient.
 	Name types.String `tfsdk:"name" tf:""`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.List `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// The one-time sharing code provided by the data recipient. This field is
 	// required when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code" tf:"optional"`
 }
 
-func (newState *CreateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRecipient) {
+func (newState *CreateRecipient_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRecipient_SdkV2) {
 }
 
-func (newState *CreateRecipient) SyncEffectiveFieldsDuringRead(existingState CreateRecipient) {
+func (newState *CreateRecipient_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRecipient_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRecipient.
@@ -115,17 +115,17 @@ func (newState *CreateRecipient) SyncEffectiveFieldsDuringRead(existingState Cre
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateRecipient) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateRecipient_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_access_list":     reflect.TypeOf(IpAccessList{}),
-		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
+		"ip_access_list":     reflect.TypeOf(IpAccessList_SdkV2{}),
+		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRecipient
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateRecipient_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateRecipient_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -142,35 +142,36 @@ func (o CreateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateRecipient) Type(ctx context.Context) attr.Type {
+func (o CreateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"authentication_type":                types.StringType,
 			"comment":                            types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
-			"ip_access_list":                     IpAccessList{}.Type(ctx),
-			"name":                               types.StringType,
-			"owner":                              types.StringType,
-			"properties_kvpairs":                 SecurablePropertiesKvPairs{}.Type(ctx),
-			"sharing_code":                       types.StringType,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
+			},
+			"name":  types.StringType,
+			"owner": types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
+			},
+			"sharing_code": types.StringType,
 		},
 	}
 }
 
-// GetIpAccessList returns the value of the IpAccessList field in CreateRecipient as
-// a IpAccessList value.
+// GetIpAccessList returns the value of the IpAccessList field in CreateRecipient_SdkV2 as
+// a IpAccessList_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
-	var e IpAccessList
+func (o *CreateRecipient_SdkV2) GetIpAccessList(ctx context.Context) (IpAccessList_SdkV2, bool) {
+	var e IpAccessList_SdkV2
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
-	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []IpAccessList_SdkV2
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -180,25 +181,23 @@ func (o *CreateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	return v[0], true
 }
 
-// SetIpAccessList sets the value of the IpAccessList field in CreateRecipient.
-func (o *CreateRecipient) SetIpAccessList(ctx context.Context, v IpAccessList) {
-	vs := v.ToObjectValue(ctx)
-	o.IpAccessList = vs
+// SetIpAccessList sets the value of the IpAccessList field in CreateRecipient_SdkV2.
+func (o *CreateRecipient_SdkV2) SetIpAccessList(ctx context.Context, v IpAccessList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
-// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in CreateRecipient as
-// a SecurablePropertiesKvPairs value.
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in CreateRecipient_SdkV2 as
+// a SecurablePropertiesKvPairs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
-	var e SecurablePropertiesKvPairs
+func (o *CreateRecipient_SdkV2) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs_SdkV2, bool) {
+	var e SecurablePropertiesKvPairs_SdkV2
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
-	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []SecurablePropertiesKvPairs_SdkV2
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -208,13 +207,14 @@ func (o *CreateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	return v[0], true
 }
 
-// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in CreateRecipient.
-func (o *CreateRecipient) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
-	vs := v.ToObjectValue(ctx)
-	o.PropertiesKvpairs = vs
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in CreateRecipient_SdkV2.
+func (o *CreateRecipient_SdkV2) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
 }
 
-type CreateShare struct {
+type CreateShare_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Name of the share.
@@ -223,10 +223,10 @@ type CreateShare struct {
 	StorageRoot types.String `tfsdk:"storage_root" tf:"optional"`
 }
 
-func (newState *CreateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateShare) {
+func (newState *CreateShare_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateShare_SdkV2) {
 }
 
-func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateShare) {
+func (newState *CreateShare_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateShare_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateShare.
@@ -236,14 +236,14 @@ func (newState *CreateShare) SyncEffectiveFieldsDuringRead(existingState CreateS
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a CreateShare) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a CreateShare_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateShare
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateShare_SdkV2
 // only implements ToObjectValue() and Type().
-func (o CreateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o CreateShare_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -254,7 +254,7 @@ func (o CreateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o CreateShare) Type(ctx context.Context) attr.Type {
+func (o CreateShare_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":      types.StringType,
@@ -265,15 +265,15 @@ func (o CreateShare) Type(ctx context.Context) attr.Type {
 }
 
 // Delete a provider
-type DeleteProviderRequest struct {
+type DeleteProviderRequest_SdkV2 struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest) {
+func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest_SdkV2) {
 }
 
-func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
+func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderRequest.
@@ -283,14 +283,14 @@ func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteProviderRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteProviderRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteProviderRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteProviderRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteProviderRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteProviderRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -299,7 +299,7 @@ func (o DeleteProviderRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteProviderRequest) Type(ctx context.Context) attr.Type {
+func (o DeleteProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -308,15 +308,15 @@ func (o DeleteProviderRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Delete a share recipient
-type DeleteRecipientRequest struct {
+type DeleteRecipientRequest_SdkV2 struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRecipientRequest) {
+func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRecipientRequest_SdkV2) {
 }
 
-func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest) {
+func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRecipientRequest.
@@ -326,14 +326,14 @@ func (newState *DeleteRecipientRequest) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteRecipientRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteRecipientRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRecipientRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteRecipientRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteRecipientRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteRecipientRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -342,7 +342,7 @@ func (o DeleteRecipientRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteRecipientRequest) Type(ctx context.Context) attr.Type {
+func (o DeleteRecipientRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -350,13 +350,13 @@ func (o DeleteRecipientRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type DeleteResponse struct {
+type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -366,36 +366,36 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState Dele
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteResponse) Type(ctx context.Context) attr.Type {
+func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
 // Delete a share
-type DeleteShareRequest struct {
+type DeleteShareRequest_SdkV2 struct {
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteShareRequest) {
+func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteShareRequest_SdkV2) {
 }
 
-func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest) {
+func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteShareRequest.
@@ -405,14 +405,14 @@ func (newState *DeleteShareRequest) SyncEffectiveFieldsDuringRead(existingState 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a DeleteShareRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a DeleteShareRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteShareRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteShareRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o DeleteShareRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o DeleteShareRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -421,7 +421,7 @@ func (o DeleteShareRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o DeleteShareRequest) Type(ctx context.Context) attr.Type {
+func (o DeleteShareRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -430,15 +430,15 @@ func (o DeleteShareRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Get a share activation URL
-type GetActivationUrlInfoRequest struct {
+type GetActivationUrlInfoRequest_SdkV2 struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoRequest) {
+func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoRequest_SdkV2) {
 }
 
-func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest) {
+func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetActivationUrlInfoRequest.
@@ -448,14 +448,14 @@ func (newState *GetActivationUrlInfoRequest) SyncEffectiveFieldsDuringRead(exist
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetActivationUrlInfoRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetActivationUrlInfoRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetActivationUrlInfoRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetActivationUrlInfoRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetActivationUrlInfoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetActivationUrlInfoRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -464,7 +464,7 @@ func (o GetActivationUrlInfoRequest) ToObjectValue(ctx context.Context) basetype
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetActivationUrlInfoRequest) Type(ctx context.Context) attr.Type {
+func (o GetActivationUrlInfoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activation_url": types.StringType,
@@ -472,13 +472,13 @@ func (o GetActivationUrlInfoRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type GetActivationUrlInfoResponse struct {
+type GetActivationUrlInfoResponse_SdkV2 struct {
 }
 
-func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoResponse) {
+func (newState *GetActivationUrlInfoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoResponse_SdkV2) {
 }
 
-func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoResponse) {
+func (newState *GetActivationUrlInfoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetActivationUrlInfoResponse.
@@ -488,36 +488,36 @@ func (newState *GetActivationUrlInfoResponse) SyncEffectiveFieldsDuringRead(exis
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetActivationUrlInfoResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetActivationUrlInfoResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetActivationUrlInfoResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetActivationUrlInfoResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetActivationUrlInfoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetActivationUrlInfoResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetActivationUrlInfoResponse) Type(ctx context.Context) attr.Type {
+func (o GetActivationUrlInfoResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
 // Get a provider
-type GetProviderRequest struct {
+type GetProviderRequest_SdkV2 struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest) {
+func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest_SdkV2) {
 }
 
-func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
+func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderRequest.
@@ -527,14 +527,14 @@ func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetProviderRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetProviderRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetProviderRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetProviderRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetProviderRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetProviderRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -543,7 +543,7 @@ func (o GetProviderRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetProviderRequest) Type(ctx context.Context) attr.Type {
+func (o GetProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -552,15 +552,15 @@ func (o GetProviderRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Get a share recipient
-type GetRecipientRequest struct {
+type GetRecipientRequest_SdkV2 struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientRequest) {
+func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientRequest_SdkV2) {
 }
 
-func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest) {
+func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRecipientRequest.
@@ -570,14 +570,14 @@ func (newState *GetRecipientRequest) SyncEffectiveFieldsDuringRead(existingState
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetRecipientRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetRecipientRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRecipientRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRecipientRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetRecipientRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetRecipientRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -586,7 +586,7 @@ func (o GetRecipientRequest) ToObjectValue(ctx context.Context) basetypes.Object
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetRecipientRequest) Type(ctx context.Context) attr.Type {
+func (o GetRecipientRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -594,7 +594,7 @@ func (o GetRecipientRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type GetRecipientSharePermissionsResponse struct {
+type GetRecipientSharePermissionsResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -603,10 +603,10 @@ type GetRecipientSharePermissionsResponse struct {
 	PermissionsOut types.List `tfsdk:"permissions_out" tf:"optional"`
 }
 
-func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientSharePermissionsResponse) {
+func (newState *GetRecipientSharePermissionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientSharePermissionsResponse_SdkV2) {
 }
 
-func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState GetRecipientSharePermissionsResponse) {
+func (newState *GetRecipientSharePermissionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRecipientSharePermissionsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRecipientSharePermissionsResponse.
@@ -616,16 +616,16 @@ func (newState *GetRecipientSharePermissionsResponse) SyncEffectiveFieldsDuringR
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetRecipientSharePermissionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetRecipientSharePermissionsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"permissions_out": reflect.TypeOf(ShareToPrivilegeAssignment{}),
+		"permissions_out": reflect.TypeOf(ShareToPrivilegeAssignment_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRecipientSharePermissionsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetRecipientSharePermissionsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetRecipientSharePermissionsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetRecipientSharePermissionsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -635,25 +635,25 @@ func (o GetRecipientSharePermissionsResponse) ToObjectValue(ctx context.Context)
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetRecipientSharePermissionsResponse) Type(ctx context.Context) attr.Type {
+func (o GetRecipientSharePermissionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"permissions_out": basetypes.ListType{
-				ElemType: ShareToPrivilegeAssignment{}.Type(ctx),
+				ElemType: ShareToPrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetPermissionsOut returns the value of the PermissionsOut field in GetRecipientSharePermissionsResponse as
-// a slice of ShareToPrivilegeAssignment values.
+// GetPermissionsOut returns the value of the PermissionsOut field in GetRecipientSharePermissionsResponse_SdkV2 as
+// a slice of ShareToPrivilegeAssignment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GetRecipientSharePermissionsResponse) GetPermissionsOut(ctx context.Context) ([]ShareToPrivilegeAssignment, bool) {
+func (o *GetRecipientSharePermissionsResponse_SdkV2) GetPermissionsOut(ctx context.Context) ([]ShareToPrivilegeAssignment_SdkV2, bool) {
 	if o.PermissionsOut.IsNull() || o.PermissionsOut.IsUnknown() {
 		return nil, false
 	}
-	var v []ShareToPrivilegeAssignment
+	var v []ShareToPrivilegeAssignment_SdkV2
 	d := o.PermissionsOut.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -661,8 +661,8 @@ func (o *GetRecipientSharePermissionsResponse) GetPermissionsOut(ctx context.Con
 	return v, true
 }
 
-// SetPermissionsOut sets the value of the PermissionsOut field in GetRecipientSharePermissionsResponse.
-func (o *GetRecipientSharePermissionsResponse) SetPermissionsOut(ctx context.Context, v []ShareToPrivilegeAssignment) {
+// SetPermissionsOut sets the value of the PermissionsOut field in GetRecipientSharePermissionsResponse_SdkV2.
+func (o *GetRecipientSharePermissionsResponse_SdkV2) SetPermissionsOut(ctx context.Context, v []ShareToPrivilegeAssignment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -673,17 +673,17 @@ func (o *GetRecipientSharePermissionsResponse) SetPermissionsOut(ctx context.Con
 }
 
 // Get a share
-type GetShareRequest struct {
+type GetShareRequest_SdkV2 struct {
 	// Query for data to include in the share.
 	IncludeSharedData types.Bool `tfsdk:"-"`
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetShareRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetShareRequest) {
+func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetShareRequest_SdkV2) {
 }
 
-func (newState *GetShareRequest) SyncEffectiveFieldsDuringRead(existingState GetShareRequest) {
+func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetShareRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetShareRequest.
@@ -693,14 +693,14 @@ func (newState *GetShareRequest) SyncEffectiveFieldsDuringRead(existingState Get
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a GetShareRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a GetShareRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, GetShareRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetShareRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o GetShareRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o GetShareRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -710,7 +710,7 @@ func (o GetShareRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o GetShareRequest) Type(ctx context.Context) attr.Type {
+func (o GetShareRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"include_shared_data": types.BoolType,
@@ -719,15 +719,15 @@ func (o GetShareRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type IpAccessList struct {
+type IpAccessList_SdkV2 struct {
 	// Allowed IP Addresses in CIDR notation. Limit of 100.
 	AllowedIpAddresses types.List `tfsdk:"allowed_ip_addresses" tf:"optional"`
 }
 
-func (newState *IpAccessList) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessList) {
+func (newState *IpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessList_SdkV2) {
 }
 
-func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAccessList) {
+func (newState *IpAccessList_SdkV2) SyncEffectiveFieldsDuringRead(existingState IpAccessList_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IpAccessList.
@@ -737,16 +737,16 @@ func (newState *IpAccessList) SyncEffectiveFieldsDuringRead(existingState IpAcce
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a IpAccessList) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a IpAccessList_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"allowed_ip_addresses": reflect.TypeOf(types.String{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, IpAccessList
+// interfere with how the plugin framework retrieves and sets values in state. Thus, IpAccessList_SdkV2
 // only implements ToObjectValue() and Type().
-func (o IpAccessList) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o IpAccessList_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -755,7 +755,7 @@ func (o IpAccessList) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o IpAccessList) Type(ctx context.Context) attr.Type {
+func (o IpAccessList_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"allowed_ip_addresses": basetypes.ListType{
@@ -765,10 +765,10 @@ func (o IpAccessList) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetAllowedIpAddresses returns the value of the AllowedIpAddresses field in IpAccessList as
+// GetAllowedIpAddresses returns the value of the AllowedIpAddresses field in IpAccessList_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *IpAccessList) GetAllowedIpAddresses(ctx context.Context) ([]types.String, bool) {
+func (o *IpAccessList_SdkV2) GetAllowedIpAddresses(ctx context.Context) ([]types.String, bool) {
 	if o.AllowedIpAddresses.IsNull() || o.AllowedIpAddresses.IsUnknown() {
 		return nil, false
 	}
@@ -780,8 +780,8 @@ func (o *IpAccessList) GetAllowedIpAddresses(ctx context.Context) ([]types.Strin
 	return v, true
 }
 
-// SetAllowedIpAddresses sets the value of the AllowedIpAddresses field in IpAccessList.
-func (o *IpAccessList) SetAllowedIpAddresses(ctx context.Context, v []types.String) {
+// SetAllowedIpAddresses sets the value of the AllowedIpAddresses field in IpAccessList_SdkV2.
+func (o *IpAccessList_SdkV2) SetAllowedIpAddresses(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
@@ -791,7 +791,7 @@ func (o *IpAccessList) SetAllowedIpAddresses(ctx context.Context, v []types.Stri
 	o.AllowedIpAddresses = types.ListValueMust(t, vs)
 }
 
-type ListProviderSharesResponse struct {
+type ListProviderSharesResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -800,10 +800,10 @@ type ListProviderSharesResponse struct {
 	Shares types.List `tfsdk:"shares" tf:"optional"`
 }
 
-func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderSharesResponse) {
+func (newState *ListProviderSharesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderSharesResponse_SdkV2) {
 }
 
-func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderSharesResponse) {
+func (newState *ListProviderSharesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProviderSharesResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProviderSharesResponse.
@@ -813,16 +813,16 @@ func (newState *ListProviderSharesResponse) SyncEffectiveFieldsDuringRead(existi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListProviderSharesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListProviderSharesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"shares": reflect.TypeOf(ProviderShare{}),
+		"shares": reflect.TypeOf(ProviderShare_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProviderSharesResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProviderSharesResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListProviderSharesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListProviderSharesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -832,25 +832,25 @@ func (o ListProviderSharesResponse) ToObjectValue(ctx context.Context) basetypes
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListProviderSharesResponse) Type(ctx context.Context) attr.Type {
+func (o ListProviderSharesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"shares": basetypes.ListType{
-				ElemType: ProviderShare{}.Type(ctx),
+				ElemType: ProviderShare_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetShares returns the value of the Shares field in ListProviderSharesResponse as
-// a slice of ProviderShare values.
+// GetShares returns the value of the Shares field in ListProviderSharesResponse_SdkV2 as
+// a slice of ProviderShare_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListProviderSharesResponse) GetShares(ctx context.Context) ([]ProviderShare, bool) {
+func (o *ListProviderSharesResponse_SdkV2) GetShares(ctx context.Context) ([]ProviderShare_SdkV2, bool) {
 	if o.Shares.IsNull() || o.Shares.IsUnknown() {
 		return nil, false
 	}
-	var v []ProviderShare
+	var v []ProviderShare_SdkV2
 	d := o.Shares.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -858,8 +858,8 @@ func (o *ListProviderSharesResponse) GetShares(ctx context.Context) ([]ProviderS
 	return v, true
 }
 
-// SetShares sets the value of the Shares field in ListProviderSharesResponse.
-func (o *ListProviderSharesResponse) SetShares(ctx context.Context, v []ProviderShare) {
+// SetShares sets the value of the Shares field in ListProviderSharesResponse_SdkV2.
+func (o *ListProviderSharesResponse_SdkV2) SetShares(ctx context.Context, v []ProviderShare_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -870,7 +870,7 @@ func (o *ListProviderSharesResponse) SetShares(ctx context.Context, v []Provider
 }
 
 // List providers
-type ListProvidersRequest struct {
+type ListProvidersRequest_SdkV2 struct {
 	// If not provided, all providers will be returned. If no providers exist
 	// with this ID, no results will be returned.
 	DataProviderGlobalMetastoreId types.String `tfsdk:"-"`
@@ -888,10 +888,10 @@ type ListProvidersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest) {
+func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest_SdkV2) {
 }
 
-func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
+func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersRequest.
@@ -901,14 +901,14 @@ func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingStat
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListProvidersRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListProvidersRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProvidersRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProvidersRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListProvidersRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListProvidersRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -919,7 +919,7 @@ func (o ListProvidersRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListProvidersRequest) Type(ctx context.Context) attr.Type {
+func (o ListProvidersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data_provider_global_metastore_id": types.StringType,
@@ -929,7 +929,7 @@ func (o ListProvidersRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListProvidersResponse struct {
+type ListProvidersResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -938,10 +938,10 @@ type ListProvidersResponse struct {
 	Providers types.List `tfsdk:"providers" tf:"optional"`
 }
 
-func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
+func (newState *ListProvidersResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse_SdkV2) {
 }
 
-func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
+func (newState *ListProvidersResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersResponse.
@@ -951,16 +951,16 @@ func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListProvidersResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListProvidersResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"providers": reflect.TypeOf(ProviderInfo{}),
+		"providers": reflect.TypeOf(ProviderInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProvidersResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListProvidersResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListProvidersResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListProvidersResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -970,25 +970,25 @@ func (o ListProvidersResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListProvidersResponse) Type(ctx context.Context) attr.Type {
+func (o ListProvidersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"providers": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetProviders returns the value of the Providers field in ListProvidersResponse as
-// a slice of ProviderInfo values.
+// GetProviders returns the value of the Providers field in ListProvidersResponse_SdkV2 as
+// a slice of ProviderInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListProvidersResponse) GetProviders(ctx context.Context) ([]ProviderInfo, bool) {
+func (o *ListProvidersResponse_SdkV2) GetProviders(ctx context.Context) ([]ProviderInfo_SdkV2, bool) {
 	if o.Providers.IsNull() || o.Providers.IsUnknown() {
 		return nil, false
 	}
-	var v []ProviderInfo
+	var v []ProviderInfo_SdkV2
 	d := o.Providers.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -996,8 +996,8 @@ func (o *ListProvidersResponse) GetProviders(ctx context.Context) ([]ProviderInf
 	return v, true
 }
 
-// SetProviders sets the value of the Providers field in ListProvidersResponse.
-func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderInfo) {
+// SetProviders sets the value of the Providers field in ListProvidersResponse_SdkV2.
+func (o *ListProvidersResponse_SdkV2) SetProviders(ctx context.Context, v []ProviderInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1008,7 +1008,7 @@ func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderIn
 }
 
 // List share recipients
-type ListRecipientsRequest struct {
+type ListRecipientsRequest_SdkV2 struct {
 	// If not provided, all recipients will be returned. If no recipients exist
 	// with this ID, no results will be returned.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"-"`
@@ -1026,10 +1026,10 @@ type ListRecipientsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsRequest) {
+func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsRequest_SdkV2) {
 }
 
-func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest) {
+func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRecipientsRequest.
@@ -1039,14 +1039,14 @@ func (newState *ListRecipientsRequest) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListRecipientsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListRecipientsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRecipientsRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRecipientsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListRecipientsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListRecipientsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1057,7 +1057,7 @@ func (o ListRecipientsRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListRecipientsRequest) Type(ctx context.Context) attr.Type {
+func (o ListRecipientsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data_recipient_global_metastore_id": types.StringType,
@@ -1067,7 +1067,7 @@ func (o ListRecipientsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListRecipientsResponse struct {
+type ListRecipientsResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -1076,10 +1076,10 @@ type ListRecipientsResponse struct {
 	Recipients types.List `tfsdk:"recipients" tf:"optional"`
 }
 
-func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsResponse) {
+func (newState *ListRecipientsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsResponse_SdkV2) {
 }
 
-func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringRead(existingState ListRecipientsResponse) {
+func (newState *ListRecipientsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListRecipientsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRecipientsResponse.
@@ -1089,16 +1089,16 @@ func (newState *ListRecipientsResponse) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListRecipientsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListRecipientsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"recipients": reflect.TypeOf(RecipientInfo{}),
+		"recipients": reflect.TypeOf(RecipientInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRecipientsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListRecipientsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListRecipientsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListRecipientsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1108,25 +1108,25 @@ func (o ListRecipientsResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListRecipientsResponse) Type(ctx context.Context) attr.Type {
+func (o ListRecipientsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"recipients": basetypes.ListType{
-				ElemType: RecipientInfo{}.Type(ctx),
+				ElemType: RecipientInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetRecipients returns the value of the Recipients field in ListRecipientsResponse as
-// a slice of RecipientInfo values.
+// GetRecipients returns the value of the Recipients field in ListRecipientsResponse_SdkV2 as
+// a slice of RecipientInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListRecipientsResponse) GetRecipients(ctx context.Context) ([]RecipientInfo, bool) {
+func (o *ListRecipientsResponse_SdkV2) GetRecipients(ctx context.Context) ([]RecipientInfo_SdkV2, bool) {
 	if o.Recipients.IsNull() || o.Recipients.IsUnknown() {
 		return nil, false
 	}
-	var v []RecipientInfo
+	var v []RecipientInfo_SdkV2
 	d := o.Recipients.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1134,8 +1134,8 @@ func (o *ListRecipientsResponse) GetRecipients(ctx context.Context) ([]Recipient
 	return v, true
 }
 
-// SetRecipients sets the value of the Recipients field in ListRecipientsResponse.
-func (o *ListRecipientsResponse) SetRecipients(ctx context.Context, v []RecipientInfo) {
+// SetRecipients sets the value of the Recipients field in ListRecipientsResponse_SdkV2.
+func (o *ListRecipientsResponse_SdkV2) SetRecipients(ctx context.Context, v []RecipientInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1146,7 +1146,7 @@ func (o *ListRecipientsResponse) SetRecipients(ctx context.Context, v []Recipien
 }
 
 // List shares by Provider
-type ListSharesRequest struct {
+type ListSharesRequest_SdkV2 struct {
 	// Maximum number of shares to return. - when set to 0, the page length is
 	// set to a server configured value (recommended); - when set to a value
 	// greater than 0, the page length is the minimum of this value and a server
@@ -1163,10 +1163,10 @@ type ListSharesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListSharesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesRequest) {
+func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesRequest_SdkV2) {
 }
 
-func (newState *ListSharesRequest) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest) {
+func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSharesRequest.
@@ -1176,14 +1176,14 @@ func (newState *ListSharesRequest) SyncEffectiveFieldsDuringRead(existingState L
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListSharesRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListSharesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSharesRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSharesRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListSharesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListSharesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1194,7 +1194,7 @@ func (o ListSharesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListSharesRequest) Type(ctx context.Context) attr.Type {
+func (o ListSharesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"max_results": types.Int64Type,
@@ -1204,7 +1204,7 @@ func (o ListSharesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ListSharesResponse struct {
+type ListSharesResponse_SdkV2 struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. __page_token__ should be set to this value for the next
 	// request (for the next page of results).
@@ -1213,10 +1213,10 @@ type ListSharesResponse struct {
 	Shares types.List `tfsdk:"shares" tf:"optional"`
 }
 
-func (newState *ListSharesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesResponse) {
+func (newState *ListSharesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesResponse_SdkV2) {
 }
 
-func (newState *ListSharesResponse) SyncEffectiveFieldsDuringRead(existingState ListSharesResponse) {
+func (newState *ListSharesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSharesResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSharesResponse.
@@ -1226,16 +1226,16 @@ func (newState *ListSharesResponse) SyncEffectiveFieldsDuringRead(existingState 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ListSharesResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ListSharesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"shares": reflect.TypeOf(ShareInfo{}),
+		"shares": reflect.TypeOf(ShareInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSharesResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListSharesResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ListSharesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ListSharesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1245,25 +1245,25 @@ func (o ListSharesResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ListSharesResponse) Type(ctx context.Context) attr.Type {
+func (o ListSharesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"shares": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetShares returns the value of the Shares field in ListSharesResponse as
-// a slice of ShareInfo values.
+// GetShares returns the value of the Shares field in ListSharesResponse_SdkV2 as
+// a slice of ShareInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListSharesResponse) GetShares(ctx context.Context) ([]ShareInfo, bool) {
+func (o *ListSharesResponse_SdkV2) GetShares(ctx context.Context) ([]ShareInfo_SdkV2, bool) {
 	if o.Shares.IsNull() || o.Shares.IsUnknown() {
 		return nil, false
 	}
-	var v []ShareInfo
+	var v []ShareInfo_SdkV2
 	d := o.Shares.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1271,8 +1271,8 @@ func (o *ListSharesResponse) GetShares(ctx context.Context) ([]ShareInfo, bool) 
 	return v, true
 }
 
-// SetShares sets the value of the Shares field in ListSharesResponse.
-func (o *ListSharesResponse) SetShares(ctx context.Context, v []ShareInfo) {
+// SetShares sets the value of the Shares field in ListSharesResponse_SdkV2.
+func (o *ListSharesResponse_SdkV2) SetShares(ctx context.Context, v []ShareInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1282,15 +1282,15 @@ func (o *ListSharesResponse) SetShares(ctx context.Context, v []ShareInfo) {
 	o.Shares = types.ListValueMust(t, vs)
 }
 
-type Partition struct {
+type Partition_SdkV2 struct {
 	// An array of partition values.
 	Values types.List `tfsdk:"value" tf:"optional"`
 }
 
-func (newState *Partition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Partition) {
+func (newState *Partition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Partition_SdkV2) {
 }
 
-func (newState *Partition) SyncEffectiveFieldsDuringRead(existingState Partition) {
+func (newState *Partition_SdkV2) SyncEffectiveFieldsDuringRead(existingState Partition_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Partition.
@@ -1300,16 +1300,16 @@ func (newState *Partition) SyncEffectiveFieldsDuringRead(existingState Partition
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a Partition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a Partition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"value": reflect.TypeOf(PartitionValue{}),
+		"value": reflect.TypeOf(PartitionValue_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Partition
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Partition_SdkV2
 // only implements ToObjectValue() and Type().
-func (o Partition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o Partition_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1318,24 +1318,24 @@ func (o Partition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o Partition) Type(ctx context.Context) attr.Type {
+func (o Partition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": basetypes.ListType{
-				ElemType: PartitionValue{}.Type(ctx),
+				ElemType: PartitionValue_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetValues returns the value of the Values field in Partition as
-// a slice of PartitionValue values.
+// GetValues returns the value of the Values field in Partition_SdkV2 as
+// a slice of PartitionValue_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *Partition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
+func (o *Partition_SdkV2) GetValues(ctx context.Context) ([]PartitionValue_SdkV2, bool) {
 	if o.Values.IsNull() || o.Values.IsUnknown() {
 		return nil, false
 	}
-	var v []PartitionValue
+	var v []PartitionValue_SdkV2
 	d := o.Values.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1343,8 +1343,8 @@ func (o *Partition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
 	return v, true
 }
 
-// SetValues sets the value of the Values field in Partition.
-func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
+// SetValues sets the value of the Values field in Partition_SdkV2.
+func (o *Partition_SdkV2) SetValues(ctx context.Context, v []PartitionValue_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1354,15 +1354,15 @@ func (o *Partition) SetValues(ctx context.Context, v []PartitionValue) {
 	o.Values = types.ListValueMust(t, vs)
 }
 
-type PartitionSpecificationPartition struct {
+type PartitionSpecificationPartition_SdkV2 struct {
 	// An array of partition values.
 	Values types.List `tfsdk:"value" tf:"optional"`
 }
 
-func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionSpecificationPartition) {
+func (newState *PartitionSpecificationPartition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionSpecificationPartition_SdkV2) {
 }
 
-func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringRead(existingState PartitionSpecificationPartition) {
+func (newState *PartitionSpecificationPartition_SdkV2) SyncEffectiveFieldsDuringRead(existingState PartitionSpecificationPartition_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartitionSpecificationPartition.
@@ -1372,16 +1372,16 @@ func (newState *PartitionSpecificationPartition) SyncEffectiveFieldsDuringRead(e
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PartitionSpecificationPartition) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a PartitionSpecificationPartition_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"value": reflect.TypeOf(PartitionValue{}),
+		"value": reflect.TypeOf(PartitionValue_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionSpecificationPartition
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionSpecificationPartition_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PartitionSpecificationPartition) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o PartitionSpecificationPartition_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1390,24 +1390,24 @@ func (o PartitionSpecificationPartition) ToObjectValue(ctx context.Context) base
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PartitionSpecificationPartition) Type(ctx context.Context) attr.Type {
+func (o PartitionSpecificationPartition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": basetypes.ListType{
-				ElemType: PartitionValue{}.Type(ctx),
+				ElemType: PartitionValue_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetValues returns the value of the Values field in PartitionSpecificationPartition as
-// a slice of PartitionValue values.
+// GetValues returns the value of the Values field in PartitionSpecificationPartition_SdkV2 as
+// a slice of PartitionValue_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PartitionSpecificationPartition) GetValues(ctx context.Context) ([]PartitionValue, bool) {
+func (o *PartitionSpecificationPartition_SdkV2) GetValues(ctx context.Context) ([]PartitionValue_SdkV2, bool) {
 	if o.Values.IsNull() || o.Values.IsUnknown() {
 		return nil, false
 	}
-	var v []PartitionValue
+	var v []PartitionValue_SdkV2
 	d := o.Values.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1415,8 +1415,8 @@ func (o *PartitionSpecificationPartition) GetValues(ctx context.Context) ([]Part
 	return v, true
 }
 
-// SetValues sets the value of the Values field in PartitionSpecificationPartition.
-func (o *PartitionSpecificationPartition) SetValues(ctx context.Context, v []PartitionValue) {
+// SetValues sets the value of the Values field in PartitionSpecificationPartition_SdkV2.
+func (o *PartitionSpecificationPartition_SdkV2) SetValues(ctx context.Context, v []PartitionValue_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1426,7 +1426,7 @@ func (o *PartitionSpecificationPartition) SetValues(ctx context.Context, v []Par
 	o.Values = types.ListValueMust(t, vs)
 }
 
-type PartitionValue struct {
+type PartitionValue_SdkV2 struct {
 	// The name of the partition column.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// The operator to apply for the value.
@@ -1441,10 +1441,10 @@ type PartitionValue struct {
 	Value types.String `tfsdk:"value" tf:"optional"`
 }
 
-func (newState *PartitionValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionValue) {
+func (newState *PartitionValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionValue_SdkV2) {
 }
 
-func (newState *PartitionValue) SyncEffectiveFieldsDuringRead(existingState PartitionValue) {
+func (newState *PartitionValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState PartitionValue_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartitionValue.
@@ -1454,14 +1454,14 @@ func (newState *PartitionValue) SyncEffectiveFieldsDuringRead(existingState Part
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PartitionValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a PartitionValue_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionValue
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PartitionValue_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PartitionValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o PartitionValue_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1473,7 +1473,7 @@ func (o PartitionValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PartitionValue) Type(ctx context.Context) attr.Type {
+func (o PartitionValue_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":                   types.StringType,
@@ -1484,17 +1484,17 @@ func (o PartitionValue) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type PrivilegeAssignment struct {
+type PrivilegeAssignment_SdkV2 struct {
 	// The principal (user email address or group name).
 	Principal types.String `tfsdk:"principal" tf:"optional"`
 	// The privileges assigned to the principal.
 	Privileges types.List `tfsdk:"privileges" tf:"optional"`
 }
 
-func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivilegeAssignment) {
+func (newState *PrivilegeAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PrivilegeAssignment_SdkV2) {
 }
 
-func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState PrivilegeAssignment) {
+func (newState *PrivilegeAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState PrivilegeAssignment_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PrivilegeAssignment.
@@ -1504,16 +1504,16 @@ func (newState *PrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a PrivilegeAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a PrivilegeAssignment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"privileges": reflect.TypeOf(types.String{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, PrivilegeAssignment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PrivilegeAssignment_SdkV2
 // only implements ToObjectValue() and Type().
-func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o PrivilegeAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1523,7 +1523,7 @@ func (o PrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.Object
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
+func (o PrivilegeAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"principal": types.StringType,
@@ -1534,10 +1534,10 @@ func (o PrivilegeAssignment) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetPrivileges returns the value of the Privileges field in PrivilegeAssignment as
+// GetPrivileges returns the value of the Privileges field in PrivilegeAssignment_SdkV2 as
 // a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *PrivilegeAssignment) GetPrivileges(ctx context.Context) ([]types.String, bool) {
+func (o *PrivilegeAssignment_SdkV2) GetPrivileges(ctx context.Context) ([]types.String, bool) {
 	if o.Privileges.IsNull() || o.Privileges.IsUnknown() {
 		return nil, false
 	}
@@ -1549,8 +1549,8 @@ func (o *PrivilegeAssignment) GetPrivileges(ctx context.Context) ([]types.String
 	return v, true
 }
 
-// SetPrivileges sets the value of the Privileges field in PrivilegeAssignment.
-func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.String) {
+// SetPrivileges sets the value of the Privileges field in PrivilegeAssignment_SdkV2.
+func (o *PrivilegeAssignment_SdkV2) SetPrivileges(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e)
@@ -1560,7 +1560,7 @@ func (o *PrivilegeAssignment) SetPrivileges(ctx context.Context, v []types.Strin
 	o.Privileges = types.ListValueMust(t, vs)
 }
 
-type ProviderInfo struct {
+type ProviderInfo_SdkV2 struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type" tf:"optional"`
 	// Cloud vendor of the provider's UC metastore. This field is only present
@@ -1585,7 +1585,7 @@ type ProviderInfo struct {
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// The recipient profile. This field is only present when the
 	// authentication_type is `TOKEN`.
-	RecipientProfile types.Object `tfsdk:"recipient_profile" tf:"optional,object"`
+	RecipientProfile types.List `tfsdk:"recipient_profile" tf:"optional,object"`
 	// This field is only present when the authentication_type is `TOKEN` or not
 	// provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
@@ -1598,10 +1598,10 @@ type ProviderInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
-func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo) {
+func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo_SdkV2) {
 }
 
-func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
+func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ProviderInfo_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderInfo.
@@ -1611,16 +1611,16 @@ func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState Provid
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ProviderInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ProviderInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"recipient_profile": reflect.TypeOf(RecipientProfile{}),
+		"recipient_profile": reflect.TypeOf(RecipientProfile_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ProviderInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ProviderInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1642,7 +1642,7 @@ func (o ProviderInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ProviderInfo) Type(ctx context.Context) attr.Type {
+func (o ProviderInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"authentication_type":               types.StringType,
@@ -1654,28 +1654,27 @@ func (o ProviderInfo) Type(ctx context.Context) attr.Type {
 			"metastore_id":                      types.StringType,
 			"name":                              types.StringType,
 			"owner":                             types.StringType,
-			"recipient_profile":                 RecipientProfile{}.Type(ctx),
-			"recipient_profile_str":             types.StringType,
-			"region":                            types.StringType,
-			"updated_at":                        types.Int64Type,
-			"updated_by":                        types.StringType,
+			"recipient_profile": basetypes.ListType{
+				ElemType: RecipientProfile_SdkV2{}.Type(ctx),
+			},
+			"recipient_profile_str": types.StringType,
+			"region":                types.StringType,
+			"updated_at":            types.Int64Type,
+			"updated_by":            types.StringType,
 		},
 	}
 }
 
-// GetRecipientProfile returns the value of the RecipientProfile field in ProviderInfo as
-// a RecipientProfile value.
+// GetRecipientProfile returns the value of the RecipientProfile field in ProviderInfo_SdkV2 as
+// a RecipientProfile_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ProviderInfo) GetRecipientProfile(ctx context.Context) (RecipientProfile, bool) {
-	var e RecipientProfile
+func (o *ProviderInfo_SdkV2) GetRecipientProfile(ctx context.Context) (RecipientProfile_SdkV2, bool) {
+	var e RecipientProfile_SdkV2
 	if o.RecipientProfile.IsNull() || o.RecipientProfile.IsUnknown() {
 		return e, false
 	}
-	var v []RecipientProfile
-	d := o.RecipientProfile.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []RecipientProfile_SdkV2
+	d := o.RecipientProfile.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1685,21 +1684,22 @@ func (o *ProviderInfo) GetRecipientProfile(ctx context.Context) (RecipientProfil
 	return v[0], true
 }
 
-// SetRecipientProfile sets the value of the RecipientProfile field in ProviderInfo.
-func (o *ProviderInfo) SetRecipientProfile(ctx context.Context, v RecipientProfile) {
-	vs := v.ToObjectValue(ctx)
-	o.RecipientProfile = vs
+// SetRecipientProfile sets the value of the RecipientProfile field in ProviderInfo_SdkV2.
+func (o *ProviderInfo_SdkV2) SetRecipientProfile(ctx context.Context, v RecipientProfile_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["recipient_profile"]
+	o.RecipientProfile = types.ListValueMust(t, vs)
 }
 
-type ProviderShare struct {
+type ProviderShare_SdkV2 struct {
 	// The name of the Provider Share.
 	Name types.String `tfsdk:"name" tf:"optional"`
 }
 
-func (newState *ProviderShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderShare) {
+func (newState *ProviderShare_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderShare_SdkV2) {
 }
 
-func (newState *ProviderShare) SyncEffectiveFieldsDuringRead(existingState ProviderShare) {
+func (newState *ProviderShare_SdkV2) SyncEffectiveFieldsDuringRead(existingState ProviderShare_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderShare.
@@ -1709,14 +1709,14 @@ func (newState *ProviderShare) SyncEffectiveFieldsDuringRead(existingState Provi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ProviderShare) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ProviderShare_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderShare
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ProviderShare_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ProviderShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ProviderShare_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1725,7 +1725,7 @@ func (o ProviderShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ProviderShare) Type(ctx context.Context) attr.Type {
+func (o ProviderShare_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
@@ -1733,7 +1733,7 @@ func (o ProviderShare) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type RecipientInfo struct {
+type RecipientInfo_SdkV2 struct {
 	// A boolean status field showing whether the Recipient's activation URL has
 	// been exercised or not.
 	Activated types.Bool `tfsdk:"activated" tf:"optional"`
@@ -1757,7 +1757,7 @@ type RecipientInfo struct {
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id" tf:"optional"`
 	// IP Access List
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Unique identifier of recipient's Unity Catalog metastore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**
 	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
@@ -1766,7 +1766,7 @@ type RecipientInfo struct {
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner" tf:"optional"`
 	// Recipient properties as map of string key-value pairs.
-	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.List `tfsdk:"properties_kvpairs" tf:"optional,object"`
 	// Cloud region of the recipient's Unity Catalog Metstore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	Region types.String `tfsdk:"region" tf:"optional"`
@@ -1781,10 +1781,10 @@ type RecipientInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
-func (newState *RecipientInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientInfo) {
+func (newState *RecipientInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientInfo_SdkV2) {
 }
 
-func (newState *RecipientInfo) SyncEffectiveFieldsDuringRead(existingState RecipientInfo) {
+func (newState *RecipientInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RecipientInfo_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RecipientInfo.
@@ -1794,18 +1794,18 @@ func (newState *RecipientInfo) SyncEffectiveFieldsDuringRead(existingState Recip
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RecipientInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RecipientInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_access_list":     reflect.TypeOf(IpAccessList{}),
-		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
-		"tokens":             reflect.TypeOf(RecipientTokenInfo{}),
+		"ip_access_list":     reflect.TypeOf(IpAccessList_SdkV2{}),
+		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs_SdkV2{}),
+		"tokens":             reflect.TypeOf(RecipientTokenInfo_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RecipientInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RecipientInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1831,7 +1831,7 @@ func (o RecipientInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RecipientInfo) Type(ctx context.Context) attr.Type {
+func (o RecipientInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activated":                          types.BoolType,
@@ -1842,15 +1842,19 @@ func (o RecipientInfo) Type(ctx context.Context) attr.Type {
 			"created_at":                         types.Int64Type,
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
-			"ip_access_list":                     IpAccessList{}.Type(ctx),
-			"metastore_id":                       types.StringType,
-			"name":                               types.StringType,
-			"owner":                              types.StringType,
-			"properties_kvpairs":                 SecurablePropertiesKvPairs{}.Type(ctx),
-			"region":                             types.StringType,
-			"sharing_code":                       types.StringType,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
+			},
+			"metastore_id": types.StringType,
+			"name":         types.StringType,
+			"owner":        types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
+			},
+			"region":       types.StringType,
+			"sharing_code": types.StringType,
 			"tokens": basetypes.ListType{
-				ElemType: RecipientTokenInfo{}.Type(ctx),
+				ElemType: RecipientTokenInfo_SdkV2{}.Type(ctx),
 			},
 			"updated_at": types.Int64Type,
 			"updated_by": types.StringType,
@@ -1858,19 +1862,16 @@ func (o RecipientInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetIpAccessList returns the value of the IpAccessList field in RecipientInfo as
-// a IpAccessList value.
+// GetIpAccessList returns the value of the IpAccessList field in RecipientInfo_SdkV2 as
+// a IpAccessList_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RecipientInfo) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
-	var e IpAccessList
+func (o *RecipientInfo_SdkV2) GetIpAccessList(ctx context.Context) (IpAccessList_SdkV2, bool) {
+	var e IpAccessList_SdkV2
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
-	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []IpAccessList_SdkV2
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1880,25 +1881,23 @@ func (o *RecipientInfo) GetIpAccessList(ctx context.Context) (IpAccessList, bool
 	return v[0], true
 }
 
-// SetIpAccessList sets the value of the IpAccessList field in RecipientInfo.
-func (o *RecipientInfo) SetIpAccessList(ctx context.Context, v IpAccessList) {
-	vs := v.ToObjectValue(ctx)
-	o.IpAccessList = vs
+// SetIpAccessList sets the value of the IpAccessList field in RecipientInfo_SdkV2.
+func (o *RecipientInfo_SdkV2) SetIpAccessList(ctx context.Context, v IpAccessList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
-// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in RecipientInfo as
-// a SecurablePropertiesKvPairs value.
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in RecipientInfo_SdkV2 as
+// a SecurablePropertiesKvPairs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RecipientInfo) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
-	var e SecurablePropertiesKvPairs
+func (o *RecipientInfo_SdkV2) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs_SdkV2, bool) {
+	var e SecurablePropertiesKvPairs_SdkV2
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
-	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []SecurablePropertiesKvPairs_SdkV2
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1908,20 +1907,21 @@ func (o *RecipientInfo) GetPropertiesKvpairs(ctx context.Context) (SecurableProp
 	return v[0], true
 }
 
-// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in RecipientInfo.
-func (o *RecipientInfo) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
-	vs := v.ToObjectValue(ctx)
-	o.PropertiesKvpairs = vs
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in RecipientInfo_SdkV2.
+func (o *RecipientInfo_SdkV2) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
 }
 
-// GetTokens returns the value of the Tokens field in RecipientInfo as
-// a slice of RecipientTokenInfo values.
+// GetTokens returns the value of the Tokens field in RecipientInfo_SdkV2 as
+// a slice of RecipientTokenInfo_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *RecipientInfo) GetTokens(ctx context.Context) ([]RecipientTokenInfo, bool) {
+func (o *RecipientInfo_SdkV2) GetTokens(ctx context.Context) ([]RecipientTokenInfo_SdkV2, bool) {
 	if o.Tokens.IsNull() || o.Tokens.IsUnknown() {
 		return nil, false
 	}
-	var v []RecipientTokenInfo
+	var v []RecipientTokenInfo_SdkV2
 	d := o.Tokens.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1929,8 +1929,8 @@ func (o *RecipientInfo) GetTokens(ctx context.Context) ([]RecipientTokenInfo, bo
 	return v, true
 }
 
-// SetTokens sets the value of the Tokens field in RecipientInfo.
-func (o *RecipientInfo) SetTokens(ctx context.Context, v []RecipientTokenInfo) {
+// SetTokens sets the value of the Tokens field in RecipientInfo_SdkV2.
+func (o *RecipientInfo_SdkV2) SetTokens(ctx context.Context, v []RecipientTokenInfo_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1940,7 +1940,7 @@ func (o *RecipientInfo) SetTokens(ctx context.Context, v []RecipientTokenInfo) {
 	o.Tokens = types.ListValueMust(t, vs)
 }
 
-type RecipientProfile struct {
+type RecipientProfile_SdkV2 struct {
 	// The token used to authorize the recipient.
 	BearerToken types.String `tfsdk:"bearer_token" tf:"optional"`
 	// The endpoint for the share to be used by the recipient.
@@ -1949,10 +1949,10 @@ type RecipientProfile struct {
 	ShareCredentialsVersion types.Int64 `tfsdk:"share_credentials_version" tf:"optional"`
 }
 
-func (newState *RecipientProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientProfile) {
+func (newState *RecipientProfile_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientProfile_SdkV2) {
 }
 
-func (newState *RecipientProfile) SyncEffectiveFieldsDuringRead(existingState RecipientProfile) {
+func (newState *RecipientProfile_SdkV2) SyncEffectiveFieldsDuringRead(existingState RecipientProfile_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RecipientProfile.
@@ -1962,14 +1962,14 @@ func (newState *RecipientProfile) SyncEffectiveFieldsDuringRead(existingState Re
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RecipientProfile) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RecipientProfile_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientProfile
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientProfile_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RecipientProfile) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RecipientProfile_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -1980,7 +1980,7 @@ func (o RecipientProfile) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RecipientProfile) Type(ctx context.Context) attr.Type {
+func (o RecipientProfile_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"bearer_token":              types.StringType,
@@ -1990,7 +1990,7 @@ func (o RecipientProfile) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type RecipientTokenInfo struct {
+type RecipientTokenInfo_SdkV2 struct {
 	// Full activation URL to retrieve the access token. It will be empty if the
 	// token is already retrieved.
 	ActivationUrl types.String `tfsdk:"activation_url" tf:"optional"`
@@ -2008,10 +2008,10 @@ type RecipientTokenInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
 }
 
-func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientTokenInfo) {
+func (newState *RecipientTokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RecipientTokenInfo_SdkV2) {
 }
 
-func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringRead(existingState RecipientTokenInfo) {
+func (newState *RecipientTokenInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RecipientTokenInfo_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RecipientTokenInfo.
@@ -2021,14 +2021,14 @@ func (newState *RecipientTokenInfo) SyncEffectiveFieldsDuringRead(existingState 
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RecipientTokenInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RecipientTokenInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientTokenInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RecipientTokenInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RecipientTokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RecipientTokenInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2043,7 +2043,7 @@ func (o RecipientTokenInfo) ToObjectValue(ctx context.Context) basetypes.ObjectV
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RecipientTokenInfo) Type(ctx context.Context) attr.Type {
+func (o RecipientTokenInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activation_url":  types.StringType,
@@ -2058,15 +2058,15 @@ func (o RecipientTokenInfo) Type(ctx context.Context) attr.Type {
 }
 
 // Get an access token
-type RetrieveTokenRequest struct {
+type RetrieveTokenRequest_SdkV2 struct {
 	// The one time activation url. It also accepts activation token.
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenRequest) {
+func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenRequest_SdkV2) {
 }
 
-func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest) {
+func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RetrieveTokenRequest.
@@ -2076,14 +2076,14 @@ func (newState *RetrieveTokenRequest) SyncEffectiveFieldsDuringRead(existingStat
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RetrieveTokenRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RetrieveTokenRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RetrieveTokenRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RetrieveTokenRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RetrieveTokenRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RetrieveTokenRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2092,7 +2092,7 @@ func (o RetrieveTokenRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RetrieveTokenRequest) Type(ctx context.Context) attr.Type {
+func (o RetrieveTokenRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activation_url": types.StringType,
@@ -2100,7 +2100,7 @@ func (o RetrieveTokenRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type RetrieveTokenResponse struct {
+type RetrieveTokenResponse_SdkV2 struct {
 	// The token used to authorize the recipient.
 	BearerToken types.String `tfsdk:"bearerToken" tf:"optional"`
 	// The endpoint for the share to be used by the recipient.
@@ -2111,10 +2111,10 @@ type RetrieveTokenResponse struct {
 	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion" tf:"optional"`
 }
 
-func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenResponse) {
+func (newState *RetrieveTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenResponse_SdkV2) {
 }
 
-func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenResponse) {
+func (newState *RetrieveTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RetrieveTokenResponse.
@@ -2124,14 +2124,14 @@ func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringRead(existingSta
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RetrieveTokenResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RetrieveTokenResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RetrieveTokenResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RetrieveTokenResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RetrieveTokenResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RetrieveTokenResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2143,7 +2143,7 @@ func (o RetrieveTokenResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RetrieveTokenResponse) Type(ctx context.Context) attr.Type {
+func (o RetrieveTokenResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"bearerToken":             types.StringType,
@@ -2154,7 +2154,7 @@ func (o RetrieveTokenResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type RotateRecipientToken struct {
+type RotateRecipientToken_SdkV2 struct {
 	// The expiration time of the bearer token in ISO 8601 format. This will set
 	// the expiration_time of existing token only to a smaller timestamp, it
 	// cannot extend the expiration_time. Use 0 to expire the existing token
@@ -2164,10 +2164,10 @@ type RotateRecipientToken struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringCreateOrUpdate(plan RotateRecipientToken) {
+func (newState *RotateRecipientToken_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RotateRecipientToken_SdkV2) {
 }
 
-func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringRead(existingState RotateRecipientToken) {
+func (newState *RotateRecipientToken_SdkV2) SyncEffectiveFieldsDuringRead(existingState RotateRecipientToken_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RotateRecipientToken.
@@ -2177,14 +2177,14 @@ func (newState *RotateRecipientToken) SyncEffectiveFieldsDuringRead(existingStat
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a RotateRecipientToken) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a RotateRecipientToken_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, RotateRecipientToken
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RotateRecipientToken_SdkV2
 // only implements ToObjectValue() and Type().
-func (o RotateRecipientToken) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o RotateRecipientToken_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2194,7 +2194,7 @@ func (o RotateRecipientToken) ToObjectValue(ctx context.Context) basetypes.Objec
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o RotateRecipientToken) Type(ctx context.Context) attr.Type {
+func (o RotateRecipientToken_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"existing_token_expire_in_seconds": types.Int64Type,
@@ -2205,15 +2205,15 @@ func (o RotateRecipientToken) Type(ctx context.Context) attr.Type {
 
 // An object with __properties__ containing map of key-value properties attached
 // to the securable.
-type SecurablePropertiesKvPairs struct {
+type SecurablePropertiesKvPairs_SdkV2 struct {
 	// A map of key-value properties attached to the securable.
 	Properties types.Map `tfsdk:"properties" tf:""`
 }
 
-func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurablePropertiesKvPairs) {
+func (newState *SecurablePropertiesKvPairs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecurablePropertiesKvPairs_SdkV2) {
 }
 
-func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existingState SecurablePropertiesKvPairs) {
+func (newState *SecurablePropertiesKvPairs_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecurablePropertiesKvPairs_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SecurablePropertiesKvPairs.
@@ -2223,16 +2223,16 @@ func (newState *SecurablePropertiesKvPairs) SyncEffectiveFieldsDuringRead(existi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SecurablePropertiesKvPairs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a SecurablePropertiesKvPairs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"properties": reflect.TypeOf(types.String{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurablePropertiesKvPairs
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SecurablePropertiesKvPairs_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SecurablePropertiesKvPairs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o SecurablePropertiesKvPairs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2241,7 +2241,7 @@ func (o SecurablePropertiesKvPairs) ToObjectValue(ctx context.Context) basetypes
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SecurablePropertiesKvPairs) Type(ctx context.Context) attr.Type {
+func (o SecurablePropertiesKvPairs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"properties": basetypes.MapType{
@@ -2251,10 +2251,10 @@ func (o SecurablePropertiesKvPairs) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetProperties returns the value of the Properties field in SecurablePropertiesKvPairs as
+// GetProperties returns the value of the Properties field in SecurablePropertiesKvPairs_SdkV2 as
 // a map of string to types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SecurablePropertiesKvPairs) GetProperties(ctx context.Context) (map[string]types.String, bool) {
+func (o *SecurablePropertiesKvPairs_SdkV2) GetProperties(ctx context.Context) (map[string]types.String, bool) {
 	if o.Properties.IsNull() || o.Properties.IsUnknown() {
 		return nil, false
 	}
@@ -2266,8 +2266,8 @@ func (o *SecurablePropertiesKvPairs) GetProperties(ctx context.Context) (map[str
 	return v, true
 }
 
-// SetProperties sets the value of the Properties field in SecurablePropertiesKvPairs.
-func (o *SecurablePropertiesKvPairs) SetProperties(ctx context.Context, v map[string]types.String) {
+// SetProperties sets the value of the Properties field in SecurablePropertiesKvPairs_SdkV2.
+func (o *SecurablePropertiesKvPairs_SdkV2) SetProperties(ctx context.Context, v map[string]types.String) {
 	vs := make(map[string]attr.Value, len(v))
 	for k, e := range v {
 		vs[k] = e
@@ -2277,7 +2277,7 @@ func (o *SecurablePropertiesKvPairs) SetProperties(ctx context.Context, v map[st
 	o.Properties = types.MapValueMust(t, vs)
 }
 
-type ShareInfo struct {
+type ShareInfo_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Time at which this share was created, in epoch milliseconds.
@@ -2300,10 +2300,10 @@ type ShareInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by" tf:"computed"`
 }
 
-func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
+func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo_SdkV2) {
 }
 
-func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ShareInfo_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ShareInfo.
@@ -2313,16 +2313,16 @@ func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ShareInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ShareInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"object": reflect.TypeOf(SharedDataObject{}),
+		"object": reflect.TypeOf(SharedDataObject_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ShareInfo
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ShareInfo_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ShareInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ShareInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2340,7 +2340,7 @@ func (o ShareInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ShareInfo) Type(ctx context.Context) attr.Type {
+func (o ShareInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":    types.StringType,
@@ -2348,7 +2348,7 @@ func (o ShareInfo) Type(ctx context.Context) attr.Type {
 			"created_by": types.StringType,
 			"name":       types.StringType,
 			"object": basetypes.ListType{
-				ElemType: SharedDataObject{}.Type(ctx),
+				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
 			},
 			"owner":            types.StringType,
 			"storage_location": types.StringType,
@@ -2359,14 +2359,14 @@ func (o ShareInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetObjects returns the value of the Objects field in ShareInfo as
-// a slice of SharedDataObject values.
+// GetObjects returns the value of the Objects field in ShareInfo_SdkV2 as
+// a slice of SharedDataObject_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ShareInfo) GetObjects(ctx context.Context) ([]SharedDataObject, bool) {
+func (o *ShareInfo_SdkV2) GetObjects(ctx context.Context) ([]SharedDataObject_SdkV2, bool) {
 	if o.Objects.IsNull() || o.Objects.IsUnknown() {
 		return nil, false
 	}
-	var v []SharedDataObject
+	var v []SharedDataObject_SdkV2
 	d := o.Objects.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2374,8 +2374,8 @@ func (o *ShareInfo) GetObjects(ctx context.Context) ([]SharedDataObject, bool) {
 	return v, true
 }
 
-// SetObjects sets the value of the Objects field in ShareInfo.
-func (o *ShareInfo) SetObjects(ctx context.Context, v []SharedDataObject) {
+// SetObjects sets the value of the Objects field in ShareInfo_SdkV2.
+func (o *ShareInfo_SdkV2) SetObjects(ctx context.Context, v []SharedDataObject_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2386,7 +2386,7 @@ func (o *ShareInfo) SetObjects(ctx context.Context, v []SharedDataObject) {
 }
 
 // Get recipient share permissions
-type SharePermissionsRequest struct {
+type SharePermissionsRequest_SdkV2 struct {
 	// Maximum number of permissions to return. - when set to 0, the page length
 	// is set to a server configured value (recommended); - when set to a value
 	// greater than 0, the page length is the minimum of this value and a server
@@ -2403,10 +2403,10 @@ type SharePermissionsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharePermissionsRequest) {
+func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharePermissionsRequest_SdkV2) {
 }
 
-func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest) {
+func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharePermissionsRequest.
@@ -2416,14 +2416,14 @@ func (newState *SharePermissionsRequest) SyncEffectiveFieldsDuringRead(existingS
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SharePermissionsRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a SharePermissionsRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SharePermissionsRequest
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SharePermissionsRequest_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SharePermissionsRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o SharePermissionsRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2434,7 +2434,7 @@ func (o SharePermissionsRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SharePermissionsRequest) Type(ctx context.Context) attr.Type {
+func (o SharePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"max_results": types.Int64Type,
@@ -2444,17 +2444,17 @@ func (o SharePermissionsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ShareToPrivilegeAssignment struct {
+type ShareToPrivilegeAssignment_SdkV2 struct {
 	// The privileges assigned to the principal.
 	PrivilegeAssignments types.List `tfsdk:"privilege_assignments" tf:"optional"`
 	// The share name.
 	ShareName types.String `tfsdk:"share_name" tf:"optional"`
 }
 
-func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareToPrivilegeAssignment) {
+func (newState *ShareToPrivilegeAssignment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareToPrivilegeAssignment_SdkV2) {
 }
 
-func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringRead(existingState ShareToPrivilegeAssignment) {
+func (newState *ShareToPrivilegeAssignment_SdkV2) SyncEffectiveFieldsDuringRead(existingState ShareToPrivilegeAssignment_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ShareToPrivilegeAssignment.
@@ -2464,16 +2464,16 @@ func (newState *ShareToPrivilegeAssignment) SyncEffectiveFieldsDuringRead(existi
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a ShareToPrivilegeAssignment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a ShareToPrivilegeAssignment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"privilege_assignments": reflect.TypeOf(PrivilegeAssignment{}),
+		"privilege_assignments": reflect.TypeOf(PrivilegeAssignment_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ShareToPrivilegeAssignment
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ShareToPrivilegeAssignment_SdkV2
 // only implements ToObjectValue() and Type().
-func (o ShareToPrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o ShareToPrivilegeAssignment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2483,25 +2483,25 @@ func (o ShareToPrivilegeAssignment) ToObjectValue(ctx context.Context) basetypes
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o ShareToPrivilegeAssignment) Type(ctx context.Context) attr.Type {
+func (o ShareToPrivilegeAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"privilege_assignments": basetypes.ListType{
-				ElemType: PrivilegeAssignment{}.Type(ctx),
+				ElemType: PrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 			"share_name": types.StringType,
 		},
 	}
 }
 
-// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment as
-// a slice of PrivilegeAssignment values.
+// GetPrivilegeAssignments returns the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment_SdkV2 as
+// a slice of PrivilegeAssignment_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ShareToPrivilegeAssignment) GetPrivilegeAssignments(ctx context.Context) ([]PrivilegeAssignment, bool) {
+func (o *ShareToPrivilegeAssignment_SdkV2) GetPrivilegeAssignments(ctx context.Context) ([]PrivilegeAssignment_SdkV2, bool) {
 	if o.PrivilegeAssignments.IsNull() || o.PrivilegeAssignments.IsUnknown() {
 		return nil, false
 	}
-	var v []PrivilegeAssignment
+	var v []PrivilegeAssignment_SdkV2
 	d := o.PrivilegeAssignments.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2509,8 +2509,8 @@ func (o *ShareToPrivilegeAssignment) GetPrivilegeAssignments(ctx context.Context
 	return v, true
 }
 
-// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment.
-func (o *ShareToPrivilegeAssignment) SetPrivilegeAssignments(ctx context.Context, v []PrivilegeAssignment) {
+// SetPrivilegeAssignments sets the value of the PrivilegeAssignments field in ShareToPrivilegeAssignment_SdkV2.
+func (o *ShareToPrivilegeAssignment_SdkV2) SetPrivilegeAssignments(ctx context.Context, v []PrivilegeAssignment_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2520,7 +2520,7 @@ func (o *ShareToPrivilegeAssignment) SetPrivilegeAssignments(ctx context.Context
 	o.PrivilegeAssignments = types.ListValueMust(t, vs)
 }
 
-type SharedDataObject struct {
+type SharedDataObject_SdkV2 struct {
 	// The time when this data object is added to the share, in epoch
 	// milliseconds.
 	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed"`
@@ -2574,7 +2574,7 @@ type SharedDataObject struct {
 	StringSharedAs types.String `tfsdk:"string_shared_as" tf:"optional"`
 }
 
-func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
+func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject_SdkV2) {
 	newState.EffectiveCdfEnabled = newState.CdfEnabled
 	newState.CdfEnabled = plan.CdfEnabled
 	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
@@ -2585,7 +2585,7 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 	newState.StartVersion = plan.StartVersion
 }
 
-func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharedDataObject_SdkV2) {
 	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
 	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
 		newState.CdfEnabled = existingState.CdfEnabled
@@ -2611,16 +2611,16 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState Sh
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SharedDataObject) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a SharedDataObject_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"partition": reflect.TypeOf(Partition{}),
+		"partition": reflect.TypeOf(Partition_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SharedDataObject
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SharedDataObject_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o SharedDataObject_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2645,7 +2645,7 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SharedDataObject) Type(ctx context.Context) attr.Type {
+func (o SharedDataObject_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"added_at":                              types.Int64Type,
@@ -2659,7 +2659,7 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 			"effective_history_data_sharing_status": types.StringType,
 			"name":                                  types.StringType,
 			"partition": basetypes.ListType{
-				ElemType: Partition{}.Type(ctx),
+				ElemType: Partition_SdkV2{}.Type(ctx),
 			},
 			"shared_as":               types.StringType,
 			"effective_shared_as":     types.StringType,
@@ -2671,14 +2671,14 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetPartitions returns the value of the Partitions field in SharedDataObject as
-// a slice of Partition values.
+// GetPartitions returns the value of the Partitions field in SharedDataObject_SdkV2 as
+// a slice of Partition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SharedDataObject) GetPartitions(ctx context.Context) ([]Partition, bool) {
+func (o *SharedDataObject_SdkV2) GetPartitions(ctx context.Context) ([]Partition_SdkV2, bool) {
 	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
 		return nil, false
 	}
-	var v []Partition
+	var v []Partition_SdkV2
 	d := o.Partitions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2686,8 +2686,8 @@ func (o *SharedDataObject) GetPartitions(ctx context.Context) ([]Partition, bool
 	return v, true
 }
 
-// SetPartitions sets the value of the Partitions field in SharedDataObject.
-func (o *SharedDataObject) SetPartitions(ctx context.Context, v []Partition) {
+// SetPartitions sets the value of the Partitions field in SharedDataObject_SdkV2.
+func (o *SharedDataObject_SdkV2) SetPartitions(ctx context.Context, v []Partition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2697,17 +2697,17 @@ func (o *SharedDataObject) SetPartitions(ctx context.Context, v []Partition) {
 	o.Partitions = types.ListValueMust(t, vs)
 }
 
-type SharedDataObjectUpdate struct {
+type SharedDataObjectUpdate_SdkV2 struct {
 	// One of: **ADD**, **REMOVE**, **UPDATE**.
 	Action types.String `tfsdk:"action" tf:"optional"`
 	// The data object that is being added, removed, or updated.
-	DataObject types.Object `tfsdk:"data_object" tf:"optional,object"`
+	DataObject types.List `tfsdk:"data_object" tf:"optional,object"`
 }
 
-func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObjectUpdate) {
+func (newState *SharedDataObjectUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObjectUpdate_SdkV2) {
 }
 
-func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringRead(existingState SharedDataObjectUpdate) {
+func (newState *SharedDataObjectUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharedDataObjectUpdate_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharedDataObjectUpdate.
@@ -2717,16 +2717,16 @@ func (newState *SharedDataObjectUpdate) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a SharedDataObjectUpdate) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a SharedDataObjectUpdate_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"data_object": reflect.TypeOf(SharedDataObject{}),
+		"data_object": reflect.TypeOf(SharedDataObject_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, SharedDataObjectUpdate
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SharedDataObjectUpdate_SdkV2
 // only implements ToObjectValue() and Type().
-func (o SharedDataObjectUpdate) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o SharedDataObjectUpdate_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2736,28 +2736,27 @@ func (o SharedDataObjectUpdate) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o SharedDataObjectUpdate) Type(ctx context.Context) attr.Type {
+func (o SharedDataObjectUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"action":      types.StringType,
-			"data_object": SharedDataObject{}.Type(ctx),
+			"action": types.StringType,
+			"data_object": basetypes.ListType{
+				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetDataObject returns the value of the DataObject field in SharedDataObjectUpdate as
-// a SharedDataObject value.
+// GetDataObject returns the value of the DataObject field in SharedDataObjectUpdate_SdkV2 as
+// a SharedDataObject_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *SharedDataObjectUpdate) GetDataObject(ctx context.Context) (SharedDataObject, bool) {
-	var e SharedDataObject
+func (o *SharedDataObjectUpdate_SdkV2) GetDataObject(ctx context.Context) (SharedDataObject_SdkV2, bool) {
+	var e SharedDataObject_SdkV2
 	if o.DataObject.IsNull() || o.DataObject.IsUnknown() {
 		return e, false
 	}
-	var v []SharedDataObject
-	d := o.DataObject.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []SharedDataObject_SdkV2
+	d := o.DataObject.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2767,19 +2766,20 @@ func (o *SharedDataObjectUpdate) GetDataObject(ctx context.Context) (SharedDataO
 	return v[0], true
 }
 
-// SetDataObject sets the value of the DataObject field in SharedDataObjectUpdate.
-func (o *SharedDataObjectUpdate) SetDataObject(ctx context.Context, v SharedDataObject) {
-	vs := v.ToObjectValue(ctx)
-	o.DataObject = vs
+// SetDataObject sets the value of the DataObject field in SharedDataObjectUpdate_SdkV2.
+func (o *SharedDataObjectUpdate_SdkV2) SetDataObject(ctx context.Context, v SharedDataObject_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_object"]
+	o.DataObject = types.ListValueMust(t, vs)
 }
 
-type UpdatePermissionsResponse struct {
+type UpdatePermissionsResponse_SdkV2 struct {
 }
 
-func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissionsResponse) {
+func (newState *UpdatePermissionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePermissionsResponse_SdkV2) {
 }
 
-func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePermissionsResponse) {
+func (newState *UpdatePermissionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePermissionsResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePermissionsResponse.
@@ -2789,27 +2789,27 @@ func (newState *UpdatePermissionsResponse) SyncEffectiveFieldsDuringRead(existin
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdatePermissionsResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdatePermissionsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdatePermissionsResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdatePermissionsResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdatePermissionsResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdatePermissionsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdatePermissionsResponse) Type(ctx context.Context) attr.Type {
+func (o UpdatePermissionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
-type UpdateProvider struct {
+type UpdateProvider_SdkV2 struct {
 	// Description about the provider.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Name of the provider.
@@ -2823,10 +2823,10 @@ type UpdateProvider struct {
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str" tf:"optional"`
 }
 
-func (newState *UpdateProvider) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvider) {
+func (newState *UpdateProvider_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvider_SdkV2) {
 }
 
-func (newState *UpdateProvider) SyncEffectiveFieldsDuringRead(existingState UpdateProvider) {
+func (newState *UpdateProvider_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProvider_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvider.
@@ -2836,14 +2836,14 @@ func (newState *UpdateProvider) SyncEffectiveFieldsDuringRead(existingState Upda
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateProvider) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateProvider_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateProvider
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateProvider_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateProvider) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateProvider_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2856,7 +2856,7 @@ func (o UpdateProvider) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateProvider) Type(ctx context.Context) attr.Type {
+func (o UpdateProvider_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":               types.StringType,
@@ -2868,13 +2868,13 @@ func (o UpdateProvider) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type UpdateRecipient struct {
+type UpdateRecipient_SdkV2 struct {
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// Expiration timestamp of the token, in epoch milliseconds.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
 	// IP Access List
-	IpAccessList types.Object `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
 	// New name for the recipient.
@@ -2885,13 +2885,13 @@ type UpdateRecipient struct {
 	// update request, the specified properties will override the existing
 	// properties. To add and remove properties, one would need to perform a
 	// read-modify-write.
-	PropertiesKvpairs types.Object `tfsdk:"properties_kvpairs" tf:"optional,object"`
+	PropertiesKvpairs types.List `tfsdk:"properties_kvpairs" tf:"optional,object"`
 }
 
-func (newState *UpdateRecipient) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRecipient) {
+func (newState *UpdateRecipient_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRecipient_SdkV2) {
 }
 
-func (newState *UpdateRecipient) SyncEffectiveFieldsDuringRead(existingState UpdateRecipient) {
+func (newState *UpdateRecipient_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRecipient_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRecipient.
@@ -2901,17 +2901,17 @@ func (newState *UpdateRecipient) SyncEffectiveFieldsDuringRead(existingState Upd
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateRecipient) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateRecipient_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"ip_access_list":     reflect.TypeOf(IpAccessList{}),
-		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs{}),
+		"ip_access_list":     reflect.TypeOf(IpAccessList_SdkV2{}),
+		"properties_kvpairs": reflect.TypeOf(SecurablePropertiesKvPairs_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRecipient
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateRecipient_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateRecipient_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -2926,33 +2926,34 @@ func (o UpdateRecipient) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateRecipient) Type(ctx context.Context) attr.Type {
+func (o UpdateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":            types.StringType,
-			"expiration_time":    types.Int64Type,
-			"ip_access_list":     IpAccessList{}.Type(ctx),
-			"name":               types.StringType,
-			"new_name":           types.StringType,
-			"owner":              types.StringType,
-			"properties_kvpairs": SecurablePropertiesKvPairs{}.Type(ctx),
+			"comment":         types.StringType,
+			"expiration_time": types.Int64Type,
+			"ip_access_list": basetypes.ListType{
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
+			},
+			"name":     types.StringType,
+			"new_name": types.StringType,
+			"owner":    types.StringType,
+			"properties_kvpairs": basetypes.ListType{
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
+			},
 		},
 	}
 }
 
-// GetIpAccessList returns the value of the IpAccessList field in UpdateRecipient as
-// a IpAccessList value.
+// GetIpAccessList returns the value of the IpAccessList field in UpdateRecipient_SdkV2 as
+// a IpAccessList_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bool) {
-	var e IpAccessList
+func (o *UpdateRecipient_SdkV2) GetIpAccessList(ctx context.Context) (IpAccessList_SdkV2, bool) {
+	var e IpAccessList_SdkV2
 	if o.IpAccessList.IsNull() || o.IpAccessList.IsUnknown() {
 		return e, false
 	}
-	var v []IpAccessList
-	d := o.IpAccessList.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []IpAccessList_SdkV2
+	d := o.IpAccessList.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2962,25 +2963,23 @@ func (o *UpdateRecipient) GetIpAccessList(ctx context.Context) (IpAccessList, bo
 	return v[0], true
 }
 
-// SetIpAccessList sets the value of the IpAccessList field in UpdateRecipient.
-func (o *UpdateRecipient) SetIpAccessList(ctx context.Context, v IpAccessList) {
-	vs := v.ToObjectValue(ctx)
-	o.IpAccessList = vs
+// SetIpAccessList sets the value of the IpAccessList field in UpdateRecipient_SdkV2.
+func (o *UpdateRecipient_SdkV2) SetIpAccessList(ctx context.Context, v IpAccessList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_access_list"]
+	o.IpAccessList = types.ListValueMust(t, vs)
 }
 
-// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in UpdateRecipient as
-// a SecurablePropertiesKvPairs value.
+// GetPropertiesKvpairs returns the value of the PropertiesKvpairs field in UpdateRecipient_SdkV2 as
+// a SecurablePropertiesKvPairs_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs, bool) {
-	var e SecurablePropertiesKvPairs
+func (o *UpdateRecipient_SdkV2) GetPropertiesKvpairs(ctx context.Context) (SecurablePropertiesKvPairs_SdkV2, bool) {
+	var e SecurablePropertiesKvPairs_SdkV2
 	if o.PropertiesKvpairs.IsNull() || o.PropertiesKvpairs.IsUnknown() {
 		return e, false
 	}
-	var v []SecurablePropertiesKvPairs
-	d := o.PropertiesKvpairs.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
+	var v []SecurablePropertiesKvPairs_SdkV2
+	d := o.PropertiesKvpairs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2990,19 +2989,20 @@ func (o *UpdateRecipient) GetPropertiesKvpairs(ctx context.Context) (SecurablePr
 	return v[0], true
 }
 
-// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in UpdateRecipient.
-func (o *UpdateRecipient) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs) {
-	vs := v.ToObjectValue(ctx)
-	o.PropertiesKvpairs = vs
+// SetPropertiesKvpairs sets the value of the PropertiesKvpairs field in UpdateRecipient_SdkV2.
+func (o *UpdateRecipient_SdkV2) SetPropertiesKvpairs(ctx context.Context, v SecurablePropertiesKvPairs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
+	o.PropertiesKvpairs = types.ListValueMust(t, vs)
 }
 
-type UpdateResponse struct {
+type UpdateResponse_SdkV2 struct {
 }
 
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse_SdkV2) {
 }
 
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
@@ -3012,27 +3012,27 @@ func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState Upda
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{})
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateResponse) Type(ctx context.Context) attr.Type {
+func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{},
 	}
 }
 
-type UpdateShare struct {
+type UpdateShare_SdkV2 struct {
 	// User-provided free-form text description.
 	Comment types.String `tfsdk:"comment" tf:"optional"`
 	// The name of the share.
@@ -3047,10 +3047,10 @@ type UpdateShare struct {
 	Updates types.List `tfsdk:"updates" tf:"optional"`
 }
 
-func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
+func (newState *UpdateShare_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare_SdkV2) {
 }
 
-func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
+func (newState *UpdateShare_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateShare_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateShare.
@@ -3060,16 +3060,16 @@ func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateS
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateShare) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateShare_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"updates": reflect.TypeOf(SharedDataObjectUpdate{}),
+		"updates": reflect.TypeOf(SharedDataObjectUpdate_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateShare
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateShare_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateShare_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -3083,7 +3083,7 @@ func (o UpdateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateShare) Type(ctx context.Context) attr.Type {
+func (o UpdateShare_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment":      types.StringType,
@@ -3092,20 +3092,20 @@ func (o UpdateShare) Type(ctx context.Context) attr.Type {
 			"owner":        types.StringType,
 			"storage_root": types.StringType,
 			"updates": basetypes.ListType{
-				ElemType: SharedDataObjectUpdate{}.Type(ctx),
+				ElemType: SharedDataObjectUpdate_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetUpdates returns the value of the Updates field in UpdateShare as
-// a slice of SharedDataObjectUpdate values.
+// GetUpdates returns the value of the Updates field in UpdateShare_SdkV2 as
+// a slice of SharedDataObjectUpdate_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateShare) GetUpdates(ctx context.Context) ([]SharedDataObjectUpdate, bool) {
+func (o *UpdateShare_SdkV2) GetUpdates(ctx context.Context) ([]SharedDataObjectUpdate_SdkV2, bool) {
 	if o.Updates.IsNull() || o.Updates.IsUnknown() {
 		return nil, false
 	}
-	var v []SharedDataObjectUpdate
+	var v []SharedDataObjectUpdate_SdkV2
 	d := o.Updates.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -3113,8 +3113,8 @@ func (o *UpdateShare) GetUpdates(ctx context.Context) ([]SharedDataObjectUpdate,
 	return v, true
 }
 
-// SetUpdates sets the value of the Updates field in UpdateShare.
-func (o *UpdateShare) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate) {
+// SetUpdates sets the value of the Updates field in UpdateShare_SdkV2.
+func (o *UpdateShare_SdkV2) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -3124,7 +3124,7 @@ func (o *UpdateShare) SetUpdates(ctx context.Context, v []SharedDataObjectUpdate
 	o.Updates = types.ListValueMust(t, vs)
 }
 
-type UpdateSharePermissions struct {
+type UpdateSharePermissions_SdkV2 struct {
 	// Array of permission changes.
 	Changes types.List `tfsdk:"changes" tf:"optional"`
 	// Maximum number of permissions to return. - when set to 0, the page length
@@ -3143,10 +3143,10 @@ type UpdateSharePermissions struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSharePermissions) {
+func (newState *UpdateSharePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateSharePermissions_SdkV2) {
 }
 
-func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingState UpdateSharePermissions) {
+func (newState *UpdateSharePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateSharePermissions_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateSharePermissions.
@@ -3156,16 +3156,16 @@ func (newState *UpdateSharePermissions) SyncEffectiveFieldsDuringRead(existingSt
 // are the reflected types of the contained elements. They must be either primitive values from the
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
-func (a UpdateSharePermissions) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+func (a UpdateSharePermissions_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"changes": reflect.TypeOf(catalog_tf.PermissionsChange{}),
+		"changes": reflect.TypeOf(catalog_tf.PermissionsChange_SdkV2{}),
 	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSharePermissions
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateSharePermissions_SdkV2
 // only implements ToObjectValue() and Type().
-func (o UpdateSharePermissions) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+func (o UpdateSharePermissions_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
@@ -3177,11 +3177,11 @@ func (o UpdateSharePermissions) ToObjectValue(ctx context.Context) basetypes.Obj
 }
 
 // Type implements basetypes.ObjectValuable.
-func (o UpdateSharePermissions) Type(ctx context.Context) attr.Type {
+func (o UpdateSharePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"changes": basetypes.ListType{
-				ElemType: catalog_tf.PermissionsChange{}.Type(ctx),
+				ElemType: catalog_tf.PermissionsChange_SdkV2{}.Type(ctx),
 			},
 			"max_results": types.Int64Type,
 			"name":        types.StringType,
@@ -3190,14 +3190,14 @@ func (o UpdateSharePermissions) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// GetChanges returns the value of the Changes field in UpdateSharePermissions as
-// a slice of catalog_tf.PermissionsChange values.
+// GetChanges returns the value of the Changes field in UpdateSharePermissions_SdkV2 as
+// a slice of catalog_tf.PermissionsChange_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *UpdateSharePermissions) GetChanges(ctx context.Context) ([]catalog_tf.PermissionsChange, bool) {
+func (o *UpdateSharePermissions_SdkV2) GetChanges(ctx context.Context) ([]catalog_tf.PermissionsChange_SdkV2, bool) {
 	if o.Changes.IsNull() || o.Changes.IsUnknown() {
 		return nil, false
 	}
-	var v []catalog_tf.PermissionsChange
+	var v []catalog_tf.PermissionsChange_SdkV2
 	d := o.Changes.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -3205,8 +3205,8 @@ func (o *UpdateSharePermissions) GetChanges(ctx context.Context) ([]catalog_tf.P
 	return v, true
 }
 
-// SetChanges sets the value of the Changes field in UpdateSharePermissions.
-func (o *UpdateSharePermissions) SetChanges(ctx context.Context, v []catalog_tf.PermissionsChange) {
+// SetChanges sets the value of the Changes field in UpdateSharePermissions_SdkV2.
+func (o *UpdateSharePermissions_SdkV2) SetChanges(ctx context.Context, v []catalog_tf.PermissionsChange_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))

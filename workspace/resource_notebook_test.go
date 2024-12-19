@@ -36,6 +36,42 @@ func TestResourceNotebookRead(t *testing.T) {
 		"language":       "PYTHON",
 		"id":             path,
 		"workspace_path": "/Workspace" + path,
+		"format":         "SOURCE",
+	})
+}
+
+func TestResourceNotebookReadWithState(t *testing.T) {
+	path := "/test/path.py"
+	objectID := 12345
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/workspace/get-status?path=%2Ftest%2Fpath.py",
+				Response: ObjectStatus{
+					ObjectID:   int64(objectID),
+					ObjectType: Notebook,
+					Path:       path,
+					Language:   "PYTHON",
+				},
+			},
+		},
+		Resource: ResourceNotebook(),
+		Read:     true,
+		New:      true,
+		State: map[string]any{
+			"source": "acceptance/testdata/tf-test-jupyter.ipynb",
+			"format": "JUPYTER",
+			"path":   "/foo/path.py",
+		},
+		ID: path,
+	}.ApplyAndExpectData(t, map[string]any{
+		"path":           path,
+		"object_id":      objectID,
+		"language":       "PYTHON",
+		"id":             path,
+		"workspace_path": "/Workspace" + path,
+		"format":         "JUPYTER",
 	})
 }
 
@@ -119,22 +155,8 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 					Overwrite: true,
 					Format:    "SOURCE",
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
-				Response: ExportPath{
-					Content: "YWJjCg==",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: "NOTEBOOK",
-					Path:       "/foo/path.py",
-					Language:   "PYTHON",
+				Response: ImportResponse{
+					ObjectID: 12345,
 				},
 			},
 		},
@@ -146,8 +168,10 @@ func TestResourceNotebookCreate_DirectoryExist(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{
-		"path": "/foo/path.py",
-		"id":   "/foo/path.py",
+		"path":      "/foo/path.py",
+		"id":        "/foo/path.py",
+		"object_id": 12345,
+		"format":    "SOURCE",
 	})
 }
 
@@ -187,22 +211,8 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 					Overwrite: true,
 					Format:    "SOURCE",
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2Ffoo%2Fpath.py",
-				Response: ExportPath{
-					Content: "YWJjCg==",
-				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fpath.py",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: "NOTEBOOK",
-					Path:       "/foo/path.py",
-					Language:   "PYTHON",
+				Response: ImportResponse{
+					ObjectID: 12345,
 				},
 			},
 		},
@@ -214,8 +224,9 @@ func TestResourceNotebookCreate_DirectoryDoesntExist(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{
-		"path": "/foo/path.py",
-		"id":   "/foo/path.py",
+		"path":      "/foo/path.py",
+		"id":        "/foo/path.py",
+		"object_id": 12345,
 	})
 }
 
@@ -294,13 +305,17 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 					Overwrite: true,
 					Format:    "JUPYTER",
 				},
+				Response: ImportResponse{
+					ObjectID: 12345,
+				},
 			},
 			{
 				Method:   http.MethodGet,
 				Resource: "/api/2.0/workspace/get-status?path=%2FMars",
 				Response: ObjectStatus{
-					ObjectID:   4567,
+					ObjectID:   12345,
 					ObjectType: "NOTEBOOK",
+					Language:   "PYTHON",
 					Path:       "/Mars",
 				},
 			},
@@ -312,7 +327,9 @@ func TestResourceNotebookCreateSource_Jupyter(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id": "/Mars",
+		"id":        "/Mars",
+		"object_id": 12345,
+		"language":  "PYTHON",
 	})
 }
 
@@ -331,15 +348,8 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 					Overwrite: true,
 					Format:    "SOURCE",
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=%2FDashboard",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: "NOTEBOOK",
-					Path:       "/Dashboard",
-					Language:   "SQL",
+				Response: ImportResponse{
+					ObjectID: 12345,
 				},
 			},
 		},
@@ -350,7 +360,10 @@ func TestResourceNotebookCreateSource(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t, map[string]any{
-		"id": "/Dashboard",
+		"id":        "/Dashboard",
+		"object_id": 12345,
+		"language":  "SQL",
+		"format":    "SOURCE",
 	})
 }
 
@@ -410,18 +423,11 @@ func TestResourceNotebookUpdate(t *testing.T) {
 					Format:    "SOURCE",
 					Overwrite: true,
 					Content:   "YWJjCg==",
-					Path:      "abc",
+					Path:      "/path.py",
 					Language:  "R",
 				},
-			},
-			{
-				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=abc",
-				Response: ObjectStatus{
-					ObjectID:   4567,
-					ObjectType: "NOTEBOOK",
-					Path:       "abc",
-					Language:   "R",
+				Response: ImportResponse{
+					ObjectID: 12345,
 				},
 			},
 		},
@@ -430,11 +436,16 @@ func TestResourceNotebookUpdate(t *testing.T) {
 			"content_base64": "YWJjCg==",
 			"language":       "R",
 			"path":           "/path.py",
+			"format":         "SOURCE",
 		},
-		ID:          "abc",
+		ID:          "/path.py",
 		RequiresNew: true,
 		Update:      true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":        "/path.py",
+		"object_id": 12345,
+		"language":  "R",
+	})
 }
 
 func TestResourceNotebookUpdate_DBC(t *testing.T) {
@@ -445,7 +456,7 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 				Resource: "/api/2.0/workspace/delete",
 				ExpectedRequest: DeletePath{
 					Recursive: true,
-					Path:      "abc",
+					Path:      "/path.py",
 				},
 			},
 			{
@@ -454,38 +465,33 @@ func TestResourceNotebookUpdate_DBC(t *testing.T) {
 				ExpectedRequest: ImportPath{
 					Format:  "DBC",
 					Content: "YWJjCg==",
-					Path:    "abc",
+					Path:    "/path.py",
 				},
 			},
 			{
 				Method:   http.MethodGet,
-				Resource: "/api/2.0/workspace/get-status?path=abc",
+				Resource: "/api/2.0/workspace/get-status?path=%2Fpath.py",
 				Response: ObjectStatus{
-					ObjectID:   4567,
+					ObjectID:   12345,
 					ObjectType: Directory,
-					Path:       "abc",
+					Path:       "/path.py",
 				},
 			},
 		},
 		Resource: ResourceNotebook(),
 		State: map[string]any{
 			"content_base64": "YWJjCg==",
-
 			// technically language is not needed, but makes the test simpler
-			"language": "PYTHON",
-			"format":   "DBC",
-			"path":     "/path.py",
+			"language":  "PYTHON",
+			"format":    "DBC",
+			"path":      "/path.py",
+			"object_id": 45678,
 		},
-		ID:          "abc",
+		ID:          "/path.py",
 		RequiresNew: true,
 		Update:      true,
-	}.ApplyNoError(t)
-}
-
-func TestNotebookLanguageSuppressSourceDiff(t *testing.T) {
-	r := ResourceNotebook()
-	d := r.ToResource().TestResourceData()
-	d.Set("source", "this.PY")
-	suppress := r.Schema["language"].DiffSuppressFunc
-	assert.True(t, suppress("language", Python, Python, d))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":        "/path.py",
+		"object_id": 12345,
+	})
 }

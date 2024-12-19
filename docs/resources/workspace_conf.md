@@ -15,7 +15,7 @@ Manages workspace configuration for expert usage. Currently, more than one insta
 Allows specification of custom configuration properties for expert usage:
 
 - `enableIpAccessLists` - enables the use of [databricks_ip_access_list](ip_access_list.md) resources
-- `maxTokenLifetimeDays` - (string) Maximum token lifetime of new tokens in days, as an integer. If zero, new tokens are permitted to have no lifetime limit. Negative numbers are unsupported. **WARNING:** This limit only applies to new tokens, so there may be tokens with lifetimes longer than this value, including unlimited lifetime. Such tokens may have been created before the current maximum token lifetime was set.
+- `maxTokenLifetimeDays` - (string) Maximum token lifetime of new tokens in days, as an integer. This value can range from 1 day to 730 days (2 years). If not specified, the maximum lifetime of new tokens is 730 days. **WARNING:** This limit only applies to new tokens, so there may be tokens with lifetimes longer than this value, including unlimited lifetime. Such tokens may have been created before the current maximum token lifetime was set.
 - `enableTokensConfig` - (boolean) Enable or disable personal access tokens for this workspace.
 - `enableDeprecatedClusterNamedInitScripts` - (boolean) Enable or disable [legacy cluster-named init scripts](https://docs.databricks.com/clusters/init-scripts.html#disable-legacy-cluster-named-init-scripts-for-a-workspace) for this workspace.
 - `enableDeprecatedGlobalInitScripts` - (boolean) Enable or disable [legacy global init scripts](https://docs.databricks.com/clusters/init-scripts.html#migrate-legacy-scripts) for this workspace.

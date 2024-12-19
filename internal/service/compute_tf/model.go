@@ -1195,9 +1195,7 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -1815,7 +1813,7 @@ type ClusterDetails struct {
 	TerminatedTime types.Int64 `tfsdk:"terminated_time" tf:"optional"`
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
-	TerminationReason types.List `tfsdk:"termination_reason" tf:"optional,object"`
+	TerminationReason types.Object `tfsdk:"termination_reason" tf:"optional,object"`
 	// This field can only be used with `kind`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
@@ -1979,17 +1977,13 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"start_time":      types.Int64Type,
-			"state":           types.StringType,
-			"state_message":   types.StringType,
-			"terminated_time": types.Int64Type,
-			"termination_reason": basetypes.ListType{
-				ElemType: TerminationReason{}.Type(ctx),
-			},
-			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"start_time":         types.Int64Type,
+			"state":              types.StringType,
+			"state_message":      types.StringType,
+			"terminated_time":    types.Int64Type,
+			"termination_reason": TerminationReason{}.Type(ctx),
+			"use_ml_runtime":     types.BoolType,
+			"workload_type":      WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -3923,9 +3917,7 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -4870,9 +4862,7 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -6983,9 +6973,7 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -15901,9 +15889,7 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"use_ml_runtime": types.BoolType,
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }

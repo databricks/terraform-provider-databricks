@@ -243,6 +243,8 @@ type BaseRun_SdkV2 struct {
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
+	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
+	// restart a continuous job run.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
 	TriggerInfo types.List `tfsdk:"trigger_info" tf:"optional,object"`
@@ -855,7 +857,7 @@ func (o CancelRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Stores the run state of the clean room notebook V1 task.
+// Stores the run state of the clean rooms notebook task.
 type CleanRoomTaskRunState_SdkV2 struct {
 	// A value indicating the run's current lifecycle state. This field is
 	// always available in the response.
@@ -902,6 +904,92 @@ func (o CleanRoomTaskRunState_SdkV2) Type(ctx context.Context) attr.Type {
 			"result_state":     types.StringType,
 		},
 	}
+}
+
+type CleanRoomsNotebookTask_SdkV2 struct {
+	// The clean room that the notebook belongs to.
+	CleanRoomName types.String `tfsdk:"clean_room_name" tf:""`
+	// Checksum to validate the freshness of the notebook resource (i.e. the
+	// notebook being run is the latest version). It can be fetched by calling
+	// the :method:cleanroomassets/get API.
+	Etag types.String `tfsdk:"etag" tf:"optional"`
+	// Base parameters to be used for the clean room notebook job.
+	NotebookBaseParameters types.Map `tfsdk:"notebook_base_parameters" tf:"optional"`
+	// Name of the notebook being run.
+	NotebookName types.String `tfsdk:"notebook_name" tf:""`
+}
+
+func (newState *CleanRoomsNotebookTask_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTask_SdkV2) {
+}
+
+func (newState *CleanRoomsNotebookTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTask_SdkV2) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomsNotebookTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomsNotebookTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notebook_base_parameters": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomsNotebookTask_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CleanRoomsNotebookTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_name":          o.CleanRoomName,
+			"etag":                     o.Etag,
+			"notebook_base_parameters": o.NotebookBaseParameters,
+			"notebook_name":            o.NotebookName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomsNotebookTask_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_name": types.StringType,
+			"etag":            types.StringType,
+			"notebook_base_parameters": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"notebook_name": types.StringType,
+		},
+	}
+}
+
+// GetNotebookBaseParameters returns the value of the NotebookBaseParameters field in CleanRoomsNotebookTask_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTask_SdkV2) GetNotebookBaseParameters(ctx context.Context) (map[string]types.String, bool) {
+	if o.NotebookBaseParameters.IsNull() || o.NotebookBaseParameters.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.NotebookBaseParameters.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetNotebookBaseParameters sets the value of the NotebookBaseParameters field in CleanRoomsNotebookTask_SdkV2.
+func (o *CleanRoomsNotebookTask_SdkV2) SetNotebookBaseParameters(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_base_parameters"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.NotebookBaseParameters = types.MapValueMust(t, vs)
 }
 
 type ClusterInstance_SdkV2 struct {
@@ -5596,13 +5684,13 @@ type JobsHealthRule_SdkV2 struct {
 	//
 	// * `RUN_DURATION_SECONDS`: Expected total time for a run in seconds. *
 	// `STREAMING_BACKLOG_BYTES`: An estimate of the maximum bytes of data
-	// waiting to be consumed across all streams. This metric is in Private
+	// waiting to be consumed across all streams. This metric is in Public
 	// Preview. * `STREAMING_BACKLOG_RECORDS`: An estimate of the maximum offset
-	// lag across all streams. This metric is in Private Preview. *
+	// lag across all streams. This metric is in Public Preview. *
 	// `STREAMING_BACKLOG_SECONDS`: An estimate of the maximum consumer delay
-	// across all streams. This metric is in Private Preview. *
+	// across all streams. This metric is in Public Preview. *
 	// `STREAMING_BACKLOG_FILES`: An estimate of the maximum number of
-	// outstanding files across all streams. This metric is in Private Preview.
+	// outstanding files across all streams. This metric is in Public Preview.
 	Metric types.String `tfsdk:"metric" tf:""`
 	// Specifies the operator used to compare the health metric value with the
 	// specified threshold.
@@ -8518,6 +8606,8 @@ type Run_SdkV2 struct {
 	// failures. * `RUN_JOB_TASK`: Indicates a run that is triggered using a Run
 	// Job task. * `FILE_ARRIVAL`: Indicates a run that is triggered by a file
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
+	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
+	// restart a continuous job run.
 	Trigger types.String `tfsdk:"trigger" tf:"optional"`
 	// Additional details about what triggered the run
 	TriggerInfo types.List `tfsdk:"trigger_info" tf:"optional,object"`
@@ -10966,6 +11056,11 @@ type RunTask_SdkV2 struct {
 	// retried only until they succeed, and the maximum `attempt_number` is the
 	// same as the `max_retries` value for the job.
 	AttemptNumber types.Int64 `tfsdk:"attempt_number" tf:"optional"`
+	// The task runs a [clean rooms] notebook when the
+	// `clean_rooms_notebook_task` field is present.
+	//
+	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
 	// `setup_duration`, `execution_duration`, and the `cleanup_duration`. The
@@ -11139,28 +11234,29 @@ func (newState *RunTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunTa
 // SDK values.
 func (a RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cluster_instance":      reflect.TypeOf(ClusterInstance_SdkV2{}),
-		"condition_task":        reflect.TypeOf(RunConditionTask_SdkV2{}),
-		"dbt_task":              reflect.TypeOf(DbtTask_SdkV2{}),
-		"depends_on":            reflect.TypeOf(TaskDependency_SdkV2{}),
-		"email_notifications":   reflect.TypeOf(JobEmailNotifications_SdkV2{}),
-		"for_each_task":         reflect.TypeOf(RunForEachTask_SdkV2{}),
-		"git_source":            reflect.TypeOf(GitSource_SdkV2{}),
-		"library":               reflect.TypeOf(compute_tf.Library_SdkV2{}),
-		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
-		"notebook_task":         reflect.TypeOf(NotebookTask_SdkV2{}),
-		"notification_settings": reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
-		"pipeline_task":         reflect.TypeOf(PipelineTask_SdkV2{}),
-		"python_wheel_task":     reflect.TypeOf(PythonWheelTask_SdkV2{}),
-		"resolved_values":       reflect.TypeOf(ResolvedValues_SdkV2{}),
-		"run_job_task":          reflect.TypeOf(RunJobTask_SdkV2{}),
-		"spark_jar_task":        reflect.TypeOf(SparkJarTask_SdkV2{}),
-		"spark_python_task":     reflect.TypeOf(SparkPythonTask_SdkV2{}),
-		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask_SdkV2{}),
-		"sql_task":              reflect.TypeOf(SqlTask_SdkV2{}),
-		"state":                 reflect.TypeOf(RunState_SdkV2{}),
-		"status":                reflect.TypeOf(RunStatus_SdkV2{}),
-		"webhook_notifications": reflect.TypeOf(WebhookNotifications_SdkV2{}),
+		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
+		"cluster_instance":          reflect.TypeOf(ClusterInstance_SdkV2{}),
+		"condition_task":            reflect.TypeOf(RunConditionTask_SdkV2{}),
+		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
+		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
+		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
+		"for_each_task":             reflect.TypeOf(RunForEachTask_SdkV2{}),
+		"git_source":                reflect.TypeOf(GitSource_SdkV2{}),
+		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
+		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
+		"notebook_task":             reflect.TypeOf(NotebookTask_SdkV2{}),
+		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
+		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
+		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
+		"resolved_values":           reflect.TypeOf(ResolvedValues_SdkV2{}),
+		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
+		"spark_jar_task":            reflect.TypeOf(SparkJarTask_SdkV2{}),
+		"spark_python_task":         reflect.TypeOf(SparkPythonTask_SdkV2{}),
+		"spark_submit_task":         reflect.TypeOf(SparkSubmitTask_SdkV2{}),
+		"sql_task":                  reflect.TypeOf(SqlTask_SdkV2{}),
+		"state":                     reflect.TypeOf(RunState_SdkV2{}),
+		"status":                    reflect.TypeOf(RunStatus_SdkV2{}),
+		"webhook_notifications":     reflect.TypeOf(WebhookNotifications_SdkV2{}),
 	}
 }
 
@@ -11171,45 +11267,46 @@ func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":        o.AttemptNumber,
-			"cleanup_duration":      o.CleanupDuration,
-			"cluster_instance":      o.ClusterInstance,
-			"condition_task":        o.ConditionTask,
-			"dbt_task":              o.DbtTask,
-			"depends_on":            o.DependsOn,
-			"description":           o.Description,
-			"email_notifications":   o.EmailNotifications,
-			"end_time":              o.EndTime,
-			"environment_key":       o.EnvironmentKey,
-			"execution_duration":    o.ExecutionDuration,
-			"existing_cluster_id":   o.ExistingClusterId,
-			"for_each_task":         o.ForEachTask,
-			"git_source":            o.GitSource,
-			"job_cluster_key":       o.JobClusterKey,
-			"library":               o.Libraries,
-			"new_cluster":           o.NewCluster,
-			"notebook_task":         o.NotebookTask,
-			"notification_settings": o.NotificationSettings,
-			"pipeline_task":         o.PipelineTask,
-			"python_wheel_task":     o.PythonWheelTask,
-			"queue_duration":        o.QueueDuration,
-			"resolved_values":       o.ResolvedValues,
-			"run_duration":          o.RunDuration,
-			"run_id":                o.RunId,
-			"run_if":                o.RunIf,
-			"run_job_task":          o.RunJobTask,
-			"run_page_url":          o.RunPageUrl,
-			"setup_duration":        o.SetupDuration,
-			"spark_jar_task":        o.SparkJarTask,
-			"spark_python_task":     o.SparkPythonTask,
-			"spark_submit_task":     o.SparkSubmitTask,
-			"sql_task":              o.SqlTask,
-			"start_time":            o.StartTime,
-			"state":                 o.State,
-			"status":                o.Status,
-			"task_key":              o.TaskKey,
-			"timeout_seconds":       o.TimeoutSeconds,
-			"webhook_notifications": o.WebhookNotifications,
+			"attempt_number":            o.AttemptNumber,
+			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
+			"cleanup_duration":          o.CleanupDuration,
+			"cluster_instance":          o.ClusterInstance,
+			"condition_task":            o.ConditionTask,
+			"dbt_task":                  o.DbtTask,
+			"depends_on":                o.DependsOn,
+			"description":               o.Description,
+			"email_notifications":       o.EmailNotifications,
+			"end_time":                  o.EndTime,
+			"environment_key":           o.EnvironmentKey,
+			"execution_duration":        o.ExecutionDuration,
+			"existing_cluster_id":       o.ExistingClusterId,
+			"for_each_task":             o.ForEachTask,
+			"git_source":                o.GitSource,
+			"job_cluster_key":           o.JobClusterKey,
+			"library":                   o.Libraries,
+			"new_cluster":               o.NewCluster,
+			"notebook_task":             o.NotebookTask,
+			"notification_settings":     o.NotificationSettings,
+			"pipeline_task":             o.PipelineTask,
+			"python_wheel_task":         o.PythonWheelTask,
+			"queue_duration":            o.QueueDuration,
+			"resolved_values":           o.ResolvedValues,
+			"run_duration":              o.RunDuration,
+			"run_id":                    o.RunId,
+			"run_if":                    o.RunIf,
+			"run_job_task":              o.RunJobTask,
+			"run_page_url":              o.RunPageUrl,
+			"setup_duration":            o.SetupDuration,
+			"spark_jar_task":            o.SparkJarTask,
+			"spark_python_task":         o.SparkPythonTask,
+			"spark_submit_task":         o.SparkSubmitTask,
+			"sql_task":                  o.SqlTask,
+			"start_time":                o.StartTime,
+			"state":                     o.State,
+			"status":                    o.Status,
+			"task_key":                  o.TaskKey,
+			"timeout_seconds":           o.TimeoutSeconds,
+			"webhook_notifications":     o.WebhookNotifications,
 		})
 }
 
@@ -11217,7 +11314,10 @@ func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attempt_number":   types.Int64Type,
+			"attempt_number": types.Int64Type,
+			"clean_rooms_notebook_task": basetypes.ListType{
+				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+			},
 			"cleanup_duration": types.Int64Type,
 			"cluster_instance": basetypes.ListType{
 				ElemType: ClusterInstance{}.Type(ctx),
@@ -11302,6 +11402,32 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in RunTask_SdkV2 as
+// a CleanRoomsNotebookTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+	var e CleanRoomsNotebookTask_SdkV2
+	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomsNotebookTask_SdkV2
+	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in RunTask_SdkV2.
+func (o *RunTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetClusterInstance returns the value of the ClusterInstance field in RunTask_SdkV2 as
@@ -13700,6 +13826,11 @@ func (o SubmitRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type SubmitTask_SdkV2 struct {
+	// The task runs a [clean rooms] notebook when the
+	// `clean_rooms_notebook_task` field is present.
+	//
+	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -13814,24 +13945,25 @@ func (newState *SubmitTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState Su
 // SDK values.
 func (a SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"condition_task":        reflect.TypeOf(ConditionTask_SdkV2{}),
-		"dbt_task":              reflect.TypeOf(DbtTask_SdkV2{}),
-		"depends_on":            reflect.TypeOf(TaskDependency_SdkV2{}),
-		"email_notifications":   reflect.TypeOf(JobEmailNotifications_SdkV2{}),
-		"for_each_task":         reflect.TypeOf(ForEachTask_SdkV2{}),
-		"health":                reflect.TypeOf(JobsHealthRules_SdkV2{}),
-		"library":               reflect.TypeOf(compute_tf.Library_SdkV2{}),
-		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
-		"notebook_task":         reflect.TypeOf(NotebookTask_SdkV2{}),
-		"notification_settings": reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
-		"pipeline_task":         reflect.TypeOf(PipelineTask_SdkV2{}),
-		"python_wheel_task":     reflect.TypeOf(PythonWheelTask_SdkV2{}),
-		"run_job_task":          reflect.TypeOf(RunJobTask_SdkV2{}),
-		"spark_jar_task":        reflect.TypeOf(SparkJarTask_SdkV2{}),
-		"spark_python_task":     reflect.TypeOf(SparkPythonTask_SdkV2{}),
-		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask_SdkV2{}),
-		"sql_task":              reflect.TypeOf(SqlTask_SdkV2{}),
-		"webhook_notifications": reflect.TypeOf(WebhookNotifications_SdkV2{}),
+		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
+		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
+		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
+		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
+		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
+		"for_each_task":             reflect.TypeOf(ForEachTask_SdkV2{}),
+		"health":                    reflect.TypeOf(JobsHealthRules_SdkV2{}),
+		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
+		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
+		"notebook_task":             reflect.TypeOf(NotebookTask_SdkV2{}),
+		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
+		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
+		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
+		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
+		"spark_jar_task":            reflect.TypeOf(SparkJarTask_SdkV2{}),
+		"spark_python_task":         reflect.TypeOf(SparkPythonTask_SdkV2{}),
+		"spark_submit_task":         reflect.TypeOf(SparkSubmitTask_SdkV2{}),
+		"sql_task":                  reflect.TypeOf(SqlTask_SdkV2{}),
+		"webhook_notifications":     reflect.TypeOf(WebhookNotifications_SdkV2{}),
 	}
 }
 
@@ -13842,30 +13974,31 @@ func (o SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"condition_task":        o.ConditionTask,
-			"dbt_task":              o.DbtTask,
-			"depends_on":            o.DependsOn,
-			"description":           o.Description,
-			"email_notifications":   o.EmailNotifications,
-			"environment_key":       o.EnvironmentKey,
-			"existing_cluster_id":   o.ExistingClusterId,
-			"for_each_task":         o.ForEachTask,
-			"health":                o.Health,
-			"library":               o.Libraries,
-			"new_cluster":           o.NewCluster,
-			"notebook_task":         o.NotebookTask,
-			"notification_settings": o.NotificationSettings,
-			"pipeline_task":         o.PipelineTask,
-			"python_wheel_task":     o.PythonWheelTask,
-			"run_if":                o.RunIf,
-			"run_job_task":          o.RunJobTask,
-			"spark_jar_task":        o.SparkJarTask,
-			"spark_python_task":     o.SparkPythonTask,
-			"spark_submit_task":     o.SparkSubmitTask,
-			"sql_task":              o.SqlTask,
-			"task_key":              o.TaskKey,
-			"timeout_seconds":       o.TimeoutSeconds,
-			"webhook_notifications": o.WebhookNotifications,
+			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
+			"condition_task":            o.ConditionTask,
+			"dbt_task":                  o.DbtTask,
+			"depends_on":                o.DependsOn,
+			"description":               o.Description,
+			"email_notifications":       o.EmailNotifications,
+			"environment_key":           o.EnvironmentKey,
+			"existing_cluster_id":       o.ExistingClusterId,
+			"for_each_task":             o.ForEachTask,
+			"health":                    o.Health,
+			"library":                   o.Libraries,
+			"new_cluster":               o.NewCluster,
+			"notebook_task":             o.NotebookTask,
+			"notification_settings":     o.NotificationSettings,
+			"pipeline_task":             o.PipelineTask,
+			"python_wheel_task":         o.PythonWheelTask,
+			"run_if":                    o.RunIf,
+			"run_job_task":              o.RunJobTask,
+			"spark_jar_task":            o.SparkJarTask,
+			"spark_python_task":         o.SparkPythonTask,
+			"spark_submit_task":         o.SparkSubmitTask,
+			"sql_task":                  o.SqlTask,
+			"task_key":                  o.TaskKey,
+			"timeout_seconds":           o.TimeoutSeconds,
+			"webhook_notifications":     o.WebhookNotifications,
 		})
 }
 
@@ -13873,6 +14006,9 @@ func (o SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"clean_rooms_notebook_task": basetypes.ListType{
+				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+			},
 			"condition_task": basetypes.ListType{
 				ElemType: ConditionTask{}.Type(ctx),
 			},
@@ -13935,6 +14071,32 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in SubmitTask_SdkV2 as
+// a CleanRoomsNotebookTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+	var e CleanRoomsNotebookTask_SdkV2
+	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomsNotebookTask_SdkV2
+	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in SubmitTask_SdkV2.
+func (o *SubmitTask_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in SubmitTask_SdkV2 as
@@ -14496,6 +14658,11 @@ func (o *TableUpdateTriggerConfiguration_SdkV2) SetTableNames(ctx context.Contex
 }
 
 type Task_SdkV2 struct {
+	// The task runs a [clean rooms] notebook when the
+	// `clean_rooms_notebook_task` field is present.
+	//
+	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
+	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -14633,24 +14800,25 @@ func (newState *Task_SdkV2) SyncEffectiveFieldsDuringRead(existingState Task_Sdk
 // SDK values.
 func (a Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"condition_task":        reflect.TypeOf(ConditionTask_SdkV2{}),
-		"dbt_task":              reflect.TypeOf(DbtTask_SdkV2{}),
-		"depends_on":            reflect.TypeOf(TaskDependency_SdkV2{}),
-		"email_notifications":   reflect.TypeOf(TaskEmailNotifications_SdkV2{}),
-		"for_each_task":         reflect.TypeOf(ForEachTask_SdkV2{}),
-		"health":                reflect.TypeOf(JobsHealthRules_SdkV2{}),
-		"library":               reflect.TypeOf(compute_tf.Library_SdkV2{}),
-		"new_cluster":           reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
-		"notebook_task":         reflect.TypeOf(NotebookTask_SdkV2{}),
-		"notification_settings": reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
-		"pipeline_task":         reflect.TypeOf(PipelineTask_SdkV2{}),
-		"python_wheel_task":     reflect.TypeOf(PythonWheelTask_SdkV2{}),
-		"run_job_task":          reflect.TypeOf(RunJobTask_SdkV2{}),
-		"spark_jar_task":        reflect.TypeOf(SparkJarTask_SdkV2{}),
-		"spark_python_task":     reflect.TypeOf(SparkPythonTask_SdkV2{}),
-		"spark_submit_task":     reflect.TypeOf(SparkSubmitTask_SdkV2{}),
-		"sql_task":              reflect.TypeOf(SqlTask_SdkV2{}),
-		"webhook_notifications": reflect.TypeOf(WebhookNotifications_SdkV2{}),
+		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask_SdkV2{}),
+		"condition_task":            reflect.TypeOf(ConditionTask_SdkV2{}),
+		"dbt_task":                  reflect.TypeOf(DbtTask_SdkV2{}),
+		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
+		"email_notifications":       reflect.TypeOf(TaskEmailNotifications_SdkV2{}),
+		"for_each_task":             reflect.TypeOf(ForEachTask_SdkV2{}),
+		"health":                    reflect.TypeOf(JobsHealthRules_SdkV2{}),
+		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
+		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
+		"notebook_task":             reflect.TypeOf(NotebookTask_SdkV2{}),
+		"notification_settings":     reflect.TypeOf(TaskNotificationSettings_SdkV2{}),
+		"pipeline_task":             reflect.TypeOf(PipelineTask_SdkV2{}),
+		"python_wheel_task":         reflect.TypeOf(PythonWheelTask_SdkV2{}),
+		"run_job_task":              reflect.TypeOf(RunJobTask_SdkV2{}),
+		"spark_jar_task":            reflect.TypeOf(SparkJarTask_SdkV2{}),
+		"spark_python_task":         reflect.TypeOf(SparkPythonTask_SdkV2{}),
+		"spark_submit_task":         reflect.TypeOf(SparkSubmitTask_SdkV2{}),
+		"sql_task":                  reflect.TypeOf(SqlTask_SdkV2{}),
+		"webhook_notifications":     reflect.TypeOf(WebhookNotifications_SdkV2{}),
 	}
 }
 
@@ -14661,6 +14829,7 @@ func (o Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
 			"condition_task":            o.ConditionTask,
 			"dbt_task":                  o.DbtTask,
 			"depends_on":                o.DependsOn,
@@ -14697,6 +14866,9 @@ func (o Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"clean_rooms_notebook_task": basetypes.ListType{
+				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+			},
 			"condition_task": basetypes.ListType{
 				ElemType: ConditionTask{}.Type(ctx),
 			},
@@ -14764,6 +14936,32 @@ func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCleanRoomsNotebookTask returns the value of the CleanRoomsNotebookTask field in Task_SdkV2 as
+// a CleanRoomsNotebookTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task_SdkV2) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNotebookTask_SdkV2, bool) {
+	var e CleanRoomsNotebookTask_SdkV2
+	if o.CleanRoomsNotebookTask.IsNull() || o.CleanRoomsNotebookTask.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomsNotebookTask_SdkV2
+	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in Task_SdkV2.
+func (o *Task_SdkV2) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
+	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
 }
 
 // GetConditionTask returns the value of the ConditionTask field in Task_SdkV2 as

@@ -11060,7 +11060,7 @@ type RunTask struct {
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
 	// `setup_duration`, `execution_duration`, and the `cleanup_duration`. The
@@ -11314,14 +11314,12 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attempt_number": types.Int64Type,
-			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
-			},
-			"cleanup_duration": types.Int64Type,
-			"cluster_instance": ClusterInstance{}.Type(ctx),
-			"condition_task":   RunConditionTask{}.Type(ctx),
-			"dbt_task":         DbtTask{}.Type(ctx),
+			"attempt_number":            types.Int64Type,
+			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
+			"cleanup_duration":          types.Int64Type,
+			"cluster_instance":          ClusterInstance{}.Type(ctx),
+			"condition_task":            RunConditionTask{}.Type(ctx),
+			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
@@ -11373,7 +11371,10 @@ func (o *RunTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNote
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11385,9 +11386,8 @@ func (o *RunTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNote
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in RunTask.
 func (o *RunTask) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoomsNotebookTask = vs
 }
 
 // GetClusterInstance returns the value of the ClusterInstance field in RunTask as
@@ -13830,7 +13830,7 @@ type SubmitTask struct {
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -14006,15 +14006,9 @@ func (o SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SubmitTask) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
-			},
-			"condition_task": basetypes.ListType{
-				ElemType: ConditionTask{}.Type(ctx),
-			},
-			"dbt_task": basetypes.ListType{
-				ElemType: DbtTask{}.Type(ctx),
-			},
+			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
+			"condition_task":            ConditionTask{}.Type(ctx),
+			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
@@ -14054,7 +14048,10 @@ func (o *SubmitTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsN
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14066,9 +14063,8 @@ func (o *SubmitTask) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsN
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in SubmitTask.
 func (o *SubmitTask) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoomsNotebookTask = vs
 }
 
 // GetConditionTask returns the value of the ConditionTask field in SubmitTask as
@@ -14666,7 +14662,7 @@ type Task struct {
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.List `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
@@ -14870,15 +14866,9 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Task) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
-			},
-			"condition_task": basetypes.ListType{
-				ElemType: ConditionTask{}.Type(ctx),
-			},
-			"dbt_task": basetypes.ListType{
-				ElemType: DbtTask{}.Type(ctx),
-			},
+			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
+			"condition_task":            ConditionTask{}.Type(ctx),
+			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
 			},
@@ -14923,7 +14913,10 @@ func (o *Task) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNoteboo
 		return e, false
 	}
 	var v []CleanRoomsNotebookTask
-	d := o.CleanRoomsNotebookTask.ElementsAs(ctx, &v, true)
+	d := o.CleanRoomsNotebookTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14935,9 +14928,8 @@ func (o *Task) GetCleanRoomsNotebookTask(ctx context.Context) (CleanRoomsNoteboo
 
 // SetCleanRoomsNotebookTask sets the value of the CleanRoomsNotebookTask field in Task.
 func (o *Task) SetCleanRoomsNotebookTask(ctx context.Context, v CleanRoomsNotebookTask) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_task"]
-	o.CleanRoomsNotebookTask = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoomsNotebookTask = vs
 }
 
 // GetConditionTask returns the value of the ConditionTask field in Task as

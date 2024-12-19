@@ -76,13 +76,13 @@ func (d *RegisteredModelVersionsDataSource) Read(ctx context.Context, req dataso
 	}
 	var tfModelVersions []attr.Value
 	for _, modelVersionSdk := range modelVersions.ModelVersions {
-		var modelVersion catalog_tf.ModelVersionInfo
+		var modelVersion catalog_tf.ModelVersionInfo_SdkV2
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, modelVersionSdk, &modelVersion)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		tfModelVersions = append(tfModelVersions, modelVersion.ToObjectValue(ctx))
 	}
-	registeredModelVersions.ModelVersions = types.ListValueMust(catalog_tf.ModelVersionInfo{}.Type(ctx), tfModelVersions)
+	registeredModelVersions.ModelVersions = types.ListValueMust(catalog_tf.ModelVersionInfo_SdkV2{}.Type(ctx), tfModelVersions)
 	resp.Diagnostics.Append(resp.State.Set(ctx, registeredModelVersions)...)
 }

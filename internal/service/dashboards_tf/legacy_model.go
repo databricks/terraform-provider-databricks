@@ -62,7 +62,7 @@ func (o CreateDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
+				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -139,7 +139,7 @@ func (o CreateScheduleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
+				ElemType: Schedule_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -220,7 +220,7 @@ func (o CreateSubscriptionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard_id": types.StringType,
 			"schedule_id":  types.StringType,
 			"subscription": basetypes.ListType{
-				ElemType: Subscription{}.Type(ctx),
+				ElemType: Subscription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -619,10 +619,10 @@ func (o GenieAttachment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query": basetypes.ListType{
-				ElemType: QueryAttachment{}.Type(ctx),
+				ElemType: QueryAttachment_SdkV2{}.Type(ctx),
 			},
 			"text": basetypes.ListType{
-				ElemType: TextAttachment{}.Type(ctx),
+				ElemType: TextAttachment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -988,7 +988,7 @@ func (o GenieGetMessageQueryResultResponse_SdkV2) Type(ctx context.Context) attr
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"statement_response": basetypes.ListType{
-				ElemType: sql_tf.StatementResponse{}.Type(ctx),
+				ElemType: sql_tf.StatementResponse_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1107,18 +1107,18 @@ func (o GenieMessage_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"attachments": basetypes.ListType{
-				ElemType: GenieAttachment{}.Type(ctx),
+				ElemType: GenieAttachment_SdkV2{}.Type(ctx),
 			},
 			"content":           types.StringType,
 			"conversation_id":   types.StringType,
 			"created_timestamp": types.Int64Type,
 			"error": basetypes.ListType{
-				ElemType: MessageError{}.Type(ctx),
+				ElemType: MessageError_SdkV2{}.Type(ctx),
 			},
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"query_result": basetypes.ListType{
-				ElemType: Result{}.Type(ctx),
+				ElemType: Result_SdkV2{}.Type(ctx),
 			},
 			"space_id": types.StringType,
 			"status":   types.StringType,
@@ -1301,11 +1301,11 @@ func (o GenieStartConversationResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"conversation": basetypes.ListType{
-				ElemType: GenieConversation{}.Type(ctx),
+				ElemType: GenieConversation_SdkV2{}.Type(ctx),
 			},
 			"conversation_id": types.StringType,
 			"message": basetypes.ListType{
-				ElemType: GenieMessage{}.Type(ctx),
+				ElemType: GenieMessage_SdkV2{}.Type(ctx),
 			},
 			"message_id": types.StringType,
 		},
@@ -1648,7 +1648,7 @@ func (o ListDashboardsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboards": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
+				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1779,7 +1779,7 @@ func (o ListSchedulesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"schedules": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
+				ElemType: Schedule_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1913,7 +1913,7 @@ func (o ListSubscriptionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"subscriptions": basetypes.ListType{
-				ElemType: Subscription{}.Type(ctx),
+				ElemType: Subscription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2216,7 +2216,7 @@ func (o QueryAttachment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cached_query_schema": basetypes.ListType{
-				ElemType: QuerySchema{}.Type(ctx),
+				ElemType: QuerySchema_SdkV2{}.Type(ctx),
 			},
 			"description":            types.StringType,
 			"id":                     types.StringType,
@@ -2299,7 +2299,7 @@ func (o QuerySchema_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: QuerySchemaColumn{}.Type(ctx),
+				ElemType: QuerySchemaColumn_SdkV2{}.Type(ctx),
 			},
 			"statement_id": types.StringType,
 		},
@@ -2503,7 +2503,7 @@ func (o Schedule_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
 			"cron_schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
 			"dashboard_id": types.StringType,
 			"display_name": types.StringType,
@@ -2588,10 +2588,10 @@ func (o Subscriber_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"destination_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberDestination{}.Type(ctx),
+				ElemType: SubscriptionSubscriberDestination_SdkV2{}.Type(ctx),
 			},
 			"user_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberUser{}.Type(ctx),
+				ElemType: SubscriptionSubscriberUser_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2719,7 +2719,7 @@ func (o Subscription_SdkV2) Type(ctx context.Context) attr.Type {
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
 			"subscriber": basetypes.ListType{
-				ElemType: Subscriber{}.Type(ctx),
+				ElemType: Subscriber_SdkV2{}.Type(ctx),
 			},
 			"subscription_id": types.StringType,
 			"update_time":     types.StringType,
@@ -3085,7 +3085,7 @@ func (o UpdateDashboardRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
+				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
 			"dashboard_id": types.StringType,
 		},
@@ -3166,7 +3166,7 @@ func (o UpdateScheduleRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
+				ElemType: Schedule_SdkV2{}.Type(ctx),
 			},
 			"schedule_id": types.StringType,
 		},

@@ -127,7 +127,7 @@ func (o AccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: Permission{}.Type(ctx),
+				ElemType: Permission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -843,7 +843,7 @@ func (o GetAssignableRolesForResourceResponse_SdkV2) Type(ctx context.Context) a
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"roles": basetypes.ListType{
-				ElemType: Role{}.Type(ctx),
+				ElemType: Role_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -958,7 +958,7 @@ func (o GetPasswordPermissionLevelsResponse_SdkV2) Type(ctx context.Context) att
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PasswordPermissionsDescription{}.Type(ctx),
+				ElemType: PasswordPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1077,7 +1077,7 @@ func (o GetPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PermissionsDescription{}.Type(ctx),
+				ElemType: PermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1527,21 +1527,21 @@ func (o Group_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"displayName": types.StringType,
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"members": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"meta": basetypes.ListType{
-				ElemType: ResourceMeta{}.Type(ctx),
+				ElemType: ResourceMeta_SdkV2{}.Type(ctx),
 			},
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2054,7 +2054,7 @@ func (o ListGroupsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: Group{}.Type(ctx),
+				ElemType: Group_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2172,7 +2172,7 @@ func (o ListServicePrincipalResponse_SdkV2) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: ServicePrincipal{}.Type(ctx),
+				ElemType: ServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2437,7 +2437,7 @@ func (o ListUsersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"itemsPerPage": types.Int64Type,
 			"Resources": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
+				ElemType: User_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2731,7 +2731,7 @@ func (o ObjectPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlResponse{}.Type(ctx),
+				ElemType: AccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -2814,7 +2814,7 @@ func (o PartialUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"Operations": basetypes.ListType{
-				ElemType: Patch{}.Type(ctx),
+				ElemType: Patch_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2981,7 +2981,7 @@ func (o PasswordAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: PasswordPermission{}.Type(ctx),
+				ElemType: PasswordPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -3141,7 +3141,7 @@ func (o PasswordPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlResponse{}.Type(ctx),
+				ElemType: PasswordAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -3259,7 +3259,7 @@ func (o PasswordPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PasswordAccessControlRequest{}.Type(ctx),
+				ElemType: PasswordAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3509,7 +3509,7 @@ func (o PermissionAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"principal": basetypes.ListType{
-				ElemType: PrincipalOutput{}.Type(ctx),
+				ElemType: PrincipalOutput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3607,7 +3607,7 @@ func (o PermissionAssignments_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_assignments": basetypes.ListType{
-				ElemType: PermissionAssignment{}.Type(ctx),
+				ElemType: PermissionAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3779,7 +3779,7 @@ func (o PermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControlRequest{}.Type(ctx),
+				ElemType: AccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"request_object_id":   types.StringType,
 			"request_object_type": types.StringType,
@@ -4005,7 +4005,7 @@ func (o RuleSetResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
 			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
+				ElemType: GrantRule_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 		},
@@ -4087,7 +4087,7 @@ func (o RuleSetUpdateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"etag": types.StringType,
 			"grant_rules": basetypes.ListType{
-				ElemType: GrantRule{}.Type(ctx),
+				ElemType: GrantRule_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 		},
@@ -4193,15 +4193,15 @@ func (o ServicePrincipal_SdkV2) Type(ctx context.Context) attr.Type {
 			"applicationId": types.StringType,
 			"displayName":   types.StringType,
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -4394,7 +4394,7 @@ func (o UpdateRuleSetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 			"rule_set": basetypes.ListType{
-				ElemType: RuleSetUpdateRequest{}.Type(ctx),
+				ElemType: RuleSetUpdateRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4597,21 +4597,21 @@ func (o User_SdkV2) Type(ctx context.Context) attr.Type {
 			"active":      types.BoolType,
 			"displayName": types.StringType,
 			"emails": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"entitlements": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"externalId": types.StringType,
 			"groups": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"name": basetypes.ListType{
-				ElemType: Name{}.Type(ctx),
+				ElemType: Name_SdkV2{}.Type(ctx),
 			},
 			"roles": basetypes.ListType{
-				ElemType: ComplexValue{}.Type(ctx),
+				ElemType: ComplexValue_SdkV2{}.Type(ctx),
 			},
 			"schemas": basetypes.ListType{
 				ElemType: types.StringType,
@@ -4817,7 +4817,7 @@ func (o WorkspacePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permissions": basetypes.ListType{
-				ElemType: PermissionOutput{}.Type(ctx),
+				ElemType: PermissionOutput_SdkV2{}.Type(ctx),
 			},
 		},
 	}

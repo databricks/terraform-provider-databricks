@@ -157,45 +157,45 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"catalog":               types.StringType,
 			"channel":               types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.Type(ctx),
+				ElemType: PipelineCluster_SdkV2{}.Type(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.Type(ctx),
+				ElemType: PipelineDeployment_SdkV2{}.Type(ctx),
 			},
 			"development": types.BoolType,
 			"dry_run":     types.BoolType,
 			"edition":     types.StringType,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.Type(ctx),
+				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionGatewayPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.Type(ctx),
+				ElemType: PipelineLibrary_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.Type(ctx),
+				ElemType: Notifications_SdkV2{}.Type(ctx),
 			},
 			"photon": types.BoolType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.Type(ctx),
+				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.Type(ctx),
+				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -505,7 +505,7 @@ func (o CreatePipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"effective_settings": basetypes.ListType{
-				ElemType: PipelineSpec{}.Type(ctx),
+				ElemType: PipelineSpec_SdkV2{}.Type(ctx),
 			},
 			"pipeline_id": types.StringType,
 		},
@@ -847,46 +847,46 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"catalog":               types.StringType,
 			"channel":               types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.Type(ctx),
+				ElemType: PipelineCluster_SdkV2{}.Type(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.Type(ctx),
+				ElemType: PipelineDeployment_SdkV2{}.Type(ctx),
 			},
 			"development":            types.BoolType,
 			"edition":                types.StringType,
 			"expected_last_modified": types.Int64Type,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.Type(ctx),
+				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionGatewayPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.Type(ctx),
+				ElemType: PipelineLibrary_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.Type(ctx),
+				ElemType: Notifications_SdkV2{}.Type(ctx),
 			},
 			"photon":      types.BoolType,
 			"pipeline_id": types.StringType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.Type(ctx),
+				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.Type(ctx),
+				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1231,7 +1231,7 @@ func (o ErrorDetail_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exceptions": basetypes.ListType{
-				ElemType: SerializedException{}.Type(ctx),
+				ElemType: SerializedException_SdkV2{}.Type(ctx),
 			},
 			"fatal": types.BoolType,
 		},
@@ -1494,7 +1494,7 @@ func (o GetPipelinePermissionLevelsResponse_SdkV2) Type(ctx context.Context) att
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: PipelinePermissionsDescription{}.Type(ctx),
+				ElemType: PipelinePermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1693,13 +1693,13 @@ func (o GetPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"health":                     types.StringType,
 			"last_modified":              types.Int64Type,
 			"latest_updates": basetypes.ListType{
-				ElemType: UpdateStateInfo{}.Type(ctx),
+				ElemType: UpdateStateInfo_SdkV2{}.Type(ctx),
 			},
 			"name":             types.StringType,
 			"pipeline_id":      types.StringType,
 			"run_as_user_name": types.StringType,
 			"spec": basetypes.ListType{
-				ElemType: PipelineSpec{}.Type(ctx),
+				ElemType: PipelineSpec_SdkV2{}.Type(ctx),
 			},
 			"state": types.StringType,
 		},
@@ -1845,7 +1845,7 @@ func (o GetUpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"update": basetypes.ListType{
-				ElemType: UpdateInfo{}.Type(ctx),
+				ElemType: UpdateInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1925,13 +1925,13 @@ func (o IngestionConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"report": basetypes.ListType{
-				ElemType: ReportSpec{}.Type(ctx),
+				ElemType: ReportSpec_SdkV2{}.Type(ctx),
 			},
 			"schema": basetypes.ListType{
-				ElemType: SchemaSpec{}.Type(ctx),
+				ElemType: SchemaSpec_SdkV2{}.Type(ctx),
 			},
 			"table": basetypes.ListType{
-				ElemType: TableSpec{}.Type(ctx),
+				ElemType: TableSpec_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2139,10 +2139,10 @@ func (o IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 			"connection_name":      types.StringType,
 			"ingestion_gateway_id": types.StringType,
 			"objects": basetypes.ListType{
-				ElemType: IngestionConfig{}.Type(ctx),
+				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.Type(ctx),
+				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2348,7 +2348,7 @@ func (o ListPipelineEventsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"events": basetypes.ListType{
-				ElemType: PipelineEvent{}.Type(ctx),
+				ElemType: PipelineEvent_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
@@ -2524,7 +2524,7 @@ func (o ListPipelinesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"statuses": basetypes.ListType{
-				ElemType: PipelineStateInfo{}.Type(ctx),
+				ElemType: PipelineStateInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2661,7 +2661,7 @@ func (o ListUpdatesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 			"updates": basetypes.ListType{
-				ElemType: UpdateInfo{}.Type(ctx),
+				ElemType: UpdateInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3095,7 +3095,7 @@ func (o PipelineAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: PipelinePermission{}.Type(ctx),
+				ElemType: PipelinePermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -3291,16 +3291,16 @@ func (o PipelineCluster_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
 			"autoscale": basetypes.ListType{
-				ElemType: PipelineClusterAutoscale{}.Type(ctx),
+				ElemType: PipelineClusterAutoscale_SdkV2{}.Type(ctx),
 			},
 			"aws_attributes": basetypes.ListType{
-				ElemType: compute_tf.AwsAttributes{}.Type(ctx),
+				ElemType: compute_tf.AwsAttributes_SdkV2{}.Type(ctx),
 			},
 			"azure_attributes": basetypes.ListType{
-				ElemType: compute_tf.AzureAttributes{}.Type(ctx),
+				ElemType: compute_tf.AzureAttributes_SdkV2{}.Type(ctx),
 			},
 			"cluster_log_conf": basetypes.ListType{
-				ElemType: compute_tf.ClusterLogConf{}.Type(ctx),
+				ElemType: compute_tf.ClusterLogConf_SdkV2{}.Type(ctx),
 			},
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
@@ -3309,10 +3309,10 @@ func (o PipelineCluster_SdkV2) Type(ctx context.Context) attr.Type {
 			"driver_node_type_id":          types.StringType,
 			"enable_local_disk_encryption": types.BoolType,
 			"gcp_attributes": basetypes.ListType{
-				ElemType: compute_tf.GcpAttributes{}.Type(ctx),
+				ElemType: compute_tf.GcpAttributes_SdkV2{}.Type(ctx),
 			},
 			"init_scripts": basetypes.ListType{
-				ElemType: compute_tf.InitScriptInfo{}.Type(ctx),
+				ElemType: compute_tf.InitScriptInfo_SdkV2{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
 			"label":            types.StringType,
@@ -3761,7 +3761,7 @@ func (o PipelineEvent_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": basetypes.ListType{
-				ElemType: ErrorDetail{}.Type(ctx),
+				ElemType: ErrorDetail_SdkV2{}.Type(ctx),
 			},
 			"event_type":     types.StringType,
 			"id":             types.StringType,
@@ -3769,10 +3769,10 @@ func (o PipelineEvent_SdkV2) Type(ctx context.Context) attr.Type {
 			"maturity_level": types.StringType,
 			"message":        types.StringType,
 			"origin": basetypes.ListType{
-				ElemType: Origin{}.Type(ctx),
+				ElemType: Origin_SdkV2{}.Type(ctx),
 			},
 			"sequence": basetypes.ListType{
-				ElemType: Sequencing{}.Type(ctx),
+				ElemType: Sequencing_SdkV2{}.Type(ctx),
 			},
 			"timestamp": types.StringType,
 		},
@@ -3913,14 +3913,14 @@ func (o PipelineLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file": basetypes.ListType{
-				ElemType: FileLibrary{}.Type(ctx),
+				ElemType: FileLibrary_SdkV2{}.Type(ctx),
 			},
 			"jar": types.StringType,
 			"maven": basetypes.ListType{
-				ElemType: compute_tf.MavenLibrary{}.Type(ctx),
+				ElemType: compute_tf.MavenLibrary_SdkV2{}.Type(ctx),
 			},
 			"notebook": basetypes.ListType{
-				ElemType: NotebookLibrary{}.Type(ctx),
+				ElemType: NotebookLibrary_SdkV2{}.Type(ctx),
 			},
 			"whl": types.StringType,
 		},
@@ -4129,7 +4129,7 @@ func (o PipelinePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PipelineAccessControlResponse{}.Type(ctx),
+				ElemType: PipelineAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -4250,7 +4250,7 @@ func (o PipelinePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: PipelineAccessControlRequest{}.Type(ctx),
+				ElemType: PipelineAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"pipeline_id": types.StringType,
 		},
@@ -4410,44 +4410,44 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"catalog":          types.StringType,
 			"channel":          types.StringType,
 			"clusters": basetypes.ListType{
-				ElemType: PipelineCluster{}.Type(ctx),
+				ElemType: PipelineCluster_SdkV2{}.Type(ctx),
 			},
 			"configuration": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"continuous": types.BoolType,
 			"deployment": basetypes.ListType{
-				ElemType: PipelineDeployment{}.Type(ctx),
+				ElemType: PipelineDeployment_SdkV2{}.Type(ctx),
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
 			"filters": basetypes.ListType{
-				ElemType: Filters{}.Type(ctx),
+				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
 			"gateway_definition": basetypes.ListType{
-				ElemType: IngestionGatewayPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionGatewayPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"ingestion_definition": basetypes.ListType{
-				ElemType: IngestionPipelineDefinition{}.Type(ctx),
+				ElemType: IngestionPipelineDefinition_SdkV2{}.Type(ctx),
 			},
 			"libraries": basetypes.ListType{
-				ElemType: PipelineLibrary{}.Type(ctx),
+				ElemType: PipelineLibrary_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: Notifications{}.Type(ctx),
+				ElemType: Notifications_SdkV2{}.Type(ctx),
 			},
 			"photon": types.BoolType,
 			"restart_window": basetypes.ListType{
-				ElemType: RestartWindow{}.Type(ctx),
+				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
 			"target":     types.StringType,
 			"trigger": basetypes.ListType{
-				ElemType: PipelineTrigger{}.Type(ctx),
+				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4779,7 +4779,7 @@ func (o PipelineStateInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"creator_user_name": types.StringType,
 			"health":            types.StringType,
 			"latest_updates": basetypes.ListType{
-				ElemType: UpdateStateInfo{}.Type(ctx),
+				ElemType: UpdateStateInfo_SdkV2{}.Type(ctx),
 			},
 			"name":             types.StringType,
 			"pipeline_id":      types.StringType,
@@ -4858,10 +4858,10 @@ func (o PipelineTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"cron": basetypes.ListType{
-				ElemType: CronTrigger{}.Type(ctx),
+				ElemType: CronTrigger_SdkV2{}.Type(ctx),
 			},
 			"manual": basetypes.ListType{
-				ElemType: ManualTrigger{}.Type(ctx),
+				ElemType: ManualTrigger_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4978,7 +4978,7 @@ func (o ReportSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"destination_table":   types.StringType,
 			"source_url":          types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.Type(ctx),
+				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5157,7 +5157,7 @@ func (o SchemaSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"source_catalog":      types.StringType,
 			"source_schema":       types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.Type(ctx),
+				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5233,7 +5233,7 @@ func (o Sequencing_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"control_plane_seq_no": types.Int64Type,
 			"data_plane_id": basetypes.ListType{
-				ElemType: DataPlaneId{}.Type(ctx),
+				ElemType: DataPlaneId_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5313,7 +5313,7 @@ func (o SerializedException_SdkV2) Type(ctx context.Context) attr.Type {
 			"class_name": types.StringType,
 			"message":    types.StringType,
 			"stack": basetypes.ListType{
-				ElemType: StackFrame{}.Type(ctx),
+				ElemType: StackFrame_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5713,7 +5713,7 @@ func (o TableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"source_schema":       types.StringType,
 			"source_table":        types.StringType,
 			"table_configuration": basetypes.ListType{
-				ElemType: TableSpecificConfig{}.Type(ctx),
+				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5943,7 +5943,7 @@ func (o UpdateInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"cause":      types.StringType,
 			"cluster_id": types.StringType,
 			"config": basetypes.ListType{
-				ElemType: PipelineSpec{}.Type(ctx),
+				ElemType: PipelineSpec_SdkV2{}.Type(ctx),
 			},
 			"creation_time": types.Int64Type,
 			"full_refresh":  types.BoolType,

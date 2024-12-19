@@ -115,13 +115,13 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"active_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
+				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
 			"app_status": basetypes.ListType{
-				ElemType: ApplicationStatus{}.Type(ctx),
+				ElemType: ApplicationStatus_SdkV2{}.Type(ctx),
 			},
 			"compute_status": basetypes.ListType{
-				ElemType: ComputeStatus{}.Type(ctx),
+				ElemType: ComputeStatus_SdkV2{}.Type(ctx),
 			},
 			"create_time":              types.StringType,
 			"creator":                  types.StringType,
@@ -129,10 +129,10 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"description":              types.StringType,
 			"name":                     types.StringType,
 			"pending_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
+				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
 			"resources": basetypes.ListType{
-				ElemType: AppResource{}.Type(ctx),
+				ElemType: AppResource_SdkV2{}.Type(ctx),
 			},
 			"service_principal_client_id": types.StringType,
 			"service_principal_id":        types.Int64Type,
@@ -380,7 +380,7 @@ func (o AppAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: AppPermission{}.Type(ctx),
+				ElemType: AppPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -486,13 +486,13 @@ func (o AppDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 			"create_time": types.StringType,
 			"creator":     types.StringType,
 			"deployment_artifacts": basetypes.ListType{
-				ElemType: AppDeploymentArtifacts{}.Type(ctx),
+				ElemType: AppDeploymentArtifacts_SdkV2{}.Type(ctx),
 			},
 			"deployment_id":    types.StringType,
 			"mode":             types.StringType,
 			"source_code_path": types.StringType,
 			"status": basetypes.ListType{
-				ElemType: AppDeploymentStatus{}.Type(ctx),
+				ElemType: AppDeploymentStatus_SdkV2{}.Type(ctx),
 			},
 			"update_time": types.StringType,
 		},
@@ -764,7 +764,7 @@ func (o AppPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AppAccessControlResponse{}.Type(ctx),
+				ElemType: AppAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -885,7 +885,7 @@ func (o AppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AppAccessControlRequest{}.Type(ctx),
+				ElemType: AppAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"app_name": types.StringType,
 		},
@@ -977,17 +977,17 @@ func (o AppResource_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"description": types.StringType,
 			"job": basetypes.ListType{
-				ElemType: AppResourceJob{}.Type(ctx),
+				ElemType: AppResourceJob_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"secret": basetypes.ListType{
-				ElemType: AppResourceSecret{}.Type(ctx),
+				ElemType: AppResourceSecret_SdkV2{}.Type(ctx),
 			},
 			"serving_endpoint": basetypes.ListType{
-				ElemType: AppResourceServingEndpoint{}.Type(ctx),
+				ElemType: AppResourceServingEndpoint_SdkV2{}.Type(ctx),
 			},
 			"sql_warehouse": basetypes.ListType{
-				ElemType: AppResourceSqlWarehouse{}.Type(ctx),
+				ElemType: AppResourceSqlWarehouse_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1424,7 +1424,7 @@ func (o CreateAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_deployment": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
+				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
 			"app_name": types.StringType,
 		},
@@ -1497,7 +1497,7 @@ func (o CreateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
+				ElemType: App_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1702,7 +1702,7 @@ func (o GetAppPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: AppPermissionsDescription{}.Type(ctx),
+				ElemType: AppPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1915,7 +1915,7 @@ func (o ListAppDeploymentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app_deployments": basetypes.ListType{
-				ElemType: AppDeployment{}.Type(ctx),
+				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -2038,7 +2038,7 @@ func (o ListAppsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
+				ElemType: App_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -2199,7 +2199,7 @@ func (o UpdateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"app": basetypes.ListType{
-				ElemType: App{}.Type(ctx),
+				ElemType: App_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 		},

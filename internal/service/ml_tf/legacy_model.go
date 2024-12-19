@@ -237,7 +237,7 @@ func (o ApproveTransitionRequestResponse_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activity": basetypes.ListType{
-				ElemType: Activity{}.Type(ctx),
+				ElemType: Activity_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -452,7 +452,7 @@ func (o CreateCommentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment": basetypes.ListType{
-				ElemType: CommentObject{}.Type(ctx),
+				ElemType: CommentObject_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -537,7 +537,7 @@ func (o CreateExperiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"artifact_location": types.StringType,
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ExperimentTag{}.Type(ctx),
+				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -659,7 +659,7 @@ func (o CreateModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"description": types.StringType,
 			"name":        types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelTag{}.Type(ctx),
+				ElemType: ModelTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -730,7 +730,7 @@ func (o CreateModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"registered_model": basetypes.ListType{
-				ElemType: Model{}.Type(ctx),
+				ElemType: Model_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -824,7 +824,7 @@ func (o CreateModelVersionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"run_link":    types.StringType,
 			"source":      types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelVersionTag{}.Type(ctx),
+				ElemType: ModelVersionTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -896,7 +896,7 @@ func (o CreateModelVersionResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_version": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1028,10 +1028,10 @@ func (o CreateRegistryWebhook_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"http_url_spec": basetypes.ListType{
-				ElemType: HttpUrlSpec{}.Type(ctx),
+				ElemType: HttpUrlSpec_SdkV2{}.Type(ctx),
 			},
 			"job_spec": basetypes.ListType{
-				ElemType: JobSpec{}.Type(ctx),
+				ElemType: JobSpec_SdkV2{}.Type(ctx),
 			},
 			"model_name": types.StringType,
 			"status":     types.StringType,
@@ -1170,7 +1170,7 @@ func (o CreateRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"experiment_id": types.StringType,
 			"start_time":    types.Int64Type,
 			"tags": basetypes.ListType{
-				ElemType: RunTag{}.Type(ctx),
+				ElemType: RunTag_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.StringType,
 		},
@@ -1243,7 +1243,7 @@ func (o CreateRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run": basetypes.ListType{
-				ElemType: Run{}.Type(ctx),
+				ElemType: Run_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1377,7 +1377,7 @@ func (o CreateTransitionRequestResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request": basetypes.ListType{
-				ElemType: TransitionRequest{}.Type(ctx),
+				ElemType: TransitionRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1448,7 +1448,7 @@ func (o CreateWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"webhook": basetypes.ListType{
-				ElemType: RegistryWebhook{}.Type(ctx),
+				ElemType: RegistryWebhook_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1595,10 +1595,10 @@ func (o DatasetInput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dataset": basetypes.ListType{
-				ElemType: Dataset{}.Type(ctx),
+				ElemType: Dataset_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.ListType{
-				ElemType: InputTag{}.Type(ctx),
+				ElemType: InputTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2650,7 +2650,7 @@ func (o Experiment_SdkV2) Type(ctx context.Context) attr.Type {
 			"lifecycle_stage":   types.StringType,
 			"name":              types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ExperimentTag{}.Type(ctx),
+				ElemType: ExperimentTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2788,7 +2788,7 @@ func (o ExperimentAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: ExperimentPermission{}.Type(ctx),
+				ElemType: ExperimentPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -2948,7 +2948,7 @@ func (o ExperimentPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: ExperimentAccessControlResponse{}.Type(ctx),
+				ElemType: ExperimentAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -3069,7 +3069,7 @@ func (o ExperimentPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: ExperimentAccessControlRequest{}.Type(ctx),
+				ElemType: ExperimentAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"experiment_id": types.StringType,
 		},
@@ -3324,7 +3324,7 @@ func (o GetExperimentPermissionLevelsResponse_SdkV2) Type(ctx context.Context) a
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: ExperimentPermissionsDescription{}.Type(ctx),
+				ElemType: ExperimentPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3482,7 +3482,7 @@ func (o GetExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"experiment": basetypes.ListType{
-				ElemType: Experiment{}.Type(ctx),
+				ElemType: Experiment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3694,7 +3694,7 @@ func (o GetLatestVersionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_versions": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3770,7 +3770,7 @@ func (o GetMetricHistoryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metrics": basetypes.ListType{
-				ElemType: Metric{}.Type(ctx),
+				ElemType: Metric_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -3885,7 +3885,7 @@ func (o GetModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"registered_model_databricks": basetypes.ListType{
-				ElemType: ModelDatabricks{}.Type(ctx),
+				ElemType: ModelDatabricks_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4092,7 +4092,7 @@ func (o GetModelVersionResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_version": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4207,7 +4207,7 @@ func (o GetRegisteredModelPermissionLevelsResponse_SdkV2) Type(ctx context.Conte
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: RegisteredModelPermissionsDescription{}.Type(ctx),
+				ElemType: RegisteredModelPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4371,7 +4371,7 @@ func (o GetRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run": basetypes.ListType{
-				ElemType: Run{}.Type(ctx),
+				ElemType: Run_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4774,7 +4774,7 @@ func (o ListArtifactsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"files": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 			"root_uri":        types.StringType,
@@ -4909,7 +4909,7 @@ func (o ListExperimentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"experiments": basetypes.ListType{
-				ElemType: Experiment{}.Type(ctx),
+				ElemType: Experiment_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -5033,7 +5033,7 @@ func (o ListModelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"registered_models": basetypes.ListType{
-				ElemType: Model{}.Type(ctx),
+				ElemType: Model_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5109,7 +5109,7 @@ func (o ListRegistryWebhooks_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"webhooks": basetypes.ListType{
-				ElemType: RegistryWebhook{}.Type(ctx),
+				ElemType: RegistryWebhook_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5228,7 +5228,7 @@ func (o ListTransitionRequestsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"requests": basetypes.ListType{
-				ElemType: Activity{}.Type(ctx),
+				ElemType: Activity_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5398,14 +5398,14 @@ func (o LogBatch_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metrics": basetypes.ListType{
-				ElemType: Metric{}.Type(ctx),
+				ElemType: Metric_SdkV2{}.Type(ctx),
 			},
 			"params": basetypes.ListType{
-				ElemType: Param{}.Type(ctx),
+				ElemType: Param_SdkV2{}.Type(ctx),
 			},
 			"run_id": types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: RunTag{}.Type(ctx),
+				ElemType: RunTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5568,7 +5568,7 @@ func (o LogInputs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"datasets": basetypes.ListType{
-				ElemType: DatasetInput{}.Type(ctx),
+				ElemType: DatasetInput_SdkV2{}.Type(ctx),
 			},
 			"run_id": types.StringType,
 		},
@@ -6027,11 +6027,11 @@ func (o Model_SdkV2) Type(ctx context.Context) attr.Type {
 			"description":            types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"latest_versions": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelTag{}.Type(ctx),
+				ElemType: ModelTag_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.StringType,
 		},
@@ -6160,12 +6160,12 @@ func (o ModelDatabricks_SdkV2) Type(ctx context.Context) attr.Type {
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"latest_versions": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 			"name":             types.StringType,
 			"permission_level": types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelTag{}.Type(ctx),
+				ElemType: ModelTag_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.StringType,
 		},
@@ -6359,7 +6359,7 @@ func (o ModelVersion_SdkV2) Type(ctx context.Context) attr.Type {
 			"status":                 types.StringType,
 			"status_message":         types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelVersionTag{}.Type(ctx),
+				ElemType: ModelVersionTag_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.StringType,
 			"version": types.StringType,
@@ -6503,7 +6503,7 @@ func (o ModelVersionDatabricks_SdkV2) Type(ctx context.Context) attr.Type {
 			"status":                 types.StringType,
 			"status_message":         types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ModelVersionTag{}.Type(ctx),
+				ElemType: ModelVersionTag_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.StringType,
 			"version": types.StringType,
@@ -6735,7 +6735,7 @@ func (o RegisteredModelAccessControlResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: RegisteredModelPermission{}.Type(ctx),
+				ElemType: RegisteredModelPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -6895,7 +6895,7 @@ func (o RegisteredModelPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: RegisteredModelAccessControlResponse{}.Type(ctx),
+				ElemType: RegisteredModelAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -7016,7 +7016,7 @@ func (o RegisteredModelPermissionsRequest_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: RegisteredModelAccessControlRequest{}.Type(ctx),
+				ElemType: RegisteredModelAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"registered_model_id": types.StringType,
 		},
@@ -7159,11 +7159,11 @@ func (o RegistryWebhook_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"http_url_spec": basetypes.ListType{
-				ElemType: HttpUrlSpecWithoutSecret{}.Type(ctx),
+				ElemType: HttpUrlSpecWithoutSecret_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"job_spec": basetypes.ListType{
-				ElemType: JobSpecWithoutSecret{}.Type(ctx),
+				ElemType: JobSpecWithoutSecret_SdkV2{}.Type(ctx),
 			},
 			"last_updated_timestamp": types.Int64Type,
 			"model_name":             types.StringType,
@@ -7352,7 +7352,7 @@ func (o RejectTransitionRequestResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"activity": basetypes.ListType{
-				ElemType: Activity{}.Type(ctx),
+				ElemType: Activity_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7469,7 +7469,7 @@ func (o RenameModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"registered_model": basetypes.ListType{
-				ElemType: Model{}.Type(ctx),
+				ElemType: Model_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7800,13 +7800,13 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data": basetypes.ListType{
-				ElemType: RunData{}.Type(ctx),
+				ElemType: RunData_SdkV2{}.Type(ctx),
 			},
 			"info": basetypes.ListType{
-				ElemType: RunInfo{}.Type(ctx),
+				ElemType: RunInfo_SdkV2{}.Type(ctx),
 			},
 			"inputs": basetypes.ListType{
-				ElemType: RunInputs{}.Type(ctx),
+				ElemType: RunInputs_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7938,13 +7938,13 @@ func (o RunData_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metrics": basetypes.ListType{
-				ElemType: Metric{}.Type(ctx),
+				ElemType: Metric_SdkV2{}.Type(ctx),
 			},
 			"params": basetypes.ListType{
-				ElemType: Param{}.Type(ctx),
+				ElemType: Param_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.ListType{
-				ElemType: RunTag{}.Type(ctx),
+				ElemType: RunTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8148,7 +8148,7 @@ func (o RunInputs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dataset_inputs": basetypes.ListType{
-				ElemType: DatasetInput{}.Type(ctx),
+				ElemType: DatasetInput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8363,7 +8363,7 @@ func (o SearchExperimentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"experiments": basetypes.ListType{
-				ElemType: Experiment{}.Type(ctx),
+				ElemType: Experiment_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -8529,7 +8529,7 @@ func (o SearchModelVersionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_versions": basetypes.ListType{
-				ElemType: ModelVersion{}.Type(ctx),
+				ElemType: ModelVersion_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -8695,7 +8695,7 @@ func (o SearchModelsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"registered_models": basetypes.ListType{
-				ElemType: Model{}.Type(ctx),
+				ElemType: Model_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8909,7 +8909,7 @@ func (o SearchRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"runs": basetypes.ListType{
-				ElemType: Run{}.Type(ctx),
+				ElemType: Run_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9445,7 +9445,7 @@ func (o TestRegistryWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"webhook": basetypes.ListType{
-				ElemType: TestRegistryWebhook{}.Type(ctx),
+				ElemType: TestRegistryWebhook_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9681,7 +9681,7 @@ func (o TransitionStageResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_version": basetypes.ListType{
-				ElemType: ModelVersionDatabricks{}.Type(ctx),
+				ElemType: ModelVersionDatabricks_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9799,7 +9799,7 @@ func (o UpdateCommentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"comment": basetypes.ListType{
-				ElemType: CommentObject{}.Type(ctx),
+				ElemType: CommentObject_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10182,11 +10182,11 @@ func (o UpdateRegistryWebhook_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"http_url_spec": basetypes.ListType{
-				ElemType: HttpUrlSpec{}.Type(ctx),
+				ElemType: HttpUrlSpec_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"job_spec": basetypes.ListType{
-				ElemType: JobSpec{}.Type(ctx),
+				ElemType: JobSpec_SdkV2{}.Type(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -10366,7 +10366,7 @@ func (o UpdateRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"run_info": basetypes.ListType{
-				ElemType: RunInfo{}.Type(ctx),
+				ElemType: RunInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}

@@ -150,12 +150,12 @@ func (o CreateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_recipient_global_metastore_id": types.StringType,
 			"expiration_time":                    types.Int64Type,
 			"ip_access_list": basetypes.ListType{
-				ElemType: IpAccessList{}.Type(ctx),
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
 			"name":  types.StringType,
 			"owner": types.StringType,
 			"properties_kvpairs": basetypes.ListType{
-				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
 			},
 			"sharing_code": types.StringType,
 		},
@@ -640,7 +640,7 @@ func (o GetRecipientSharePermissionsResponse_SdkV2) Type(ctx context.Context) at
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"permissions_out": basetypes.ListType{
-				ElemType: ShareToPrivilegeAssignment{}.Type(ctx),
+				ElemType: ShareToPrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -837,7 +837,7 @@ func (o ListProviderSharesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"shares": basetypes.ListType{
-				ElemType: ProviderShare{}.Type(ctx),
+				ElemType: ProviderShare_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -975,7 +975,7 @@ func (o ListProvidersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"providers": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1113,7 +1113,7 @@ func (o ListRecipientsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"recipients": basetypes.ListType{
-				ElemType: RecipientInfo{}.Type(ctx),
+				ElemType: RecipientInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1250,7 +1250,7 @@ func (o ListSharesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"shares": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1322,7 +1322,7 @@ func (o Partition_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": basetypes.ListType{
-				ElemType: PartitionValue{}.Type(ctx),
+				ElemType: PartitionValue_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1394,7 +1394,7 @@ func (o PartitionSpecificationPartition_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": basetypes.ListType{
-				ElemType: PartitionValue{}.Type(ctx),
+				ElemType: PartitionValue_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1655,7 +1655,7 @@ func (o ProviderInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":                              types.StringType,
 			"owner":                             types.StringType,
 			"recipient_profile": basetypes.ListType{
-				ElemType: RecipientProfile{}.Type(ctx),
+				ElemType: RecipientProfile_SdkV2{}.Type(ctx),
 			},
 			"recipient_profile_str": types.StringType,
 			"region":                types.StringType,
@@ -1843,18 +1843,18 @@ func (o RecipientInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
 			"ip_access_list": basetypes.ListType{
-				ElemType: IpAccessList{}.Type(ctx),
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
 			"metastore_id": types.StringType,
 			"name":         types.StringType,
 			"owner":        types.StringType,
 			"properties_kvpairs": basetypes.ListType{
-				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
 			},
 			"region":       types.StringType,
 			"sharing_code": types.StringType,
 			"tokens": basetypes.ListType{
-				ElemType: RecipientTokenInfo{}.Type(ctx),
+				ElemType: RecipientTokenInfo_SdkV2{}.Type(ctx),
 			},
 			"updated_at": types.Int64Type,
 			"updated_by": types.StringType,
@@ -2348,7 +2348,7 @@ func (o ShareInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_by": types.StringType,
 			"name":       types.StringType,
 			"object": basetypes.ListType{
-				ElemType: SharedDataObject{}.Type(ctx),
+				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
 			},
 			"owner":            types.StringType,
 			"storage_location": types.StringType,
@@ -2487,7 +2487,7 @@ func (o ShareToPrivilegeAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"privilege_assignments": basetypes.ListType{
-				ElemType: PrivilegeAssignment{}.Type(ctx),
+				ElemType: PrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 			"share_name": types.StringType,
 		},
@@ -2659,7 +2659,7 @@ func (o SharedDataObject_SdkV2) Type(ctx context.Context) attr.Type {
 			"effective_history_data_sharing_status": types.StringType,
 			"name":                                  types.StringType,
 			"partition": basetypes.ListType{
-				ElemType: Partition{}.Type(ctx),
+				ElemType: Partition_SdkV2{}.Type(ctx),
 			},
 			"shared_as":               types.StringType,
 			"effective_shared_as":     types.StringType,
@@ -2741,7 +2741,7 @@ func (o SharedDataObjectUpdate_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"action": types.StringType,
 			"data_object": basetypes.ListType{
-				ElemType: SharedDataObject{}.Type(ctx),
+				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2932,13 +2932,13 @@ func (o UpdateRecipient_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":         types.StringType,
 			"expiration_time": types.Int64Type,
 			"ip_access_list": basetypes.ListType{
-				ElemType: IpAccessList{}.Type(ctx),
+				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
 			"name":     types.StringType,
 			"new_name": types.StringType,
 			"owner":    types.StringType,
 			"properties_kvpairs": basetypes.ListType{
-				ElemType: SecurablePropertiesKvPairs{}.Type(ctx),
+				ElemType: SecurablePropertiesKvPairs_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3092,7 +3092,7 @@ func (o UpdateShare_SdkV2) Type(ctx context.Context) attr.Type {
 			"owner":        types.StringType,
 			"storage_root": types.StringType,
 			"updates": basetypes.ListType{
-				ElemType: SharedDataObjectUpdate{}.Type(ctx),
+				ElemType: SharedDataObjectUpdate_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3181,7 +3181,7 @@ func (o UpdateSharePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"changes": basetypes.ListType{
-				ElemType: catalog_tf.PermissionsChange{}.Type(ctx),
+				ElemType: catalog_tf.PermissionsChange_SdkV2{}.Type(ctx),
 			},
 			"max_results": types.Int64Type,
 			"name":        types.StringType,

@@ -1134,7 +1134,7 @@ func (o ListDirectoryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"contents": basetypes.ListType{
-				ElemType: DirectoryEntry{}.Type(ctx),
+				ElemType: DirectoryEntry_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1208,7 +1208,7 @@ func (o ListStatusResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"files": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}

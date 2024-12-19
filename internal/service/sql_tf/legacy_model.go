@@ -166,7 +166,7 @@ func (o Alert_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition": basetypes.ListType{
-				ElemType: AlertCondition{}.Type(ctx),
+				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
 			"create_time":          types.StringType,
 			"custom_body":          types.StringType,
@@ -265,10 +265,10 @@ func (o AlertCondition_SdkV2) Type(ctx context.Context) attr.Type {
 			"empty_result_state": types.StringType,
 			"op":                 types.StringType,
 			"operand": basetypes.ListType{
-				ElemType: AlertConditionOperand{}.Type(ctx),
+				ElemType: AlertConditionOperand_SdkV2{}.Type(ctx),
 			},
 			"threshold": basetypes.ListType{
-				ElemType: AlertConditionThreshold{}.Type(ctx),
+				ElemType: AlertConditionThreshold_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -365,7 +365,7 @@ func (o AlertConditionOperand_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"column": basetypes.ListType{
-				ElemType: AlertOperandColumn{}.Type(ctx),
+				ElemType: AlertOperandColumn_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -436,7 +436,7 @@ func (o AlertConditionThreshold_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"value": basetypes.ListType{
-				ElemType: AlertOperandValue{}.Type(ctx),
+				ElemType: AlertOperandValue_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -733,7 +733,7 @@ func (o AlertQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			"is_safe":        types.BoolType,
 			"name":           types.StringType,
 			"options": basetypes.ListType{
-				ElemType: QueryOptions{}.Type(ctx),
+				ElemType: QueryOptions_SdkV2{}.Type(ctx),
 			},
 			"query": types.StringType,
 			"tags": basetypes.ListType{
@@ -1153,7 +1153,7 @@ func (o CreateAlert_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 			"options": basetypes.ListType{
-				ElemType: AlertOptions{}.Type(ctx),
+				ElemType: AlertOptions_SdkV2{}.Type(ctx),
 			},
 			"parent":   types.StringType,
 			"query_id": types.StringType,
@@ -1227,7 +1227,7 @@ func (o CreateAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert": basetypes.ListType{
-				ElemType: CreateAlertRequestAlert{}.Type(ctx),
+				ElemType: CreateAlertRequestAlert_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1329,7 +1329,7 @@ func (o CreateAlertRequestAlert_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition": basetypes.ListType{
-				ElemType: AlertCondition{}.Type(ctx),
+				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
@@ -1407,7 +1407,7 @@ func (o CreateQueryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query": basetypes.ListType{
-				ElemType: CreateQueryRequestQuery{}.Type(ctx),
+				ElemType: CreateQueryRequestQuery_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1516,7 +1516,7 @@ func (o CreateQueryRequestQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			"description":      types.StringType,
 			"display_name":     types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: QueryParameter{}.Type(ctx),
+				ElemType: QueryParameter_SdkV2{}.Type(ctx),
 			},
 			"parent_path": types.StringType,
 			"query_text":  types.StringType,
@@ -1684,7 +1684,7 @@ func (o CreateVisualizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"visualization": basetypes.ListType{
-				ElemType: CreateVisualizationRequestVisualization{}.Type(ctx),
+				ElemType: CreateVisualizationRequestVisualization_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1891,7 +1891,7 @@ func (o CreateWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_stop_mins": types.Int64Type,
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
@@ -1903,7 +1903,7 @@ func (o CreateWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: EndpointTags{}.Type(ctx),
+				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
 			"warehouse_type": types.StringType,
 		},
@@ -2063,7 +2063,7 @@ func (o CreateWidget_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard_id": types.StringType,
 			"id":           types.StringType,
 			"options": basetypes.ListType{
-				ElemType: WidgetOptions{}.Type(ctx),
+				ElemType: WidgetOptions_SdkV2{}.Type(ctx),
 			},
 			"text":             types.StringType,
 			"visualization_id": types.StringType,
@@ -2209,7 +2209,7 @@ func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 			"is_favorite":               types.BoolType,
 			"name":                      types.StringType,
 			"options": basetypes.ListType{
-				ElemType: DashboardOptions{}.Type(ctx),
+				ElemType: DashboardOptions_SdkV2{}.Type(ctx),
 			},
 			"parent":          types.StringType,
 			"permission_tier": types.StringType,
@@ -2219,11 +2219,11 @@ func (o Dashboard_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"updated_at": types.StringType,
 			"user": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
+				ElemType: User_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.Int64Type,
 			"widgets": basetypes.ListType{
-				ElemType: Widget{}.Type(ctx),
+				ElemType: Widget_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2735,7 +2735,7 @@ func (o DateRangeValue_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"date_range_value": basetypes.ListType{
-				ElemType: DateRange{}.Type(ctx),
+				ElemType: DateRange_SdkV2{}.Type(ctx),
 			},
 			"dynamic_date_range_value": types.StringType,
 			"precision":                types.StringType,
@@ -3245,7 +3245,7 @@ func (o EditAlert_SdkV2) Type(ctx context.Context) attr.Type {
 			"alert_id": types.StringType,
 			"name":     types.StringType,
 			"options": basetypes.ListType{
-				ElemType: AlertOptions{}.Type(ctx),
+				ElemType: AlertOptions_SdkV2{}.Type(ctx),
 			},
 			"query_id": types.StringType,
 			"rearm":    types.Int64Type,
@@ -3393,7 +3393,7 @@ func (o EditWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_stop_mins": types.Int64Type,
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
@@ -3406,7 +3406,7 @@ func (o EditWarehouseRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":                      types.StringType,
 			"spot_instance_policy":      types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: EndpointTags{}.Type(ctx),
+				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
 			"warehouse_type": types.StringType,
 		},
@@ -3639,7 +3639,7 @@ func (o EndpointHealth_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"details": types.StringType,
 			"failure_reason": basetypes.ListType{
-				ElemType: TerminationReason{}.Type(ctx),
+				ElemType: TerminationReason_SdkV2{}.Type(ctx),
 			},
 			"message": types.StringType,
 			"status":  types.StringType,
@@ -3809,14 +3809,14 @@ func (o EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_stop_mins": types.Int64Type,
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
 			"health": basetypes.ListType{
-				ElemType: EndpointHealth{}.Type(ctx),
+				ElemType: EndpointHealth_SdkV2{}.Type(ctx),
 			},
 			"id":                   types.StringType,
 			"instance_profile_arn": types.StringType,
@@ -3827,12 +3827,12 @@ func (o EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"num_active_sessions":  types.Int64Type,
 			"num_clusters":         types.Int64Type,
 			"odbc_params": basetypes.ListType{
-				ElemType: OdbcParams{}.Type(ctx),
+				ElemType: OdbcParams_SdkV2{}.Type(ctx),
 			},
 			"spot_instance_policy": types.StringType,
 			"state":                types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: EndpointTags{}.Type(ctx),
+				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
 			"warehouse_type": types.StringType,
 		},
@@ -4027,7 +4027,7 @@ func (o EndpointTags_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"custom_tags": basetypes.ListType{
-				ElemType: EndpointTagPair{}.Type(ctx),
+				ElemType: EndpointTagPair_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4107,7 +4107,7 @@ func (o EnumValue_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"enum_options": types.StringType,
 			"multi_values_options": basetypes.ListType{
-				ElemType: MultiValuesOptions{}.Type(ctx),
+				ElemType: MultiValuesOptions_SdkV2{}.Type(ctx),
 			},
 			"values": basetypes.ListType{
 				ElemType: types.StringType,
@@ -4344,7 +4344,7 @@ func (o ExecuteStatementRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"format":          types.StringType,
 			"on_wait_timeout": types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: StatementParameterListItem{}.Type(ctx),
+				ElemType: StatementParameterListItem_SdkV2{}.Type(ctx),
 			},
 			"row_limit":    types.Int64Type,
 			"schema":       types.StringType,
@@ -4799,7 +4799,7 @@ func (o GetResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControl{}.Type(ctx),
+				ElemType: AccessControl_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -5007,7 +5007,7 @@ func (o GetWarehousePermissionLevelsResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: WarehousePermissionsDescription{}.Type(ctx),
+				ElemType: WarehousePermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5260,14 +5260,14 @@ func (o GetWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"auto_stop_mins": types.Int64Type,
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"cluster_size":              types.StringType,
 			"creator_name":              types.StringType,
 			"enable_photon":             types.BoolType,
 			"enable_serverless_compute": types.BoolType,
 			"health": basetypes.ListType{
-				ElemType: EndpointHealth{}.Type(ctx),
+				ElemType: EndpointHealth_SdkV2{}.Type(ctx),
 			},
 			"id":                   types.StringType,
 			"instance_profile_arn": types.StringType,
@@ -5278,12 +5278,12 @@ func (o GetWarehouseResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"num_active_sessions":  types.Int64Type,
 			"num_clusters":         types.Int64Type,
 			"odbc_params": basetypes.ListType{
-				ElemType: OdbcParams{}.Type(ctx),
+				ElemType: OdbcParams_SdkV2{}.Type(ctx),
 			},
 			"spot_instance_policy": types.StringType,
 			"state":                types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: EndpointTags{}.Type(ctx),
+				ElemType: EndpointTags_SdkV2{}.Type(ctx),
 			},
 			"warehouse_type": types.StringType,
 		},
@@ -5470,25 +5470,25 @@ func (o GetWorkspaceWarehouseConfigResponse_SdkV2) Type(ctx context.Context) att
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"config_param": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 			"data_access_config": basetypes.ListType{
-				ElemType: EndpointConfPair{}.Type(ctx),
+				ElemType: EndpointConfPair_SdkV2{}.Type(ctx),
 			},
 			"enabled_warehouse_types": basetypes.ListType{
-				ElemType: WarehouseTypePair{}.Type(ctx),
+				ElemType: WarehouseTypePair_SdkV2{}.Type(ctx),
 			},
 			"global_param": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 			"google_service_account": types.StringType,
 			"instance_profile_arn":   types.StringType,
 			"security_policy":        types.StringType,
 			"sql_configuration_parameters": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5730,17 +5730,17 @@ func (o LegacyAlert_SdkV2) Type(ctx context.Context) attr.Type {
 			"last_triggered_at": types.StringType,
 			"name":              types.StringType,
 			"options": basetypes.ListType{
-				ElemType: AlertOptions{}.Type(ctx),
+				ElemType: AlertOptions_SdkV2{}.Type(ctx),
 			},
 			"parent": types.StringType,
 			"query": basetypes.ListType{
-				ElemType: AlertQuery{}.Type(ctx),
+				ElemType: AlertQuery_SdkV2{}.Type(ctx),
 			},
 			"rearm":      types.Int64Type,
 			"state":      types.StringType,
 			"updated_at": types.StringType,
 			"user": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
+				ElemType: User_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5966,13 +5966,13 @@ func (o LegacyQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			"is_favorite":    types.BoolType,
 			"is_safe":        types.BoolType,
 			"last_modified_by": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
+				ElemType: User_SdkV2{}.Type(ctx),
 			},
 			"last_modified_by_id":  types.Int64Type,
 			"latest_query_data_id": types.StringType,
 			"name":                 types.StringType,
 			"options": basetypes.ListType{
-				ElemType: QueryOptions{}.Type(ctx),
+				ElemType: QueryOptions_SdkV2{}.Type(ctx),
 			},
 			"parent":          types.StringType,
 			"permission_tier": types.StringType,
@@ -5984,11 +5984,11 @@ func (o LegacyQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"updated_at": types.StringType,
 			"user": basetypes.ListType{
-				ElemType: User{}.Type(ctx),
+				ElemType: User_SdkV2{}.Type(ctx),
 			},
 			"user_id": types.Int64Type,
 			"visualizations": basetypes.ListType{
-				ElemType: LegacyVisualization{}.Type(ctx),
+				ElemType: LegacyVisualization_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6198,7 +6198,7 @@ func (o LegacyVisualization_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":        types.StringType,
 			"options":     types.ObjectType{},
 			"query": basetypes.ListType{
-				ElemType: LegacyQuery{}.Type(ctx),
+				ElemType: LegacyQuery_SdkV2{}.Type(ctx),
 			},
 			"type":       types.StringType,
 			"updated_at": types.StringType,
@@ -6321,7 +6321,7 @@ func (o ListAlertsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
-				ElemType: ListAlertsResponseAlert{}.Type(ctx),
+				ElemType: ListAlertsResponseAlert_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6445,7 +6445,7 @@ func (o ListAlertsResponseAlert_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition": basetypes.ListType{
-				ElemType: AlertCondition{}.Type(ctx),
+				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
 			"create_time":          types.StringType,
 			"custom_body":          types.StringType,
@@ -6707,7 +6707,7 @@ func (o ListQueriesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"has_next_page":   types.BoolType,
 			"next_page_token": types.StringType,
 			"res": basetypes.ListType{
-				ElemType: QueryInfo{}.Type(ctx),
+				ElemType: QueryInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6794,7 +6794,7 @@ func (o ListQueryHistoryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter_by": basetypes.ListType{
-				ElemType: QueryFilter{}.Type(ctx),
+				ElemType: QueryFilter_SdkV2{}.Type(ctx),
 			},
 			"include_metrics": types.BoolType,
 			"max_results":     types.Int64Type,
@@ -6872,7 +6872,7 @@ func (o ListQueryObjectsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
-				ElemType: ListQueryObjectsResponseQuery{}.Type(ctx),
+				ElemType: ListQueryObjectsResponseQuery_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7001,7 +7001,7 @@ func (o ListQueryObjectsResponseQuery_SdkV2) Type(ctx context.Context) attr.Type
 			"lifecycle_state":         types.StringType,
 			"owner_user_name":         types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: QueryParameter{}.Type(ctx),
+				ElemType: QueryParameter_SdkV2{}.Type(ctx),
 			},
 			"query_text":  types.StringType,
 			"run_as_mode": types.StringType,
@@ -7119,7 +7119,7 @@ func (o ListResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"page":      types.Int64Type,
 			"page_size": types.Int64Type,
 			"results": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
+				ElemType: Dashboard_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7244,7 +7244,7 @@ func (o ListVisualizationsForQueryResponse_SdkV2) Type(ctx context.Context) attr
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
-				ElemType: Visualization{}.Type(ctx),
+				ElemType: Visualization_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7360,7 +7360,7 @@ func (o ListWarehousesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"warehouses": basetypes.ListType{
-				ElemType: EndpointInfo{}.Type(ctx),
+				ElemType: EndpointInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7600,7 +7600,7 @@ func (o Parameter_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"enumOptions": types.StringType,
 			"multiValuesOptions": basetypes.ListType{
-				ElemType: MultiValuesOptions{}.Type(ctx),
+				ElemType: MultiValuesOptions_SdkV2{}.Type(ctx),
 			},
 			"name":    types.StringType,
 			"queryId": types.StringType,
@@ -7737,7 +7737,7 @@ func (o Query_SdkV2) Type(ctx context.Context) attr.Type {
 			"lifecycle_state":         types.StringType,
 			"owner_user_name":         types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: QueryParameter{}.Type(ctx),
+				ElemType: QueryParameter_SdkV2{}.Type(ctx),
 			},
 			"parent_path": types.StringType,
 			"query_text":  types.StringType,
@@ -7851,7 +7851,7 @@ func (o QueryBackedValue_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"multi_values_options": basetypes.ListType{
-				ElemType: MultiValuesOptions{}.Type(ctx),
+				ElemType: MultiValuesOptions_SdkV2{}.Type(ctx),
 			},
 			"query_id": types.StringType,
 			"values": basetypes.ListType{
@@ -8079,7 +8079,7 @@ func (o QueryFilter_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query_start_time_range": basetypes.ListType{
-				ElemType: TimeRange{}.Type(ctx),
+				ElemType: TimeRange_SdkV2{}.Type(ctx),
 			},
 			"statement_ids": basetypes.ListType{
 				ElemType: types.StringType,
@@ -8336,7 +8336,7 @@ func (o QueryInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"channel_used": basetypes.ListType{
-				ElemType: ChannelInfo{}.Type(ctx),
+				ElemType: ChannelInfo_SdkV2{}.Type(ctx),
 			},
 			"duration":              types.Int64Type,
 			"endpoint_id":           types.StringType,
@@ -8347,7 +8347,7 @@ func (o QueryInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"is_final":              types.BoolType,
 			"lookup_key":            types.StringType,
 			"metrics": basetypes.ListType{
-				ElemType: QueryMetrics{}.Type(ctx),
+				ElemType: QueryMetrics_SdkV2{}.Type(ctx),
 			},
 			"plans_state":         types.StringType,
 			"query_end_time_ms":   types.Int64Type,
@@ -8469,7 +8469,7 @@ func (o QueryList_SdkV2) Type(ctx context.Context) attr.Type {
 			"page":      types.Int64Type,
 			"page_size": types.Int64Type,
 			"results": basetypes.ListType{
-				ElemType: LegacyQuery{}.Type(ctx),
+				ElemType: LegacyQuery_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8694,7 +8694,7 @@ func (o QueryOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			"catalog":           types.StringType,
 			"moved_to_trash_at": types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: Parameter{}.Type(ctx),
+				ElemType: Parameter_SdkV2{}.Type(ctx),
 			},
 			"schema": types.StringType,
 		},
@@ -8796,23 +8796,23 @@ func (o QueryParameter_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"date_range_value": basetypes.ListType{
-				ElemType: DateRangeValue{}.Type(ctx),
+				ElemType: DateRangeValue_SdkV2{}.Type(ctx),
 			},
 			"date_value": basetypes.ListType{
-				ElemType: DateValue{}.Type(ctx),
+				ElemType: DateValue_SdkV2{}.Type(ctx),
 			},
 			"enum_value": basetypes.ListType{
-				ElemType: EnumValue{}.Type(ctx),
+				ElemType: EnumValue_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"numeric_value": basetypes.ListType{
-				ElemType: NumericValue{}.Type(ctx),
+				ElemType: NumericValue_SdkV2{}.Type(ctx),
 			},
 			"query_backed_value": basetypes.ListType{
-				ElemType: QueryBackedValue{}.Type(ctx),
+				ElemType: QueryBackedValue_SdkV2{}.Type(ctx),
 			},
 			"text_value": basetypes.ListType{
-				ElemType: TextValue{}.Type(ctx),
+				ElemType: TextValue_SdkV2{}.Type(ctx),
 			},
 			"title": types.StringType,
 		},
@@ -9128,10 +9128,10 @@ func (o RepeatedEndpointConfPairs_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"config_pair": basetypes.ListType{
-				ElemType: EndpointConfPair{}.Type(ctx),
+				ElemType: EndpointConfPair_SdkV2{}.Type(ctx),
 			},
 			"configuration_pairs": basetypes.ListType{
-				ElemType: EndpointConfPair{}.Type(ctx),
+				ElemType: EndpointConfPair_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9386,7 +9386,7 @@ func (o ResultData_SdkV2) Type(ctx context.Context) attr.Type {
 				},
 			},
 			"external_links": basetypes.ListType{
-				ElemType: ExternalLink{}.Type(ctx),
+				ElemType: ExternalLink_SdkV2{}.Type(ctx),
 			},
 			"next_chunk_index":         types.Int64Type,
 			"next_chunk_internal_link": types.StringType,
@@ -9510,11 +9510,11 @@ func (o ResultManifest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"chunks": basetypes.ListType{
-				ElemType: BaseChunkInfo{}.Type(ctx),
+				ElemType: BaseChunkInfo_SdkV2{}.Type(ctx),
 			},
 			"format": types.StringType,
 			"schema": basetypes.ListType{
-				ElemType: ResultSchema{}.Type(ctx),
+				ElemType: ResultSchema_SdkV2{}.Type(ctx),
 			},
 			"total_byte_count":  types.Int64Type,
 			"total_chunk_count": types.Int64Type,
@@ -9620,7 +9620,7 @@ func (o ResultSchema_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"column_count": types.Int64Type,
 			"columns": basetypes.ListType{
-				ElemType: ColumnInfo{}.Type(ctx),
+				ElemType: ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9744,7 +9744,7 @@ func (o SetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControl{}.Type(ctx),
+				ElemType: AccessControl_SdkV2{}.Type(ctx),
 			},
 			"objectId":   types.StringType,
 			"objectType": types.StringType,
@@ -9823,7 +9823,7 @@ func (o SetResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: AccessControl{}.Type(ctx),
+				ElemType: AccessControl_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -9933,25 +9933,25 @@ func (o SetWorkspaceWarehouseConfigRequest_SdkV2) Type(ctx context.Context) attr
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"channel": basetypes.ListType{
-				ElemType: Channel{}.Type(ctx),
+				ElemType: Channel_SdkV2{}.Type(ctx),
 			},
 			"config_param": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 			"data_access_config": basetypes.ListType{
-				ElemType: EndpointConfPair{}.Type(ctx),
+				ElemType: EndpointConfPair_SdkV2{}.Type(ctx),
 			},
 			"enabled_warehouse_types": basetypes.ListType{
-				ElemType: WarehouseTypePair{}.Type(ctx),
+				ElemType: WarehouseTypePair_SdkV2{}.Type(ctx),
 			},
 			"global_param": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 			"google_service_account": types.StringType,
 			"instance_profile_arn":   types.StringType,
 			"security_policy":        types.StringType,
 			"sql_configuration_parameters": basetypes.ListType{
-				ElemType: RepeatedEndpointConfPairs{}.Type(ctx),
+				ElemType: RepeatedEndpointConfPairs_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10338,14 +10338,14 @@ func (o StatementResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"manifest": basetypes.ListType{
-				ElemType: ResultManifest{}.Type(ctx),
+				ElemType: ResultManifest_SdkV2{}.Type(ctx),
 			},
 			"result": basetypes.ListType{
-				ElemType: ResultData{}.Type(ctx),
+				ElemType: ResultData_SdkV2{}.Type(ctx),
 			},
 			"statement_id": types.StringType,
 			"status": basetypes.ListType{
-				ElemType: StatementStatus{}.Type(ctx),
+				ElemType: StatementStatus_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10479,7 +10479,7 @@ func (o StatementStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error": basetypes.ListType{
-				ElemType: ServiceError{}.Type(ctx),
+				ElemType: ServiceError_SdkV2{}.Type(ctx),
 			},
 			"state": types.StringType,
 		},
@@ -10890,7 +10890,7 @@ func (o TransferOwnershipRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"new_owner": types.StringType,
 			"objectId": basetypes.ListType{
-				ElemType: TransferOwnershipObjectId{}.Type(ctx),
+				ElemType: TransferOwnershipObjectId_SdkV2{}.Type(ctx),
 			},
 			"objectType": types.StringType,
 		},
@@ -11055,7 +11055,7 @@ func (o UpdateAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert": basetypes.ListType{
-				ElemType: UpdateAlertRequestAlert{}.Type(ctx),
+				ElemType: UpdateAlertRequestAlert_SdkV2{}.Type(ctx),
 			},
 			"id":          types.StringType,
 			"update_mask": types.StringType,
@@ -11160,7 +11160,7 @@ func (o UpdateAlertRequestAlert_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition": basetypes.ListType{
-				ElemType: AlertCondition{}.Type(ctx),
+				ElemType: AlertCondition_SdkV2{}.Type(ctx),
 			},
 			"custom_body":          types.StringType,
 			"custom_subject":       types.StringType,
@@ -11248,7 +11248,7 @@ func (o UpdateQueryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"query": basetypes.ListType{
-				ElemType: UpdateQueryRequestQuery{}.Type(ctx),
+				ElemType: UpdateQueryRequestQuery_SdkV2{}.Type(ctx),
 			},
 			"update_mask": types.StringType,
 		},
@@ -11359,7 +11359,7 @@ func (o UpdateQueryRequestQuery_SdkV2) Type(ctx context.Context) attr.Type {
 			"display_name":     types.StringType,
 			"owner_user_name":  types.StringType,
 			"parameters": basetypes.ListType{
-				ElemType: QueryParameter{}.Type(ctx),
+				ElemType: QueryParameter_SdkV2{}.Type(ctx),
 			},
 			"query_text":  types.StringType,
 			"run_as_mode": types.StringType,
@@ -11510,7 +11510,7 @@ func (o UpdateVisualizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"id":          types.StringType,
 			"update_mask": types.StringType,
 			"visualization": basetypes.ListType{
-				ElemType: UpdateVisualizationRequestVisualization{}.Type(ctx),
+				ElemType: UpdateVisualizationRequestVisualization_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11829,7 +11829,7 @@ func (o WarehouseAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: WarehousePermission{}.Type(ctx),
+				ElemType: WarehousePermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -11989,7 +11989,7 @@ func (o WarehousePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: WarehouseAccessControlResponse{}.Type(ctx),
+				ElemType: WarehouseAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -12110,7 +12110,7 @@ func (o WarehousePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: WarehouseAccessControlRequest{}.Type(ctx),
+				ElemType: WarehouseAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
@@ -12245,10 +12245,10 @@ func (o Widget_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"options": basetypes.ListType{
-				ElemType: WidgetOptions{}.Type(ctx),
+				ElemType: WidgetOptions_SdkV2{}.Type(ctx),
 			},
 			"visualization": basetypes.ListType{
-				ElemType: LegacyVisualization{}.Type(ctx),
+				ElemType: LegacyVisualization_SdkV2{}.Type(ctx),
 			},
 			"width": types.Int64Type,
 		},
@@ -12372,7 +12372,7 @@ func (o WidgetOptions_SdkV2) Type(ctx context.Context) attr.Type {
 			"isHidden":          types.BoolType,
 			"parameterMappings": types.ObjectType{},
 			"position": basetypes.ListType{
-				ElemType: WidgetPosition{}.Type(ctx),
+				ElemType: WidgetPosition_SdkV2{}.Type(ctx),
 			},
 			"title":      types.StringType,
 			"updated_at": types.StringType,

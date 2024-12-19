@@ -173,10 +173,10 @@ func (o CreateVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"delta_sync_index_spec": basetypes.ListType{
-				ElemType: DeltaSyncVectorIndexSpecRequest{}.Type(ctx),
+				ElemType: DeltaSyncVectorIndexSpecRequest_SdkV2{}.Type(ctx),
 			},
 			"direct_access_index_spec": basetypes.ListType{
-				ElemType: DirectAccessVectorIndexSpec{}.Type(ctx),
+				ElemType: DirectAccessVectorIndexSpec_SdkV2{}.Type(ctx),
 			},
 			"endpoint_name": types.StringType,
 			"index_type":    types.StringType,
@@ -277,7 +277,7 @@ func (o CreateVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"vector_index": basetypes.ListType{
-				ElemType: VectorIndex{}.Type(ctx),
+				ElemType: VectorIndex_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -508,7 +508,7 @@ func (o DeleteDataVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"result": basetypes.ListType{
-				ElemType: DeleteDataResult{}.Type(ctx),
+				ElemType: DeleteDataResult_SdkV2{}.Type(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -772,10 +772,10 @@ func (o DeltaSyncVectorIndexSpecRequest_SdkV2) Type(ctx context.Context) attr.Ty
 				ElemType: types.StringType,
 			},
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.Type(ctx),
+				ElemType: EmbeddingSourceColumn_SdkV2{}.Type(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.Type(ctx),
+				ElemType: EmbeddingVectorColumn_SdkV2{}.Type(ctx),
 			},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_type":             types.StringType,
@@ -926,10 +926,10 @@ func (o DeltaSyncVectorIndexSpecResponse_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.Type(ctx),
+				ElemType: EmbeddingSourceColumn_SdkV2{}.Type(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.Type(ctx),
+				ElemType: EmbeddingVectorColumn_SdkV2{}.Type(ctx),
 			},
 			"embedding_writeback_table": types.StringType,
 			"pipeline_id":               types.StringType,
@@ -1043,10 +1043,10 @@ func (o DirectAccessVectorIndexSpec_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"embedding_source_columns": basetypes.ListType{
-				ElemType: EmbeddingSourceColumn{}.Type(ctx),
+				ElemType: EmbeddingSourceColumn_SdkV2{}.Type(ctx),
 			},
 			"embedding_vector_columns": basetypes.ListType{
-				ElemType: EmbeddingVectorColumn{}.Type(ctx),
+				ElemType: EmbeddingVectorColumn_SdkV2{}.Type(ctx),
 			},
 			"schema_json": types.StringType,
 		},
@@ -1263,7 +1263,7 @@ func (o EndpointInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"creation_timestamp": types.Int64Type,
 			"creator":            types.StringType,
 			"endpoint_status": basetypes.ListType{
-				ElemType: EndpointStatus{}.Type(ctx),
+				ElemType: EndpointStatus_SdkV2{}.Type(ctx),
 			},
 			"endpoint_type":          types.StringType,
 			"id":                     types.StringType,
@@ -1478,7 +1478,7 @@ func (o ListEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoints": basetypes.ListType{
-				ElemType: EndpointInfo{}.Type(ctx),
+				ElemType: EndpointInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1640,7 +1640,7 @@ func (o ListValue_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"values": basetypes.ListType{
-				ElemType: Value{}.Type(ctx),
+				ElemType: Value_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1717,7 +1717,7 @@ func (o ListVectorIndexesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"vector_indexes": basetypes.ListType{
-				ElemType: MiniVectorIndex{}.Type(ctx),
+				ElemType: MiniVectorIndex_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1794,7 +1794,7 @@ func (o MapStringValueEntry_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"key": types.StringType,
 			"value": basetypes.ListType{
-				ElemType: Value{}.Type(ctx),
+				ElemType: Value_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2126,11 +2126,11 @@ func (o QueryVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"manifest": basetypes.ListType{
-				ElemType: ResultManifest{}.Type(ctx),
+				ElemType: ResultManifest_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 			"result": basetypes.ListType{
-				ElemType: ResultData{}.Type(ctx),
+				ElemType: ResultData_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2312,7 +2312,7 @@ func (o ResultManifest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"column_count": types.Int64Type,
 			"columns": basetypes.ListType{
-				ElemType: ColumnInfo{}.Type(ctx),
+				ElemType: ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2439,7 +2439,7 @@ func (o ScanVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data": basetypes.ListType{
-				ElemType: Struct{}.Type(ctx),
+				ElemType: Struct_SdkV2{}.Type(ctx),
 			},
 			"last_primary_key": types.StringType,
 		},
@@ -2512,7 +2512,7 @@ func (o Struct_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"fields": basetypes.ListType{
-				ElemType: MapStringValueEntry{}.Type(ctx),
+				ElemType: MapStringValueEntry_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2792,7 +2792,7 @@ func (o UpsertDataVectorIndexResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"result": basetypes.ListType{
-				ElemType: UpsertDataResult{}.Type(ctx),
+				ElemType: UpsertDataResult_SdkV2{}.Type(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -2881,13 +2881,13 @@ func (o Value_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"bool_value": types.BoolType,
 			"list_value": basetypes.ListType{
-				ElemType: ListValue{}.Type(ctx),
+				ElemType: ListValue_SdkV2{}.Type(ctx),
 			},
 			"null_value":   types.StringType,
 			"number_value": types.Float64Type,
 			"string_value": types.StringType,
 			"struct_value": basetypes.ListType{
-				ElemType: Struct{}.Type(ctx),
+				ElemType: Struct_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3015,17 +3015,17 @@ func (o VectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"creator": types.StringType,
 			"delta_sync_index_spec": basetypes.ListType{
-				ElemType: DeltaSyncVectorIndexSpecResponse{}.Type(ctx),
+				ElemType: DeltaSyncVectorIndexSpecResponse_SdkV2{}.Type(ctx),
 			},
 			"direct_access_index_spec": basetypes.ListType{
-				ElemType: DirectAccessVectorIndexSpec{}.Type(ctx),
+				ElemType: DirectAccessVectorIndexSpec_SdkV2{}.Type(ctx),
 			},
 			"endpoint_name": types.StringType,
 			"index_type":    types.StringType,
 			"name":          types.StringType,
 			"primary_key":   types.StringType,
 			"status": basetypes.ListType{
-				ElemType: VectorIndexStatus{}.Type(ctx),
+				ElemType: VectorIndexStatus_SdkV2{}.Type(ctx),
 			},
 		},
 	}

@@ -60,7 +60,7 @@ func (o AwsCredentials_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"sts_role": basetypes.ListType{
-				ElemType: StsRole{}.Type(ctx),
+				ElemType: StsRole_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -236,7 +236,7 @@ func (o CloudResourceContainer_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"gcp": basetypes.ListType{
-				ElemType: CustomerFacingGcpCloudResourceContainer{}.Type(ctx),
+				ElemType: CustomerFacingGcpCloudResourceContainer_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -361,7 +361,7 @@ func (o CreateCredentialAwsCredentials_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"sts_role": basetypes.ListType{
-				ElemType: CreateCredentialStsRole{}.Type(ctx),
+				ElemType: CreateCredentialStsRole_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -435,7 +435,7 @@ func (o CreateCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_credentials": basetypes.ListType{
-				ElemType: CreateCredentialAwsCredentials{}.Type(ctx),
+				ElemType: CreateCredentialAwsCredentials_SdkV2{}.Type(ctx),
 			},
 			"credentials_name": types.StringType,
 		},
@@ -557,10 +557,10 @@ func (o CreateCustomerManagedKeyRequest_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_key_info": basetypes.ListType{
-				ElemType: CreateAwsKeyInfo{}.Type(ctx),
+				ElemType: CreateAwsKeyInfo_SdkV2{}.Type(ctx),
 			},
 			"gcp_key_info": basetypes.ListType{
-				ElemType: CreateGcpKeyInfo{}.Type(ctx),
+				ElemType: CreateGcpKeyInfo_SdkV2{}.Type(ctx),
 			},
 			"use_cases": basetypes.ListType{
 				ElemType: types.StringType,
@@ -754,7 +754,7 @@ func (o CreateNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"gcp_network_info": basetypes.ListType{
-				ElemType: GcpNetworkInfo{}.Type(ctx),
+				ElemType: GcpNetworkInfo_SdkV2{}.Type(ctx),
 			},
 			"network_name": types.StringType,
 			"security_group_ids": basetypes.ListType{
@@ -764,7 +764,7 @@ func (o CreateNetworkRequest_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"vpc_endpoints": basetypes.ListType{
-				ElemType: NetworkVpcEndpoints{}.Type(ctx),
+				ElemType: NetworkVpcEndpoints_SdkV2{}.Type(ctx),
 			},
 			"vpc_id": types.StringType,
 		},
@@ -918,7 +918,7 @@ func (o CreateStorageConfigurationRequest_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"root_bucket_info": basetypes.ListType{
-				ElemType: RootBucketInfo{}.Type(ctx),
+				ElemType: RootBucketInfo_SdkV2{}.Type(ctx),
 			},
 			"storage_configuration_name": types.StringType,
 		},
@@ -1002,7 +1002,7 @@ func (o CreateVpcEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"aws_vpc_endpoint_id": types.StringType,
 			"gcp_vpc_endpoint_info": basetypes.ListType{
-				ElemType: GcpVpcEndpointInfo{}.Type(ctx),
+				ElemType: GcpVpcEndpointInfo_SdkV2{}.Type(ctx),
 			},
 			"region":            types.StringType,
 			"vpc_endpoint_name": types.StringType,
@@ -1205,7 +1205,7 @@ func (o CreateWorkspaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"aws_region": types.StringType,
 			"cloud":      types.StringType,
 			"cloud_resource_container": basetypes.ListType{
-				ElemType: CloudResourceContainer{}.Type(ctx),
+				ElemType: CloudResourceContainer_SdkV2{}.Type(ctx),
 			},
 			"credentials_id": types.StringType,
 			"custom_tags": basetypes.MapType{
@@ -1213,10 +1213,10 @@ func (o CreateWorkspaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"deployment_name": types.StringType,
 			"gcp_managed_network_config": basetypes.ListType{
-				ElemType: GcpManagedNetworkConfig{}.Type(ctx),
+				ElemType: GcpManagedNetworkConfig_SdkV2{}.Type(ctx),
 			},
 			"gke_config": basetypes.ListType{
-				ElemType: GkeConfig{}.Type(ctx),
+				ElemType: GkeConfig_SdkV2{}.Type(ctx),
 			},
 			"is_no_public_ip_enabled": types.BoolType,
 			"location":                types.StringType,
@@ -1388,7 +1388,7 @@ func (o Credential_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"aws_credentials": basetypes.ListType{
-				ElemType: AwsCredentials{}.Type(ctx),
+				ElemType: AwsCredentials_SdkV2{}.Type(ctx),
 			},
 			"creation_time":    types.Int64Type,
 			"credentials_id":   types.StringType,
@@ -1525,12 +1525,12 @@ func (o CustomerManagedKey_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"aws_key_info": basetypes.ListType{
-				ElemType: AwsKeyInfo{}.Type(ctx),
+				ElemType: AwsKeyInfo_SdkV2{}.Type(ctx),
 			},
 			"creation_time":           types.Int64Type,
 			"customer_managed_key_id": types.StringType,
 			"gcp_key_info": basetypes.ListType{
-				ElemType: GcpKeyInfo{}.Type(ctx),
+				ElemType: GcpKeyInfo_SdkV2{}.Type(ctx),
 			},
 			"use_cases": basetypes.ListType{
 				ElemType: types.StringType,
@@ -2701,10 +2701,10 @@ func (o Network_SdkV2) Type(ctx context.Context) attr.Type {
 			"account_id":    types.StringType,
 			"creation_time": types.Int64Type,
 			"error_messages": basetypes.ListType{
-				ElemType: NetworkHealth{}.Type(ctx),
+				ElemType: NetworkHealth_SdkV2{}.Type(ctx),
 			},
 			"gcp_network_info": basetypes.ListType{
-				ElemType: GcpNetworkInfo{}.Type(ctx),
+				ElemType: GcpNetworkInfo_SdkV2{}.Type(ctx),
 			},
 			"network_id":   types.StringType,
 			"network_name": types.StringType,
@@ -2715,12 +2715,12 @@ func (o Network_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"vpc_endpoints": basetypes.ListType{
-				ElemType: NetworkVpcEndpoints{}.Type(ctx),
+				ElemType: NetworkVpcEndpoints_SdkV2{}.Type(ctx),
 			},
 			"vpc_id":     types.StringType,
 			"vpc_status": types.StringType,
 			"warning_messages": basetypes.ListType{
-				ElemType: NetworkWarning{}.Type(ctx),
+				ElemType: NetworkWarning_SdkV2{}.Type(ctx),
 			},
 			"workspace_id": types.Int64Type,
 		},
@@ -3327,7 +3327,7 @@ func (o StorageConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 			"account_id":    types.StringType,
 			"creation_time": types.Int64Type,
 			"root_bucket_info": basetypes.ListType{
-				ElemType: RootBucketInfo{}.Type(ctx),
+				ElemType: RootBucketInfo_SdkV2{}.Type(ctx),
 			},
 			"storage_configuration_id":   types.StringType,
 			"storage_configuration_name": types.StringType,
@@ -3765,7 +3765,7 @@ func (o VpcEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"aws_endpoint_service_id": types.StringType,
 			"aws_vpc_endpoint_id":     types.StringType,
 			"gcp_vpc_endpoint_info": basetypes.ListType{
-				ElemType: GcpVpcEndpointInfo{}.Type(ctx),
+				ElemType: GcpVpcEndpointInfo_SdkV2{}.Type(ctx),
 			},
 			"region":            types.StringType,
 			"state":             types.StringType,
@@ -3967,11 +3967,11 @@ func (o Workspace_SdkV2) Type(ctx context.Context) attr.Type {
 			"account_id": types.StringType,
 			"aws_region": types.StringType,
 			"azure_workspace_info": basetypes.ListType{
-				ElemType: AzureWorkspaceInfo{}.Type(ctx),
+				ElemType: AzureWorkspaceInfo_SdkV2{}.Type(ctx),
 			},
 			"cloud": types.StringType,
 			"cloud_resource_container": basetypes.ListType{
-				ElemType: CloudResourceContainer{}.Type(ctx),
+				ElemType: CloudResourceContainer_SdkV2{}.Type(ctx),
 			},
 			"creation_time":  types.Int64Type,
 			"credentials_id": types.StringType,
@@ -3980,13 +3980,13 @@ func (o Workspace_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"deployment_name": types.StringType,
 			"external_customer_info": basetypes.ListType{
-				ElemType: ExternalCustomerInfo{}.Type(ctx),
+				ElemType: ExternalCustomerInfo_SdkV2{}.Type(ctx),
 			},
 			"gcp_managed_network_config": basetypes.ListType{
-				ElemType: GcpManagedNetworkConfig{}.Type(ctx),
+				ElemType: GcpManagedNetworkConfig_SdkV2{}.Type(ctx),
 			},
 			"gke_config": basetypes.ListType{
-				ElemType: GkeConfig{}.Type(ctx),
+				ElemType: GkeConfig_SdkV2{}.Type(ctx),
 			},
 			"is_no_public_ip_enabled": types.BoolType,
 			"location":                types.StringType,

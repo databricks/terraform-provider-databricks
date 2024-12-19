@@ -130,7 +130,7 @@ func (o AlertConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
-				ElemType: ActionConfiguration{}.Type(ctx),
+				ElemType: ActionConfiguration_SdkV2{}.Type(ctx),
 			},
 			"alert_configuration_id": types.StringType,
 			"quantity_threshold":     types.StringType,
@@ -231,13 +231,13 @@ func (o BudgetConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: AlertConfiguration{}.Type(ctx),
+				ElemType: AlertConfiguration_SdkV2{}.Type(ctx),
 			},
 			"budget_configuration_id": types.StringType,
 			"create_time":             types.Int64Type,
 			"display_name":            types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+				ElemType: BudgetConfigurationFilter_SdkV2{}.Type(ctx),
 			},
 			"update_time": types.Int64Type,
 		},
@@ -342,10 +342,10 @@ func (o BudgetConfigurationFilter_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"tags": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterTagClause{}.Type(ctx),
+				ElemType: BudgetConfigurationFilterTagClause_SdkV2{}.Type(ctx),
 			},
 			"workspace_id": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterWorkspaceIdClause{}.Type(ctx),
+				ElemType: BudgetConfigurationFilterWorkspaceIdClause_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -521,7 +521,7 @@ func (o BudgetConfigurationFilterTagClause_SdkV2) Type(ctx context.Context) attr
 		AttrTypes: map[string]attr.Type{
 			"key": types.StringType,
 			"value": basetypes.ListType{
-				ElemType: BudgetConfigurationFilterClause{}.Type(ctx),
+				ElemType: BudgetConfigurationFilterClause_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -774,11 +774,11 @@ func (o CreateBudgetConfigurationBudget_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations{}.Type(ctx),
+				ElemType: CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2{}.Type(ctx),
 			},
 			"display_name": types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+				ElemType: BudgetConfigurationFilter_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -938,7 +938,7 @@ func (o CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) Type(ctx conte
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"action_configurations": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudgetActionConfigurations{}.Type(ctx),
+				ElemType: CreateBudgetConfigurationBudgetActionConfigurations_SdkV2{}.Type(ctx),
 			},
 			"quantity_threshold": types.StringType,
 			"quantity_type":      types.StringType,
@@ -1014,7 +1014,7 @@ func (o CreateBudgetConfigurationRequest_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: CreateBudgetConfigurationBudget{}.Type(ctx),
+				ElemType: CreateBudgetConfigurationBudget_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1086,7 +1086,7 @@ func (o CreateBudgetConfigurationResponse_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.Type(ctx),
+				ElemType: BudgetConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1626,7 +1626,7 @@ func (o GetBudgetConfigurationResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.Type(ctx),
+				ElemType: BudgetConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1789,7 +1789,7 @@ func (o ListBudgetConfigurationsResponse_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budgets": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.Type(ctx),
+				ElemType: BudgetConfiguration_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -2013,7 +2013,7 @@ func (o LogDeliveryConfiguration_SdkV2) Type(ctx context.Context) attr.Type {
 			"delivery_path_prefix": types.StringType,
 			"delivery_start_time":  types.StringType,
 			"log_delivery_status": basetypes.ListType{
-				ElemType: LogDeliveryStatus{}.Type(ctx),
+				ElemType: LogDeliveryStatus_SdkV2{}.Type(ctx),
 			},
 			"log_type":                 types.StringType,
 			"output_format":            types.StringType,
@@ -2239,12 +2239,12 @@ func (o UpdateBudgetConfigurationBudget_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"account_id": types.StringType,
 			"alert_configurations": basetypes.ListType{
-				ElemType: AlertConfiguration{}.Type(ctx),
+				ElemType: AlertConfiguration_SdkV2{}.Type(ctx),
 			},
 			"budget_configuration_id": types.StringType,
 			"display_name":            types.StringType,
 			"filter": basetypes.ListType{
-				ElemType: BudgetConfigurationFilter{}.Type(ctx),
+				ElemType: BudgetConfigurationFilter_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2346,7 +2346,7 @@ func (o UpdateBudgetConfigurationRequest_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: UpdateBudgetConfigurationBudget{}.Type(ctx),
+				ElemType: UpdateBudgetConfigurationBudget_SdkV2{}.Type(ctx),
 			},
 			"budget_id": types.StringType,
 		},
@@ -2419,7 +2419,7 @@ func (o UpdateBudgetConfigurationResponse_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"budget": basetypes.ListType{
-				ElemType: BudgetConfiguration{}.Type(ctx),
+				ElemType: BudgetConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2540,7 +2540,7 @@ func (o WrappedCreateLogDeliveryConfiguration_SdkV2) Type(ctx context.Context) a
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": basetypes.ListType{
-				ElemType: CreateLogDeliveryConfigurationParams{}.Type(ctx),
+				ElemType: CreateLogDeliveryConfigurationParams_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2611,7 +2611,7 @@ func (o WrappedLogDeliveryConfiguration_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configuration": basetypes.ListType{
-				ElemType: LogDeliveryConfiguration{}.Type(ctx),
+				ElemType: LogDeliveryConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2682,7 +2682,7 @@ func (o WrappedLogDeliveryConfigurations_SdkV2) Type(ctx context.Context) attr.T
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"log_delivery_configurations": basetypes.ListType{
-				ElemType: LogDeliveryConfiguration{}.Type(ctx),
+				ElemType: LogDeliveryConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}

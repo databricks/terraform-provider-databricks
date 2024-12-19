@@ -85,7 +85,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var tfCluster compute_tf.ClusterDetails
+	var tfCluster compute_tf.ClusterDetails_SdkV2
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
 	if resp.Diagnostics.HasError() {
 		return

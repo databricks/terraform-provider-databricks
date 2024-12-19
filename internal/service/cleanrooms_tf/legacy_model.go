@@ -108,11 +108,11 @@ func (o CleanRoom_SdkV2) Type(ctx context.Context) attr.Type {
 			"local_collaborator_alias": types.StringType,
 			"name":                     types.StringType,
 			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
 			},
 			"owner": types.StringType,
 			"remote_detailed_info": basetypes.ListType{
-				ElemType: CleanRoomRemoteDetail{}.Type(ctx),
+				ElemType: CleanRoomRemoteDetail_SdkV2{}.Type(ctx),
 			},
 			"status":     types.StringType,
 			"updated_at": types.Int64Type,
@@ -272,31 +272,31 @@ func (o CleanRoomAsset_SdkV2) Type(ctx context.Context) attr.Type {
 			"added_at":   types.Int64Type,
 			"asset_type": types.StringType,
 			"foreign_table": basetypes.ListType{
-				ElemType: CleanRoomAssetForeignTable{}.Type(ctx),
+				ElemType: CleanRoomAssetForeignTable_SdkV2{}.Type(ctx),
 			},
 			"foreign_table_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
+				ElemType: CleanRoomAssetForeignTableLocalDetails_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"notebook": basetypes.ListType{
-				ElemType: CleanRoomAssetNotebook{}.Type(ctx),
+				ElemType: CleanRoomAssetNotebook_SdkV2{}.Type(ctx),
 			},
 			"owner_collaborator_alias": types.StringType,
 			"status":                   types.StringType,
 			"table": basetypes.ListType{
-				ElemType: CleanRoomAssetTable{}.Type(ctx),
+				ElemType: CleanRoomAssetTable_SdkV2{}.Type(ctx),
 			},
 			"table_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetTableLocalDetails{}.Type(ctx),
+				ElemType: CleanRoomAssetTableLocalDetails_SdkV2{}.Type(ctx),
 			},
 			"view": basetypes.ListType{
-				ElemType: CleanRoomAssetView{}.Type(ctx),
+				ElemType: CleanRoomAssetView_SdkV2{}.Type(ctx),
 			},
 			"view_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetViewLocalDetails{}.Type(ctx),
+				ElemType: CleanRoomAssetViewLocalDetails_SdkV2{}.Type(ctx),
 			},
 			"volume_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetVolumeLocalDetails{}.Type(ctx),
+				ElemType: CleanRoomAssetVolumeLocalDetails_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -550,7 +550,7 @@ func (o CleanRoomAssetForeignTable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -712,7 +712,7 @@ func (o CleanRoomAssetTable_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -789,7 +789,7 @@ func (o CleanRoomAssetTableLocalDetails_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
 			"partitions": basetypes.ListType{
-				ElemType: sharing_tf.PartitionSpecificationPartition{}.Type(ctx),
+				ElemType: sharing_tf.PartitionSpecificationPartition_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -861,7 +861,7 @@ func (o CleanRoomAssetView_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
-				ElemType: catalog_tf.ColumnInfo{}.Type(ctx),
+				ElemType: catalog_tf.ColumnInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1124,10 +1124,10 @@ func (o CleanRoomNotebookTaskRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"collaborator_job_run_info": basetypes.ListType{
-				ElemType: CollaboratorJobRunInfo{}.Type(ctx),
+				ElemType: CollaboratorJobRunInfo_SdkV2{}.Type(ctx),
 			},
 			"notebook_job_run_state": basetypes.ListType{
-				ElemType: jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
+				ElemType: jobs_tf.CleanRoomTaskRunState_SdkV2{}.Type(ctx),
 			},
 			"notebook_name":                 types.StringType,
 			"output_schema_expiration_time": types.Int64Type,
@@ -1310,16 +1310,16 @@ func (o CleanRoomRemoteDetail_SdkV2) Type(ctx context.Context) attr.Type {
 			"central_clean_room_id": types.StringType,
 			"cloud_vendor":          types.StringType,
 			"collaborators": basetypes.ListType{
-				ElemType: CleanRoomCollaborator{}.Type(ctx),
+				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
 			},
 			"compliance_security_profile": basetypes.ListType{
-				ElemType: ComplianceSecurityProfile{}.Type(ctx),
+				ElemType: ComplianceSecurityProfile_SdkV2{}.Type(ctx),
 			},
 			"creator": basetypes.ListType{
-				ElemType: CleanRoomCollaborator{}.Type(ctx),
+				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
 			},
 			"egress_network_policy": basetypes.ListType{
-				ElemType: settings_tf.EgressNetworkPolicy{}.Type(ctx),
+				ElemType: settings_tf.EgressNetworkPolicy_SdkV2{}.Type(ctx),
 			},
 			"region": types.StringType,
 		},
@@ -1611,7 +1611,7 @@ func (o CreateCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"asset": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
 			},
 			"clean_room_name": types.StringType,
 		},
@@ -1689,7 +1689,7 @@ func (o CreateCleanRoomOutputCatalogRequest_SdkV2) Type(ctx context.Context) att
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
 			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1760,7 +1760,7 @@ func (o CreateCleanRoomOutputCatalogResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
+				ElemType: CleanRoomOutputCatalog_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1832,7 +1832,7 @@ func (o CreateCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2219,7 +2219,7 @@ func (o ListCleanRoomAssetsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"assets": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -2353,7 +2353,7 @@ func (o ListCleanRoomNotebookTaskRunsResponse_SdkV2) Type(ctx context.Context) a
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"runs": basetypes.ListType{
-				ElemType: CleanRoomNotebookTaskRun{}.Type(ctx),
+				ElemType: CleanRoomNotebookTaskRun_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2477,7 +2477,7 @@ func (o ListCleanRoomsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -2566,7 +2566,7 @@ func (o UpdateCleanRoomAssetRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"asset": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
+				ElemType: CleanRoomAsset_SdkV2{}.Type(ctx),
 			},
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
@@ -2643,7 +2643,7 @@ func (o UpdateCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
+				ElemType: CleanRoom_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 		},

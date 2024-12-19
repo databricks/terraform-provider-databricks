@@ -86,7 +86,7 @@ func (o BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
 			"effective_budget_policy_id": types.StringType,
 			"job_id":                     types.Int64Type,
 			"settings": basetypes.ListType{
-				ElemType: JobSettings{}.Type(ctx),
+				ElemType: JobSettings_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -328,34 +328,34 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"attempt_number":   types.Int64Type,
 			"cleanup_duration": types.Int64Type,
 			"cluster_instance": basetypes.ListType{
-				ElemType: ClusterInstance{}.Type(ctx),
+				ElemType: ClusterInstance_SdkV2{}.Type(ctx),
 			},
 			"cluster_spec": basetypes.ListType{
-				ElemType: ClusterSpec{}.Type(ctx),
+				ElemType: ClusterSpec_SdkV2{}.Type(ctx),
 			},
 			"creator_user_name":  types.StringType,
 			"description":        types.StringType,
 			"end_time":           types.Int64Type,
 			"execution_duration": types.Int64Type,
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"job_clusters": basetypes.ListType{
-				ElemType: JobCluster{}.Type(ctx),
+				ElemType: JobCluster_SdkV2{}.Type(ctx),
 			},
 			"job_id": types.Int64Type,
 			"job_parameters": basetypes.ListType{
-				ElemType: JobParameter{}.Type(ctx),
+				ElemType: JobParameter_SdkV2{}.Type(ctx),
 			},
 			"job_run_id":              types.Int64Type,
 			"number_in_job":           types.Int64Type,
 			"original_attempt_run_id": types.Int64Type,
 			"overriding_parameters": basetypes.ListType{
-				ElemType: RunParameters{}.Type(ctx),
+				ElemType: RunParameters_SdkV2{}.Type(ctx),
 			},
 			"queue_duration": types.Int64Type,
 			"repair_history": basetypes.ListType{
-				ElemType: RepairHistoryItem{}.Type(ctx),
+				ElemType: RepairHistoryItem_SdkV2{}.Type(ctx),
 			},
 			"run_duration": types.Int64Type,
 			"run_id":       types.Int64Type,
@@ -363,22 +363,22 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"run_page_url": types.StringType,
 			"run_type":     types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
 			"setup_duration": types.Int64Type,
 			"start_time":     types.Int64Type,
 			"state": basetypes.ListType{
-				ElemType: RunState{}.Type(ctx),
+				ElemType: RunState_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
-				ElemType: RunStatus{}.Type(ctx),
+				ElemType: RunStatus_SdkV2{}.Type(ctx),
 			},
 			"tasks": basetypes.ListType{
-				ElemType: RunTask{}.Type(ctx),
+				ElemType: RunTask_SdkV2{}.Type(ctx),
 			},
 			"trigger": types.StringType,
 			"trigger_info": basetypes.ListType{
-				ElemType: TriggerInfo{}.Type(ctx),
+				ElemType: TriggerInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1110,10 +1110,10 @@ func (o ClusterSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"existing_cluster_id": types.StringType,
 			"job_cluster_key":     types.StringType,
 			"library": basetypes.ListType{
-				ElemType: compute_tf.Library{}.Type(ctx),
+				ElemType: compute_tf.Library_SdkV2{}.Type(ctx),
 			},
 			"new_cluster": basetypes.ListType{
-				ElemType: compute_tf.ClusterSpec{}.Type(ctx),
+				ElemType: compute_tf.ClusterSpec_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1454,62 +1454,62 @@ func (o CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: JobAccessControlRequest{}.Type(ctx),
+				ElemType: JobAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"budget_policy_id": types.StringType,
 			"continuous": basetypes.ListType{
-				ElemType: Continuous{}.Type(ctx),
+				ElemType: Continuous_SdkV2{}.Type(ctx),
 			},
 			"deployment": basetypes.ListType{
-				ElemType: JobDeployment{}.Type(ctx),
+				ElemType: JobDeployment_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
 			"edit_mode":   types.StringType,
 			"email_notifications": basetypes.ListType{
-				ElemType: JobEmailNotifications{}.Type(ctx),
+				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"environment": basetypes.ListType{
-				ElemType: JobEnvironment{}.Type(ctx),
+				ElemType: JobEnvironment_SdkV2{}.Type(ctx),
 			},
 			"format": types.StringType,
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
-				ElemType: JobsHealthRules{}.Type(ctx),
+				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
 			},
 			"job_cluster": basetypes.ListType{
-				ElemType: JobCluster{}.Type(ctx),
+				ElemType: JobCluster_SdkV2{}.Type(ctx),
 			},
 			"max_concurrent_runs": types.Int64Type,
 			"name":                types.StringType,
 			"notification_settings": basetypes.ListType{
-				ElemType: JobNotificationSettings{}.Type(ctx),
+				ElemType: JobNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"parameter": basetypes.ListType{
-				ElemType: JobParameterDefinition{}.Type(ctx),
+				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
 			"queue": basetypes.ListType{
-				ElemType: QueueSettings{}.Type(ctx),
+				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
 			"run_as": basetypes.ListType{
-				ElemType: JobRunAs{}.Type(ctx),
+				ElemType: JobRunAs_SdkV2{}.Type(ctx),
 			},
 			"schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"task": basetypes.ListType{
-				ElemType: Task{}.Type(ctx),
+				ElemType: Task_SdkV2{}.Type(ctx),
 			},
 			"timeout_seconds": types.Int64Type,
 			"trigger": basetypes.ListType{
-				ElemType: TriggerSettings{}.Type(ctx),
+				ElemType: TriggerSettings_SdkV2{}.Type(ctx),
 			},
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2569,10 +2569,10 @@ func (o EnforcePolicyComplianceResponse_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"has_changes": types.BoolType,
 			"job_cluster_changes": basetypes.ListType{
-				ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.Type(ctx),
+				ElemType: EnforcePolicyComplianceForJobResponseJobClusterSettingsChange_SdkV2{}.Type(ctx),
 			},
 			"settings": basetypes.ListType{
-				ElemType: JobSettings{}.Type(ctx),
+				ElemType: JobSettings_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2675,7 +2675,7 @@ func (o ExportRunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"views": basetypes.ListType{
-				ElemType: ViewItem{}.Type(ctx),
+				ElemType: ViewItem_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2854,10 +2854,10 @@ func (o ForEachStats_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"error_message_stats": basetypes.ListType{
-				ElemType: ForEachTaskErrorMessageStats{}.Type(ctx),
+				ElemType: ForEachTaskErrorMessageStats_SdkV2{}.Type(ctx),
 			},
 			"task_run_stats": basetypes.ListType{
-				ElemType: ForEachTaskTaskRunStats{}.Type(ctx),
+				ElemType: ForEachTaskTaskRunStats_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2966,7 +2966,7 @@ func (o ForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"concurrency": types.Int64Type,
 			"inputs":      types.StringType,
 			"task": basetypes.ListType{
-				ElemType: Task{}.Type(ctx),
+				ElemType: Task_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3195,7 +3195,7 @@ func (o GetJobPermissionLevelsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: JobPermissionsDescription{}.Type(ctx),
+				ElemType: JobPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3664,12 +3664,12 @@ func (o GitSource_SdkV2) Type(ctx context.Context) attr.Type {
 			"commit":       types.StringType,
 			"git_provider": types.StringType,
 			"git_snapshot": basetypes.ListType{
-				ElemType: GitSnapshot{}.Type(ctx),
+				ElemType: GitSnapshot_SdkV2{}.Type(ctx),
 			},
 			"tag": types.StringType,
 			"url": types.StringType,
 			"job_source": basetypes.ListType{
-				ElemType: JobSource{}.Type(ctx),
+				ElemType: JobSource_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3802,7 +3802,7 @@ func (o Job_SdkV2) Type(ctx context.Context) attr.Type {
 			"job_id":                     types.Int64Type,
 			"run_as_user_name":           types.StringType,
 			"settings": basetypes.ListType{
-				ElemType: JobSettings{}.Type(ctx),
+				ElemType: JobSettings_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3940,7 +3940,7 @@ func (o JobAccessControlResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: JobPermission{}.Type(ctx),
+				ElemType: JobPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -4022,7 +4022,7 @@ func (o JobCluster_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"job_cluster_key": types.StringType,
 			"new_cluster": basetypes.ListType{
-				ElemType: compute_tf.ClusterSpec{}.Type(ctx),
+				ElemType: compute_tf.ClusterSpec_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4461,7 +4461,7 @@ func (o JobEnvironment_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"environment_key": types.StringType,
 			"spec": basetypes.ListType{
-				ElemType: compute_tf.Environment{}.Type(ctx),
+				ElemType: compute_tf.Environment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4762,7 +4762,7 @@ func (o JobPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: JobAccessControlResponse{}.Type(ctx),
+				ElemType: JobAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -4883,7 +4883,7 @@ func (o JobPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: JobAccessControlRequest{}.Type(ctx),
+				ElemType: JobAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"job_id": types.StringType,
 		},
@@ -5145,58 +5145,58 @@ func (o JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"budget_policy_id": types.StringType,
 			"continuous": basetypes.ListType{
-				ElemType: Continuous{}.Type(ctx),
+				ElemType: Continuous_SdkV2{}.Type(ctx),
 			},
 			"deployment": basetypes.ListType{
-				ElemType: JobDeployment{}.Type(ctx),
+				ElemType: JobDeployment_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
 			"edit_mode":   types.StringType,
 			"email_notifications": basetypes.ListType{
-				ElemType: JobEmailNotifications{}.Type(ctx),
+				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"environment": basetypes.ListType{
-				ElemType: JobEnvironment{}.Type(ctx),
+				ElemType: JobEnvironment_SdkV2{}.Type(ctx),
 			},
 			"format": types.StringType,
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
-				ElemType: JobsHealthRules{}.Type(ctx),
+				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
 			},
 			"job_cluster": basetypes.ListType{
-				ElemType: JobCluster{}.Type(ctx),
+				ElemType: JobCluster_SdkV2{}.Type(ctx),
 			},
 			"max_concurrent_runs": types.Int64Type,
 			"name":                types.StringType,
 			"notification_settings": basetypes.ListType{
-				ElemType: JobNotificationSettings{}.Type(ctx),
+				ElemType: JobNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"parameter": basetypes.ListType{
-				ElemType: JobParameterDefinition{}.Type(ctx),
+				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
 			"queue": basetypes.ListType{
-				ElemType: QueueSettings{}.Type(ctx),
+				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
 			"run_as": basetypes.ListType{
-				ElemType: JobRunAs{}.Type(ctx),
+				ElemType: JobRunAs_SdkV2{}.Type(ctx),
 			},
 			"schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"task": basetypes.ListType{
-				ElemType: Task{}.Type(ctx),
+				ElemType: Task_SdkV2{}.Type(ctx),
 			},
 			"timeout_seconds": types.Int64Type,
 			"trigger": basetypes.ListType{
-				ElemType: TriggerSettings{}.Type(ctx),
+				ElemType: TriggerSettings_SdkV2{}.Type(ctx),
 			},
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5781,7 +5781,7 @@ func (o JobsHealthRules_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"rules": basetypes.ListType{
-				ElemType: JobsHealthRule{}.Type(ctx),
+				ElemType: JobsHealthRule_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5863,7 +5863,7 @@ func (o ListJobComplianceForPolicyResponse_SdkV2) Type(ctx context.Context) attr
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"jobs": basetypes.ListType{
-				ElemType: JobCompliance{}.Type(ctx),
+				ElemType: JobCompliance_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
@@ -6068,7 +6068,7 @@ func (o ListJobsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"has_more": types.BoolType,
 			"jobs": basetypes.ListType{
-				ElemType: BaseJob{}.Type(ctx),
+				ElemType: BaseJob_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
@@ -6253,7 +6253,7 @@ func (o ListRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"next_page_token": types.StringType,
 			"prev_page_token": types.StringType,
 			"runs": basetypes.ListType{
-				ElemType: BaseRun{}.Type(ctx),
+				ElemType: BaseRun_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6862,10 +6862,10 @@ func (o RepairHistoryItem_SdkV2) Type(ctx context.Context) attr.Type {
 			"id":         types.Int64Type,
 			"start_time": types.Int64Type,
 			"state": basetypes.ListType{
-				ElemType: RunState{}.Type(ctx),
+				ElemType: RunState_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
-				ElemType: RunStatus{}.Type(ctx),
+				ElemType: RunStatus_SdkV2{}.Type(ctx),
 			},
 			"task_run_ids": basetypes.ListType{
 				ElemType: types.Int64Type,
@@ -7126,7 +7126,7 @@ func (o RepairRun_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"pipeline_params": basetypes.ListType{
-				ElemType: PipelineParams{}.Type(ctx),
+				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
 			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
@@ -7502,7 +7502,7 @@ func (o ResetJob_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"job_id": types.Int64Type,
 			"new_settings": basetypes.ListType{
-				ElemType: JobSettings{}.Type(ctx),
+				ElemType: JobSettings_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8182,34 +8182,34 @@ func (o ResolvedValues_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"condition_task": basetypes.ListType{
-				ElemType: ResolvedConditionTaskValues{}.Type(ctx),
+				ElemType: ResolvedConditionTaskValues_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
-				ElemType: ResolvedDbtTaskValues{}.Type(ctx),
+				ElemType: ResolvedDbtTaskValues_SdkV2{}.Type(ctx),
 			},
 			"notebook_task": basetypes.ListType{
-				ElemType: ResolvedNotebookTaskValues{}.Type(ctx),
+				ElemType: ResolvedNotebookTaskValues_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
-				ElemType: ResolvedPythonWheelTaskValues{}.Type(ctx),
+				ElemType: ResolvedPythonWheelTaskValues_SdkV2{}.Type(ctx),
 			},
 			"run_job_task": basetypes.ListType{
-				ElemType: ResolvedRunJobTaskValues{}.Type(ctx),
+				ElemType: ResolvedRunJobTaskValues_SdkV2{}.Type(ctx),
 			},
 			"simulation_task": basetypes.ListType{
-				ElemType: ResolvedParamPairValues{}.Type(ctx),
+				ElemType: ResolvedParamPairValues_SdkV2{}.Type(ctx),
 			},
 			"spark_jar_task": basetypes.ListType{
-				ElemType: ResolvedStringParamsValues{}.Type(ctx),
+				ElemType: ResolvedStringParamsValues_SdkV2{}.Type(ctx),
 			},
 			"spark_python_task": basetypes.ListType{
-				ElemType: ResolvedStringParamsValues{}.Type(ctx),
+				ElemType: ResolvedStringParamsValues_SdkV2{}.Type(ctx),
 			},
 			"spark_submit_task": basetypes.ListType{
-				ElemType: ResolvedStringParamsValues{}.Type(ctx),
+				ElemType: ResolvedStringParamsValues_SdkV2{}.Type(ctx),
 			},
 			"sql_task": basetypes.ListType{
-				ElemType: ResolvedParamPairValues{}.Type(ctx),
+				ElemType: ResolvedParamPairValues_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -8694,38 +8694,38 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 			"attempt_number":   types.Int64Type,
 			"cleanup_duration": types.Int64Type,
 			"cluster_instance": basetypes.ListType{
-				ElemType: ClusterInstance{}.Type(ctx),
+				ElemType: ClusterInstance_SdkV2{}.Type(ctx),
 			},
 			"cluster_spec": basetypes.ListType{
-				ElemType: ClusterSpec{}.Type(ctx),
+				ElemType: ClusterSpec_SdkV2{}.Type(ctx),
 			},
 			"creator_user_name":  types.StringType,
 			"description":        types.StringType,
 			"end_time":           types.Int64Type,
 			"execution_duration": types.Int64Type,
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"iterations": basetypes.ListType{
-				ElemType: RunTask{}.Type(ctx),
+				ElemType: RunTask_SdkV2{}.Type(ctx),
 			},
 			"job_clusters": basetypes.ListType{
-				ElemType: JobCluster{}.Type(ctx),
+				ElemType: JobCluster_SdkV2{}.Type(ctx),
 			},
 			"job_id": types.Int64Type,
 			"job_parameters": basetypes.ListType{
-				ElemType: JobParameter{}.Type(ctx),
+				ElemType: JobParameter_SdkV2{}.Type(ctx),
 			},
 			"job_run_id":              types.Int64Type,
 			"next_page_token":         types.StringType,
 			"number_in_job":           types.Int64Type,
 			"original_attempt_run_id": types.Int64Type,
 			"overriding_parameters": basetypes.ListType{
-				ElemType: RunParameters{}.Type(ctx),
+				ElemType: RunParameters_SdkV2{}.Type(ctx),
 			},
 			"queue_duration": types.Int64Type,
 			"repair_history": basetypes.ListType{
-				ElemType: RepairHistoryItem{}.Type(ctx),
+				ElemType: RepairHistoryItem_SdkV2{}.Type(ctx),
 			},
 			"run_duration": types.Int64Type,
 			"run_id":       types.Int64Type,
@@ -8733,22 +8733,22 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 			"run_page_url": types.StringType,
 			"run_type":     types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
+				ElemType: CronSchedule_SdkV2{}.Type(ctx),
 			},
 			"setup_duration": types.Int64Type,
 			"start_time":     types.Int64Type,
 			"state": basetypes.ListType{
-				ElemType: RunState{}.Type(ctx),
+				ElemType: RunState_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
-				ElemType: RunStatus{}.Type(ctx),
+				ElemType: RunStatus_SdkV2{}.Type(ctx),
 			},
 			"tasks": basetypes.ListType{
-				ElemType: RunTask{}.Type(ctx),
+				ElemType: RunTask_SdkV2{}.Type(ctx),
 			},
 			"trigger": types.StringType,
 			"trigger_info": basetypes.ListType{
-				ElemType: TriggerInfo{}.Type(ctx),
+				ElemType: TriggerInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9214,10 +9214,10 @@ func (o RunForEachTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"concurrency": types.Int64Type,
 			"inputs":      types.StringType,
 			"stats": basetypes.ListType{
-				ElemType: ForEachStats{}.Type(ctx),
+				ElemType: ForEachStats_SdkV2{}.Type(ctx),
 			},
 			"task": basetypes.ListType{
-				ElemType: Task{}.Type(ctx),
+				ElemType: Task_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9471,7 +9471,7 @@ func (o RunJobTask_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"pipeline_params": basetypes.ListType{
-				ElemType: PipelineParams{}.Type(ctx),
+				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
 			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
@@ -9907,7 +9907,7 @@ func (o RunNow_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"pipeline_params": basetypes.ListType{
-				ElemType: PipelineParams{}.Type(ctx),
+				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
 			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
@@ -9916,7 +9916,7 @@ func (o RunNow_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"queue": basetypes.ListType{
-				ElemType: QueueSettings{}.Type(ctx),
+				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
 			"spark_submit_params": basetypes.ListType{
 				ElemType: types.StringType,
@@ -10350,7 +10350,7 @@ func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dbt_output": basetypes.ListType{
-				ElemType: DbtOutput{}.Type(ctx),
+				ElemType: DbtOutput_SdkV2{}.Type(ctx),
 			},
 			"error":          types.StringType,
 			"error_trace":    types.StringType,
@@ -10358,16 +10358,16 @@ func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"logs":           types.StringType,
 			"logs_truncated": types.BoolType,
 			"metadata": basetypes.ListType{
-				ElemType: Run{}.Type(ctx),
+				ElemType: Run_SdkV2{}.Type(ctx),
 			},
 			"notebook_output": basetypes.ListType{
-				ElemType: NotebookOutput{}.Type(ctx),
+				ElemType: NotebookOutput_SdkV2{}.Type(ctx),
 			},
 			"run_job_output": basetypes.ListType{
-				ElemType: RunJobOutput{}.Type(ctx),
+				ElemType: RunJobOutput_SdkV2{}.Type(ctx),
 			},
 			"sql_output": basetypes.ListType{
-				ElemType: SqlOutput{}.Type(ctx),
+				ElemType: SqlOutput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10646,7 +10646,7 @@ func (o RunParameters_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"pipeline_params": basetypes.ListType{
-				ElemType: PipelineParams{}.Type(ctx),
+				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
 			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
@@ -10984,11 +10984,11 @@ func (o RunStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"queue_details": basetypes.ListType{
-				ElemType: QueueDetails{}.Type(ctx),
+				ElemType: QueueDetails_SdkV2{}.Type(ctx),
 			},
 			"state": types.StringType,
 			"termination_details": basetypes.ListType{
-				ElemType: TerminationDetails{}.Type(ctx),
+				ElemType: TerminationDetails_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11316,89 +11316,89 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"attempt_number": types.Int64Type,
 			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+				ElemType: CleanRoomsNotebookTask_SdkV2{}.Type(ctx),
 			},
 			"cleanup_duration": types.Int64Type,
 			"cluster_instance": basetypes.ListType{
-				ElemType: ClusterInstance{}.Type(ctx),
+				ElemType: ClusterInstance_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
-				ElemType: RunConditionTask{}.Type(ctx),
+				ElemType: RunConditionTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
-				ElemType: DbtTask{}.Type(ctx),
+				ElemType: DbtTask_SdkV2{}.Type(ctx),
 			},
 			"depends_on": basetypes.ListType{
-				ElemType: TaskDependency{}.Type(ctx),
+				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
 			"email_notifications": basetypes.ListType{
-				ElemType: JobEmailNotifications{}.Type(ctx),
+				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"end_time":            types.Int64Type,
 			"environment_key":     types.StringType,
 			"execution_duration":  types.Int64Type,
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
-				ElemType: RunForEachTask{}.Type(ctx),
+				ElemType: RunForEachTask_SdkV2{}.Type(ctx),
 			},
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"job_cluster_key": types.StringType,
 			"library": basetypes.ListType{
-				ElemType: compute_tf.Library{}.Type(ctx),
+				ElemType: compute_tf.Library_SdkV2{}.Type(ctx),
 			},
 			"new_cluster": basetypes.ListType{
-				ElemType: compute_tf.ClusterSpec{}.Type(ctx),
+				ElemType: compute_tf.ClusterSpec_SdkV2{}.Type(ctx),
 			},
 			"notebook_task": basetypes.ListType{
-				ElemType: NotebookTask{}.Type(ctx),
+				ElemType: NotebookTask_SdkV2{}.Type(ctx),
 			},
 			"notification_settings": basetypes.ListType{
-				ElemType: TaskNotificationSettings{}.Type(ctx),
+				ElemType: TaskNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"pipeline_task": basetypes.ListType{
-				ElemType: PipelineTask{}.Type(ctx),
+				ElemType: PipelineTask_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
-				ElemType: PythonWheelTask{}.Type(ctx),
+				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
 			},
 			"queue_duration": types.Int64Type,
 			"resolved_values": basetypes.ListType{
-				ElemType: ResolvedValues{}.Type(ctx),
+				ElemType: ResolvedValues_SdkV2{}.Type(ctx),
 			},
 			"run_duration": types.Int64Type,
 			"run_id":       types.Int64Type,
 			"run_if":       types.StringType,
 			"run_job_task": basetypes.ListType{
-				ElemType: RunJobTask{}.Type(ctx),
+				ElemType: RunJobTask_SdkV2{}.Type(ctx),
 			},
 			"run_page_url":   types.StringType,
 			"setup_duration": types.Int64Type,
 			"spark_jar_task": basetypes.ListType{
-				ElemType: SparkJarTask{}.Type(ctx),
+				ElemType: SparkJarTask_SdkV2{}.Type(ctx),
 			},
 			"spark_python_task": basetypes.ListType{
-				ElemType: SparkPythonTask{}.Type(ctx),
+				ElemType: SparkPythonTask_SdkV2{}.Type(ctx),
 			},
 			"spark_submit_task": basetypes.ListType{
-				ElemType: SparkSubmitTask{}.Type(ctx),
+				ElemType: SparkSubmitTask_SdkV2{}.Type(ctx),
 			},
 			"sql_task": basetypes.ListType{
-				ElemType: SqlTask{}.Type(ctx),
+				ElemType: SqlTask_SdkV2{}.Type(ctx),
 			},
 			"start_time": types.Int64Type,
 			"state": basetypes.ListType{
-				ElemType: RunState{}.Type(ctx),
+				ElemType: RunState_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
-				ElemType: RunStatus{}.Type(ctx),
+				ElemType: RunStatus_SdkV2{}.Type(ctx),
 			},
 			"task_key":        types.StringType,
 			"timeout_seconds": types.Int64Type,
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12326,7 +12326,7 @@ func (o SqlAlertOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"output_link": types.StringType,
 			"query_text":  types.StringType,
 			"sql_statements": basetypes.ListType{
-				ElemType: SqlStatementOutput{}.Type(ctx),
+				ElemType: SqlStatementOutput_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
@@ -12403,7 +12403,7 @@ func (o SqlDashboardOutput_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"warehouse_id": types.StringType,
 			"widgets": basetypes.ListType{
-				ElemType: SqlDashboardWidgetOutput{}.Type(ctx),
+				ElemType: SqlDashboardWidgetOutput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12494,7 +12494,7 @@ func (o SqlDashboardWidgetOutput_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"end_time": types.Int64Type,
 			"error": basetypes.ListType{
-				ElemType: SqlOutputError{}.Type(ctx),
+				ElemType: SqlOutputError_SdkV2{}.Type(ctx),
 			},
 			"output_link":  types.StringType,
 			"start_time":   types.Int64Type,
@@ -12579,13 +12579,13 @@ func (o SqlOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert_output": basetypes.ListType{
-				ElemType: SqlAlertOutput{}.Type(ctx),
+				ElemType: SqlAlertOutput_SdkV2{}.Type(ctx),
 			},
 			"dashboard_output": basetypes.ListType{
-				ElemType: SqlDashboardOutput{}.Type(ctx),
+				ElemType: SqlDashboardOutput_SdkV2{}.Type(ctx),
 			},
 			"query_output": basetypes.ListType{
-				ElemType: SqlQueryOutput{}.Type(ctx),
+				ElemType: SqlQueryOutput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12766,7 +12766,7 @@ func (o SqlQueryOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"output_link": types.StringType,
 			"query_text":  types.StringType,
 			"sql_statements": basetypes.ListType{
-				ElemType: SqlStatementOutput{}.Type(ctx),
+				ElemType: SqlStatementOutput_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
@@ -12905,19 +12905,19 @@ func (o SqlTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"alert": basetypes.ListType{
-				ElemType: SqlTaskAlert{}.Type(ctx),
+				ElemType: SqlTaskAlert_SdkV2{}.Type(ctx),
 			},
 			"dashboard": basetypes.ListType{
-				ElemType: SqlTaskDashboard{}.Type(ctx),
+				ElemType: SqlTaskDashboard_SdkV2{}.Type(ctx),
 			},
 			"file": basetypes.ListType{
-				ElemType: SqlTaskFile{}.Type(ctx),
+				ElemType: SqlTaskFile_SdkV2{}.Type(ctx),
 			},
 			"parameters": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"query": basetypes.ListType{
-				ElemType: SqlTaskQuery{}.Type(ctx),
+				ElemType: SqlTaskQuery_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
@@ -13102,7 +13102,7 @@ func (o SqlTaskAlert_SdkV2) Type(ctx context.Context) attr.Type {
 			"alert_id":            types.StringType,
 			"pause_subscriptions": types.BoolType,
 			"subscriptions": basetypes.ListType{
-				ElemType: SqlTaskSubscription{}.Type(ctx),
+				ElemType: SqlTaskSubscription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -13187,7 +13187,7 @@ func (o SqlTaskDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 			"dashboard_id":        types.StringType,
 			"pause_subscriptions": types.BoolType,
 			"subscriptions": basetypes.ListType{
-				ElemType: SqlTaskSubscription{}.Type(ctx),
+				ElemType: SqlTaskSubscription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -13485,38 +13485,38 @@ func (o SubmitRun_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: JobAccessControlRequest{}.Type(ctx),
+				ElemType: JobAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"budget_policy_id": types.StringType,
 			"email_notifications": basetypes.ListType{
-				ElemType: JobEmailNotifications{}.Type(ctx),
+				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"environments": basetypes.ListType{
-				ElemType: JobEnvironment{}.Type(ctx),
+				ElemType: JobEnvironment_SdkV2{}.Type(ctx),
 			},
 			"git_source": basetypes.ListType{
-				ElemType: GitSource{}.Type(ctx),
+				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
-				ElemType: JobsHealthRules{}.Type(ctx),
+				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
 			},
 			"idempotency_token": types.StringType,
 			"notification_settings": basetypes.ListType{
-				ElemType: JobNotificationSettings{}.Type(ctx),
+				ElemType: JobNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"queue": basetypes.ListType{
-				ElemType: QueueSettings{}.Type(ctx),
+				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
 			"run_as": basetypes.ListType{
-				ElemType: JobRunAs{}.Type(ctx),
+				ElemType: JobRunAs_SdkV2{}.Type(ctx),
 			},
 			"run_name": types.StringType,
 			"tasks": basetypes.ListType{
-				ElemType: SubmitTask{}.Type(ctx),
+				ElemType: SubmitTask_SdkV2{}.Type(ctx),
 			},
 			"timeout_seconds": types.Int64Type,
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -14007,67 +14007,67 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+				ElemType: CleanRoomsNotebookTask_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
-				ElemType: ConditionTask{}.Type(ctx),
+				ElemType: ConditionTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
-				ElemType: DbtTask{}.Type(ctx),
+				ElemType: DbtTask_SdkV2{}.Type(ctx),
 			},
 			"depends_on": basetypes.ListType{
-				ElemType: TaskDependency{}.Type(ctx),
+				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
 			"description": types.StringType,
 			"email_notifications": basetypes.ListType{
-				ElemType: JobEmailNotifications{}.Type(ctx),
+				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"environment_key":     types.StringType,
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
-				ElemType: ForEachTask{}.Type(ctx),
+				ElemType: ForEachTask_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
-				ElemType: JobsHealthRules{}.Type(ctx),
+				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
 			},
 			"library": basetypes.ListType{
-				ElemType: compute_tf.Library{}.Type(ctx),
+				ElemType: compute_tf.Library_SdkV2{}.Type(ctx),
 			},
 			"new_cluster": basetypes.ListType{
-				ElemType: compute_tf.ClusterSpec{}.Type(ctx),
+				ElemType: compute_tf.ClusterSpec_SdkV2{}.Type(ctx),
 			},
 			"notebook_task": basetypes.ListType{
-				ElemType: NotebookTask{}.Type(ctx),
+				ElemType: NotebookTask_SdkV2{}.Type(ctx),
 			},
 			"notification_settings": basetypes.ListType{
-				ElemType: TaskNotificationSettings{}.Type(ctx),
+				ElemType: TaskNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"pipeline_task": basetypes.ListType{
-				ElemType: PipelineTask{}.Type(ctx),
+				ElemType: PipelineTask_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
-				ElemType: PythonWheelTask{}.Type(ctx),
+				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
 			},
 			"run_if": types.StringType,
 			"run_job_task": basetypes.ListType{
-				ElemType: RunJobTask{}.Type(ctx),
+				ElemType: RunJobTask_SdkV2{}.Type(ctx),
 			},
 			"spark_jar_task": basetypes.ListType{
-				ElemType: SparkJarTask{}.Type(ctx),
+				ElemType: SparkJarTask_SdkV2{}.Type(ctx),
 			},
 			"spark_python_task": basetypes.ListType{
-				ElemType: SparkPythonTask{}.Type(ctx),
+				ElemType: SparkPythonTask_SdkV2{}.Type(ctx),
 			},
 			"spark_submit_task": basetypes.ListType{
-				ElemType: SparkSubmitTask{}.Type(ctx),
+				ElemType: SparkSubmitTask_SdkV2{}.Type(ctx),
 			},
 			"sql_task": basetypes.ListType{
-				ElemType: SqlTask{}.Type(ctx),
+				ElemType: SqlTask_SdkV2{}.Type(ctx),
 			},
 			"task_key":        types.StringType,
 			"timeout_seconds": types.Int64Type,
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -14867,72 +14867,72 @@ func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": basetypes.ListType{
-				ElemType: CleanRoomsNotebookTask{}.Type(ctx),
+				ElemType: CleanRoomsNotebookTask_SdkV2{}.Type(ctx),
 			},
 			"condition_task": basetypes.ListType{
-				ElemType: ConditionTask{}.Type(ctx),
+				ElemType: ConditionTask_SdkV2{}.Type(ctx),
 			},
 			"dbt_task": basetypes.ListType{
-				ElemType: DbtTask{}.Type(ctx),
+				ElemType: DbtTask_SdkV2{}.Type(ctx),
 			},
 			"depends_on": basetypes.ListType{
-				ElemType: TaskDependency{}.Type(ctx),
+				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
 			"description":               types.StringType,
 			"disable_auto_optimization": types.BoolType,
 			"email_notifications": basetypes.ListType{
-				ElemType: TaskEmailNotifications{}.Type(ctx),
+				ElemType: TaskEmailNotifications_SdkV2{}.Type(ctx),
 			},
 			"environment_key":     types.StringType,
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
-				ElemType: ForEachTask{}.Type(ctx),
+				ElemType: ForEachTask_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
-				ElemType: JobsHealthRules{}.Type(ctx),
+				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
 			},
 			"job_cluster_key": types.StringType,
 			"library": basetypes.ListType{
-				ElemType: compute_tf.Library{}.Type(ctx),
+				ElemType: compute_tf.Library_SdkV2{}.Type(ctx),
 			},
 			"max_retries":               types.Int64Type,
 			"min_retry_interval_millis": types.Int64Type,
 			"new_cluster": basetypes.ListType{
-				ElemType: compute_tf.ClusterSpec{}.Type(ctx),
+				ElemType: compute_tf.ClusterSpec_SdkV2{}.Type(ctx),
 			},
 			"notebook_task": basetypes.ListType{
-				ElemType: NotebookTask{}.Type(ctx),
+				ElemType: NotebookTask_SdkV2{}.Type(ctx),
 			},
 			"notification_settings": basetypes.ListType{
-				ElemType: TaskNotificationSettings{}.Type(ctx),
+				ElemType: TaskNotificationSettings_SdkV2{}.Type(ctx),
 			},
 			"pipeline_task": basetypes.ListType{
-				ElemType: PipelineTask{}.Type(ctx),
+				ElemType: PipelineTask_SdkV2{}.Type(ctx),
 			},
 			"python_wheel_task": basetypes.ListType{
-				ElemType: PythonWheelTask{}.Type(ctx),
+				ElemType: PythonWheelTask_SdkV2{}.Type(ctx),
 			},
 			"retry_on_timeout": types.BoolType,
 			"run_if":           types.StringType,
 			"run_job_task": basetypes.ListType{
-				ElemType: RunJobTask{}.Type(ctx),
+				ElemType: RunJobTask_SdkV2{}.Type(ctx),
 			},
 			"spark_jar_task": basetypes.ListType{
-				ElemType: SparkJarTask{}.Type(ctx),
+				ElemType: SparkJarTask_SdkV2{}.Type(ctx),
 			},
 			"spark_python_task": basetypes.ListType{
-				ElemType: SparkPythonTask{}.Type(ctx),
+				ElemType: SparkPythonTask_SdkV2{}.Type(ctx),
 			},
 			"spark_submit_task": basetypes.ListType{
-				ElemType: SparkSubmitTask{}.Type(ctx),
+				ElemType: SparkSubmitTask_SdkV2{}.Type(ctx),
 			},
 			"sql_task": basetypes.ListType{
-				ElemType: SqlTask{}.Type(ctx),
+				ElemType: SqlTask_SdkV2{}.Type(ctx),
 			},
 			"task_key":        types.StringType,
 			"timeout_seconds": types.Int64Type,
 			"webhook_notifications": basetypes.ListType{
-				ElemType: WebhookNotifications{}.Type(ctx),
+				ElemType: WebhookNotifications_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -15962,17 +15962,17 @@ func (o TriggerSettings_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_arrival": basetypes.ListType{
-				ElemType: FileArrivalTriggerConfiguration{}.Type(ctx),
+				ElemType: FileArrivalTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"pause_status": types.StringType,
 			"periodic": basetypes.ListType{
-				ElemType: PeriodicTriggerConfiguration{}.Type(ctx),
+				ElemType: PeriodicTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"table": basetypes.ListType{
-				ElemType: TableUpdateTriggerConfiguration{}.Type(ctx),
+				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 			"table_update": basetypes.ListType{
-				ElemType: TableUpdateTriggerConfiguration{}.Type(ctx),
+				ElemType: TableUpdateTriggerConfiguration_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -16145,7 +16145,7 @@ func (o UpdateJob_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"job_id": types.Int64Type,
 			"new_settings": basetypes.ListType{
-				ElemType: JobSettings{}.Type(ctx),
+				ElemType: JobSettings_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -16402,19 +16402,19 @@ func (o WebhookNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"on_duration_warning_threshold_exceeded": basetypes.ListType{
-				ElemType: Webhook{}.Type(ctx),
+				ElemType: Webhook_SdkV2{}.Type(ctx),
 			},
 			"on_failure": basetypes.ListType{
-				ElemType: Webhook{}.Type(ctx),
+				ElemType: Webhook_SdkV2{}.Type(ctx),
 			},
 			"on_start": basetypes.ListType{
-				ElemType: Webhook{}.Type(ctx),
+				ElemType: Webhook_SdkV2{}.Type(ctx),
 			},
 			"on_streaming_backlog_exceeded": basetypes.ListType{
-				ElemType: Webhook{}.Type(ctx),
+				ElemType: Webhook_SdkV2{}.Type(ctx),
 			},
 			"on_success": basetypes.ListType{
-				ElemType: Webhook{}.Type(ctx),
+				ElemType: Webhook_SdkV2{}.Type(ctx),
 			},
 		},
 	}

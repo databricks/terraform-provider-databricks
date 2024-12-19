@@ -105,7 +105,7 @@ func (o AddExchangeForListingResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange_for_listing": basetypes.ListType{
-				ElemType: ExchangeListing{}.Type(ctx),
+				ElemType: ExchangeListing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -248,7 +248,7 @@ func (o BatchGetListingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listings": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -391,7 +391,7 @@ func (o BatchGetProvidersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"providers": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -558,7 +558,7 @@ func (o CreateExchangeFilterRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
+				ElemType: ExchangeFilter_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -670,7 +670,7 @@ func (o CreateExchangeRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
+				ElemType: Exchange_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -792,7 +792,7 @@ func (o CreateFileRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"display_name": types.StringType,
 			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
+				ElemType: FileParent_SdkV2{}.Type(ctx),
 			},
 			"marketplace_file_type": types.StringType,
 			"mime_type":             types.StringType,
@@ -868,7 +868,7 @@ func (o CreateFileResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_info": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 			"upload_url": types.StringType,
 		},
@@ -956,13 +956,13 @@ func (o CreateInstallationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"accepted_consumer_terms": basetypes.ListType{
-				ElemType: ConsumerTerms{}.Type(ctx),
+				ElemType: ConsumerTerms_SdkV2{}.Type(ctx),
 			},
 			"catalog_name":   types.StringType,
 			"listing_id":     types.StringType,
 			"recipient_type": types.StringType,
 			"repo_detail": basetypes.ListType{
-				ElemType: RepoInstallation{}.Type(ctx),
+				ElemType: RepoInstallation_SdkV2{}.Type(ctx),
 			},
 			"share_name": types.StringType,
 		},
@@ -1060,7 +1060,7 @@ func (o CreateListingRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1197,7 +1197,7 @@ func (o CreatePersonalizationRequest_SdkV2) Type(ctx context.Context) attr.Type 
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"accepted_consumer_terms": basetypes.ListType{
-				ElemType: ConsumerTerms{}.Type(ctx),
+				ElemType: ConsumerTerms_SdkV2{}.Type(ctx),
 			},
 			"comment":            types.StringType,
 			"company":            types.StringType,
@@ -1317,7 +1317,7 @@ func (o CreateProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1974,11 +1974,11 @@ func (o Exchange_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_at": types.Int64Type,
 			"created_by": types.StringType,
 			"filters": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
+				ElemType: ExchangeFilter_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"linked_listings": basetypes.ListType{
-				ElemType: ExchangeListing{}.Type(ctx),
+				ElemType: ExchangeListing_SdkV2{}.Type(ctx),
 			},
 			"name":       types.StringType,
 			"updated_at": types.Int64Type,
@@ -2247,7 +2247,7 @@ func (o FileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"display_name":  types.StringType,
 			"download_link": types.StringType,
 			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
+				ElemType: FileParent_SdkV2{}.Type(ctx),
 			},
 			"id":                    types.StringType,
 			"marketplace_file_type": types.StringType,
@@ -2411,7 +2411,7 @@ func (o GetExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
+				ElemType: Exchange_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2524,7 +2524,7 @@ func (o GetFileResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_info": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2691,7 +2691,7 @@ func (o GetListingContentMetadataResponse_SdkV2) Type(ctx context.Context) attr.
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"shared_data_objects": basetypes.ListType{
-				ElemType: SharedDataObject{}.Type(ctx),
+				ElemType: SharedDataObject_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2804,7 +2804,7 @@ func (o GetListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2924,7 +2924,7 @@ func (o GetListingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listings": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -3038,7 +3038,7 @@ func (o GetPersonalizationRequestResponse_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"personalization_requests": basetypes.ListType{
-				ElemType: PersonalizationRequest{}.Type(ctx),
+				ElemType: PersonalizationRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3151,7 +3151,7 @@ func (o GetProviderResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3222,7 +3222,7 @@ func (o Installation_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
+				ElemType: InstallationDetail_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3341,10 +3341,10 @@ func (o InstallationDetail_SdkV2) Type(ctx context.Context) attr.Type {
 			"share_name":     types.StringType,
 			"status":         types.StringType,
 			"token_detail": basetypes.ListType{
-				ElemType: TokenDetail{}.Type(ctx),
+				ElemType: TokenDetail_SdkV2{}.Type(ctx),
 			},
 			"tokens": basetypes.ListType{
-				ElemType: TokenInfo{}.Type(ctx),
+				ElemType: TokenInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3490,7 +3490,7 @@ func (o ListAllInstallationsResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"installations": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
+				ElemType: InstallationDetail_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -3612,7 +3612,7 @@ func (o ListAllPersonalizationRequestsResponse_SdkV2) Type(ctx context.Context) 
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"personalization_requests": basetypes.ListType{
-				ElemType: PersonalizationRequest{}.Type(ctx),
+				ElemType: PersonalizationRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3736,7 +3736,7 @@ func (o ListExchangeFiltersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filters": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
+				ElemType: ExchangeFilter_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -3861,7 +3861,7 @@ func (o ListExchangesForListingResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange_listing": basetypes.ListType{
-				ElemType: ExchangeListing{}.Type(ctx),
+				ElemType: ExchangeListing_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -3982,7 +3982,7 @@ func (o ListExchangesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchanges": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
+				ElemType: Exchange_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4061,7 +4061,7 @@ func (o ListFilesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
+				ElemType: FileParent_SdkV2{}.Type(ctx),
 			},
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
@@ -4137,7 +4137,7 @@ func (o ListFilesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file_infos": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4262,7 +4262,7 @@ func (o ListFulfillmentsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"fulfillments": basetypes.ListType{
-				ElemType: ListingFulfillment{}.Type(ctx),
+				ElemType: ListingFulfillment_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4387,7 +4387,7 @@ func (o ListInstallationsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"installations": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
+				ElemType: InstallationDetail_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4512,7 +4512,7 @@ func (o ListListingsForExchangeResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange_listings": basetypes.ListType{
-				ElemType: ExchangeListing{}.Type(ctx),
+				ElemType: ExchangeListing_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4627,7 +4627,7 @@ func (o ListListingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"tags": basetypes.ListType{
-				ElemType: ListingTag{}.Type(ctx),
+				ElemType: ListingTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4779,7 +4779,7 @@ func (o ListListingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listings": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -4955,7 +4955,7 @@ func (o ListProvidersResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"providers": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5033,11 +5033,11 @@ func (o Listing_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"detail": basetypes.ListType{
-				ElemType: ListingDetail{}.Type(ctx),
+				ElemType: ListingDetail_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 			"summary": basetypes.ListType{
-				ElemType: ListingSummary{}.Type(ctx),
+				ElemType: ListingSummary_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5209,14 +5209,14 @@ func (o ListingDetail_SdkV2) Type(ctx context.Context) attr.Type {
 			"collection_date_end":   types.Int64Type,
 			"collection_date_start": types.Int64Type,
 			"collection_granularity": basetypes.ListType{
-				ElemType: DataRefreshInfo{}.Type(ctx),
+				ElemType: DataRefreshInfo_SdkV2{}.Type(ctx),
 			},
 			"cost":               types.StringType,
 			"data_source":        types.StringType,
 			"description":        types.StringType,
 			"documentation_link": types.StringType,
 			"embedded_notebook_file_infos": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
+				ElemType: FileInfo_SdkV2{}.Type(ctx),
 			},
 			"file_ids": basetypes.ListType{
 				ElemType: types.StringType,
@@ -5228,11 +5228,11 @@ func (o ListingDetail_SdkV2) Type(ctx context.Context) attr.Type {
 			"size":                  types.Float64Type,
 			"support_link":          types.StringType,
 			"tags": basetypes.ListType{
-				ElemType: ListingTag{}.Type(ctx),
+				ElemType: ListingTag_SdkV2{}.Type(ctx),
 			},
 			"terms_of_service": types.StringType,
 			"update_frequency": basetypes.ListType{
-				ElemType: DataRefreshInfo{}.Type(ctx),
+				ElemType: DataRefreshInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5449,10 +5449,10 @@ func (o ListingFulfillment_SdkV2) Type(ctx context.Context) attr.Type {
 			"listing_id":       types.StringType,
 			"recipient_type":   types.StringType,
 			"repo_info": basetypes.ListType{
-				ElemType: RepoInfo{}.Type(ctx),
+				ElemType: RepoInfo_SdkV2{}.Type(ctx),
 			},
 			"share_info": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5660,21 +5660,21 @@ func (o ListingSummary_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"git_repo": basetypes.ListType{
-				ElemType: RepoInfo{}.Type(ctx),
+				ElemType: RepoInfo_SdkV2{}.Type(ctx),
 			},
 			"listingType": types.StringType,
 			"name":        types.StringType,
 			"provider_id": types.StringType,
 			"provider_region": basetypes.ListType{
-				ElemType: RegionInfo{}.Type(ctx),
+				ElemType: RegionInfo_SdkV2{}.Type(ctx),
 			},
 			"published_at": types.Int64Type,
 			"published_by": types.StringType,
 			"setting": basetypes.ListType{
-				ElemType: ListingSetting{}.Type(ctx),
+				ElemType: ListingSetting_SdkV2{}.Type(ctx),
 			},
 			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 			"status":        types.StringType,
 			"subtitle":      types.StringType,
@@ -6006,10 +6006,10 @@ func (o PersonalizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment": types.StringType,
 			"consumer_region": basetypes.ListType{
-				ElemType: RegionInfo{}.Type(ctx),
+				ElemType: RegionInfo_SdkV2{}.Type(ctx),
 			},
 			"contact_info": basetypes.ListType{
-				ElemType: ContactInfo{}.Type(ctx),
+				ElemType: ContactInfo_SdkV2{}.Type(ctx),
 			},
 			"created_at":         types.Int64Type,
 			"id":                 types.StringType,
@@ -6021,7 +6021,7 @@ func (o PersonalizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"provider_id":        types.StringType,
 			"recipient_type":     types.StringType,
 			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 			"status":         types.StringType,
 			"status_message": types.StringType,
@@ -6656,7 +6656,7 @@ func (o SearchListingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listings": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -6945,7 +6945,7 @@ func (o UpdateExchangeFilterRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
+				ElemType: ExchangeFilter_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 		},
@@ -7017,7 +7017,7 @@ func (o UpdateExchangeFilterResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
+				ElemType: ExchangeFilter_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7091,7 +7091,7 @@ func (o UpdateExchangeRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
+				ElemType: Exchange_SdkV2{}.Type(ctx),
 			},
 			"id": types.StringType,
 		},
@@ -7163,7 +7163,7 @@ func (o UpdateExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
+				ElemType: Exchange_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7243,7 +7243,7 @@ func (o UpdateInstallationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
+				ElemType: InstallationDetail_SdkV2{}.Type(ctx),
 			},
 			"installation_id": types.StringType,
 			"listing_id":      types.StringType,
@@ -7317,7 +7317,7 @@ func (o UpdateInstallationResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
+				ElemType: InstallationDetail_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7392,7 +7392,7 @@ func (o UpdateListingRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7463,7 +7463,7 @@ func (o UpdateListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
+				ElemType: Listing_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7549,7 +7549,7 @@ func (o UpdatePersonalizationRequestRequest_SdkV2) Type(ctx context.Context) att
 			"reason":     types.StringType,
 			"request_id": types.StringType,
 			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
+				ElemType: ShareInfo_SdkV2{}.Type(ctx),
 			},
 			"status": types.StringType,
 		},
@@ -7621,7 +7621,7 @@ func (o UpdatePersonalizationRequestResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"request": basetypes.ListType{
-				ElemType: PersonalizationRequest{}.Type(ctx),
+				ElemType: PersonalizationRequest_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7794,7 +7794,7 @@ func (o UpdateProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"id": types.StringType,
 			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7865,7 +7865,7 @@ func (o UpdateProviderResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
+				ElemType: ProviderInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}

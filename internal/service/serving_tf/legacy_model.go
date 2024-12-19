@@ -131,16 +131,16 @@ func (o AiGatewayConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"guardrails": basetypes.ListType{
-				ElemType: AiGatewayGuardrails{}.Type(ctx),
+				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
 			"inference_table_config": basetypes.ListType{
-				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+				ElemType: AiGatewayInferenceTableConfig_SdkV2{}.Type(ctx),
 			},
 			"rate_limits": basetypes.ListType{
-				ElemType: AiGatewayRateLimit{}.Type(ctx),
+				ElemType: AiGatewayRateLimit_SdkV2{}.Type(ctx),
 			},
 			"usage_tracking_config": basetypes.ListType{
-				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+				ElemType: AiGatewayUsageTrackingConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -306,7 +306,7 @@ func (o AiGatewayGuardrailParameters_SdkV2) Type(ctx context.Context) attr.Type 
 				ElemType: types.StringType,
 			},
 			"pii": basetypes.ListType{
-				ElemType: AiGatewayGuardrailPiiBehavior{}.Type(ctx),
+				ElemType: AiGatewayGuardrailPiiBehavior_SdkV2{}.Type(ctx),
 			},
 			"safety": types.BoolType,
 			"valid_topics": basetypes.ListType{
@@ -485,10 +485,10 @@ func (o AiGatewayGuardrails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"input": basetypes.ListType{
-				ElemType: AiGatewayGuardrailParameters{}.Type(ctx),
+				ElemType: AiGatewayGuardrailParameters_SdkV2{}.Type(ctx),
 			},
 			"output": basetypes.ListType{
-				ElemType: AiGatewayGuardrailParameters{}.Type(ctx),
+				ElemType: AiGatewayGuardrailParameters_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -945,7 +945,7 @@ func (o AutoCaptureConfigOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"enabled":      types.BoolType,
 			"schema_name":  types.StringType,
 			"state": basetypes.ListType{
-				ElemType: AutoCaptureState{}.Type(ctx),
+				ElemType: AutoCaptureState_SdkV2{}.Type(ctx),
 			},
 			"table_name_prefix": types.StringType,
 		},
@@ -1017,7 +1017,7 @@ func (o AutoCaptureState_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"payload_table": basetypes.ListType{
-				ElemType: PayloadTable{}.Type(ctx),
+				ElemType: PayloadTable_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1306,18 +1306,18 @@ func (o CreateServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"ai_gateway": basetypes.ListType{
-				ElemType: AiGatewayConfig{}.Type(ctx),
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
 			"config": basetypes.ListType{
-				ElemType: EndpointCoreConfigInput{}.Type(ctx),
+				ElemType: EndpointCoreConfigInput_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
-				ElemType: RateLimit{}.Type(ctx),
+				ElemType: RateLimit_SdkV2{}.Type(ctx),
 			},
 			"route_optimized": types.BoolType,
 			"tags": basetypes.ListType{
-				ElemType: EndpointTag{}.Type(ctx),
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1842,17 +1842,17 @@ func (o EndpointCoreConfigInput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{
-				ElemType: AutoCaptureConfigInput{}.Type(ctx),
+				ElemType: AutoCaptureConfigInput_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"served_entities": basetypes.ListType{
-				ElemType: ServedEntityInput{}.Type(ctx),
+				ElemType: ServedEntityInput_SdkV2{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
-				ElemType: ServedModelInput{}.Type(ctx),
+				ElemType: ServedModelInput_SdkV2{}.Type(ctx),
 			},
 			"traffic_config": basetypes.ListType{
-				ElemType: TrafficConfig{}.Type(ctx),
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2019,17 +2019,17 @@ func (o EndpointCoreConfigOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{
-				ElemType: AutoCaptureConfigOutput{}.Type(ctx),
+				ElemType: AutoCaptureConfigOutput_SdkV2{}.Type(ctx),
 			},
 			"config_version": types.Int64Type,
 			"served_entities": basetypes.ListType{
-				ElemType: ServedEntityOutput{}.Type(ctx),
+				ElemType: ServedEntityOutput_SdkV2{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
-				ElemType: ServedModelOutput{}.Type(ctx),
+				ElemType: ServedModelOutput_SdkV2{}.Type(ctx),
 			},
 			"traffic_config": basetypes.ListType{
-				ElemType: TrafficConfig{}.Type(ctx),
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2184,10 +2184,10 @@ func (o EndpointCoreConfigSummary_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"served_entities": basetypes.ListType{
-				ElemType: ServedEntitySpec{}.Type(ctx),
+				ElemType: ServedEntitySpec_SdkV2{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
-				ElemType: ServedModelSpec{}.Type(ctx),
+				ElemType: ServedModelSpec_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2307,18 +2307,18 @@ func (o EndpointPendingConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"auto_capture_config": basetypes.ListType{
-				ElemType: AutoCaptureConfigOutput{}.Type(ctx),
+				ElemType: AutoCaptureConfigOutput_SdkV2{}.Type(ctx),
 			},
 			"config_version": types.Int64Type,
 			"served_entities": basetypes.ListType{
-				ElemType: ServedEntityOutput{}.Type(ctx),
+				ElemType: ServedEntityOutput_SdkV2{}.Type(ctx),
 			},
 			"served_models": basetypes.ListType{
-				ElemType: ServedModelOutput{}.Type(ctx),
+				ElemType: ServedModelOutput_SdkV2{}.Type(ctx),
 			},
 			"start_time": types.Int64Type,
 			"traffic_config": basetypes.ListType{
-				ElemType: TrafficConfig{}.Type(ctx),
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2694,29 +2694,29 @@ func (o ExternalModel_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"ai21labs_config": basetypes.ListType{
-				ElemType: Ai21LabsConfig{}.Type(ctx),
+				ElemType: Ai21LabsConfig_SdkV2{}.Type(ctx),
 			},
 			"amazon_bedrock_config": basetypes.ListType{
-				ElemType: AmazonBedrockConfig{}.Type(ctx),
+				ElemType: AmazonBedrockConfig_SdkV2{}.Type(ctx),
 			},
 			"anthropic_config": basetypes.ListType{
-				ElemType: AnthropicConfig{}.Type(ctx),
+				ElemType: AnthropicConfig_SdkV2{}.Type(ctx),
 			},
 			"cohere_config": basetypes.ListType{
-				ElemType: CohereConfig{}.Type(ctx),
+				ElemType: CohereConfig_SdkV2{}.Type(ctx),
 			},
 			"databricks_model_serving_config": basetypes.ListType{
-				ElemType: DatabricksModelServingConfig{}.Type(ctx),
+				ElemType: DatabricksModelServingConfig_SdkV2{}.Type(ctx),
 			},
 			"google_cloud_vertex_ai_config": basetypes.ListType{
-				ElemType: GoogleCloudVertexAiConfig{}.Type(ctx),
+				ElemType: GoogleCloudVertexAiConfig_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"openai_config": basetypes.ListType{
-				ElemType: OpenAiConfig{}.Type(ctx),
+				ElemType: OpenAiConfig_SdkV2{}.Type(ctx),
 			},
 			"palm_config": basetypes.ListType{
-				ElemType: PaLmConfig{}.Type(ctx),
+				ElemType: PaLmConfig_SdkV2{}.Type(ctx),
 			},
 			"provider": types.StringType,
 			"task":     types.StringType,
@@ -3201,7 +3201,7 @@ func (o GetServingEndpointPermissionLevelsResponse_SdkV2) Type(ctx context.Conte
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"permission_levels": basetypes.ListType{
-				ElemType: ServingEndpointPermissionsDescription{}.Type(ctx),
+				ElemType: ServingEndpointPermissionsDescription_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3432,7 +3432,7 @@ func (o ListEndpointsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"endpoints": basetypes.ListType{
-				ElemType: ServingEndpoint{}.Type(ctx),
+				ElemType: ServingEndpoint_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3553,7 +3553,7 @@ func (o ModelDataPlaneInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query_info": basetypes.ListType{
-				ElemType: oauth2_tf.DataPlaneInfo{}.Type(ctx),
+				ElemType: oauth2_tf.DataPlaneInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3796,7 +3796,7 @@ func (o PatchServingEndpointTags_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"add_tags": basetypes.ListType{
-				ElemType: EndpointTag{}.Type(ctx),
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
 			"delete_tags": basetypes.ListType{
 				ElemType: types.StringType,
@@ -3970,17 +3970,17 @@ func (o PutAiGatewayRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"guardrails": basetypes.ListType{
-				ElemType: AiGatewayGuardrails{}.Type(ctx),
+				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
 			"inference_table_config": basetypes.ListType{
-				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+				ElemType: AiGatewayInferenceTableConfig_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
-				ElemType: AiGatewayRateLimit{}.Type(ctx),
+				ElemType: AiGatewayRateLimit_SdkV2{}.Type(ctx),
 			},
 			"usage_tracking_config": basetypes.ListType{
-				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+				ElemType: AiGatewayUsageTrackingConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4147,16 +4147,16 @@ func (o PutAiGatewayResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"guardrails": basetypes.ListType{
-				ElemType: AiGatewayGuardrails{}.Type(ctx),
+				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
 			"inference_table_config": basetypes.ListType{
-				ElemType: AiGatewayInferenceTableConfig{}.Type(ctx),
+				ElemType: AiGatewayInferenceTableConfig_SdkV2{}.Type(ctx),
 			},
 			"rate_limits": basetypes.ListType{
-				ElemType: AiGatewayRateLimit{}.Type(ctx),
+				ElemType: AiGatewayRateLimit_SdkV2{}.Type(ctx),
 			},
 			"usage_tracking_config": basetypes.ListType{
-				ElemType: AiGatewayUsageTrackingConfig{}.Type(ctx),
+				ElemType: AiGatewayUsageTrackingConfig_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4312,7 +4312,7 @@ func (o PutRequest_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 			"rate_limits": basetypes.ListType{
-				ElemType: RateLimit{}.Type(ctx),
+				ElemType: RateLimit_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4384,7 +4384,7 @@ func (o PutResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"rate_limits": basetypes.ListType{
-				ElemType: RateLimit{}.Type(ctx),
+				ElemType: RateLimit_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -4524,7 +4524,7 @@ func (o QueryEndpointInput_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.ObjectType{},
 			},
 			"dataframe_split": basetypes.ListType{
-				ElemType: DataframeSplitInput{}.Type(ctx),
+				ElemType: DataframeSplitInput_SdkV2{}.Type(ctx),
 			},
 			"extra_params": basetypes.MapType{
 				ElemType: types.StringType,
@@ -4536,7 +4536,7 @@ func (o QueryEndpointInput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"max_tokens": types.Int64Type,
 			"messages": basetypes.ListType{
-				ElemType: ChatMessage{}.Type(ctx),
+				ElemType: ChatMessage_SdkV2{}.Type(ctx),
 			},
 			"n":      types.Int64Type,
 			"name":   types.StringType,
@@ -4783,11 +4783,11 @@ func (o QueryEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"choices": basetypes.ListType{
-				ElemType: V1ResponseChoiceElement{}.Type(ctx),
+				ElemType: V1ResponseChoiceElement_SdkV2{}.Type(ctx),
 			},
 			"created": types.Int64Type,
 			"data": basetypes.ListType{
-				ElemType: EmbeddingsV1ResponseEmbeddingElement{}.Type(ctx),
+				ElemType: EmbeddingsV1ResponseEmbeddingElement_SdkV2{}.Type(ctx),
 			},
 			"id":     types.StringType,
 			"model":  types.StringType,
@@ -4797,7 +4797,7 @@ func (o QueryEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"served-model-name": types.StringType,
 			"usage": basetypes.ListType{
-				ElemType: ExternalModelUsageElement{}.Type(ctx),
+				ElemType: ExternalModelUsageElement_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5120,7 +5120,7 @@ func (o ServedEntityInput_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"external_model": basetypes.ListType{
-				ElemType: ExternalModel{}.Type(ctx),
+				ElemType: ExternalModel_SdkV2{}.Type(ctx),
 			},
 			"instance_profile_arn":       types.StringType,
 			"max_provisioned_throughput": types.Int64Type,
@@ -5307,10 +5307,10 @@ func (o ServedEntityOutput_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"external_model": basetypes.ListType{
-				ElemType: ExternalModel{}.Type(ctx),
+				ElemType: ExternalModel_SdkV2{}.Type(ctx),
 			},
 			"foundation_model": basetypes.ListType{
-				ElemType: FoundationModel{}.Type(ctx),
+				ElemType: FoundationModel_SdkV2{}.Type(ctx),
 			},
 			"instance_profile_arn":       types.StringType,
 			"max_provisioned_throughput": types.Int64Type,
@@ -5318,7 +5318,7 @@ func (o ServedEntityOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":                       types.StringType,
 			"scale_to_zero_enabled":      types.BoolType,
 			"state": basetypes.ListType{
-				ElemType: ServedModelState{}.Type(ctx),
+				ElemType: ServedModelState_SdkV2{}.Type(ctx),
 			},
 			"workload_size": types.StringType,
 			"workload_type": types.StringType,
@@ -5494,10 +5494,10 @@ func (o ServedEntitySpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"entity_name":    types.StringType,
 			"entity_version": types.StringType,
 			"external_model": basetypes.ListType{
-				ElemType: ExternalModel{}.Type(ctx),
+				ElemType: ExternalModel_SdkV2{}.Type(ctx),
 			},
 			"foundation_model": basetypes.ListType{
-				ElemType: FoundationModel{}.Type(ctx),
+				ElemType: FoundationModel_SdkV2{}.Type(ctx),
 			},
 			"name": types.StringType,
 		},
@@ -5791,7 +5791,7 @@ func (o ServedModelOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":                  types.StringType,
 			"scale_to_zero_enabled": types.BoolType,
 			"state": basetypes.ListType{
-				ElemType: ServedModelState{}.Type(ctx),
+				ElemType: ServedModelState_SdkV2{}.Type(ctx),
 			},
 			"workload_size": types.StringType,
 			"workload_type": types.StringType,
@@ -6075,10 +6075,10 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"ai_gateway": basetypes.ListType{
-				ElemType: AiGatewayConfig{}.Type(ctx),
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
 			"config": basetypes.ListType{
-				ElemType: EndpointCoreConfigSummary{}.Type(ctx),
+				ElemType: EndpointCoreConfigSummary_SdkV2{}.Type(ctx),
 			},
 			"creation_timestamp":     types.Int64Type,
 			"creator":                types.StringType,
@@ -6086,10 +6086,10 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
 			"state": basetypes.ListType{
-				ElemType: EndpointState{}.Type(ctx),
+				ElemType: EndpointState_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.ListType{
-				ElemType: EndpointTag{}.Type(ctx),
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
 			"task": types.StringType,
 		},
@@ -6306,7 +6306,7 @@ func (o ServingEndpointAccessControlResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"all_permissions": basetypes.ListType{
-				ElemType: ServingEndpointPermission{}.Type(ctx),
+				ElemType: ServingEndpointPermission_SdkV2{}.Type(ctx),
 			},
 			"display_name":           types.StringType,
 			"group_name":             types.StringType,
@@ -6432,30 +6432,30 @@ func (o ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"ai_gateway": basetypes.ListType{
-				ElemType: AiGatewayConfig{}.Type(ctx),
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
 			"config": basetypes.ListType{
-				ElemType: EndpointCoreConfigOutput{}.Type(ctx),
+				ElemType: EndpointCoreConfigOutput_SdkV2{}.Type(ctx),
 			},
 			"creation_timestamp": types.Int64Type,
 			"creator":            types.StringType,
 			"data_plane_info": basetypes.ListType{
-				ElemType: ModelDataPlaneInfo{}.Type(ctx),
+				ElemType: ModelDataPlaneInfo_SdkV2{}.Type(ctx),
 			},
 			"endpoint_url":           types.StringType,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
 			"name":                   types.StringType,
 			"pending_config": basetypes.ListType{
-				ElemType: EndpointPendingConfig{}.Type(ctx),
+				ElemType: EndpointPendingConfig_SdkV2{}.Type(ctx),
 			},
 			"permission_level": types.StringType,
 			"route_optimized":  types.BoolType,
 			"state": basetypes.ListType{
-				ElemType: EndpointState{}.Type(ctx),
+				ElemType: EndpointState_SdkV2{}.Type(ctx),
 			},
 			"tags": basetypes.ListType{
-				ElemType: EndpointTag{}.Type(ctx),
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
 			},
 			"task": types.StringType,
 		},
@@ -6742,7 +6742,7 @@ func (o ServingEndpointPermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: ServingEndpointAccessControlResponse{}.Type(ctx),
+				ElemType: ServingEndpointAccessControlResponse_SdkV2{}.Type(ctx),
 			},
 			"object_id":   types.StringType,
 			"object_type": types.StringType,
@@ -6863,7 +6863,7 @@ func (o ServingEndpointPermissionsRequest_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"access_control_list": basetypes.ListType{
-				ElemType: ServingEndpointAccessControlRequest{}.Type(ctx),
+				ElemType: ServingEndpointAccessControlRequest_SdkV2{}.Type(ctx),
 			},
 			"serving_endpoint_id": types.StringType,
 		},
@@ -6936,7 +6936,7 @@ func (o TrafficConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"routes": basetypes.ListType{
-				ElemType: Route{}.Type(ctx),
+				ElemType: Route_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7023,7 +7023,7 @@ func (o V1ResponseChoiceElement_SdkV2) Type(ctx context.Context) attr.Type {
 			"index":        types.Int64Type,
 			"logprobs":     types.Int64Type,
 			"message": basetypes.ListType{
-				ElemType: ChatMessage{}.Type(ctx),
+				ElemType: ChatMessage_SdkV2{}.Type(ctx),
 			},
 			"text": types.StringType,
 		},

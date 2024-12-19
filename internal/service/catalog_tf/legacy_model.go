@@ -60,7 +60,7 @@ func (o AccountsCreateMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastore_info": basetypes.ListType{
-				ElemType: CreateMetastore{}.Type(ctx),
+				ElemType: CreateMetastore_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -137,7 +137,7 @@ func (o AccountsCreateMetastoreAssignment_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastore_assignment": basetypes.ListType{
-				ElemType: CreateMetastoreAssignment{}.Type(ctx),
+				ElemType: CreateMetastoreAssignment_SdkV2{}.Type(ctx),
 			},
 			"metastore_id": types.StringType,
 			"workspace_id": types.Int64Type,
@@ -213,7 +213,7 @@ func (o AccountsCreateStorageCredential_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credential_info": basetypes.ListType{
-				ElemType: CreateStorageCredential{}.Type(ctx),
+				ElemType: CreateStorageCredential_SdkV2{}.Type(ctx),
 			},
 			"metastore_id": types.StringType,
 		},
@@ -285,7 +285,7 @@ func (o AccountsMetastoreAssignment_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastore_assignment": basetypes.ListType{
-				ElemType: MetastoreAssignment{}.Type(ctx),
+				ElemType: MetastoreAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -356,7 +356,7 @@ func (o AccountsMetastoreInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastore_info": basetypes.ListType{
-				ElemType: MetastoreInfo{}.Type(ctx),
+				ElemType: MetastoreInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -427,7 +427,7 @@ func (o AccountsStorageCredentialInfo_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credential_info": basetypes.ListType{
-				ElemType: StorageCredentialInfo{}.Type(ctx),
+				ElemType: StorageCredentialInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -503,7 +503,7 @@ func (o AccountsUpdateMetastore_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"metastore_id": types.StringType,
 			"metastore_info": basetypes.ListType{
-				ElemType: UpdateMetastore{}.Type(ctx),
+				ElemType: UpdateMetastore_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -580,7 +580,7 @@ func (o AccountsUpdateMetastoreAssignment_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastore_assignment": basetypes.ListType{
-				ElemType: UpdateMetastoreAssignment{}.Type(ctx),
+				ElemType: UpdateMetastoreAssignment_SdkV2{}.Type(ctx),
 			},
 			"metastore_id": types.StringType,
 			"workspace_id": types.Int64Type,
@@ -659,7 +659,7 @@ func (o AccountsUpdateStorageCredential_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credential_info": basetypes.ListType{
-				ElemType: UpdateStorageCredential{}.Type(ctx),
+				ElemType: UpdateStorageCredential_SdkV2{}.Type(ctx),
 			},
 			"metastore_id":            types.StringType,
 			"storage_credential_name": types.StringType,
@@ -742,7 +742,7 @@ func (o ArtifactAllowlistInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"artifact_matchers": basetypes.ListType{
-				ElemType: ArtifactMatcher{}.Type(ctx),
+				ElemType: ArtifactMatcher_SdkV2{}.Type(ctx),
 			},
 			"created_at":   types.Int64Type,
 			"created_by":   types.StringType,
@@ -1588,7 +1588,7 @@ func (o CatalogInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_at":      types.Int64Type,
 			"created_by":      types.StringType,
 			"effective_predictive_optimization_flag": basetypes.ListType{
-				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+				ElemType: EffectivePredictiveOptimizationFlag_SdkV2{}.Type(ctx),
 			},
 			"enable_predictive_optimization": types.StringType,
 			"full_name":                      types.StringType,
@@ -1604,7 +1604,7 @@ func (o CatalogInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"provider_name": types.StringType,
 			"provisioning_info": basetypes.ListType{
-				ElemType: ProvisioningInfo{}.Type(ctx),
+				ElemType: ProvisioningInfo_SdkV2{}.Type(ctx),
 			},
 			"securable_kind":   types.StringType,
 			"securable_type":   types.StringType,
@@ -1845,7 +1845,7 @@ func (o ColumnInfo_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"comment": types.StringType,
 			"mask": basetypes.ListType{
-				ElemType: ColumnMask{}.Type(ctx),
+				ElemType: ColumnMask_SdkV2{}.Type(ctx),
 			},
 			"name":               types.StringType,
 			"nullable":           types.BoolType,
@@ -2079,7 +2079,7 @@ func (o ConnectionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"provisioning_info": basetypes.ListType{
-				ElemType: ProvisioningInfo{}.Type(ctx),
+				ElemType: ProvisioningInfo_SdkV2{}.Type(ctx),
 			},
 			"read_only":      types.BoolType,
 			"securable_kind": types.StringType,
@@ -2220,7 +2220,7 @@ func (o ContinuousUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"initial_pipeline_sync_progress": basetypes.ListType{
-				ElemType: PipelineProgress{}.Type(ctx),
+				ElemType: PipelineProgress_SdkV2{}.Type(ctx),
 			},
 			"last_processed_commit_version": types.Int64Type,
 			"timestamp":                     types.StringType,
@@ -2580,17 +2580,17 @@ func (o CreateCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRole{}.Type(ctx),
+				ElemType: AwsIamRole_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentity{}.Type(ctx),
+				ElemType: AzureManagedIdentity_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"comment": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccount_SdkV2{}.Type(ctx),
 			},
 			"name":            types.StringType,
 			"purpose":         types.StringType,
@@ -2774,7 +2774,7 @@ func (o CreateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":         types.StringType,
 			"credential_name": types.StringType,
 			"encryption_details": basetypes.ListType{
-				ElemType: EncryptionDetails{}.Type(ctx),
+				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
 			"fallback":        types.BoolType,
 			"name":            types.StringType,
@@ -2923,7 +2923,7 @@ func (o CreateFunction_SdkV2) Type(ctx context.Context) attr.Type {
 			"external_name":     types.StringType,
 			"full_data_type":    types.StringType,
 			"input_params": basetypes.ListType{
-				ElemType: FunctionParameterInfos{}.Type(ctx),
+				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
 			},
 			"is_deterministic": types.BoolType,
 			"is_null_call":     types.BoolType,
@@ -2931,12 +2931,12 @@ func (o CreateFunction_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter_style":  types.StringType,
 			"properties":       types.StringType,
 			"return_params": basetypes.ListType{
-				ElemType: FunctionParameterInfos{}.Type(ctx),
+				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
 			},
 			"routine_body":       types.StringType,
 			"routine_definition": types.StringType,
 			"routine_dependencies": basetypes.ListType{
-				ElemType: DependencyList{}.Type(ctx),
+				ElemType: DependencyList_SdkV2{}.Type(ctx),
 			},
 			"schema_name":     types.StringType,
 			"security_type":   types.StringType,
@@ -3065,7 +3065,7 @@ func (o CreateFunctionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"function_info": basetypes.ListType{
-				ElemType: CreateFunction{}.Type(ctx),
+				ElemType: CreateFunction_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3300,31 +3300,31 @@ func (o CreateMonitor_SdkV2) Type(ctx context.Context) attr.Type {
 			"assets_dir":          types.StringType,
 			"baseline_table_name": types.StringType,
 			"custom_metrics": basetypes.ListType{
-				ElemType: MonitorMetric{}.Type(ctx),
+				ElemType: MonitorMetric_SdkV2{}.Type(ctx),
 			},
 			"data_classification_config": basetypes.ListType{
-				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+				ElemType: MonitorDataClassificationConfig_SdkV2{}.Type(ctx),
 			},
 			"inference_log": basetypes.ListType{
-				ElemType: MonitorInferenceLog{}.Type(ctx),
+				ElemType: MonitorInferenceLog_SdkV2{}.Type(ctx),
 			},
 			"notifications": basetypes.ListType{
-				ElemType: MonitorNotifications{}.Type(ctx),
+				ElemType: MonitorNotifications_SdkV2{}.Type(ctx),
 			},
 			"output_schema_name": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: MonitorCronSchedule{}.Type(ctx),
+				ElemType: MonitorCronSchedule_SdkV2{}.Type(ctx),
 			},
 			"skip_builtin_dashboard": types.BoolType,
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"snapshot": basetypes.ListType{
-				ElemType: MonitorSnapshot{}.Type(ctx),
+				ElemType: MonitorSnapshot_SdkV2{}.Type(ctx),
 			},
 			"table_name": types.StringType,
 			"time_series": basetypes.ListType{
-				ElemType: MonitorTimeSeries{}.Type(ctx),
+				ElemType: MonitorTimeSeries_SdkV2{}.Type(ctx),
 			},
 			"warehouse_id": types.StringType,
 		},
@@ -3580,7 +3580,7 @@ func (o CreateOnlineTableRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"table": basetypes.ListType{
-				ElemType: OnlineTable{}.Type(ctx),
+				ElemType: OnlineTable_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3864,20 +3864,20 @@ func (o CreateStorageCredential_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRoleRequest{}.Type(ctx),
+				ElemType: AwsIamRoleRequest_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentityRequest{}.Type(ctx),
+				ElemType: AzureManagedIdentityRequest_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"cloudflare_api_token": basetypes.ListType{
-				ElemType: CloudflareApiToken{}.Type(ctx),
+				ElemType: CloudflareApiToken_SdkV2{}.Type(ctx),
 			},
 			"comment": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccountRequest_SdkV2{}.Type(ctx),
 			},
 			"name":            types.StringType,
 			"read_only":       types.BoolType,
@@ -4061,7 +4061,7 @@ func (o CreateTableConstraint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"constraint": basetypes.ListType{
-				ElemType: TableConstraint{}.Type(ctx),
+				ElemType: TableConstraint_SdkV2{}.Type(ctx),
 			},
 			"full_name_arg": types.StringType,
 		},
@@ -4256,19 +4256,19 @@ func (o CredentialInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRole{}.Type(ctx),
+				ElemType: AwsIamRole_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentity{}.Type(ctx),
+				ElemType: AzureManagedIdentity_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"comment":    types.StringType,
 			"created_at": types.Int64Type,
 			"created_by": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccount_SdkV2{}.Type(ctx),
 			},
 			"full_name":                types.StringType,
 			"id":                       types.StringType,
@@ -5759,10 +5759,10 @@ func (o Dependency_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"function": basetypes.ListType{
-				ElemType: FunctionDependency{}.Type(ctx),
+				ElemType: FunctionDependency_SdkV2{}.Type(ctx),
 			},
 			"table": basetypes.ListType{
-				ElemType: TableDependency{}.Type(ctx),
+				ElemType: TableDependency_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -5861,7 +5861,7 @@ func (o DependencyList_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dependencies": basetypes.ListType{
-				ElemType: Dependency{}.Type(ctx),
+				ElemType: Dependency_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6017,7 +6017,7 @@ func (o EffectivePermissionsList_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"privilege_assignments": basetypes.ListType{
-				ElemType: EffectivePrivilegeAssignment{}.Type(ctx),
+				ElemType: EffectivePrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6201,7 +6201,7 @@ func (o EffectivePrivilegeAssignment_SdkV2) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"principal": types.StringType,
 			"privileges": basetypes.ListType{
-				ElemType: EffectivePrivilege{}.Type(ctx),
+				ElemType: EffectivePrivilege_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6357,7 +6357,7 @@ func (o EncryptionDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"sse_encryption_details": basetypes.ListType{
-				ElemType: SseEncryptionDetails{}.Type(ctx),
+				ElemType: SseEncryptionDetails_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -6532,7 +6532,7 @@ func (o ExternalLocationInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"credential_id":   types.StringType,
 			"credential_name": types.StringType,
 			"encryption_details": basetypes.ListType{
-				ElemType: EncryptionDetails{}.Type(ctx),
+				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
 			"fallback":       types.BoolType,
 			"isolation_mode": types.StringType,
@@ -6930,7 +6930,7 @@ func (o FunctionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"full_name":         types.StringType,
 			"function_id":       types.StringType,
 			"input_params": basetypes.ListType{
-				ElemType: FunctionParameterInfos{}.Type(ctx),
+				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
 			},
 			"is_deterministic": types.BoolType,
 			"is_null_call":     types.BoolType,
@@ -6940,12 +6940,12 @@ func (o FunctionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter_style":  types.StringType,
 			"properties":       types.StringType,
 			"return_params": basetypes.ListType{
-				ElemType: FunctionParameterInfos{}.Type(ctx),
+				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
 			},
 			"routine_body":       types.StringType,
 			"routine_definition": types.StringType,
 			"routine_dependencies": basetypes.ListType{
-				ElemType: DependencyList{}.Type(ctx),
+				ElemType: DependencyList_SdkV2{}.Type(ctx),
 			},
 			"schema_name":     types.StringType,
 			"security_type":   types.StringType,
@@ -7163,7 +7163,7 @@ func (o FunctionParameterInfos_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"parameters": basetypes.ListType{
-				ElemType: FunctionParameterInfo{}.Type(ctx),
+				ElemType: FunctionParameterInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7436,11 +7436,11 @@ func (o GenerateTemporaryServiceCredentialRequest_SdkV2) Type(ctx context.Contex
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"azure_options": basetypes.ListType{
-				ElemType: GenerateTemporaryServiceCredentialAzureOptions{}.Type(ctx),
+				ElemType: GenerateTemporaryServiceCredentialAzureOptions_SdkV2{}.Type(ctx),
 			},
 			"credential_name": types.StringType,
 			"gcp_options": basetypes.ListType{
-				ElemType: GenerateTemporaryServiceCredentialGcpOptions{}.Type(ctx),
+				ElemType: GenerateTemporaryServiceCredentialGcpOptions_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -7615,20 +7615,20 @@ func (o GenerateTemporaryTableCredentialResponse_SdkV2) Type(ctx context.Context
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_temp_credentials": basetypes.ListType{
-				ElemType: AwsCredentials{}.Type(ctx),
+				ElemType: AwsCredentials_SdkV2{}.Type(ctx),
 			},
 			"azure_aad": basetypes.ListType{
-				ElemType: AzureActiveDirectoryToken{}.Type(ctx),
+				ElemType: AzureActiveDirectoryToken_SdkV2{}.Type(ctx),
 			},
 			"azure_user_delegation_sas": basetypes.ListType{
-				ElemType: AzureUserDelegationSas{}.Type(ctx),
+				ElemType: AzureUserDelegationSas_SdkV2{}.Type(ctx),
 			},
 			"expiration_time": types.Int64Type,
 			"gcp_oauth_token": basetypes.ListType{
-				ElemType: GcpOauthToken{}.Type(ctx),
+				ElemType: GcpOauthToken_SdkV2{}.Type(ctx),
 			},
 			"r2_temp_credentials": basetypes.ListType{
-				ElemType: R2Credentials{}.Type(ctx),
+				ElemType: R2Credentials_SdkV2{}.Type(ctx),
 			},
 			"url": types.StringType,
 		},
@@ -8785,7 +8785,7 @@ func (o GetQuotaResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"quota_info": basetypes.ListType{
-				ElemType: QuotaInfo{}.Type(ctx),
+				ElemType: QuotaInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9304,7 +9304,7 @@ func (o ListAccountStorageCredentialsResponse_SdkV2) Type(ctx context.Context) a
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"storage_credentials": basetypes.ListType{
-				ElemType: StorageCredentialInfo{}.Type(ctx),
+				ElemType: StorageCredentialInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9441,7 +9441,7 @@ func (o ListCatalogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"catalogs": basetypes.ListType{
-				ElemType: CatalogInfo{}.Type(ctx),
+				ElemType: CatalogInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -9571,7 +9571,7 @@ func (o ListConnectionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"connections": basetypes.ListType{
-				ElemType: ConnectionInfo{}.Type(ctx),
+				ElemType: ConnectionInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -9703,7 +9703,7 @@ func (o ListCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"credentials": basetypes.ListType{
-				ElemType: CredentialInfo{}.Type(ctx),
+				ElemType: CredentialInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -9838,7 +9838,7 @@ func (o ListExternalLocationsResponse_SdkV2) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"external_locations": basetypes.ListType{
-				ElemType: ExternalLocationInfo{}.Type(ctx),
+				ElemType: ExternalLocationInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -9981,7 +9981,7 @@ func (o ListFunctionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"functions": basetypes.ListType{
-				ElemType: FunctionInfo{}.Type(ctx),
+				ElemType: FunctionInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -10054,7 +10054,7 @@ func (o ListMetastoresResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"metastores": basetypes.ListType{
-				ElemType: MetastoreInfo{}.Type(ctx),
+				ElemType: MetastoreInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10193,7 +10193,7 @@ func (o ListModelVersionsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"model_versions": basetypes.ListType{
-				ElemType: ModelVersionInfo{}.Type(ctx),
+				ElemType: ModelVersionInfo_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -10319,7 +10319,7 @@ func (o ListQuotasResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"quotas": basetypes.ListType{
-				ElemType: QuotaInfo{}.Type(ctx),
+				ElemType: QuotaInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10517,7 +10517,7 @@ func (o ListRegisteredModelsResponse_SdkV2) Type(ctx context.Context) attr.Type 
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"registered_models": basetypes.ListType{
-				ElemType: RegisteredModelInfo{}.Type(ctx),
+				ElemType: RegisteredModelInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10656,7 +10656,7 @@ func (o ListSchemasResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"schemas": basetypes.ListType{
-				ElemType: SchemaInfo{}.Type(ctx),
+				ElemType: SchemaInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10786,7 +10786,7 @@ func (o ListStorageCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Typ
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"storage_credentials": basetypes.ListType{
-				ElemType: StorageCredentialInfo{}.Type(ctx),
+				ElemType: StorageCredentialInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -10991,7 +10991,7 @@ func (o ListSystemSchemasResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"schemas": basetypes.ListType{
-				ElemType: SystemSchemaInfo{}.Type(ctx),
+				ElemType: SystemSchemaInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11069,7 +11069,7 @@ func (o ListTableSummariesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"tables": basetypes.ListType{
-				ElemType: TableSummary{}.Type(ctx),
+				ElemType: TableSummary_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11233,7 +11233,7 @@ func (o ListTablesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"tables": basetypes.ListType{
-				ElemType: TableInfo{}.Type(ctx),
+				ElemType: TableInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11383,7 +11383,7 @@ func (o ListVolumesResponseContent_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"volumes": basetypes.ListType{
-				ElemType: VolumeInfo{}.Type(ctx),
+				ElemType: VolumeInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -11690,7 +11690,7 @@ func (o ModelVersionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aliases": basetypes.ListType{
-				ElemType: RegisteredModelAlias{}.Type(ctx),
+				ElemType: RegisteredModelAlias_SdkV2{}.Type(ctx),
 			},
 			"browse_only":  types.BoolType,
 			"catalog_name": types.StringType,
@@ -11701,7 +11701,7 @@ func (o ModelVersionInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"metastore_id": types.StringType,
 			"model_name":   types.StringType,
 			"model_version_dependencies": basetypes.ListType{
-				ElemType: DependencyList{}.Type(ctx),
+				ElemType: DependencyList_SdkV2{}.Type(ctx),
 			},
 			"run_id":           types.StringType,
 			"run_workspace_id": types.Int64Type,
@@ -12159,36 +12159,36 @@ func (o MonitorInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"assets_dir":          types.StringType,
 			"baseline_table_name": types.StringType,
 			"custom_metrics": basetypes.ListType{
-				ElemType: MonitorMetric{}.Type(ctx),
+				ElemType: MonitorMetric_SdkV2{}.Type(ctx),
 			},
 			"dashboard_id": types.StringType,
 			"data_classification_config": basetypes.ListType{
-				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+				ElemType: MonitorDataClassificationConfig_SdkV2{}.Type(ctx),
 			},
 			"drift_metrics_table_name": types.StringType,
 			"inference_log": basetypes.ListType{
-				ElemType: MonitorInferenceLog{}.Type(ctx),
+				ElemType: MonitorInferenceLog_SdkV2{}.Type(ctx),
 			},
 			"latest_monitor_failure_msg": types.StringType,
 			"monitor_version":            types.StringType,
 			"notifications": basetypes.ListType{
-				ElemType: MonitorNotifications{}.Type(ctx),
+				ElemType: MonitorNotifications_SdkV2{}.Type(ctx),
 			},
 			"output_schema_name":         types.StringType,
 			"profile_metrics_table_name": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: MonitorCronSchedule{}.Type(ctx),
+				ElemType: MonitorCronSchedule_SdkV2{}.Type(ctx),
 			},
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"snapshot": basetypes.ListType{
-				ElemType: MonitorSnapshot{}.Type(ctx),
+				ElemType: MonitorSnapshot_SdkV2{}.Type(ctx),
 			},
 			"status":     types.StringType,
 			"table_name": types.StringType,
 			"time_series": basetypes.ListType{
-				ElemType: MonitorTimeSeries{}.Type(ctx),
+				ElemType: MonitorTimeSeries_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12549,10 +12549,10 @@ func (o MonitorNotifications_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"on_failure": basetypes.ListType{
-				ElemType: MonitorDestination{}.Type(ctx),
+				ElemType: MonitorDestination_SdkV2{}.Type(ctx),
 			},
 			"on_new_classification_tag_detected": basetypes.ListType{
-				ElemType: MonitorDestination{}.Type(ctx),
+				ElemType: MonitorDestination_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12715,7 +12715,7 @@ func (o MonitorRefreshListResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"refreshes": basetypes.ListType{
-				ElemType: MonitorRefreshInfo{}.Type(ctx),
+				ElemType: MonitorRefreshInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -12967,10 +12967,10 @@ func (o OnlineTable_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"name": types.StringType,
 			"spec": basetypes.ListType{
-				ElemType: OnlineTableSpec{}.Type(ctx),
+				ElemType: OnlineTableSpec_SdkV2{}.Type(ctx),
 			},
 			"status": basetypes.ListType{
-				ElemType: OnlineTableStatus{}.Type(ctx),
+				ElemType: OnlineTableStatus_SdkV2{}.Type(ctx),
 			},
 			"table_serving_url":                types.StringType,
 			"unity_catalog_provisioning_state": types.StringType,
@@ -13105,10 +13105,10 @@ func (o OnlineTableSpec_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"run_continuously": basetypes.ListType{
-				ElemType: OnlineTableSpecContinuousSchedulingPolicy{}.Type(ctx),
+				ElemType: OnlineTableSpecContinuousSchedulingPolicy_SdkV2{}.Type(ctx),
 			},
 			"run_triggered": basetypes.ListType{
-				ElemType: OnlineTableSpecTriggeredSchedulingPolicy{}.Type(ctx),
+				ElemType: OnlineTableSpecTriggeredSchedulingPolicy_SdkV2{}.Type(ctx),
 			},
 			"source_table_full_name": types.StringType,
 			"timeseries_key":         types.StringType,
@@ -13330,18 +13330,18 @@ func (o OnlineTableStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"continuous_update_status": basetypes.ListType{
-				ElemType: ContinuousUpdateStatus{}.Type(ctx),
+				ElemType: ContinuousUpdateStatus_SdkV2{}.Type(ctx),
 			},
 			"detailed_state": types.StringType,
 			"failed_status": basetypes.ListType{
-				ElemType: FailedStatus{}.Type(ctx),
+				ElemType: FailedStatus_SdkV2{}.Type(ctx),
 			},
 			"message": types.StringType,
 			"provisioning_status": basetypes.ListType{
-				ElemType: ProvisioningStatus{}.Type(ctx),
+				ElemType: ProvisioningStatus_SdkV2{}.Type(ctx),
 			},
 			"triggered_update_status": basetypes.ListType{
-				ElemType: TriggeredUpdateStatus{}.Type(ctx),
+				ElemType: TriggeredUpdateStatus_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -13600,7 +13600,7 @@ func (o PermissionsList_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"privilege_assignments": basetypes.ListType{
-				ElemType: PrivilegeAssignment{}.Type(ctx),
+				ElemType: PrivilegeAssignment_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -13930,7 +13930,7 @@ func (o ProvisioningStatus_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"initial_pipeline_sync_progress": basetypes.ListType{
-				ElemType: PipelineProgress{}.Type(ctx),
+				ElemType: PipelineProgress_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -14349,7 +14349,7 @@ func (o RegisteredModelInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aliases": basetypes.ListType{
-				ElemType: RegisteredModelAlias{}.Type(ctx),
+				ElemType: RegisteredModelAlias_SdkV2{}.Type(ctx),
 			},
 			"browse_only":      types.BoolType,
 			"catalog_name":     types.StringType,
@@ -14538,7 +14538,7 @@ func (o SchemaInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_at":   types.Int64Type,
 			"created_by":   types.StringType,
 			"effective_predictive_optimization_flag": basetypes.ListType{
-				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+				ElemType: EffectivePredictiveOptimizationFlag_SdkV2{}.Type(ctx),
 			},
 			"enable_predictive_optimization": types.StringType,
 			"full_name":                      types.StringType,
@@ -14652,7 +14652,7 @@ func (o SetArtifactAllowlist_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"artifact_matchers": basetypes.ListType{
-				ElemType: ArtifactMatcher{}.Type(ctx),
+				ElemType: ArtifactMatcher_SdkV2{}.Type(ctx),
 			},
 			"artifact_type": types.StringType,
 		},
@@ -14879,22 +14879,22 @@ func (o StorageCredentialInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRoleResponse{}.Type(ctx),
+				ElemType: AwsIamRoleResponse_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentityResponse{}.Type(ctx),
+				ElemType: AzureManagedIdentityResponse_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"cloudflare_api_token": basetypes.ListType{
-				ElemType: CloudflareApiToken{}.Type(ctx),
+				ElemType: CloudflareApiToken_SdkV2{}.Type(ctx),
 			},
 			"comment":    types.StringType,
 			"created_at": types.Int64Type,
 			"created_by": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccountResponse{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccountResponse_SdkV2{}.Type(ctx),
 			},
 			"full_name":                types.StringType,
 			"id":                       types.StringType,
@@ -15137,13 +15137,13 @@ func (o TableConstraint_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"foreign_key_constraint": basetypes.ListType{
-				ElemType: ForeignKeyConstraint{}.Type(ctx),
+				ElemType: ForeignKeyConstraint_SdkV2{}.Type(ctx),
 			},
 			"named_table_constraint": basetypes.ListType{
-				ElemType: NamedTableConstraint{}.Type(ctx),
+				ElemType: NamedTableConstraint_SdkV2{}.Type(ctx),
 			},
 			"primary_key_constraint": basetypes.ListType{
-				ElemType: PrimaryKeyConstraint{}.Type(ctx),
+				ElemType: PrimaryKeyConstraint_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -15469,7 +15469,7 @@ func (o TableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"browse_only":  types.BoolType,
 			"catalog_name": types.StringType,
 			"columns": basetypes.ListType{
-				ElemType: ColumnInfo{}.Type(ctx),
+				ElemType: ColumnInfo_SdkV2{}.Type(ctx),
 			},
 			"comment":                      types.StringType,
 			"created_at":                   types.Int64Type,
@@ -15478,14 +15478,14 @@ func (o TableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"data_source_format":           types.StringType,
 			"deleted_at":                   types.Int64Type,
 			"delta_runtime_properties_kvpairs": basetypes.ListType{
-				ElemType: DeltaRuntimePropertiesKvPairs{}.Type(ctx),
+				ElemType: DeltaRuntimePropertiesKvPairs_SdkV2{}.Type(ctx),
 			},
 			"effective_predictive_optimization_flag": basetypes.ListType{
-				ElemType: EffectivePredictiveOptimizationFlag{}.Type(ctx),
+				ElemType: EffectivePredictiveOptimizationFlag_SdkV2{}.Type(ctx),
 			},
 			"enable_predictive_optimization": types.StringType,
 			"encryption_details": basetypes.ListType{
-				ElemType: EncryptionDetails{}.Type(ctx),
+				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
 			"full_name":    types.StringType,
 			"metastore_id": types.StringType,
@@ -15496,14 +15496,14 @@ func (o TableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"row_filter": basetypes.ListType{
-				ElemType: TableRowFilter{}.Type(ctx),
+				ElemType: TableRowFilter_SdkV2{}.Type(ctx),
 			},
 			"schema_name":             types.StringType,
 			"sql_path":                types.StringType,
 			"storage_credential_name": types.StringType,
 			"storage_location":        types.StringType,
 			"table_constraints": basetypes.ListType{
-				ElemType: TableConstraint{}.Type(ctx),
+				ElemType: TableConstraint_SdkV2{}.Type(ctx),
 			},
 			"table_id":        types.StringType,
 			"table_type":      types.StringType,
@@ -15511,7 +15511,7 @@ func (o TableInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"updated_by":      types.StringType,
 			"view_definition": types.StringType,
 			"view_dependencies": basetypes.ListType{
-				ElemType: DependencyList{}.Type(ctx),
+				ElemType: DependencyList_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -15900,10 +15900,10 @@ func (o TemporaryCredentials_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_temp_credentials": basetypes.ListType{
-				ElemType: AwsCredentials{}.Type(ctx),
+				ElemType: AwsCredentials_SdkV2{}.Type(ctx),
 			},
 			"azure_aad": basetypes.ListType{
-				ElemType: AzureActiveDirectoryToken{}.Type(ctx),
+				ElemType: AzureActiveDirectoryToken_SdkV2{}.Type(ctx),
 			},
 			"expiration_time": types.Int64Type,
 		},
@@ -16015,7 +16015,7 @@ func (o TriggeredUpdateStatus_SdkV2) Type(ctx context.Context) attr.Type {
 			"last_processed_commit_version": types.Int64Type,
 			"timestamp":                     types.StringType,
 			"triggered_update_progress": basetypes.ListType{
-				ElemType: PipelineProgress{}.Type(ctx),
+				ElemType: PipelineProgress_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -16431,17 +16431,17 @@ func (o UpdateCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRole{}.Type(ctx),
+				ElemType: AwsIamRole_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentity{}.Type(ctx),
+				ElemType: AzureManagedIdentity_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"comment": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccount{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccount_SdkV2{}.Type(ctx),
 			},
 			"force":           types.BoolType,
 			"isolation_mode":  types.StringType,
@@ -16641,7 +16641,7 @@ func (o UpdateExternalLocation_SdkV2) Type(ctx context.Context) attr.Type {
 			"comment":         types.StringType,
 			"credential_name": types.StringType,
 			"encryption_details": basetypes.ListType{
-				ElemType: EncryptionDetails{}.Type(ctx),
+				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
 			"fallback":        types.BoolType,
 			"force":           types.BoolType,
@@ -16993,31 +16993,31 @@ func (o UpdateMonitor_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"baseline_table_name": types.StringType,
 			"custom_metrics": basetypes.ListType{
-				ElemType: MonitorMetric{}.Type(ctx),
+				ElemType: MonitorMetric_SdkV2{}.Type(ctx),
 			},
 			"dashboard_id": types.StringType,
 			"data_classification_config": basetypes.ListType{
-				ElemType: MonitorDataClassificationConfig{}.Type(ctx),
+				ElemType: MonitorDataClassificationConfig_SdkV2{}.Type(ctx),
 			},
 			"inference_log": basetypes.ListType{
-				ElemType: MonitorInferenceLog{}.Type(ctx),
+				ElemType: MonitorInferenceLog_SdkV2{}.Type(ctx),
 			},
 			"notifications": basetypes.ListType{
-				ElemType: MonitorNotifications{}.Type(ctx),
+				ElemType: MonitorNotifications_SdkV2{}.Type(ctx),
 			},
 			"output_schema_name": types.StringType,
 			"schedule": basetypes.ListType{
-				ElemType: MonitorCronSchedule{}.Type(ctx),
+				ElemType: MonitorCronSchedule_SdkV2{}.Type(ctx),
 			},
 			"slicing_exprs": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"snapshot": basetypes.ListType{
-				ElemType: MonitorSnapshot{}.Type(ctx),
+				ElemType: MonitorSnapshot_SdkV2{}.Type(ctx),
 			},
 			"table_name": types.StringType,
 			"time_series": basetypes.ListType{
-				ElemType: MonitorTimeSeries{}.Type(ctx),
+				ElemType: MonitorTimeSeries_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -17277,7 +17277,7 @@ func (o UpdatePermissions_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"changes": basetypes.ListType{
-				ElemType: PermissionsChange{}.Type(ctx),
+				ElemType: PermissionsChange_SdkV2{}.Type(ctx),
 			},
 			"full_name":      types.StringType,
 			"securable_type": types.StringType,
@@ -17576,20 +17576,20 @@ func (o UpdateStorageCredential_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRoleRequest{}.Type(ctx),
+				ElemType: AwsIamRoleRequest_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentityResponse{}.Type(ctx),
+				ElemType: AzureManagedIdentityResponse_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"cloudflare_api_token": basetypes.ListType{
-				ElemType: CloudflareApiToken{}.Type(ctx),
+				ElemType: CloudflareApiToken_SdkV2{}.Type(ctx),
 			},
 			"comment": types.StringType,
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccountRequest_SdkV2{}.Type(ctx),
 			},
 			"force":           types.BoolType,
 			"isolation_mode":  types.StringType,
@@ -17992,10 +17992,10 @@ func (o UpdateWorkspaceBindingsParameters_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"add": basetypes.ListType{
-				ElemType: WorkspaceBinding{}.Type(ctx),
+				ElemType: WorkspaceBinding_SdkV2{}.Type(ctx),
 			},
 			"remove": basetypes.ListType{
-				ElemType: WorkspaceBinding{}.Type(ctx),
+				ElemType: WorkspaceBinding_SdkV2{}.Type(ctx),
 			},
 			"securable_name": types.StringType,
 			"securable_type": types.StringType,
@@ -18119,10 +18119,10 @@ func (o ValidateCredentialRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRole{}.Type(ctx),
+				ElemType: AwsIamRole_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentity{}.Type(ctx),
+				ElemType: AzureManagedIdentity_SdkV2{}.Type(ctx),
 			},
 			"credential_name":        types.StringType,
 			"external_location_name": types.StringType,
@@ -18230,7 +18230,7 @@ func (o ValidateCredentialResponse_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"isDir": types.BoolType,
 			"results": basetypes.ListType{
-				ElemType: CredentialValidationResult{}.Type(ctx),
+				ElemType: CredentialValidationResult_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -18330,19 +18330,19 @@ func (o ValidateStorageCredential_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"aws_iam_role": basetypes.ListType{
-				ElemType: AwsIamRoleRequest{}.Type(ctx),
+				ElemType: AwsIamRoleRequest_SdkV2{}.Type(ctx),
 			},
 			"azure_managed_identity": basetypes.ListType{
-				ElemType: AzureManagedIdentityRequest{}.Type(ctx),
+				ElemType: AzureManagedIdentityRequest_SdkV2{}.Type(ctx),
 			},
 			"azure_service_principal": basetypes.ListType{
-				ElemType: AzureServicePrincipal{}.Type(ctx),
+				ElemType: AzureServicePrincipal_SdkV2{}.Type(ctx),
 			},
 			"cloudflare_api_token": basetypes.ListType{
-				ElemType: CloudflareApiToken{}.Type(ctx),
+				ElemType: CloudflareApiToken_SdkV2{}.Type(ctx),
 			},
 			"databricks_gcp_service_account": basetypes.ListType{
-				ElemType: DatabricksGcpServiceAccountRequest{}.Type(ctx),
+				ElemType: DatabricksGcpServiceAccountRequest_SdkV2{}.Type(ctx),
 			},
 			"external_location_name":  types.StringType,
 			"read_only":               types.BoolType,
@@ -18526,7 +18526,7 @@ func (o ValidateStorageCredentialResponse_SdkV2) Type(ctx context.Context) attr.
 		AttrTypes: map[string]attr.Type{
 			"isDir": types.BoolType,
 			"results": basetypes.ListType{
-				ElemType: ValidationResult{}.Type(ctx),
+				ElemType: ValidationResult_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -18704,7 +18704,7 @@ func (o VolumeInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_at":   types.Int64Type,
 			"created_by":   types.StringType,
 			"encryption_details": basetypes.ListType{
-				ElemType: EncryptionDetails{}.Type(ctx),
+				ElemType: EncryptionDetails_SdkV2{}.Type(ctx),
 			},
 			"full_name":        types.StringType,
 			"metastore_id":     types.StringType,
@@ -18837,7 +18837,7 @@ func (o WorkspaceBindingsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"bindings": basetypes.ListType{
-				ElemType: WorkspaceBinding{}.Type(ctx),
+				ElemType: WorkspaceBinding_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},

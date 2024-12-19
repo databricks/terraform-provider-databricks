@@ -65,7 +65,7 @@ func (o CreateAccountFederationPolicyRequest_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy": basetypes.ListType{
-				ElemType: FederationPolicy{}.Type(ctx),
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
 			},
 			"policy_id": types.StringType,
 		},
@@ -162,7 +162,7 @@ func (o CreateCustomAppIntegration_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -342,7 +342,7 @@ func (o CreatePublishedAppIntegration_SdkV2) Type(ctx context.Context) attr.Type
 		AttrTypes: map[string]attr.Type{
 			"app_id": types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -463,7 +463,7 @@ func (o CreateServicePrincipalFederationPolicyRequest_SdkV2) Type(ctx context.Co
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy": basetypes.ListType{
-				ElemType: FederationPolicy{}.Type(ctx),
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
 			},
 			"policy_id":            types.StringType,
 			"service_principal_id": types.Int64Type,
@@ -1036,7 +1036,7 @@ func (o FederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 			"description": types.StringType,
 			"name":        types.StringType,
 			"oidc_policy": basetypes.ListType{
-				ElemType: OidcFederationPolicy{}.Type(ctx),
+				ElemType: OidcFederationPolicy_SdkV2{}.Type(ctx),
 			},
 			"uid":         types.StringType,
 			"update_time": types.StringType,
@@ -1195,7 +1195,7 @@ func (o GetCustomAppIntegrationOutput_SdkV2) Type(ctx context.Context) attr.Type
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1365,7 +1365,7 @@ func (o GetCustomAppIntegrationsOutput_SdkV2) Type(ctx context.Context) attr.Typ
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: GetCustomAppIntegrationOutput{}.Type(ctx),
+				ElemType: GetCustomAppIntegrationOutput_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1458,7 +1458,7 @@ func (o GetPublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) attr.T
 			"integration_id": types.StringType,
 			"name":           types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -1575,7 +1575,7 @@ func (o GetPublishedAppIntegrationsOutput_SdkV2) Type(ctx context.Context) attr.
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: GetPublishedAppIntegrationOutput{}.Type(ctx),
+				ElemType: GetPublishedAppIntegrationOutput_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1652,7 +1652,7 @@ func (o GetPublishedAppsOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apps": basetypes.ListType{
-				ElemType: PublishedAppOutput{}.Type(ctx),
+				ElemType: PublishedAppOutput_SdkV2{}.Type(ctx),
 			},
 			"next_page_token": types.StringType,
 		},
@@ -1870,7 +1870,7 @@ func (o ListFederationPoliciesResponse_SdkV2) Type(ctx context.Context) attr.Typ
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"policies": basetypes.ListType{
-				ElemType: FederationPolicy{}.Type(ctx),
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2144,7 +2144,7 @@ func (o ListServicePrincipalSecretsResponse_SdkV2) Type(ctx context.Context) att
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"secrets": basetypes.ListType{
-				ElemType: SecretInfo{}.Type(ctx),
+				ElemType: SecretInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2559,7 +2559,7 @@ func (o UpdateAccountFederationPolicyRequest_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy": basetypes.ListType{
-				ElemType: FederationPolicy{}.Type(ctx),
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
 			},
 			"policy_id":   types.StringType,
 			"update_mask": types.StringType,
@@ -2644,7 +2644,7 @@ func (o UpdateCustomAppIntegration_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2781,7 +2781,7 @@ func (o UpdatePublishedAppIntegration_SdkV2) Type(ctx context.Context) attr.Type
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
 			"token_access_policy": basetypes.ListType{
-				ElemType: TokenAccessPolicy{}.Type(ctx),
+				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -2901,7 +2901,7 @@ func (o UpdateServicePrincipalFederationPolicyRequest_SdkV2) Type(ctx context.Co
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"policy": basetypes.ListType{
-				ElemType: FederationPolicy{}.Type(ctx),
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
 			},
 			"policy_id":            types.StringType,
 			"service_principal_id": types.Int64Type,

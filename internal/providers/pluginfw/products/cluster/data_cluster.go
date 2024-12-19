@@ -41,7 +41,7 @@ type ClusterInfo struct {
 
 func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails{}),
+		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails_SdkV2{}),
 	}
 }
 

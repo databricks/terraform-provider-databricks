@@ -56,7 +56,7 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 }
 
 type MonitorInfoExtended struct {
-	catalog_tf.MonitorInfo
+	catalog_tf.MonitorInfo_SdkV2
 	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
 	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
@@ -65,7 +65,7 @@ type MonitorInfoExtended struct {
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
 
 func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return m.MonitorInfo.GetComplexFieldTypes(ctx)
+	return m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
 }
 
 type QualityMonitorResource struct {

@@ -33,7 +33,7 @@ type RegisteredModelVersionsData struct {
 
 func (RegisteredModelVersionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_versions": reflect.TypeOf(catalog_tf.ModelVersionInfo{}),
+		"model_versions": reflect.TypeOf(catalog_tf.ModelVersionInfo_SdkV2{}),
 	}
 }
 

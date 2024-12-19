@@ -32,7 +32,7 @@ type ServingEndpointsData struct {
 
 func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"endpoints": reflect.TypeOf(serving_tf.ServingEndpoint{}),
+		"endpoints": reflect.TypeOf(serving_tf.ServingEndpoint_SdkV2{}),
 	}
 }
 

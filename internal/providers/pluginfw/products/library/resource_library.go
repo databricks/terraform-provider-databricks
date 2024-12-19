@@ -73,7 +73,7 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 }
 
 type LibraryExtended struct {
-	compute_tf.Library
+	compute_tf.Library_SdkV2
 	ClusterId types.String `tfsdk:"cluster_id"`
 	ID        types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }

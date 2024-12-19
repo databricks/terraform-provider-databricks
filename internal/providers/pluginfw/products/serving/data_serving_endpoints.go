@@ -77,13 +77,13 @@ func (d *ServingEndpointsDataSource) Read(ctx context.Context, req datasource.Re
 	}
 	tfEndpoints := []attr.Value{}
 	for _, endpoint := range endpointsInfoSdk {
-		var endpointsInfo serving_tf.ServingEndpoint
+		var endpointsInfo serving_tf.ServingEndpoint_SdkV2
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, endpoint, &endpointsInfo)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		tfEndpoints = append(tfEndpoints, endpointsInfo.ToObjectValue(ctx))
 	}
-	endpoints.Endpoints = types.ListValueMust(serving_tf.ServingEndpoint{}.Type(ctx), tfEndpoints)
+	endpoints.Endpoints = types.ListValueMust(serving_tf.ServingEndpoint_SdkV2{}.Type(ctx), tfEndpoints)
 	resp.Diagnostics.Append(resp.State.Set(ctx, endpoints)...)
 }

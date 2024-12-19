@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"golang.org/x/exp/slices"
@@ -29,6 +28,7 @@ func (ic *importContext) emitRepoByPath(path string) {
 	// Path to Repos objects consits of following parts: /Repos, folder, repository, path inside Repo.
 	// Because it starts with `/`, it will produce empty string as first element in the slice.
 	// And we're stopping splitting to avoid producing too many not necessary parts, so we have 5 parts only.
+	path = maybeStripWorkspacePrefix(path)
 	parts := strings.SplitN(path, "/", 5)
 	if len(parts) >= 4 {
 		ic.Emit(&resource{
@@ -42,20 +42,91 @@ func (ic *importContext) emitRepoByPath(path string) {
 }
 
 func isRepoPath(path string) bool {
+	// TODO: call GetStatus if we don't have /Repos prefix? Or add a separate function to check if we have GitFolder?
 	return strings.HasPrefix(path, "/Repos") || strings.HasPrefix(path, "/Workspace/Repos")
 }
 
-func maybeStringWorkspacePrefix(path string) string {
+func hasWorkspacePrefix(path string) bool {
+	return strings.HasPrefix(path, "/Workspace/")
+}
+
+func maybeStripWorkspacePrefix(path string) string {
 	if strings.HasPrefix(path, "/Workspace/") {
-		return path[10:]
+		return strings.TrimPrefix(path, "/Workspace")
 	}
 	return path
 }
 
-func (ic *importContext) emitWorkspaceObject(objType, path string) {
-	path = maybeStringWorkspacePrefix(path)
+func (ic *importContext) isInRepoOrGitFolder(path string, isDirectory bool) bool {
+	if isRepoPath(path) {
+		return true
+	}
+	isInGit, _ := ic.isInGitFolder(path, isDirectory)
+	return isInGit
+}
+
+func (ic *importContext) emitRepoOrGitFolder(path string, isDirectory bool) {
 	if isRepoPath(path) {
 		ic.emitRepoByPath(path)
+	} else if ok, repoId := ic.isInGitFolder(path, isDirectory); ok {
+		ic.Emit(&resource{
+			Resource: "databricks_repo",
+			ID:       strconv.FormatInt(repoId, 10),
+		})
+	} else {
+		log.Printf("[WARN] can't find a repository for %s", path)
+	}
+}
+
+func (ic *importContext) isInGitFolder(path string, isDirectory bool) (bool, int64) {
+	if path == "" || path == "/" {
+		return false, 0
+	}
+	ic.gitInfoCacheMutex.RLock()
+	entry, ok := ic.gitInfoCache[path]
+	ic.gitInfoCacheMutex.RUnlock()
+	if ok {
+		log.Printf("[TRACE] GitInfo cache hit for %s: %v", path, entry)
+		return entry.IsPresent, entry.RepoId
+	}
+	isPresent := false
+	repoId := int64(0)
+	if !isDirectory {
+		parts := strings.Split(path, "/")
+		if len(parts) < 3 { // we can't have Git Folder in the / itself, so we can ignore all files/notebooks in the root
+			ic.gitInfoCacheMutex.Lock()
+			ic.gitInfoCache[path] = gitInfoCacheEntry{IsPresent: isPresent, RepoId: repoId}
+			ic.gitInfoCacheMutex.Unlock()
+			return isPresent, repoId
+		}
+	}
+	// Check if we have GitInfo for the path
+	notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+	objStatus, err := notebooksAPI.GetStatus(path, true)
+	if err != nil {
+		log.Printf("[WARN] can't get GitInfo for %s: %v", path, err)
+	} else if objStatus.GitInfo != nil {
+		log.Printf("[DEBUG] GitInfo for %s: %v", path, objStatus.GitInfo)
+		isPresent = true
+		repoId = objStatus.GitInfo.Id
+	} else {
+		log.Printf("[DEBUG] No GitInfo for %s", path)
+	}
+	ic.gitInfoCacheMutex.Lock()
+	ic.gitInfoCache[path] = gitInfoCacheEntry{IsPresent: isPresent, RepoId: repoId}
+	ic.gitInfoCacheMutex.Unlock()
+	return isPresent, repoId
+}
+
+func (ic *importContext) emitWorkspaceObject(objType, path string) {
+	path = maybeStripWorkspacePrefix(path)
+	if isRepoPath(path) {
+		ic.emitRepoByPath(path)
+	} else if ok, repoId := ic.isInGitFolder(path, objType == "databricks_directory"); ok {
+		ic.Emit(&resource{
+			Resource: "databricks_repo",
+			ID:       strconv.FormatInt(repoId, 10),
+		})
 	} else {
 		ic.maybeEmitWorkspaceObject(objType, path, nil)
 	}
@@ -174,14 +245,7 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj
 				data = workspace.ResourceDirectory().ToResource().TestResourceData()
 			}
 			if data != nil {
-				scm := ic.Resources[resourceType].Schema
-				data.MarkNewResource()
-				data.SetId(path)
-				err := common.StructToData(obj, scm, data)
-				if err != nil {
-					log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
-					data = nil
-				}
+				data = ic.generateNewData(data, resourceType, path, obj)
 			}
 		}
 		ic.Emit(&resource{

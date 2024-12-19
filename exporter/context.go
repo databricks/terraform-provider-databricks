@@ -52,6 +52,11 @@ import (
 
 type resourceChannel chan *resource
 
+type gitInfoCacheEntry struct {
+	IsPresent bool
+	RepoId    int64
+}
+
 type importContext struct {
 	// not modified/used only in single thread
 	Module            string
@@ -138,6 +143,9 @@ type importContext struct {
 	wsObjectsMutex            sync.RWMutex
 	oldWorkspaceObjects       []workspace.ObjectStatus
 	oldWorkspaceObjectMapping map[int64]string
+
+	gitInfoCache      map[string]gitInfoCacheEntry
+	gitInfoCacheMutex sync.RWMutex
 
 	builtInPolicies      map[string]compute.PolicyFamily
 	builtInPoliciesMutex sync.Mutex
@@ -256,6 +264,7 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 		allWorkspaceObjects:       []workspace.ObjectStatus{},
 		oldWorkspaceObjects:       []workspace.ObjectStatus{},
 		oldWorkspaceObjectMapping: map[int64]string{},
+		gitInfoCache:              map[string]gitInfoCacheEntry{},
 		workspaceConfKeys:         workspaceConfKeys,
 		shImports:                 map[string]bool{},
 		notebooksFormat:           "SOURCE",
@@ -485,20 +494,20 @@ func (ic *importContext) Run() error {
 		// nolint
 		dcfile.WriteString(
 			`terraform {
-				required_providers {
-			  		databricks = {
-						source  = "databricks/databricks"
-						version = "` + common.Version() + `"
-				  	}
-				}
-		  	}
+  required_providers {
+    databricks = {
+      source  = "databricks/databricks"
+      version = "` + common.Version() + `"
+    }
+  }
+}
 
-		  	provider "databricks" {
-		  	`)
+provider "databricks" {
+`)
 		if ic.accountLevel {
-			dcfile.WriteString(fmt.Sprintf(`	host       = "%s"
-				account_id = "%s"
-			`, ic.Client.Config.Host, ic.Client.Config.AccountID))
+			dcfile.WriteString(fmt.Sprintf(`  host       = "%s"
+  account_id = "%s"
+`, ic.Client.Config.Host, ic.Client.Config.AccountID))
 		}
 		dcfile.WriteString(`}`)
 		dcfile.Close()

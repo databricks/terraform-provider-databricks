@@ -37,7 +37,7 @@ resource "databricks_sql_global_config" "this" {
 }
 
 func TestAccSQLGlobalConfig(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	WorkspaceLevel(t, Step{
 		PreConfig: func() {
 			ctx := context.Background()
@@ -49,9 +49,9 @@ func TestAccSQLGlobalConfig(t *testing.T) {
 }
 
 func TestAccSQLGlobalConfigServerless(t *testing.T) {
-	loadWorkspaceEnv(t)
-	if isGcp(t) {
-		skipf(t)("GCP does not support serverless compute")
+	LoadWorkspaceEnv(t)
+	if IsGcp(t) {
+		Skipf(t)("GCP does not support serverless compute")
 	}
 
 	checkServerlessEnabled := func(enabled bool) func(state *terraform.State) error {

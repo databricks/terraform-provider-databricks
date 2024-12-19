@@ -40,7 +40,7 @@ func (a Float64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a Float64AttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a Float64AttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -49,7 +49,7 @@ func (a Float64AttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a Float64AttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -58,7 +58,7 @@ func (a Float64AttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a Float64AttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -66,7 +66,7 @@ func (a Float64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a Float64AttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -74,7 +74,7 @@ func (a Float64AttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a Float64AttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -89,12 +89,12 @@ func (a Float64AttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	return a
 }
 
-func (a Float64AttributeBuilder) AddValidator(v validator.Float64) BaseSchemaBuilder {
+func (a Float64AttributeBuilder) AddValidator(v validator.Float64) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a Float64AttributeBuilder) AddPlanModifier(v planmodifier.Float64) BaseSchemaBuilder {
+func (a Float64AttributeBuilder) AddPlanModifier(v planmodifier.Float64) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

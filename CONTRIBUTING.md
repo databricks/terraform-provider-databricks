@@ -135,10 +135,18 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 6. Create a PR and send it for review. 
 
 ### Migrating resource to plugin framework
-Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
+There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
 - Integration tests shouldn't require any major changes.   
 
+By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
+```go
+resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+    cs.ConfigureAsSdkV2Compatible()
+    // Add any additional configuration here
+    return cs
+})
+```
 
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 

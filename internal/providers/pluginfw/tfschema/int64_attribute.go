@@ -40,7 +40,7 @@ func (a Int64AttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a Int64AttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a Int64AttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -49,7 +49,7 @@ func (a Int64AttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a Int64AttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a Int64AttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -58,7 +58,7 @@ func (a Int64AttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a Int64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a Int64AttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -66,7 +66,7 @@ func (a Int64AttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a Int64AttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a Int64AttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -74,7 +74,7 @@ func (a Int64AttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a Int64AttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a Int64AttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -89,12 +89,12 @@ func (a Int64AttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	return a
 }
 
-func (a Int64AttributeBuilder) AddValidator(v validator.Int64) BaseSchemaBuilder {
+func (a Int64AttributeBuilder) AddValidator(v validator.Int64) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a Int64AttributeBuilder) AddPlanModifier(v planmodifier.Int64) BaseSchemaBuilder {
+func (a Int64AttributeBuilder) AddPlanModifier(v planmodifier.Int64) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

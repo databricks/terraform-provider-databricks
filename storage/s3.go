@@ -18,7 +18,7 @@ type S3IamMount struct {
 }
 
 // Source ...
-func (m S3IamMount) Source() string {
+func (m S3IamMount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("s3a://%s", m.BucketName)
 }
 

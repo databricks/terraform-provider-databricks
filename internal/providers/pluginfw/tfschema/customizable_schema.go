@@ -10,14 +10,14 @@ import (
 )
 
 // CustomizableSchema is a wrapper struct on top of BaseSchemaBuilder that can be used to navigate through nested schema add customizations.
+// The methods of CustomizableSchema that modify the underlying schema should return the same CustomizableSchema object to allow chaining.
 type CustomizableSchema struct {
 	attr BaseSchemaBuilder
 }
 
 // ConstructCustomizableSchema constructs a CustomizableSchema given a NestedBlockObject.
 func ConstructCustomizableSchema(nestedObject NestedBlockObject) *CustomizableSchema {
-	attr := AttributeBuilder(SingleNestedBlockBuilder{NestedObject: nestedObject})
-	return &CustomizableSchema{attr: attr}
+	return &CustomizableSchema{attr: SingleNestedBlockBuilder{NestedObject: nestedObject}}
 }
 
 // ToAttributeMap converts CustomizableSchema into BaseSchemaBuilder.
@@ -60,6 +60,8 @@ func (s *CustomizableSchema) AddValidator(v any, path ...string) *CustomizableSc
 		case ListAttributeBuilder:
 			return a.AddValidator(v.(validator.List))
 		case ListNestedAttributeBuilder:
+			return a.AddValidator(v.(validator.List))
+		case ListNestedBlockBuilder:
 			return a.AddValidator(v.(validator.List))
 		case MapAttributeBuilder:
 			return a.AddValidator(v.(validator.Map))
@@ -116,7 +118,12 @@ func (s *CustomizableSchema) AddPlanModifier(v any, path ...string) *Customizabl
 
 func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetOptional()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetOptional()
+		default:
+			panic(fmt.Errorf("SetOptional called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -126,7 +133,12 @@ func (s *CustomizableSchema) SetOptional(path ...string) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetRequired()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetRequired()
+		default:
+			panic(fmt.Errorf("SetRequired called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -136,7 +148,12 @@ func (s *CustomizableSchema) SetRequired(path ...string) *CustomizableSchema {
 
 func (s *CustomizableSchema) SetSensitive(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetSensitive()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetSensitive()
+		default:
+			panic(fmt.Errorf("SetSensitive called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -155,7 +172,12 @@ func (s *CustomizableSchema) SetDeprecated(msg string, path ...string) *Customiz
 
 func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetComputed()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetComputed()
+		default:
+			panic(fmt.Errorf("SetComputed called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -167,7 +189,12 @@ func (s *CustomizableSchema) SetComputed(path ...string) *CustomizableSchema {
 // by the platform.
 func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	cb := func(attr BaseSchemaBuilder) BaseSchemaBuilder {
-		return attr.SetReadOnly()
+		switch a := attr.(type) {
+		case AttributeBuilder:
+			return a.SetReadOnly()
+		default:
+			panic(fmt.Errorf("SetReadOnly called on invalid attribute type: %s. %s", reflect.TypeOf(attr).String(), common.TerraformBugErrorMessage))
+		}
 	}
 
 	navigateSchemaWithCallback(&s.attr, cb, path...)
@@ -175,8 +202,17 @@ func (s *CustomizableSchema) SetReadOnly(path ...string) *CustomizableSchema {
 	return s
 }
 
+// ConfigureAsSdkV2Compatible modifies the underlying schema to be compatible with SDKv2. This method must
+// be called on all resources that were originally implemented using the SDKv2 and are migrated to the plugin
+// framework.
+func (s *CustomizableSchema) ConfigureAsSdkV2Compatible() *CustomizableSchema {
+	nbo := s.attr.(SingleNestedBlockBuilder).NestedObject
+	s.attr = SingleNestedBlockBuilder{NestedObject: convertAttributesToBlocks(nbo.Attributes, nbo.Blocks)}
+	return s
+}
+
 // navigateSchemaWithCallback navigates through schema attributes and executes callback on the target, panics if path does not exist or invalid.
-func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) (BaseSchemaBuilder, error) {
+func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder) BaseSchemaBuilder, path ...string) {
 	currentScm := s
 	for i, p := range path {
 		m := attributeToNestedBlockObject(currentScm)
@@ -187,7 +223,7 @@ func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder)
 			if i == len(path)-1 {
 				newV := cb(v).(AttributeBuilder)
 				mAttr[p] = newV
-				return mAttr[p], nil
+				return
 			}
 			castedV := v.(BaseSchemaBuilder)
 			currentScm = &castedV
@@ -195,14 +231,14 @@ func navigateSchemaWithCallback(s *BaseSchemaBuilder, cb func(BaseSchemaBuilder)
 			if i == len(path)-1 {
 				newV := cb(v).(BlockBuilder)
 				mBlock[p] = newV
-				return mBlock[p], nil
+				return
 			}
 			castedV := v.(BaseSchemaBuilder)
 			currentScm = &castedV
 		} else {
-			return nil, fmt.Errorf("missing key %s", p)
+			panic(fmt.Errorf("missing key %s", p))
 		}
 
 	}
-	return nil, fmt.Errorf("path %v is incomplete", path)
+	panic(fmt.Errorf("path %v is incomplete", path))
 }

@@ -155,6 +155,8 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "data_object_type")
 		c.SetRequired("object", "partition", "value", "op")
 		c.SetRequired("object", "partition", "value", "name")
+
+		c.SetOptional("owner")
 		return c
 	})
 	resp.Schema = schema.Schema{

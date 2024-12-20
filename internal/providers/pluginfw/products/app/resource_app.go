@@ -177,7 +177,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	_, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: &appGoSdk, Name: app.Name.ValueString()})
+	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: &appGoSdk, Name: app.Name.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update app", err.Error())
 		return
@@ -185,7 +185,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	// Store the updated version of the app in state
 	var newApp apps_tf.App
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, appGoSdk, &newApp)...)
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

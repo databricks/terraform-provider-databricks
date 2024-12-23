@@ -13,6 +13,7 @@ subcategory: "Apps"
 resource "databricks_app" "this" {
   name        = "my-custom-app"
   description = "My app"
+
   resources = [{
     name = "sql-warehouse"
     sql_warehouse = {

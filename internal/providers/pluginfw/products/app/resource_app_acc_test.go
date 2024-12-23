@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 const baseResources = `
@@ -118,14 +120,24 @@ is required`)),
 }
 
 func TestAccAppResource(t *testing.T) {
+	var updateTime string
 	acceptance.LoadWorkspaceEnv(t)
 	if acceptance.IsGcp(t) {
 		acceptance.Skipf(t)("not available on GCP")
 	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: makeTemplate("My app"),
+		Check: func(s *terraform.State) error {
+			updateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			return nil
+		},
 	}, acceptance.Step{
 		Template: makeTemplate("My new app"),
+		Check: func(s *terraform.State) error {
+			var newUpdateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			assert.NotEqual(t, updateTime, newUpdateTime)
+			return nil
+		},
 	}, acceptance.Step{
 		ImportState:       true,
 		ResourceName:      "databricks_app.this",

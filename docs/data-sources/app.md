@@ -13,7 +13,7 @@ This data source allows you to fetch information about a Databricks App.
 
 ```hcl
 data "databricks_app" "this" {
-  name             = "my-custom-app"
+  name = "my-custom-app"
 }
 ```
 

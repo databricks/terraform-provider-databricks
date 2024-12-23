@@ -14,7 +14,7 @@ data "databricks_serving_endpoints" "all" {
 }
 
 resource "databricks_permissions" "ml_serving_usage" {
-  for_each = databricks_serving_endpoints.all.endpoints
+  for_each            = databricks_serving_endpoints.all.endpoints
   serving_endpoint_id = each.value.id
 
   access_control {

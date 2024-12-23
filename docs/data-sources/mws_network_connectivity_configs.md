@@ -33,7 +33,7 @@ provider "databricks" {
 }
 
 data "databricks_mws_network_connectivity_configs" "this" {
-    region = "us-east-1"
+  region = "us-east-1"
 }
 
 output "filtered" {

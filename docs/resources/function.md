@@ -27,20 +27,21 @@ resource "databricks_function" "calculate_bmi" {
   name              = "calculate_bmi"
   catalog_name      = databricks_catalog.sandbox.name
   schema_name       = databricks_schema.functions.name
-  input_params      = [
-    {
-      name = "weight"
-      type = "DOUBLE"
-    },
-    {
-      name = "height"
-      type = "DOUBLE"
-    }
-  ]
+  input_params      = {
+    parameters  = [
+        {
+          name = "weight"
+          type_name = "DOUBLE"
+        },
+        {
+          name = "height"
+          type_name = "DOUBLE"
+        }
+      ]
+  }
   data_type         = "DOUBLE"
   routine_body      = "SQL"
   routine_definition = "weight / (height * height)"
-  language          = "SQL"
   is_deterministic  = true
   sql_data_access   = "CONTAINS_SQL"
   security_type     = "DEFINER"
@@ -54,16 +55,18 @@ resource "databricks_function" "calculate_bmi_py" {
   name              = "calculate_bmi_py"
   catalog_name      = databricks_catalog.sandbox.name
   schema_name       = databricks_schema.functions.name
-  input_params      = [
-    {
-      name = "weight_kg"
-      type = "DOUBLE"
-    },
-    {
-      name = "height_m"
-      type = "DOUBLE"
-    }
-  ]
+  input_params      = {
+   parameters = [
+      {
+        name = "weight_kg"
+        type = "DOUBLE"
+      },
+      {
+        name = "height_m"
+        type = "DOUBLE"
+      }
+    ]
+  }
   data_type         = "DOUBLE"
   routine_body      = "EXTERNAL"
   routine_definition = "return weight_kg / (height_m ** 2)"

@@ -34,24 +34,26 @@ func TestFunctionResource(t *testing.T) {
 			}
 
 			resource "databricks_schema" "functions" {
-				catalog_name	= databricks_catalog.sandbox.id
+				catalog_name	= databricks_catalog.sandbox.name
 				name			= "functions-${var.STICKY_RANDOM}"
 			}
 
 			resource "databricks_function" "function" {
 				name 			  = "function-${var.STICKY_RANDOM}"
-				catalog_name 	  = databricks_catalog.sandbox.id
+				catalog_name 	  = databricks_catalog.sandbox.name
 				schema_name 	  = databricks_schema.functions.name
-				input_params      = [
-					{
-						name = "weight"
-						type = "DOUBLE"
-					},
-					{
-						name = "height"
-						type = "DOUBLE"
-					}
-				]
+				input_params      = {
+					parameters = [
+						{
+							name = "weight"
+							type = "DOUBLE"
+						},
+						{
+							name = "height"
+							type = "DOUBLE"
+						}
+					]
+				}
 				data_type		  = "DOUBLE"
 				routine_body	  = "SQL"
 				routine_defintion = "weight / (height * height)"
@@ -76,22 +78,24 @@ func TestFunctionResource(t *testing.T) {
 
 				resource "databricks_function" "function" {
 					name 			  = "function-${var.STICKY_RANDOM}"
-					catalog_name 	  = databricks_catalog.sandbox.id
+					catalog_name 	  = databricks_catalog.sandbox.name
 					schema_name 	  = databricks_schema.functions.name
-					input_params      = [
-						{
-							name = "weight"
-							type = "DOUBLE"
-						},
-						{
-							name = "height"
-							type = "DOUBLE"
-						},
-						{
-							name = "age"
-							type = "INT"
-						}
-					]
+					input_params      = {
+						parameters = [
+							{
+								name = "weight"
+								type = "DOUBLE"
+							},
+							{
+								name = "height"
+								type = "DOUBLE"
+							},
+							{
+								name = "age"
+								type = "INT"
+							}
+						]
+					}
 					data_type		  = "DOUBLE"
 					routine_body	  = "SQL"
 					routine_defintion = "weight / (height * height) + age / 100"

@@ -33,9 +33,7 @@ func (r *FunctionResource) Metadata(ctx context.Context, req resource.MetadataRe
 }
 
 func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(catalog_tf.FunctionInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.ToNestedBlockObject()
-
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, catalog_tf.FunctionInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		c.SetRequired("name")
 		c.SetRequired("catalog_name")
 		c.SetRequired("schema_name")
@@ -163,7 +161,7 @@ func (r *FunctionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	funcName := stateFunc.Name.ValueString()
+	funcName := stateFunc.FullName.ValueString()
 
 	funcInfo, err := w.Functions.GetByName(ctx, funcName)
 	if err != nil {

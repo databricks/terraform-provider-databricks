@@ -43,9 +43,8 @@ var migratedDataSources = []func() datasource.DataSource{
 // Keep this list sorted.
 var pluginFwOnlyResources = []func() resource.Resource{
 	// TODO Add resources here
-	sharing.ResourceShare, // Using the staging name (with pluginframework suffix)
-	catalog.ResourceFunction,
 	app.ResourceApp,
+	catalog.ResourceFunction,
 	sharing.ResourceShare,
 }
 

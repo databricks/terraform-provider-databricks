@@ -139,6 +139,11 @@ func ResourceCredential() common.Resource {
 			}
 
 			updateCredRequest.Owner = ""
+			// Workaround until backend team fixes API issue
+			if updateCredRequest.AwsIamRole != nil { // Update API accepts only RoleArn, not the rest of attributes
+				updateCredRequest.AwsIamRole = &catalog.AwsIamRole{RoleArn: updateCredRequest.AwsIamRole.RoleArn}
+			}
+			// End of workaround
 			_, err = w.Credentials.UpdateCredential(ctx, updateCredRequest)
 			if err != nil {
 				if d.HasChange("owner") {

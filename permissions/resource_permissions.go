@@ -122,10 +122,16 @@ func (a PermissionsAPI) readRaw(objectID string, mapping resourcePermissions) (*
 	}
 	idParts := strings.Split(objectID, "/")
 	id := idParts[len(idParts)-1]
-	permissions, err := w.Permissions.Get(a.context, iam.GetPermissionRequest{
-		RequestObjectId:   id,
-		RequestObjectType: mapping.requestObjectType,
+
+	// TODO: This a temporary measure to implement retry on 504 until this is
+	// supported natively in the Go SDK.
+	permissions, err := common.RetryOn504(a.context, func(ctx context.Context) (*iam.ObjectPermissions, error) {
+		return w.Permissions.Get(a.context, iam.GetPermissionRequest{
+			RequestObjectId:   id,
+			RequestObjectType: mapping.requestObjectType,
+		})
 	})
+
 	var apiErr *apierr.APIError
 	// https://github.com/databricks/terraform-provider-databricks/issues/1227
 	// platform propagates INVALID_STATE error for auto-purged clusters in

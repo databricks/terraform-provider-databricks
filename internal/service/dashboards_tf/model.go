@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -25,12 +26,6 @@ import (
 // Create dashboard
 type CreateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDashboardRequest) {
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDashboardRequest.
@@ -100,12 +95,6 @@ type CreateScheduleRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 
 	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScheduleRequest) {
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScheduleRequest.
@@ -179,12 +168,6 @@ type CreateSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 
 	Subscription types.Object `tfsdk:"subscription" tf:"optional,object"`
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSubscriptionRequest) {
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSubscriptionRequest.
@@ -271,6 +254,13 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
+func (c CronSchedule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "quartz_cron_expression")...)
+	cs.SetRequired(append(path, "timezone_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -346,6 +336,18 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
 }
 
+func (c Dashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "create_time")...)
+	cs.SetComputed(append(path, "dashboard_id")...)
+	cs.SetComputed(append(path, "etag")...)
+	cs.SetComputed(append(path, "lifecycle_state")...)
+	cs.SetComputed(append(path, "parent_path")...)
+	cs.SetComputed(append(path, "path")...)
+	cs.SetComputed(append(path, "update_time")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Dashboard.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -406,12 +408,6 @@ type DeleteScheduleRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScheduleRequest) {
-}
-
-func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -448,12 +444,6 @@ func (o DeleteScheduleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteScheduleResponse struct {
-}
-
-func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScheduleResponse) {
-}
-
-func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleResponse.
@@ -496,12 +486,6 @@ type DeleteSubscriptionRequest struct {
 	SubscriptionId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSubscriptionRequest) {
-}
-
-func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -542,12 +526,6 @@ func (o DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 type DeleteSubscriptionResponse struct {
 }
 
-func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSubscriptionResponse) {
-}
-
-func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -586,6 +564,13 @@ func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
+}
+
+func (c GenieAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	QueryAttachment{}.ApplySchemaCustomizations(cs, append(path, "query")...)
+	TextAttachment{}.ApplySchemaCustomizations(cs, append(path, "text")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieAttachment.
@@ -701,6 +686,15 @@ func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
 }
 
+func (c GenieConversation) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "id")...)
+	cs.SetRequired(append(path, "space_id")...)
+	cs.SetRequired(append(path, "title")...)
+	cs.SetRequired(append(path, "user_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieConversation.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -757,6 +751,14 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
 }
 
+func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "content")...)
+	cs.SetRequired(append(path, "conversation_id")...)
+	cs.SetRequired(append(path, "space_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -800,12 +802,6 @@ type GenieExecuteMessageQueryRequest struct {
 	MessageId types.String `tfsdk:"-"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieExecuteMessageQueryRequest) {
-}
-
-func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState GenieExecuteMessageQueryRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieExecuteMessageQueryRequest.
@@ -855,12 +851,6 @@ type GenieGetConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetConversationMessageRequest) {
-}
-
-func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetConversationMessageRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -904,12 +894,6 @@ type GenieGetMessageQueryResultRequest struct {
 	MessageId types.String `tfsdk:"-"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultRequest) {
-}
-
-func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultRequest.
@@ -957,6 +941,12 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCre
 }
 
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
+}
+
+func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	sql_tf.StatementResponse{}.ApplySchemaCustomizations(cs, append(path, "statement_response")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultResponse.
@@ -1064,6 +1054,18 @@ func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan Genie
 }
 
 func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
+}
+
+func (c GenieMessage) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	GenieAttachment{}.ApplySchemaCustomizations(cs, append(path, "attachments")...)
+	cs.SetRequired(append(path, "content")...)
+	cs.SetRequired(append(path, "conversation_id")...)
+	MessageError{}.ApplySchemaCustomizations(cs, append(path, "error")...)
+	cs.SetRequired(append(path, "id")...)
+	Result{}.ApplySchemaCustomizations(cs, append(path, "query_result")...)
+	cs.SetRequired(append(path, "space_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieMessage.
@@ -1219,6 +1221,13 @@ func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringC
 func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
 }
 
+func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "content")...)
+	cs.SetRequired(append(path, "space_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1266,6 +1275,15 @@ func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
+}
+
+func (c GenieStartConversationResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	GenieConversation{}.ApplySchemaCustomizations(cs, append(path, "conversation")...)
+	cs.SetRequired(append(path, "conversation_id")...)
+	GenieMessage{}.ApplySchemaCustomizations(cs, append(path, "message")...)
+	cs.SetRequired(append(path, "message_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationResponse.
@@ -1370,12 +1388,6 @@ type GetDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
-func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDashboardRequest) {
-}
-
-func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1411,12 +1423,6 @@ func (o GetDashboardRequest) Type(ctx context.Context) attr.Type {
 type GetPublishedDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardRequest) {
-}
-
-func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardRequest.
@@ -1456,12 +1462,6 @@ type GetScheduleRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
-}
-
-func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetScheduleRequest) {
-}
-
-func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringRead(existingState GetScheduleRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetScheduleRequest.
@@ -1505,12 +1505,6 @@ type GetSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
-}
-
-func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSubscriptionRequest) {
-}
-
-func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState GetSubscriptionRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSubscriptionRequest.
@@ -1562,12 +1556,6 @@ type ListDashboardsRequest struct {
 	View types.String `tfsdk:"-"`
 }
 
-func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsRequest) {
-}
-
-func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1616,6 +1604,13 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+}
+
+func (c ListDashboardsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	Dashboard{}.ApplySchemaCustomizations(cs, append(path, "dashboards")...)
+	cs.SetComputed(append(path, "next_page_token")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsResponse.
@@ -1692,12 +1687,6 @@ type ListSchedulesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesRequest) {
-}
-
-func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringRead(existingState ListSchedulesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1746,6 +1735,13 @@ func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+}
+
+func (c ListSchedulesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "next_page_token")...)
+	Schedule{}.ApplySchemaCustomizations(cs, append(path, "schedules")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesResponse.
@@ -1824,12 +1820,6 @@ type ListSubscriptionsRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
-func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsRequest) {
-}
-
-func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1880,6 +1870,13 @@ func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+}
+
+func (c ListSubscriptionsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "next_page_token")...)
+	Subscription{}.ApplySchemaCustomizations(cs, append(path, "subscriptions")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsResponse.
@@ -1957,6 +1954,11 @@ func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Messa
 func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
 }
 
+func (c MessageError) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MessageError.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2008,6 +2010,12 @@ func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
+}
+
+func (c MigrateDashboardRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "source_dashboard_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
@@ -2065,6 +2073,12 @@ func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pub
 func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
 }
 
+func (c PublishRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "dashboard_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2115,6 +2129,13 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+}
+
+func (c PublishedDashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "display_name")...)
+	cs.SetComputed(append(path, "revision_create_time")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishedDashboard.
@@ -2178,6 +2199,12 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Qu
 }
 
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
+}
+
+func (c QueryAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	QuerySchema{}.ApplySchemaCustomizations(cs, append(path, "cached_query_schema")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryAttachment.
@@ -2269,6 +2296,12 @@ func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryS
 func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
 }
 
+func (c QuerySchema) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	QuerySchemaColumn{}.ApplySchemaCustomizations(cs, append(path, "columns")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchema.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2348,6 +2381,14 @@ func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
 }
 
+func (c QuerySchemaColumn) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "data_type")...)
+	cs.SetRequired(append(path, "name")...)
+	cs.SetRequired(append(path, "type_text")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchemaColumn.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2398,6 +2439,11 @@ func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
 }
 
 func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
+}
+
+func (c Result) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Result.
@@ -2463,6 +2509,18 @@ func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule)
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
+}
+
+func (c Schedule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "create_time")...)
+	cs.SetRequired(append(path, "cron_schedule")...)
+	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "cron_schedule")...)
+	cs.SetComputed(append(path, "dashboard_id")...)
+	cs.SetComputed(append(path, "etag")...)
+	cs.SetComputed(append(path, "schedule_id")...)
+	cs.SetComputed(append(path, "update_time")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Schedule.
@@ -2555,6 +2613,13 @@ func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscri
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
+}
+
+func (c Subscriber) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	SubscriptionSubscriberDestination{}.ApplySchemaCustomizations(cs, append(path, "destination_subscriber")...)
+	SubscriptionSubscriberUser{}.ApplySchemaCustomizations(cs, append(path, "user_subscriber")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscriber.
@@ -2678,6 +2743,20 @@ func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subsc
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
 }
 
+func (c Subscription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "create_time")...)
+	cs.SetComputed(append(path, "created_by_user_id")...)
+	cs.SetComputed(append(path, "dashboard_id")...)
+	cs.SetComputed(append(path, "etag")...)
+	cs.SetComputed(append(path, "schedule_id")...)
+	cs.SetRequired(append(path, "subscriber")...)
+	Subscriber{}.ApplySchemaCustomizations(cs, append(path, "subscriber")...)
+	cs.SetComputed(append(path, "subscription_id")...)
+	cs.SetComputed(append(path, "update_time")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscription.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2765,6 +2844,12 @@ func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCrea
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
 }
 
+func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "destination_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberDestination.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2805,6 +2890,12 @@ func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+}
+
+func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "user_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberUser.
@@ -2851,6 +2942,11 @@ func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tex
 func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
 }
 
+func (c TextAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TextAttachment.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2888,12 +2984,6 @@ func (o TextAttachment) Type(ctx context.Context) attr.Type {
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashDashboardRequest) {
-}
-
-func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringRead(existingState TrashDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardRequest.
@@ -2936,6 +3026,11 @@ func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
 }
 
+func (c TrashDashboardResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2967,12 +3062,6 @@ func (o TrashDashboardResponse) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpublishDashboardRequest) {
-}
-
-func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardRequest.
@@ -3015,6 +3104,11 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
 }
 
+func (c UnpublishDashboardResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3047,12 +3141,6 @@ type UpdateDashboardRequest struct {
 	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardRequest) {
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDashboardRequest.
@@ -3126,12 +3214,6 @@ type UpdateScheduleRequest struct {
 	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateScheduleRequest) {
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateScheduleRequest.

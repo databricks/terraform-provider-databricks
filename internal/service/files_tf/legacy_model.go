@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -33,6 +34,13 @@ func (newState *AddBlock_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Add
 }
 
 func (newState *AddBlock_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddBlock_SdkV2) {
+}
+
+func (c AddBlock_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "data")...)
+	cs.SetRequired(append(path, "handle")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
@@ -77,6 +85,11 @@ func (newState *AddBlockResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *AddBlockResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse_SdkV2) {
 }
 
+func (c AddBlockResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlockResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -113,6 +126,12 @@ func (newState *Close_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close_
 }
 
 func (newState *Close_SdkV2) SyncEffectiveFieldsDuringRead(existingState Close_SdkV2) {
+}
+
+func (c Close_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "handle")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
@@ -155,6 +174,11 @@ func (newState *CloseResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *CloseResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CloseResponse_SdkV2) {
 }
 
+func (c CloseResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloseResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -193,6 +217,12 @@ func (newState *Create_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Creat
 }
 
 func (newState *Create_SdkV2) SyncEffectiveFieldsDuringRead(existingState Create_SdkV2) {
+}
+
+func (c Create_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "path")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
@@ -234,12 +264,6 @@ type CreateDirectoryRequest_SdkV2 struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
-func (newState *CreateDirectoryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDirectoryRequest_SdkV2) {
-}
-
-func (newState *CreateDirectoryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -272,12 +296,6 @@ func (o CreateDirectoryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateDirectoryResponse_SdkV2 struct {
-}
-
-func (newState *CreateDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDirectoryResponse_SdkV2) {
-}
-
-func (newState *CreateDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateDirectoryResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDirectoryResponse.
@@ -317,6 +335,11 @@ func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateResponse_SdkV2) {
+}
+
+func (c CreateResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
@@ -365,6 +388,12 @@ func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delet
 func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringRead(existingState Delete_SdkV2) {
 }
 
+func (c Delete_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "path")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -404,12 +433,6 @@ type DeleteDirectoryRequest_SdkV2 struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteDirectoryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDirectoryRequest_SdkV2) {
-}
-
-func (newState *DeleteDirectoryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDirectoryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -444,12 +467,6 @@ func (o DeleteDirectoryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteDirectoryResponse_SdkV2 struct {
 }
 
-func (newState *DeleteDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDirectoryResponse_SdkV2) {
-}
-
-func (newState *DeleteDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDirectoryResponse_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDirectoryResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -481,12 +498,6 @@ func (o DeleteDirectoryResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteFileRequest_SdkV2 struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteFileRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileRequest_SdkV2) {
-}
-
-func (newState *DeleteFileRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileRequest.
@@ -527,6 +538,11 @@ func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
+}
+
+func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -576,6 +592,11 @@ func (newState *DirectoryEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DirectoryEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry_SdkV2) {
 }
 
+func (c DirectoryEntry_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectoryEntry.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -621,12 +642,6 @@ type DownloadRequest_SdkV2 struct {
 	FilePath types.String `tfsdk:"-"`
 }
 
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadRequest_SdkV2) {
-}
-
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -666,12 +681,6 @@ type DownloadResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 
 	LastModified types.String `tfsdk:"-"`
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadResponse_SdkV2) {
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadResponse.
@@ -728,6 +737,11 @@ func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Fil
 func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileInfo_SdkV2) {
 }
 
+func (c FileInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -771,12 +785,6 @@ type GetDirectoryMetadataRequest_SdkV2 struct {
 	DirectoryPath types.String `tfsdk:"-"`
 }
 
-func (newState *GetDirectoryMetadataRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDirectoryMetadataRequest_SdkV2) {
-}
-
-func (newState *GetDirectoryMetadataRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDirectoryMetadataRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -811,12 +819,6 @@ func (o GetDirectoryMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetDirectoryMetadataResponse_SdkV2 struct {
 }
 
-func (newState *GetDirectoryMetadataResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDirectoryMetadataResponse_SdkV2) {
-}
-
-func (newState *GetDirectoryMetadataResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetDirectoryMetadataResponse_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDirectoryMetadataResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -848,12 +850,6 @@ func (o GetDirectoryMetadataResponse_SdkV2) Type(ctx context.Context) attr.Type 
 type GetMetadataRequest_SdkV2 struct {
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
-}
-
-func (newState *GetMetadataRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetadataRequest_SdkV2) {
-}
-
-func (newState *GetMetadataRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetMetadataRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataRequest.
@@ -893,12 +889,6 @@ type GetMetadataResponse_SdkV2 struct {
 	ContentType types.String `tfsdk:"-"`
 
 	LastModified types.String `tfsdk:"-"`
-}
-
-func (newState *GetMetadataResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetadataResponse_SdkV2) {
-}
-
-func (newState *GetMetadataResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetMetadataResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetadataResponse.
@@ -943,12 +933,6 @@ type GetStatusRequest_SdkV2 struct {
 	Path types.String `tfsdk:"-"`
 }
 
-func (newState *GetStatusRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStatusRequest_SdkV2) {
-}
-
-func (newState *GetStatusRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetStatusRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatusRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -985,12 +969,6 @@ type ListDbfsRequest_SdkV2 struct {
 	// The path of the file or directory. The path should be the absolute DBFS
 	// path.
 	Path types.String `tfsdk:"-"`
-}
-
-func (newState *ListDbfsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDbfsRequest_SdkV2) {
-}
-
-func (newState *ListDbfsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDbfsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDbfsRequest.
@@ -1050,12 +1028,6 @@ type ListDirectoryContentsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListDirectoryContentsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryContentsRequest_SdkV2) {
-}
-
-func (newState *ListDirectoryContentsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDirectoryContentsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryContentsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1102,6 +1074,12 @@ func (newState *ListDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *ListDirectoryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse_SdkV2) {
+}
+
+func (c ListDirectoryResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	DirectoryEntry_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "contents")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryResponse.
@@ -1179,6 +1157,12 @@ func (newState *ListStatusResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse_SdkV2) {
 }
 
+func (c ListStatusResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "files")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStatusResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1251,6 +1235,12 @@ func (newState *MkDirs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDir
 func (newState *MkDirs_SdkV2) SyncEffectiveFieldsDuringRead(existingState MkDirs_SdkV2) {
 }
 
+func (c MkDirs_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "path")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1289,6 +1279,11 @@ func (newState *MkDirsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *MkDirsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse_SdkV2) {
+}
+
+func (c MkDirsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirsResponse.
@@ -1333,6 +1328,13 @@ func (newState *Move_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move_Sd
 func (newState *Move_SdkV2) SyncEffectiveFieldsDuringRead(existingState Move_SdkV2) {
 }
 
+func (c Move_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "destination_path")...)
+	cs.SetRequired(append(path, "source_path")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1375,6 +1377,11 @@ func (newState *MoveResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *MoveResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState MoveResponse_SdkV2) {
 }
 
+func (c MoveResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MoveResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1415,6 +1422,12 @@ func (newState *Put_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put_SdkV
 }
 
 func (newState *Put_SdkV2) SyncEffectiveFieldsDuringRead(existingState Put_SdkV2) {
+}
+
+func (c Put_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "path")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.
@@ -1461,6 +1474,11 @@ func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *PutResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutResponse_SdkV2) {
 }
 
+func (c PutResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1497,12 +1515,6 @@ type ReadDbfsRequest_SdkV2 struct {
 	Offset types.Int64 `tfsdk:"-"`
 	// The path of the file to read. The path should be the absolute DBFS path.
 	Path types.String `tfsdk:"-"`
-}
-
-func (newState *ReadDbfsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadDbfsRequest_SdkV2) {
-}
-
-func (newState *ReadDbfsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReadDbfsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadDbfsRequest.
@@ -1555,6 +1567,11 @@ func (newState *ReadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ReadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReadResponse_SdkV2) {
 }
 
+func (c ReadResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1597,12 +1614,6 @@ type UploadRequest_SdkV2 struct {
 	Overwrite types.Bool `tfsdk:"-"`
 }
 
-func (newState *UploadRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UploadRequest_SdkV2) {
-}
-
-func (newState *UploadRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UploadRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1639,12 +1650,6 @@ func (o UploadRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UploadResponse_SdkV2 struct {
-}
-
-func (newState *UploadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UploadResponse_SdkV2) {
-}
-
-func (newState *UploadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UploadResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UploadResponse.

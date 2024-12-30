@@ -1,5 +1,25 @@
 # Version changelog
 
+## [Release] Release v1.63.0
+
+### Bug Fixes
+
+ * Reflect backend updates in state for databricks_app ([#4337](https://github.com/databricks/terraform-provider-databricks/pull/4337)).
+
+
+### Documentation
+
+ * Update `databricks_workspace_conf` documentation ([#4334](https://github.com/databricks/terraform-provider-databricks/pull/4334)).
+ * apply `make fmt-docs` to all docs ([#4344](https://github.com/databricks/terraform-provider-databricks/pull/4344)).
+
+
+### Internal Changes
+
+ * Generate both SdkV2-compatible and Plugin Framework-compatible structures ([#4332](https://github.com/databricks/terraform-provider-databricks/pull/4332)).
+ * Mark TestAccServicePrincipalResourceOnAzure test as flaky ([#4333](https://github.com/databricks/terraform-provider-databricks/pull/4333)).
+ * Retry on 504 when calling the permission API ([#4355](https://github.com/databricks/terraform-provider-databricks/pull/4355)).
+
+
 ## [Release] Release v1.62.0
 
 ### New Features and Improvements

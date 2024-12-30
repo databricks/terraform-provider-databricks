@@ -69,6 +69,13 @@ type CreatePipeline_SdkV2 struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
+	// Write-only setting, available only in Create/Update calls. Specifies the
+	// user or service principal that the pipeline runs as. If not specified,
+	// the pipeline runs as the user who created the pipeline.
+	//
+	// Only `user_name` or `service_principal_name` can be specified. If both
+	// are specified, an error is thrown.
+	RunAs types.List `tfsdk:"run_as" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -109,6 +116,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"libraries":            reflect.TypeOf(PipelineLibrary_SdkV2{}),
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
+		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -140,6 +148,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"notifications":         o.Notifications,
 			"photon":                o.Photon,
 			"restart_window":        o.RestartWindow,
+			"run_as":                o.RunAs,
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
 			"storage":               o.Storage,
@@ -189,6 +198,9 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"photon": types.BoolType,
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: RunAs_SdkV2{}.Type(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
@@ -433,6 +445,32 @@ func (o *CreatePipeline_SdkV2) SetRestartWindow(ctx context.Context, v RestartWi
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
 	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in CreatePipeline_SdkV2 as
+// a RunAs_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetRunAs(ctx context.Context) (RunAs_SdkV2, bool) {
+	var e RunAs_SdkV2
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs_SdkV2
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in CreatePipeline_SdkV2 as
@@ -758,6 +796,13 @@ type EditPipeline_SdkV2 struct {
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
+	// Write-only setting, available only in Create/Update calls. Specifies the
+	// user or service principal that the pipeline runs as. If not specified,
+	// the pipeline runs as the user who created the pipeline.
+	//
+	// Only `user_name` or `service_principal_name` can be specified. If both
+	// are specified, an error is thrown.
+	RunAs types.List `tfsdk:"run_as" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -798,6 +843,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"libraries":            reflect.TypeOf(PipelineLibrary_SdkV2{}),
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
+		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -830,6 +876,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"photon":                 o.Photon,
 			"pipeline_id":            o.PipelineId,
 			"restart_window":         o.RestartWindow,
+			"run_as":                 o.RunAs,
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
 			"storage":                o.Storage,
@@ -880,6 +927,9 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"pipeline_id": types.StringType,
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
+			},
+			"run_as": basetypes.ListType{
+				ElemType: RunAs_SdkV2{}.Type(ctx),
 			},
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
@@ -1124,6 +1174,32 @@ func (o *EditPipeline_SdkV2) SetRestartWindow(ctx context.Context, v RestartWind
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
 	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetRunAs returns the value of the RunAs field in EditPipeline_SdkV2 as
+// a RunAs_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetRunAs(ctx context.Context) (RunAs_SdkV2, bool) {
+	var e RunAs_SdkV2
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs_SdkV2
+	d := o.RunAs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
+	o.RunAs = types.ListValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in EditPipeline_SdkV2 as
@@ -5094,6 +5170,60 @@ func (o *RestartWindow_SdkV2) SetDaysOfWeek(ctx context.Context, v []types.Strin
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["days_of_week"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DaysOfWeek = types.ListValueMust(t, vs)
+}
+
+// Write-only setting, available only in Create/Update calls. Specifies the user
+// or service principal that the pipeline runs as. If not specified, the
+// pipeline runs as the user who created the pipeline.
+//
+// Only `user_name` or `service_principal_name` can be specified. If both are
+// specified, an error is thrown.
+type RunAs_SdkV2 struct {
+	// Application ID of an active service principal. Setting this field
+	// requires the `servicePrincipal/user` role.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	// The email of an active workspace user. Users can only set this field to
+	// their own email.
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *RunAs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunAs_SdkV2) {
+}
+
+func (newState *RunAs_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunAs_SdkV2) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunAs.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunAs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunAs_SdkV2
+// only implements ToObjectValue() and Type().
+func (o RunAs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RunAs_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
 }
 
 type SchemaSpec_SdkV2 struct {

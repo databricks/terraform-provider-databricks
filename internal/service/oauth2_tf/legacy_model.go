@@ -24,8 +24,9 @@ import (
 // Create account federation policy
 type CreateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy" tf:"optional,object"`
-	// The identifier for the federation policy. If unspecified, the id will be
-	// assigned by Databricks.
+	// The identifier for the federation policy. The identifier must contain
+	// only lowercase alphanumeric characters, numbers, hyphens, and slashes. If
+	// unspecified, the id will be assigned by Databricks.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -419,8 +420,9 @@ func (o CreatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 // Create service principal federation policy
 type CreateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy" tf:"optional,object"`
-	// The identifier for the federation policy. If unspecified, the id will be
-	// assigned by Databricks.
+	// The identifier for the federation policy. The identifier must contain
+	// only lowercase alphanumeric characters, numbers, hyphens, and slashes. If
+	// unspecified, the id will be assigned by Databricks.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -650,6 +652,7 @@ func (o DataPlaneInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Delete account federation policy
 type DeleteAccountFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -884,6 +887,7 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Delete service principal federation policy
 type DeleteServicePrincipalFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -980,9 +984,13 @@ type FederationPolicy_SdkV2 struct {
 	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
 	// Description of the federation policy.
 	Description types.String `tfsdk:"description" tf:"optional"`
-	// Name of the federation policy. The name must contain only lowercase
-	// alphanumeric characters, numbers, and hyphens. It must be unique within
-	// the account.
+	// Resource name for the federation policy. Example values include
+	// `accounts/<account-id>/federationPolicies/my-federation-policy` for
+	// Account Federation Policies, and
+	// `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
+	// for Service Principal Federation Policies. Typically an output parameter,
+	// which does not need to be specified in create or update requests. If
+	// specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name" tf:"optional"`
 	// Specifies the policy to use for validating OIDC claims in your federated
 	// tokens.
@@ -1072,6 +1080,7 @@ func (o *FederationPolicy_SdkV2) SetOidcPolicy(ctx context.Context, v OidcFedera
 
 // Get account federation policy
 type GetAccountFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -1687,6 +1696,7 @@ func (o *GetPublishedAppsOutput_SdkV2) SetApps(ctx context.Context, v []Publishe
 
 // Get service principal federation policy
 type GetServicePrincipalFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -2513,7 +2523,7 @@ func (o TokenAccessPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 // Update account federation policy
 type UpdateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy" tf:"optional,object"`
-
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
@@ -2852,7 +2862,7 @@ func (o UpdatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 // Update service principal federation policy
 type UpdateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy" tf:"optional,object"`
-
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`

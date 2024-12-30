@@ -69,6 +69,13 @@ type CreatePipeline struct {
 	Photon types.Bool `tfsdk:"photon" tf:"optional"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window" tf:"optional,object"`
+	// Write-only setting, available only in Create/Update calls. Specifies the
+	// user or service principal that the pipeline runs as. If not specified,
+	// the pipeline runs as the user who created the pipeline.
+	//
+	// Only `user_name` or `service_principal_name` can be specified. If both
+	// are specified, an error is thrown.
+	RunAs types.Object `tfsdk:"run_as" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -109,6 +116,7 @@ func (a CreatePipeline) GetComplexFieldTypes(ctx context.Context) map[string]ref
 		"libraries":            reflect.TypeOf(PipelineLibrary{}),
 		"notifications":        reflect.TypeOf(Notifications{}),
 		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"run_as":               reflect.TypeOf(RunAs{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger{}),
 	}
 }
@@ -140,6 +148,7 @@ func (o CreatePipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"notifications":         o.Notifications,
 			"photon":                o.Photon,
 			"restart_window":        o.RestartWindow,
+			"run_as":                o.RunAs,
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
 			"storage":               o.Storage,
@@ -180,6 +189,7 @@ func (o CreatePipeline) Type(ctx context.Context) attr.Type {
 			},
 			"photon":         types.BoolType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
 			"storage":        types.StringType,
@@ -431,6 +441,34 @@ func (o *CreatePipeline) GetRestartWindow(ctx context.Context) (RestartWindow, b
 func (o *CreatePipeline) SetRestartWindow(ctx context.Context, v RestartWindow) {
 	vs := v.ToObjectValue(ctx)
 	o.RestartWindow = vs
+}
+
+// GetRunAs returns the value of the RunAs field in CreatePipeline as
+// a RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline) GetRunAs(ctx context.Context) (RunAs, bool) {
+	var e RunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs
+	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in CreatePipeline.
+func (o *CreatePipeline) SetRunAs(ctx context.Context, v RunAs) {
+	vs := v.ToObjectValue(ctx)
+	o.RunAs = vs
 }
 
 // GetTrigger returns the value of the Trigger field in CreatePipeline as
@@ -758,6 +796,13 @@ type EditPipeline struct {
 	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window" tf:"optional,object"`
+	// Write-only setting, available only in Create/Update calls. Specifies the
+	// user or service principal that the pipeline runs as. If not specified,
+	// the pipeline runs as the user who created the pipeline.
+	//
+	// Only `user_name` or `service_principal_name` can be specified. If both
+	// are specified, an error is thrown.
+	RunAs types.Object `tfsdk:"run_as" tf:"optional,object"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
@@ -798,6 +843,7 @@ func (a EditPipeline) GetComplexFieldTypes(ctx context.Context) map[string]refle
 		"libraries":            reflect.TypeOf(PipelineLibrary{}),
 		"notifications":        reflect.TypeOf(Notifications{}),
 		"restart_window":       reflect.TypeOf(RestartWindow{}),
+		"run_as":               reflect.TypeOf(RunAs{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger{}),
 	}
 }
@@ -830,6 +876,7 @@ func (o EditPipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"photon":                 o.Photon,
 			"pipeline_id":            o.PipelineId,
 			"restart_window":         o.RestartWindow,
+			"run_as":                 o.RunAs,
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
 			"storage":                o.Storage,
@@ -871,6 +918,7 @@ func (o EditPipeline) Type(ctx context.Context) attr.Type {
 			"photon":         types.BoolType,
 			"pipeline_id":    types.StringType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
 			"storage":        types.StringType,
@@ -1122,6 +1170,34 @@ func (o *EditPipeline) GetRestartWindow(ctx context.Context) (RestartWindow, boo
 func (o *EditPipeline) SetRestartWindow(ctx context.Context, v RestartWindow) {
 	vs := v.ToObjectValue(ctx)
 	o.RestartWindow = vs
+}
+
+// GetRunAs returns the value of the RunAs field in EditPipeline as
+// a RunAs value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline) GetRunAs(ctx context.Context) (RunAs, bool) {
+	var e RunAs
+	if o.RunAs.IsNull() || o.RunAs.IsUnknown() {
+		return e, false
+	}
+	var v []RunAs
+	d := o.RunAs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetRunAs sets the value of the RunAs field in EditPipeline.
+func (o *EditPipeline) SetRunAs(ctx context.Context, v RunAs) {
+	vs := v.ToObjectValue(ctx)
+	o.RunAs = vs
 }
 
 // GetTrigger returns the value of the Trigger field in EditPipeline as
@@ -5094,6 +5170,60 @@ func (o *RestartWindow) SetDaysOfWeek(ctx context.Context, v []types.String) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["days_of_week"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DaysOfWeek = types.ListValueMust(t, vs)
+}
+
+// Write-only setting, available only in Create/Update calls. Specifies the user
+// or service principal that the pipeline runs as. If not specified, the
+// pipeline runs as the user who created the pipeline.
+//
+// Only `user_name` or `service_principal_name` can be specified. If both are
+// specified, an error is thrown.
+type RunAs struct {
+	// Application ID of an active service principal. Setting this field
+	// requires the `servicePrincipal/user` role.
+	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	// The email of an active workspace user. Users can only set this field to
+	// their own email.
+	UserName types.String `tfsdk:"user_name" tf:"optional"`
+}
+
+func (newState *RunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunAs) {
+}
+
+func (newState *RunAs) SyncEffectiveFieldsDuringRead(existingState RunAs) {
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in RunAs.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a RunAs) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, RunAs
+// only implements ToObjectValue() and Type().
+func (o RunAs) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"service_principal_name": o.ServicePrincipalName,
+			"user_name":              o.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o RunAs) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"service_principal_name": types.StringType,
+			"user_name":              types.StringType,
+		},
+	}
 }
 
 type SchemaSpec struct {

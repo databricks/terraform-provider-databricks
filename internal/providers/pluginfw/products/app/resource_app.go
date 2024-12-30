@@ -15,12 +15,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 const (
 	resourceName       = "app"
 	resourceNamePlural = "apps"
 )
+
+type appResource struct {
+	apps_tf.App
+	NoCompute types.Bool `tfsdk:"no_compute"`
+}
 
 func ResourceApp() resource.Resource {
 	return &resourceApp{}
@@ -35,7 +41,7 @@ func (a resourceApp) Metadata(ctx context.Context, req resource.MetadataRequest,
 }
 
 func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = tfschema.ResourceStructToSchema(ctx, apps_tf.App{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	resp.Schema = tfschema.ResourceStructToSchema(ctx, appResource{}, func(cs tfschema.CustomizableSchema) tfschema.CustomizableSchema {
 		cs.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
 		exclusiveFields := []string{"job", "secret", "serving_endpoint", "sql_warehouse"}
 		paths := path.Expressions{}
@@ -61,7 +67,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	var app apps_tf.App
+	var app appResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -73,18 +79,27 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	// Create the app
-	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{App: &appGoSdk})
+	var forceSendFields []string
+	if !app.NoCompute.IsNull() {
+		forceSendFields = append(forceSendFields, "NoCompute")
+	}
+	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{
+		App: &appGoSdk,
+		// NoCompute: app.NoCompute.ValueBool(),
+		// ForceSendFields: forceSendFields,
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create app", err.Error())
 		return
 	}
 
 	// Store the initial version of the app in state
-	var newApp apps_tf.App
+	var newApp appResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, waiter.Response, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	newApp.NoCompute = app.NoCompute
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -147,7 +162,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	var app apps_tf.App
+	var app appResource
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,11 +181,12 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	// Store the updated version of the app in state
-	var newApp apps_tf.App
+	var newApp appResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	newApp.NoCompute = app.NoCompute
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -316,6 +316,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "policy_id", Resource: "databricks_cluster_policy"},
 			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "single_user_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "library.jar", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
@@ -937,11 +938,14 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Search: func(ic *importContext, r *resource) error {
+			if r.Attribute != "display_name" {
+				return fmt.Errorf("wrong search attribute '%s' for databricks_group", r.Attribute)
+			}
 			if err := ic.cacheGroups(); err != nil {
 				return err
 			}
 			for _, g := range ic.allGroups {
-				if g.DisplayName == r.Value && r.Attribute == "display_name" {
+				if g.DisplayName == r.Value {
 					r.ID = g.ID
 					return nil
 				}

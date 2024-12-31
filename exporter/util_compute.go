@@ -65,6 +65,13 @@ func (ic *importContext) importCluster(c *compute.ClusterSpec) {
 	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
 	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
 	ic.emitUserOrServicePrincipal(c.SingleUserName)
+	if c.Kind.String() != "" && c.SingleUserName != "" {
+		ic.Emit(&resource{
+			Resource:  "databricks_group",
+			Attribute: "display_name",
+			Value:     c.SingleUserName,
+		})
+	}
 }
 
 func (ic *importContext) emitSecretsFromSecretPathString(v string) {

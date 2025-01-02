@@ -108,6 +108,7 @@ The resource supports the following arguments:
 * `health` - (Optional) An optional block that specifies the health conditions for the job [documented below](#health-configuration-block).
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
+* `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
 
 ### task Configuration Block
 

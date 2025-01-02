@@ -333,7 +333,7 @@ func ResourceNotebook() common.Resource {
 			oldFormat := d.Get("format").(string)
 			if oldFormat == "" {
 				source := d.Get("source").(string)
-				// check if `source` is set, and if it is, use file exension to determine format
+				// check if `source` is set, and if it is, use file extension to determine format
 				if source != "" {
 					ext := strings.ToLower(filepath.Ext(source))
 					oldFormat = extMap[ext].Format

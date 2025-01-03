@@ -336,7 +336,8 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 					CredentialName:  "bcd",
 					Comment:         "def",
 					ReadOnly:        false,
-					ForceSendFields: []string{"ReadOnly"},
+					Fallback:        false,
+					ForceSendFields: []string{"ReadOnly", "Fallback"},
 				},
 			},
 			{
@@ -360,6 +361,7 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 			"credential_name": "abc",
 			"comment":         "def",
 			"read_only":       "true",
+			"fallback":        "true",
 		},
 		HCL: `
 		name = "abc"
@@ -367,6 +369,7 @@ func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 		credential_name = "bcd"
 		comment = "def"
 		read_only = false
+		fallback = false
 		`,
 	}.ApplyNoError(t)
 }

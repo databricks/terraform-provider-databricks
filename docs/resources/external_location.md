@@ -124,6 +124,7 @@ The following arguments are required:
 - `owner` - (Optional) Username/groupname/sp application_id of the external location owner.
 - `comment` - (Optional) User-supplied free-form text.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
+- `fallback` - (Optional) Indicates whether fallback mode is enabled for this external location. When fallback mode is enabled, the access to the location falls back to cluster credentials if UC credentials are not sufficient.
 - `read_only` - (Optional) Indicates whether the external location is read-only.
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 - `force_update` - (Optional) Update external location regardless of its dependents.
@@ -136,6 +137,11 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this external location - same as `name`.
+- `created_at` - Time at which this external location was created, in epoch milliseconds.
+- `created_by` -  Username of external location creator.
+- `credential_id` - Unique ID of the location's storage credential.
+- `updated_at` - Time at which external location this was last modified, in epoch milliseconds.
+- `updated_by` - Username of user who last modified the external location.
 
 ## Import
 

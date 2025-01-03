@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -89,6 +90,20 @@ func (newState *CreatePipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 }
 
 func (newState *CreatePipeline) SyncEffectiveFieldsDuringRead(existingState CreatePipeline) {
+}
+
+func (c CreatePipeline) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineCluster{}.ApplySchemaCustomizations(cs, append(path, "clusters")...)
+	PipelineDeployment{}.ApplySchemaCustomizations(cs, append(path, "deployment")...)
+	Filters{}.ApplySchemaCustomizations(cs, append(path, "filters")...)
+	IngestionGatewayPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "gateway_definition")...)
+	IngestionPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "ingestion_definition")...)
+	PipelineLibrary{}.ApplySchemaCustomizations(cs, append(path, "libraries")...)
+	Notifications{}.ApplySchemaCustomizations(cs, append(path, "notifications")...)
+	RestartWindow{}.ApplySchemaCustomizations(cs, append(path, "restart_window")...)
+	PipelineTrigger{}.ApplySchemaCustomizations(cs, append(path, "trigger")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
@@ -475,6 +490,12 @@ func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreatePipelineResponse) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse) {
 }
 
+func (c CreatePipelineResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineSpec{}.ApplySchemaCustomizations(cs, append(path, "effective_settings")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -550,6 +571,11 @@ func (newState *CronTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTr
 func (newState *CronTrigger) SyncEffectiveFieldsDuringRead(existingState CronTrigger) {
 }
 
+func (c CronTrigger) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronTrigger.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -596,6 +622,11 @@ func (newState *DataPlaneId) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPl
 func (newState *DataPlaneId) SyncEffectiveFieldsDuringRead(existingState DataPlaneId) {
 }
 
+func (c DataPlaneId) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataPlaneId.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -632,12 +663,6 @@ func (o DataPlaneId) Type(ctx context.Context) attr.Type {
 // Delete a pipeline
 type DeletePipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineRequest) {
-}
-
-func (newState *DeletePipelineRequest) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineRequest.
@@ -678,6 +703,11 @@ func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *DeletePipelineResponse) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse) {
+}
+
+func (c DeletePipelineResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineResponse.
@@ -778,6 +808,20 @@ func (newState *EditPipeline) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditP
 }
 
 func (newState *EditPipeline) SyncEffectiveFieldsDuringRead(existingState EditPipeline) {
+}
+
+func (c EditPipeline) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineCluster{}.ApplySchemaCustomizations(cs, append(path, "clusters")...)
+	PipelineDeployment{}.ApplySchemaCustomizations(cs, append(path, "deployment")...)
+	Filters{}.ApplySchemaCustomizations(cs, append(path, "filters")...)
+	IngestionGatewayPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "gateway_definition")...)
+	IngestionPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "ingestion_definition")...)
+	PipelineLibrary{}.ApplySchemaCustomizations(cs, append(path, "libraries")...)
+	Notifications{}.ApplySchemaCustomizations(cs, append(path, "notifications")...)
+	RestartWindow{}.ApplySchemaCustomizations(cs, append(path, "restart_window")...)
+	PipelineTrigger{}.ApplySchemaCustomizations(cs, append(path, "trigger")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -1161,6 +1205,11 @@ func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *EditPipelineResponse) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse) {
 }
 
+func (c EditPipelineResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1199,6 +1248,12 @@ func (newState *ErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorD
 }
 
 func (newState *ErrorDetail) SyncEffectiveFieldsDuringRead(existingState ErrorDetail) {
+}
+
+func (c ErrorDetail) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	SerializedException{}.ApplySchemaCustomizations(cs, append(path, "exceptions")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ErrorDetail.
@@ -1275,6 +1330,11 @@ func (newState *FileLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLi
 func (newState *FileLibrary) SyncEffectiveFieldsDuringRead(existingState FileLibrary) {
 }
 
+func (c FileLibrary) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileLibrary.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1317,6 +1377,11 @@ func (newState *Filters) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters) {
 }
 
 func (newState *Filters) SyncEffectiveFieldsDuringRead(existingState Filters) {
+}
+
+func (c Filters) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Filters.
@@ -1417,12 +1482,6 @@ type GetPipelinePermissionLevelsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsRequest) {
-}
-
-func (newState *GetPipelinePermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1463,6 +1522,12 @@ func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringCr
 }
 
 func (newState *GetPipelinePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse) {
+}
+
+func (c GetPipelinePermissionLevelsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelinePermissionsDescription{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsResponse.
@@ -1532,12 +1597,6 @@ type GetPipelinePermissionsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionsRequest) {
-}
-
-func (newState *GetPipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1572,12 +1631,6 @@ func (o GetPipelinePermissionsRequest) Type(ctx context.Context) attr.Type {
 // Get a pipeline
 type GetPipelineRequest struct {
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineRequest) {
-}
-
-func (newState *GetPipelineRequest) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineRequest.
@@ -1644,6 +1697,13 @@ func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *GetPipelineResponse) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse) {
+}
+
+func (c GetPipelineResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	UpdateStateInfo{}.ApplySchemaCustomizations(cs, append(path, "latest_updates")...)
+	PipelineSpec{}.ApplySchemaCustomizations(cs, append(path, "spec")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineResponse.
@@ -1766,12 +1826,6 @@ type GetUpdateRequest struct {
 	UpdateId types.String `tfsdk:"-"`
 }
 
-func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateRequest) {
-}
-
-func (newState *GetUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1814,6 +1868,12 @@ func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 }
 
 func (newState *GetUpdateResponse) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse) {
+}
+
+func (c GetUpdateResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	UpdateInfo{}.ApplySchemaCustomizations(cs, append(path, "update")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateResponse.
@@ -1890,6 +1950,14 @@ func (newState *IngestionConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan In
 }
 
 func (newState *IngestionConfig) SyncEffectiveFieldsDuringRead(existingState IngestionConfig) {
+}
+
+func (c IngestionConfig) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	ReportSpec{}.ApplySchemaCustomizations(cs, append(path, "report")...)
+	SchemaSpec{}.ApplySchemaCustomizations(cs, append(path, "schema")...)
+	TableSpec{}.ApplySchemaCustomizations(cs, append(path, "table")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionConfig.
@@ -2042,6 +2110,11 @@ func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringCre
 func (newState *IngestionGatewayPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition) {
 }
 
+func (c IngestionGatewayPipelineDefinition) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionGatewayPipelineDefinition.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2102,6 +2175,13 @@ func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *IngestionPipelineDefinition) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition) {
+}
+
+func (c IngestionPipelineDefinition) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	IngestionConfig{}.ApplySchemaCustomizations(cs, append(path, "objects")...)
+	TableSpecificConfig{}.ApplySchemaCustomizations(cs, append(path, "table_configuration")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionPipelineDefinition.
@@ -2227,12 +2307,6 @@ type ListPipelineEventsRequest struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsRequest) {
-}
-
-func (newState *ListPipelineEventsRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2315,6 +2389,12 @@ func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *ListPipelineEventsResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse) {
+}
+
+func (c ListPipelineEventsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineEvent{}.ApplySchemaCustomizations(cs, append(path, "events")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsResponse.
@@ -2407,12 +2487,6 @@ type ListPipelinesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesRequest) {
-}
-
-func (newState *ListPipelinesRequest) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2493,6 +2567,12 @@ func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListPipelinesResponse) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse) {
 }
 
+func (c ListPipelinesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineStateInfo{}.ApplySchemaCustomizations(cs, append(path, "statuses")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2568,12 +2648,6 @@ type ListUpdatesRequest struct {
 	UntilUpdateId types.String `tfsdk:"-"`
 }
 
-func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesRequest) {
-}
-
-func (newState *ListUpdatesRequest) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2626,6 +2700,12 @@ func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *ListUpdatesResponse) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse) {
+}
+
+func (c ListUpdatesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	UpdateInfo{}.ApplySchemaCustomizations(cs, append(path, "updates")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesResponse.
@@ -2702,6 +2782,11 @@ func (newState *ManualTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan Manu
 func (newState *ManualTrigger) SyncEffectiveFieldsDuringRead(existingState ManualTrigger) {
 }
 
+func (c ManualTrigger) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ManualTrigger.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2738,6 +2823,11 @@ func (newState *NotebookLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan No
 }
 
 func (newState *NotebookLibrary) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary) {
+}
+
+func (c NotebookLibrary) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookLibrary.
@@ -2788,6 +2878,11 @@ func (newState *Notifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan Noti
 }
 
 func (newState *Notifications) SyncEffectiveFieldsDuringRead(existingState Notifications) {
+}
+
+func (c Notifications) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Notifications.
@@ -2926,6 +3021,11 @@ func (newState *Origin) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin) {
 func (newState *Origin) SyncEffectiveFieldsDuringRead(existingState Origin) {
 }
 
+func (c Origin) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Origin.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3006,6 +3106,11 @@ func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PipelineAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest) {
 }
 
+func (c PipelineAccessControlRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineAccessControlRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3060,6 +3165,12 @@ func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringCreateOr
 }
 
 func (newState *PipelineAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse) {
+}
+
+func (c PipelineAccessControlResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelinePermission{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineAccessControlResponse.
@@ -3232,6 +3343,16 @@ func (newState *PipelineCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 }
 
 func (newState *PipelineCluster) SyncEffectiveFieldsDuringRead(existingState PipelineCluster) {
+}
+
+func (c PipelineCluster) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineClusterAutoscale{}.ApplySchemaCustomizations(cs, append(path, "autoscale")...)
+	compute_tf.AwsAttributes{}.ApplySchemaCustomizations(cs, append(path, "aws_attributes")...)
+	compute_tf.AzureAttributes{}.ApplySchemaCustomizations(cs, append(path, "azure_attributes")...)
+	compute_tf.ClusterLogConf{}.ApplySchemaCustomizations(cs, append(path, "cluster_log_conf")...)
+	compute_tf.GcpAttributes{}.ApplySchemaCustomizations(cs, append(path, "gcp_attributes")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineCluster.
@@ -3614,6 +3735,13 @@ func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *PipelineClusterAutoscale) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale) {
 }
 
+func (c PipelineClusterAutoscale) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "max_workers")...)
+	cs.SetRequired(append(path, "min_workers")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineClusterAutoscale.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3660,6 +3788,11 @@ func (newState *PipelineDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *PipelineDeployment) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment) {
+}
+
+func (c PipelineDeployment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineDeployment.
@@ -3720,6 +3853,14 @@ func (newState *PipelineEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipe
 }
 
 func (newState *PipelineEvent) SyncEffectiveFieldsDuringRead(existingState PipelineEvent) {
+}
+
+func (c PipelineEvent) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	ErrorDetail{}.ApplySchemaCustomizations(cs, append(path, "error")...)
+	Origin{}.ApplySchemaCustomizations(cs, append(path, "origin")...)
+	Sequencing{}.ApplySchemaCustomizations(cs, append(path, "sequence")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineEvent.
@@ -3878,6 +4019,14 @@ func (newState *PipelineLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary) {
 }
 
+func (c PipelineLibrary) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	FileLibrary{}.ApplySchemaCustomizations(cs, append(path, "file")...)
+	compute_tf.MavenLibrary{}.ApplySchemaCustomizations(cs, append(path, "maven")...)
+	NotebookLibrary{}.ApplySchemaCustomizations(cs, append(path, "notebook")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineLibrary.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4019,6 +4168,11 @@ func (newState *PipelinePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PipelinePermission) SyncEffectiveFieldsDuringRead(existingState PipelinePermission) {
 }
 
+func (c PipelinePermission) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermission.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4098,6 +4252,12 @@ func (newState *PipelinePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *PipelinePermissions) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions) {
 }
 
+func (c PipelinePermissions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineAccessControlResponse{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissions.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4175,6 +4335,11 @@ func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringCreateO
 func (newState *PipelinePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription) {
 }
 
+func (c PipelinePermissionsDescription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsDescription.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4218,6 +4383,13 @@ func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpd
 }
 
 func (newState *PipelinePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest) {
+}
+
+func (c PipelinePermissionsRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineAccessControlRequest{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+	cs.SetRequired(append(path, "pipeline_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
@@ -4345,6 +4517,20 @@ func (newState *PipelineSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipel
 }
 
 func (newState *PipelineSpec) SyncEffectiveFieldsDuringRead(existingState PipelineSpec) {
+}
+
+func (c PipelineSpec) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineCluster{}.ApplySchemaCustomizations(cs, append(path, "clusters")...)
+	PipelineDeployment{}.ApplySchemaCustomizations(cs, append(path, "deployment")...)
+	Filters{}.ApplySchemaCustomizations(cs, append(path, "filters")...)
+	IngestionGatewayPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "gateway_definition")...)
+	IngestionPipelineDefinition{}.ApplySchemaCustomizations(cs, append(path, "ingestion_definition")...)
+	PipelineLibrary{}.ApplySchemaCustomizations(cs, append(path, "libraries")...)
+	Notifications{}.ApplySchemaCustomizations(cs, append(path, "notifications")...)
+	RestartWindow{}.ApplySchemaCustomizations(cs, append(path, "restart_window")...)
+	PipelineTrigger{}.ApplySchemaCustomizations(cs, append(path, "trigger")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineSpec.
@@ -4740,6 +4926,12 @@ func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *PipelineStateInfo) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo) {
 }
 
+func (c PipelineStateInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	UpdateStateInfo{}.ApplySchemaCustomizations(cs, append(path, "latest_updates")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineStateInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4825,6 +5017,13 @@ func (newState *PipelineTrigger) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pi
 }
 
 func (newState *PipelineTrigger) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger) {
+}
+
+func (c PipelineTrigger) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CronTrigger{}.ApplySchemaCustomizations(cs, append(path, "cron")...)
+	ManualTrigger{}.ApplySchemaCustomizations(cs, append(path, "manual")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineTrigger.
@@ -4941,6 +5140,12 @@ func (newState *ReportSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportS
 func (newState *ReportSpec) SyncEffectiveFieldsDuringRead(existingState ReportSpec) {
 }
 
+func (c ReportSpec) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	TableSpecificConfig{}.ApplySchemaCustomizations(cs, append(path, "table_configuration")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReportSpec.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5029,6 +5234,12 @@ func (newState *RestartWindow) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rest
 }
 
 func (newState *RestartWindow) SyncEffectiveFieldsDuringRead(existingState RestartWindow) {
+}
+
+func (c RestartWindow) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "start_hour")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartWindow.
@@ -5120,6 +5331,12 @@ func (newState *SchemaSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaS
 func (newState *SchemaSpec) SyncEffectiveFieldsDuringRead(existingState SchemaSpec) {
 }
 
+func (c SchemaSpec) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	TableSpecificConfig{}.ApplySchemaCustomizations(cs, append(path, "table_configuration")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaSpec.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5202,6 +5419,12 @@ func (newState *Sequencing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequenc
 func (newState *Sequencing) SyncEffectiveFieldsDuringRead(existingState Sequencing) {
 }
 
+func (c Sequencing) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	DataPlaneId{}.ApplySchemaCustomizations(cs, append(path, "data_plane_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Sequencing.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5278,6 +5501,12 @@ func (newState *SerializedException) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *SerializedException) SyncEffectiveFieldsDuringRead(existingState SerializedException) {
+}
+
+func (c SerializedException) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	StackFrame{}.ApplySchemaCustomizations(cs, append(path, "stack")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SerializedException.
@@ -5362,6 +5591,11 @@ func (newState *StackFrame) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFr
 func (newState *StackFrame) SyncEffectiveFieldsDuringRead(existingState StackFrame) {
 }
 
+func (c StackFrame) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StackFrame.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5424,6 +5658,12 @@ func (newState *StartUpdate) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartU
 }
 
 func (newState *StartUpdate) SyncEffectiveFieldsDuringRead(existingState StartUpdate) {
+}
+
+func (c StartUpdate) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "pipeline_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.
@@ -5536,6 +5776,11 @@ func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *StartUpdateResponse) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse) {
 }
 
+func (c StartUpdateResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdateResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5576,6 +5821,11 @@ func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *StopPipelineResponse) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse) {
 }
 
+func (c StopPipelineResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopPipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5606,12 +5856,6 @@ func (o StopPipelineResponse) Type(ctx context.Context) attr.Type {
 // Stop a pipeline
 type StopRequest struct {
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *StopRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest) {
-}
-
-func (newState *StopRequest) SyncEffectiveFieldsDuringRead(existingState StopRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.
@@ -5670,6 +5914,12 @@ func (newState *TableSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpe
 }
 
 func (newState *TableSpec) SyncEffectiveFieldsDuringRead(existingState TableSpec) {
+}
+
+func (c TableSpec) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	TableSpecificConfig{}.ApplySchemaCustomizations(cs, append(path, "table_configuration")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TableSpec.
@@ -5763,6 +6013,11 @@ func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *TableSpecificConfig) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig) {
+}
+
+func (c TableSpecificConfig) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TableSpecificConfig.
@@ -5898,6 +6153,12 @@ func (newState *UpdateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateI
 }
 
 func (newState *UpdateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateInfo) {
+}
+
+func (c UpdateInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	PipelineSpec{}.ApplySchemaCustomizations(cs, append(path, "config")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInfo.
@@ -6051,6 +6312,11 @@ func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Up
 }
 
 func (newState *UpdateStateInfo) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo) {
+}
+
+func (c UpdateStateInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateStateInfo.

@@ -103,6 +103,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
 			}
 		}
+		c.SetComputed("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

@@ -87,6 +87,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetReadOnly("status")
 		c.SetReadOnly("dashboard_id")
 		c.SetReadOnly("schedule", "pause_status")
+		c.SetComputed("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

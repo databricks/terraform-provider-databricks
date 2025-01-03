@@ -3074,7 +3074,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				// TODO: add check for "securable_kind":"EXTERNAL_LOCATION_DB_STORAGE" when we get it in the credential
 				r.Mode = "data"
 				data := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
-				obj := tfcatalog.ExternalLocationInfo{Name: r.ID}
+				obj := tfcatalog.ExternalLocationInfo{ExternalLocationInfo: catalog.ExternalLocationInfo{Name: r.ID}}
 				r.Data = ic.generateNewData(data, "databricks_external_location", r.ID, obj)
 			}
 			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)

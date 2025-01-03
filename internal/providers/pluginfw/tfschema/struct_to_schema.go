@@ -195,27 +195,31 @@ func DataSourceStructToSchema(ctx context.Context, v any, customizeSchema func(C
 // ResourceStructToSchemaMap returns two maps from string to resource schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func ResourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]schema.Attribute, map[string]schema.Block) {
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
+	cs := *ConstructCustomizableSchema(nestedBlockObj)
+
+	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
+		cs = schemaProvider.ApplySchemaCustomizations(cs)
+	}
 
 	if customizeSchema != nil {
-		cs := *ConstructCustomizableSchema(nestedBlockObj)
-		if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
-			cs = schemaProvider.ApplySchemaCustomizations(cs)
-		}
 		cs = customizeSchema(cs)
-		return BuildResourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildResourceBlockMap(cs.ToNestedBlockObject().Blocks)
-	} else {
-		return BuildResourceAttributeMap(nestedBlockObj.Attributes), BuildResourceBlockMap(nestedBlockObj.Blocks)
 	}
+
+	return BuildResourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildResourceBlockMap(cs.ToNestedBlockObject().Blocks)
 }
 
 // DataSourceStructToSchemaMap returns twp maps from string to data source schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func DataSourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]dataschema.Attribute, map[string]dataschema.Block) {
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
+	cs := *ConstructCustomizableSchema(nestedBlockObj)
+
+	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
+		cs = schemaProvider.ApplySchemaCustomizations(cs)
+	}
 
 	if customizeSchema != nil {
-		cs := customizeSchema(*ConstructCustomizableSchema(nestedBlockObj))
-		return BuildDataSourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildDataSourceBlockMap(cs.ToNestedBlockObject().Blocks)
-	} else {
-		return BuildDataSourceAttributeMap(nestedBlockObj.Attributes), BuildDataSourceBlockMap(nestedBlockObj.Blocks)
+		cs = customizeSchema(cs)
 	}
+
+	return BuildDataSourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildDataSourceBlockMap(cs.ToNestedBlockObject().Blocks)
 }

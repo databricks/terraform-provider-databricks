@@ -124,7 +124,7 @@ The following arguments are required:
 - `owner` - (Optional) Username/groupname/sp application_id of the external location owner.
 - `comment` - (Optional) User-supplied free-form text.
 - `skip_validation` - (Optional) Suppress validation errors if any & force save the external location
-- `fallback` - (Optional) Indicates whether fallback mode is enabled for this external location. When fallback mode is enabled, the access to the location falls back to cluster credentials if UC credentials are not sufficient.
+- `fallback` - (Optional) Indicates whether fallback mode is enabled for this external location. When fallback mode is enabled (disabled by default), the access to the location falls back to cluster credentials if UC credentials are not sufficient.
 - `read_only` - (Optional) Indicates whether the external location is read-only.
 - `force_destroy` - (Optional) Destroy external location regardless of its dependents.
 - `force_update` - (Optional) Update external location regardless of its dependents.

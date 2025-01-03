@@ -116,6 +116,7 @@ This block describes individual tasks:
 
 * `task_key` - (Required) string specifying an unique key for a given task.
 * `*_task` - (Required) one of the specific task blocks described below:
+  * `clean_rooms_notebook_task`
   * `condition_task`
   * `dbt_task`
   * `for_each_task`
@@ -145,6 +146,15 @@ This block describes individual tasks:
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 
 -> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
+
+#### clean_rooms_notebook_task Configuration Block
+
+The `clean_rooms_notebook_task` runs a clean rooms notebook.  The following attributes are supported:
+
+* `clean_room_name` (Required) The clean room that the notebook belongs to.
+* `notebook_name` (Required) Name of the notebook being run.
+* `notebook_base_parameters` (Optional) (Map) Base parameters to be used for the clean room notebook job.
+* `etag` (Optional) Checksum to validate the freshness of the notebook resource.
 
 #### condition_task Configuration Block
 

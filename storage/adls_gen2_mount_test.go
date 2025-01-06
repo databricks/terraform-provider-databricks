@@ -10,11 +10,10 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceAdlsGen2Mount_Create(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:       "GET",
@@ -51,8 +50,9 @@ func TestResourceAdlsGen2Mount_Create(t *testing.T) {
 			"initialize_file_system": true,
 		},
 		Create: true,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "this_mount", d.Id())
-	assert.Equal(t, "abfss://e@test-adls-gen2.dfs.core.windows.net", d.Get("source"))
+		Azure:  true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":     "this_mount",
+		"source": "abfss://e@test-adls-gen2.dfs.core.windows.net",
+	})
 }

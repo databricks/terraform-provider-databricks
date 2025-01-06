@@ -120,7 +120,10 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 
 ### Adding a new resource
 1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_quality_monitor.go`. Make sure to set the user agent in all the CRUD methods. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`. 
+2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_app.go`.
+  - Make sure to set the user agent in all the CRUD methods.
+  - In the `Metadata()`, use the method `GetDatabricksProductionName()`.
+  - In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix.
 3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
 4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
@@ -135,10 +138,18 @@ We are migrating the resource from SDKv2 to Plugin Framework provider and hence 
 6. Create a PR and send it for review. 
 
 ### Migrating resource to plugin framework
-Ideally there shouldn't be any behaviour change when migrating a resource or data source to either Go SDk or Plugin Framework.
+There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
 - Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
 - Integration tests shouldn't require any major changes.   
 
+By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, use the `_SdkV2` variant from the `internal/service/{package}_tf` package when defining the resource schema and when interacting with the plan, config and state. Additionally, in the `Schema()` method, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
+```go
+resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+    cs.ConfigureAsSdkV2Compatible()
+    // Add any additional configuration here
+    return cs
+})
+```
 
 ### Code Organization
 Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 

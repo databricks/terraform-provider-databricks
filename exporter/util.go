@@ -19,7 +19,6 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 
-	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -83,9 +82,8 @@ func (ic *importContext) emitIfDbfsFile(path string) {
 }
 
 func (ic *importContext) emitIfWsfsFile(path string) {
-	if strings.HasPrefix(path, "/Workspace/") {
-		normalPath := strings.TrimPrefix(path, "/Workspace")
-		ic.emitWorkspaceFileOrRepo(normalPath)
+	if hasWorkspacePrefix(path) {
+		ic.emitWorkspaceFileOrRepo(maybeStripWorkspacePrefix(path))
 	}
 }
 
@@ -311,7 +309,7 @@ func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, e
 	return relativeName, nil
 }
 
-func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 	if as.Computed {
 		return true
 	} else if as.Default != nil && d.Get(pathString) == as.Default {
@@ -321,14 +319,16 @@ func defaultShouldOmitFieldFunc(ic *importContext, pathString string, as *schema
 	return false
 }
 
-func resourceOrDataBlockBody(ic *importContext, body *hclwrite.Body, r *resource) error {
-	blockType := "resource"
-	if r.Mode == "data" {
-		blockType = r.Mode
+func (ic *importContext) generateNewData(data *schema.ResourceData, resourceType, rID string, obj any) *schema.ResourceData {
+	data.MarkNewResource()
+	data.SetId(rID)
+	scm := ic.Resources[resourceType].Schema
+	err := common.StructToData(obj, scm, data)
+	if err != nil {
+		log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
+		return nil
 	}
-	resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
-	return ic.dataToHcl(ic.Importables[r.Resource],
-		[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
+	return data
 }
 
 func generateUniqueID(v string) string {
@@ -435,6 +435,13 @@ func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.
 		return d.Get(pathString).(string) == ""
 	}
 	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	if pathString == "isolation_mode" {
+		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
+	}
+	return shouldOmitForUnityCatalog(ic, pathString, as, d)
 }
 
 func appendEndingSlashToDirName(dir string) string {

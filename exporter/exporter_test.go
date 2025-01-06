@@ -30,6 +30,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/service/workspace_tf"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
@@ -272,11 +273,18 @@ var emptyExternalLocations = qa.HTTPFixture{
 	Response: &catalog.ListExternalLocationsResponse{},
 }
 
-var emptyStorageCrdentials = qa.HTTPFixture{
+var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/storage-credentials?",
 	Status:   200,
 	Response: &catalog.ListStorageCredentialsResponse{},
+}
+
+var emptyUcCredentials = qa.HTTPFixture{
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/credentials?",
+	Status:   200,
+	Response: &catalog.ListCredentialsResponse{},
 }
 
 var emptyConnections = qa.HTTPFixture{
@@ -288,7 +296,7 @@ var emptyConnections = qa.HTTPFixture{
 var emptyRepos = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
-	Resource:     "/api/2.0/repos?",
+	Resource:     "/api/2.0/repos?path_prefix=%2FWorkspace",
 	Response:     repos.ReposListResponse{},
 }
 
@@ -494,7 +502,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyInstancePools,
 			emptyModelServing,
 			emptyExternalLocations,
-			emptyStorageCrdentials,
+			emptyStorageCredentials,
+			emptyUcCredentials,
 			emptyMlflowWebhooks,
 			emptySqlDashboards,
 			emptySqlEndpoints,
@@ -762,7 +771,8 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyMetastoreList,
 			emptyRepos,
 			emptyExternalLocations,
-			emptyStorageCrdentials,
+			emptyStorageCredentials,
+			emptyUcCredentials,
 			emptyShares,
 			emptyConnections,
 			emptyRecipients,
@@ -830,6 +840,16 @@ func TestImportingClusters(t *testing.T) {
 			meAdminFixture,
 			noCurrentMetastoreAttached,
 			emptyRepos,
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Flibs%2Ftest.whl&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Frepo%2Ftest.sh&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups?",
@@ -1494,6 +1514,11 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fbar.py&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
@@ -1743,7 +1768,7 @@ func TestImportingRepos(t *testing.T) {
 			userReadFixture,
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/repos?",
+				Resource: "/api/2.0/repos?path_prefix=%2FWorkspace",
 				Response: repos.ReposListResponse{
 					Repos: []repos.ReposInformation{
 						resp,
@@ -2184,6 +2209,16 @@ func TestImportingDLTPipelines(t *testing.T) {
 				Resource: "/api/2.0/permissions/files/789?",
 				Response: getJSONObject("test-data/get-workspace-file-permissions.json"),
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
@@ -2276,6 +2311,16 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/instance-profiles/list",
 				Response: getJSONObject("test-data/list-instance-profiles.json"),
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT&return_git_info=true",
+				Response: workspace.ObjectStatus{},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh&return_git_info=true",
+				Response: workspace.ObjectStatus{},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -2974,6 +3019,11 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 					SerializedDashboard: `{}`,
 					WarehouseId:         "1234",
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/workspace/get-status?path=%2FDashboard1.lvdash.json&return_git_info=true",
+				Response: workspace_tf.ObjectInfo{},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {

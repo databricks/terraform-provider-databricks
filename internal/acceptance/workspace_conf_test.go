@@ -82,7 +82,7 @@ func TestAccWorkspaceConfFullLifecycle(t *testing.T) {
 }
 
 func TestAccWorkspaceConf_GetValidKey(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	conf, err := workspace.SafeGetStatus(ctx, w, []string{"enableIpAccessLists"})
@@ -91,7 +91,7 @@ func TestAccWorkspaceConf_GetValidKey(t *testing.T) {
 }
 
 func TestAccWorkspaceConf_GetInvalidKey(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	conf, err := workspace.SafeGetStatus(ctx, w, []string{"invalidKey", "enableIpAccessLists"})
@@ -100,7 +100,7 @@ func TestAccWorkspaceConf_GetInvalidKey(t *testing.T) {
 }
 
 func TestAccWorkspaceConf_GetOnlyInvalidKeys(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	_, err := workspace.SafeGetStatus(ctx, w, []string{"invalidKey"})
@@ -108,7 +108,7 @@ func TestAccWorkspaceConf_GetOnlyInvalidKeys(t *testing.T) {
 }
 
 func TestAccWorkspaceConf_SetInvalidKey(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	err := workspace.SafeSetStatus(ctx, w, map[string]struct{}{}, map[string]string{
@@ -118,7 +118,7 @@ func TestAccWorkspaceConf_SetInvalidKey(t *testing.T) {
 }
 
 func TestAccWorkspaceConf_DeleteInvalidKey(t *testing.T) {
-	loadWorkspaceEnv(t)
+	LoadWorkspaceEnv(t)
 	ctx := context.Background()
 	w := databricks.Must(databricks.NewWorkspaceClient())
 	err := workspace.SafeSetStatus(ctx, w, map[string]struct{}{"invalidKey": {}}, map[string]string{

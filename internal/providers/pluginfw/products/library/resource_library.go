@@ -73,7 +73,7 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 }
 
 type LibraryExtended struct {
-	compute_tf.Library
+	compute_tf.Library_SdkV2
 	ClusterId types.String `tfsdk:"cluster_id"`
 	ID        types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
 }
@@ -87,7 +87,8 @@ func (r *LibraryResource) Metadata(ctx context.Context, req resource.MetadataReq
 }
 
 func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, LibraryExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureAsSdkV2Compatible()
 		for field, attribute := range c.ToNestedBlockObject().Attributes {
 			switch attribute.(type) {
 			case tfschema.StringAttributeBuilder:
@@ -102,6 +103,7 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
 			}
 		}
+		c.SetComputed("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

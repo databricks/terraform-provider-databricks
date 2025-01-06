@@ -726,6 +726,7 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -770,6 +771,7 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				"initialize_file_system": true,
 			}}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -816,6 +818,7 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 				"initialize_file_system": true,
 			}}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "this_mount", d.Id())
@@ -951,6 +954,7 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 			},
 			}},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -996,6 +1000,7 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 				"directory":            "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -1040,6 +1045,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 				"directory":          "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -1060,6 +1066,7 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 				"directory":          "/d",
 			},
 			}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "parsing failed for abc. Invalid container resource Id format")
@@ -1094,6 +1101,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				"token_secret_key":     "g",
 				"token_secret_scope":   "h",
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
@@ -1128,6 +1136,7 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 				"token_secret_key":   "g",
 				"token_secret_scope": "h",
 			}}},
+		Azure:  true,
 		Create: true,
 	}.Apply(t)
 	require.EqualError(t, err, "container_name or storage_account_name are empty, and resource_id or uri aren't specified")
@@ -1175,8 +1184,9 @@ func TestResourceAzureBlobMountGeneric_Read(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
-		ID:   "e",
-		Read: true,
+		Azure: true,
+		ID:    "e",
+		Read:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -1222,6 +1232,7 @@ func TestResourceAzureBlobMountGenericRead_NotFound(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
+		Azure:   true,
 		ID:      "e",
 		Read:    true,
 		Removed: true,
@@ -1267,8 +1278,9 @@ func TestResourceAzureBlobMountGenericRead_Error(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
-		ID:   "e",
-		Read: true,
+		Azure: true,
+		ID:    "e",
+		Read:  true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
 	assert.Equal(t, "e", d.Id())
@@ -1315,6 +1327,7 @@ func TestResourceAzureBlobMountGenericDelete(t *testing.T) {
 				"token_secret_scope":   "h",
 			}},
 		},
+		Azure:  true,
 		ID:     "e",
 		Delete: true,
 	}.Apply(t)

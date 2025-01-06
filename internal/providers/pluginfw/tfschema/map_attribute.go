@@ -45,7 +45,7 @@ func (a MapAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a MapAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a MapAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -54,7 +54,7 @@ func (a MapAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a MapAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -63,7 +63,7 @@ func (a MapAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a MapAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -71,7 +71,7 @@ func (a MapAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a MapAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -79,7 +79,7 @@ func (a MapAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a MapAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
@@ -94,12 +94,12 @@ func (a MapAttributeBuilder) SetDeprecated(msg string) BaseSchemaBuilder {
 	return a
 }
 
-func (a MapAttributeBuilder) AddValidator(v validator.Map) BaseSchemaBuilder {
+func (a MapAttributeBuilder) AddValidator(v validator.Map) AttributeBuilder {
 	a.Validators = append(a.Validators, v)
 	return a
 }
 
-func (a MapAttributeBuilder) AddPlanModifier(v planmodifier.Map) BaseSchemaBuilder {
+func (a MapAttributeBuilder) AddPlanModifier(v planmodifier.Map) AttributeBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
 }

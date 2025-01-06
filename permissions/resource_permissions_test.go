@@ -484,6 +484,36 @@ func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourcePermissionsRead_EmptyListResultsInRemovalWith504Errors(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+
+			req := iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}
+
+			// Fail 3 times with a 504 error. These should be retried
+			// transparently.
+			call := mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, req).Return(nil, apierr.ErrDeadlineExceeded)
+			call.Repeatability = 3
+
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, req).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		Removed:  true,
+		InstanceState: map[string]string{
+			"cluster_id": "abc",
+		},
+		ID: "/clusters/abc",
+	}.ApplyNoError(t)
+}
+
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
@@ -593,7 +623,7 @@ func TestResourcePermissionsCreate_invalid(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourcePermissions(),
 		Create:   true,
-	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: authorization, cluster_id, cluster_policy_id, dashboard_id, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
+	}.ExpectError(t, "at least one type of resource identifier must be set; allowed fields: app_name, authorization, cluster_id, cluster_policy_id, dashboard_id, directory_id, directory_path, experiment_id, instance_pool_id, job_id, notebook_id, notebook_path, pipeline_id, registered_model_id, repo_id, repo_path, serving_endpoint_id, sql_alert_id, sql_dashboard_id, sql_endpoint_id, sql_query_id, vector_search_endpoint_id, workspace_file_id, workspace_file_path")
 }
 
 func TestResourcePermissionsCreate_no_access_control(t *testing.T) {

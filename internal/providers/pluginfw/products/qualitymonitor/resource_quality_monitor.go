@@ -3,6 +3,7 @@ package qualitymonitor
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -55,10 +56,16 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 }
 
 type MonitorInfoExtended struct {
-	catalog_tf.MonitorInfo
+	catalog_tf.MonitorInfo_SdkV2
 	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
 	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
 	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
+
+func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
 }
 
 type QualityMonitorResource struct {
@@ -70,7 +77,8 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("assets_dir")
 		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")
@@ -79,6 +87,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetReadOnly("status")
 		c.SetReadOnly("dashboard_id")
 		c.SetReadOnly("schedule", "pause_status")
+		c.SetComputed("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

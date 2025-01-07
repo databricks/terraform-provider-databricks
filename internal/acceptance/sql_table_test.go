@@ -73,7 +73,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 func TestUcAccResourceSqlTable_CreateTags(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `

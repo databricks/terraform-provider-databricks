@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+type CustomizableSchemaProvider interface {
+	ApplySchemaCustomizations(cs CustomizableSchema, path ...string) CustomizableSchema
+}
+
 type structTag struct {
 	optional     bool
 	computed     bool
@@ -26,6 +30,7 @@ type structTag struct {
 func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 	scmAttr := map[string]AttributeBuilder{}
 	rk := v.Kind()
+	typeProvidesSchemaCustomization := v.Type().Implements(reflect.TypeOf((*CustomizableSchemaProvider)(nil)).Elem())
 	if rk == reflect.Ptr {
 		v = v.Elem()
 		rk = v.Kind()
@@ -139,21 +144,28 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			}
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
 		}
+
 		attr := scmAttr[fieldName]
-		if structTag.computed {
-			// Computed attributes are always computed and may be optional.
-			attr = attr.SetComputed()
-			if structTag.optional {
-				attr = attr.SetOptional()
-			}
+
+		if typeProvidesSchemaCustomization {
+			attr = attr.SetOptional() // default to optional, ToSchema may override this
 		} else {
-			// Non-computed attributes must be either optional or required.
-			if structTag.optional {
-				attr = attr.SetOptional()
+			if structTag.computed {
+				// Computed attributes are always computed and may be optional.
+				attr = attr.SetComputed()
+				if structTag.optional {
+					attr = attr.SetOptional()
+				}
 			} else {
-				attr = attr.SetRequired()
+				// Non-computed attributes must be either optional or required.
+				if structTag.optional {
+					attr = attr.SetOptional()
+				} else {
+					attr = attr.SetRequired()
+				}
 			}
 		}
+
 		scmAttr[fieldName] = attr
 	}
 	return NestedBlockObject{Attributes: scmAttr}
@@ -183,23 +195,31 @@ func DataSourceStructToSchema(ctx context.Context, v any, customizeSchema func(C
 // ResourceStructToSchemaMap returns two maps from string to resource schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func ResourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]schema.Attribute, map[string]schema.Block) {
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
+	cs := *ConstructCustomizableSchema(nestedBlockObj)
+
+	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
+		cs = schemaProvider.ApplySchemaCustomizations(cs)
+	}
 
 	if customizeSchema != nil {
-		cs := customizeSchema(*ConstructCustomizableSchema(nestedBlockObj))
-		return BuildResourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildResourceBlockMap(cs.ToNestedBlockObject().Blocks)
-	} else {
-		return BuildResourceAttributeMap(nestedBlockObj.Attributes), BuildResourceBlockMap(nestedBlockObj.Blocks)
+		cs = customizeSchema(cs)
 	}
+
+	return BuildResourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildResourceBlockMap(cs.ToNestedBlockObject().Blocks)
 }
 
 // DataSourceStructToSchemaMap returns twp maps from string to data source schema attributes and blocks using a tfsdk struct, with custoimzations applied.
 func DataSourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]dataschema.Attribute, map[string]dataschema.Block) {
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
+	cs := *ConstructCustomizableSchema(nestedBlockObj)
+
+	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
+		cs = schemaProvider.ApplySchemaCustomizations(cs)
+	}
 
 	if customizeSchema != nil {
-		cs := customizeSchema(*ConstructCustomizableSchema(nestedBlockObj))
-		return BuildDataSourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildDataSourceBlockMap(cs.ToNestedBlockObject().Blocks)
-	} else {
-		return BuildDataSourceAttributeMap(nestedBlockObj.Attributes), BuildDataSourceBlockMap(nestedBlockObj.Blocks)
+		cs = customizeSchema(cs)
 	}
+
+	return BuildDataSourceAttributeMap(cs.ToNestedBlockObject().Attributes), BuildDataSourceBlockMap(cs.ToNestedBlockObject().Blocks)
 }

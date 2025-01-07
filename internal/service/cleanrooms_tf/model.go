@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
@@ -62,6 +63,19 @@ func (newState *CleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoo
 }
 
 func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom) {
+}
+
+func (c CleanRoom) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "access_restricted")...)
+	cs.SetComputed(append(path, "created_at")...)
+	cs.SetComputed(append(path, "local_collaborator_alias")...)
+	cs.SetComputed(append(path, "output_catalog")...)
+	CleanRoomOutputCatalog{}.ApplySchemaCustomizations(cs, append(path, "output_catalog")...)
+	CleanRoomRemoteDetail{}.ApplySchemaCustomizations(cs, append(path, "remote_detailed_info")...)
+	cs.SetComputed(append(path, "status")...)
+	cs.SetComputed(append(path, "updated_at")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoom.
@@ -220,6 +234,22 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cle
 }
 
 func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState CleanRoomAsset) {
+}
+
+func (c CleanRoomAsset) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "added_at")...)
+	CleanRoomAssetForeignTable{}.ApplySchemaCustomizations(cs, append(path, "foreign_table")...)
+	CleanRoomAssetForeignTableLocalDetails{}.ApplySchemaCustomizations(cs, append(path, "foreign_table_local_details")...)
+	CleanRoomAssetNotebook{}.ApplySchemaCustomizations(cs, append(path, "notebook")...)
+	cs.SetComputed(append(path, "owner_collaborator_alias")...)
+	cs.SetComputed(append(path, "status")...)
+	CleanRoomAssetTable{}.ApplySchemaCustomizations(cs, append(path, "table")...)
+	CleanRoomAssetTableLocalDetails{}.ApplySchemaCustomizations(cs, append(path, "table_local_details")...)
+	CleanRoomAssetView{}.ApplySchemaCustomizations(cs, append(path, "view")...)
+	CleanRoomAssetViewLocalDetails{}.ApplySchemaCustomizations(cs, append(path, "view_local_details")...)
+	CleanRoomAssetVolumeLocalDetails{}.ApplySchemaCustomizations(cs, append(path, "volume_local_details")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAsset.
@@ -521,6 +551,12 @@ func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTable) {
 }
 
+func (c CleanRoomAssetForeignTable) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "columns")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTable.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -594,6 +630,11 @@ func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDurin
 func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails) {
 }
 
+func (c CleanRoomAssetForeignTableLocalDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTableLocalDetails.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -639,6 +680,12 @@ func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetNotebook) {
 }
 
+func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "etag")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetNotebook.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -681,6 +728,12 @@ func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTable) {
+}
+
+func (c CleanRoomAssetTable) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "columns")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTable.
@@ -758,6 +811,11 @@ func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringCreate
 func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails) {
 }
 
+func (c CleanRoomAssetTableLocalDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTableLocalDetails.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -830,6 +888,12 @@ func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetView) {
+}
+
+func (c CleanRoomAssetView) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "columns")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetView.
@@ -905,6 +969,11 @@ func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringCreateO
 func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails) {
 }
 
+func (c CleanRoomAssetViewLocalDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetViewLocalDetails.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -946,6 +1015,11 @@ func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails) {
+}
+
+func (c CleanRoomAssetVolumeLocalDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetVolumeLocalDetails.
@@ -1018,6 +1092,13 @@ func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaborator) {
 }
 
+func (c CleanRoomCollaborator) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "display_name")...)
+	cs.SetComputed(append(path, "organization_name")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomCollaborator.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1086,6 +1167,13 @@ func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookTaskRun) {
+}
+
+func (c CleanRoomNotebookTaskRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CollaboratorJobRunInfo{}.ApplySchemaCustomizations(cs, append(path, "collaborator_job_run_info")...)
+	jobs_tf.CleanRoomTaskRunState{}.ApplySchemaCustomizations(cs, append(path, "notebook_job_run_state")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomNotebookTaskRun.
@@ -1206,6 +1294,12 @@ func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomOutputCatalog) {
 }
 
+func (c CleanRoomOutputCatalog) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "status")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomOutputCatalog.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1268,6 +1362,17 @@ func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingState CleanRoomRemoteDetail) {
+}
+
+func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "central_clean_room_id")...)
+	CleanRoomCollaborator{}.ApplySchemaCustomizations(cs, append(path, "collaborators")...)
+	ComplianceSecurityProfile{}.ApplySchemaCustomizations(cs, append(path, "compliance_security_profile")...)
+	cs.SetComputed(append(path, "creator")...)
+	CleanRoomCollaborator{}.ApplySchemaCustomizations(cs, append(path, "creator")...)
+	settings_tf.EgressNetworkPolicy{}.ApplySchemaCustomizations(cs, append(path, "egress_network_policy")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomRemoteDetail.
@@ -1449,6 +1554,11 @@ func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringRead(existingState CollaboratorJobRunInfo) {
 }
 
+func (c CollaboratorJobRunInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CollaboratorJobRunInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1502,6 +1612,11 @@ func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+}
+
+func (c ComplianceSecurityProfile) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplianceSecurityProfile.
@@ -1575,12 +1690,6 @@ type CreateCleanRoomAssetRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetRequest) {
-}
-
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomAssetRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1650,12 +1759,6 @@ type CreateCleanRoomOutputCatalogRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 
 	OutputCatalog types.Object `tfsdk:"output_catalog" tf:"optional,object"`
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogRequest) {
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
@@ -1731,6 +1834,12 @@ func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringC
 func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse) {
 }
 
+func (c CreateCleanRoomOutputCatalogResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CleanRoomOutputCatalog{}.ApplySchemaCustomizations(cs, append(path, "output_catalog")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1795,12 +1904,6 @@ func (o *CreateCleanRoomOutputCatalogResponse) SetOutputCatalog(ctx context.Cont
 // Create a clean room
 type CreateCleanRoomRequest struct {
 	CleanRoom types.Object `tfsdk:"clean_room" tf:"optional,object"`
-}
-
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomRequest) {
-}
-
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
@@ -1875,12 +1978,6 @@ type DeleteCleanRoomAssetRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetRequest) {
-}
-
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1927,6 +2024,11 @@ func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetResponse) {
 }
 
+func (c DeleteCleanRoomAssetResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1958,12 +2060,6 @@ func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
 type DeleteCleanRoomRequest struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest) {
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
@@ -1998,12 +2094,6 @@ func (o DeleteCleanRoomRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteResponse struct {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -2042,12 +2132,6 @@ type GetCleanRoomAssetRequest struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomAssetRequest) {
-}
-
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomAssetRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2090,12 +2174,6 @@ type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest) {
-}
-
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2133,12 +2211,6 @@ type ListCleanRoomAssetsRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsRequest) {
-}
-
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
@@ -2187,6 +2259,12 @@ func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsResponse) {
+}
+
+func (c ListCleanRoomAssetsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CleanRoomAsset{}.ApplySchemaCustomizations(cs, append(path, "assets")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsResponse.
@@ -2264,12 +2342,6 @@ type ListCleanRoomNotebookTaskRunsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsRequest) {
-}
-
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2320,6 +2392,12 @@ func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuring
 }
 
 func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse) {
+}
+
+func (c ListCleanRoomNotebookTaskRunsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CleanRoomNotebookTaskRun{}.ApplySchemaCustomizations(cs, append(path, "runs")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsResponse.
@@ -2394,12 +2472,6 @@ type ListCleanRoomsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest) {
-}
-
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2445,6 +2517,12 @@ func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
+}
+
+func (c ListCleanRoomsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CleanRoom{}.ApplySchemaCustomizations(cs, append(path, "clean_rooms")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsResponse.
@@ -2528,12 +2606,6 @@ type UpdateCleanRoomAssetRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomAssetRequest) {
-}
-
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomAssetRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2611,6 +2683,13 @@ func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest) {
+}
+
+func (c UpdateCleanRoomRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CleanRoom{}.ApplySchemaCustomizations(cs, append(path, "clean_room")...)
+	cs.SetRequired(append(path, "name")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.

@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -34,6 +35,11 @@ func (newState *ActionConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ActionConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState ActionConfiguration_SdkV2) {
+}
+
+func (c ActionConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ActionConfiguration.
@@ -94,6 +100,12 @@ func (newState *AlertConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *AlertConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState AlertConfiguration_SdkV2) {
+}
+
+func (c AlertConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	ActionConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "action_configurations")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertConfiguration.
@@ -192,6 +204,13 @@ func (newState *BudgetConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *BudgetConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState BudgetConfiguration_SdkV2) {
+}
+
+func (c BudgetConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	AlertConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "alert_configurations")...)
+	BudgetConfigurationFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetConfiguration.
@@ -311,6 +330,13 @@ func (newState *BudgetConfigurationFilter_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *BudgetConfigurationFilter_SdkV2) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilter_SdkV2) {
 }
 
+func (c BudgetConfigurationFilter_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfigurationFilterTagClause_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+	BudgetConfigurationFilterWorkspaceIdClause_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "workspace_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetConfigurationFilter.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -415,6 +441,11 @@ func (newState *BudgetConfigurationFilterClause_SdkV2) SyncEffectiveFieldsDuring
 func (newState *BudgetConfigurationFilterClause_SdkV2) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterClause_SdkV2) {
 }
 
+func (c BudgetConfigurationFilterClause_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetConfigurationFilterClause.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -490,6 +521,12 @@ func (newState *BudgetConfigurationFilterTagClause_SdkV2) SyncEffectiveFieldsDur
 func (newState *BudgetConfigurationFilterTagClause_SdkV2) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterTagClause_SdkV2) {
 }
 
+func (c BudgetConfigurationFilterTagClause_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfigurationFilterClause_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "value")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetConfigurationFilterTagClause.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -563,6 +600,11 @@ func (newState *BudgetConfigurationFilterWorkspaceIdClause_SdkV2) SyncEffectiveF
 }
 
 func (newState *BudgetConfigurationFilterWorkspaceIdClause_SdkV2) SyncEffectiveFieldsDuringRead(existingState BudgetConfigurationFilterWorkspaceIdClause_SdkV2) {
+}
+
+func (c BudgetConfigurationFilterWorkspaceIdClause_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BudgetConfigurationFilterWorkspaceIdClause.
@@ -644,6 +686,11 @@ func (newState *CreateBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDur
 func (newState *CreateBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardRequest_SdkV2) {
 }
 
+func (c CreateBillingUsageDashboardRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBillingUsageDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -686,6 +733,11 @@ func (newState *CreateBillingUsageDashboardResponse_SdkV2) SyncEffectiveFieldsDu
 }
 
 func (newState *CreateBillingUsageDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBillingUsageDashboardResponse_SdkV2) {
+}
+
+func (c CreateBillingUsageDashboardResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBillingUsageDashboardResponse.
@@ -738,6 +790,13 @@ func (newState *CreateBudgetConfigurationBudget_SdkV2) SyncEffectiveFieldsDuring
 }
 
 func (newState *CreateBudgetConfigurationBudget_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudget_SdkV2) {
+}
+
+func (c CreateBudgetConfigurationBudget_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "alert_configurations")...)
+	BudgetConfigurationFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationBudget.
@@ -849,6 +908,11 @@ func (newState *CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) SyncE
 func (newState *CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) {
 }
 
+func (c CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationBudgetActionConfigurations.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -903,6 +967,12 @@ func (newState *CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) SyncEf
 }
 
 func (newState *CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) {
+}
+
+func (c CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CreateBudgetConfigurationBudgetActionConfigurations_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "action_configurations")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationBudgetAlertConfigurations.
@@ -985,6 +1055,13 @@ func (newState *CreateBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDurin
 func (newState *CreateBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationRequest_SdkV2) {
 }
 
+func (c CreateBudgetConfigurationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "budget")...)
+	CreateBudgetConfigurationBudget_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budget")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1055,6 +1132,12 @@ func (newState *CreateBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuri
 }
 
 func (newState *CreateBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateBudgetConfigurationResponse_SdkV2) {
+}
+
+func (c CreateBudgetConfigurationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budget")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateBudgetConfigurationResponse.
@@ -1196,6 +1279,15 @@ func (newState *CreateLogDeliveryConfigurationParams_SdkV2) SyncEffectiveFieldsD
 func (newState *CreateLogDeliveryConfigurationParams_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateLogDeliveryConfigurationParams_SdkV2) {
 }
 
+func (c CreateLogDeliveryConfigurationParams_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "credentials_id")...)
+	cs.SetRequired(append(path, "log_type")...)
+	cs.SetRequired(append(path, "output_format")...)
+	cs.SetRequired(append(path, "storage_configuration_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateLogDeliveryConfigurationParams.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1279,12 +1371,6 @@ type DeleteBudgetConfigurationRequest_SdkV2 struct {
 	BudgetId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationRequest_SdkV2) {
-}
-
-func (newState *DeleteBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1323,6 +1409,11 @@ func (newState *DeleteBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuri
 }
 
 func (newState *DeleteBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationResponse_SdkV2) {
+}
+
+func (c DeleteBudgetConfigurationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteBudgetConfigurationResponse.
@@ -1366,12 +1457,6 @@ type DownloadRequest_SdkV2 struct {
 	StartMonth types.String `tfsdk:"-"`
 }
 
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadRequest_SdkV2) {
-}
-
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1409,12 +1494,6 @@ func (o DownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DownloadResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadResponse_SdkV2) {
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadResponse.
@@ -1457,12 +1536,6 @@ type GetBillingUsageDashboardRequest_SdkV2 struct {
 	// The workspace ID of the workspace in which the usage dashboard is
 	// created.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *GetBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardRequest_SdkV2) {
-}
-
-func (newState *GetBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBillingUsageDashboardRequest.
@@ -1511,6 +1584,11 @@ func (newState *GetBillingUsageDashboardResponse_SdkV2) SyncEffectiveFieldsDurin
 func (newState *GetBillingUsageDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardResponse_SdkV2) {
 }
 
+func (c GetBillingUsageDashboardResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBillingUsageDashboardResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1548,12 +1626,6 @@ func (o GetBillingUsageDashboardResponse_SdkV2) Type(ctx context.Context) attr.T
 type GetBudgetConfigurationRequest_SdkV2 struct {
 	// The budget configuration ID
 	BudgetId types.String `tfsdk:"-"`
-}
-
-func (newState *GetBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationRequest_SdkV2) {
-}
-
-func (newState *GetBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBudgetConfigurationRequest.
@@ -1595,6 +1667,12 @@ func (newState *GetBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringC
 }
 
 func (newState *GetBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationResponse_SdkV2) {
+}
+
+func (c GetBudgetConfigurationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budget")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBudgetConfigurationResponse.
@@ -1664,12 +1742,6 @@ type GetLogDeliveryRequest_SdkV2 struct {
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
 }
 
-func (newState *GetLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLogDeliveryRequest_SdkV2) {
-}
-
-func (newState *GetLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLogDeliveryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1707,12 +1779,6 @@ type ListBudgetConfigurationsRequest_SdkV2 struct {
 	// This token can be used to retrieve the subsequent page. Requests first
 	// page if absent.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListBudgetConfigurationsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsRequest_SdkV2) {
-}
-
-func (newState *ListBudgetConfigurationsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetConfigurationsRequest.
@@ -1757,6 +1823,12 @@ func (newState *ListBudgetConfigurationsResponse_SdkV2) SyncEffectiveFieldsDurin
 }
 
 func (newState *ListBudgetConfigurationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsResponse_SdkV2) {
+}
+
+func (c ListBudgetConfigurationsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budgets")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetConfigurationsResponse.
@@ -1830,12 +1902,6 @@ type ListLogDeliveryRequest_SdkV2 struct {
 	Status types.String `tfsdk:"-"`
 	// Filter by storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
-}
-
-func (newState *ListLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListLogDeliveryRequest_SdkV2) {
-}
-
-func (newState *ListLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListLogDeliveryRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListLogDeliveryRequest.
@@ -1961,6 +2027,12 @@ func (newState *LogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *LogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogDeliveryConfiguration_SdkV2) {
+}
+
+func (c LogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	LogDeliveryStatus_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "log_delivery_status")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogDeliveryConfiguration.
@@ -2108,6 +2180,11 @@ func (newState *LogDeliveryStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *LogDeliveryStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogDeliveryStatus_SdkV2) {
 }
 
+func (c LogDeliveryStatus_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogDeliveryStatus.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2146,12 +2223,6 @@ func (o LogDeliveryStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchStatusResponse_SdkV2 struct {
-}
-
-func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchStatusResponse_SdkV2) {
-}
-
-func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchStatusResponse.
@@ -2202,6 +2273,13 @@ func (newState *UpdateBudgetConfigurationBudget_SdkV2) SyncEffectiveFieldsDuring
 }
 
 func (newState *UpdateBudgetConfigurationBudget_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationBudget_SdkV2) {
+}
+
+func (c UpdateBudgetConfigurationBudget_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	AlertConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "alert_configurations")...)
+	BudgetConfigurationFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetConfigurationBudget.
@@ -2316,6 +2394,14 @@ func (newState *UpdateBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDurin
 func (newState *UpdateBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationRequest_SdkV2) {
 }
 
+func (c UpdateBudgetConfigurationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "budget")...)
+	UpdateBudgetConfigurationBudget_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budget")...)
+	cs.SetRequired(append(path, "budget_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2388,6 +2474,12 @@ func (newState *UpdateBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuri
 }
 
 func (newState *UpdateBudgetConfigurationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetConfigurationResponse_SdkV2) {
+}
+
+func (c UpdateBudgetConfigurationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	BudgetConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "budget")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetConfigurationResponse.
@@ -2468,6 +2560,13 @@ func (newState *UpdateLogDeliveryConfigurationStatusRequest_SdkV2) SyncEffective
 func (newState *UpdateLogDeliveryConfigurationStatusRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateLogDeliveryConfigurationStatusRequest_SdkV2) {
 }
 
+func (c UpdateLogDeliveryConfigurationStatusRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "log_delivery_configuration_id")...)
+	cs.SetRequired(append(path, "status")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLogDeliveryConfigurationStatusRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2509,6 +2608,12 @@ func (newState *WrappedCreateLogDeliveryConfiguration_SdkV2) SyncEffectiveFields
 }
 
 func (newState *WrappedCreateLogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState WrappedCreateLogDeliveryConfiguration_SdkV2) {
+}
+
+func (c WrappedCreateLogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CreateLogDeliveryConfigurationParams_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "log_delivery_configuration")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WrappedCreateLogDeliveryConfiguration.
@@ -2582,6 +2687,12 @@ func (newState *WrappedLogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuring
 func (newState *WrappedLogDeliveryConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfiguration_SdkV2) {
 }
 
+func (c WrappedLogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	LogDeliveryConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "log_delivery_configuration")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WrappedLogDeliveryConfiguration.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2651,6 +2762,12 @@ func (newState *WrappedLogDeliveryConfigurations_SdkV2) SyncEffectiveFieldsDurin
 }
 
 func (newState *WrappedLogDeliveryConfigurations_SdkV2) SyncEffectiveFieldsDuringRead(existingState WrappedLogDeliveryConfigurations_SdkV2) {
+}
+
+func (c WrappedLogDeliveryConfigurations_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	LogDeliveryConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "log_delivery_configurations")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WrappedLogDeliveryConfigurations.

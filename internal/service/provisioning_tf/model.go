@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -29,6 +30,12 @@ func (newState *AwsCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan Aws
 }
 
 func (newState *AwsCredentials) SyncEffectiveFieldsDuringRead(existingState AwsCredentials) {
+}
+
+func (c AwsCredentials) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	StsRole{}.ApplySchemaCustomizations(cs, append(path, "sts_role")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AwsCredentials.
@@ -112,6 +119,13 @@ func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsKeyI
 func (newState *AwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState AwsKeyInfo) {
 }
 
+func (c AwsKeyInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "key_arn")...)
+	cs.SetRequired(append(path, "key_region")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AwsKeyInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -162,6 +176,11 @@ func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AzureWorkspaceInfo) SyncEffectiveFieldsDuringRead(existingState AzureWorkspaceInfo) {
 }
 
+func (c AzureWorkspaceInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AzureWorkspaceInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -205,6 +224,12 @@ func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *CloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CloudResourceContainer) {
+}
+
+func (c CloudResourceContainer) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CustomerFacingGcpCloudResourceContainer{}.ApplySchemaCustomizations(cs, append(path, "gcp")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloudResourceContainer.
@@ -287,6 +312,12 @@ func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan C
 func (newState *CreateAwsKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateAwsKeyInfo) {
 }
 
+func (c CreateAwsKeyInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "key_arn")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAwsKeyInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -330,6 +361,12 @@ func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *CreateCredentialAwsCredentials) SyncEffectiveFieldsDuringRead(existingState CreateCredentialAwsCredentials) {
+}
+
+func (c CreateCredentialAwsCredentials) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CreateCredentialStsRole{}.ApplySchemaCustomizations(cs, append(path, "sts_role")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialAwsCredentials.
@@ -403,6 +440,14 @@ func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 }
 
 func (newState *CreateCredentialRequest) SyncEffectiveFieldsDuringRead(existingState CreateCredentialRequest) {
+}
+
+func (c CreateCredentialRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "aws_credentials")...)
+	CreateCredentialAwsCredentials{}.ApplySchemaCustomizations(cs, append(path, "aws_credentials")...)
+	cs.SetRequired(append(path, "credentials_name")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialRequest.
@@ -479,6 +524,11 @@ func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateCredentialStsRole) SyncEffectiveFieldsDuringRead(existingState CreateCredentialStsRole) {
 }
 
+func (c CreateCredentialStsRole) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialStsRole.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -522,6 +572,14 @@ func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *CreateCustomerManagedKeyRequest) SyncEffectiveFieldsDuringRead(existingState CreateCustomerManagedKeyRequest) {
+}
+
+func (c CreateCustomerManagedKeyRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CreateAwsKeyInfo{}.ApplySchemaCustomizations(cs, append(path, "aws_key_info")...)
+	CreateGcpKeyInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_key_info")...)
+	cs.SetRequired(append(path, "use_cases")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCustomerManagedKeyRequest.
@@ -658,6 +716,12 @@ func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan C
 func (newState *CreateGcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState CreateGcpKeyInfo) {
 }
 
+func (c CreateGcpKeyInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "kms_key_id")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateGcpKeyInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -715,6 +779,14 @@ func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *CreateNetworkRequest) SyncEffectiveFieldsDuringRead(existingState CreateNetworkRequest) {
+}
+
+func (c CreateNetworkRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	GcpNetworkInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_network_info")...)
+	cs.SetRequired(append(path, "network_name")...)
+	NetworkVpcEndpoints{}.ApplySchemaCustomizations(cs, append(path, "vpc_endpoints")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNetworkRequest.
@@ -888,6 +960,14 @@ func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringCrea
 func (newState *CreateStorageConfigurationRequest) SyncEffectiveFieldsDuringRead(existingState CreateStorageConfigurationRequest) {
 }
 
+func (c CreateStorageConfigurationRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "root_bucket_info")...)
+	RootBucketInfo{}.ApplySchemaCustomizations(cs, append(path, "root_bucket_info")...)
+	cs.SetRequired(append(path, "storage_configuration_name")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateStorageConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -967,6 +1047,13 @@ func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdat
 }
 
 func (newState *CreateVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState CreateVpcEndpointRequest) {
+}
+
+func (c CreateVpcEndpointRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	GcpVpcEndpointInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_vpc_endpoint_info")...)
+	cs.SetRequired(append(path, "vpc_endpoint_name")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVpcEndpointRequest.
@@ -1153,6 +1240,15 @@ func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *CreateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState CreateWorkspaceRequest) {
+}
+
+func (c CreateWorkspaceRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	CloudResourceContainer{}.ApplySchemaCustomizations(cs, append(path, "cloud_resource_container")...)
+	GcpManagedNetworkConfig{}.ApplySchemaCustomizations(cs, append(path, "gcp_managed_network_config")...)
+	GkeConfig{}.ApplySchemaCustomizations(cs, append(path, "gke_config")...)
+	cs.SetRequired(append(path, "workspace_name")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWorkspaceRequest.
@@ -1354,6 +1450,13 @@ func (newState *Credential) SyncEffectiveFieldsDuringCreateOrUpdate(plan Credent
 func (newState *Credential) SyncEffectiveFieldsDuringRead(existingState Credential) {
 }
 
+func (c Credential) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	AwsCredentials{}.ApplySchemaCustomizations(cs, append(path, "aws_credentials")...)
+	cs.SetComputed(append(path, "creation_time")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Credential.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1436,6 +1539,11 @@ func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuri
 func (newState *CustomerFacingGcpCloudResourceContainer) SyncEffectiveFieldsDuringRead(existingState CustomerFacingGcpCloudResourceContainer) {
 }
 
+func (c CustomerFacingGcpCloudResourceContainer) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomerFacingGcpCloudResourceContainer.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1486,6 +1594,14 @@ func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 }
 
 func (newState *CustomerManagedKey) SyncEffectiveFieldsDuringRead(existingState CustomerManagedKey) {
+}
+
+func (c CustomerManagedKey) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	AwsKeyInfo{}.ApplySchemaCustomizations(cs, append(path, "aws_key_info")...)
+	cs.SetComputed(append(path, "creation_time")...)
+	GcpKeyInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_key_info")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomerManagedKey.
@@ -1623,12 +1739,6 @@ type DeleteCredentialRequest struct {
 	CredentialsId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCredentialRequest) {
-}
-
-func (newState *DeleteCredentialRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1664,12 +1774,6 @@ func (o DeleteCredentialRequest) Type(ctx context.Context) attr.Type {
 type DeleteEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEncryptionKeyRequest) {
-}
-
-func (newState *DeleteEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState DeleteEncryptionKeyRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEncryptionKeyRequest.
@@ -1709,12 +1813,6 @@ type DeleteNetworkRequest struct {
 	NetworkId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteNetworkRequest) {
-}
-
-func (newState *DeleteNetworkRequest) SyncEffectiveFieldsDuringRead(existingState DeleteNetworkRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteNetworkRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1752,12 +1850,6 @@ type DeletePrivateAccesRequest struct {
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
 }
 
-func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePrivateAccesRequest) {
-}
-
-func (newState *DeletePrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState DeletePrivateAccesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePrivateAccesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1792,12 +1884,6 @@ func (o DeletePrivateAccesRequest) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1829,12 +1915,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 type DeleteStorageRequest struct {
 	// Databricks Account API storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteStorageRequest) {
-}
-
-func (newState *DeleteStorageRequest) SyncEffectiveFieldsDuringRead(existingState DeleteStorageRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteStorageRequest.
@@ -1874,12 +1954,6 @@ type DeleteVpcEndpointRequest struct {
 	VpcEndpointId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteVpcEndpointRequest) {
-}
-
-func (newState *DeleteVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState DeleteVpcEndpointRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteVpcEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1915,12 +1989,6 @@ func (o DeleteVpcEndpointRequest) Type(ctx context.Context) attr.Type {
 type DeleteWorkspaceRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWorkspaceRequest) {
-}
-
-func (newState *DeleteWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState DeleteWorkspaceRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWorkspaceRequest.
@@ -1969,6 +2037,11 @@ func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExternalCustomerInfo) SyncEffectiveFieldsDuringRead(existingState ExternalCustomerInfo) {
 }
 
+func (c ExternalCustomerInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalCustomerInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2013,6 +2086,12 @@ func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpKeyI
 }
 
 func (newState *GcpKeyInfo) SyncEffectiveFieldsDuringRead(existingState GcpKeyInfo) {
+}
+
+func (c GcpKeyInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "kms_key_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpKeyInfo.
@@ -2087,6 +2166,11 @@ func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *GcpManagedNetworkConfig) SyncEffectiveFieldsDuringRead(existingState GcpManagedNetworkConfig) {
 }
 
+func (c GcpManagedNetworkConfig) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpManagedNetworkConfig.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2149,6 +2233,17 @@ func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Gcp
 }
 
 func (newState *GcpNetworkInfo) SyncEffectiveFieldsDuringRead(existingState GcpNetworkInfo) {
+}
+
+func (c GcpNetworkInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "network_project_id")...)
+	cs.SetRequired(append(path, "pod_ip_range_name")...)
+	cs.SetRequired(append(path, "service_ip_range_name")...)
+	cs.SetRequired(append(path, "subnet_id")...)
+	cs.SetRequired(append(path, "subnet_region")...)
+	cs.SetRequired(append(path, "vpc_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpNetworkInfo.
@@ -2214,6 +2309,14 @@ func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *GcpVpcEndpointInfo) SyncEffectiveFieldsDuringRead(existingState GcpVpcEndpointInfo) {
 }
 
+func (c GcpVpcEndpointInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "endpoint_region")...)
+	cs.SetRequired(append(path, "project_id")...)
+	cs.SetRequired(append(path, "psc_endpoint_name")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpVpcEndpointInfo.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2259,12 +2362,6 @@ type GetCredentialRequest struct {
 	CredentialsId types.String `tfsdk:"-"`
 }
 
-func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialRequest) {
-}
-
-func (newState *GetCredentialRequest) SyncEffectiveFieldsDuringRead(existingState GetCredentialRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2300,12 +2397,6 @@ func (o GetCredentialRequest) Type(ctx context.Context) attr.Type {
 type GetEncryptionKeyRequest struct {
 	// Databricks encryption key configuration ID.
 	CustomerManagedKeyId types.String `tfsdk:"-"`
-}
-
-func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEncryptionKeyRequest) {
-}
-
-func (newState *GetEncryptionKeyRequest) SyncEffectiveFieldsDuringRead(existingState GetEncryptionKeyRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEncryptionKeyRequest.
@@ -2345,12 +2436,6 @@ type GetNetworkRequest struct {
 	NetworkId types.String `tfsdk:"-"`
 }
 
-func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetNetworkRequest) {
-}
-
-func (newState *GetNetworkRequest) SyncEffectiveFieldsDuringRead(existingState GetNetworkRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetNetworkRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2386,12 +2471,6 @@ func (o GetNetworkRequest) Type(ctx context.Context) attr.Type {
 type GetPrivateAccesRequest struct {
 	// Databricks Account API private access settings ID.
 	PrivateAccessSettingsId types.String `tfsdk:"-"`
-}
-
-func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPrivateAccesRequest) {
-}
-
-func (newState *GetPrivateAccesRequest) SyncEffectiveFieldsDuringRead(existingState GetPrivateAccesRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPrivateAccesRequest.
@@ -2431,12 +2510,6 @@ type GetStorageRequest struct {
 	StorageConfigurationId types.String `tfsdk:"-"`
 }
 
-func (newState *GetStorageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStorageRequest) {
-}
-
-func (newState *GetStorageRequest) SyncEffectiveFieldsDuringRead(existingState GetStorageRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStorageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2474,12 +2547,6 @@ type GetVpcEndpointRequest struct {
 	VpcEndpointId types.String `tfsdk:"-"`
 }
 
-func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetVpcEndpointRequest) {
-}
-
-func (newState *GetVpcEndpointRequest) SyncEffectiveFieldsDuringRead(existingState GetVpcEndpointRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetVpcEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2515,12 +2582,6 @@ func (o GetVpcEndpointRequest) Type(ctx context.Context) attr.Type {
 type GetWorkspaceRequest struct {
 	// Workspace ID.
 	WorkspaceId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceRequest) {
-}
-
-func (newState *GetWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceRequest.
@@ -2576,6 +2637,11 @@ func (newState *GkeConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan GkeConfi
 }
 
 func (newState *GkeConfig) SyncEffectiveFieldsDuringRead(existingState GkeConfig) {
+}
+
+func (c GkeConfig) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GkeConfig.
@@ -2651,6 +2717,19 @@ func (newState *Network) SyncEffectiveFieldsDuringCreateOrUpdate(plan Network) {
 }
 
 func (newState *Network) SyncEffectiveFieldsDuringRead(existingState Network) {
+}
+
+func (c Network) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "creation_time")...)
+	cs.SetComputed(append(path, "error_messages")...)
+	NetworkHealth{}.ApplySchemaCustomizations(cs, append(path, "error_messages")...)
+	GcpNetworkInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_network_info")...)
+	NetworkVpcEndpoints{}.ApplySchemaCustomizations(cs, append(path, "vpc_endpoints")...)
+	cs.SetComputed(append(path, "vpc_status")...)
+	cs.SetComputed(append(path, "warning_messages")...)
+	NetworkWarning{}.ApplySchemaCustomizations(cs, append(path, "warning_messages")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Network.
@@ -2897,6 +2976,11 @@ func (newState *NetworkHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan Netw
 func (newState *NetworkHealth) SyncEffectiveFieldsDuringRead(existingState NetworkHealth) {
 }
 
+func (c NetworkHealth) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NetworkHealth.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2947,6 +3031,13 @@ func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *NetworkVpcEndpoints) SyncEffectiveFieldsDuringRead(existingState NetworkVpcEndpoints) {
+}
+
+func (c NetworkVpcEndpoints) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "dataplane_relay")...)
+	cs.SetRequired(append(path, "rest_api")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NetworkVpcEndpoints.
@@ -3055,6 +3146,11 @@ func (newState *NetworkWarning) SyncEffectiveFieldsDuringCreateOrUpdate(plan Net
 func (newState *NetworkWarning) SyncEffectiveFieldsDuringRead(existingState NetworkWarning) {
 }
 
+func (c NetworkWarning) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NetworkWarning.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3119,6 +3215,11 @@ func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *PrivateAccessSettings) SyncEffectiveFieldsDuringRead(existingState PrivateAccessSettings) {
+}
+
+func (c PrivateAccessSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PrivateAccessSettings.
@@ -3197,12 +3298,6 @@ func (o *PrivateAccessSettings) SetAllowedVpcEndpointIds(ctx context.Context, v 
 type ReplaceResponse struct {
 }
 
-func (newState *ReplaceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReplaceResponse) {
-}
-
-func (newState *ReplaceResponse) SyncEffectiveFieldsDuringRead(existingState ReplaceResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplaceResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3240,6 +3335,11 @@ func (newState *RootBucketInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Roo
 }
 
 func (newState *RootBucketInfo) SyncEffectiveFieldsDuringRead(existingState RootBucketInfo) {
+}
+
+func (c RootBucketInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RootBucketInfo.
@@ -3290,6 +3390,14 @@ func (newState *StorageConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 }
 
 func (newState *StorageConfiguration) SyncEffectiveFieldsDuringRead(existingState StorageConfiguration) {
+}
+
+func (c StorageConfiguration) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetComputed(append(path, "account_id")...)
+	cs.SetComputed(append(path, "creation_time")...)
+	RootBucketInfo{}.ApplySchemaCustomizations(cs, append(path, "root_bucket_info")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StorageConfiguration.
@@ -3375,6 +3483,11 @@ func (newState *StsRole) SyncEffectiveFieldsDuringCreateOrUpdate(plan StsRole) {
 func (newState *StsRole) SyncEffectiveFieldsDuringRead(existingState StsRole) {
 }
 
+func (c StsRole) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StsRole.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3409,12 +3522,6 @@ func (o StsRole) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateResponse struct {
-}
-
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
-}
-
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
@@ -3483,6 +3590,12 @@ func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *UpdateWorkspaceRequest) SyncEffectiveFieldsDuringRead(existingState UpdateWorkspaceRequest) {
+}
+
+func (c UpdateWorkspaceRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "workspace_id")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateWorkspaceRequest.
@@ -3608,6 +3721,14 @@ func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringCre
 func (newState *UpsertPrivateAccessSettingsRequest) SyncEffectiveFieldsDuringRead(existingState UpsertPrivateAccessSettingsRequest) {
 }
 
+func (c UpsertPrivateAccessSettingsRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	cs.SetRequired(append(path, "private_access_settings_id")...)
+	cs.SetRequired(append(path, "private_access_settings_name")...)
+	cs.SetRequired(append(path, "region")...)
+
+	return cs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertPrivateAccessSettingsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3721,6 +3842,12 @@ func (newState *VpcEndpoint) SyncEffectiveFieldsDuringCreateOrUpdate(plan VpcEnd
 }
 
 func (newState *VpcEndpoint) SyncEffectiveFieldsDuringRead(existingState VpcEndpoint) {
+}
+
+func (c VpcEndpoint) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	GcpVpcEndpointInfo{}.ApplySchemaCustomizations(cs, append(path, "gcp_vpc_endpoint_info")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in VpcEndpoint.
@@ -3906,6 +4033,19 @@ func (newState *Workspace) SyncEffectiveFieldsDuringCreateOrUpdate(plan Workspac
 }
 
 func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace) {
+}
+
+func (c Workspace) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+	AzureWorkspaceInfo{}.ApplySchemaCustomizations(cs, append(path, "azure_workspace_info")...)
+	CloudResourceContainer{}.ApplySchemaCustomizations(cs, append(path, "cloud_resource_container")...)
+	cs.SetComputed(append(path, "creation_time")...)
+	ExternalCustomerInfo{}.ApplySchemaCustomizations(cs, append(path, "external_customer_info")...)
+	GcpManagedNetworkConfig{}.ApplySchemaCustomizations(cs, append(path, "gcp_managed_network_config")...)
+	GkeConfig{}.ApplySchemaCustomizations(cs, append(path, "gke_config")...)
+	cs.SetComputed(append(path, "workspace_status")...)
+	cs.SetComputed(append(path, "workspace_status_message")...)
+
+	return cs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Workspace.

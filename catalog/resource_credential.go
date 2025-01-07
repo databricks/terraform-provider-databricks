@@ -146,8 +146,8 @@ func ResourceCredential() common.Resource {
 			if updateCredRequest.AzureManagedIdentity != nil {
 				updateCredRequest.AzureManagedIdentity.CredentialId = "" // this is Computed attribute
 			}
-			if updateCredRequest.DatabricksGcpServiceAccount != nil {
-				updateCredRequest.DatabricksGcpServiceAccount.CredentialId = ""
+			if updateCredRequest.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				updateCredRequest.DatabricksGcpServiceAccount = nil
 			}
 			// End of workaround
 			_, err = w.Credentials.UpdateCredential(ctx, updateCredRequest)

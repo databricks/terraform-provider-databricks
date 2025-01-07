@@ -139,6 +139,17 @@ func ResourceCredential() common.Resource {
 			}
 
 			updateCredRequest.Owner = ""
+			// Workaround until backend team fixes API issue
+			if updateCredRequest.AwsIamRole != nil { // Update API accepts only RoleArn, not the rest of attributes
+				updateCredRequest.AwsIamRole = &catalog.AwsIamRole{RoleArn: updateCredRequest.AwsIamRole.RoleArn}
+			}
+			if updateCredRequest.AzureManagedIdentity != nil {
+				updateCredRequest.AzureManagedIdentity.CredentialId = "" // this is Computed attribute
+			}
+			if updateCredRequest.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				updateCredRequest.DatabricksGcpServiceAccount = nil
+			}
+			// End of workaround
 			_, err = w.Credentials.UpdateCredential(ctx, updateCredRequest)
 			if err != nil {
 				if d.HasChange("owner") {

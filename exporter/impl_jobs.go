@@ -3,14 +3,16 @@ package exporter
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	tf_jobs "github.com/databricks/terraform-provider-databricks/jobs"
-	"github.com/databricks/terraform-provider-databricks/workspace"
+	tf_workspace "github.com/databricks/terraform-provider-databricks/workspace"
 )
 
 func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
@@ -97,11 +99,11 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 				ic.emitRepoOrGitFolder(directory, true)
 			} else {
 				// Traverse the dbt project directory and emit all objects found in it
-				nbAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
+				nbAPI := tf_workspace.NewNotebooksAPI(ic.Context, ic.Client)
 				objects, err := nbAPI.List(directory, true, true)
 				if err == nil {
 					for _, object := range objects {
-						if object.ObjectType != workspace.File {
+						if object.ObjectType != tf_workspace.File {
 							continue
 						}
 						ic.maybeEmitWorkspaceObject("databricks_workspace_file", object.Path, &object)
@@ -195,4 +197,121 @@ func importJob(ic *importContext, r *resource) error {
 	}
 
 	return ic.importLibraries(r.Data, s)
+}
+
+func listJobs(ic *importContext) error {
+	i := 0
+	it := ic.workspaceClient.Jobs.List(ic.Context, sdk_jobs.ListJobsRequest{ExpandTasks: false, Limit: 100})
+	for it.HasNext(ic.Context) {
+		job, err := it.Next(ic.Context)
+		if err != nil {
+			return err
+		}
+		i++
+		if i%50 == 0 {
+			log.Printf("[INFO] Scanned %d jobs", i)
+		}
+		if !ic.MatchesName(job.Settings.Name) {
+			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
+			continue
+		}
+		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
+			job.Settings.EditMode == "UI_LOCKED" {
+			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
+			continue
+		}
+		ic.Emit(&resource{
+			Resource: "databricks_job",
+			ID:       strconv.FormatInt(job.JobId, 10),
+		})
+	}
+	log.Printf("[INFO] Total %d jobs are going to be exported", i)
+	return nil
+}
+
+func shouldOmitFieldInJob(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+	switch pathString {
+	case "url", "format":
+		return true
+	}
+	var js tf_jobs.JobSettingsResource
+	common.DataToStructPointer(d, ic.Resources["databricks_job"].Schema, &js)
+	switch pathString {
+	case "email_notifications":
+		if js.EmailNotifications != nil {
+			return reflect.DeepEqual(*js.EmailNotifications, sdk_jobs.JobEmailNotifications{})
+		}
+	case "webhook_notifications":
+		if js.WebhookNotifications != nil {
+			return reflect.DeepEqual(*js.WebhookNotifications, sdk_jobs.WebhookNotifications{})
+		}
+	case "notification_settings":
+		if js.NotificationSettings != nil {
+			return reflect.DeepEqual(*js.NotificationSettings, sdk_jobs.JobNotificationSettings{})
+		}
+	case "run_as":
+		if js.RunAs != nil && (js.RunAs.UserName != "" || js.RunAs.ServicePrincipalName != "") {
+			var user string
+			if js.RunAs.UserName != "" {
+				user = js.RunAs.UserName
+			} else {
+				user = js.RunAs.ServicePrincipalName
+			}
+			return user == ic.meUserName
+		}
+		return true
+	}
+	if strings.HasPrefix(pathString, "task.") {
+		parts := strings.Split(pathString, ".")
+		if len(parts) > 2 {
+			taskIndex, err := strconv.Atoi(parts[1])
+			if err == nil && taskIndex >= 0 && taskIndex < len(js.Tasks) {
+				blockName := parts[len(parts)-1]
+				switch blockName {
+				case "notification_settings":
+					if js.Tasks[taskIndex].NotificationSettings != nil {
+						return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings,
+							sdk_jobs.TaskNotificationSettings{})
+					}
+				case "email_notifications":
+					if js.Tasks[taskIndex].EmailNotifications != nil {
+						return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
+							sdk_jobs.TaskEmailNotifications{})
+					}
+				case "webhook_notifications":
+					if js.Tasks[taskIndex].WebhookNotifications != nil {
+						return reflect.DeepEqual(*js.Tasks[taskIndex].WebhookNotifications,
+							sdk_jobs.WebhookNotifications{})
+					}
+				}
+			}
+		}
+		if strings.HasSuffix(pathString, ".notebook_task.0.source") && js.GitSource == nil && d.Get(pathString).(string) == "WORKSPACE" {
+			return true
+		}
+		// TODO: add should omit for new cluster in the task?
+		// TODO: double check it
+	}
+	if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
+		return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
+	}
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+}
+
+func shouldIgnoreJob(ic *importContext, r *resource) bool {
+	numTasks := r.Data.Get("task.#").(int)
+	if numTasks == 0 {
+		log.Printf("[WARN] Ignoring job with ID %s", r.ID)
+		ic.addIgnoredResource(fmt.Sprintf("databricks_job. id=%s", r.ID))
+	}
+	return numTasks == 0
+}
+
+func (ic *importContext) emitJobsDestinationNotifications(notifications []sdk_jobs.Webhook) {
+	for _, notification := range notifications {
+		ic.Emit(&resource{
+			Resource: "databricks_notification_destination",
+			ID:       notification.Id,
+		})
+	}
 }

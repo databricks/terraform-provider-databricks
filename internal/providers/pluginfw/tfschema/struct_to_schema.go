@@ -18,7 +18,7 @@ import (
 )
 
 type CustomizableSchemaProvider interface {
-	ApplySchemaCustomizations(cs CustomizableSchema, path ...string) CustomizableSchema
+	ApplySchemaCustomizations(map[string]AttributeBuilder) map[string]AttributeBuilder
 }
 
 type structTag struct {
@@ -30,7 +30,6 @@ type structTag struct {
 func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 	scmAttr := map[string]AttributeBuilder{}
 	rk := v.Kind()
-	typeProvidesSchemaCustomization := v.Type().Implements(reflect.TypeOf((*CustomizableSchemaProvider)(nil)).Elem())
 	if rk == reflect.Ptr {
 		v = v.Elem()
 		rk = v.Kind()
@@ -39,13 +38,15 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 		panic(fmt.Errorf("schema value of Struct is expected, but got %s: %#v. %s", rk.String(), v, common.TerraformBugErrorMessage))
 	}
 
+	schemaProvider, implementsSchemaProvider := v.Interface().(CustomizableSchemaProvider)
+
 	for _, field := range tfreflect.ListAllFields(v) {
 		typeField := field.StructField
 		fieldName := typeField.Tag.Get("tfsdk")
 		if fieldName == "-" {
 			continue
 		}
-		structTag := getStructTag(typeField)
+		structTag, hasStructTag := getStructTag(typeField)
 		value := field.Value.Interface()
 		if _, ok := value.(attr.Value); !ok {
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
@@ -147,9 +148,7 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 
 		attr := scmAttr[fieldName]
 
-		if typeProvidesSchemaCustomization {
-			attr = attr.SetOptional() // default to optional, ToSchema may override this
-		} else {
+		if hasStructTag && !implementsSchemaProvider {
 			if structTag.computed {
 				// Computed attributes are always computed and may be optional.
 				attr = attr.SetComputed()
@@ -168,16 +167,20 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 
 		scmAttr[fieldName] = attr
 	}
+
+	if implementsSchemaProvider {
+		scmAttr = schemaProvider.ApplySchemaCustomizations(scmAttr)
+	}
 	return NestedBlockObject{Attributes: scmAttr}
 }
 
-func getStructTag(field reflect.StructField) structTag {
+func getStructTag(field reflect.StructField) (structTag, bool) {
 	tagValue := field.Tag.Get("tf")
 	return structTag{
 		optional:     strings.Contains(tagValue, "optional"),
 		computed:     strings.Contains(tagValue, "computed"),
 		singleObject: strings.Contains(tagValue, "object"),
-	}
+	}, tagValue != ""
 }
 
 // ResourceStructToSchema builds a resource schema from a tfsdk struct, with custoimzations applied.
@@ -197,10 +200,6 @@ func ResourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
 	cs := *ConstructCustomizableSchema(nestedBlockObj)
 
-	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
-		cs = schemaProvider.ApplySchemaCustomizations(cs)
-	}
-
 	if customizeSchema != nil {
 		cs = customizeSchema(cs)
 	}
@@ -212,10 +211,6 @@ func ResourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(
 func DataSourceStructToSchemaMap(ctx context.Context, v any, customizeSchema func(CustomizableSchema) CustomizableSchema) (map[string]dataschema.Attribute, map[string]dataschema.Block) {
 	nestedBlockObj := typeToSchema(ctx, reflect.ValueOf(v))
 	cs := *ConstructCustomizableSchema(nestedBlockObj)
-
-	if schemaProvider, ok := v.(CustomizableSchemaProvider); ok {
-		cs = schemaProvider.ApplySchemaCustomizations(cs)
-	}
 
 	if customizeSchema != nil {
 		cs = customizeSchema(cs)

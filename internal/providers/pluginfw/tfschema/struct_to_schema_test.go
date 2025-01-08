@@ -20,7 +20,7 @@ type TestStringTfSdk struct {
 }
 
 type TestBoolTfSdk struct {
-	Enabled types.Bool `tfsdk:"enabled" tf:""`
+	Enabled types.Bool `tfsdk:"enabled" tf:"required"`
 }
 
 type TestIntTfSdk struct {

@@ -24,7 +24,7 @@ type dataSourceApp struct {
 }
 
 type dataApp struct {
-	Name types.String `tfsdk:"name"`
+	Name types.String `tfsdk:"name" tf:"required"`
 	App  types.Object `tfsdk:"app" tf:"computed"`
 }
 

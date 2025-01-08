@@ -27,7 +27,7 @@ type RegisteredModelVersionsDataSource struct {
 }
 
 type RegisteredModelVersionsData struct {
-	FullName      types.String `tfsdk:"full_name"`
+	FullName      types.String `tfsdk:"full_name" tf:"required"`
 	ModelVersions types.List   `tfsdk:"model_versions" tf:"optional,computed"`
 }
 

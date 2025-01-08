@@ -32,8 +32,8 @@ type FunctionsDataSource struct {
 }
 
 type FunctionsData struct {
-	CatalogName   types.String `tfsdk:"catalog_name"`
-	SchemaName    types.String `tfsdk:"schema_name"`
+	CatalogName   types.String `tfsdk:"catalog_name" tf:"required"`
+	SchemaName    types.String `tfsdk:"schema_name" tf:"required"`
 	IncludeBrowse types.Bool   `tfsdk:"include_browse" tf:"optional"`
 	Functions     types.List   `tfsdk:"functions" tf:"optional,computed"`
 }

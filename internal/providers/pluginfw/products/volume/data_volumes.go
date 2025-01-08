@@ -31,8 +31,8 @@ type VolumesDataSource struct {
 }
 
 type VolumesList struct {
-	CatalogName types.String `tfsdk:"catalog_name"`
-	SchemaName  types.String `tfsdk:"schema_name"`
+	CatalogName types.String `tfsdk:"catalog_name" tf:"required"`
+	SchemaName  types.String `tfsdk:"schema_name" tf:"required"`
 	Ids         types.List   `tfsdk:"ids" tf:"optional,computed"`
 }
 

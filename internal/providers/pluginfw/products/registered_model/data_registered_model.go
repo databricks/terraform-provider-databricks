@@ -34,7 +34,7 @@ type RegisteredModelDataSource struct {
 }
 
 type RegisteredModelData struct {
-	FullName       types.String `tfsdk:"full_name"`
+	FullName       types.String `tfsdk:"full_name" tf:"required"`
 	IncludeAliases types.Bool   `tfsdk:"include_aliases" tf:"optional"`
 	IncludeBrowse  types.Bool   `tfsdk:"include_browse" tf:"optional"`
 	ModelInfo      types.List   `tfsdk:"model_info" tf:"optional,computed"`

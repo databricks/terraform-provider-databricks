@@ -113,13 +113,12 @@ func TestAccLibraryInstallIfClusterTerminated(t *testing.T) {
 					ClusterId: clusterId,
 				})
 				if err != nil {
-					// What to do
+					t.Fatalf("Error deleting cluster: %s", err)
 				}
 				_, err = getter.GetWithTimeout(60 * time.Minute)
 				if err != nil {
-					// What to do
+					t.Fatalf("Error waiting for cluster to be deleted: %s", err)
 				}
-				// Wait for the cluster to be completely deleted
 			},
 			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
 				cluster_id = databricks_cluster.this.id

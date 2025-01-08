@@ -1,35 +1,48 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
-func TestUcAccCredential(t *testing.T) {
-	LoadUcwsEnv(t)
-	if IsAws(t) {
-		UnityWorkspaceLevel(t, Step{
-			Template: `
+func awsCredentialWithComment(comment string) string {
+	return fmt.Sprintf(`
 				resource "databricks_credential" "external" {
-					name = "service-cred-{var.RANDOM}"
+					name = "service-cred-{var.STICKY_RANDOM}"
 					aws_iam_role {
 						role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
 					}
 					purpose = "SERVICE"
 					skip_validation = true
-					comment = "Managed by TF"
-				}`,
-		})
-	} else if IsGcp(t) {
-		UnityWorkspaceLevel(t, Step{
-			// TODO: update purpose to SERVICE when it's released
-			Template: `
+					comment = "%s"
+				}`, comment)
+}
+
+func gcpCredentialWithComment(comment string) string {
+	// TODO: update purpose to SERVICE when it's released
+	return fmt.Sprintf(`
 				resource "databricks_credential" "external" {
-					name = "storage-cred-{var.RANDOM}"
+					name = "storage-cred-{var.STICKY_RANDOM}"
 					databricks_gcp_service_account {}
 					purpose = "STORAGE"
 					skip_validation = true
-					comment = "Managed by TF"
-				}`,
+					comment = "%s"
+				}`, comment)
+}
+
+func TestUcAccCredential(t *testing.T) {
+	LoadUcwsEnv(t)
+	if IsAws(t) {
+		UnityWorkspaceLevel(t, Step{
+			Template: awsCredentialWithComment("Managed by TF"),
+		}, Step{
+			Template: awsCredentialWithComment("Managed by TF updated"),
+		})
+	} else if IsGcp(t) {
+		UnityWorkspaceLevel(t, Step{
+			Template: gcpCredentialWithComment("Managed by TF"),
+		}, Step{
+			Template: gcpCredentialWithComment("Managed by TF updated"),
 		})
 	}
 }

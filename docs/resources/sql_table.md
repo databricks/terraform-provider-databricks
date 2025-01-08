@@ -3,11 +3,13 @@ subcategory: "Unity Catalog"
 ---
 # databricks_sql_table (Resource)
 
-Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables / views.
+Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, databases (also called schemas), and tables/views.
 
-A `databricks_sql_table` is contained within [databricks_schema](schema.md), and can represent either a managed table, an external table or a view.
+A `databricks_sql_table` is contained within [databricks_schema](schema.md), and can represent either a managed table, an external table, or a view.
 
 This resource creates and updates the Unity Catalog table/view by executing the necessary SQL queries on a special auto-terminating cluster it would create for this operation. You could also specify a SQL warehouse or cluster for the queries to be executed on.
+
+~> This resource doesn't handle complex cases of schema evolution due to the limitations of Terraform itself.  If you need to implement schema evolution it's recommended to use specialized tools, such as, [Luquibase](https://medium.com/dbsql-sme-engineering/advanced-schema-management-on-databricks-with-liquibase-1900e9f7b9c0) and [Flyway](https://medium.com/dbsql-sme-engineering/databricks-schema-management-with-flyway-527c4a9f5d67).
 
 ## Example Usage
 
@@ -153,23 +155,23 @@ resource "databricks_sql_table" "thing" {
 
 The following arguments are supported:
 
-* `name` - Name of table relative to parent catalog and schema. Change forces creation of a new resource.
-* `catalog_name` - Name of parent catalog. Change forces creation of a new resource.
-* `schema_name` - Name of parent Schema relative to parent Catalog. Change forces creation of a new resource.
-* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL` or `VIEW`. Change forces creation of a new resource.
+* `name` - Name of table relative to parent catalog and schema. Change forces the creation of a new resource.
+* `catalog_name` - Name of parent catalog. Change forces the creation of a new resource.
+* `schema_name` - Name of parent Schema relative to parent Catalog. Change forces the creation of a new resource.
+* `table_type` - Distinguishes a view vs. managed/external Table. `MANAGED`, `EXTERNAL`, or `VIEW`. Change forces the creation of a new resource.
 * `storage_location` - (Optional) URL of storage location for Table data (required for EXTERNAL Tables). Not supported for `VIEW` or `MANAGED` table_type.
-* `data_source_format` - (Optional) External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, `TEXT`. Change forces creation of a new resource. Not supported for `MANAGED` tables or `VIEW`.
+* `data_source_format` - (Optional) External tables are supported in multiple data source formats. The string constants identifying these formats are `DELTA`, `CSV`, `JSON`, `AVRO`, `PARQUET`, `ORC`, and `TEXT`. Change forces the creation of a new resource. Not supported for `MANAGED` tables or `VIEW`.
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
 * `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`.
 * `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
 * `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
-* `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces creation of a new resource.
-* `owner` - (Optional) Username/groupname/sp application_id of the schema owner.
-* `comment` - (Optional) User-supplied free-form text. Changing comment is not currently supported on `VIEW` table_type.
+* `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces the creation of a new resource.
+* `owner` - (Optional) User name/group name/sp application_id of the schema owner.
+* `comment` - (Optional) User-supplied free-form text. Changing the comment is not currently supported on the `VIEW` table type.
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
-* `properties` - (Optional) Map of table properties.
+* `properties` - (Optional) A map of table properties.
+* `partitions` - (Optional) a subset of columns to partition the table by. Change forces the creation of a new resource. Conflicts with `cluster_keys`. Change forces creation of a new resource.
 * `tags` - (Optional) Map of table tags.
-* `partitions` - (Optional) a subset of columns to partition the table by. Change forces creation of a new resource. Conflicts with `cluster_keys`. Change forces creation of a new resource.
 
 ### `column` configuration block
 
@@ -178,15 +180,15 @@ Currently, changing the column definitions for a table will require dropping and
 
 * `name` - User-visible name of column
 * `type` - Column type spec (with metadata) as SQL text. Not supported for `VIEW` table_type.
-* `identity` - (Optional) Whether field is an identity column. Can be `default`, `always` or unset. It is unset by default.
+* `identity` - (Optional) Whether the field is an identity column. Can be `default`, `always`, or unset. It is unset by default.
 * `comment` - (Optional) User-supplied free-form text.
 * `nullable` - (Optional) Whether field is nullable (Default: `true`)
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+In addition to all the arguments above, the following attributes are exported:
 
-* `id` - ID of this table in form of `<catalog_name>.<schema_name>.<name>`.
+* `id` - ID of this table in the form of `<catalog_name>.<schema_name>.<name>`.
 
 ## Import
 

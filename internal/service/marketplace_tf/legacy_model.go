@@ -17,15 +17,16 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AddExchangeForListingRequest_SdkV2 struct {
-	ExchangeId types.String `tfsdk:"exchange_id" tf:""`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:""`
+	ListingId types.String `tfsdk:"listing_id"`
 }
 
 func (newState *AddExchangeForListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingRequest_SdkV2) {
@@ -34,11 +35,11 @@ func (newState *AddExchangeForListingRequest_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *AddExchangeForListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingRequest_SdkV2) {
 }
 
-func (c AddExchangeForListingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "exchange_id")...)
-	cs.SetRequired(append(path, "listing_id")...)
+func (c AddExchangeForListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddExchangeForListingRequest.
@@ -75,7 +76,7 @@ func (o AddExchangeForListingRequest_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type AddExchangeForListingResponse_SdkV2 struct {
-	ExchangeForListing types.List `tfsdk:"exchange_for_listing" tf:"optional,object"`
+	ExchangeForListing types.List `tfsdk:"exchange_for_listing"`
 }
 
 func (newState *AddExchangeForListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingResponse_SdkV2) {
@@ -84,10 +85,11 @@ func (newState *AddExchangeForListingResponse_SdkV2) SyncEffectiveFieldsDuringCr
 func (newState *AddExchangeForListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingResponse_SdkV2) {
 }
 
-func (c AddExchangeForListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeListing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange_for_listing")...)
+func (c AddExchangeForListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_for_listing"] = attrs["exchange_for_listing"].SetOptional()
+	attrs["exchange_for_listing"] = attrs["exchange_for_listing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddExchangeForListingResponse.
@@ -218,7 +220,7 @@ func (o *BatchGetListingsRequest_SdkV2) SetIds(ctx context.Context, v []types.St
 }
 
 type BatchGetListingsResponse_SdkV2 struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 }
 
 func (newState *BatchGetListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsResponse_SdkV2) {
@@ -227,10 +229,10 @@ func (newState *BatchGetListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *BatchGetListingsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsResponse_SdkV2) {
 }
 
-func (c BatchGetListingsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listings")...)
+func (c BatchGetListingsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetListingsResponse.
@@ -361,7 +363,7 @@ func (o *BatchGetProvidersRequest_SdkV2) SetIds(ctx context.Context, v []types.S
 }
 
 type BatchGetProvidersResponse_SdkV2 struct {
-	Providers types.List `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers"`
 }
 
 func (newState *BatchGetProvidersResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersResponse_SdkV2) {
@@ -370,10 +372,10 @@ func (newState *BatchGetProvidersResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *BatchGetProvidersResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersResponse_SdkV2) {
 }
 
-func (c BatchGetProvidersResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "providers")...)
+func (c BatchGetProvidersResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["providers"] = attrs["providers"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetProvidersResponse.
@@ -438,7 +440,7 @@ func (o *BatchGetProvidersResponse_SdkV2) SetProviders(ctx context.Context, v []
 }
 
 type ConsumerTerms_SdkV2 struct {
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *ConsumerTerms_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsumerTerms_SdkV2) {
@@ -447,10 +449,10 @@ func (newState *ConsumerTerms_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ConsumerTerms_SdkV2) SyncEffectiveFieldsDuringRead(existingState ConsumerTerms_SdkV2) {
 }
 
-func (c ConsumerTerms_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "version")...)
+func (c ConsumerTerms_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ConsumerTerms.
@@ -487,13 +489,13 @@ func (o ConsumerTerms_SdkV2) Type(ctx context.Context) attr.Type {
 // contact info for the consumer requesting data or performing a listing
 // installation
 type ContactInfo_SdkV2 struct {
-	Company types.String `tfsdk:"company" tf:"optional"`
+	Company types.String `tfsdk:"company"`
 
-	Email types.String `tfsdk:"email" tf:"optional"`
+	Email types.String `tfsdk:"email"`
 
-	FirstName types.String `tfsdk:"first_name" tf:"optional"`
+	FirstName types.String `tfsdk:"first_name"`
 
-	LastName types.String `tfsdk:"last_name" tf:"optional"`
+	LastName types.String `tfsdk:"last_name"`
 }
 
 func (newState *ContactInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContactInfo_SdkV2) {
@@ -502,9 +504,13 @@ func (newState *ContactInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ContactInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ContactInfo_SdkV2) {
 }
 
-func (c ContactInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ContactInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["company"] = attrs["company"].SetOptional()
+	attrs["email"] = attrs["email"].SetOptional()
+	attrs["first_name"] = attrs["first_name"].SetOptional()
+	attrs["last_name"] = attrs["last_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ContactInfo.
@@ -545,7 +551,7 @@ func (o ContactInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateExchangeFilterRequest_SdkV2 struct {
-	Filter types.List `tfsdk:"filter" tf:"object"`
+	Filter types.List `tfsdk:"filter"`
 }
 
 func (newState *CreateExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterRequest_SdkV2) {
@@ -554,11 +560,11 @@ func (newState *CreateExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *CreateExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterRequest_SdkV2) {
 }
 
-func (c CreateExchangeFilterRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "filter")...)
-	ExchangeFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
+func (c CreateExchangeFilterRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetRequired()
+	attrs["filter"] = attrs["filter"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeFilterRequest.
@@ -623,7 +629,7 @@ func (o *CreateExchangeFilterRequest_SdkV2) SetFilter(ctx context.Context, v Exc
 }
 
 type CreateExchangeFilterResponse_SdkV2 struct {
-	FilterId types.String `tfsdk:"filter_id" tf:"optional"`
+	FilterId types.String `tfsdk:"filter_id"`
 }
 
 func (newState *CreateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterResponse_SdkV2) {
@@ -632,9 +638,10 @@ func (newState *CreateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *CreateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterResponse_SdkV2) {
 }
 
-func (c CreateExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_id"] = attrs["filter_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeFilterResponse.
@@ -669,7 +676,7 @@ func (o CreateExchangeFilterResponse_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type CreateExchangeRequest_SdkV2 struct {
-	Exchange types.List `tfsdk:"exchange" tf:"object"`
+	Exchange types.List `tfsdk:"exchange"`
 }
 
 func (newState *CreateExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeRequest_SdkV2) {
@@ -678,11 +685,11 @@ func (newState *CreateExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateExchangeRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExchangeRequest_SdkV2) {
 }
 
-func (c CreateExchangeRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "exchange")...)
-	Exchange_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange")...)
+func (c CreateExchangeRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetRequired()
+	attrs["exchange"] = attrs["exchange"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeRequest.
@@ -747,7 +754,7 @@ func (o *CreateExchangeRequest_SdkV2) SetExchange(ctx context.Context, v Exchang
 }
 
 type CreateExchangeResponse_SdkV2 struct {
-	ExchangeId types.String `tfsdk:"exchange_id" tf:"optional"`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 }
 
 func (newState *CreateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeResponse_SdkV2) {
@@ -756,9 +763,10 @@ func (newState *CreateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *CreateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExchangeResponse_SdkV2) {
 }
 
-func (c CreateExchangeResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateExchangeResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeResponse.
@@ -793,13 +801,13 @@ func (o CreateExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateFileRequest_SdkV2 struct {
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 
-	FileParent types.List `tfsdk:"file_parent" tf:"object"`
+	FileParent types.List `tfsdk:"file_parent"`
 
-	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
 
-	MimeType types.String `tfsdk:"mime_type" tf:""`
+	MimeType types.String `tfsdk:"mime_type"`
 }
 
 func (newState *CreateFileRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileRequest_SdkV2) {
@@ -808,13 +816,14 @@ func (newState *CreateFileRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateFileRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateFileRequest_SdkV2) {
 }
 
-func (c CreateFileRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "file_parent")...)
-	FileParent_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "file_parent")...)
-	cs.SetRequired(append(path, "marketplace_file_type")...)
-	cs.SetRequired(append(path, "mime_type")...)
+func (c CreateFileRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["file_parent"] = attrs["file_parent"].SetRequired()
+	attrs["file_parent"] = attrs["file_parent"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetRequired()
+	attrs["mime_type"] = attrs["mime_type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFileRequest.
@@ -885,9 +894,9 @@ func (o *CreateFileRequest_SdkV2) SetFileParent(ctx context.Context, v FileParen
 }
 
 type CreateFileResponse_SdkV2 struct {
-	FileInfo types.List `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.List `tfsdk:"file_info"`
 	// Pre-signed POST URL to blob storage
-	UploadUrl types.String `tfsdk:"upload_url" tf:"optional"`
+	UploadUrl types.String `tfsdk:"upload_url"`
 }
 
 func (newState *CreateFileResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileResponse_SdkV2) {
@@ -896,10 +905,12 @@ func (newState *CreateFileResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateFileResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateFileResponse_SdkV2) {
 }
 
-func (c CreateFileResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "file_info")...)
+func (c CreateFileResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_info"] = attrs["file_info"].SetOptional()
+	attrs["file_info"] = attrs["file_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["upload_url"] = attrs["upload_url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFileResponse.
@@ -966,17 +977,17 @@ func (o *CreateFileResponse_SdkV2) SetFileInfo(ctx context.Context, v FileInfo_S
 }
 
 type CreateInstallationRequest_SdkV2 struct {
-	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
+	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms"`
 
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 	// for git repo installations
-	RepoDetail types.List `tfsdk:"repo_detail" tf:"optional,object"`
+	RepoDetail types.List `tfsdk:"repo_detail"`
 
-	ShareName types.String `tfsdk:"share_name" tf:"optional"`
+	ShareName types.String `tfsdk:"share_name"`
 }
 
 func (newState *CreateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstallationRequest_SdkV2) {
@@ -985,12 +996,17 @@ func (newState *CreateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *CreateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateInstallationRequest_SdkV2) {
 }
 
-func (c CreateInstallationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ConsumerTerms_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "accepted_consumer_terms")...)
-	cs.SetRequired(append(path, "listing_id")...)
-	RepoInstallation_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "repo_detail")...)
+func (c CreateInstallationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].SetOptional()
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_detail"] = attrs["repo_detail"].SetOptional()
+	attrs["repo_detail"] = attrs["repo_detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["share_name"] = attrs["share_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstallationRequest.
@@ -1094,7 +1110,7 @@ func (o *CreateInstallationRequest_SdkV2) SetRepoDetail(ctx context.Context, v R
 }
 
 type CreateListingRequest_SdkV2 struct {
-	Listing types.List `tfsdk:"listing" tf:"object"`
+	Listing types.List `tfsdk:"listing"`
 }
 
 func (newState *CreateListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingRequest_SdkV2) {
@@ -1103,11 +1119,11 @@ func (newState *CreateListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CreateListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateListingRequest_SdkV2) {
 }
 
-func (c CreateListingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "listing")...)
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listing")...)
+func (c CreateListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetRequired()
+	attrs["listing"] = attrs["listing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateListingRequest.
@@ -1172,7 +1188,7 @@ func (o *CreateListingRequest_SdkV2) SetListing(ctx context.Context, v Listing_S
 }
 
 type CreateListingResponse_SdkV2 struct {
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 }
 
 func (newState *CreateListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingResponse_SdkV2) {
@@ -1181,9 +1197,10 @@ func (newState *CreateListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateListingResponse_SdkV2) {
 }
 
-func (c CreateListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateListingResponse.
@@ -1219,23 +1236,23 @@ func (o CreateListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Data request messages also creates a lead (maybe)
 type CreatePersonalizationRequest_SdkV2 struct {
-	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms" tf:"object"`
+	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms"`
 
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	Company types.String `tfsdk:"company" tf:"optional"`
+	Company types.String `tfsdk:"company"`
 
-	FirstName types.String `tfsdk:"first_name" tf:"optional"`
+	FirstName types.String `tfsdk:"first_name"`
 
-	IntendedUse types.String `tfsdk:"intended_use" tf:""`
+	IntendedUse types.String `tfsdk:"intended_use"`
 
-	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse" tf:"optional"`
+	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse"`
 
-	LastName types.String `tfsdk:"last_name" tf:"optional"`
+	LastName types.String `tfsdk:"last_name"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 }
 
 func (newState *CreatePersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequest_SdkV2) {
@@ -1244,13 +1261,19 @@ func (newState *CreatePersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *CreatePersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequest_SdkV2) {
 }
 
-func (c CreatePersonalizationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "accepted_consumer_terms")...)
-	ConsumerTerms_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "accepted_consumer_terms")...)
-	cs.SetRequired(append(path, "intended_use")...)
-	cs.SetRequired(append(path, "listing_id")...)
+func (c CreatePersonalizationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].SetRequired()
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["company"] = attrs["company"].SetOptional()
+	attrs["first_name"] = attrs["first_name"].SetOptional()
+	attrs["intended_use"] = attrs["intended_use"].SetRequired()
+	attrs["is_from_lighthouse"] = attrs["is_from_lighthouse"].SetOptional()
+	attrs["last_name"] = attrs["last_name"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePersonalizationRequest.
@@ -1331,7 +1354,7 @@ func (o *CreatePersonalizationRequest_SdkV2) SetAcceptedConsumerTerms(ctx contex
 }
 
 type CreatePersonalizationRequestResponse_SdkV2 struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *CreatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequestResponse_SdkV2) {
@@ -1340,9 +1363,10 @@ func (newState *CreatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *CreatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequestResponse_SdkV2) {
 }
 
-func (c CreatePersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreatePersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePersonalizationRequestResponse.
@@ -1377,7 +1401,7 @@ func (o CreatePersonalizationRequestResponse_SdkV2) Type(ctx context.Context) at
 }
 
 type CreateProviderRequest_SdkV2 struct {
-	Provider types.List `tfsdk:"provider" tf:"object"`
+	Provider types.List `tfsdk:"provider"`
 }
 
 func (newState *CreateProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderRequest_SdkV2) {
@@ -1386,11 +1410,11 @@ func (newState *CreateProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateProviderRequest_SdkV2) {
 }
 
-func (c CreateProviderRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "provider")...)
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "provider")...)
+func (c CreateProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["provider"] = attrs["provider"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProviderRequest.
@@ -1455,7 +1479,7 @@ func (o *CreateProviderRequest_SdkV2) SetProvider(ctx context.Context, v Provide
 }
 
 type CreateProviderResponse_SdkV2 struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *CreateProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderResponse_SdkV2) {
@@ -1464,9 +1488,10 @@ func (newState *CreateProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *CreateProviderResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateProviderResponse_SdkV2) {
 }
 
-func (c CreateProviderResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateProviderResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProviderResponse.
@@ -1501,9 +1526,9 @@ func (o CreateProviderResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DataRefreshInfo_SdkV2 struct {
-	Interval types.Int64 `tfsdk:"interval" tf:""`
+	Interval types.Int64 `tfsdk:"interval"`
 
-	Unit types.String `tfsdk:"unit" tf:""`
+	Unit types.String `tfsdk:"unit"`
 }
 
 func (newState *DataRefreshInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataRefreshInfo_SdkV2) {
@@ -1512,11 +1537,11 @@ func (newState *DataRefreshInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DataRefreshInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataRefreshInfo_SdkV2) {
 }
 
-func (c DataRefreshInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "interval")...)
-	cs.SetRequired(append(path, "unit")...)
+func (c DataRefreshInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["interval"] = attrs["interval"].SetRequired()
+	attrs["unit"] = attrs["unit"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataRefreshInfo.
@@ -1597,9 +1622,9 @@ func (newState *DeleteExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *DeleteExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterResponse_SdkV2) {
 }
 
-func (c DeleteExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeFilterResponse.
@@ -1674,9 +1699,9 @@ func (newState *DeleteExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteExchangeResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeResponse_SdkV2) {
 }
 
-func (c DeleteExchangeResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteExchangeResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeResponse.
@@ -1751,9 +1776,9 @@ func (newState *DeleteFileResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *DeleteFileResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteFileResponse_SdkV2) {
 }
 
-func (c DeleteFileResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteFileResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileResponse.
@@ -1832,9 +1857,9 @@ func (newState *DeleteInstallationResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *DeleteInstallationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationResponse_SdkV2) {
 }
 
-func (c DeleteInstallationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteInstallationResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstallationResponse.
@@ -1909,9 +1934,9 @@ func (newState *DeleteListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *DeleteListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteListingResponse_SdkV2) {
 }
 
-func (c DeleteListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteListingResponse.
@@ -1986,9 +2011,9 @@ func (newState *DeleteProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteProviderResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteProviderResponse_SdkV2) {
 }
 
-func (c DeleteProviderResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteProviderResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderResponse.
@@ -2019,23 +2044,23 @@ func (o DeleteProviderResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type Exchange_SdkV2 struct {
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	Filters types.List `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	LinkedListings types.List `tfsdk:"linked_listings" tf:"optional"`
+	LinkedListings types.List `tfsdk:"linked_listings"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *Exchange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exchange_SdkV2) {
@@ -2044,12 +2069,18 @@ func (newState *Exchange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exc
 func (newState *Exchange_SdkV2) SyncEffectiveFieldsDuringRead(existingState Exchange_SdkV2) {
 }
 
-func (c Exchange_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filters")...)
-	ExchangeListing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "linked_listings")...)
-	cs.SetRequired(append(path, "name")...)
+func (c Exchange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["linked_listings"] = attrs["linked_listings"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Exchange.
@@ -2159,23 +2190,23 @@ func (o *Exchange_SdkV2) SetLinkedListings(ctx context.Context, v []ExchangeList
 }
 
 type ExchangeFilter_SdkV2 struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	ExchangeId types.String `tfsdk:"exchange_id" tf:""`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	FilterType types.String `tfsdk:"filter_type" tf:""`
+	FilterType types.String `tfsdk:"filter_type"`
 
-	FilterValue types.String `tfsdk:"filter_value" tf:""`
+	FilterValue types.String `tfsdk:"filter_value"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *ExchangeFilter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeFilter_SdkV2) {
@@ -2184,12 +2215,18 @@ func (newState *ExchangeFilter_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExchangeFilter_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExchangeFilter_SdkV2) {
 }
 
-func (c ExchangeFilter_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "exchange_id")...)
-	cs.SetRequired(append(path, "filter_type")...)
-	cs.SetRequired(append(path, "filter_value")...)
+func (c ExchangeFilter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["filter_type"] = attrs["filter_type"].SetRequired()
+	attrs["filter_value"] = attrs["filter_value"].SetRequired()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeFilter.
@@ -2240,19 +2277,19 @@ func (o ExchangeFilter_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ExchangeListing_SdkV2 struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	ExchangeId types.String `tfsdk:"exchange_id" tf:"optional"`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	ExchangeName types.String `tfsdk:"exchange_name" tf:"optional"`
+	ExchangeName types.String `tfsdk:"exchange_name"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 }
 
 func (newState *ExchangeListing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeListing_SdkV2) {
@@ -2261,9 +2298,16 @@ func (newState *ExchangeListing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ExchangeListing_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExchangeListing_SdkV2) {
 }
 
-func (c ExchangeListing_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExchangeListing_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["exchange_id"] = attrs["exchange_id"].SetOptional()
+	attrs["exchange_name"] = attrs["exchange_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeListing.
@@ -2310,26 +2354,26 @@ func (o ExchangeListing_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FileInfo_SdkV2 struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Name displayed to users for applicable files, e.g. embedded notebooks
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 
-	DownloadLink types.String `tfsdk:"download_link" tf:"optional"`
+	DownloadLink types.String `tfsdk:"download_link"`
 
-	FileParent types.List `tfsdk:"file_parent" tf:"optional,object"`
+	FileParent types.List `tfsdk:"file_parent"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:"optional"`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
 
-	MimeType types.String `tfsdk:"mime_type" tf:"optional"`
+	MimeType types.String `tfsdk:"mime_type"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// Populated if status is in a failed state with more information on reason
 	// for the failure.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
 func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo_SdkV2) {
@@ -2338,10 +2382,20 @@ func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Fil
 func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileInfo_SdkV2) {
 }
 
-func (c FileInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileParent_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "file_parent")...)
+func (c FileInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["download_link"] = attrs["download_link"].SetOptional()
+	attrs["file_parent"] = attrs["file_parent"].SetOptional()
+	attrs["file_parent"] = attrs["file_parent"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetOptional()
+	attrs["mime_type"] = attrs["mime_type"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
@@ -2424,9 +2478,9 @@ func (o *FileInfo_SdkV2) SetFileParent(ctx context.Context, v FileParent_SdkV2) 
 }
 
 type FileParent_SdkV2 struct {
-	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
+	FileParentType types.String `tfsdk:"file_parent_type"`
 	// TODO make the following fields required
-	ParentId types.String `tfsdk:"parent_id" tf:"optional"`
+	ParentId types.String `tfsdk:"parent_id"`
 }
 
 func (newState *FileParent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileParent_SdkV2) {
@@ -2435,9 +2489,11 @@ func (newState *FileParent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan F
 func (newState *FileParent_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileParent_SdkV2) {
 }
 
-func (c FileParent_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c FileParent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_parent_type"] = attrs["file_parent_type"].SetOptional()
+	attrs["parent_id"] = attrs["parent_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileParent.
@@ -2510,7 +2566,7 @@ func (o GetExchangeRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetExchangeResponse_SdkV2 struct {
-	Exchange types.List `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.List `tfsdk:"exchange"`
 }
 
 func (newState *GetExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeResponse_SdkV2) {
@@ -2519,10 +2575,11 @@ func (newState *GetExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetExchangeResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetExchangeResponse_SdkV2) {
 }
 
-func (c GetExchangeResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Exchange_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange")...)
+func (c GetExchangeResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetOptional()
+	attrs["exchange"] = attrs["exchange"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExchangeResponse.
@@ -2623,7 +2680,7 @@ func (o GetFileRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetFileResponse_SdkV2 struct {
-	FileInfo types.List `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.List `tfsdk:"file_info"`
 }
 
 func (newState *GetFileResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileResponse_SdkV2) {
@@ -2632,10 +2689,11 @@ func (newState *GetFileResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *GetFileResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetFileResponse_SdkV2) {
 }
 
-func (c GetFileResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "file_info")...)
+func (c GetFileResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_info"] = attrs["file_info"].SetOptional()
+	attrs["file_info"] = attrs["file_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFileResponse.
@@ -2701,7 +2759,7 @@ func (o *GetFileResponse_SdkV2) SetFileInfo(ctx context.Context, v FileInfo_SdkV
 
 type GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2 struct {
 	// version here is latest logical version of the dashboard template
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) {
@@ -2710,9 +2768,10 @@ func (newState *GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) SyncEf
 func (newState *GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) {
 }
 
-func (c GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GetLatestVersionProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLatestVersionProviderAnalyticsDashboardResponse.
@@ -2791,9 +2850,9 @@ func (o GetListingContentMetadataRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type GetListingContentMetadataResponse_SdkV2 struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	SharedDataObjects types.List `tfsdk:"shared_data_objects" tf:"optional"`
+	SharedDataObjects types.List `tfsdk:"shared_data_objects"`
 }
 
 func (newState *GetListingContentMetadataResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataResponse_SdkV2) {
@@ -2802,10 +2861,11 @@ func (newState *GetListingContentMetadataResponse_SdkV2) SyncEffectiveFieldsDuri
 func (newState *GetListingContentMetadataResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataResponse_SdkV2) {
 }
 
-func (c GetListingContentMetadataResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SharedDataObject_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "shared_data_objects")...)
+func (c GetListingContentMetadataResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["shared_data_objects"] = attrs["shared_data_objects"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingContentMetadataResponse.
@@ -2908,7 +2968,7 @@ func (o GetListingRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingResponse_SdkV2 struct {
-	Listing types.List `tfsdk:"listing" tf:"optional,object"`
+	Listing types.List `tfsdk:"listing"`
 }
 
 func (newState *GetListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingResponse_SdkV2) {
@@ -2917,10 +2977,11 @@ func (newState *GetListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *GetListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingResponse_SdkV2) {
 }
 
-func (c GetListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listing")...)
+func (c GetListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetOptional()
+	attrs["listing"] = attrs["listing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingResponse.
@@ -3025,9 +3086,9 @@ func (o GetListingsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingsResponse_SdkV2 struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *GetListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsResponse_SdkV2) {
@@ -3036,10 +3097,11 @@ func (newState *GetListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetListingsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingsResponse_SdkV2) {
 }
 
-func (c GetListingsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listings")...)
+func (c GetListingsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingsResponse.
@@ -3142,7 +3204,7 @@ func (o GetPersonalizationRequestRequest_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type GetPersonalizationRequestResponse_SdkV2 struct {
-	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
 }
 
 func (newState *GetPersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestResponse_SdkV2) {
@@ -3151,10 +3213,10 @@ func (newState *GetPersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuri
 func (newState *GetPersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestResponse_SdkV2) {
 }
 
-func (c GetPersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PersonalizationRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "personalization_requests")...)
+func (c GetPersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["personalization_requests"] = attrs["personalization_requests"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPersonalizationRequestResponse.
@@ -3255,7 +3317,7 @@ func (o GetProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetProviderResponse_SdkV2 struct {
-	Provider types.List `tfsdk:"provider" tf:"optional,object"`
+	Provider types.List `tfsdk:"provider"`
 }
 
 func (newState *GetProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderResponse_SdkV2) {
@@ -3264,10 +3326,11 @@ func (newState *GetProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *GetProviderResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetProviderResponse_SdkV2) {
 }
 
-func (c GetProviderResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "provider")...)
+func (c GetProviderResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetOptional()
+	attrs["provider"] = attrs["provider"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderResponse.
@@ -3332,7 +3395,7 @@ func (o *GetProviderResponse_SdkV2) SetProvider(ctx context.Context, v ProviderI
 }
 
 type Installation_SdkV2 struct {
-	Installation types.List `tfsdk:"installation" tf:"optional,object"`
+	Installation types.List `tfsdk:"installation"`
 }
 
 func (newState *Installation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Installation_SdkV2) {
@@ -3341,10 +3404,11 @@ func (newState *Installation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *Installation_SdkV2) SyncEffectiveFieldsDuringRead(existingState Installation_SdkV2) {
 }
 
-func (c Installation_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	InstallationDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "installation")...)
+func (c Installation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetOptional()
+	attrs["installation"] = attrs["installation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Installation.
@@ -3409,31 +3473,31 @@ func (o *Installation_SdkV2) SetInstallation(ctx context.Context, v Installation
 }
 
 type InstallationDetail_SdkV2 struct {
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 
-	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
+	ErrorMessage types.String `tfsdk:"error_message"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	InstalledOn types.Int64 `tfsdk:"installed_on" tf:"optional"`
+	InstalledOn types.Int64 `tfsdk:"installed_on"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	RepoName types.String `tfsdk:"repo_name" tf:"optional"`
+	RepoName types.String `tfsdk:"repo_name"`
 
-	RepoPath types.String `tfsdk:"repo_path" tf:"optional"`
+	RepoPath types.String `tfsdk:"repo_path"`
 
-	ShareName types.String `tfsdk:"share_name" tf:"optional"`
+	ShareName types.String `tfsdk:"share_name"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	TokenDetail types.List `tfsdk:"token_detail" tf:"optional,object"`
+	TokenDetail types.List `tfsdk:"token_detail"`
 
-	Tokens types.List `tfsdk:"tokens" tf:"optional"`
+	Tokens types.List `tfsdk:"tokens"`
 }
 
 func (newState *InstallationDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallationDetail_SdkV2) {
@@ -3442,11 +3506,23 @@ func (newState *InstallationDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *InstallationDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState InstallationDetail_SdkV2) {
 }
 
-func (c InstallationDetail_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_detail")...)
-	TokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tokens")...)
+func (c InstallationDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["installed_on"] = attrs["installed_on"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_name"] = attrs["repo_name"].SetOptional()
+	attrs["repo_path"] = attrs["repo_path"].SetOptional()
+	attrs["share_name"] = attrs["share_name"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["token_detail"] = attrs["token_detail"].SetOptional()
+	attrs["token_detail"] = attrs["token_detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tokens"] = attrs["tokens"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallationDetail.
@@ -3604,9 +3680,9 @@ func (o ListAllInstallationsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListAllInstallationsResponse_SdkV2 struct {
-	Installations types.List `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListAllInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsResponse_SdkV2) {
@@ -3615,10 +3691,11 @@ func (newState *ListAllInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *ListAllInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsResponse_SdkV2) {
 }
 
-func (c ListAllInstallationsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	InstallationDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "installations")...)
+func (c ListAllInstallationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installations"] = attrs["installations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllInstallationsResponse.
@@ -3725,9 +3802,9 @@ func (o ListAllPersonalizationRequestsRequest_SdkV2) Type(ctx context.Context) a
 }
 
 type ListAllPersonalizationRequestsResponse_SdkV2 struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
 }
 
 func (newState *ListAllPersonalizationRequestsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsResponse_SdkV2) {
@@ -3736,10 +3813,11 @@ func (newState *ListAllPersonalizationRequestsResponse_SdkV2) SyncEffectiveField
 func (newState *ListAllPersonalizationRequestsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsResponse_SdkV2) {
 }
 
-func (c ListAllPersonalizationRequestsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PersonalizationRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "personalization_requests")...)
+func (c ListAllPersonalizationRequestsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["personalization_requests"] = attrs["personalization_requests"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllPersonalizationRequestsResponse.
@@ -3850,9 +3928,9 @@ func (o ListExchangeFiltersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListExchangeFiltersResponse_SdkV2 struct {
-	Filters types.List `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangeFiltersResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersResponse_SdkV2) {
@@ -3861,10 +3939,11 @@ func (newState *ListExchangeFiltersResponse_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *ListExchangeFiltersResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersResponse_SdkV2) {
 }
 
-func (c ListExchangeFiltersResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filters")...)
+func (c ListExchangeFiltersResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangeFiltersResponse.
@@ -3975,9 +4054,9 @@ func (o ListExchangesForListingRequest_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type ListExchangesForListingResponse_SdkV2 struct {
-	ExchangeListing types.List `tfsdk:"exchange_listing" tf:"optional"`
+	ExchangeListing types.List `tfsdk:"exchange_listing"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangesForListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingResponse_SdkV2) {
@@ -3986,10 +4065,11 @@ func (newState *ListExchangesForListingResponse_SdkV2) SyncEffectiveFieldsDuring
 func (newState *ListExchangesForListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingResponse_SdkV2) {
 }
 
-func (c ListExchangesForListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeListing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange_listing")...)
+func (c ListExchangesForListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_listing"] = attrs["exchange_listing"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesForListingResponse.
@@ -4096,9 +4176,9 @@ func (o ListExchangesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListExchangesResponse_SdkV2 struct {
-	Exchanges types.List `tfsdk:"exchanges" tf:"optional"`
+	Exchanges types.List `tfsdk:"exchanges"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesResponse_SdkV2) {
@@ -4107,10 +4187,11 @@ func (newState *ListExchangesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ListExchangesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangesResponse_SdkV2) {
 }
 
-func (c ListExchangesResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Exchange_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchanges")...)
+func (c ListExchangesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchanges"] = attrs["exchanges"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesResponse.
@@ -4251,9 +4332,9 @@ func (o *ListFilesRequest_SdkV2) SetFileParent(ctx context.Context, v FileParent
 }
 
 type ListFilesResponse_SdkV2 struct {
-	FileInfos types.List `tfsdk:"file_infos" tf:"optional"`
+	FileInfos types.List `tfsdk:"file_infos"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListFilesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesResponse_SdkV2) {
@@ -4262,10 +4343,11 @@ func (newState *ListFilesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListFilesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFilesResponse_SdkV2) {
 }
 
-func (c ListFilesResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "file_infos")...)
+func (c ListFilesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_infos"] = attrs["file_infos"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFilesResponse.
@@ -4376,9 +4458,9 @@ func (o ListFulfillmentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListFulfillmentsResponse_SdkV2 struct {
-	Fulfillments types.List `tfsdk:"fulfillments" tf:"optional"`
+	Fulfillments types.List `tfsdk:"fulfillments"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListFulfillmentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsResponse_SdkV2) {
@@ -4387,10 +4469,11 @@ func (newState *ListFulfillmentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *ListFulfillmentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsResponse_SdkV2) {
 }
 
-func (c ListFulfillmentsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ListingFulfillment_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "fulfillments")...)
+func (c ListFulfillmentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fulfillments"] = attrs["fulfillments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFulfillmentsResponse.
@@ -4501,9 +4584,9 @@ func (o ListInstallationsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListInstallationsResponse_SdkV2 struct {
-	Installations types.List `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsResponse_SdkV2) {
@@ -4512,10 +4595,11 @@ func (newState *ListInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *ListInstallationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListInstallationsResponse_SdkV2) {
 }
 
-func (c ListInstallationsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	InstallationDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "installations")...)
+func (c ListInstallationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installations"] = attrs["installations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstallationsResponse.
@@ -4626,9 +4710,9 @@ func (o ListListingsForExchangeRequest_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type ListListingsForExchangeResponse_SdkV2 struct {
-	ExchangeListings types.List `tfsdk:"exchange_listings" tf:"optional"`
+	ExchangeListings types.List `tfsdk:"exchange_listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListListingsForExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeResponse_SdkV2) {
@@ -4637,10 +4721,11 @@ func (newState *ListListingsForExchangeResponse_SdkV2) SyncEffectiveFieldsDuring
 func (newState *ListListingsForExchangeResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeResponse_SdkV2) {
 }
 
-func (c ListListingsForExchangeResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeListing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange_listings")...)
+func (c ListListingsForExchangeResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_listings"] = attrs["exchange_listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsForExchangeResponse.
@@ -4893,9 +4978,9 @@ func (o *ListListingsRequest_SdkV2) SetTags(ctx context.Context, v []ListingTag_
 }
 
 type ListListingsResponse_SdkV2 struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsResponse_SdkV2) {
@@ -4904,10 +4989,11 @@ func (newState *ListListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ListListingsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListListingsResponse_SdkV2) {
 }
 
-func (c ListListingsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listings")...)
+func (c ListListingsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsResponse.
@@ -4975,11 +5061,11 @@ func (o *ListListingsResponse_SdkV2) SetListings(ctx context.Context, v []Listin
 
 type ListProviderAnalyticsDashboardResponse_SdkV2 struct {
 	// dashboard_id will be used to open Lakeview dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *ListProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderAnalyticsDashboardResponse_SdkV2) {
@@ -4988,11 +5074,12 @@ func (newState *ListProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveField
 func (newState *ListProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProviderAnalyticsDashboardResponse_SdkV2) {
 }
 
-func (c ListProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
-	cs.SetRequired(append(path, "id")...)
+func (c ListProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProviderAnalyticsDashboardResponse.
@@ -5075,9 +5162,9 @@ func (o ListProvidersRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListProvidersResponse_SdkV2 struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Providers types.List `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers"`
 }
 
 func (newState *ListProvidersResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse_SdkV2) {
@@ -5086,10 +5173,11 @@ func (newState *ListProvidersResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ListProvidersResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse_SdkV2) {
 }
 
-func (c ListProvidersResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "providers")...)
+func (c ListProvidersResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["providers"] = attrs["providers"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersResponse.
@@ -5156,11 +5244,11 @@ func (o *ListProvidersResponse_SdkV2) SetProviders(ctx context.Context, v []Prov
 }
 
 type Listing_SdkV2 struct {
-	Detail types.List `tfsdk:"detail" tf:"optional,object"`
+	Detail types.List `tfsdk:"detail"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Next Number: 26
-	Summary types.List `tfsdk:"summary" tf:"object"`
+	Summary types.List `tfsdk:"summary"`
 }
 
 func (newState *Listing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing_SdkV2) {
@@ -5169,12 +5257,14 @@ func (newState *Listing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan List
 func (newState *Listing_SdkV2) SyncEffectiveFieldsDuringRead(existingState Listing_SdkV2) {
 }
 
-func (c Listing_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ListingDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "detail")...)
-	cs.SetRequired(append(path, "summary")...)
-	ListingSummary_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "summary")...)
+func (c Listing_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detail"] = attrs["detail"].SetOptional()
+	attrs["detail"] = attrs["detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["summary"] = attrs["summary"].SetRequired()
+	attrs["summary"] = attrs["summary"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Listing.
@@ -5274,40 +5364,40 @@ func (o *Listing_SdkV2) SetSummary(ctx context.Context, v ListingSummary_SdkV2) 
 type ListingDetail_SdkV2 struct {
 	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
 	// NOTEBOOK
-	Assets types.List `tfsdk:"assets" tf:"optional"`
+	Assets types.List `tfsdk:"assets"`
 	// The ending date timestamp for when the data spans
-	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end" tf:"optional"`
+	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end"`
 	// The starting date timestamp for when the data spans
-	CollectionDateStart types.Int64 `tfsdk:"collection_date_start" tf:"optional"`
+	CollectionDateStart types.Int64 `tfsdk:"collection_date_start"`
 	// Smallest unit of time in the dataset
-	CollectionGranularity types.List `tfsdk:"collection_granularity" tf:"optional,object"`
+	CollectionGranularity types.List `tfsdk:"collection_granularity"`
 	// Whether the dataset is free or paid
-	Cost types.String `tfsdk:"cost" tf:"optional"`
+	Cost types.String `tfsdk:"cost"`
 	// Where/how the data is sourced
-	DataSource types.String `tfsdk:"data_source" tf:"optional"`
+	DataSource types.String `tfsdk:"data_source"`
 
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	DocumentationLink types.String `tfsdk:"documentation_link" tf:"optional"`
+	DocumentationLink types.String `tfsdk:"documentation_link"`
 
-	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos" tf:"optional"`
+	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos"`
 
-	FileIds types.List `tfsdk:"file_ids" tf:"optional"`
+	FileIds types.List `tfsdk:"file_ids"`
 	// Which geo region the listing data is collected from
-	GeographicalCoverage types.String `tfsdk:"geographical_coverage" tf:"optional"`
+	GeographicalCoverage types.String `tfsdk:"geographical_coverage"`
 	// ID 20, 21 removed don't use License of the data asset - Required for
 	// listings with model based assets
-	License types.String `tfsdk:"license" tf:"optional"`
+	License types.String `tfsdk:"license"`
 	// What the pricing model is (e.g. paid, subscription, paid upfront); should
 	// only be present if cost is paid TODO: Not used yet, should deprecate if
 	// we will never use it
-	PricingModel types.String `tfsdk:"pricing_model" tf:"optional"`
+	PricingModel types.String `tfsdk:"pricing_model"`
 
-	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link" tf:"optional"`
+	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// size of the dataset in GB
-	Size types.Float64 `tfsdk:"size" tf:"optional"`
+	Size types.Float64 `tfsdk:"size"`
 
-	SupportLink types.String `tfsdk:"support_link" tf:"optional"`
+	SupportLink types.String `tfsdk:"support_link"`
 	// Listing tags - Simple key value pair to annotate listings. When should I
 	// use tags vs dedicated fields? Using tags avoids the need to add new
 	// columns in the database for new annotations. However, this should be used
@@ -5315,11 +5405,11 @@ type ListingDetail_SdkV2 struct {
 	// the field is optional and won't need to have NOT NULL integrity check 2.
 	// The value is fairly fixed, static and low cardinality (eg. enums). 3. The
 	// value won't be used in filters or joins with other tables.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 
-	TermsOfService types.String `tfsdk:"terms_of_service" tf:"optional"`
+	TermsOfService types.String `tfsdk:"terms_of_service"`
 	// How often data is updated
-	UpdateFrequency types.List `tfsdk:"update_frequency" tf:"optional,object"`
+	UpdateFrequency types.List `tfsdk:"update_frequency"`
 }
 
 func (newState *ListingDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingDetail_SdkV2) {
@@ -5328,13 +5418,30 @@ func (newState *ListingDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListingDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListingDetail_SdkV2) {
 }
 
-func (c ListingDetail_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DataRefreshInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "collection_granularity")...)
-	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "embedded_notebook_file_infos")...)
-	ListingTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
-	DataRefreshInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "update_frequency")...)
+func (c ListingDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assets"] = attrs["assets"].SetOptional()
+	attrs["collection_date_end"] = attrs["collection_date_end"].SetOptional()
+	attrs["collection_date_start"] = attrs["collection_date_start"].SetOptional()
+	attrs["collection_granularity"] = attrs["collection_granularity"].SetOptional()
+	attrs["collection_granularity"] = attrs["collection_granularity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["cost"] = attrs["cost"].SetOptional()
+	attrs["data_source"] = attrs["data_source"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["documentation_link"] = attrs["documentation_link"].SetOptional()
+	attrs["embedded_notebook_file_infos"] = attrs["embedded_notebook_file_infos"].SetOptional()
+	attrs["file_ids"] = attrs["file_ids"].SetOptional()
+	attrs["geographical_coverage"] = attrs["geographical_coverage"].SetOptional()
+	attrs["license"] = attrs["license"].SetOptional()
+	attrs["pricing_model"] = attrs["pricing_model"].SetOptional()
+	attrs["privacy_policy_link"] = attrs["privacy_policy_link"].SetOptional()
+	attrs["size"] = attrs["size"].SetOptional()
+	attrs["support_link"] = attrs["support_link"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["terms_of_service"] = attrs["terms_of_service"].SetOptional()
+	attrs["update_frequency"] = attrs["update_frequency"].SetOptional()
+	attrs["update_frequency"] = attrs["update_frequency"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingDetail.
@@ -5580,15 +5687,15 @@ func (o *ListingDetail_SdkV2) SetUpdateFrequency(ctx context.Context, v DataRefr
 }
 
 type ListingFulfillment_SdkV2 struct {
-	FulfillmentType types.String `tfsdk:"fulfillment_type" tf:"optional"`
+	FulfillmentType types.String `tfsdk:"fulfillment_type"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:""`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	RepoInfo types.List `tfsdk:"repo_info" tf:"optional,object"`
+	RepoInfo types.List `tfsdk:"repo_info"`
 
-	ShareInfo types.List `tfsdk:"share_info" tf:"optional,object"`
+	ShareInfo types.List `tfsdk:"share_info"`
 }
 
 func (newState *ListingFulfillment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingFulfillment_SdkV2) {
@@ -5597,12 +5704,16 @@ func (newState *ListingFulfillment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListingFulfillment_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListingFulfillment_SdkV2) {
 }
 
-func (c ListingFulfillment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "listing_id")...)
-	RepoInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "repo_info")...)
-	ShareInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "share_info")...)
+func (c ListingFulfillment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fulfillment_type"] = attrs["fulfillment_type"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_info"] = attrs["repo_info"].SetOptional()
+	attrs["repo_info"] = attrs["repo_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["share_info"] = attrs["share_info"].SetOptional()
+	attrs["share_info"] = attrs["share_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingFulfillment.
@@ -5704,7 +5815,7 @@ func (o *ListingFulfillment_SdkV2) SetShareInfo(ctx context.Context, v ShareInfo
 }
 
 type ListingSetting_SdkV2 struct {
-	Visibility types.String `tfsdk:"visibility" tf:"optional"`
+	Visibility types.String `tfsdk:"visibility"`
 }
 
 func (newState *ListingSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSetting_SdkV2) {
@@ -5713,9 +5824,10 @@ func (newState *ListingSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListingSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListingSetting_SdkV2) {
 }
 
-func (c ListingSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ListingSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["visibility"] = attrs["visibility"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingSetting.
@@ -5751,44 +5863,44 @@ func (o ListingSetting_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Next Number: 26
 type ListingSummary_SdkV2 struct {
-	Categories types.List `tfsdk:"categories" tf:"optional"`
+	Categories types.List `tfsdk:"categories"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	CreatedById types.Int64 `tfsdk:"created_by_id" tf:"optional"`
+	CreatedById types.Int64 `tfsdk:"created_by_id"`
 
-	ExchangeIds types.List `tfsdk:"exchange_ids" tf:"optional"`
+	ExchangeIds types.List `tfsdk:"exchange_ids"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
-	GitRepo types.List `tfsdk:"git_repo" tf:"optional,object"`
+	GitRepo types.List `tfsdk:"git_repo"`
 
-	ListingType types.String `tfsdk:"listingType" tf:""`
+	ListingType types.String `tfsdk:"listingType"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
+	ProviderId types.String `tfsdk:"provider_id"`
 
-	ProviderRegion types.List `tfsdk:"provider_region" tf:"optional,object"`
+	ProviderRegion types.List `tfsdk:"provider_region"`
 
-	PublishedAt types.Int64 `tfsdk:"published_at" tf:"optional"`
+	PublishedAt types.Int64 `tfsdk:"published_at"`
 
-	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
+	PublishedBy types.String `tfsdk:"published_by"`
 
-	Setting types.List `tfsdk:"setting" tf:"optional,object"`
+	Setting types.List `tfsdk:"setting"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.List `tfsdk:"share"`
 	// Enums
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	Subtitle types.String `tfsdk:"subtitle" tf:"optional"`
+	Subtitle types.String `tfsdk:"subtitle"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 
-	UpdatedById types.Int64 `tfsdk:"updated_by_id" tf:"optional"`
+	UpdatedById types.Int64 `tfsdk:"updated_by_id"`
 }
 
 func (newState *ListingSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSummary_SdkV2) {
@@ -5797,15 +5909,32 @@ func (newState *ListingSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ListingSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListingSummary_SdkV2) {
 }
 
-func (c ListingSummary_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "git_repo")...)
-	cs.SetRequired(append(path, "listingType")...)
-	cs.SetRequired(append(path, "name")...)
-	RegionInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "provider_region")...)
-	ListingSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
-	ShareInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "share")...)
+func (c ListingSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["created_by_id"] = attrs["created_by_id"].SetOptional()
+	attrs["exchange_ids"] = attrs["exchange_ids"].SetOptional()
+	attrs["git_repo"] = attrs["git_repo"].SetOptional()
+	attrs["git_repo"] = attrs["git_repo"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["listingType"] = attrs["listingType"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["provider_id"] = attrs["provider_id"].SetOptional()
+	attrs["provider_region"] = attrs["provider_region"].SetOptional()
+	attrs["provider_region"] = attrs["provider_region"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["published_at"] = attrs["published_at"].SetOptional()
+	attrs["published_by"] = attrs["published_by"].SetOptional()
+	attrs["setting"] = attrs["setting"].SetOptional()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["subtitle"] = attrs["subtitle"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+	attrs["updated_by_id"] = attrs["updated_by_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingSummary.
@@ -6052,10 +6181,10 @@ func (o *ListingSummary_SdkV2) SetShare(ctx context.Context, v ShareInfo_SdkV2) 
 
 type ListingTag_SdkV2 struct {
 	// Tag name (enum)
-	TagName types.String `tfsdk:"tag_name" tf:"optional"`
+	TagName types.String `tfsdk:"tag_name"`
 	// String representation of the tag value. Values should be string literals
 	// (no complex types)
-	TagValues types.List `tfsdk:"tag_values" tf:"optional"`
+	TagValues types.List `tfsdk:"tag_values"`
 }
 
 func (newState *ListingTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingTag_SdkV2) {
@@ -6064,9 +6193,11 @@ func (newState *ListingTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListingTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListingTag_SdkV2) {
 }
 
-func (c ListingTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ListingTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_name"] = attrs["tag_name"].SetOptional()
+	attrs["tag_values"] = attrs["tag_values"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingTag.
@@ -6133,38 +6264,38 @@ func (o *ListingTag_SdkV2) SetTagValues(ctx context.Context, v []types.String) {
 }
 
 type PersonalizationRequest_SdkV2 struct {
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	ConsumerRegion types.List `tfsdk:"consumer_region" tf:"object"`
+	ConsumerRegion types.List `tfsdk:"consumer_region"`
 	// contact info for the consumer requesting data or performing a listing
 	// installation
-	ContactInfo types.List `tfsdk:"contact_info" tf:"optional,object"`
+	ContactInfo types.List `tfsdk:"contact_info"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	IntendedUse types.String `tfsdk:"intended_use" tf:"optional"`
+	IntendedUse types.String `tfsdk:"intended_use"`
 
-	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse" tf:"optional"`
+	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 
-	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
+	MetastoreId types.String `tfsdk:"metastore_id"`
 
-	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
+	ProviderId types.String `tfsdk:"provider_id"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.List `tfsdk:"share"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
 func (newState *PersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalizationRequest_SdkV2) {
@@ -6173,13 +6304,28 @@ func (newState *PersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PersonalizationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PersonalizationRequest_SdkV2) {
 }
 
-func (c PersonalizationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "consumer_region")...)
-	RegionInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "consumer_region")...)
-	ContactInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "contact_info")...)
-	ShareInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "share")...)
+func (c PersonalizationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["consumer_region"] = attrs["consumer_region"].SetRequired()
+	attrs["consumer_region"] = attrs["consumer_region"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["contact_info"] = attrs["contact_info"].SetOptional()
+	attrs["contact_info"] = attrs["contact_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["intended_use"] = attrs["intended_use"].SetOptional()
+	attrs["is_from_lighthouse"] = attrs["is_from_lighthouse"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
+	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["provider_id"] = attrs["provider_id"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PersonalizationRequest.
@@ -6332,7 +6478,7 @@ func (o *PersonalizationRequest_SdkV2) SetShare(ctx context.Context, v ShareInfo
 }
 
 type ProviderAnalyticsDashboard_SdkV2 struct {
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *ProviderAnalyticsDashboard_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderAnalyticsDashboard_SdkV2) {
@@ -6341,10 +6487,10 @@ func (newState *ProviderAnalyticsDashboard_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *ProviderAnalyticsDashboard_SdkV2) SyncEffectiveFieldsDuringRead(existingState ProviderAnalyticsDashboard_SdkV2) {
 }
 
-func (c ProviderAnalyticsDashboard_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
+func (c ProviderAnalyticsDashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderAnalyticsDashboard.
@@ -6379,33 +6525,33 @@ func (o ProviderAnalyticsDashboard_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ProviderInfo_SdkV2 struct {
-	BusinessContactEmail types.String `tfsdk:"business_contact_email" tf:""`
+	BusinessContactEmail types.String `tfsdk:"business_contact_email"`
 
-	CompanyWebsiteLink types.String `tfsdk:"company_website_link" tf:"optional"`
+	CompanyWebsiteLink types.String `tfsdk:"company_website_link"`
 
-	DarkModeIconFileId types.String `tfsdk:"dark_mode_icon_file_id" tf:"optional"`
+	DarkModeIconFileId types.String `tfsdk:"dark_mode_icon_file_id"`
 
-	DarkModeIconFilePath types.String `tfsdk:"dark_mode_icon_file_path" tf:"optional"`
+	DarkModeIconFilePath types.String `tfsdk:"dark_mode_icon_file_path"`
 
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	IconFileId types.String `tfsdk:"icon_file_id" tf:"optional"`
+	IconFileId types.String `tfsdk:"icon_file_id"`
 
-	IconFilePath types.String `tfsdk:"icon_file_path" tf:"optional"`
+	IconFilePath types.String `tfsdk:"icon_file_path"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// is_featured is accessible by consumers only
-	IsFeatured types.Bool `tfsdk:"is_featured" tf:"optional"`
+	IsFeatured types.Bool `tfsdk:"is_featured"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link" tf:""`
+	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// published_by is only applicable to data aggregators (e.g. Crux)
-	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
+	PublishedBy types.String `tfsdk:"published_by"`
 
-	SupportContactEmail types.String `tfsdk:"support_contact_email" tf:"optional"`
+	SupportContactEmail types.String `tfsdk:"support_contact_email"`
 
-	TermOfServiceLink types.String `tfsdk:"term_of_service_link" tf:""`
+	TermOfServiceLink types.String `tfsdk:"term_of_service_link"`
 }
 
 func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo_SdkV2) {
@@ -6414,13 +6560,23 @@ func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ProviderInfo_SdkV2) {
 }
 
-func (c ProviderInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "business_contact_email")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "privacy_policy_link")...)
-	cs.SetRequired(append(path, "term_of_service_link")...)
+func (c ProviderInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["business_contact_email"] = attrs["business_contact_email"].SetRequired()
+	attrs["company_website_link"] = attrs["company_website_link"].SetOptional()
+	attrs["dark_mode_icon_file_id"] = attrs["dark_mode_icon_file_id"].SetOptional()
+	attrs["dark_mode_icon_file_path"] = attrs["dark_mode_icon_file_path"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["icon_file_id"] = attrs["icon_file_id"].SetOptional()
+	attrs["icon_file_path"] = attrs["icon_file_path"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_featured"] = attrs["is_featured"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["privacy_policy_link"] = attrs["privacy_policy_link"].SetRequired()
+	attrs["published_by"] = attrs["published_by"].SetOptional()
+	attrs["support_contact_email"] = attrs["support_contact_email"].SetOptional()
+	attrs["term_of_service_link"] = attrs["term_of_service_link"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderInfo.
@@ -6481,9 +6637,9 @@ func (o ProviderInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RegionInfo_SdkV2 struct {
-	Cloud types.String `tfsdk:"cloud" tf:"optional"`
+	Cloud types.String `tfsdk:"cloud"`
 
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *RegionInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegionInfo_SdkV2) {
@@ -6492,9 +6648,11 @@ func (newState *RegionInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RegionInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegionInfo_SdkV2) {
 }
 
-func (c RegionInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RegionInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegionInfo.
@@ -6575,9 +6733,9 @@ func (newState *RemoveExchangeForListingResponse_SdkV2) SyncEffectiveFieldsDurin
 func (newState *RemoveExchangeForListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingResponse_SdkV2) {
 }
 
-func (c RemoveExchangeForListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RemoveExchangeForListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveExchangeForListingResponse.
@@ -6609,7 +6767,7 @@ func (o RemoveExchangeForListingResponse_SdkV2) Type(ctx context.Context) attr.T
 
 type RepoInfo_SdkV2 struct {
 	// the git repo url e.g. https://github.com/databrickslabs/dolly.git
-	GitRepoUrl types.String `tfsdk:"git_repo_url" tf:""`
+	GitRepoUrl types.String `tfsdk:"git_repo_url"`
 }
 
 func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo_SdkV2) {
@@ -6618,10 +6776,10 @@ func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rep
 func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoInfo_SdkV2) {
 }
 
-func (c RepoInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "git_repo_url")...)
+func (c RepoInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_repo_url"] = attrs["git_repo_url"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoInfo.
@@ -6657,11 +6815,11 @@ func (o RepoInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RepoInstallation_SdkV2 struct {
 	// the user-specified repo name for their installed git repo listing
-	RepoName types.String `tfsdk:"repo_name" tf:""`
+	RepoName types.String `tfsdk:"repo_name"`
 	// refers to the full url file path that navigates the user to the repo's
 	// entrypoint (e.g. a README.md file, or the repo file view in the unified
 	// UI) should just be a relative path
-	RepoPath types.String `tfsdk:"repo_path" tf:""`
+	RepoPath types.String `tfsdk:"repo_path"`
 }
 
 func (newState *RepoInstallation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInstallation_SdkV2) {
@@ -6670,11 +6828,11 @@ func (newState *RepoInstallation_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *RepoInstallation_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoInstallation_SdkV2) {
 }
 
-func (c RepoInstallation_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "repo_name")...)
-	cs.SetRequired(append(path, "repo_path")...)
+func (c RepoInstallation_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_name"] = attrs["repo_name"].SetRequired()
+	attrs["repo_path"] = attrs["repo_path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoInstallation.
@@ -6864,9 +7022,9 @@ func (o *SearchListingsRequest_SdkV2) SetProviderIds(ctx context.Context, v []ty
 }
 
 type SearchListingsResponse_SdkV2 struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *SearchListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsResponse_SdkV2) {
@@ -6875,10 +7033,11 @@ func (newState *SearchListingsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *SearchListingsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchListingsResponse_SdkV2) {
 }
 
-func (c SearchListingsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listings")...)
+func (c SearchListingsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchListingsResponse.
@@ -6945,9 +7104,9 @@ func (o *SearchListingsResponse_SdkV2) SetListings(ctx context.Context, v []List
 }
 
 type ShareInfo_SdkV2 struct {
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	Type_ types.String `tfsdk:"type" tf:""`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo_SdkV2) {
@@ -6956,11 +7115,11 @@ func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sh
 func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ShareInfo_SdkV2) {
 }
 
-func (c ShareInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "type")...)
+func (c ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["type"] = attrs["type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ShareInfo.
@@ -6999,9 +7158,9 @@ func (o ShareInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type SharedDataObject_SdkV2 struct {
 	// The type of the data object. Could be one of: TABLE, SCHEMA,
 	// NOTEBOOK_FILE, MODEL, VOLUME
-	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
+	DataObjectType types.String `tfsdk:"data_object_type"`
 	// Name of the shared object
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject_SdkV2) {
@@ -7010,9 +7169,11 @@ func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharedDataObject_SdkV2) {
 }
 
-func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_object_type"] = attrs["data_object_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharedDataObject.
@@ -7049,15 +7210,15 @@ func (o SharedDataObject_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TokenDetail_SdkV2 struct {
-	BearerToken types.String `tfsdk:"bearerToken" tf:"optional"`
+	BearerToken types.String `tfsdk:"bearerToken"`
 
-	Endpoint types.String `tfsdk:"endpoint" tf:"optional"`
+	Endpoint types.String `tfsdk:"endpoint"`
 
-	ExpirationTime types.String `tfsdk:"expirationTime" tf:"optional"`
+	ExpirationTime types.String `tfsdk:"expirationTime"`
 	// These field names must follow the delta sharing protocol. Original
 	// message: RetrieveToken.Response in
 	// managed-catalog/api/messages/recipient.proto
-	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion" tf:"optional"`
+	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion"`
 }
 
 func (newState *TokenDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenDetail_SdkV2) {
@@ -7066,9 +7227,13 @@ func (newState *TokenDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TokenDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenDetail_SdkV2) {
 }
 
-func (c TokenDetail_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bearerToken"] = attrs["bearerToken"].SetOptional()
+	attrs["endpoint"] = attrs["endpoint"].SetOptional()
+	attrs["expirationTime"] = attrs["expirationTime"].SetOptional()
+	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenDetail.
@@ -7111,19 +7276,19 @@ func (o TokenDetail_SdkV2) Type(ctx context.Context) attr.Type {
 type TokenInfo_SdkV2 struct {
 	// Full activation url to retrieve the access token. It will be empty if the
 	// token is already retrieved.
-	ActivationUrl types.String `tfsdk:"activation_url" tf:"optional"`
+	ActivationUrl types.String `tfsdk:"activation_url"`
 	// Time at which this Recipient Token was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of Recipient Token creator.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 	// Expiration timestamp of the token in epoch milliseconds.
-	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 	// Unique id of the Recipient Token.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Time at which this Recipient Token was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of Recipient Token updater.
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo_SdkV2) {
@@ -7132,9 +7297,16 @@ func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan To
 func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenInfo_SdkV2) {
 }
 
-func (c TokenInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activation_url"] = attrs["activation_url"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenInfo.
@@ -7181,7 +7353,7 @@ func (o TokenInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateExchangeFilterRequest_SdkV2 struct {
-	Filter types.List `tfsdk:"filter" tf:"object"`
+	Filter types.List `tfsdk:"filter"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -7192,12 +7364,12 @@ func (newState *UpdateExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *UpdateExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterRequest_SdkV2) {
 }
 
-func (c UpdateExchangeFilterRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "filter")...)
-	ExchangeFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateExchangeFilterRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetRequired()
+	attrs["filter"] = attrs["filter"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeFilterRequest.
@@ -7264,7 +7436,7 @@ func (o *UpdateExchangeFilterRequest_SdkV2) SetFilter(ctx context.Context, v Exc
 }
 
 type UpdateExchangeFilterResponse_SdkV2 struct {
-	Filter types.List `tfsdk:"filter" tf:"optional,object"`
+	Filter types.List `tfsdk:"filter"`
 }
 
 func (newState *UpdateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeFilterResponse_SdkV2) {
@@ -7273,10 +7445,11 @@ func (newState *UpdateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *UpdateExchangeFilterResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterResponse_SdkV2) {
 }
 
-func (c UpdateExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeFilter_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "filter")...)
+func (c UpdateExchangeFilterResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["filter"] = attrs["filter"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeFilterResponse.
@@ -7341,7 +7514,7 @@ func (o *UpdateExchangeFilterResponse_SdkV2) SetFilter(ctx context.Context, v Ex
 }
 
 type UpdateExchangeRequest_SdkV2 struct {
-	Exchange types.List `tfsdk:"exchange" tf:"object"`
+	Exchange types.List `tfsdk:"exchange"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -7352,12 +7525,12 @@ func (newState *UpdateExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *UpdateExchangeRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeRequest_SdkV2) {
 }
 
-func (c UpdateExchangeRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "exchange")...)
-	Exchange_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange")...)
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateExchangeRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetRequired()
+	attrs["exchange"] = attrs["exchange"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeRequest.
@@ -7424,7 +7597,7 @@ func (o *UpdateExchangeRequest_SdkV2) SetExchange(ctx context.Context, v Exchang
 }
 
 type UpdateExchangeResponse_SdkV2 struct {
-	Exchange types.List `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.List `tfsdk:"exchange"`
 }
 
 func (newState *UpdateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeResponse_SdkV2) {
@@ -7433,10 +7606,11 @@ func (newState *UpdateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *UpdateExchangeResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeResponse_SdkV2) {
 }
 
-func (c UpdateExchangeResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Exchange_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "exchange")...)
+func (c UpdateExchangeResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetOptional()
+	attrs["exchange"] = attrs["exchange"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeResponse.
@@ -7501,13 +7675,13 @@ func (o *UpdateExchangeResponse_SdkV2) SetExchange(ctx context.Context, v Exchan
 }
 
 type UpdateInstallationRequest_SdkV2 struct {
-	Installation types.List `tfsdk:"installation" tf:"object"`
+	Installation types.List `tfsdk:"installation"`
 
 	InstallationId types.String `tfsdk:"-"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RotateToken types.Bool `tfsdk:"rotate_token" tf:"optional"`
+	RotateToken types.Bool `tfsdk:"rotate_token"`
 }
 
 func (newState *UpdateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationRequest_SdkV2) {
@@ -7516,13 +7690,14 @@ func (newState *UpdateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *UpdateInstallationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationRequest_SdkV2) {
 }
 
-func (c UpdateInstallationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "installation")...)
-	InstallationDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "installation")...)
-	cs.SetRequired(append(path, "installation_id")...)
-	cs.SetRequired(append(path, "listing_id")...)
+func (c UpdateInstallationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetRequired()
+	attrs["installation"] = attrs["installation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["installation_id"] = attrs["installation_id"].SetRequired()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["rotate_token"] = attrs["rotate_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInstallationRequest.
@@ -7593,7 +7768,7 @@ func (o *UpdateInstallationRequest_SdkV2) SetInstallation(ctx context.Context, v
 }
 
 type UpdateInstallationResponse_SdkV2 struct {
-	Installation types.List `tfsdk:"installation" tf:"optional,object"`
+	Installation types.List `tfsdk:"installation"`
 }
 
 func (newState *UpdateInstallationResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationResponse_SdkV2) {
@@ -7602,10 +7777,11 @@ func (newState *UpdateInstallationResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *UpdateInstallationResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationResponse_SdkV2) {
 }
 
-func (c UpdateInstallationResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	InstallationDetail_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "installation")...)
+func (c UpdateInstallationResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetOptional()
+	attrs["installation"] = attrs["installation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInstallationResponse.
@@ -7672,7 +7848,7 @@ func (o *UpdateInstallationResponse_SdkV2) SetInstallation(ctx context.Context, 
 type UpdateListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 
-	Listing types.List `tfsdk:"listing" tf:"object"`
+	Listing types.List `tfsdk:"listing"`
 }
 
 func (newState *UpdateListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingRequest_SdkV2) {
@@ -7681,12 +7857,12 @@ func (newState *UpdateListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UpdateListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateListingRequest_SdkV2) {
 }
 
-func (c UpdateListingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "listing")...)
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listing")...)
+func (c UpdateListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["listing"] = attrs["listing"].SetRequired()
+	attrs["listing"] = attrs["listing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateListingRequest.
@@ -7753,7 +7929,7 @@ func (o *UpdateListingRequest_SdkV2) SetListing(ctx context.Context, v Listing_S
 }
 
 type UpdateListingResponse_SdkV2 struct {
-	Listing types.List `tfsdk:"listing" tf:"optional,object"`
+	Listing types.List `tfsdk:"listing"`
 }
 
 func (newState *UpdateListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingResponse_SdkV2) {
@@ -7762,10 +7938,11 @@ func (newState *UpdateListingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *UpdateListingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateListingResponse_SdkV2) {
 }
 
-func (c UpdateListingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Listing_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "listing")...)
+func (c UpdateListingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetOptional()
+	attrs["listing"] = attrs["listing"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateListingResponse.
@@ -7832,13 +8009,13 @@ func (o *UpdateListingResponse_SdkV2) SetListing(ctx context.Context, v Listing_
 type UpdatePersonalizationRequestRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 
-	Reason types.String `tfsdk:"reason" tf:"optional"`
+	Reason types.String `tfsdk:"reason"`
 
 	RequestId types.String `tfsdk:"-"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.List `tfsdk:"share"`
 
-	Status types.String `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *UpdatePersonalizationRequestRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestRequest_SdkV2) {
@@ -7847,13 +8024,15 @@ func (newState *UpdatePersonalizationRequestRequest_SdkV2) SyncEffectiveFieldsDu
 func (newState *UpdatePersonalizationRequestRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestRequest_SdkV2) {
 }
 
-func (c UpdatePersonalizationRequestRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "listing_id")...)
-	cs.SetRequired(append(path, "request_id")...)
-	ShareInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "share")...)
-	cs.SetRequired(append(path, "status")...)
+func (c UpdatePersonalizationRequestRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["reason"] = attrs["reason"].SetOptional()
+	attrs["request_id"] = attrs["request_id"].SetRequired()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalizationRequestRequest.
@@ -7926,7 +8105,7 @@ func (o *UpdatePersonalizationRequestRequest_SdkV2) SetShare(ctx context.Context
 }
 
 type UpdatePersonalizationRequestResponse_SdkV2 struct {
-	Request types.List `tfsdk:"request" tf:"optional,object"`
+	Request types.List `tfsdk:"request"`
 }
 
 func (newState *UpdatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestResponse_SdkV2) {
@@ -7935,10 +8114,11 @@ func (newState *UpdatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *UpdatePersonalizationRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestResponse_SdkV2) {
 }
 
-func (c UpdatePersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PersonalizationRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "request")...)
+func (c UpdatePersonalizationRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request"] = attrs["request"].SetOptional()
+	attrs["request"] = attrs["request"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalizationRequestResponse.
@@ -8008,7 +8188,7 @@ type UpdateProviderAnalyticsDashboardRequest_SdkV2 struct {
 	// this is the version of the dashboard template we want to update our user
 	// to current expectation is that it should be equal to latest version of
 	// the dashboard template
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *UpdateProviderAnalyticsDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardRequest_SdkV2) {
@@ -8017,10 +8197,11 @@ func (newState *UpdateProviderAnalyticsDashboardRequest_SdkV2) SyncEffectiveFiel
 func (newState *UpdateProviderAnalyticsDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardRequest_SdkV2) {
 }
 
-func (c UpdateProviderAnalyticsDashboardRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateProviderAnalyticsDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderAnalyticsDashboardRequest.
@@ -8058,11 +8239,11 @@ func (o UpdateProviderAnalyticsDashboardRequest_SdkV2) Type(ctx context.Context)
 
 type UpdateProviderAnalyticsDashboardResponse_SdkV2 struct {
 	// this is newly created Lakeview dashboard for the user
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// id & version should be the same as the request
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *UpdateProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardResponse_SdkV2) {
@@ -8071,11 +8252,12 @@ func (newState *UpdateProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFie
 func (newState *UpdateProviderAnalyticsDashboardResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardResponse_SdkV2) {
 }
 
-func (c UpdateProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateProviderAnalyticsDashboardResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderAnalyticsDashboardResponse.
@@ -8116,7 +8298,7 @@ func (o UpdateProviderAnalyticsDashboardResponse_SdkV2) Type(ctx context.Context
 type UpdateProviderRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 
-	Provider types.List `tfsdk:"provider" tf:"object"`
+	Provider types.List `tfsdk:"provider"`
 }
 
 func (newState *UpdateProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderRequest_SdkV2) {
@@ -8125,12 +8307,12 @@ func (newState *UpdateProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *UpdateProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProviderRequest_SdkV2) {
 }
 
-func (c UpdateProviderRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "provider")...)
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "provider")...)
+func (c UpdateProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["provider"] = attrs["provider"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderRequest.
@@ -8197,7 +8379,7 @@ func (o *UpdateProviderRequest_SdkV2) SetProvider(ctx context.Context, v Provide
 }
 
 type UpdateProviderResponse_SdkV2 struct {
-	Provider types.List `tfsdk:"provider" tf:"optional,object"`
+	Provider types.List `tfsdk:"provider"`
 }
 
 func (newState *UpdateProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderResponse_SdkV2) {
@@ -8206,10 +8388,11 @@ func (newState *UpdateProviderResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *UpdateProviderResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProviderResponse_SdkV2) {
 }
 
-func (c UpdateProviderResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ProviderInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "provider")...)
+func (c UpdateProviderResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetOptional()
+	attrs["provider"] = attrs["provider"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderResponse.

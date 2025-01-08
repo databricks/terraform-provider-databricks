@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/oauth2_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -28,12 +29,12 @@ type Ai21LabsConfig_SdkV2 struct {
 	// prefer to paste your API key directly, see `ai21labs_api_key_plaintext`.
 	// You must provide an API key using one of the following fields:
 	// `ai21labs_api_key` or `ai21labs_api_key_plaintext`.
-	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key" tf:"optional"`
+	Ai21labsApiKey types.String `tfsdk:"ai21labs_api_key"`
 	// An AI21 Labs API key provided as a plaintext string. If you prefer to
 	// reference your key using Databricks Secrets, see `ai21labs_api_key`. You
 	// must provide an API key using one of the following fields:
 	// `ai21labs_api_key` or `ai21labs_api_key_plaintext`.
-	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext" tf:"optional"`
+	Ai21labsApiKeyPlaintext types.String `tfsdk:"ai21labs_api_key_plaintext"`
 }
 
 func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ai21LabsConfig_SdkV2) {
@@ -42,9 +43,11 @@ func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *Ai21LabsConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState Ai21LabsConfig_SdkV2) {
 }
 
-func (c Ai21LabsConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Ai21LabsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai21labs_api_key"] = attrs["ai21labs_api_key"].SetOptional()
+	attrs["ai21labs_api_key_plaintext"] = attrs["ai21labs_api_key_plaintext"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Ai21LabsConfig.
@@ -83,17 +86,17 @@ func (o Ai21LabsConfig_SdkV2) Type(ctx context.Context) attr.Type {
 type AiGatewayConfig_SdkV2 struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails types.List `tfsdk:"guardrails" tf:"optional,object"`
+	Guardrails types.List `tfsdk:"guardrails"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality.
-	InferenceTableConfig types.List `tfsdk:"inference_table_config" tf:"optional,object"`
+	InferenceTableConfig types.List `tfsdk:"inference_table_config"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config" tf:"optional,object"`
+	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
 func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayConfig_SdkV2) {
@@ -102,13 +105,16 @@ func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayConfig_SdkV2) {
 }
 
-func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayGuardrails_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "guardrails")...)
-	AiGatewayInferenceTableConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "inference_table_config")...)
-	AiGatewayRateLimit_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "rate_limits")...)
-	AiGatewayUsageTrackingConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "usage_tracking_config")...)
+func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["guardrails"] = attrs["guardrails"].SetOptional()
+	attrs["guardrails"] = attrs["guardrails"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+	attrs["inference_table_config"] = attrs["inference_table_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].SetOptional()
+	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayConfig.
@@ -268,14 +274,14 @@ func (o *AiGatewayConfig_SdkV2) SetUsageTrackingConfig(ctx context.Context, v Ai
 type AiGatewayGuardrailParameters_SdkV2 struct {
 	// List of invalid keywords. AI guardrail uses keyword or string matching to
 	// decide if the keyword exists in the request or response content.
-	InvalidKeywords types.List `tfsdk:"invalid_keywords" tf:"optional"`
+	InvalidKeywords types.List `tfsdk:"invalid_keywords"`
 	// Configuration for guardrail PII filter.
-	Pii types.List `tfsdk:"pii" tf:"optional,object"`
+	Pii types.List `tfsdk:"pii"`
 	// Indicates whether the safety filter is enabled.
-	Safety types.Bool `tfsdk:"safety" tf:"optional"`
+	Safety types.Bool `tfsdk:"safety"`
 	// The list of allowed topics. Given a chat request, this guardrail flags
 	// the request if its topic is not in the allowed topics.
-	ValidTopics types.List `tfsdk:"valid_topics" tf:"optional"`
+	ValidTopics types.List `tfsdk:"valid_topics"`
 }
 
 func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailParameters_SdkV2) {
@@ -284,10 +290,14 @@ func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *AiGatewayGuardrailParameters_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailParameters_SdkV2) {
 }
 
-func (c AiGatewayGuardrailParameters_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayGuardrailPiiBehavior_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "pii")...)
+func (c AiGatewayGuardrailParameters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["invalid_keywords"] = attrs["invalid_keywords"].SetOptional()
+	attrs["pii"] = attrs["pii"].SetOptional()
+	attrs["pii"] = attrs["pii"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["safety"] = attrs["safety"].SetOptional()
+	attrs["valid_topics"] = attrs["valid_topics"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrailParameters.
@@ -422,7 +432,7 @@ type AiGatewayGuardrailPiiBehavior_SdkV2 struct {
 	// 'BLOCK' is set for the output guardrail and the model response contains
 	// PII, the PII info in the response is redacted and 400 status code is
 	// returned.
-	Behavior types.String `tfsdk:"behavior" tf:""`
+	Behavior types.String `tfsdk:"behavior"`
 }
 
 func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrailPiiBehavior_SdkV2) {
@@ -431,10 +441,10 @@ func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringCr
 func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrailPiiBehavior_SdkV2) {
 }
 
-func (c AiGatewayGuardrailPiiBehavior_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "behavior")...)
+func (c AiGatewayGuardrailPiiBehavior_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["behavior"] = attrs["behavior"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrailPiiBehavior.
@@ -470,9 +480,9 @@ func (o AiGatewayGuardrailPiiBehavior_SdkV2) Type(ctx context.Context) attr.Type
 
 type AiGatewayGuardrails_SdkV2 struct {
 	// Configuration for input guardrail filters.
-	Input types.List `tfsdk:"input" tf:"optional,object"`
+	Input types.List `tfsdk:"input"`
 	// Configuration for output guardrail filters.
-	Output types.List `tfsdk:"output" tf:"optional,object"`
+	Output types.List `tfsdk:"output"`
 }
 
 func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayGuardrails_SdkV2) {
@@ -481,11 +491,13 @@ func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *AiGatewayGuardrails_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayGuardrails_SdkV2) {
 }
 
-func (c AiGatewayGuardrails_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayGuardrailParameters_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "input")...)
-	AiGatewayGuardrailParameters_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "output")...)
+func (c AiGatewayGuardrails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["input"] = attrs["input"].SetOptional()
+	attrs["input"] = attrs["input"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["output"] = attrs["output"].SetOptional()
+	attrs["output"] = attrs["output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayGuardrails.
@@ -584,16 +596,16 @@ type AiGatewayInferenceTableConfig_SdkV2 struct {
 	// The name of the catalog in Unity Catalog. Required when enabling
 	// inference tables. NOTE: On update, you have to disable inference table
 	// first in order to change the catalog name.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 	// Indicates whether the inference table is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the schema in Unity Catalog. Required when enabling inference
 	// tables. NOTE: On update, you have to disable inference table first in
 	// order to change the schema name.
-	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
+	SchemaName types.String `tfsdk:"schema_name"`
 	// The prefix of the table in Unity Catalog. NOTE: On update, you have to
 	// disable inference table first in order to change the prefix name.
-	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
+	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
 func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayInferenceTableConfig_SdkV2) {
@@ -602,9 +614,13 @@ func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringCr
 func (newState *AiGatewayInferenceTableConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayInferenceTableConfig_SdkV2) {
 }
 
-func (c AiGatewayInferenceTableConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AiGatewayInferenceTableConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+	attrs["table_name_prefix"] = attrs["table_name_prefix"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayInferenceTableConfig.
@@ -647,13 +663,13 @@ func (o AiGatewayInferenceTableConfig_SdkV2) Type(ctx context.Context) attr.Type
 type AiGatewayRateLimit_SdkV2 struct {
 	// Used to specify how many calls are allowed for a key within the
 	// renewal_period.
-	Calls types.Int64 `tfsdk:"calls" tf:""`
+	Calls types.Int64 `tfsdk:"calls"`
 	// Key field for a rate limit. Currently, only 'user' and 'endpoint' are
 	// supported, with 'endpoint' being the default if not specified.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// Renewal period field for a rate limit. Currently, only 'minute' is
 	// supported.
-	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
+	RenewalPeriod types.String `tfsdk:"renewal_period"`
 }
 
 func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayRateLimit_SdkV2) {
@@ -662,11 +678,12 @@ func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayRateLimit_SdkV2) {
 }
 
-func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "calls")...)
-	cs.SetRequired(append(path, "renewal_period")...)
+func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["calls"] = attrs["calls"].SetRequired()
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayRateLimit.
@@ -706,7 +723,7 @@ func (o AiGatewayRateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AiGatewayUsageTrackingConfig_SdkV2 struct {
 	// Whether to enable usage tracking.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 }
 
 func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AiGatewayUsageTrackingConfig_SdkV2) {
@@ -715,9 +732,10 @@ func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *AiGatewayUsageTrackingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AiGatewayUsageTrackingConfig_SdkV2) {
 }
 
-func (c AiGatewayUsageTrackingConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AiGatewayUsageTrackingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AiGatewayUsageTrackingConfig.
@@ -757,32 +775,32 @@ type AmazonBedrockConfig_SdkV2 struct {
 	// your API key directly, see `aws_access_key_id`. You must provide an API
 	// key using one of the following fields: `aws_access_key_id` or
 	// `aws_access_key_id_plaintext`.
-	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id" tf:"optional"`
+	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id"`
 	// An AWS access key ID with permissions to interact with Bedrock services
 	// provided as a plaintext string. If you prefer to reference your key using
 	// Databricks Secrets, see `aws_access_key_id`. You must provide an API key
 	// using one of the following fields: `aws_access_key_id` or
 	// `aws_access_key_id_plaintext`.
-	AwsAccessKeyIdPlaintext types.String `tfsdk:"aws_access_key_id_plaintext" tf:"optional"`
+	AwsAccessKeyIdPlaintext types.String `tfsdk:"aws_access_key_id_plaintext"`
 	// The AWS region to use. Bedrock has to be enabled there.
-	AwsRegion types.String `tfsdk:"aws_region" tf:""`
+	AwsRegion types.String `tfsdk:"aws_region"`
 	// The Databricks secret key reference for an AWS secret access key paired
 	// with the access key ID, with permissions to interact with Bedrock
 	// services. If you prefer to paste your API key directly, see
 	// `aws_secret_access_key_plaintext`. You must provide an API key using one
 	// of the following fields: `aws_secret_access_key` or
 	// `aws_secret_access_key_plaintext`.
-	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key" tf:"optional"`
+	AwsSecretAccessKey types.String `tfsdk:"aws_secret_access_key"`
 	// An AWS secret access key paired with the access key ID, with permissions
 	// to interact with Bedrock services provided as a plaintext string. If you
 	// prefer to reference your key using Databricks Secrets, see
 	// `aws_secret_access_key`. You must provide an API key using one of the
 	// following fields: `aws_secret_access_key` or
 	// `aws_secret_access_key_plaintext`.
-	AwsSecretAccessKeyPlaintext types.String `tfsdk:"aws_secret_access_key_plaintext" tf:"optional"`
+	AwsSecretAccessKeyPlaintext types.String `tfsdk:"aws_secret_access_key_plaintext"`
 	// The underlying provider in Amazon Bedrock. Supported values (case
 	// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
-	BedrockProvider types.String `tfsdk:"bedrock_provider" tf:""`
+	BedrockProvider types.String `tfsdk:"bedrock_provider"`
 }
 
 func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig_SdkV2) {
@@ -791,11 +809,15 @@ func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *AmazonBedrockConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AmazonBedrockConfig_SdkV2) {
 }
 
-func (c AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "aws_region")...)
-	cs.SetRequired(append(path, "bedrock_provider")...)
+func (c AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_access_key_id"] = attrs["aws_access_key_id"].SetOptional()
+	attrs["aws_access_key_id_plaintext"] = attrs["aws_access_key_id_plaintext"].SetOptional()
+	attrs["aws_region"] = attrs["aws_region"].SetRequired()
+	attrs["aws_secret_access_key"] = attrs["aws_secret_access_key"].SetOptional()
+	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].SetOptional()
+	attrs["bedrock_provider"] = attrs["bedrock_provider"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AmazonBedrockConfig.
@@ -844,12 +866,12 @@ type AnthropicConfig_SdkV2 struct {
 	// prefer to paste your API key directly, see `anthropic_api_key_plaintext`.
 	// You must provide an API key using one of the following fields:
 	// `anthropic_api_key` or `anthropic_api_key_plaintext`.
-	AnthropicApiKey types.String `tfsdk:"anthropic_api_key" tf:"optional"`
+	AnthropicApiKey types.String `tfsdk:"anthropic_api_key"`
 	// The Anthropic API key provided as a plaintext string. If you prefer to
 	// reference your key using Databricks Secrets, see `anthropic_api_key`. You
 	// must provide an API key using one of the following fields:
 	// `anthropic_api_key` or `anthropic_api_key_plaintext`.
-	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext" tf:"optional"`
+	AnthropicApiKeyPlaintext types.String `tfsdk:"anthropic_api_key_plaintext"`
 }
 
 func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AnthropicConfig_SdkV2) {
@@ -858,9 +880,11 @@ func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *AnthropicConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState AnthropicConfig_SdkV2) {
 }
 
-func (c AnthropicConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AnthropicConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["anthropic_api_key"] = attrs["anthropic_api_key"].SetOptional()
+	attrs["anthropic_api_key_plaintext"] = attrs["anthropic_api_key_plaintext"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AnthropicConfig.
@@ -899,15 +923,15 @@ func (o AnthropicConfig_SdkV2) Type(ctx context.Context) attr.Type {
 type AutoCaptureConfigInput_SdkV2 struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 	// Indicates whether the inference table is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the schema in Unity Catalog. NOTE: On update, you cannot
 	// change the schema name if the inference table is already enabled.
-	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
+	SchemaName types.String `tfsdk:"schema_name"`
 	// The prefix of the table in Unity Catalog. NOTE: On update, you cannot
 	// change the prefix name if the inference table is already enabled.
-	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
+	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
 func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigInput_SdkV2) {
@@ -916,9 +940,13 @@ func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *AutoCaptureConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigInput_SdkV2) {
 }
 
-func (c AutoCaptureConfigInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AutoCaptureConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+	attrs["table_name_prefix"] = attrs["table_name_prefix"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureConfigInput.
@@ -960,15 +988,15 @@ func (o AutoCaptureConfigInput_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AutoCaptureConfigOutput_SdkV2 struct {
 	// The name of the catalog in Unity Catalog.
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 	// Indicates whether the inference table is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the schema in Unity Catalog.
-	SchemaName types.String `tfsdk:"schema_name" tf:"optional"`
+	SchemaName types.String `tfsdk:"schema_name"`
 
-	State types.List `tfsdk:"state" tf:"optional,object"`
+	State types.List `tfsdk:"state"`
 	// The prefix of the table in Unity Catalog.
-	TableNamePrefix types.String `tfsdk:"table_name_prefix" tf:"optional"`
+	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
 func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureConfigOutput_SdkV2) {
@@ -977,10 +1005,15 @@ func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *AutoCaptureConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureConfigOutput_SdkV2) {
 }
 
-func (c AutoCaptureConfigOutput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AutoCaptureState_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "state")...)
+func (c AutoCaptureConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table_name_prefix"] = attrs["table_name_prefix"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureConfigOutput.
@@ -1053,7 +1086,7 @@ func (o *AutoCaptureConfigOutput_SdkV2) SetState(ctx context.Context, v AutoCapt
 }
 
 type AutoCaptureState_SdkV2 struct {
-	PayloadTable types.List `tfsdk:"payload_table" tf:"optional,object"`
+	PayloadTable types.List `tfsdk:"payload_table"`
 }
 
 func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoCaptureState_SdkV2) {
@@ -1062,10 +1095,11 @@ func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *AutoCaptureState_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutoCaptureState_SdkV2) {
 }
 
-func (c AutoCaptureState_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PayloadTable_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "payload_table")...)
+func (c AutoCaptureState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["payload_table"] = attrs["payload_table"].SetOptional()
+	attrs["payload_table"] = attrs["payload_table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoCaptureState.
@@ -1174,7 +1208,7 @@ func (o BuildLogsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type BuildLogsResponse_SdkV2 struct {
 	// The logs associated with building the served entity's environment.
-	Logs types.String `tfsdk:"logs" tf:""`
+	Logs types.String `tfsdk:"logs"`
 }
 
 func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsResponse_SdkV2) {
@@ -1183,10 +1217,10 @@ func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *BuildLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState BuildLogsResponse_SdkV2) {
 }
 
-func (c BuildLogsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "logs")...)
+func (c BuildLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["logs"] = attrs["logs"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsResponse.
@@ -1222,9 +1256,9 @@ func (o BuildLogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ChatMessage_SdkV2 struct {
 	// The content of the message.
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 	// The role of the message. One of [system, user, assistant].
-	Role types.String `tfsdk:"role" tf:"optional"`
+	Role types.String `tfsdk:"role"`
 }
 
 func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChatMessage_SdkV2) {
@@ -1233,9 +1267,11 @@ func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState ChatMessage_SdkV2) {
 }
 
-func (c ChatMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ChatMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["role"] = attrs["role"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChatMessage.
@@ -1274,17 +1310,17 @@ func (o ChatMessage_SdkV2) Type(ctx context.Context) attr.Type {
 type CohereConfig_SdkV2 struct {
 	// This is an optional field to provide a customized base URL for the Cohere
 	// API. If left unspecified, the standard Cohere base URL is used.
-	CohereApiBase types.String `tfsdk:"cohere_api_base" tf:"optional"`
+	CohereApiBase types.String `tfsdk:"cohere_api_base"`
 	// The Databricks secret key reference for a Cohere API key. If you prefer
 	// to paste your API key directly, see `cohere_api_key_plaintext`. You must
 	// provide an API key using one of the following fields: `cohere_api_key` or
 	// `cohere_api_key_plaintext`.
-	CohereApiKey types.String `tfsdk:"cohere_api_key" tf:"optional"`
+	CohereApiKey types.String `tfsdk:"cohere_api_key"`
 	// The Cohere API key provided as a plaintext string. If you prefer to
 	// reference your key using Databricks Secrets, see `cohere_api_key`. You
 	// must provide an API key using one of the following fields:
 	// `cohere_api_key` or `cohere_api_key_plaintext`.
-	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext" tf:"optional"`
+	CohereApiKeyPlaintext types.String `tfsdk:"cohere_api_key_plaintext"`
 }
 
 func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CohereConfig_SdkV2) {
@@ -1293,9 +1329,12 @@ func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CohereConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CohereConfig_SdkV2) {
 }
 
-func (c CohereConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CohereConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cohere_api_base"] = attrs["cohere_api_base"].SetOptional()
+	attrs["cohere_api_key"] = attrs["cohere_api_key"].SetOptional()
+	attrs["cohere_api_key_plaintext"] = attrs["cohere_api_key_plaintext"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CohereConfig.
@@ -1336,21 +1375,21 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 type CreateServingEndpoint_SdkV2 struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: only
 	// external model endpoints are supported as of now.
-	AiGateway types.List `tfsdk:"ai_gateway" tf:"optional,object"`
+	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The core config of the serving endpoint.
-	Config types.List `tfsdk:"config" tf:"object"`
+	Config types.List `tfsdk:"config"`
 	// The name of the serving endpoint. This field is required and must be
 	// unique across a Databricks workspace. An endpoint name can consist of
 	// alphanumeric characters, dashes, and underscores.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Rate limits to be applied to the serving endpoint. NOTE: this field is
 	// deprecated, please use AI Gateway to manage rate limits.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 	// Enable route optimization for the serving endpoint.
-	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
+	RouteOptimized types.Bool `tfsdk:"route_optimized"`
 	// Tags to be attached to the serving endpoint and automatically propagated
 	// to billing logs.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServingEndpoint_SdkV2) {
@@ -1359,15 +1398,17 @@ func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServingEndpoint_SdkV2) {
 }
 
-func (c CreateServingEndpoint_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ai_gateway")...)
-	cs.SetRequired(append(path, "config")...)
-	EndpointCoreConfigInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
-	cs.SetRequired(append(path, "name")...)
-	RateLimit_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "rate_limits")...)
-	EndpointTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServingEndpoint.
@@ -1535,17 +1576,17 @@ type DatabricksModelServingConfig_SdkV2 struct {
 	// to paste your API key directly, see `databricks_api_token_plaintext`. You
 	// must provide an API key using one of the following fields:
 	// `databricks_api_token` or `databricks_api_token_plaintext`.
-	DatabricksApiToken types.String `tfsdk:"databricks_api_token" tf:"optional"`
+	DatabricksApiToken types.String `tfsdk:"databricks_api_token"`
 	// The Databricks API token that corresponds to a user or service principal
 	// with Can Query access to the model serving endpoint pointed to by this
 	// external model provided as a plaintext string. If you prefer to reference
 	// your key using Databricks Secrets, see `databricks_api_token`. You must
 	// provide an API key using one of the following fields:
 	// `databricks_api_token` or `databricks_api_token_plaintext`.
-	DatabricksApiTokenPlaintext types.String `tfsdk:"databricks_api_token_plaintext" tf:"optional"`
+	DatabricksApiTokenPlaintext types.String `tfsdk:"databricks_api_token_plaintext"`
 	// The URL of the Databricks workspace containing the model serving endpoint
 	// pointed to by this external model.
-	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url" tf:""`
+	DatabricksWorkspaceUrl types.String `tfsdk:"databricks_workspace_url"`
 }
 
 func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatabricksModelServingConfig_SdkV2) {
@@ -1554,10 +1595,12 @@ func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *DatabricksModelServingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatabricksModelServingConfig_SdkV2) {
 }
 
-func (c DatabricksModelServingConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "databricks_workspace_url")...)
+func (c DatabricksModelServingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["databricks_api_token"] = attrs["databricks_api_token"].SetOptional()
+	attrs["databricks_api_token_plaintext"] = attrs["databricks_api_token_plaintext"].SetOptional()
+	attrs["databricks_workspace_url"] = attrs["databricks_workspace_url"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DatabricksModelServingConfig.
@@ -1596,11 +1639,11 @@ func (o DatabricksModelServingConfig_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type DataframeSplitInput_SdkV2 struct {
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns"`
 
-	Data types.List `tfsdk:"data" tf:"optional"`
+	Data types.List `tfsdk:"data"`
 
-	Index types.List `tfsdk:"index" tf:"optional"`
+	Index types.List `tfsdk:"index"`
 }
 
 func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataframeSplitInput_SdkV2) {
@@ -1609,9 +1652,12 @@ func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DataframeSplitInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataframeSplitInput_SdkV2) {
 }
 
-func (c DataframeSplitInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DataframeSplitInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["index"] = attrs["index"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataframeSplitInput.
@@ -1805,11 +1851,11 @@ func (o DeleteServingEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type EmbeddingsV1ResponseEmbeddingElement_SdkV2 struct {
-	Embedding types.List `tfsdk:"embedding" tf:"optional"`
+	Embedding types.List `tfsdk:"embedding"`
 	// The index of the embedding in the response.
-	Index types.Int64 `tfsdk:"index" tf:"optional"`
+	Index types.Int64 `tfsdk:"index"`
 	// This will always be 'embedding'.
-	Object types.String `tfsdk:"object" tf:"optional"`
+	Object types.String `tfsdk:"object"`
 }
 
 func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
@@ -1818,9 +1864,12 @@ func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsD
 func (newState *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmbeddingsV1ResponseEmbeddingElement_SdkV2) {
 }
 
-func (c EmbeddingsV1ResponseEmbeddingElement_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EmbeddingsV1ResponseEmbeddingElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embedding"] = attrs["embedding"].SetOptional()
+	attrs["index"] = attrs["index"].SetOptional()
+	attrs["object"] = attrs["object"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EmbeddingsV1ResponseEmbeddingElement.
@@ -1891,18 +1940,18 @@ func (o *EmbeddingsV1ResponseEmbeddingElement_SdkV2) SetEmbedding(ctx context.Co
 type EndpointCoreConfigInput_SdkV2 struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig types.List `tfsdk:"auto_capture_config" tf:"optional,object"`
+	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
 	// A list of served entities for the endpoint to serve. A serving endpoint
 	// can have up to 15 served entities.
-	ServedEntities types.List `tfsdk:"served_entities" tf:"optional"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) A list of served models for the
 	// endpoint to serve. A serving endpoint can have up to 15 served models.
-	ServedModels types.List `tfsdk:"served_models" tf:"optional"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig types.List `tfsdk:"traffic_config" tf:"optional,object"`
+	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
 func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigInput_SdkV2) {
@@ -1911,14 +1960,16 @@ func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *EndpointCoreConfigInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigInput_SdkV2) {
 }
 
-func (c EndpointCoreConfigInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AutoCaptureConfigInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "auto_capture_config")...)
-	cs.SetRequired(append(path, "name")...)
-	ServedEntityInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_entities")...)
-	ServedModelInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_models")...)
-	TrafficConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "traffic_config")...)
+func (c EndpointCoreConfigInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].SetOptional()
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["served_models"] = attrs["served_models"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigInput.
@@ -2080,16 +2131,16 @@ func (o *EndpointCoreConfigInput_SdkV2) SetTrafficConfig(ctx context.Context, v 
 type EndpointCoreConfigOutput_SdkV2 struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig types.List `tfsdk:"auto_capture_config" tf:"optional,object"`
+	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
-	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
+	ConfigVersion types.Int64 `tfsdk:"config_version"`
 	// The list of served entities under the serving endpoint config.
-	ServedEntities types.List `tfsdk:"served_entities" tf:"optional"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels types.List `tfsdk:"served_models" tf:"optional"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The traffic configuration associated with the serving endpoint config.
-	TrafficConfig types.List `tfsdk:"traffic_config" tf:"optional,object"`
+	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
 func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigOutput_SdkV2) {
@@ -2098,13 +2149,16 @@ func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *EndpointCoreConfigOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigOutput_SdkV2) {
 }
 
-func (c EndpointCoreConfigOutput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AutoCaptureConfigOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "auto_capture_config")...)
-	ServedEntityOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_entities")...)
-	ServedModelOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_models")...)
-	TrafficConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "traffic_config")...)
+func (c EndpointCoreConfigOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].SetOptional()
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["config_version"] = attrs["config_version"].SetOptional()
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["served_models"] = attrs["served_models"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigOutput.
@@ -2265,10 +2319,10 @@ func (o *EndpointCoreConfigOutput_SdkV2) SetTrafficConfig(ctx context.Context, v
 
 type EndpointCoreConfigSummary_SdkV2 struct {
 	// The list of served entities under the serving endpoint config.
-	ServedEntities types.List `tfsdk:"served_entities" tf:"optional"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models under
 	// the serving endpoint config.
-	ServedModels types.List `tfsdk:"served_models" tf:"optional"`
+	ServedModels types.List `tfsdk:"served_models"`
 }
 
 func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointCoreConfigSummary_SdkV2) {
@@ -2277,11 +2331,11 @@ func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *EndpointCoreConfigSummary_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointCoreConfigSummary_SdkV2) {
 }
 
-func (c EndpointCoreConfigSummary_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServedEntitySpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_entities")...)
-	ServedModelSpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_models")...)
+func (c EndpointCoreConfigSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["served_models"] = attrs["served_models"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointCoreConfigSummary.
@@ -2379,20 +2433,20 @@ func (o *EndpointCoreConfigSummary_SdkV2) SetServedModels(ctx context.Context, v
 type EndpointPendingConfig_SdkV2 struct {
 	// Configuration for Inference Tables which automatically logs requests and
 	// responses to Unity Catalog.
-	AutoCaptureConfig types.List `tfsdk:"auto_capture_config" tf:"optional,object"`
+	AutoCaptureConfig types.List `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
-	ConfigVersion types.Int64 `tfsdk:"config_version" tf:"optional"`
+	ConfigVersion types.Int64 `tfsdk:"config_version"`
 	// The list of served entities belonging to the last issued update to the
 	// serving endpoint.
-	ServedEntities types.List `tfsdk:"served_entities" tf:"optional"`
+	ServedEntities types.List `tfsdk:"served_entities"`
 	// (Deprecated, use served_entities instead) The list of served models
 	// belonging to the last issued update to the serving endpoint.
-	ServedModels types.List `tfsdk:"served_models" tf:"optional"`
+	ServedModels types.List `tfsdk:"served_models"`
 	// The timestamp when the update to the pending config started.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// The traffic config defining how invocations to the serving endpoint
 	// should be routed.
-	TrafficConfig types.List `tfsdk:"traffic_config" tf:"optional,object"`
+	TrafficConfig types.List `tfsdk:"traffic_config"`
 }
 
 func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointPendingConfig_SdkV2) {
@@ -2401,13 +2455,17 @@ func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *EndpointPendingConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointPendingConfig_SdkV2) {
 }
 
-func (c EndpointPendingConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AutoCaptureConfigOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "auto_capture_config")...)
-	ServedEntityOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_entities")...)
-	ServedModelOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "served_models")...)
-	TrafficConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "traffic_config")...)
+func (c EndpointPendingConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].SetOptional()
+	attrs["auto_capture_config"] = attrs["auto_capture_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["config_version"] = attrs["config_version"].SetOptional()
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["served_models"] = attrs["served_models"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointPendingConfig.
@@ -2574,12 +2632,12 @@ type EndpointState_SdkV2 struct {
 	// update in progress. Note that if the endpoint's config_update state value
 	// is IN_PROGRESS, another update can not be made until the update completes
 	// or fails."
-	ConfigUpdate types.String `tfsdk:"config_update" tf:"optional"`
+	ConfigUpdate types.String `tfsdk:"config_update"`
 	// The state of an endpoint, indicating whether or not the endpoint is
 	// queryable. An endpoint is READY if all of the served entities in its
 	// active configuration are ready. If any of the actively served entities
 	// are in a non-ready state, the endpoint state will be NOT_READY.
-	Ready types.String `tfsdk:"ready" tf:"optional"`
+	Ready types.String `tfsdk:"ready"`
 }
 
 func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointState_SdkV2) {
@@ -2588,9 +2646,11 @@ func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointState_SdkV2) {
 }
 
-func (c EndpointState_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EndpointState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config_update"] = attrs["config_update"].SetOptional()
+	attrs["ready"] = attrs["ready"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointState.
@@ -2628,9 +2688,9 @@ func (o EndpointState_SdkV2) Type(ctx context.Context) attr.Type {
 
 type EndpointTag_SdkV2 struct {
 	// Key field for a serving endpoint tag.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// Optional value field for a serving endpoint tag.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTag_SdkV2) {
@@ -2639,10 +2699,11 @@ func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *EndpointTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointTag_SdkV2) {
 }
 
-func (c EndpointTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
+func (c EndpointTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointTag.
@@ -2753,32 +2814,32 @@ func (o ExportMetricsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ExternalModel_SdkV2 struct {
 	// AI21Labs Config. Only required if the provider is 'ai21labs'.
-	Ai21labsConfig types.List `tfsdk:"ai21labs_config" tf:"optional,object"`
+	Ai21labsConfig types.List `tfsdk:"ai21labs_config"`
 	// Amazon Bedrock Config. Only required if the provider is 'amazon-bedrock'.
-	AmazonBedrockConfig types.List `tfsdk:"amazon_bedrock_config" tf:"optional,object"`
+	AmazonBedrockConfig types.List `tfsdk:"amazon_bedrock_config"`
 	// Anthropic Config. Only required if the provider is 'anthropic'.
-	AnthropicConfig types.List `tfsdk:"anthropic_config" tf:"optional,object"`
+	AnthropicConfig types.List `tfsdk:"anthropic_config"`
 	// Cohere Config. Only required if the provider is 'cohere'.
-	CohereConfig types.List `tfsdk:"cohere_config" tf:"optional,object"`
+	CohereConfig types.List `tfsdk:"cohere_config"`
 	// Databricks Model Serving Config. Only required if the provider is
 	// 'databricks-model-serving'.
-	DatabricksModelServingConfig types.List `tfsdk:"databricks_model_serving_config" tf:"optional,object"`
+	DatabricksModelServingConfig types.List `tfsdk:"databricks_model_serving_config"`
 	// Google Cloud Vertex AI Config. Only required if the provider is
 	// 'google-cloud-vertex-ai'.
-	GoogleCloudVertexAiConfig types.List `tfsdk:"google_cloud_vertex_ai_config" tf:"optional,object"`
+	GoogleCloudVertexAiConfig types.List `tfsdk:"google_cloud_vertex_ai_config"`
 	// The name of the external model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// OpenAI Config. Only required if the provider is 'openai'.
-	OpenaiConfig types.List `tfsdk:"openai_config" tf:"optional,object"`
+	OpenaiConfig types.List `tfsdk:"openai_config"`
 	// PaLM Config. Only required if the provider is 'palm'.
-	PalmConfig types.List `tfsdk:"palm_config" tf:"optional,object"`
+	PalmConfig types.List `tfsdk:"palm_config"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
 	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and
 	// 'palm'.",
-	Provider types.String `tfsdk:"provider" tf:""`
+	Provider types.String `tfsdk:"provider"`
 	// The task type of the external model.
-	Task types.String `tfsdk:"task" tf:""`
+	Task types.String `tfsdk:"task"`
 }
 
 func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModel_SdkV2) {
@@ -2787,20 +2848,28 @@ func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ExternalModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModel_SdkV2) {
 }
 
-func (c ExternalModel_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Ai21LabsConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ai21labs_config")...)
-	AmazonBedrockConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "amazon_bedrock_config")...)
-	AnthropicConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "anthropic_config")...)
-	CohereConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "cohere_config")...)
-	DatabricksModelServingConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "databricks_model_serving_config")...)
-	GoogleCloudVertexAiConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "google_cloud_vertex_ai_config")...)
-	cs.SetRequired(append(path, "name")...)
-	OpenAiConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "openai_config")...)
-	PaLmConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "palm_config")...)
-	cs.SetRequired(append(path, "provider")...)
-	cs.SetRequired(append(path, "task")...)
+func (c ExternalModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai21labs_config"] = attrs["ai21labs_config"].SetOptional()
+	attrs["ai21labs_config"] = attrs["ai21labs_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["amazon_bedrock_config"] = attrs["amazon_bedrock_config"].SetOptional()
+	attrs["amazon_bedrock_config"] = attrs["amazon_bedrock_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["anthropic_config"] = attrs["anthropic_config"].SetOptional()
+	attrs["anthropic_config"] = attrs["anthropic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["cohere_config"] = attrs["cohere_config"].SetOptional()
+	attrs["cohere_config"] = attrs["cohere_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["databricks_model_serving_config"] = attrs["databricks_model_serving_config"].SetOptional()
+	attrs["databricks_model_serving_config"] = attrs["databricks_model_serving_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["google_cloud_vertex_ai_config"] = attrs["google_cloud_vertex_ai_config"].SetOptional()
+	attrs["google_cloud_vertex_ai_config"] = attrs["google_cloud_vertex_ai_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["openai_config"] = attrs["openai_config"].SetOptional()
+	attrs["openai_config"] = attrs["openai_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["palm_config"] = attrs["palm_config"].SetOptional()
+	attrs["palm_config"] = attrs["palm_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["task"] = attrs["task"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalModel.
@@ -3089,11 +3158,11 @@ func (o *ExternalModel_SdkV2) SetPalmConfig(ctx context.Context, v PaLmConfig_Sd
 
 type ExternalModelUsageElement_SdkV2 struct {
 	// The number of tokens in the chat/completions response.
-	CompletionTokens types.Int64 `tfsdk:"completion_tokens" tf:"optional"`
+	CompletionTokens types.Int64 `tfsdk:"completion_tokens"`
 	// The number of tokens in the prompt.
-	PromptTokens types.Int64 `tfsdk:"prompt_tokens" tf:"optional"`
+	PromptTokens types.Int64 `tfsdk:"prompt_tokens"`
 	// The total number of tokens in the prompt and response.
-	TotalTokens types.Int64 `tfsdk:"total_tokens" tf:"optional"`
+	TotalTokens types.Int64 `tfsdk:"total_tokens"`
 }
 
 func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalModelUsageElement_SdkV2) {
@@ -3102,9 +3171,12 @@ func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *ExternalModelUsageElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalModelUsageElement_SdkV2) {
 }
 
-func (c ExternalModelUsageElement_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExternalModelUsageElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["completion_tokens"] = attrs["completion_tokens"].SetOptional()
+	attrs["prompt_tokens"] = attrs["prompt_tokens"].SetOptional()
+	attrs["total_tokens"] = attrs["total_tokens"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalModelUsageElement.
@@ -3144,13 +3216,13 @@ func (o ExternalModelUsageElement_SdkV2) Type(ctx context.Context) attr.Type {
 
 type FoundationModel_SdkV2 struct {
 	// The description of the foundation model.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The display name of the foundation model.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The URL to the documentation of the foundation model.
-	Docs types.String `tfsdk:"docs" tf:"optional"`
+	Docs types.String `tfsdk:"docs"`
 	// The name of the foundation model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FoundationModel_SdkV2) {
@@ -3159,9 +3231,13 @@ func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *FoundationModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState FoundationModel_SdkV2) {
 }
 
-func (c FoundationModel_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c FoundationModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["docs"] = attrs["docs"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FoundationModel.
@@ -3310,7 +3386,7 @@ func (o GetServingEndpointPermissionLevelsRequest_SdkV2) Type(ctx context.Contex
 
 type GetServingEndpointPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsResponse_SdkV2) {
@@ -3319,10 +3395,10 @@ func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveF
 func (newState *GetServingEndpointPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetServingEndpointPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServingEndpointPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetServingEndpointPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsResponse.
@@ -3469,7 +3545,7 @@ type GoogleCloudVertexAiConfig_SdkV2 struct {
 	// `private_key_plaintext`
 	//
 	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
-	PrivateKey types.String `tfsdk:"private_key" tf:"optional"`
+	PrivateKey types.String `tfsdk:"private_key"`
 	// The private key for the service account which has access to the Google
 	// Cloud Vertex AI Service provided as a plaintext secret. See [Best
 	// practices for managing service account keys]. If you prefer to reference
@@ -3478,16 +3554,16 @@ type GoogleCloudVertexAiConfig_SdkV2 struct {
 	// `private_key_plaintext`.
 	//
 	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
-	PrivateKeyPlaintext types.String `tfsdk:"private_key_plaintext" tf:"optional"`
+	PrivateKeyPlaintext types.String `tfsdk:"private_key_plaintext"`
 	// This is the Google Cloud project id that the service account is
 	// associated with.
-	ProjectId types.String `tfsdk:"project_id" tf:"optional"`
+	ProjectId types.String `tfsdk:"project_id"`
 	// This is the region for the Google Cloud Vertex AI Service. See [supported
 	// regions] for more details. Some models are only available in specific
 	// regions.
 	//
 	// [supported regions]: https://cloud.google.com/vertex-ai/docs/general/locations
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GoogleCloudVertexAiConfig_SdkV2) {
@@ -3496,9 +3572,13 @@ func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *GoogleCloudVertexAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GoogleCloudVertexAiConfig_SdkV2) {
 }
 
-func (c GoogleCloudVertexAiConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GoogleCloudVertexAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["private_key"] = attrs["private_key"].SetOptional()
+	attrs["private_key_plaintext"] = attrs["private_key_plaintext"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GoogleCloudVertexAiConfig.
@@ -3540,7 +3620,7 @@ func (o GoogleCloudVertexAiConfig_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListEndpointsResponse_SdkV2 struct {
 	// The list of endpoints.
-	Endpoints types.List `tfsdk:"endpoints" tf:"optional"`
+	Endpoints types.List `tfsdk:"endpoints"`
 }
 
 func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsResponse_SdkV2) {
@@ -3549,10 +3629,10 @@ func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ListEndpointsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointsResponse_SdkV2) {
 }
 
-func (c ListEndpointsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServingEndpoint_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "endpoints")...)
+func (c ListEndpointsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoints"] = attrs["endpoints"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsResponse.
@@ -3661,7 +3741,7 @@ func (o LogsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ModelDataPlaneInfo_SdkV2 struct {
 	// Information required to query DataPlane API 'query' endpoint.
-	QueryInfo types.List `tfsdk:"query_info" tf:"optional,object"`
+	QueryInfo types.List `tfsdk:"query_info"`
 }
 
 func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDataPlaneInfo_SdkV2) {
@@ -3670,10 +3750,11 @@ func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ModelDataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelDataPlaneInfo_SdkV2) {
 }
 
-func (c ModelDataPlaneInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	oauth2_tf.DataPlaneInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "query_info")...)
+func (c ModelDataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_info"] = attrs["query_info"].SetOptional()
+	attrs["query_info"] = attrs["query_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelDataPlaneInfo.
@@ -3740,55 +3821,55 @@ func (o *ModelDataPlaneInfo_SdkV2) SetQueryInfo(ctx context.Context, v oauth2_tf
 type OpenAiConfig_SdkV2 struct {
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Client ID.
-	MicrosoftEntraClientId types.String `tfsdk:"microsoft_entra_client_id" tf:"optional"`
+	MicrosoftEntraClientId types.String `tfsdk:"microsoft_entra_client_id"`
 	// The Databricks secret key reference for a client secret used for
 	// Microsoft Entra ID authentication. If you prefer to paste your client
 	// secret directly, see `microsoft_entra_client_secret_plaintext`. You must
 	// provide an API key using one of the following fields:
 	// `microsoft_entra_client_secret` or
 	// `microsoft_entra_client_secret_plaintext`.
-	MicrosoftEntraClientSecret types.String `tfsdk:"microsoft_entra_client_secret" tf:"optional"`
+	MicrosoftEntraClientSecret types.String `tfsdk:"microsoft_entra_client_secret"`
 	// The client secret used for Microsoft Entra ID authentication provided as
 	// a plaintext string. If you prefer to reference your key using Databricks
 	// Secrets, see `microsoft_entra_client_secret`. You must provide an API key
 	// using one of the following fields: `microsoft_entra_client_secret` or
 	// `microsoft_entra_client_secret_plaintext`.
-	MicrosoftEntraClientSecretPlaintext types.String `tfsdk:"microsoft_entra_client_secret_plaintext" tf:"optional"`
+	MicrosoftEntraClientSecretPlaintext types.String `tfsdk:"microsoft_entra_client_secret_plaintext"`
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Tenant ID.
-	MicrosoftEntraTenantId types.String `tfsdk:"microsoft_entra_tenant_id" tf:"optional"`
+	MicrosoftEntraTenantId types.String `tfsdk:"microsoft_entra_tenant_id"`
 	// This is a field to provide a customized base URl for the OpenAI API. For
 	// Azure OpenAI, this field is required, and is the base URL for the Azure
 	// OpenAI API service provided by Azure. For other OpenAI API types, this
 	// field is optional, and if left unspecified, the standard OpenAI base URL
 	// is used.
-	OpenaiApiBase types.String `tfsdk:"openai_api_base" tf:"optional"`
+	OpenaiApiBase types.String `tfsdk:"openai_api_base"`
 	// The Databricks secret key reference for an OpenAI API key using the
 	// OpenAI or Azure service. If you prefer to paste your API key directly,
 	// see `openai_api_key_plaintext`. You must provide an API key using one of
 	// the following fields: `openai_api_key` or `openai_api_key_plaintext`.
-	OpenaiApiKey types.String `tfsdk:"openai_api_key" tf:"optional"`
+	OpenaiApiKey types.String `tfsdk:"openai_api_key"`
 	// The OpenAI API key using the OpenAI or Azure service provided as a
 	// plaintext string. If you prefer to reference your key using Databricks
 	// Secrets, see `openai_api_key`. You must provide an API key using one of
 	// the following fields: `openai_api_key` or `openai_api_key_plaintext`.
-	OpenaiApiKeyPlaintext types.String `tfsdk:"openai_api_key_plaintext" tf:"optional"`
+	OpenaiApiKeyPlaintext types.String `tfsdk:"openai_api_key_plaintext"`
 	// This is an optional field to specify the type of OpenAI API to use. For
 	// Azure OpenAI, this field is required, and adjust this parameter to
 	// represent the preferred security access validation protocol. For access
 	// token validation, use azure. For authentication using Azure Active
 	// Directory (Azure AD) use, azuread.
-	OpenaiApiType types.String `tfsdk:"openai_api_type" tf:"optional"`
+	OpenaiApiType types.String `tfsdk:"openai_api_type"`
 	// This is an optional field to specify the OpenAI API version. For Azure
 	// OpenAI, this field is required, and is the version of the Azure OpenAI
 	// service to utilize, specified by a date.
-	OpenaiApiVersion types.String `tfsdk:"openai_api_version" tf:"optional"`
+	OpenaiApiVersion types.String `tfsdk:"openai_api_version"`
 	// This field is only required for Azure OpenAI and is the name of the
 	// deployment resource for the Azure OpenAI service.
-	OpenaiDeploymentName types.String `tfsdk:"openai_deployment_name" tf:"optional"`
+	OpenaiDeploymentName types.String `tfsdk:"openai_deployment_name"`
 	// This is an optional field to specify the organization in OpenAI or Azure
 	// OpenAI.
-	OpenaiOrganization types.String `tfsdk:"openai_organization" tf:"optional"`
+	OpenaiOrganization types.String `tfsdk:"openai_organization"`
 }
 
 func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OpenAiConfig_SdkV2) {
@@ -3797,9 +3878,20 @@ func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *OpenAiConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState OpenAiConfig_SdkV2) {
 }
 
-func (c OpenAiConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c OpenAiConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["microsoft_entra_client_id"] = attrs["microsoft_entra_client_id"].SetOptional()
+	attrs["microsoft_entra_client_secret"] = attrs["microsoft_entra_client_secret"].SetOptional()
+	attrs["microsoft_entra_client_secret_plaintext"] = attrs["microsoft_entra_client_secret_plaintext"].SetOptional()
+	attrs["microsoft_entra_tenant_id"] = attrs["microsoft_entra_tenant_id"].SetOptional()
+	attrs["openai_api_base"] = attrs["openai_api_base"].SetOptional()
+	attrs["openai_api_key"] = attrs["openai_api_key"].SetOptional()
+	attrs["openai_api_key_plaintext"] = attrs["openai_api_key_plaintext"].SetOptional()
+	attrs["openai_api_type"] = attrs["openai_api_type"].SetOptional()
+	attrs["openai_api_version"] = attrs["openai_api_version"].SetOptional()
+	attrs["openai_deployment_name"] = attrs["openai_deployment_name"].SetOptional()
+	attrs["openai_organization"] = attrs["openai_organization"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in OpenAiConfig.
@@ -3858,12 +3950,12 @@ type PaLmConfig_SdkV2 struct {
 	// paste your API key directly, see `palm_api_key_plaintext`. You must
 	// provide an API key using one of the following fields: `palm_api_key` or
 	// `palm_api_key_plaintext`.
-	PalmApiKey types.String `tfsdk:"palm_api_key" tf:"optional"`
+	PalmApiKey types.String `tfsdk:"palm_api_key"`
 	// The PaLM API key provided as a plaintext string. If you prefer to
 	// reference your key using Databricks Secrets, see `palm_api_key`. You must
 	// provide an API key using one of the following fields: `palm_api_key` or
 	// `palm_api_key_plaintext`.
-	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext" tf:"optional"`
+	PalmApiKeyPlaintext types.String `tfsdk:"palm_api_key_plaintext"`
 }
 
 func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PaLmConfig_SdkV2) {
@@ -3872,9 +3964,11 @@ func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan P
 func (newState *PaLmConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PaLmConfig_SdkV2) {
 }
 
-func (c PaLmConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PaLmConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["palm_api_key"] = attrs["palm_api_key"].SetOptional()
+	attrs["palm_api_key_plaintext"] = attrs["palm_api_key_plaintext"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PaLmConfig.
@@ -3912,9 +4006,9 @@ func (o PaLmConfig_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PatchServingEndpointTags_SdkV2 struct {
 	// List of endpoint tags to add
-	AddTags types.List `tfsdk:"add_tags" tf:"optional"`
+	AddTags types.List `tfsdk:"add_tags"`
 	// List of tag keys to delete
-	DeleteTags types.List `tfsdk:"delete_tags" tf:"optional"`
+	DeleteTags types.List `tfsdk:"delete_tags"`
 	// The name of the serving endpoint who's tags to patch. This field is
 	// required.
 	Name types.String `tfsdk:"-"`
@@ -3926,11 +4020,12 @@ func (newState *PatchServingEndpointTags_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *PatchServingEndpointTags_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchServingEndpointTags_SdkV2) {
 }
 
-func (c PatchServingEndpointTags_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EndpointTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "add_tags")...)
-	cs.SetRequired(append(path, "name")...)
+func (c PatchServingEndpointTags_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["add_tags"] = attrs["add_tags"].SetOptional()
+	attrs["delete_tags"] = attrs["delete_tags"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchServingEndpointTags.
@@ -4029,11 +4124,11 @@ func (o *PatchServingEndpointTags_SdkV2) SetDeleteTags(ctx context.Context, v []
 
 type PayloadTable_SdkV2 struct {
 	// The name of the payload table.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The status of the payload table.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// The status message of the payload table.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 }
 
 func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PayloadTable_SdkV2) {
@@ -4042,9 +4137,12 @@ func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PayloadTable_SdkV2) SyncEffectiveFieldsDuringRead(existingState PayloadTable_SdkV2) {
 }
 
-func (c PayloadTable_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PayloadTable_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PayloadTable.
@@ -4086,20 +4184,20 @@ func (o PayloadTable_SdkV2) Type(ctx context.Context) attr.Type {
 type PutAiGatewayRequest_SdkV2 struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails types.List `tfsdk:"guardrails" tf:"optional,object"`
+	Guardrails types.List `tfsdk:"guardrails"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality.
-	InferenceTableConfig types.List `tfsdk:"inference_table_config" tf:"optional,object"`
+	InferenceTableConfig types.List `tfsdk:"inference_table_config"`
 	// The name of the serving endpoint whose AI Gateway is being updated. This
 	// field is required.
 	Name types.String `tfsdk:"-"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config" tf:"optional,object"`
+	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayRequest.
@@ -4261,17 +4359,17 @@ func (o *PutAiGatewayRequest_SdkV2) SetUsageTrackingConfig(ctx context.Context, 
 type PutAiGatewayResponse_SdkV2 struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
-	Guardrails types.List `tfsdk:"guardrails" tf:"optional,object"`
+	Guardrails types.List `tfsdk:"guardrails"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
 	// APIs and to improve model quality .
-	InferenceTableConfig types.List `tfsdk:"inference_table_config" tf:"optional,object"`
+	InferenceTableConfig types.List `tfsdk:"inference_table_config"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 	// Configuration to enable usage tracking using system tables. These tables
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
-	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config" tf:"optional,object"`
+	UsageTrackingConfig types.List `tfsdk:"usage_tracking_config"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayResponse.
@@ -4434,7 +4532,7 @@ type PutRequest_SdkV2 struct {
 	// This field is required.
 	Name types.String `tfsdk:"-"`
 	// The list of endpoint rate limits.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutRequest.
@@ -4502,7 +4600,7 @@ func (o *PutRequest_SdkV2) SetRateLimits(ctx context.Context, v []RateLimit_SdkV
 
 type PutResponse_SdkV2 struct {
 	// The list of endpoint rate limits.
-	RateLimits types.List `tfsdk:"rate_limits" tf:"optional"`
+	RateLimits types.List `tfsdk:"rate_limits"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
@@ -4568,54 +4666,54 @@ func (o *PutResponse_SdkV2) SetRateLimits(ctx context.Context, v []RateLimit_Sdk
 
 type QueryEndpointInput_SdkV2 struct {
 	// Pandas Dataframe input in the records orientation.
-	DataframeRecords types.List `tfsdk:"dataframe_records" tf:"optional"`
+	DataframeRecords types.List `tfsdk:"dataframe_records"`
 	// Pandas Dataframe input in the split orientation.
-	DataframeSplit types.List `tfsdk:"dataframe_split" tf:"optional,object"`
+	DataframeSplit types.List `tfsdk:"dataframe_split"`
 	// The extra parameters field used ONLY for __completions, chat,__ and
 	// __embeddings external & foundation model__ serving endpoints. This is a
 	// map of strings and should only be used with other external/foundation
 	// model query fields.
-	ExtraParams types.Map `tfsdk:"extra_params" tf:"optional"`
+	ExtraParams types.Map `tfsdk:"extra_params"`
 	// The input string (or array of strings) field used ONLY for __embeddings
 	// external & foundation model__ serving endpoints and is the only field
 	// (along with extra_params if needed) used by embeddings queries.
-	Input types.Object `tfsdk:"input" tf:"optional"`
+	Input types.Object `tfsdk:"input"`
 	// Tensor-based input in columnar format.
-	Inputs types.Object `tfsdk:"inputs" tf:"optional"`
+	Inputs types.Object `tfsdk:"inputs"`
 	// Tensor-based input in row format.
-	Instances types.List `tfsdk:"instances" tf:"optional"`
+	Instances types.List `tfsdk:"instances"`
 	// The max tokens field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is an integer and should only
 	// be used with other chat/completions query fields.
-	MaxTokens types.Int64 `tfsdk:"max_tokens" tf:"optional"`
+	MaxTokens types.Int64 `tfsdk:"max_tokens"`
 	// The messages field used ONLY for __chat external & foundation model__
 	// serving endpoints. This is a map of strings and should only be used with
 	// other chat query fields.
-	Messages types.List `tfsdk:"messages" tf:"optional"`
+	Messages types.List `tfsdk:"messages"`
 	// The n (number of candidates) field used ONLY for __completions__ and
 	// __chat external & foundation model__ serving endpoints. This is an
 	// integer between 1 and 5 with a default of 1 and should only be used with
 	// other chat/completions query fields.
-	N types.Int64 `tfsdk:"n" tf:"optional"`
+	N types.Int64 `tfsdk:"n"`
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
 	// The prompt string (or array of strings) field used ONLY for __completions
 	// external & foundation model__ serving endpoints and should only be used
 	// with other completions query fields.
-	Prompt types.Object `tfsdk:"prompt" tf:"optional"`
+	Prompt types.Object `tfsdk:"prompt"`
 	// The stop sequences field used ONLY for __completions__ and __chat
 	// external & foundation model__ serving endpoints. This is a list of
 	// strings and should only be used with other chat/completions query fields.
-	Stop types.List `tfsdk:"stop" tf:"optional"`
+	Stop types.List `tfsdk:"stop"`
 	// The stream field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is a boolean defaulting to
 	// false and should only be used with other chat/completions query fields.
-	Stream types.Bool `tfsdk:"stream" tf:"optional"`
+	Stream types.Bool `tfsdk:"stream"`
 	// The temperature field used ONLY for __completions__ and __chat external &
 	// foundation model__ serving endpoints. This is a float between 0.0 and 2.0
 	// with a default of 1.0 and should only be used with other chat/completions
 	// query fields.
-	Temperature types.Float64 `tfsdk:"temperature" tf:"optional"`
+	Temperature types.Float64 `tfsdk:"temperature"`
 }
 
 func (newState *QueryEndpointInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointInput_SdkV2) {
@@ -4624,12 +4722,24 @@ func (newState *QueryEndpointInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *QueryEndpointInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryEndpointInput_SdkV2) {
 }
 
-func (c QueryEndpointInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DataframeSplitInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "dataframe_split")...)
-	ChatMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "messages")...)
-	cs.SetRequired(append(path, "name")...)
+func (c QueryEndpointInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataframe_records"] = attrs["dataframe_records"].SetOptional()
+	attrs["dataframe_split"] = attrs["dataframe_split"].SetOptional()
+	attrs["dataframe_split"] = attrs["dataframe_split"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["extra_params"] = attrs["extra_params"].SetOptional()
+	attrs["input"] = attrs["input"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].SetOptional()
+	attrs["instances"] = attrs["instances"].SetOptional()
+	attrs["max_tokens"] = attrs["max_tokens"].SetOptional()
+	attrs["messages"] = attrs["messages"].SetOptional()
+	attrs["n"] = attrs["n"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["prompt"] = attrs["prompt"].SetOptional()
+	attrs["stop"] = attrs["stop"].SetOptional()
+	attrs["stream"] = attrs["stream"].SetOptional()
+	attrs["temperature"] = attrs["temperature"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointInput.
@@ -4867,32 +4977,32 @@ func (o *QueryEndpointInput_SdkV2) SetStop(ctx context.Context, v []types.String
 type QueryEndpointResponse_SdkV2 struct {
 	// The list of choices returned by the __chat or completions
 	// external/foundation model__ serving endpoint.
-	Choices types.List `tfsdk:"choices" tf:"optional"`
+	Choices types.List `tfsdk:"choices"`
 	// The timestamp in seconds when the query was created in Unix time returned
 	// by a __completions or chat external/foundation model__ serving endpoint.
-	Created types.Int64 `tfsdk:"created" tf:"optional"`
+	Created types.Int64 `tfsdk:"created"`
 	// The list of the embeddings returned by the __embeddings
 	// external/foundation model__ serving endpoint.
-	Data types.List `tfsdk:"data" tf:"optional"`
+	Data types.List `tfsdk:"data"`
 	// The ID of the query that may be returned by a __completions or chat
 	// external/foundation model__ serving endpoint.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The name of the __external/foundation model__ used for querying. This is
 	// the name of the model that was specified in the endpoint config.
-	Model types.String `tfsdk:"model" tf:"optional"`
+	Model types.String `tfsdk:"model"`
 	// The type of object returned by the __external/foundation model__ serving
 	// endpoint, one of [text_completion, chat.completion, list (of
 	// embeddings)].
-	Object types.String `tfsdk:"object" tf:"optional"`
+	Object types.String `tfsdk:"object"`
 	// The predictions returned by the serving endpoint.
-	Predictions types.List `tfsdk:"predictions" tf:"optional"`
+	Predictions types.List `tfsdk:"predictions"`
 	// The name of the served model that served the request. This is useful when
 	// there are multiple models behind the same endpoint with traffic split.
 	ServedModelName types.String `tfsdk:"-"`
 	// The usage object that may be returned by the __external/foundation
 	// model__ serving endpoint. This contains information about the number of
 	// tokens used in the prompt and response.
-	Usage types.List `tfsdk:"usage" tf:"optional,object"`
+	Usage types.List `tfsdk:"usage"`
 }
 
 func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEndpointResponse_SdkV2) {
@@ -4901,12 +5011,19 @@ func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *QueryEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryEndpointResponse_SdkV2) {
 }
 
-func (c QueryEndpointResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	V1ResponseChoiceElement_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "choices")...)
-	EmbeddingsV1ResponseEmbeddingElement_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "data")...)
-	ExternalModelUsageElement_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "usage")...)
+func (c QueryEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["choices"] = attrs["choices"].SetOptional()
+	attrs["created"] = attrs["created"].SetOptional()
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["model"] = attrs["model"].SetOptional()
+	attrs["object"] = attrs["object"].SetOptional()
+	attrs["predictions"] = attrs["predictions"].SetOptional()
+	attrs["served-model-name"] = attrs["served-model-name"].SetOptional()
+	attrs["usage"] = attrs["usage"].SetOptional()
+	attrs["usage"] = attrs["usage"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEndpointResponse.
@@ -5076,14 +5193,14 @@ func (o *QueryEndpointResponse_SdkV2) SetUsage(ctx context.Context, v ExternalMo
 type RateLimit_SdkV2 struct {
 	// Used to specify how many calls are allowed for a key within the
 	// renewal_period.
-	Calls types.Int64 `tfsdk:"calls" tf:""`
+	Calls types.Int64 `tfsdk:"calls"`
 	// Key field for a serving endpoint rate limit. Currently, only 'user' and
 	// 'endpoint' are supported, with 'endpoint' being the default if not
 	// specified.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// Renewal period field for a serving endpoint rate limit. Currently, only
 	// 'minute' is supported.
-	RenewalPeriod types.String `tfsdk:"renewal_period" tf:""`
+	RenewalPeriod types.String `tfsdk:"renewal_period"`
 }
 
 func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RateLimit_SdkV2) {
@@ -5092,11 +5209,12 @@ func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ra
 func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState RateLimit_SdkV2) {
 }
 
-func (c RateLimit_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "calls")...)
-	cs.SetRequired(append(path, "renewal_period")...)
+func (c RateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["calls"] = attrs["calls"].SetRequired()
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RateLimit.
@@ -5136,10 +5254,10 @@ func (o RateLimit_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Route_SdkV2 struct {
 	// The name of the served model this route configures traffic for.
-	ServedModelName types.String `tfsdk:"served_model_name" tf:""`
+	ServedModelName types.String `tfsdk:"served_model_name"`
 	// The percentage of endpoint traffic to send to this route. It must be an
 	// integer between 0 and 100 inclusive.
-	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage" tf:""`
+	TrafficPercentage types.Int64 `tfsdk:"traffic_percentage"`
 }
 
 func (newState *Route_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route_SdkV2) {
@@ -5148,11 +5266,11 @@ func (newState *Route_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Route_
 func (newState *Route_SdkV2) SyncEffectiveFieldsDuringRead(existingState Route_SdkV2) {
 }
 
-func (c Route_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "served_model_name")...)
-	cs.SetRequired(append(path, "traffic_percentage")...)
+func (c Route_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
+	attrs["traffic_percentage"] = attrs["traffic_percentage"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Route.
@@ -5194,17 +5312,17 @@ type ServedEntityInput_SdkV2 struct {
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object should be given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
+	EntityName types.String `tfsdk:"entity_name"`
 	// The version of the model in Databricks Model Registry to be served or
 	// empty if the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
+	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
 	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars types.Map `tfsdk:"environment_vars" tf:"optional"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// The external model to be served. NOTE: Only one of external_model and
 	// (entity_name, entity_version, workload_size, workload_type, and
 	// scale_to_zero_enabled) can be specified with the latter set being used
@@ -5213,24 +5331,24 @@ type ServedEntityInput_SdkV2 struct {
 	// endpoint without external_model. If the endpoint is created without
 	// external_model, users cannot update it to add external_model later. The
 	// task type of all external models within an endpoint must be the same.
-	ExternalModel types.List `tfsdk:"external_model" tf:"optional,object"`
+	ExternalModel types.List `tfsdk:"external_model"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The maximum tokens per second that the endpoint can scale up to.
-	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
 	// The minimum tokens per second that the endpoint can scale down to.
-	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of a served entity. It must be unique across an endpoint. A
 	// served entity name can consist of alphanumeric characters, dashes, and
 	// underscores. If not specified for an external model, this field defaults
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to
 	// <entity-name>-<entity-version>.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
 	// single unit of provisioned concurrency can process one request at a time.
@@ -5238,7 +5356,7 @@ type ServedEntityInput_SdkV2 struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size is 0.
-	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
+	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -5246,7 +5364,7 @@ type ServedEntityInput_SdkV2 struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
 func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityInput_SdkV2) {
@@ -5255,10 +5373,21 @@ func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ServedEntityInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityInput_SdkV2) {
 }
 
-func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExternalModel_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "external_model")...)
+func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetOptional()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
+	attrs["workload_size"] = attrs["workload_size"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntityInput.
@@ -5373,49 +5502,49 @@ func (o *ServedEntityInput_SdkV2) SetExternalModel(ctx context.Context, v Extern
 
 type ServedEntityOutput_SdkV2 struct {
 	// The creation timestamp of the served entity in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the served entity.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// The name of the entity served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object is given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
+	EntityName types.String `tfsdk:"entity_name"`
 	// The version of the served entity in Databricks Model Registry or empty if
 	// the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
+	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
 	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars types.Map `tfsdk:"environment_vars" tf:"optional"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	ExternalModel types.List `tfsdk:"external_model" tf:"optional,object"`
+	ExternalModel types.List `tfsdk:"external_model"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version, workload_size,
 	// workload_type, and scale_to_zero_enabled) is returned based on the
 	// endpoint type.
-	FoundationModel types.List `tfsdk:"foundation_model" tf:"optional,object"`
+	FoundationModel types.List `tfsdk:"foundation_model"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The maximum tokens per second that the endpoint can scale up to.
-	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
 	// The minimum tokens per second that the endpoint can scale down to.
-	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of the served entity.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
 	// Information corresponding to the state of the served entity.
-	State types.List `tfsdk:"state" tf:"optional,object"`
+	State types.List `tfsdk:"state"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
 	// single unit of provisioned concurrency can process one request at a time.
@@ -5423,7 +5552,7 @@ type ServedEntityOutput_SdkV2 struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
+	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -5431,7 +5560,7 @@ type ServedEntityOutput_SdkV2 struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
 func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntityOutput_SdkV2) {
@@ -5440,12 +5569,27 @@ func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ServedEntityOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntityOutput_SdkV2) {
 }
 
-func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExternalModel_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "external_model")...)
-	FoundationModel_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "foundation_model")...)
-	ServedModelState_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "state")...)
+func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["entity_name"] = attrs["entity_name"].SetOptional()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["foundation_model"] = attrs["foundation_model"].SetOptional()
+	attrs["foundation_model"] = attrs["foundation_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["workload_size"] = attrs["workload_size"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntityOutput.
@@ -5630,20 +5774,20 @@ type ServedEntitySpec_SdkV2 struct {
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object is given in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	EntityName types.String `tfsdk:"entity_name" tf:"optional"`
+	EntityName types.String `tfsdk:"entity_name"`
 	// The version of the served entity in Databricks Model Registry or empty if
 	// the entity is a FEATURE_SPEC.
-	EntityVersion types.String `tfsdk:"entity_version" tf:"optional"`
+	EntityVersion types.String `tfsdk:"entity_version"`
 	// The external model that is served. NOTE: Only one of external_model,
 	// foundation_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	ExternalModel types.List `tfsdk:"external_model" tf:"optional,object"`
+	ExternalModel types.List `tfsdk:"external_model"`
 	// The foundation model that is served. NOTE: Only one of foundation_model,
 	// external_model, and (entity_name, entity_version) is returned based on
 	// the endpoint type.
-	FoundationModel types.List `tfsdk:"foundation_model" tf:"optional,object"`
+	FoundationModel types.List `tfsdk:"foundation_model"`
 	// The name of the served entity.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedEntitySpec_SdkV2) {
@@ -5652,11 +5796,16 @@ func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ServedEntitySpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedEntitySpec_SdkV2) {
 }
 
-func (c ServedEntitySpec_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExternalModel_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "external_model")...)
-	FoundationModel_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "foundation_model")...)
+func (c ServedEntitySpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetOptional()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].SetOptional()
+	attrs["external_model"] = attrs["external_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["foundation_model"] = attrs["foundation_model"].SetOptional()
+	attrs["foundation_model"] = attrs["foundation_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedEntitySpec.
@@ -5764,29 +5913,29 @@ type ServedModelInput_SdkV2 struct {
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars types.Map `tfsdk:"environment_vars" tf:"optional"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The maximum tokens per second that the endpoint can scale up to.
-	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput" tf:"optional"`
+	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
 	// The minimum tokens per second that the endpoint can scale down to.
-	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput" tf:"optional"`
+	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
 	// The name of the model in Databricks Model Registry to be served or if the
 	// model resides in Unity Catalog, the full name of model, in the form of
 	// __catalog_name__.__schema_name__.__model_name__.
-	ModelName types.String `tfsdk:"model_name" tf:""`
+	ModelName types.String `tfsdk:"model_name"`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version" tf:""`
+	ModelVersion types.String `tfsdk:"model_version"`
 	// The name of a served model. It must be unique across an endpoint. If not
 	// specified, this field will default to <model-name>-<model-version>. A
 	// served model name can consist of alphanumeric characters, dashes, and
 	// underscores.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the served model should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:""`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
 	// The workload size of the served model. The workload size corresponds to a
 	// range of provisioned concurrency that the compute will autoscale between.
 	// A single unit of provisioned concurrency can process one request at a
@@ -5794,7 +5943,7 @@ type ServedModelInput_SdkV2 struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
+	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -5802,7 +5951,7 @@ type ServedModelInput_SdkV2 struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
 func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelInput_SdkV2) {
@@ -5811,12 +5960,19 @@ func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ServedModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelInput_SdkV2) {
 }
 
-func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "model_name")...)
-	cs.SetRequired(append(path, "model_version")...)
-	cs.SetRequired(append(path, "scale_to_zero_enabled")...)
+func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
+	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
+	attrs["model_name"] = attrs["model_name"].SetRequired()
+	attrs["model_version"] = attrs["model_version"].SetRequired()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetRequired()
+	attrs["workload_size"] = attrs["workload_size"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelInput.
@@ -5900,32 +6056,32 @@ func (o *ServedModelInput_SdkV2) SetEnvironmentVars(ctx context.Context, v map[s
 
 type ServedModelOutput_SdkV2 struct {
 	// The creation timestamp of the served model in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the served model.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this model. Note: this is an
 	// experimental feature and subject to change. Example model environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
-	EnvironmentVars types.Map `tfsdk:"environment_vars" tf:"optional"`
+	EnvironmentVars types.Map `tfsdk:"environment_vars"`
 	// ARN of the instance profile that the served model will use to access AWS
 	// resources.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The name of the model in Databricks Model Registry or the full name of
 	// the model in Unity Catalog.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name"`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version" tf:"optional"`
+	ModelVersion types.String `tfsdk:"model_version"`
 	// The name of the served model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the Served Model should scale down to
 	// zero.
-	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled" tf:"optional"`
+	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
 	// Information corresponding to the state of the Served Model.
-	State types.List `tfsdk:"state" tf:"optional,object"`
+	State types.List `tfsdk:"state"`
 	// The workload size of the served model. The workload size corresponds to a
 	// range of provisioned concurrency that the compute will autoscale between.
 	// A single unit of provisioned concurrency can process one request at a
@@ -5933,7 +6089,7 @@ type ServedModelOutput_SdkV2 struct {
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
 	// the provisioned concurrency for each workload size will be 0.
-	WorkloadSize types.String `tfsdk:"workload_size" tf:"optional"`
+	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served model. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
@@ -5941,7 +6097,7 @@ type ServedModelOutput_SdkV2 struct {
 	// available [GPU types].
 	//
 	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
-	WorkloadType types.String `tfsdk:"workload_type" tf:"optional"`
+	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
 func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelOutput_SdkV2) {
@@ -5950,10 +6106,21 @@ func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ServedModelOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelOutput_SdkV2) {
 }
 
-func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServedModelState_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "state")...)
+func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["environment_vars"] = attrs["environment_vars"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["workload_size"] = attrs["workload_size"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelOutput.
@@ -6069,12 +6236,12 @@ func (o *ServedModelOutput_SdkV2) SetState(ctx context.Context, v ServedModelSta
 type ServedModelSpec_SdkV2 struct {
 	// The name of the model in Databricks Model Registry or the full name of
 	// the model in Unity Catalog.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name"`
 	// The version of the model in Databricks Model Registry or Unity Catalog to
 	// be served.
-	ModelVersion types.String `tfsdk:"model_version" tf:"optional"`
+	ModelVersion types.String `tfsdk:"model_version"`
 	// The name of the served model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelSpec_SdkV2) {
@@ -6083,9 +6250,12 @@ func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ServedModelSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelSpec_SdkV2) {
 }
 
-func (c ServedModelSpec_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServedModelSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelSpec.
@@ -6136,9 +6306,9 @@ type ServedModelState_SdkV2 struct {
 	// etc.) DEPLOYMENT_ABORTED indicates that the deployment was terminated
 	// likely due to a failure in bringing up another served entity under the
 	// same endpoint and config version.
-	Deployment types.String `tfsdk:"deployment" tf:"optional"`
+	Deployment types.String `tfsdk:"deployment"`
 	// More information about the state of the served entity, if available.
-	DeploymentStateMessage types.String `tfsdk:"deployment_state_message" tf:"optional"`
+	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
 }
 
 func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServedModelState_SdkV2) {
@@ -6147,9 +6317,11 @@ func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServedModelState_SdkV2) {
 }
 
-func (c ServedModelState_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServedModelState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment_state_message"] = attrs["deployment_state_message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServedModelState.
@@ -6188,7 +6360,7 @@ func (o ServedModelState_SdkV2) Type(ctx context.Context) attr.Type {
 type ServerLogsResponse_SdkV2 struct {
 	// The most recent log lines of the model server processing invocation
 	// requests.
-	Logs types.String `tfsdk:"logs" tf:""`
+	Logs types.String `tfsdk:"logs"`
 }
 
 func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServerLogsResponse_SdkV2) {
@@ -6197,10 +6369,10 @@ func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ServerLogsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServerLogsResponse_SdkV2) {
 }
 
-func (c ServerLogsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "logs")...)
+func (c ServerLogsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["logs"] = attrs["logs"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServerLogsResponse.
@@ -6237,26 +6409,26 @@ func (o ServerLogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type ServingEndpoint_SdkV2 struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
 	// external model endpoints are currently supported.
-	AiGateway types.List `tfsdk:"ai_gateway" tf:"optional,object"`
+	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The config that is currently being served by the endpoint.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// The timestamp when the endpoint was created in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// System-generated ID of the endpoint. This is used to refer to the
 	// endpoint in the Permissions API
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The timestamp when the endpoint was last updated by a user in Unix time.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The name of the serving endpoint.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Information corresponding to the state of the serving endpoint.
-	State types.List `tfsdk:"state" tf:"optional,object"`
+	State types.List `tfsdk:"state"`
 	// Tags attached to the serving endpoint.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
-	Task types.String `tfsdk:"task" tf:"optional"`
+	Task types.String `tfsdk:"task"`
 }
 
 func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpoint_SdkV2) {
@@ -6265,13 +6437,22 @@ func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpoint_SdkV2) {
 }
 
-func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ai_gateway")...)
-	EndpointCoreConfigSummary_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
-	EndpointState_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	EndpointTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpoint.
@@ -6442,13 +6623,13 @@ func (o *ServingEndpoint_SdkV2) SetTags(ctx context.Context, v []EndpointTag_Sdk
 
 type ServingEndpointAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlRequest_SdkV2) {
@@ -6457,9 +6638,13 @@ func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDu
 func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlRequest_SdkV2) {
 }
 
-func (c ServingEndpointAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServingEndpointAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointAccessControlRequest.
@@ -6501,15 +6686,15 @@ func (o ServingEndpointAccessControlRequest_SdkV2) Type(ctx context.Context) att
 
 type ServingEndpointAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointAccessControlResponse_SdkV2) {
@@ -6518,10 +6703,14 @@ func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *ServingEndpointAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointAccessControlResponse_SdkV2) {
 }
 
-func (c ServingEndpointAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServingEndpointPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c ServingEndpointAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointAccessControlResponse.
@@ -6596,37 +6785,37 @@ func (o *ServingEndpointAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 type ServingEndpointDetailed_SdkV2 struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
 	// external model endpoints are currently supported.
-	AiGateway types.List `tfsdk:"ai_gateway" tf:"optional,object"`
+	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The config that is currently being served by the endpoint.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// The timestamp when the endpoint was created in Unix time.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// Information required to query DataPlane APIs.
-	DataPlaneInfo types.List `tfsdk:"data_plane_info" tf:"optional,object"`
+	DataPlaneInfo types.List `tfsdk:"data_plane_info"`
 	// Endpoint invocation url if route optimization is enabled for endpoint
-	EndpointUrl types.String `tfsdk:"endpoint_url" tf:"optional"`
+	EndpointUrl types.String `tfsdk:"endpoint_url"`
 	// System-generated ID of the endpoint. This is used to refer to the
 	// endpoint in the Permissions API
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The timestamp when the endpoint was last updated by a user in Unix time.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The name of the serving endpoint.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The config that the endpoint is attempting to update to.
-	PendingConfig types.List `tfsdk:"pending_config" tf:"optional,object"`
+	PendingConfig types.List `tfsdk:"pending_config"`
 	// The permission level of the principal making the request.
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// Boolean representing if route optimization has been enabled for the
 	// endpoint
-	RouteOptimized types.Bool `tfsdk:"route_optimized" tf:"optional"`
+	RouteOptimized types.Bool `tfsdk:"route_optimized"`
 	// Information corresponding to the state of the serving endpoint.
-	State types.List `tfsdk:"state" tf:"optional,object"`
+	State types.List `tfsdk:"state"`
 	// Tags attached to the serving endpoint.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The task type of the serving endpoint.
-	Task types.String `tfsdk:"task" tf:"optional"`
+	Task types.String `tfsdk:"task"`
 }
 
 func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointDetailed_SdkV2) {
@@ -6635,15 +6824,29 @@ func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointDetailed_SdkV2) {
 }
 
-func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AiGatewayConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ai_gateway")...)
-	EndpointCoreConfigOutput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
-	ModelDataPlaneInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "data_plane_info")...)
-	EndpointPendingConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "pending_config")...)
-	EndpointState_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	EndpointTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["data_plane_info"] = attrs["data_plane_info"].SetOptional()
+	attrs["data_plane_info"] = attrs["data_plane_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["pending_config"] = attrs["pending_config"].SetOptional()
+	attrs["pending_config"] = attrs["pending_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointDetailed.
@@ -6881,11 +7084,11 @@ func (o *ServingEndpointDetailed_SdkV2) SetTags(ctx context.Context, v []Endpoin
 }
 
 type ServingEndpointPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermission_SdkV2) {
@@ -6894,9 +7097,12 @@ func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *ServingEndpointPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermission_SdkV2) {
 }
 
-func (c ServingEndpointPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServingEndpointPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermission.
@@ -6965,11 +7171,11 @@ func (o *ServingEndpointPermission_SdkV2) SetInheritedFromObject(ctx context.Con
 }
 
 type ServingEndpointPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissions_SdkV2) {
@@ -6978,10 +7184,12 @@ func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *ServingEndpointPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissions_SdkV2) {
 }
 
-func (c ServingEndpointPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServingEndpointAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c ServingEndpointPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissions.
@@ -7050,9 +7258,9 @@ func (o *ServingEndpointPermissions_SdkV2) SetAccessControlList(ctx context.Cont
 }
 
 type ServingEndpointPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServingEndpointPermissionsDescription_SdkV2) {
@@ -7061,9 +7269,11 @@ func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFields
 func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsDescription_SdkV2) {
 }
 
-func (c ServingEndpointPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServingEndpointPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsDescription.
@@ -7100,7 +7310,7 @@ func (o ServingEndpointPermissionsDescription_SdkV2) Type(ctx context.Context) a
 }
 
 type ServingEndpointPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
 }
@@ -7111,11 +7321,11 @@ func (newState *ServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuri
 func (newState *ServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ServingEndpointPermissionsRequest_SdkV2) {
 }
 
-func (c ServingEndpointPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServingEndpointAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "serving_endpoint_id")...)
+func (c ServingEndpointPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServingEndpointPermissionsRequest.
@@ -7183,7 +7393,7 @@ func (o *ServingEndpointPermissionsRequest_SdkV2) SetAccessControlList(ctx conte
 
 type TrafficConfig_SdkV2 struct {
 	// The list of routes that define traffic to each served entity.
-	Routes types.List `tfsdk:"routes" tf:"optional"`
+	Routes types.List `tfsdk:"routes"`
 }
 
 func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrafficConfig_SdkV2) {
@@ -7192,10 +7402,10 @@ func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *TrafficConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrafficConfig_SdkV2) {
 }
 
-func (c TrafficConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Route_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "routes")...)
+func (c TrafficConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["routes"] = attrs["routes"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrafficConfig.
@@ -7261,15 +7471,15 @@ func (o *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 
 type V1ResponseChoiceElement_SdkV2 struct {
 	// The finish reason returned by the endpoint.
-	FinishReason types.String `tfsdk:"finishReason" tf:"optional"`
+	FinishReason types.String `tfsdk:"finishReason"`
 	// The index of the choice in the __chat or completions__ response.
-	Index types.Int64 `tfsdk:"index" tf:"optional"`
+	Index types.Int64 `tfsdk:"index"`
 	// The logprobs returned only by the __completions__ endpoint.
-	Logprobs types.Int64 `tfsdk:"logprobs" tf:"optional"`
+	Logprobs types.Int64 `tfsdk:"logprobs"`
 	// The message response from the __chat__ endpoint.
-	Message types.List `tfsdk:"message" tf:"optional,object"`
+	Message types.List `tfsdk:"message"`
 	// The text response from the __completions__ endpoint.
-	Text types.String `tfsdk:"text" tf:"optional"`
+	Text types.String `tfsdk:"text"`
 }
 
 func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan V1ResponseChoiceElement_SdkV2) {
@@ -7278,10 +7488,15 @@ func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *V1ResponseChoiceElement_SdkV2) SyncEffectiveFieldsDuringRead(existingState V1ResponseChoiceElement_SdkV2) {
 }
 
-func (c V1ResponseChoiceElement_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ChatMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "message")...)
+func (c V1ResponseChoiceElement_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["finishReason"] = attrs["finishReason"].SetOptional()
+	attrs["index"] = attrs["index"].SetOptional()
+	attrs["logprobs"] = attrs["logprobs"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["message"] = attrs["message"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["text"] = attrs["text"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in V1ResponseChoiceElement.

@@ -24,8 +24,15 @@ type dataSourceApp struct {
 }
 
 type dataApp struct {
-	Name types.String `tfsdk:"name" tf:"required"`
-	App  types.Object `tfsdk:"app" tf:"computed"`
+	Name types.String `tfsdk:"name"`
+	App  types.Object `tfsdk:"app"`
+}
+
+func (dataApp) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["app"] = attrs["app"].SetComputed()
+
+	return attrs
 }
 
 func (dataApp) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

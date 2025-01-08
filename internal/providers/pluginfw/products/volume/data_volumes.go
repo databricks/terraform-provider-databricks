@@ -31,9 +31,16 @@ type VolumesDataSource struct {
 }
 
 type VolumesList struct {
-	CatalogName types.String `tfsdk:"catalog_name" tf:"required"`
-	SchemaName  types.String `tfsdk:"schema_name" tf:"required"`
-	Ids         types.List   `tfsdk:"ids" tf:"optional,computed"`
+	CatalogName types.String `tfsdk:"catalog_name"`
+	SchemaName  types.String `tfsdk:"schema_name"`
+	Ids         types.List   `tfsdk:"ids"`
+}
+
+func (VolumesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
+	attrs["ids"] = attrs["ids"].SetOptional().SetComputed()
+	return attrs
 }
 
 func (VolumesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

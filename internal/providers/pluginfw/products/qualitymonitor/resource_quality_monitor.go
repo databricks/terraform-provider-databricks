@@ -90,6 +90,7 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetOptional("warehouse_id")
 		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
+		c.SetOptional("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

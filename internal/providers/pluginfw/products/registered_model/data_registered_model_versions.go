@@ -27,8 +27,14 @@ type RegisteredModelVersionsDataSource struct {
 }
 
 type RegisteredModelVersionsData struct {
-	FullName      types.String `tfsdk:"full_name" tf:"required"`
-	ModelVersions types.List   `tfsdk:"model_versions" tf:"optional,computed"`
+	FullName      types.String `tfsdk:"full_name"`
+	ModelVersions types.List   `tfsdk:"model_versions"`
+}
+
+func (RegisteredModelVersionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["model_versions"] = attrs["model_versions"].SetOptional().SetComputed()
+	return attrs
 }
 
 func (RegisteredModelVersionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

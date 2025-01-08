@@ -14,8 +14,9 @@ import (
 
 // ClusterSizes for SQL endpoints
 var (
-	ClusterSizes   = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
-	MaxNumClusters = 30
+	ClusterSizes    = []string{"2X-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "2X-Large", "3X-Large", "4X-Large"}
+	MaxNumClusters  = 30
+	ForceSendFields = []string{"enable_serverless_compute", "enable_photon", "auto_stop_mins"}
 )
 
 type SqlWarehouse struct {
@@ -95,7 +96,7 @@ func ResourceSqlEndpoint() common.Resource {
 			}
 			var se sql.CreateWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
-			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
+			common.SetForceSendFields(&se, d, ForceSendFields)
 			wait, err := w.Warehouses.Create(ctx, se)
 			if err != nil {
 				return fmt.Errorf("failed creating warehouse: %w", err)
@@ -129,7 +130,7 @@ func ResourceSqlEndpoint() common.Resource {
 			}
 			var se sql.EditWarehouseRequest
 			common.DataToStructPointer(d, s, &se)
-			common.SetForceSendFields(&se, d, []string{"enable_serverless_compute", "enable_photon"})
+			common.SetForceSendFields(&se, d, ForceSendFields)
 			se.Id = d.Id()
 			_, err = w.Warehouses.Edit(ctx, se)
 			if err != nil {

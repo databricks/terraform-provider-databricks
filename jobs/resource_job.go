@@ -677,8 +677,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 
 // List all jobs
 func (a JobsAPI) List() (l []Job, err error) {
-	l, err = a.ListByName("", false)
-	return
+	return a.ListByName("", false)
 }
 
 // RunsList returns a job runs list
@@ -1066,19 +1065,6 @@ func ResourceJob() common.Resource {
 				}
 				if js.MaxConcurrentRuns > 1 {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
-				}
-			}
-			for _, task := range js.Tasks {
-				if task.NewCluster == nil {
-					continue
-				}
-				if err := clusters.Validate(*task.NewCluster); err != nil {
-					return fmt.Errorf("task %s invalid: %w", task.TaskKey, err)
-				}
-			}
-			if js.NewCluster != nil {
-				if err := clusters.Validate(*js.NewCluster); err != nil {
-					return fmt.Errorf("invalid job cluster: %w", err)
 				}
 			}
 			return nil

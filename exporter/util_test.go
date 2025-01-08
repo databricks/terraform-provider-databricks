@@ -225,6 +225,11 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		userListIdUsernameFixture2,
 		userListFixture,
 		userReadFixture,
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Fabc&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.enableServices("notebooks")

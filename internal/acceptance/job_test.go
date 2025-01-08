@@ -356,7 +356,7 @@ func TestAccJobRunAsUser(t *testing.T) {
 }
 
 func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
-	loadUcwsEnv(t)
+	LoadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	UnityWorkspaceLevel(t, Step{
 		Template: runAsTemplate(`service_principal_name = "` + spId + `"`),
@@ -373,7 +373,7 @@ func getRunAsAttribute(t *testing.T, ctx context.Context) string {
 }
 
 func TestUcAccJobRunAsMutations(t *testing.T) {
-	loadUcwsEnv(t)
+	LoadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	// Note: the attribute must match the type of principal that the test is run as.
 	ctx := context.Background()
@@ -396,7 +396,7 @@ func TestUcAccJobRunAsMutations(t *testing.T) {
 }
 
 func TestAccRemoveWebhooks(t *testing.T) {
-	skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
+	Skipf(t)("There is no API to create notification destinations. Once available, add here and enable this test.")
 	WorkspaceLevel(t, Step{
 		Template: `
 		resource databricks_job test {

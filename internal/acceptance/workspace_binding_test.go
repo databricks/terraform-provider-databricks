@@ -30,6 +30,16 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 			}
 			isolation_mode = "ISOLATION_MODE_ISOLATED"
 		}
+
+		resource "databricks_credential" "credential" {
+			name = "service-cred-{var.RANDOM}"
+			aws_iam_role {
+				role_arn = "{env.TEST_METASTORE_DATA_ACCESS_ARN}"
+			}
+			purpose = "SERVICE"
+			skip_validation = true
+			isolation_mode = "ISOLATION_MODE_ISOLATED"
+		}
 		
 		resource "databricks_external_location" "some" {
 			name            = "external-{var.RANDOM}"
@@ -40,28 +50,34 @@ func workspaceBindingTemplateWithWorkspaceId(workspaceId string) string {
 
 		resource "databricks_workspace_binding" "dev" {
 			catalog_name = databricks_catalog.dev.name
-			workspace_id = %s
+			workspace_id = %[1]s
 		}
 
 		resource "databricks_workspace_binding" "prod" {
 			securable_name = databricks_catalog.prod.name
 			securable_type = "catalog"
-			workspace_id   = %s
+			workspace_id   = %[1]s
 			binding_type   = "BINDING_TYPE_READ_ONLY"
 		}		
 
 		resource "databricks_workspace_binding" "ext" {
 			securable_name = databricks_external_location.some.id
 			securable_type = "external_location"
-			workspace_id   = %s
+			workspace_id   = %[1]s
 		}
 
 		resource "databricks_workspace_binding" "cred" {
 			securable_name = databricks_storage_credential.external.id
 			securable_type = "storage_credential"
-			workspace_id   = %s
-		}		
-	`, workspaceId, workspaceId, workspaceId, workspaceId)
+			workspace_id   = %[1]s
+		}
+		
+		resource "databricks_workspace_binding" "service_cred" {
+			securable_name = databricks_credential.credential.id
+			securable_type = "credential"
+			workspace_id   = %[1]s
+		}
+	`, workspaceId)
 }
 
 func TestUcAccWorkspaceBindingToOtherWorkspace(t *testing.T) {

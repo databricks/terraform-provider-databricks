@@ -29,7 +29,7 @@ Unlike the [SQL specification](https://docs.databricks.com/sql/language-manual/s
 
 ## Metastore grants
 
-You can grant `CREATE_CATALOG`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_STORAGE_CREDENTIAL`, `MANAGE_ALLOWLIST`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_CONNECTION`, `USE_PROVIDER`, `USE_RECIPIENT` and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
+You can grant `CREATE_CATALOG`, `CREATE_CLEAN_ROOM`, `CREATE_CONNECTION`, `CREATE_EXTERNAL_LOCATION`, `CREATE_PROVIDER`, `CREATE_RECIPIENT`, `CREATE_SHARE`, `CREATE_SERVICE_CREDENTIAL`, `CREATE_STORAGE_CREDENTIAL`, `SET_SHARE_PERMISSION`, `USE_MARKETPLACE_ASSETS`, `USE_PROVIDER`, `USE_RECIPIENT`, and `USE_SHARE` privileges to [databricks_metastore](metastore.md) assigned to the workspace.
 
 ```hcl
 resource "databricks_grants" "sandbox" {
@@ -47,7 +47,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Catalog grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_CONNECTION`, `CREATE_SCHEMA`, `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_CONNECTION`, `CREATE_SCHEMA`, `MANAGE`, and `USE_CATALOG` privileges to [databricks_catalog](catalog.md) specified in the `catalog` attribute. You can also grant `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` and `USE_SCHEMA` at the catalog level to apply them to the pertinent current and future securable objects within the catalog:
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
@@ -77,7 +77,7 @@ resource "databricks_grants" "sandbox" {
 
 ## Schema grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` at the schema level to apply them to the pertinent current and future securable objects within the schema:
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `CREATE_FUNCTION`, `CREATE_TABLE`, `CREATE_VOLUME`, `MANAGE` and `USE_SCHEMA` privileges to [_`catalog.schema`_](schema.md) specified in the `schema` attribute. You can also grant `EXECUTE`, `MODIFY`, `REFRESH`, `SELECT`, `READ_VOLUME`, `WRITE_VOLUME` at the schema level to apply them to the pertinent current and future securable objects within the schema:
 
 ```hcl
 resource "databricks_schema" "things" {
@@ -100,7 +100,7 @@ resource "databricks_grants" "things" {
 
 ## Table grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](tables.md) specified in the `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `MANAGE`, `SELECT` and `MODIFY` privileges to [_`catalog.schema.table`_](sql_table.md) specified in the `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -138,7 +138,7 @@ resource "databricks_grants" "things" {
 
 ## View grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG` and `SELECT` privileges to [_`catalog.schema.view`_](views.md) specified in `table` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `MANAGE` and `SELECT` privileges to [_`catalog.schema.view`_](sql_table.md) specified in `table` attribute.
 
 ```hcl
 resource "databricks_grants" "customer360" {
@@ -172,7 +172,7 @@ resource "databricks_grants" "customers" {
 
 ## Volume grants
 
-You can grant `ALL_PRIVILEGES`, `READ_VOLUME` and `WRITE_VOLUME` privileges to [_`catalog.schema.volume`_](volumes.md) specified in the `volume` attribute.
+You can grant `ALL_PRIVILEGES`, `MANAGE`, `READ_VOLUME` and `WRITE_VOLUME` privileges to [_`catalog.schema.volume`_](volume.md) specified in the `volume` attribute.
 
 ```hcl
 resource "databricks_volume" "this" {
@@ -195,7 +195,7 @@ resource "databricks_grants" "volume" {
 
 ## Registered model grants
 
-You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, and `EXECUTE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `model` attribute.
+You can grant `ALL_PRIVILEGES`, `APPLY_TAG`, `EXECUTE`, and `MANAGE` privileges to [_`catalog.schema.model`_](registered_model.md) specified in the `model` attribute.
 
 ```hcl
 resource "databricks_grants" "customers" {
@@ -213,7 +213,7 @@ resource "databricks_grants" "customers" {
 
 ## Function grants
 
-You can grant `ALL_PRIVILEGES` and `EXECUTE` privileges to _`catalog.schema.function`_ specified in the `function` attribute.
+You can grant `ALL_PRIVILEGES`, `EXECUTE`, and `MANAGE` privileges to _`catalog.schema.function`_ specified in the `function` attribute.
 
 ```hcl
 resource "databricks_grants" "udf" {
@@ -230,9 +230,32 @@ resource "databricks_grants" "udf" {
 }
 ```
 
+## Service credential grants
+
+You can grant `ALL_PRIVILEGES`, `ACCESS`, `CREATE_CONNECTION`, and `MANAGE` privileges to [databricks_credential](credential.md) id specified in `credential` attribute:
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  purpose = "SERVICE"
+  comment = "Managed by TF"
+}
+
+resource "databricks_grants" "external_creds" {
+  credential = databricks_credential.external.id
+  grant {
+    principal  = "Data Engineers"
+    privileges = ["CREATE_CONNECTION"]
+  }
+}
+```
+
 ## Storage credential grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_LOCATION`, `CREATE_EXTERNAL_TABLE`, `MANAGE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_storage_credential](storage_credential.md) id specified in `storage_credential` attribute:
 
 ```hcl
 resource "databricks_storage_credential" "external" {
@@ -254,7 +277,7 @@ resource "databricks_grants" "external_creds" {
 
 ## External location grants
 
-You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `CREATE EXTERNAL VOLUME`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
+You can grant `ALL_PRIVILEGES`, `CREATE_EXTERNAL_TABLE`, `CREATE_MANAGED_STORAGE`, `CREATE EXTERNAL VOLUME`, `MANAGE`, `READ_FILES` and `WRITE_FILES` privileges to [databricks_external_location](external_location.md) id specified in `external_location` attribute:
 
 ```hcl
 resource "databricks_external_location" "some" {
@@ -287,7 +310,7 @@ resource "databricks_grants" "some" {
 
 ## Connection grants
 
-You can grant `ALL_PRIVILEGES`, `USE_CONNECTION` and `CREATE_FOREIGN_CATALOG` to [databricks_connection](connection.md) specified in `foreign_connection` attribute:
+You can grant `ALL_PRIVILEGES`, `MANAGE`, `USE_CONNECTION` and `CREATE_FOREIGN_CATALOG` to [databricks_connection](connection.md) specified in `foreign_connection` attribute:
 
 ```hcl
 resource "databricks_connection" "mysql" {

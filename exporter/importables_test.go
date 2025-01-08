@@ -58,6 +58,7 @@ func importContextForTest() *importContext {
 		allSps:                    map[string]scim.User{},
 		channels:                  makeResourcesChannels(),
 		oldWorkspaceObjectMapping: map[int64]string{},
+		gitInfoCache:              map[string]gitInfoCacheEntry{},
 		exportDeletedUsersAssets:  false,
 		ignoredResources:          map[string]struct{}{},
 		deletedResources:          map[string]struct{}{},
@@ -511,7 +512,7 @@ func TestClusterPolicyNoValues(t *testing.T) {
 	assert.Equal(t, 1, len(ic.testEmits))
 }
 
-func TestGroupCacheError(t *testing.T) {
+func TestGroupCacheAndSearchError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
@@ -526,9 +527,14 @@ func TestGroupCacheError(t *testing.T) {
 		assert.EqualError(t, err, "nope")
 
 		err = resourcesMap["databricks_group"].Search(ic, &resource{
-			ID: "nonsense",
+			Attribute: "display_name",
 		})
 		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_group"].Search(ic, &resource{
+			Attribute: "nonsense",
+		})
+		assert.EqualError(t, err, "wrong search attribute 'nonsense' for databricks_group")
 		d := scim.ResourceGroup().ToResource().TestResourceData()
 		d.Set("display_name", "nonsense")
 		err = resourcesMap["databricks_group"].Import(ic, &resource{
@@ -1525,29 +1531,67 @@ func TestEmitSqlParent(t *testing.T) {
 }
 
 func TestEmitFilesFromSlice(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("storage,notebooks,wsfiles")
-	ic.emitFilesFromSlice([]string{
-		"dbfs:/FileStore/test.txt",
-		"/Workspace/Shared/test.txt",
-		"nothing",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Fgit%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{
+				GitInfo: &sdk_workspace.RepoInfo{
+					Id: 1234,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("storage,notebooks,wsfiles,repos")
+		ic.emitFilesFromSlice([]string{
+			"dbfs:/FileStore/test.txt",
+			"/Workspace/Shared/test.txt",
+			"/Workspace/Shared/git/test.txt",
+			"nothing",
+		})
+		assert.Equal(t, 3, len(ic.testEmits))
+		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
 	})
-	assert.Equal(t, 2, len(ic.testEmits))
-	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
-	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }
 
 func TestEmitFilesFromMap(t *testing.T) {
-	ic := importContextForTest()
-	ic.enableServices("storage,notebooks,wsfiles")
-	ic.emitFilesFromMap(map[string]string{
-		"k1": "dbfs:/FileStore/test.txt",
-		"k2": "/Workspace/Shared/test.txt",
-		"k3": "nothing",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/workspace/get-status?path=%2FShared%2Fgit%2Ftest.txt&return_git_info=true",
+			Response: workspace.ObjectStatus{
+				GitInfo: &sdk_workspace.RepoInfo{
+					Id: 1234,
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("storage,notebooks,wsfiles,repos")
+		ic.emitFilesFromMap(map[string]string{
+			"k1": "dbfs:/FileStore/test.txt",
+			"k2": "/Workspace/Shared/test.txt",
+			"k3": "nothing",
+			"k4": "/Workspace/Shared/git/test.txt",
+		})
+		assert.Equal(t, 3, len(ic.testEmits))
+		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
+		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
 	})
-	assert.Equal(t, 2, len(ic.testEmits))
-	assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
-	assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
 }
 
 func TestStorageCredentialListFails(t *testing.T) {
@@ -1975,6 +2019,44 @@ func TestListExternalLocations(t *testing.T) {
 		require.Equal(t, 3, len(ic.testEmits))
 		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: external_location/ext_loc)"])
 		assert.True(t, ic.testEmits["databricks_storage_credential[<unknown>] (id: stest)"])
+	})
+}
+
+func TestServiceCredentials(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			ReuseRequest: true,
+			Method:       "GET",
+			Resource:     "/api/2.1/unity-catalog/credentials?",
+			Response: catalog.ListCredentialsResponse{
+				Credentials: []catalog.CredentialInfo{
+					{
+						Name:    "test-storage",
+						Purpose: catalog.CredentialPurposeStorage,
+					},
+					{
+						Name:    "test-service",
+						Purpose: catalog.CredentialPurposeService,
+					},
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		ic := importContextForTestWithClient(ctx, client)
+		ic.enableServices("uc-credentials,uc-grants")
+		ic.currentMetastore = currentMetastoreResponse
+		// Test listing
+		err := resourcesMap["databricks_credential"].List(ic)
+		assert.NoError(t, err)
+		require.Equal(t, 1, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_credential[<unknown>] (id: test-service)"])
+		// Test import
+		err = resourcesMap["databricks_credential"].Import(ic, &resource{
+			ID: "1234",
+		})
+		assert.NoError(t, err)
+		require.Equal(t, 2, len(ic.testEmits))
+		assert.True(t, ic.testEmits["databricks_grants[<unknown>] (id: credential/1234)"])
 	})
 }
 

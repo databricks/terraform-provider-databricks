@@ -20,6 +20,7 @@ const (
 	Notebook  string = "NOTEBOOK"
 	File      string = "FILE"
 	Directory string = "DIRECTORY"
+	Repo      string = "REPO"
 	Scala     string = "SCALA"
 	Python    string = "PYTHON"
 	SQL       string = "SQL"
@@ -58,6 +59,8 @@ type ObjectStatus struct {
 	ModifiedAt            int64                  `json:"modified_at,omitempty"`
 	ModifiedAtInteractive *ModifiedAtInteractive `json:"modified_at_interactive,omitempty"`
 	Size                  int64                  `json:"size,omitempty"`
+	GitInfo               *workspace.RepoInfo    `json:"git_info,omitempty"`
+	ResourceId            string                 `json:"resource_id,omitempty"`
 }
 
 // ExportPath contains the base64 content of the notebook
@@ -108,11 +111,20 @@ func (a NotebooksAPI) Create(r ImportPath) error {
 
 // Read returns the notebook metadata and not the contents
 func (a NotebooksAPI) Read(path string) (ObjectStatus, error) {
+	return a.GetStatus(path, false)
+}
+
+// Read returns the notebook metadata and not the contents
+func (a NotebooksAPI) GetStatus(path string, returnGitInfo bool) (ObjectStatus, error) {
 	var notebookInfo ObjectStatus
+	params := map[string]string{
+		"path": path,
+	}
+	if returnGitInfo {
+		params["return_git_info"] = "true"
+	}
 	_, err := common.RetryOnTimeout(a.context, func(ctx context.Context) (*ObjectStatus, error) {
-		err := a.client.Get(a.context, "/workspace/get-status", map[string]string{
-			"path": path,
-		}, &notebookInfo)
+		err := a.client.Get(a.context, "/workspace/get-status", params, &notebookInfo)
 		return nil, err
 	})
 	return notebookInfo, err

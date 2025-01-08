@@ -423,7 +423,6 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 A folder could be specified by using either `directory_path` or `directory_id` attribute.  The value for the `directory_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_directory` resource as shown below.
 
-
 ```hcl
 resource "databricks_group" "auto" {
   display_name = "Automation"
@@ -635,6 +634,37 @@ resource "databricks_permissions" "ml_serving_usage" {
   access_control {
     group_name       = databricks_group.eng.display_name
     permission_level = "CAN_QUERY"
+  }
+}
+```
+
+## Mosaic AI Vector Search usage
+
+Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
+
+-> You need to use the `endpoint_id` attribute of `databricks_vector_search_endpoint` as value for `vector_search_endpoint_id`, not the `id`!
+
+```hcl
+resource "databricks_vector_search_endpoint" "this" {
+  name          = "vector-search-test"
+  endpoint_type = "STANDARD"
+}
+
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "vector_search_endpoint_usage" {
+  vector_search_endpoint_id = databricks_vector_search_endpoint.this.endpoint_id
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
   }
 }
 ```
@@ -881,6 +911,7 @@ One type argument and at least one access control block argument are required.
 
 Exactly one of the following arguments is required:
 
+- `app_name` - [app](app.md) name
 - `cluster_id` - [cluster](cluster.md) id
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id
@@ -895,6 +926,7 @@ Exactly one of the following arguments is required:
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id
 - `serving_endpoint_id` - [Model Serving](model_serving.md) endpoint id.
+- `vector_search_endpoint_id` - [Vector Search](vector_search_endpoint.md) endpoint id.
 - `authorization` - either [`tokens`](https://docs.databricks.com/administration-guide/access-control/tokens.html) or [`passwords`](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#configure-password-permission).
 - `sql_endpoint_id` - [SQL warehouse](sql_endpoint.md) id
 - `sql_dashboard_id` - [SQL dashboard](sql_dashboard.md) id

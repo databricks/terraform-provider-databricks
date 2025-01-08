@@ -662,8 +662,13 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
 				log.Printf("[ERROR] error calling ir.Body for %v: %s", r, err.Error())
 			}
 		} else {
-			resourceBlock := body.AppendNewBlock("resource", []string{r.Resource, r.Name})
-			err = ic.dataToHcl(ir, []string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
+			blockType := "resource"
+			if r.Mode == "data" {
+				blockType = r.Mode
+			}
+			resourceBlock := body.AppendNewBlock(blockType, []string{r.Resource, r.Name})
+			err = ic.dataToHcl(ic.Importables[r.Resource],
+				[]string{}, ic.Resources[r.Resource], r, resourceBlock.Body())
 			if err != nil {
 				log.Printf("[ERROR] error generating body for %v: %s", r, err.Error())
 			}

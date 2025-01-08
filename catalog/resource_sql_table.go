@@ -157,8 +157,11 @@ func reconstructIdentity(c *SqlColumnInfo) (IdentityColumn, error) {
 func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) (err error) {
 	defaultClusterName := "terraform-sql-table"
 	clustersAPI := clusters.NewClustersAPI(ctx, c)
-	// if a cluster id is specified, start the cluster
-	if ci, ok := d.GetOk("cluster_id"); ok {
+	// if a warehouse id is specified, use the warehouse
+	if wi, ok := d.GetOk("warehouse_id"); ok {
+		ti.WarehouseID = wi.(string)
+	} else if ci, ok := d.GetOk("cluster_id"); ok {
+		// if a cluster id is specified, start the cluster
 		ti.ClusterID = ci.(string)
 		_, err = clustersAPI.StartAndGetInfo(ti.ClusterID)
 		if apierr.IsMissing(err) {
@@ -172,11 +175,8 @@ func (ti *SqlTableInfo) initCluster(ctx context.Context, d *schema.ResourceData,
 		if err != nil {
 			return
 		}
-		// if a warehouse id is specified, use the warehouse
-	} else if wi, ok := d.GetOk("warehouse_id"); ok {
-		ti.WarehouseID = wi.(string)
-		// else, create a default cluster
 	} else {
+		// else, create a default cluster
 		ti.ClusterID, err = ti.getOrCreateCluster(defaultClusterName, clustersAPI)
 		if err != nil {
 			return

@@ -1,12 +1,24 @@
 package acceptance
 
 import (
+	"fmt"
 	"testing"
 )
 
+func gcpStorageCredentialWithComment(comment string) string {
+	// TODO: update purpose to SERVICE when it's released
+	return fmt.Sprintf(`
+				resource "databricks_storage_credential" "external" {
+					name = "cred-{var.RANDOM}"
+					databricks_gcp_service_account {}
+					skip_validation = true
+					comment = "%s"
+				}`, comment)
+}
+
 func TestUcAccStorageCredential(t *testing.T) {
-	loadUcwsEnv(t)
-	if isAws(t) {
+	LoadUcwsEnv(t)
+	if IsAws(t) {
 		UnityWorkspaceLevel(t, Step{
 			Template: `
 				resource "databricks_storage_credential" "external" {
@@ -28,15 +40,11 @@ func TestUcAccStorageCredential(t *testing.T) {
 					comment = "Managed by TF"
 				}`,
 		})
-	} else if isGcp(t) {
+	} else if IsGcp(t) {
 		UnityWorkspaceLevel(t, Step{
-			Template: `
-				resource "databricks_storage_credential" "external" {
-					name = "cred-{var.RANDOM}"
-					databricks_gcp_service_account {}
-					skip_validation = true
-					comment = "Managed by TF"
-				}`,
+			Template: gcpStorageCredentialWithComment("Managed by TF"),
+		}, Step{
+			Template: gcpStorageCredentialWithComment("Managed by TF updated"),
 		})
 	}
 }

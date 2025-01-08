@@ -12,7 +12,7 @@ import (
 
 func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `
@@ -146,7 +146,7 @@ func TestUcAccResourceSqlTable_Constraints(t *testing.T) {
 
 func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `
@@ -247,7 +247,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 
 func TestUcAccResourceSqlTable_View(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `
@@ -298,7 +298,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 
 func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `
@@ -349,7 +349,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 }
 func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	UnityWorkspaceLevel(t, Step{
 		Template: `
@@ -453,7 +453,7 @@ var inlineAndMembershipChangeErrorRegex = regexp.MustCompile(inlineAndMembership
 
 func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -478,7 +478,7 @@ func constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName string, col
 
 func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	columnName := RandomName()
@@ -520,7 +520,7 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 
 func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -532,7 +532,7 @@ func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 
 func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -544,7 +544,7 @@ func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 
 func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -556,7 +556,7 @@ func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 
 func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 
@@ -570,7 +570,7 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 
 func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -585,7 +585,7 @@ func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
 
 func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -601,7 +601,7 @@ func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
 
 func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -616,7 +616,7 @@ func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
 
 func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 	tableName := RandomName()
 	UnityWorkspaceLevel(t, Step{
@@ -632,7 +632,7 @@ func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
 
 func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 
 	tableName := RandomName()
@@ -649,7 +649,7 @@ func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
 
 func TestUcAccResourceSqlTable_DropColumnAndUpdateThrows(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		skipf(t)("databricks_sql_table resource not available on GCP")
+		Skipf(t)("databricks_sql_table resource not available on GCP")
 	}
 
 	tableName := RandomName()

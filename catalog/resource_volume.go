@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // This structure contains the fields of catalog.UpdateVolumeRequestContent and catalog.CreateVolumeRequestContent
@@ -50,6 +51,13 @@ func ResourceVolume() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
+			// As of 3rd December 2024, the Volumes create API returns an incorrect
+			// error message "CreateVolume Missing required field: volume_type"
+			// if you specify an invalid value for volume_type (i.e. not one of "MANAGED" or "EXTERNAL").
+			//
+			// If server side validation is added in the future, this validation function
+			// can be removed.
+			common.CustomizeSchemaPath(m, "volume_type").SetValidateFunc(validation.StringInSlice([]string{"MANAGED", "EXTERNAL"}, false))
 			return m
 		})
 	return common.Resource{
@@ -125,6 +133,10 @@ func ResourceVolume() common.Resource {
 
 			if !d.HasChangeExcept("owner") {
 				return nil
+			}
+
+			if d.HasChange("comment") && updateVolumeRequestContent.Comment == "" {
+				updateVolumeRequestContent.ForceSendFields = append(updateVolumeRequestContent.ForceSendFields, "Comment")
 			}
 
 			updateVolumeRequestContent.Owner = ""

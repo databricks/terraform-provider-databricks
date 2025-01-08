@@ -2,9 +2,11 @@ package common
 
 import (
 	"context"
-	"log"
+	"errors"
 	"regexp"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/logger"
 	"github.com/databricks/databricks-sdk-go/retries"
 )
 
@@ -15,9 +17,25 @@ func RetryOnTimeout[T any](ctx context.Context, f func(context.Context) (*T, err
 		msg := err.Error()
 		isTimeout := timeoutRegex.MatchString(msg)
 		if isTimeout {
-			log.Printf("[DEBUG] Retrying due to timeout: %s", msg)
+			logger.Debugf(ctx, "Retrying due to timeout: %s", msg)
 		}
 		return isTimeout
+	}))
+	return r.Run(ctx, func(ctx context.Context) (*T, error) {
+		return f(ctx)
+	})
+}
+
+// RetryOn504 returns a [retries.Retrier] that calls the given method
+// until it either succeeds or returns an error that is different from
+// [apierr.ErrDeadlineExceeded].
+func RetryOn504[T any](ctx context.Context, f func(context.Context) (*T, error)) (*T, error) {
+	r := retries.New[T](retries.WithTimeout(-1), retries.WithRetryFunc(func(err error) bool {
+		if !errors.Is(err, apierr.ErrDeadlineExceeded) {
+			return false
+		}
+		logger.Debugf(ctx, "Retrying on error 504")
+		return true
 	}))
 	return r.Run(ctx, func(ctx context.Context) (*T, error) {
 		return f(ctx)

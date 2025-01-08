@@ -68,7 +68,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 		skipCreation:    true,
 	}
 	return func(config *makePermissionsConfig) {
-		if isGcp(t) {
+		if IsGcp(t) {
 			config.user = append(config.user, settings)
 		} else {
 			config.servicePrincipal = append(config.servicePrincipal, settings)
@@ -77,7 +77,7 @@ func currentPrincipalPermission(t *testing.T, permissionLevel string) func(*make
 }
 
 func currentPrincipalType(t *testing.T) string {
-	if isGcp(t) {
+	if IsGcp(t) {
 		return "user"
 	}
 	return "service_principal"
@@ -583,7 +583,7 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 }
 
 func TestAccPermissions_Authorization_Passwords(t *testing.T) {
-	skipf(t)("ACLs for passwords are disabled on testing workspaces")
+	Skipf(t)("ACLs for passwords are disabled on testing workspaces")
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
 	WorkspaceLevel(t, Step{
 		Template: makePermissionsTestStage("authorization", "\"passwords\"", groupPermissions("CAN_USE")),
@@ -833,8 +833,8 @@ func TestAccPermissions_RegisteredModel_Root(t *testing.T) {
 
 func TestAccPermissions_ServingEndpoint(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
-	if isGcp(t) {
-		skipf(t)("Serving endpoints are not supported on GCP")
+	if IsGcp(t) {
+		Skipf(t)("Serving endpoints are not supported on GCP")
 	}
 	endpointTemplate := `
 	resource "databricks_model_serving" "endpoint" {
@@ -865,6 +865,29 @@ func TestAccPermissions_ServingEndpoint(t *testing.T) {
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for serving-endpoint, allowed levels: CAN_MANAGE"),
 	})
 }
+
+// AlexOtt: Temporary disable as it takes too long to create a new vector search endpoint
+// Testing is done in the `vector_search_test.go`
+// func TestAccPermissions_VectorSearchEndpoint(t *testing.T) {
+// 	loadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	if isGcp(t) {
+// 		skipf(t)("Vector Search endpoints are not supported on GCP")
+// 	}
+// 	endpointTemplate := `
+// 	resource "databricks_vector_search_endpoint" "endpoint" {
+// 		name = "{var.STICKY_RANDOM}"
+// 		endpoint_type = "STANDARD"
+// 	}
+// `
+// 	WorkspaceLevel(t, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template: endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE")),
+// 	}, Step{
+// 		Template:    endpointTemplate + makePermissionsTestStage("vector_search_endpoint_id", "databricks_vector_search_endpoint.endpoint.endpoint_id", currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for mlflowExperiment, allowed levels: CAN_MANAGE"),
+// 	})
+// }
 
 func TestAccPermissions_Alert(t *testing.T) {
 	loadDebugEnvIfRunsFromIDE(t, "workspace")
@@ -922,5 +945,27 @@ func TestAccPermissions_Query(t *testing.T) {
 		Template: queryTemplate + makePermissionsTestStage("sql_query_id", "databricks_query.this.id",
 			currentPrincipalPermission(t, "CAN_VIEW"), groupPermissions("CAN_VIEW", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for query, allowed levels: CAN_MANAGE"),
+	})
+}
+
+func TestAccPermissions_App(t *testing.T) {
+	loadDebugEnvIfRunsFromIDE(t, "workspace")
+	if IsGcp(t) {
+		Skipf(t)("not available on GCP")
+	}
+	queryTemplate := `
+		resource "databricks_app" "this" {
+			name = "{var.RANDOM}"
+			description = "Test app"
+		}`
+	WorkspaceLevel(t, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name", groupPermissions("CAN_USE")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name",
+			currentPrincipalPermission(t, "CAN_MANAGE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+	}, Step{
+		Template: queryTemplate + makePermissionsTestStage("app_name", "databricks_app.this.name",
+			currentPrincipalPermission(t, "CAN_USE"), groupPermissions("CAN_USE", "CAN_MANAGE")),
+		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for apps, allowed levels: CAN_MANAGE"),
 	})
 }

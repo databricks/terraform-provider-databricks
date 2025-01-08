@@ -14,7 +14,7 @@ import (
 
 // Application ID is mandatory in Azure today.
 func getServicePrincipalResource(t *testing.T) string {
-	if isAzure(t) {
+	if IsAzure(t) {
 		return `
 		resource "databricks_service_principal" "this" {
 			application_id = "{var.RANDOM_UUID}"
@@ -30,7 +30,7 @@ func getServicePrincipalResource(t *testing.T) string {
 }
 
 func TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle(t *testing.T) {
-	loadAccountEnv(t)
+	LoadAccountEnv(t)
 	spResource := getServicePrincipalResource(t)
 	AccountLevel(t, Step{
 		Template: spResource + `

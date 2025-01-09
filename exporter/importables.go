@@ -28,7 +28,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
 	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
-	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
@@ -329,41 +328,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
-		List: func(ic *importContext) error {
-			clusters, err := clusters.NewClustersAPI(ic.Context, ic.Client).List()
-			if err != nil {
-				return err
-			}
-			lastActiveMs := ic.getLastActiveMs()
-			nonInteractiveClusters := []string{"JOB", "MODELS", "PIPELINE_MAINTENANCE", "PIPELINE", "SQL"}
-			for offset, c := range clusters {
-				if slices.Contains(nonInteractiveClusters, string(c.ClusterSource)) {
-					// TODO: Should we check cluster name as well?
-					// jobRunClusterNameRegex = regexp.MustCompile(`^job-\d+-run-\d+$`)
-					// jobRunClusterNameRegex.MatchString(c.ClusterName)
-					log.Printf("[INFO] Skipping non-interactive cluster %s", c.ClusterID)
-					continue
-				}
-				if strings.HasPrefix(c.ClusterName, "terraform-") {
-					log.Printf("[INFO] Skipping terraform-specific cluster %s", c.ClusterName)
-					continue
-				}
-				if !ic.MatchesName(c.ClusterName) {
-					log.Printf("[INFO] Skipping %s because it doesn't match %s", c.ClusterName, ic.match)
-					continue
-				}
-				if c.LastActivityTime > 0 && c.LastActivityTime < lastActiveMs {
-					log.Printf("[INFO] Older inactive cluster %s", c.ClusterName)
-					continue
-				}
-				ic.Emit(&resource{
-					Resource: "databricks_cluster",
-					ID:       c.ClusterID,
-				})
-				log.Printf("[INFO] Scanned %d of %d clusters", offset+1, len(clusters))
-			}
-			return nil
-		},
+		List: listClusters,
 		Import: func(ic *importContext, r *resource) error {
 			var c compute.ClusterSpec
 			s := ic.Resources["databricks_cluster"].Schema

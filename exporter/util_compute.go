@@ -32,48 +32,6 @@ func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 	}
 }
 
-func (ic *importContext) importCluster(c *compute.ClusterSpec) {
-	if c == nil {
-		return
-	}
-	if c.AwsAttributes != nil && c.AwsAttributes.InstanceProfileArn != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_profile",
-			ID:       c.AwsAttributes.InstanceProfileArn,
-		})
-	}
-	if c.InstancePoolId != "" {
-		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.InstancePoolId,
-		})
-	}
-	if c.DriverInstancePoolId != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.DriverInstancePoolId,
-		})
-	}
-	if c.PolicyId != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_cluster_policy",
-			ID:       c.PolicyId,
-		})
-	}
-	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
-	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
-	ic.emitUserOrServicePrincipal(c.SingleUserName)
-	if c.Kind.String() != "" && c.SingleUserName != "" {
-		ic.Emit(&resource{
-			Resource:  "databricks_group",
-			Attribute: "display_name",
-			Value:     c.SingleUserName,
-		})
-	}
-}
-
 func (ic *importContext) emitSecretsFromSecretPathString(v string) {
 	if res := secretPathRegex.FindStringSubmatch(v); res != nil {
 		ic.Emit(&resource{

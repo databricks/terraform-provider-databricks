@@ -18,7 +18,13 @@ import (
 const dataSourceNameShares = "shares"
 
 type SharesList struct {
-	Shares types.List `tfsdk:"shares" tf:"computed,optional,slice_set"`
+	Shares types.List `tfsdk:"shares"`
+}
+
+func (SharesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["shares"] = attrs["shares"].SetComputed().SetOptional()
+
+	return attrs
 }
 
 func (SharesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -15,10 +16,16 @@ import (
 )
 
 type TestTfSdk struct {
-	Description       types.String `tfsdk:"description" tf:""`
-	Nested            types.List   `tfsdk:"nested" tf:"optional"`
-	NestedSliceObject types.List   `tfsdk:"nested_slice_object" tf:"optional,object"`
-	Map               types.Map    `tfsdk:"map" tf:"optional"`
+	Description       types.String `tfsdk:"description"`
+	Nested            types.List   `tfsdk:"nested"`
+	NestedSliceObject types.List   `tfsdk:"nested_slice_object"`
+	Map               types.Map    `tfsdk:"map"`
+}
+
+func (TestTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["nested_slice_object"] = attrs["nested_slice_object"].(ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(AttributeBuilder)
+
+	return attrs
 }
 
 func (TestTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -30,8 +37,8 @@ func (TestTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 }
 
 type NestedTfSdk struct {
-	Name    types.String `tfsdk:"name" tf:"optional"`
-	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
+	Name    types.String `tfsdk:"name"`
+	Enabled types.Bool   `tfsdk:"enabled"`
 }
 
 type stringLengthBetweenValidator struct {

@@ -27,7 +27,13 @@ type ServingEndpointsDataSource struct {
 }
 
 type ServingEndpointsData struct {
-	Endpoints types.List `tfsdk:"endpoints" tf:"optional,computed"`
+	Endpoints types.List `tfsdk:"endpoints"`
+}
+
+func (ServingEndpointsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoints"] = attrs["endpoints"].SetOptional().SetComputed()
+
+	return attrs
 }
 
 func (ServingEndpointsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

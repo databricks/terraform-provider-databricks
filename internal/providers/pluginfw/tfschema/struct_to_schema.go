@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	tfcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,12 +17,6 @@ import (
 
 type CustomizableSchemaProvider interface {
 	ApplySchemaCustomizations(map[string]AttributeBuilder) map[string]AttributeBuilder
-}
-
-type structTag struct {
-	optional     bool
-	computed     bool
-	singleObject bool
 }
 
 func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
@@ -38,15 +30,16 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 		panic(fmt.Errorf("schema value of Struct is expected, but got %s: %#v. %s", rk.String(), v, common.TerraformBugErrorMessage))
 	}
 
-	schemaProvider, implementsSchemaProvider := v.Interface().(CustomizableSchemaProvider)
-
 	for _, field := range tfreflect.ListAllFields(v) {
 		typeField := field.StructField
 		fieldName := typeField.Tag.Get("tfsdk")
 		if fieldName == "-" {
 			continue
 		}
-		structTag, hasStructTag := getStructTag(typeField)
+		if typeField.Tag.Get("tf") != "" {
+			panic(`"tf:..." annotations are no longer supported. You should implement the CustomizableSchemaProvider interface on the struct and apply the appropriate schema customizations there.`)
+		}
+
 		value := field.Value.Interface()
 		if _, ok := value.(attr.Value); !ok {
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
@@ -102,9 +95,6 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 				switch value.(type) {
 				case types.List:
 					validators := []validator.List{}
-					if structTag.singleObject {
-						validators = append(validators, listvalidator.SizeAtMost(1))
-					}
 					scmAttr[fieldName] = ListNestedAttributeBuilder{
 						NestedObject: nestedSchema.ToNestedAttributeObject(),
 						Validators:   validators,
@@ -145,42 +135,12 @@ func typeToSchema(ctx context.Context, v reflect.Value) NestedBlockObject {
 			}
 			panic(fmt.Errorf("unexpected type %T in tfsdk structs, expected a plugin framework value type. %s", value, common.TerraformBugErrorMessage))
 		}
-
-		attr := scmAttr[fieldName]
-
-		if hasStructTag && !implementsSchemaProvider {
-			if structTag.computed {
-				// Computed attributes are always computed and may be optional.
-				attr = attr.SetComputed()
-				if structTag.optional {
-					attr = attr.SetOptional()
-				}
-			} else {
-				// Non-computed attributes must be either optional or required.
-				if structTag.optional {
-					attr = attr.SetOptional()
-				} else {
-					attr = attr.SetRequired()
-				}
-			}
-		}
-
-		scmAttr[fieldName] = attr
 	}
 
-	if implementsSchemaProvider {
+	if schemaProvider, ok := v.Interface().(CustomizableSchemaProvider); ok {
 		scmAttr = schemaProvider.ApplySchemaCustomizations(scmAttr)
 	}
 	return NestedBlockObject{Attributes: scmAttr}
-}
-
-func getStructTag(field reflect.StructField) (structTag, bool) {
-	tagValue := field.Tag.Get("tf")
-	return structTag{
-		optional:     strings.Contains(tagValue, "optional"),
-		computed:     strings.Contains(tagValue, "computed"),
-		singleObject: strings.Contains(tagValue, "object"),
-	}, tagValue != ""
 }
 
 // ResourceStructToSchema builds a resource schema from a tfsdk struct, with custoimzations applied.

@@ -34,9 +34,17 @@ type NotificationDestinationsDataSource struct {
 }
 
 type NotificationDestinationsInfo struct {
-	DisplayNameContains      types.String `tfsdk:"display_name_contains" tf:"optional"`
-	Type                     types.String `tfsdk:"type" tf:"optional"`
-	NotificationDestinations types.List   `tfsdk:"notification_destinations" tf:"computed"`
+	DisplayNameContains      types.String `tfsdk:"display_name_contains"`
+	Type                     types.String `tfsdk:"type"`
+	NotificationDestinations types.List   `tfsdk:"notification_destinations"`
+}
+
+func (NotificationDestinationsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name_contains"] = attrs["display_name_contains"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["notification_destinations"] = attrs["notification_destinations"].SetComputed()
+
+	return attrs
 }
 
 func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

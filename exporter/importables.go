@@ -1156,6 +1156,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
 			{Path: "experiment_id", Resource: "databricks_mlflow_experiment"},
 			{Path: "repo_id", Resource: "databricks_repo"},
+			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
+			{Path: "serving_endpoint_id", Resource: "databricks_serving_endpoint", Match: "serving_endpoint_id"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
@@ -2918,6 +2920,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "model", Resource: "databricks_registered_model"},
 			{Path: "external_location", Resource: "databricks_external_location", Match: "name"},
 			{Path: "storage_credential", Resource: "databricks_storage_credential"},
+			{Path: "credential", Resource: "databricks_credential"},
 			// TODO: add similar matchers for users/groups/SPs on account level...
 			{Path: "grant.principal", Resource: "databricks_recipient", IsValidApproximation: isMatchingShareRecipient},
 			//	{Path: "", Resource: ""},

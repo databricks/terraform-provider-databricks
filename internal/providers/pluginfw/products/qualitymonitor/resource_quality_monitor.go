@@ -57,9 +57,9 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 
 type MonitorInfoExtended struct {
 	catalog_tf.MonitorInfo_SdkV2
-	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
-	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
-	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
+	WarehouseId          types.String `tfsdk:"warehouse_id"`
+	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
+	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
@@ -87,7 +87,10 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetReadOnly("status")
 		c.SetReadOnly("dashboard_id")
 		c.SetReadOnly("schedule", "pause_status")
+		c.SetOptional("warehouse_id")
+		c.SetOptional("skip_builtin_dashboard")
 		c.SetComputed("id")
+		c.SetOptional("id")
 		return c
 	})
 	resp.Schema = schema.Schema{

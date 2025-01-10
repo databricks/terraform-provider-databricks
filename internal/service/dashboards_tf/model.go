@@ -25,7 +25,7 @@ import (
 
 // Create dashboard
 type CreateDashboardRequest struct {
-	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDashboardRequest.
@@ -94,7 +94,7 @@ type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScheduleRequest.
@@ -167,7 +167,7 @@ type CreateSubscriptionRequest struct {
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
 
-	Subscription types.Object `tfsdk:"subscription" tf:"optional,object"`
+	Subscription types.Object `tfsdk:"subscription"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSubscriptionRequest.
@@ -240,12 +240,12 @@ type CronSchedule struct {
 	// everyday at 8am. See [Cron Trigger] for details.
 	//
 	// [Cron Trigger]: http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
-	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression" tf:""`
+	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression"`
 	// A Java timezone id. The schedule will be resolved with respect to this
 	// timezone. See [Java TimeZone] for details.
 	//
 	// [Java TimeZone]: https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html
-	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
+	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
 func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
@@ -254,11 +254,11 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
-func (c CronSchedule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "quartz_cron_expression")...)
-	cs.SetRequired(append(path, "timezone_id")...)
+func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
+	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
@@ -296,25 +296,25 @@ func (o CronSchedule) Type(ctx context.Context) attr.Type {
 
 type Dashboard struct {
 	// The timestamp of when the dashboard was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// UUID identifying the dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The display name of the dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the dashboard. Can be optionally provided on updates to
 	// ensure that the dashboard has not been modified since the last read. This
 	// field is excluded in List Dashboards responses.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// The state of the dashboard resource. Used for tracking trashed status.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"computed"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The workspace path of the folder containing the dashboard. Includes
 	// leading slash and no trailing slash. This field is excluded in List
 	// Dashboards responses.
-	ParentPath types.String `tfsdk:"parent_path" tf:"computed"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The workspace path of the dashboard asset, including the file name.
 	// Exported dashboards always have the file extension `.lvdash.json`. This
 	// field is excluded in List Dashboards responses.
-	Path types.String `tfsdk:"path" tf:"computed"`
+	Path types.String `tfsdk:"path"`
 	// The contents of the dashboard in serialized string form. This field is
 	// excluded in List Dashboards responses. Use the [get dashboard API] to
 	// retrieve an example response, which includes the `serialized_dashboard`
@@ -322,12 +322,12 @@ type Dashboard struct {
 	// represents the dashboard's layout and components.
 	//
 	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
-	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
+	SerializedDashboard types.String `tfsdk:"serialized_dashboard"`
 	// The timestamp of when the dashboard was last updated by the user. This
 	// field is excluded in List Dashboards responses.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// The warehouse ID used to run the dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
@@ -336,16 +336,19 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
 }
 
-func (c Dashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "create_time")...)
-	cs.SetComputed(append(path, "dashboard_id")...)
-	cs.SetComputed(append(path, "etag")...)
-	cs.SetComputed(append(path, "lifecycle_state")...)
-	cs.SetComputed(append(path, "parent_path")...)
-	cs.SetComputed(append(path, "path")...)
-	cs.SetComputed(append(path, "update_time")...)
+func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].SetComputed()
+	attrs["path"] = attrs["path"].SetComputed()
+	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Dashboard.
@@ -555,9 +558,9 @@ func (o DeleteSubscriptionResponse) Type(ctx context.Context) attr.Type {
 
 // Genie AI Response
 type GenieAttachment struct {
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 
-	Text types.Object `tfsdk:"text" tf:"optional,object"`
+	Text types.Object `tfsdk:"text"`
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment) {
@@ -566,11 +569,11 @@ func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ge
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
 }
 
-func (c GenieAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryAttachment{}.ApplySchemaCustomizations(cs, append(path, "query")...)
-	TextAttachment{}.ApplySchemaCustomizations(cs, append(path, "text")...)
+func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["text"] = attrs["text"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieAttachment.
@@ -667,17 +670,17 @@ func (o *GenieAttachment) SetText(ctx context.Context, v TextAttachment) {
 
 type GenieConversation struct {
 	// Timestamp when the message was created
-	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Conversation ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Genie space ID
-	SpaceId types.String `tfsdk:"space_id" tf:""`
+	SpaceId types.String `tfsdk:"space_id"`
 	// Conversation title
-	Title types.String `tfsdk:"title" tf:""`
+	Title types.String `tfsdk:"title"`
 	// ID of the user who created the conversation
-	UserId types.Int64 `tfsdk:"user_id" tf:""`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversation) {
@@ -686,13 +689,15 @@ func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
 }
 
-func (c GenieConversation) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "space_id")...)
-	cs.SetRequired(append(path, "title")...)
-	cs.SetRequired(append(path, "user_id")...)
+func (c GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["title"] = attrs["title"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieConversation.
@@ -738,7 +743,7 @@ func (o GenieConversation) Type(ctx context.Context) attr.Type {
 
 type GenieCreateConversationMessageRequest struct {
 	// User message content.
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// The ID associated with the conversation.
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is started.
@@ -751,12 +756,12 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
 }
 
-func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "content")...)
-	cs.SetRequired(append(path, "conversation_id")...)
-	cs.SetRequired(append(path, "space_id")...)
+func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
@@ -934,7 +939,7 @@ func (o GenieGetMessageQueryResultRequest) Type(ctx context.Context) attr.Type {
 type GenieGetMessageQueryResultResponse struct {
 	// SQL Statement Execution response. See [Get status, manifest, and result
 	// first chunk](:method:statementexecution/getstatement) for more details.
-	StatementResponse types.Object `tfsdk:"statement_response" tf:"optional,object"`
+	StatementResponse types.Object `tfsdk:"statement_response"`
 }
 
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultResponse) {
@@ -943,10 +948,10 @@ func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCre
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
 }
 
-func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	sql_tf.StatementResponse{}.ApplySchemaCustomizations(cs, append(path, "statement_response")...)
+func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_response"] = attrs["statement_response"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultResponse.
@@ -1012,23 +1017,23 @@ func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Co
 
 type GenieMessage struct {
 	// AI produced response to the message
-	Attachments types.List `tfsdk:"attachments" tf:"optional"`
+	Attachments types.List `tfsdk:"attachments"`
 	// User message content
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// Conversation ID
-	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+	ConversationId types.String `tfsdk:"conversation_id"`
 	// Timestamp when the message was created
-	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Error message if AI failed to respond to the message
-	Error types.Object `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error"`
 	// Message ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The result of SQL query if the message has a query attachment
-	QueryResult types.Object `tfsdk:"query_result" tf:"optional,object"`
+	QueryResult types.Object `tfsdk:"query_result"`
 	// Genie space ID
-	SpaceId types.String `tfsdk:"space_id" tf:""`
+	SpaceId types.String `tfsdk:"space_id"`
 	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
 	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
 	// context step to determine relevant context. * `ASKING_AI`: Waiting for
@@ -1045,9 +1050,9 @@ type GenieMessage struct {
 	// * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL
 	// result is not available anymore. The user needs to execute the query
 	// again. * `CANCELLED`: Message has been cancelled.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// ID of the user who created the message
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieMessage) {
@@ -1056,16 +1061,20 @@ func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan Genie
 func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
 }
 
-func (c GenieMessage) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	GenieAttachment{}.ApplySchemaCustomizations(cs, append(path, "attachments")...)
-	cs.SetRequired(append(path, "content")...)
-	cs.SetRequired(append(path, "conversation_id")...)
-	MessageError{}.ApplySchemaCustomizations(cs, append(path, "error")...)
-	cs.SetRequired(append(path, "id")...)
-	Result{}.ApplySchemaCustomizations(cs, append(path, "query_result")...)
-	cs.SetRequired(append(path, "space_id")...)
+func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachments"] = attrs["attachments"].SetOptional()
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieMessage.
@@ -1209,7 +1218,7 @@ func (o *GenieMessage) SetQueryResult(ctx context.Context, v Result) {
 
 type GenieStartConversationMessageRequest struct {
 	// The text of the message that starts the conversation.
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// The ID associated with the Genie space where you want to start a
 	// conversation.
 	SpaceId types.String `tfsdk:"-"`
@@ -1221,11 +1230,11 @@ func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringC
 func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
 }
 
-func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "content")...)
-	cs.SetRequired(append(path, "space_id")...)
+func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
@@ -1262,13 +1271,13 @@ func (o GenieStartConversationMessageRequest) Type(ctx context.Context) attr.Typ
 }
 
 type GenieStartConversationResponse struct {
-	Conversation types.Object `tfsdk:"conversation" tf:"optional,object"`
+	Conversation types.Object `tfsdk:"conversation"`
 	// Conversation ID
-	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+	ConversationId types.String `tfsdk:"conversation_id"`
 
-	Message types.Object `tfsdk:"message" tf:"optional,object"`
+	Message types.Object `tfsdk:"message"`
 	// Message ID
-	MessageId types.String `tfsdk:"message_id" tf:""`
+	MessageId types.String `tfsdk:"message_id"`
 }
 
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationResponse) {
@@ -1277,13 +1286,13 @@ func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
 }
 
-func (c GenieStartConversationResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	GenieConversation{}.ApplySchemaCustomizations(cs, append(path, "conversation")...)
-	cs.SetRequired(append(path, "conversation_id")...)
-	GenieMessage{}.ApplySchemaCustomizations(cs, append(path, "message")...)
-	cs.SetRequired(append(path, "message_id")...)
+func (c GenieStartConversationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversation"] = attrs["conversation"].SetOptional()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationResponse.
@@ -1594,10 +1603,10 @@ func (o ListDashboardsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListDashboardsResponse struct {
-	Dashboards types.List `tfsdk:"dashboards" tf:"optional"`
+	Dashboards types.List `tfsdk:"dashboards"`
 	// A token, which can be sent as `page_token` to retrieve the next page. If
 	// this field is omitted, there are no subsequent dashboards.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsResponse) {
@@ -1606,11 +1615,11 @@ func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
 }
 
-func (c ListDashboardsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Dashboard{}.ApplySchemaCustomizations(cs, append(path, "dashboards")...)
-	cs.SetComputed(append(path, "next_page_token")...)
+func (c ListDashboardsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboards"] = attrs["dashboards"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsResponse.
@@ -1726,9 +1735,9 @@ type ListSchedulesResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent schedules.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Schedules types.List `tfsdk:"schedules" tf:"optional"`
+	Schedules types.List `tfsdk:"schedules"`
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse) {
@@ -1737,11 +1746,11 @@ func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
 }
 
-func (c ListSchedulesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "next_page_token")...)
-	Schedule{}.ApplySchemaCustomizations(cs, append(path, "schedules")...)
+func (c ListSchedulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["schedules"] = attrs["schedules"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesResponse.
@@ -1861,9 +1870,9 @@ type ListSubscriptionsResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent subscriptions.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Subscriptions types.List `tfsdk:"subscriptions" tf:"optional"`
+	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse) {
@@ -1872,11 +1881,11 @@ func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
 }
 
-func (c ListSubscriptionsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "next_page_token")...)
-	Subscription{}.ApplySchemaCustomizations(cs, append(path, "subscriptions")...)
+func (c ListSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsResponse.
@@ -1943,9 +1952,9 @@ func (o *ListSubscriptionsResponse) SetSubscriptions(ctx context.Context, v []Su
 }
 
 type MessageError struct {
-	Error types.String `tfsdk:"error" tf:"optional"`
+	Error types.String `tfsdk:"error"`
 
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan MessageError) {
@@ -1954,9 +1963,11 @@ func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Messa
 func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
 }
 
-func (c MessageError) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MessageError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MessageError.
@@ -1994,16 +2005,16 @@ func (o MessageError) Type(ctx context.Context) attr.Type {
 
 type MigrateDashboardRequest struct {
 	// Display name for the new Lakeview dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The workspace path of the folder to contain the migrated Lakeview
 	// dashboard.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// UUID of the dashboard to be migrated.
-	SourceDashboardId types.String `tfsdk:"source_dashboard_id" tf:""`
+	SourceDashboardId types.String `tfsdk:"source_dashboard_id"`
 	// Flag to indicate if mustache parameter syntax ({{ param }}) should be
 	// auto-updated to named syntax (:param) when converting datasets in the
 	// dashboard.
-	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax" tf:"optional"`
+	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest) {
@@ -2012,10 +2023,13 @@ func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
 }
 
-func (c MigrateDashboardRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "source_dashboard_id")...)
+func (c MigrateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
+	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
@@ -2061,10 +2075,10 @@ type PublishRequest struct {
 	// Flag to indicate if the publisher's credentials should be embedded in the
 	// published dashboard. These embedded credentials will be used to execute
 	// the published dashboard's queries.
-	EmbedCredentials types.Bool `tfsdk:"embed_credentials" tf:"optional"`
+	EmbedCredentials types.Bool `tfsdk:"embed_credentials"`
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishRequest) {
@@ -2073,10 +2087,12 @@ func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pub
 func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
 }
 
-func (c PublishRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
+func (c PublishRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -2116,13 +2132,13 @@ func (o PublishRequest) Type(ctx context.Context) attr.Type {
 
 type PublishedDashboard struct {
 	// The display name of the published dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"computed"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Indicates whether credentials are embedded in the published dashboard.
-	EmbedCredentials types.Bool `tfsdk:"embed_credentials" tf:"optional"`
+	EmbedCredentials types.Bool `tfsdk:"embed_credentials"`
 	// The timestamp of when the published dashboard was last revised.
-	RevisionCreateTime types.String `tfsdk:"revision_create_time" tf:"computed"`
+	RevisionCreateTime types.String `tfsdk:"revision_create_time"`
 	// The warehouse ID used to run the published dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedDashboard) {
@@ -2131,11 +2147,13 @@ func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
 }
 
-func (c PublishedDashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "display_name")...)
-	cs.SetComputed(append(path, "revision_create_time")...)
+func (c PublishedDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
+	attrs["revision_create_time"] = attrs["revision_create_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishedDashboard.
@@ -2176,23 +2194,23 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 }
 
 type QueryAttachment struct {
-	CachedQuerySchema types.Object `tfsdk:"cached_query_schema" tf:"optional,object"`
+	CachedQuerySchema types.Object `tfsdk:"cached_query_schema"`
 	// Description of the query
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// If the query was created on an instruction (trusted asset) we link to the
 	// id
-	InstructionId types.String `tfsdk:"instruction_id" tf:"optional"`
+	InstructionId types.String `tfsdk:"instruction_id"`
 	// Always store the title next to the id in case the original instruction
 	// title changes or the instruction is deleted.
-	InstructionTitle types.String `tfsdk:"instruction_title" tf:"optional"`
+	InstructionTitle types.String `tfsdk:"instruction_title"`
 	// Time when the user updated the query last
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// AI generated SQL query
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 	// Name of the query
-	Title types.String `tfsdk:"title" tf:"optional"`
+	Title types.String `tfsdk:"title"`
 }
 
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryAttachment) {
@@ -2201,10 +2219,17 @@ func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Qu
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
 }
 
-func (c QueryAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QuerySchema{}.ApplySchemaCustomizations(cs, append(path, "cached_query_schema")...)
+func (c QueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cached_query_schema"] = attrs["cached_query_schema"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["instruction_id"] = attrs["instruction_id"].SetOptional()
+	attrs["instruction_title"] = attrs["instruction_title"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryAttachment.
@@ -2283,11 +2308,11 @@ func (o *QueryAttachment) SetCachedQuerySchema(ctx context.Context, v QuerySchem
 }
 
 type QuerySchema struct {
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns"`
 	// Used to determine if the stored query schema is compatible with the
 	// latest run. The service should always clear the schema when the query is
 	// re-executed.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	StatementId types.String `tfsdk:"statement_id"`
 }
 
 func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchema) {
@@ -2296,10 +2321,11 @@ func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryS
 func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
 }
 
-func (c QuerySchema) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QuerySchemaColumn{}.ApplySchemaCustomizations(cs, append(path, "columns")...)
+func (c QuerySchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchema.
@@ -2368,11 +2394,11 @@ func (o *QuerySchema) SetColumns(ctx context.Context, v []QuerySchemaColumn) {
 type QuerySchemaColumn struct {
 	// Populated from
 	// https://docs.databricks.com/sql/language-manual/sql-ref-datatypes.html
-	DataType types.String `tfsdk:"data_type" tf:""`
+	DataType types.String `tfsdk:"data_type"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Corresponds to type desc
-	TypeText types.String `tfsdk:"type_text" tf:""`
+	TypeText types.String `tfsdk:"type_text"`
 }
 
 func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchemaColumn) {
@@ -2381,12 +2407,12 @@ func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
 }
 
-func (c QuerySchemaColumn) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "data_type")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "type_text")...)
+func (c QuerySchemaColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_type"] = attrs["data_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["type_text"] = attrs["type_text"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchemaColumn.
@@ -2426,13 +2452,13 @@ func (o QuerySchemaColumn) Type(ctx context.Context) attr.Type {
 
 type Result struct {
 	// If result is truncated
-	IsTruncated types.Bool `tfsdk:"is_truncated" tf:"optional"`
+	IsTruncated types.Bool `tfsdk:"is_truncated"`
 	// Row count of the result
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 	// Statement Execution API statement id. Use [Get status, manifest, and
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	StatementId types.String `tfsdk:"statement_id"`
 }
 
 func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
@@ -2441,9 +2467,12 @@ func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
 func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
 }
 
-func (c Result) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Result) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Result.
@@ -2483,26 +2512,26 @@ func (o Result) Type(ctx context.Context) attr.Type {
 
 type Schedule struct {
 	// A timestamp indicating when the schedule was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule types.Object `tfsdk:"cron_schedule" tf:"object"`
+	CronSchedule types.Object `tfsdk:"cron_schedule"`
 	// UUID identifying the dashboard to which the schedule belongs.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The display name for schedule.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the schedule. Must be left empty on create, must be provided
 	// on updates to ensure that the schedule has not been modified since the
 	// last read, and can be optionally provided on delete.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// The status indicates whether this schedule is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// UUID identifying the schedule.
-	ScheduleId types.String `tfsdk:"schedule_id" tf:"computed"`
+	ScheduleId types.String `tfsdk:"schedule_id"`
 	// A timestamp indicating when the schedule was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// The warehouse id to run the dashboard with for the schedule.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule) {
@@ -2511,16 +2540,18 @@ func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule)
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
 }
 
-func (c Schedule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "create_time")...)
-	cs.SetRequired(append(path, "cron_schedule")...)
-	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "cron_schedule")...)
-	cs.SetComputed(append(path, "dashboard_id")...)
-	cs.SetComputed(append(path, "etag")...)
-	cs.SetComputed(append(path, "schedule_id")...)
-	cs.SetComputed(append(path, "update_time")...)
+func (c Schedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Schedule.
@@ -2603,10 +2634,10 @@ func (o *Schedule) SetCronSchedule(ctx context.Context, v CronSchedule) {
 type Subscriber struct {
 	// The destination to receive the subscription email. This parameter is
 	// mutually exclusive with `user_subscriber`.
-	DestinationSubscriber types.Object `tfsdk:"destination_subscriber" tf:"optional,object"`
+	DestinationSubscriber types.Object `tfsdk:"destination_subscriber"`
 	// The user to receive the subscription email. This parameter is mutually
 	// exclusive with `destination_subscriber`.
-	UserSubscriber types.Object `tfsdk:"user_subscriber" tf:"optional,object"`
+	UserSubscriber types.Object `tfsdk:"user_subscriber"`
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber) {
@@ -2615,11 +2646,11 @@ func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscri
 func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
 }
 
-func (c Subscriber) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SubscriptionSubscriberDestination{}.ApplySchemaCustomizations(cs, append(path, "destination_subscriber")...)
-	SubscriptionSubscriberUser{}.ApplySchemaCustomizations(cs, append(path, "user_subscriber")...)
+func (c Subscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_subscriber"] = attrs["destination_subscriber"].SetOptional()
+	attrs["user_subscriber"] = attrs["user_subscriber"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscriber.
@@ -2716,25 +2747,25 @@ func (o *Subscriber) SetUserSubscriber(ctx context.Context, v SubscriptionSubscr
 
 type Subscription struct {
 	// A timestamp indicating when the subscription was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// UserId of the user who adds subscribers (users or notification
 	// destinations) to the dashboard's schedule.
-	CreatedByUserId types.Int64 `tfsdk:"created_by_user_id" tf:"computed"`
+	CreatedByUserId types.Int64 `tfsdk:"created_by_user_id"`
 	// UUID identifying the dashboard to which the subscription belongs.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The etag for the subscription. Must be left empty on create, can be
 	// optionally provided on delete to ensure that the subscription has not
 	// been deleted since the last read.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
-	ScheduleId types.String `tfsdk:"schedule_id" tf:"computed"`
+	ScheduleId types.String `tfsdk:"schedule_id"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
-	Subscriber types.Object `tfsdk:"subscriber" tf:"object"`
+	Subscriber types.Object `tfsdk:"subscriber"`
 	// UUID identifying the subscription.
-	SubscriptionId types.String `tfsdk:"subscription_id" tf:"computed"`
+	SubscriptionId types.String `tfsdk:"subscription_id"`
 	// A timestamp indicating when the subscription was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
@@ -2743,18 +2774,17 @@ func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subsc
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
 }
 
-func (c Subscription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "create_time")...)
-	cs.SetComputed(append(path, "created_by_user_id")...)
-	cs.SetComputed(append(path, "dashboard_id")...)
-	cs.SetComputed(append(path, "etag")...)
-	cs.SetComputed(append(path, "schedule_id")...)
-	cs.SetRequired(append(path, "subscriber")...)
-	Subscriber{}.ApplySchemaCustomizations(cs, append(path, "subscriber")...)
-	cs.SetComputed(append(path, "subscription_id")...)
-	cs.SetComputed(append(path, "update_time")...)
+func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by_user_id"] = attrs["created_by_user_id"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["subscriber"] = attrs["subscriber"].SetRequired()
+	attrs["subscription_id"] = attrs["subscription_id"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscription.
@@ -2835,7 +2865,7 @@ func (o *Subscription) SetSubscriber(ctx context.Context, v Subscriber) {
 type SubscriptionSubscriberDestination struct {
 	// The canonical identifier of the destination to receive email
 	// notification.
-	DestinationId types.String `tfsdk:"destination_id" tf:"computed"`
+	DestinationId types.String `tfsdk:"destination_id"`
 }
 
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberDestination) {
@@ -2844,10 +2874,10 @@ func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCrea
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
 }
 
-func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "destination_id")...)
+func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberDestination.
@@ -2883,7 +2913,7 @@ func (o SubscriptionSubscriberDestination) Type(ctx context.Context) attr.Type {
 
 type SubscriptionSubscriberUser struct {
 	// UserId of the subscriber.
-	UserId types.Int64 `tfsdk:"user_id" tf:"computed"`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberUser) {
@@ -2892,10 +2922,10 @@ func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
 }
 
-func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "user_id")...)
+func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["user_id"] = attrs["user_id"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberUser.
@@ -2931,9 +2961,9 @@ func (o SubscriptionSubscriberUser) Type(ctx context.Context) attr.Type {
 
 type TextAttachment struct {
 	// AI generated message
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextAttachment) {
@@ -2942,9 +2972,11 @@ func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tex
 func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
 }
 
-func (c TextAttachment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TextAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TextAttachment.
@@ -3026,9 +3058,9 @@ func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
 }
 
-func (c TrashDashboardResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TrashDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardResponse.
@@ -3104,9 +3136,9 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
 }
 
-func (c UnpublishDashboardResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UnpublishDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardResponse.
@@ -3138,7 +3170,7 @@ func (o UnpublishDashboardResponse) Type(ctx context.Context) attr.Type {
 
 // Update dashboard
 type UpdateDashboardRequest struct {
-	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
 }
@@ -3211,7 +3243,7 @@ type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
 }

@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -38,11 +39,11 @@ type Activity_SdkV2 struct {
 	//
 	// * `SYSTEM_TRANSITION`: For events performed as a side effect, such as
 	// archiving existing model versions in a stage.
-	ActivityType types.String `tfsdk:"activity_type" tf:"optional"`
+	ActivityType types.String `tfsdk:"activity_type"`
 	// User-provided comment associated with the activity.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Source stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -53,16 +54,16 @@ type Activity_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	FromStage types.String `tfsdk:"from_stage" tf:"optional"`
+	FromStage types.String `tfsdk:"from_stage"`
 	// Unique identifier for the object.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Comment made by system, for example explaining an activity of type
 	// `SYSTEM_TRANSITION`. It usually describes a side effect, such as a
 	// version being archived as part of another version's stage transition, and
 	// may not be returned for some activity types.
-	SystemComment types.String `tfsdk:"system_comment" tf:"optional"`
+	SystemComment types.String `tfsdk:"system_comment"`
 	// Target stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -73,9 +74,9 @@ type Activity_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *Activity_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Activity_SdkV2) {
@@ -84,9 +85,18 @@ func (newState *Activity_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Act
 func (newState *Activity_SdkV2) SyncEffectiveFieldsDuringRead(existingState Activity_SdkV2) {
 }
 
-func (c Activity_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Activity_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity_type"] = attrs["activity_type"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["from_stage"] = attrs["from_stage"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["system_comment"] = attrs["system_comment"].SetOptional()
+	attrs["to_stage"] = attrs["to_stage"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Activity.
@@ -139,11 +149,11 @@ func (o Activity_SdkV2) Type(ctx context.Context) attr.Type {
 type ApproveTransitionRequest_SdkV2 struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
-	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions" tf:""`
+	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions"`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Target stage of the transition. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -153,9 +163,9 @@ type ApproveTransitionRequest_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage types.String `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *ApproveTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequest_SdkV2) {
@@ -164,13 +174,14 @@ func (newState *ApproveTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *ApproveTransitionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequest_SdkV2) {
 }
 
-func (c ApproveTransitionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "archive_existing_versions")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "stage")...)
-	cs.SetRequired(append(path, "version")...)
+func (c ApproveTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["archive_existing_versions"] = attrs["archive_existing_versions"].SetRequired()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApproveTransitionRequest.
@@ -214,7 +225,7 @@ func (o ApproveTransitionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ApproveTransitionRequestResponse_SdkV2 struct {
 	// Activity recorded for the action.
-	Activity types.List `tfsdk:"activity" tf:"optional,object"`
+	Activity types.List `tfsdk:"activity"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApproveTransitionRequestResponse.
@@ -281,17 +292,17 @@ func (o *ApproveTransitionRequestResponse_SdkV2) SetActivity(ctx context.Context
 // Comment details.
 type CommentObject_SdkV2 struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions types.List `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions types.List `tfsdk:"available_actions"`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Comment ID
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *CommentObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommentObject_SdkV2) {
@@ -300,9 +311,15 @@ func (newState *CommentObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *CommentObject_SdkV2) SyncEffectiveFieldsDuringRead(existingState CommentObject_SdkV2) {
 }
 
-func (c CommentObject_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CommentObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["available_actions"] = attrs["available_actions"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CommentObject.
@@ -378,11 +395,11 @@ func (o *CommentObject_SdkV2) SetAvailableActions(ctx context.Context, v []types
 
 type CreateComment_SdkV2 struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:""`
+	Comment types.String `tfsdk:"comment"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *CreateComment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateComment_SdkV2) {
@@ -391,12 +408,12 @@ func (newState *CreateComment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *CreateComment_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateComment_SdkV2) {
 }
 
-func (c CreateComment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "comment")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "version")...)
+func (c CreateComment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateComment.
@@ -436,7 +453,7 @@ func (o CreateComment_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateCommentResponse_SdkV2 struct {
 	// Comment details.
-	Comment types.List `tfsdk:"comment" tf:"optional,object"`
+	Comment types.List `tfsdk:"comment"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCommentResponse.
@@ -503,15 +520,15 @@ func (o *CreateCommentResponse_SdkV2) SetComment(ctx context.Context, v CommentO
 type CreateExperiment_SdkV2 struct {
 	// Location where all artifacts for the experiment are stored. If not
 	// provided, the remote server will select an appropriate default.
-	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional"`
+	ArtifactLocation types.String `tfsdk:"artifact_location"`
 	// Experiment name.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// A collection of tags to set on the experiment. Maximum tag size and
 	// number of tags per request depends on the storage backend. All storage
 	// backends are guaranteed to support tag keys up to 250 bytes in size and
 	// tag values up to 5000 bytes in size. All storage backends are also
 	// guaranteed to support up to 20 tags per request.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *CreateExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperiment_SdkV2) {
@@ -520,11 +537,12 @@ func (newState *CreateExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateExperiment_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExperiment_SdkV2) {
 }
 
-func (c CreateExperiment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	ExperimentTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifact_location"] = attrs["artifact_location"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExperiment.
@@ -594,7 +612,7 @@ func (o *CreateExperiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_
 
 type CreateExperimentResponse_SdkV2 struct {
 	// Unique identifier for the experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 }
 
 func (newState *CreateExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExperimentResponse_SdkV2) {
@@ -603,9 +621,10 @@ func (newState *CreateExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *CreateExperimentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateExperimentResponse_SdkV2) {
 }
 
-func (c CreateExperimentResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateExperimentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExperimentResponse.
@@ -641,11 +660,11 @@ func (o CreateExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateModelRequest_SdkV2 struct {
 	// Optional description for registered model.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Register models under this name
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Additional metadata for registered model.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *CreateModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelRequest_SdkV2) {
@@ -654,11 +673,12 @@ func (newState *CreateModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateModelRequest_SdkV2) {
 }
 
-func (c CreateModelRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	ModelTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelRequest.
@@ -727,7 +747,7 @@ func (o *CreateModelRequest_SdkV2) SetTags(ctx context.Context, v []ModelTag_Sdk
 }
 
 type CreateModelResponse_SdkV2 struct {
-	RegisteredModel types.List `tfsdk:"registered_model" tf:"optional,object"`
+	RegisteredModel types.List `tfsdk:"registered_model"`
 }
 
 func (newState *CreateModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelResponse_SdkV2) {
@@ -736,10 +756,11 @@ func (newState *CreateModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateModelResponse_SdkV2) {
 }
 
-func (c CreateModelResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Model_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "registered_model")...)
+func (c CreateModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["registered_model"] = attrs["registered_model"].SetOptional()
+	attrs["registered_model"] = attrs["registered_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelResponse.
@@ -805,19 +826,19 @@ func (o *CreateModelResponse_SdkV2) SetRegisteredModel(ctx context.Context, v Mo
 
 type CreateModelVersionRequest_SdkV2 struct {
 	// Optional description for model version.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Register model under this name
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// MLflow run ID for correlation, if `source` was generated by an experiment
 	// run in MLflow tracking server
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// MLflow run link - this is the exact link of the run that generated this
 	// model version, potentially hosted at another instance of MLflow.
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link"`
 	// URI indicating the location of the model artifacts.
-	Source types.String `tfsdk:"source" tf:""`
+	Source types.String `tfsdk:"source"`
 	// Additional metadata for model version.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *CreateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionRequest_SdkV2) {
@@ -826,12 +847,15 @@ func (newState *CreateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *CreateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionRequest_SdkV2) {
 }
 
-func (c CreateModelVersionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "source")...)
-	ModelVersionTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateModelVersionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_link"] = attrs["run_link"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelVersionRequest.
@@ -907,7 +931,7 @@ func (o *CreateModelVersionRequest_SdkV2) SetTags(ctx context.Context, v []Model
 
 type CreateModelVersionResponse_SdkV2 struct {
 	// Return new version number generated for this model in registry.
-	ModelVersion types.List `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.List `tfsdk:"model_version"`
 }
 
 func (newState *CreateModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateModelVersionResponse_SdkV2) {
@@ -916,10 +940,11 @@ func (newState *CreateModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *CreateModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateModelVersionResponse_SdkV2) {
 }
 
-func (c CreateModelVersionResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "model_version")...)
+func (c CreateModelVersionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateModelVersionResponse.
@@ -985,7 +1010,7 @@ func (o *CreateModelVersionResponse_SdkV2) SetModelVersion(ctx context.Context, 
 
 type CreateRegistryWebhook_SdkV2 struct {
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -1019,13 +1044,13 @@ type CreateRegistryWebhook_SdkV2 struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events" tf:""`
+	Events types.List `tfsdk:"events"`
 
-	HttpUrlSpec types.List `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.List `tfsdk:"http_url_spec"`
 
-	JobSpec types.List `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.List `tfsdk:"job_spec"`
 	// Name of the model whose events would trigger this webhook.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -1034,7 +1059,7 @@ type CreateRegistryWebhook_SdkV2 struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *CreateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRegistryWebhook_SdkV2) {
@@ -1043,12 +1068,17 @@ func (newState *CreateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRegistryWebhook_SdkV2) {
 }
 
-func (c CreateRegistryWebhook_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "events")...)
-	HttpUrlSpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "http_url_spec")...)
-	JobSpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "job_spec")...)
+func (c CreateRegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["events"] = attrs["events"].SetRequired()
+	attrs["http_url_spec"] = attrs["http_url_spec"].SetOptional()
+	attrs["http_url_spec"] = attrs["http_url_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["job_spec"] = attrs["job_spec"].SetOptional()
+	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRegistryWebhook.
@@ -1182,15 +1212,15 @@ func (o *CreateRegistryWebhook_SdkV2) SetJobSpec(ctx context.Context, v JobSpec_
 
 type CreateRun_SdkV2 struct {
 	// ID of the associated experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// Unix timestamp in milliseconds of when the run started.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Additional metadata for run.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// ID of the user executing the run. This field is deprecated as of MLflow
 	// 1.0, and will be removed in a future MLflow release. Use 'mlflow.user'
 	// tag instead.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *CreateRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRun_SdkV2) {
@@ -1199,10 +1229,13 @@ func (newState *CreateRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cr
 func (newState *CreateRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRun_SdkV2) {
 }
 
-func (c CreateRun_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RunTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRun.
@@ -1274,7 +1307,7 @@ func (o *CreateRun_SdkV2) SetTags(ctx context.Context, v []RunTag_SdkV2) {
 
 type CreateRunResponse_SdkV2 struct {
 	// The newly created run.
-	Run types.List `tfsdk:"run" tf:"optional,object"`
+	Run types.List `tfsdk:"run"`
 }
 
 func (newState *CreateRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRunResponse_SdkV2) {
@@ -1283,10 +1316,11 @@ func (newState *CreateRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateRunResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRunResponse_SdkV2) {
 }
 
-func (c CreateRunResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Run_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "run")...)
+func (c CreateRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run"] = attrs["run"].SetOptional()
+	attrs["run"] = attrs["run"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRunResponse.
@@ -1352,9 +1386,9 @@ func (o *CreateRunResponse_SdkV2) SetRun(ctx context.Context, v Run_SdkV2) {
 
 type CreateTransitionRequest_SdkV2 struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Target stage of the transition. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -1364,9 +1398,9 @@ type CreateTransitionRequest_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage types.String `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *CreateTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequest_SdkV2) {
@@ -1375,12 +1409,13 @@ func (newState *CreateTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *CreateTransitionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequest_SdkV2) {
 }
 
-func (c CreateTransitionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "stage")...)
-	cs.SetRequired(append(path, "version")...)
+func (c CreateTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTransitionRequest.
@@ -1422,7 +1457,7 @@ func (o CreateTransitionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateTransitionRequestResponse_SdkV2 struct {
 	// Transition request details.
-	Request types.List `tfsdk:"request" tf:"optional,object"`
+	Request types.List `tfsdk:"request"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTransitionRequestResponse.
@@ -1487,7 +1522,7 @@ func (o *CreateTransitionRequestResponse_SdkV2) SetRequest(ctx context.Context, 
 }
 
 type CreateWebhookResponse_SdkV2 struct {
-	Webhook types.List `tfsdk:"webhook" tf:"optional,object"`
+	Webhook types.List `tfsdk:"webhook"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWebhookResponse.
@@ -1554,24 +1589,24 @@ func (o *CreateWebhookResponse_SdkV2) SetWebhook(ctx context.Context, v Registry
 type Dataset_SdkV2 struct {
 	// Dataset digest, e.g. an md5 hash of the dataset that uniquely identifies
 	// it within datasets of the same name.
-	Digest types.String `tfsdk:"digest" tf:"optional"`
+	Digest types.String `tfsdk:"digest"`
 	// The name of the dataset. E.g. “my.uc.table@2” “nyc-taxi-dataset”,
 	// “fantastic-elk-3”
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The profile of the dataset. Summary statistics for the dataset, such as
 	// the number of rows in a table, the mean / std / mode of each column in a
 	// table, or the number of elements in an array.
-	Profile types.String `tfsdk:"profile" tf:"optional"`
+	Profile types.String `tfsdk:"profile"`
 	// The schema of the dataset. E.g., MLflow ColSpec JSON for a dataframe,
 	// MLflow TensorSpec JSON for an ndarray, or another schema format.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// The type of the dataset source, e.g. ‘databricks-uc-table’,
 	// ‘DBFS’, ‘S3’, ...
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 	// Source information for the dataset. Note that the source may not exactly
 	// reproduce the dataset if it was transformed / modified before use with
 	// MLflow.
-	SourceType types.String `tfsdk:"source_type" tf:"optional"`
+	SourceType types.String `tfsdk:"source_type"`
 }
 
 func (newState *Dataset_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dataset_SdkV2) {
@@ -1580,9 +1615,15 @@ func (newState *Dataset_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Data
 func (newState *Dataset_SdkV2) SyncEffectiveFieldsDuringRead(existingState Dataset_SdkV2) {
 }
 
-func (c Dataset_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Dataset_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["digest"] = attrs["digest"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["profile"] = attrs["profile"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["source_type"] = attrs["source_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Dataset.
@@ -1628,10 +1669,10 @@ func (o Dataset_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DatasetInput_SdkV2 struct {
 	// The dataset being used as a Run input.
-	Dataset types.List `tfsdk:"dataset" tf:"optional,object"`
+	Dataset types.List `tfsdk:"dataset"`
 	// A list of tags for the dataset input, e.g. a “context” tag with value
 	// “training”
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *DatasetInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DatasetInput_SdkV2) {
@@ -1640,11 +1681,12 @@ func (newState *DatasetInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DatasetInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState DatasetInput_SdkV2) {
 }
 
-func (c DatasetInput_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Dataset_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "dataset")...)
-	InputTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c DatasetInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset"] = attrs["dataset"].SetOptional()
+	attrs["dataset"] = attrs["dataset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DatasetInput.
@@ -1807,7 +1849,7 @@ func (o DeleteCommentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteExperiment_SdkV2 struct {
 	// ID of the associated experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 }
 
 func (newState *DeleteExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExperiment_SdkV2) {
@@ -1816,10 +1858,10 @@ func (newState *DeleteExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteExperiment_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExperiment_SdkV2) {
 }
 
-func (c DeleteExperiment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
+func (c DeleteExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExperiment.
@@ -1862,9 +1904,9 @@ func (newState *DeleteExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *DeleteExperimentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExperimentResponse_SdkV2) {
 }
 
-func (c DeleteExperimentResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteExperimentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExperimentResponse.
@@ -2182,7 +2224,7 @@ func (o DeleteModelVersionTagResponse_SdkV2) Type(ctx context.Context) attr.Type
 
 type DeleteRun_SdkV2 struct {
 	// ID of the run to delete.
-	RunId types.String `tfsdk:"run_id" tf:""`
+	RunId types.String `tfsdk:"run_id"`
 }
 
 func (newState *DeleteRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun_SdkV2) {
@@ -2191,10 +2233,10 @@ func (newState *DeleteRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan De
 func (newState *DeleteRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRun_SdkV2) {
 }
 
-func (c DeleteRun_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "run_id")...)
+func (c DeleteRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -2237,9 +2279,9 @@ func (newState *DeleteRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteRunResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse_SdkV2) {
 }
 
-func (c DeleteRunResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunResponse.
@@ -2271,14 +2313,14 @@ func (o DeleteRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteRuns_SdkV2 struct {
 	// The ID of the experiment containing the runs to delete.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// An optional positive integer indicating the maximum number of runs to
 	// delete. The maximum allowed value for max_runs is 10000.
-	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional"`
+	MaxRuns types.Int64 `tfsdk:"max_runs"`
 	// The maximum creation timestamp in milliseconds since the UNIX epoch for
 	// deleting runs. Only runs created prior to or at this timestamp are
 	// deleted.
-	MaxTimestampMillis types.Int64 `tfsdk:"max_timestamp_millis" tf:""`
+	MaxTimestampMillis types.Int64 `tfsdk:"max_timestamp_millis"`
 }
 
 func (newState *DeleteRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRuns_SdkV2) {
@@ -2287,11 +2329,12 @@ func (newState *DeleteRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DeleteRuns_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRuns_SdkV2) {
 }
 
-func (c DeleteRuns_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
-	cs.SetRequired(append(path, "max_timestamp_millis")...)
+func (c DeleteRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["max_runs"] = attrs["max_runs"].SetOptional()
+	attrs["max_timestamp_millis"] = attrs["max_timestamp_millis"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRuns.
@@ -2331,7 +2374,7 @@ func (o DeleteRuns_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteRunsResponse_SdkV2 struct {
 	// The number of runs deleted.
-	RunsDeleted types.Int64 `tfsdk:"runs_deleted" tf:"optional"`
+	RunsDeleted types.Int64 `tfsdk:"runs_deleted"`
 }
 
 func (newState *DeleteRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunsResponse_SdkV2) {
@@ -2340,9 +2383,10 @@ func (newState *DeleteRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *DeleteRunsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRunsResponse_SdkV2) {
 }
 
-func (c DeleteRunsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["runs_deleted"] = attrs["runs_deleted"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunsResponse.
@@ -2378,9 +2422,9 @@ func (o DeleteRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteTag_SdkV2 struct {
 	// Name of the tag. Maximum size is 255 bytes. Must be provided.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// ID of the run that the tag was logged under. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:""`
+	RunId types.String `tfsdk:"run_id"`
 }
 
 func (newState *DeleteTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteTag_SdkV2) {
@@ -2389,11 +2433,11 @@ func (newState *DeleteTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan De
 func (newState *DeleteTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteTag_SdkV2) {
 }
 
-func (c DeleteTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "run_id")...)
+func (c DeleteTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTag.
@@ -2438,9 +2482,9 @@ func (newState *DeleteTagResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteTagResponse_SdkV2) {
 }
 
-func (c DeleteTagResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteTagResponse.
@@ -2632,20 +2676,20 @@ func (o DeleteWebhookResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Experiment_SdkV2 struct {
 	// Location where artifacts for the experiment are stored.
-	ArtifactLocation types.String `tfsdk:"artifact_location" tf:"optional"`
+	ArtifactLocation types.String `tfsdk:"artifact_location"`
 	// Creation time
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Unique identifier for the experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// Last update time
-	LastUpdateTime types.Int64 `tfsdk:"last_update_time" tf:"optional"`
+	LastUpdateTime types.Int64 `tfsdk:"last_update_time"`
 	// Current life cycle stage of the experiment: "active" or "deleted".
 	// Deleted experiments are not returned by APIs.
-	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional"`
+	LifecycleStage types.String `tfsdk:"lifecycle_stage"`
 	// Human readable name that identifies the experiment.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *Experiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Experiment_SdkV2) {
@@ -2654,10 +2698,16 @@ func (newState *Experiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *Experiment_SdkV2) SyncEffectiveFieldsDuringRead(existingState Experiment_SdkV2) {
 }
 
-func (c Experiment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExperimentTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c Experiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifact_location"] = attrs["artifact_location"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["last_update_time"] = attrs["last_update_time"].SetOptional()
+	attrs["lifecycle_stage"] = attrs["lifecycle_stage"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Experiment.
@@ -2735,13 +2785,13 @@ func (o *Experiment_SdkV2) SetTags(ctx context.Context, v []ExperimentTag_SdkV2)
 
 type ExperimentAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ExperimentAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentAccessControlRequest_SdkV2) {
@@ -2750,9 +2800,13 @@ func (newState *ExperimentAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringC
 func (newState *ExperimentAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlRequest_SdkV2) {
 }
 
-func (c ExperimentAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExperimentAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentAccessControlRequest.
@@ -2794,15 +2848,15 @@ func (o ExperimentAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Typ
 
 type ExperimentAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ExperimentAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentAccessControlResponse_SdkV2) {
@@ -2811,10 +2865,14 @@ func (newState *ExperimentAccessControlResponse_SdkV2) SyncEffectiveFieldsDuring
 func (newState *ExperimentAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentAccessControlResponse_SdkV2) {
 }
 
-func (c ExperimentAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExperimentPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c ExperimentAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentAccessControlResponse.
@@ -2887,11 +2945,11 @@ func (o *ExperimentAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Co
 }
 
 type ExperimentPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ExperimentPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermission_SdkV2) {
@@ -2900,9 +2958,12 @@ func (newState *ExperimentPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ExperimentPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentPermission_SdkV2) {
 }
 
-func (c ExperimentPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExperimentPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentPermission.
@@ -2971,11 +3032,11 @@ func (o *ExperimentPermission_SdkV2) SetInheritedFromObject(ctx context.Context,
 }
 
 type ExperimentPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *ExperimentPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissions_SdkV2) {
@@ -2984,10 +3045,12 @@ func (newState *ExperimentPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ExperimentPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissions_SdkV2) {
 }
 
-func (c ExperimentPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExperimentAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c ExperimentPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentPermissions.
@@ -3056,9 +3119,9 @@ func (o *ExperimentPermissions_SdkV2) SetAccessControlList(ctx context.Context, 
 }
 
 type ExperimentPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ExperimentPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentPermissionsDescription_SdkV2) {
@@ -3067,9 +3130,11 @@ func (newState *ExperimentPermissionsDescription_SdkV2) SyncEffectiveFieldsDurin
 func (newState *ExperimentPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsDescription_SdkV2) {
 }
 
-func (c ExperimentPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExperimentPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentPermissionsDescription.
@@ -3106,7 +3171,7 @@ func (o ExperimentPermissionsDescription_SdkV2) Type(ctx context.Context) attr.T
 }
 
 type ExperimentPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The experiment for which to get or manage permissions.
 	ExperimentId types.String `tfsdk:"-"`
 }
@@ -3117,11 +3182,11 @@ func (newState *ExperimentPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCre
 func (newState *ExperimentPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentPermissionsRequest_SdkV2) {
 }
 
-func (c ExperimentPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExperimentAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "experiment_id")...)
+func (c ExperimentPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentPermissionsRequest.
@@ -3189,9 +3254,9 @@ func (o *ExperimentPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Co
 
 type ExperimentTag_SdkV2 struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *ExperimentTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExperimentTag_SdkV2) {
@@ -3200,9 +3265,11 @@ func (newState *ExperimentTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ExperimentTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExperimentTag_SdkV2) {
 }
 
-func (c ExperimentTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExperimentTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExperimentTag.
@@ -3240,11 +3307,11 @@ func (o ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 type FileInfo_SdkV2 struct {
 	// Size in bytes. Unset for directories.
-	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
+	FileSize types.Int64 `tfsdk:"file_size"`
 	// Whether the path is a directory.
-	IsDir types.Bool `tfsdk:"is_dir" tf:"optional"`
+	IsDir types.Bool `tfsdk:"is_dir"`
 	// Path relative to the root artifact directory run.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo_SdkV2) {
@@ -3253,9 +3320,12 @@ func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Fil
 func (newState *FileInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileInfo_SdkV2) {
 }
 
-func (c FileInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c FileInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_size"] = attrs["file_size"].SetOptional()
+	attrs["is_dir"] = attrs["is_dir"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
@@ -3369,7 +3439,7 @@ func (o GetExperimentPermissionLevelsRequest_SdkV2) Type(ctx context.Context) at
 
 type GetExperimentPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetExperimentPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentPermissionLevelsResponse_SdkV2) {
@@ -3378,10 +3448,10 @@ func (newState *GetExperimentPermissionLevelsResponse_SdkV2) SyncEffectiveFields
 func (newState *GetExperimentPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetExperimentPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetExperimentPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExperimentPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetExperimentPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExperimentPermissionLevelsResponse.
@@ -3521,7 +3591,7 @@ func (o GetExperimentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetExperimentResponse_SdkV2 struct {
 	// Experiment details.
-	Experiment types.List `tfsdk:"experiment" tf:"optional,object"`
+	Experiment types.List `tfsdk:"experiment"`
 }
 
 func (newState *GetExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentResponse_SdkV2) {
@@ -3530,10 +3600,11 @@ func (newState *GetExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetExperimentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetExperimentResponse_SdkV2) {
 }
 
-func (c GetExperimentResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Experiment_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "experiment")...)
+func (c GetExperimentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment"] = attrs["experiment"].SetOptional()
+	attrs["experiment"] = attrs["experiment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExperimentResponse.
@@ -3655,9 +3726,9 @@ func (o GetHistoryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetLatestVersionsRequest_SdkV2 struct {
 	// Registered model unique name identifier.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// List of stages.
-	Stages types.List `tfsdk:"stages" tf:"optional"`
+	Stages types.List `tfsdk:"stages"`
 }
 
 func (newState *GetLatestVersionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsRequest_SdkV2) {
@@ -3666,10 +3737,11 @@ func (newState *GetLatestVersionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *GetLatestVersionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsRequest_SdkV2) {
 }
 
-func (c GetLatestVersionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
+func (c GetLatestVersionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stages"] = attrs["stages"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLatestVersionsRequest.
@@ -3739,7 +3811,7 @@ type GetLatestVersionsResponse_SdkV2 struct {
 	// Latest version models for each requests stage. Only return models with
 	// current `READY` status. If no `stages` provided, returns the latest
 	// version for each stage, including `"None"`.
-	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions types.List `tfsdk:"model_versions"`
 }
 
 func (newState *GetLatestVersionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionsResponse_SdkV2) {
@@ -3748,10 +3820,10 @@ func (newState *GetLatestVersionsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *GetLatestVersionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionsResponse_SdkV2) {
 }
 
-func (c GetLatestVersionsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "model_versions")...)
+func (c GetLatestVersionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_versions"] = attrs["model_versions"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLatestVersionsResponse.
@@ -3817,10 +3889,10 @@ func (o *GetLatestVersionsResponse_SdkV2) SetModelVersions(ctx context.Context, 
 
 type GetMetricHistoryResponse_SdkV2 struct {
 	// All logged values for this metric.
-	Metrics types.List `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics"`
 	// Token that can be used to retrieve the next page of metric history
 	// results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *GetMetricHistoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetMetricHistoryResponse_SdkV2) {
@@ -3829,10 +3901,11 @@ func (newState *GetMetricHistoryResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *GetMetricHistoryResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetMetricHistoryResponse_SdkV2) {
 }
 
-func (c GetMetricHistoryResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Metric_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "metrics")...)
+func (c GetMetricHistoryResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetMetricHistoryResponse.
@@ -3936,7 +4009,7 @@ func (o GetModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelResponse_SdkV2 struct {
-	RegisteredModelDatabricks types.List `tfsdk:"registered_model_databricks" tf:"optional,object"`
+	RegisteredModelDatabricks types.List `tfsdk:"registered_model_databricks"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetModelResponse.
@@ -4043,7 +4116,7 @@ func (o GetModelVersionDownloadUriRequest_SdkV2) Type(ctx context.Context) attr.
 
 type GetModelVersionDownloadUriResponse_SdkV2 struct {
 	// URI corresponding to where artifacts for this model version are stored.
-	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
+	ArtifactUri types.String `tfsdk:"artifact_uri"`
 }
 
 func (newState *GetModelVersionDownloadUriResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionDownloadUriResponse_SdkV2) {
@@ -4052,9 +4125,10 @@ func (newState *GetModelVersionDownloadUriResponse_SdkV2) SyncEffectiveFieldsDur
 func (newState *GetModelVersionDownloadUriResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetModelVersionDownloadUriResponse_SdkV2) {
 }
 
-func (c GetModelVersionDownloadUriResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GetModelVersionDownloadUriResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifact_uri"] = attrs["artifact_uri"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetModelVersionDownloadUriResponse.
@@ -4130,7 +4204,7 @@ func (o GetModelVersionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetModelVersionResponse_SdkV2 struct {
-	ModelVersion types.List `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.List `tfsdk:"model_version"`
 }
 
 func (newState *GetModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelVersionResponse_SdkV2) {
@@ -4139,10 +4213,11 @@ func (newState *GetModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetModelVersionResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetModelVersionResponse_SdkV2) {
 }
 
-func (c GetModelVersionResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "model_version")...)
+func (c GetModelVersionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetModelVersionResponse.
@@ -4245,7 +4320,7 @@ func (o GetRegisteredModelPermissionLevelsRequest_SdkV2) Type(ctx context.Contex
 
 type GetRegisteredModelPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRegisteredModelPermissionLevelsResponse_SdkV2) {
@@ -4254,10 +4329,10 @@ func (newState *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncEffectiveF
 func (newState *GetRegisteredModelPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRegisteredModelPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetRegisteredModelPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RegisteredModelPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetRegisteredModelPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRegisteredModelPermissionLevelsResponse.
@@ -4403,7 +4478,7 @@ func (o GetRunRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetRunResponse_SdkV2 struct {
 	// Run metadata (name, start time, etc) and data (metrics, params, and
 	// tags).
-	Run types.List `tfsdk:"run" tf:"optional,object"`
+	Run types.List `tfsdk:"run"`
 }
 
 func (newState *GetRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunResponse_SdkV2) {
@@ -4412,10 +4487,11 @@ func (newState *GetRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *GetRunResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRunResponse_SdkV2) {
 }
 
-func (c GetRunResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Run_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "run")...)
+func (c GetRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run"] = attrs["run"].SetOptional()
+	attrs["run"] = attrs["run"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunResponse.
@@ -4484,7 +4560,7 @@ type HttpUrlSpec_SdkV2 struct {
 	// by the wehbook. It should be of the form `"<auth type> <credentials>"`.
 	// If set to an empty string, no authorization header will be included in
 	// the request.
-	Authorization types.String `tfsdk:"authorization" tf:"optional"`
+	Authorization types.String `tfsdk:"authorization"`
 	// Enable/disable SSL certificate validation. Default is true. For
 	// self-signed certificates, this field must be false AND the destination
 	// server must disable certificate validation as well. For security
@@ -4492,13 +4568,13 @@ type HttpUrlSpec_SdkV2 struct {
 	// HMAC-encoded portion of the payload and acknowledge the risk associated
 	// with disabling hostname validation whereby it becomes more likely that
 	// requests can be maliciously routed to an unintended host.
-	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional"`
+	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification"`
 	// Shared secret required for HMAC encoding payload. The HMAC-encoded
 	// payload will be sent in the header as: { "X-Databricks-Signature":
 	// $encoded_payload }.
-	Secret types.String `tfsdk:"secret" tf:"optional"`
+	Secret types.String `tfsdk:"secret"`
 	// External HTTPS URL called on event trigger (by using a POST request).
-	Url types.String `tfsdk:"url" tf:""`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *HttpUrlSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpUrlSpec_SdkV2) {
@@ -4507,10 +4583,13 @@ func (newState *HttpUrlSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *HttpUrlSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpec_SdkV2) {
 }
 
-func (c HttpUrlSpec_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "url")...)
+func (c HttpUrlSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["authorization"] = attrs["authorization"].SetOptional()
+	attrs["enable_ssl_verification"] = attrs["enable_ssl_verification"].SetOptional()
+	attrs["secret"] = attrs["secret"].SetOptional()
+	attrs["url"] = attrs["url"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpUrlSpec.
@@ -4558,9 +4637,9 @@ type HttpUrlSpecWithoutSecret_SdkV2 struct {
 	// HMAC-encoded portion of the payload and acknowledge the risk associated
 	// with disabling hostname validation whereby it becomes more likely that
 	// requests can be maliciously routed to an unintended host.
-	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification" tf:"optional"`
+	EnableSslVerification types.Bool `tfsdk:"enable_ssl_verification"`
 	// External HTTPS URL called on event trigger (by using a POST request).
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *HttpUrlSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpUrlSpecWithoutSecret_SdkV2) {
@@ -4569,9 +4648,11 @@ func (newState *HttpUrlSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *HttpUrlSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState HttpUrlSpecWithoutSecret_SdkV2) {
 }
 
-func (c HttpUrlSpecWithoutSecret_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c HttpUrlSpecWithoutSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enable_ssl_verification"] = attrs["enable_ssl_verification"].SetOptional()
+	attrs["url"] = attrs["url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpUrlSpecWithoutSecret.
@@ -4609,9 +4690,9 @@ func (o HttpUrlSpecWithoutSecret_SdkV2) Type(ctx context.Context) attr.Type {
 
 type InputTag_SdkV2 struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *InputTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InputTag_SdkV2) {
@@ -4620,9 +4701,11 @@ func (newState *InputTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Inp
 func (newState *InputTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState InputTag_SdkV2) {
 }
 
-func (c InputTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c InputTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InputTag.
@@ -4660,13 +4743,13 @@ func (o InputTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 type JobSpec_SdkV2 struct {
 	// The personal access token used to authorize webhook's job runs.
-	AccessToken types.String `tfsdk:"access_token" tf:""`
+	AccessToken types.String `tfsdk:"access_token"`
 	// ID of the job that the webhook runs.
-	JobId types.String `tfsdk:"job_id" tf:""`
+	JobId types.String `tfsdk:"job_id"`
 	// URL of the workspace containing the job that this webhook runs. If not
 	// specified, the job’s workspace URL is assumed to be the same as the
 	// workspace where the webhook is created.
-	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
+	WorkspaceUrl types.String `tfsdk:"workspace_url"`
 }
 
 func (newState *JobSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSpec_SdkV2) {
@@ -4675,11 +4758,12 @@ func (newState *JobSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobS
 func (newState *JobSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState JobSpec_SdkV2) {
 }
 
-func (c JobSpec_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "access_token")...)
-	cs.SetRequired(append(path, "job_id")...)
+func (c JobSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_token"] = attrs["access_token"].SetRequired()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["workspace_url"] = attrs["workspace_url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSpec.
@@ -4719,11 +4803,11 @@ func (o JobSpec_SdkV2) Type(ctx context.Context) attr.Type {
 
 type JobSpecWithoutSecret_SdkV2 struct {
 	// ID of the job that the webhook runs.
-	JobId types.String `tfsdk:"job_id" tf:"optional"`
+	JobId types.String `tfsdk:"job_id"`
 	// URL of the workspace containing the job that this webhook runs. Defaults
 	// to the workspace URL in which the webhook is created. If not specified,
 	// the job’s workspace is assumed to be the same as the webhook’s.
-	WorkspaceUrl types.String `tfsdk:"workspace_url" tf:"optional"`
+	WorkspaceUrl types.String `tfsdk:"workspace_url"`
 }
 
 func (newState *JobSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSpecWithoutSecret_SdkV2) {
@@ -4732,9 +4816,11 @@ func (newState *JobSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *JobSpecWithoutSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState JobSpecWithoutSecret_SdkV2) {
 }
 
-func (c JobSpecWithoutSecret_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobSpecWithoutSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["workspace_url"] = attrs["workspace_url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSpecWithoutSecret.
@@ -4828,11 +4914,11 @@ func (o ListArtifactsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListArtifactsResponse_SdkV2 struct {
 	// File location and metadata for artifacts.
-	Files types.List `tfsdk:"files" tf:"optional"`
+	Files types.List `tfsdk:"files"`
 	// Token that can be used to retrieve the next page of artifact results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Root artifact directory for the run.
-	RootUri types.String `tfsdk:"root_uri" tf:"optional"`
+	RootUri types.String `tfsdk:"root_uri"`
 }
 
 func (newState *ListArtifactsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListArtifactsResponse_SdkV2) {
@@ -4841,10 +4927,12 @@ func (newState *ListArtifactsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ListArtifactsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListArtifactsResponse_SdkV2) {
 }
 
-func (c ListArtifactsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "files")...)
+func (c ListArtifactsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["files"] = attrs["files"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["root_uri"] = attrs["root_uri"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListArtifactsResponse.
@@ -4965,10 +5053,10 @@ func (o ListExperimentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListExperimentsResponse_SdkV2 struct {
 	// Paginated Experiments beginning with the first item on the requested
 	// page.
-	Experiments types.List `tfsdk:"experiments" tf:"optional"`
+	Experiments types.List `tfsdk:"experiments"`
 	// Token that can be used to retrieve the next page of experiments. Empty
 	// token means no more experiment is available for retrieval.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExperimentsResponse_SdkV2) {
@@ -4977,10 +5065,11 @@ func (newState *ListExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExperimentsResponse_SdkV2) {
 }
 
-func (c ListExperimentsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Experiment_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "experiments")...)
+func (c ListExperimentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiments"] = attrs["experiments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExperimentsResponse.
@@ -5089,9 +5178,9 @@ func (o ListModelsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListModelsResponse_SdkV2 struct {
 	// Pagination token to request next page of models for the same query.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	RegisteredModels types.List `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels types.List `tfsdk:"registered_models"`
 }
 
 func (newState *ListModelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListModelsResponse_SdkV2) {
@@ -5100,10 +5189,11 @@ func (newState *ListModelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListModelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListModelsResponse_SdkV2) {
 }
 
-func (c ListModelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Model_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "registered_models")...)
+func (c ListModelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["registered_models"] = attrs["registered_models"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListModelsResponse.
@@ -5171,9 +5261,9 @@ func (o *ListModelsResponse_SdkV2) SetRegisteredModels(ctx context.Context, v []
 
 type ListRegistryWebhooks_SdkV2 struct {
 	// Token that can be used to retrieve the next page of artifact results
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Array of registry webhooks.
-	Webhooks types.List `tfsdk:"webhooks" tf:"optional"`
+	Webhooks types.List `tfsdk:"webhooks"`
 }
 
 func (newState *ListRegistryWebhooks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRegistryWebhooks_SdkV2) {
@@ -5182,10 +5272,11 @@ func (newState *ListRegistryWebhooks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ListRegistryWebhooks_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListRegistryWebhooks_SdkV2) {
 }
 
-func (c ListRegistryWebhooks_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RegistryWebhook_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "webhooks")...)
+func (c ListRegistryWebhooks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["webhooks"] = attrs["webhooks"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRegistryWebhooks.
@@ -5294,7 +5385,7 @@ func (o ListTransitionRequestsRequest_SdkV2) Type(ctx context.Context) attr.Type
 
 type ListTransitionRequestsResponse_SdkV2 struct {
 	// Array of open transition requests.
-	Requests types.List `tfsdk:"requests" tf:"optional"`
+	Requests types.List `tfsdk:"requests"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTransitionRequestsResponse.
@@ -5439,15 +5530,15 @@ func (o *ListWebhooksRequest_SdkV2) SetEvents(ctx context.Context, v []types.Str
 type LogBatch_SdkV2 struct {
 	// Metrics to log. A single request can contain up to 1000 metrics, and up
 	// to 1000 metrics, params, and tags in total.
-	Metrics types.List `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics"`
 	// Params to log. A single request can contain up to 100 params, and up to
 	// 1000 metrics, params, and tags in total.
-	Params types.List `tfsdk:"params" tf:"optional"`
+	Params types.List `tfsdk:"params"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// Tags to log. A single request can contain up to 100 tags, and up to 1000
 	// metrics, params, and tags in total.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *LogBatch_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogBatch_SdkV2) {
@@ -5456,12 +5547,13 @@ func (newState *LogBatch_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Log
 func (newState *LogBatch_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogBatch_SdkV2) {
 }
 
-func (c LogBatch_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Metric_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "metrics")...)
-	Param_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "params")...)
-	RunTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c LogBatch_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogBatch.
@@ -5598,9 +5690,9 @@ func (newState *LogBatchResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *LogBatchResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogBatchResponse_SdkV2) {
 }
 
-func (c LogBatchResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogBatchResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogBatchResponse.
@@ -5632,9 +5724,9 @@ func (o LogBatchResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type LogInputs_SdkV2 struct {
 	// Dataset inputs
-	Datasets types.List `tfsdk:"datasets" tf:"optional"`
+	Datasets types.List `tfsdk:"datasets"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 }
 
 func (newState *LogInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogInputs_SdkV2) {
@@ -5643,10 +5735,11 @@ func (newState *LogInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Lo
 func (newState *LogInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogInputs_SdkV2) {
 }
 
-func (c LogInputs_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DatasetInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "datasets")...)
+func (c LogInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogInputs.
@@ -5721,9 +5814,9 @@ func (newState *LogInputsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *LogInputsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogInputsResponse_SdkV2) {
 }
 
-func (c LogInputsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogInputsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogInputsResponse.
@@ -5755,18 +5848,18 @@ func (o LogInputsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type LogMetric_SdkV2 struct {
 	// Name of the metric.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the metric. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// metric. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid"`
 	// Step at which to log the metric
-	Step types.Int64 `tfsdk:"step" tf:"optional"`
+	Step types.Int64 `tfsdk:"step"`
 	// Unix timestamp in milliseconds at the time metric was logged.
-	Timestamp types.Int64 `tfsdk:"timestamp" tf:""`
+	Timestamp types.Int64 `tfsdk:"timestamp"`
 	// Double value of the metric being logged.
-	Value types.Float64 `tfsdk:"value" tf:""`
+	Value types.Float64 `tfsdk:"value"`
 }
 
 func (newState *LogMetric_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogMetric_SdkV2) {
@@ -5775,12 +5868,15 @@ func (newState *LogMetric_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Lo
 func (newState *LogMetric_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogMetric_SdkV2) {
 }
 
-func (c LogMetric_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "timestamp")...)
-	cs.SetRequired(append(path, "value")...)
+func (c LogMetric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
+	attrs["step"] = attrs["step"].SetOptional()
+	attrs["timestamp"] = attrs["timestamp"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogMetric.
@@ -5833,9 +5929,9 @@ func (newState *LogMetricResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *LogMetricResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogMetricResponse_SdkV2) {
 }
 
-func (c LogMetricResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogMetricResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogMetricResponse.
@@ -5867,9 +5963,9 @@ func (o LogMetricResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type LogModel_SdkV2 struct {
 	// MLmodel file in json format.
-	ModelJson types.String `tfsdk:"model_json" tf:"optional"`
+	ModelJson types.String `tfsdk:"model_json"`
 	// ID of the run to log under
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 }
 
 func (newState *LogModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogModel_SdkV2) {
@@ -5878,9 +5974,11 @@ func (newState *LogModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Log
 func (newState *LogModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogModel_SdkV2) {
 }
 
-func (c LogModel_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_json"] = attrs["model_json"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogModel.
@@ -5925,9 +6023,9 @@ func (newState *LogModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *LogModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogModelResponse_SdkV2) {
 }
 
-func (c LogModelResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogModelResponse.
@@ -5959,14 +6057,14 @@ func (o LogModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type LogParam_SdkV2 struct {
 	// Name of the param. Maximum size is 255 bytes.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the param. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// param. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid"`
 	// String value of the param being logged. Maximum size is 500 bytes.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *LogParam_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogParam_SdkV2) {
@@ -5975,11 +6073,13 @@ func (newState *LogParam_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Log
 func (newState *LogParam_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogParam_SdkV2) {
 }
 
-func (c LogParam_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "value")...)
+func (c LogParam_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogParam.
@@ -6028,9 +6128,9 @@ func (newState *LogParamResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *LogParamResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogParamResponse_SdkV2) {
 }
 
-func (c LogParamResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c LogParamResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogParamResponse.
@@ -6062,13 +6162,13 @@ func (o LogParamResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Metric_SdkV2 struct {
 	// Key identifying this metric.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// Step at which to log the metric.
-	Step types.Int64 `tfsdk:"step" tf:"optional"`
+	Step types.Int64 `tfsdk:"step"`
 	// The timestamp at which this metric was recorded.
-	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
+	Timestamp types.Int64 `tfsdk:"timestamp"`
 	// Value associated with this metric.
-	Value types.Float64 `tfsdk:"value" tf:"optional"`
+	Value types.Float64 `tfsdk:"value"`
 }
 
 func (newState *Metric_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Metric_SdkV2) {
@@ -6077,9 +6177,13 @@ func (newState *Metric_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Metri
 func (newState *Metric_SdkV2) SyncEffectiveFieldsDuringRead(existingState Metric_SdkV2) {
 }
 
-func (c Metric_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Metric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["step"] = attrs["step"].SetOptional()
+	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Metric.
@@ -6121,21 +6225,21 @@ func (o Metric_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Model_SdkV2 struct {
 	// Timestamp recorded when this `registered_model` was created.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Description of this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Timestamp recorded when metadata for this `registered_model` was last
 	// updated.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Collection of latest model versions for each stage. Only contains models
 	// with current `READY` status.
-	LatestVersions types.List `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions types.List `tfsdk:"latest_versions"`
 	// Unique name for the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Tags: Additional metadata key-value pairs for this `registered_model`.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// User that created this `registered_model`
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *Model_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Model_SdkV2) {
@@ -6144,11 +6248,16 @@ func (newState *Model_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Model_
 func (newState *Model_SdkV2) SyncEffectiveFieldsDuringRead(existingState Model_SdkV2) {
 }
 
-func (c Model_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "latest_versions")...)
-	ModelTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c Model_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["latest_versions"] = attrs["latest_versions"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Model.
@@ -6255,24 +6364,24 @@ func (o *Model_SdkV2) SetTags(ctx context.Context, v []ModelTag_SdkV2) {
 
 type ModelDatabricks_SdkV2 struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// User-specified description for the object.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Unique identifier for the object.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Array of model versions, each the latest version for its stage.
-	LatestVersions types.List `tfsdk:"latest_versions" tf:"optional"`
+	LatestVersions types.List `tfsdk:"latest_versions"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// Array of tags associated with the model.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *ModelDatabricks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelDatabricks_SdkV2) {
@@ -6281,11 +6390,18 @@ func (newState *ModelDatabricks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ModelDatabricks_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelDatabricks_SdkV2) {
 }
 
-func (c ModelDatabricks_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "latest_versions")...)
-	ModelTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c ModelDatabricks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["latest_versions"] = attrs["latest_versions"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelDatabricks.
@@ -6396,9 +6512,9 @@ func (o *ModelDatabricks_SdkV2) SetTags(ctx context.Context, v []ModelTag_SdkV2)
 
 type ModelTag_SdkV2 struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *ModelTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelTag_SdkV2) {
@@ -6407,9 +6523,11 @@ func (newState *ModelTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mod
 func (newState *ModelTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelTag_SdkV2) {
 }
 
-func (c ModelTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ModelTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelTag.
@@ -6447,34 +6565,34 @@ func (o ModelTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ModelVersion_SdkV2 struct {
 	// Timestamp recorded when this `model_version` was created.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Current stage for this `model_version`.
-	CurrentStage types.String `tfsdk:"current_stage" tf:"optional"`
+	CurrentStage types.String `tfsdk:"current_stage"`
 	// Description of this `model_version`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Timestamp recorded when metadata for this `model_version` was last
 	// updated.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Unique name of the model
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// MLflow run ID used when creating `model_version`, if `source` was
 	// generated by an experiment run stored in MLflow tracking server.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// Run Link: Direct link to the run that generated this version
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link"`
 	// URI indicating the location of the source model artifacts, used when
 	// creating `model_version`
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 	// Current status of `model_version`
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// Details on current `status`, if it is pending or failed.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 	// Tags: Additional metadata key-value pairs for this `model_version`.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// User that created this `model_version`.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 	// Model's version number.
-	Version types.String `tfsdk:"version" tf:"optional"`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *ModelVersion_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersion_SdkV2) {
@@ -6483,10 +6601,22 @@ func (newState *ModelVersion_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ModelVersion_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelVersion_SdkV2) {
 }
 
-func (c ModelVersion_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersionTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c ModelVersion_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["current_stage"] = attrs["current_stage"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_link"] = attrs["run_link"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelVersion.
@@ -6576,7 +6706,7 @@ func (o *ModelVersion_SdkV2) SetTags(ctx context.Context, v []ModelVersionTag_Sd
 
 type ModelVersionDatabricks_SdkV2 struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Stage of the model version. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -6586,26 +6716,26 @@ type ModelVersionDatabricks_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	CurrentStage types.String `tfsdk:"current_stage" tf:"optional"`
+	CurrentStage types.String `tfsdk:"current_stage"`
 	// User-specified description for the object.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Permission level of the requesting user on the object. For what is
 	// allowed at each level, see [MLflow Model permissions](..).
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// Unique identifier for the MLflow tracking run associated with the source
 	// model artifacts.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// URL of the run associated with the model artifacts. This field is set at
 	// model version creation time only for model versions whose source run is
 	// from a tracking server that is different from the registry server.
-	RunLink types.String `tfsdk:"run_link" tf:"optional"`
+	RunLink types.String `tfsdk:"run_link"`
 	// URI that indicates the location of the source model artifacts. This is
 	// used when creating the model version.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 	// The status of the model version. Valid values are: *
 	// `PENDING_REGISTRATION`: Request to register a new model version is
 	// pending as server performs background tasks.
@@ -6614,15 +6744,15 @@ type ModelVersionDatabricks_SdkV2 struct {
 	// failed.
 	//
 	// * `READY`: Model version is ready for use.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// Details on the current status, for example why registration failed.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 	// Array of tags that are associated with the model version.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:"optional"`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *ModelVersionDatabricks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersionDatabricks_SdkV2) {
@@ -6631,10 +6761,23 @@ func (newState *ModelVersionDatabricks_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ModelVersionDatabricks_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelVersionDatabricks_SdkV2) {
 }
 
-func (c ModelVersionDatabricks_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersionTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c ModelVersionDatabricks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["current_stage"] = attrs["current_stage"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_link"] = attrs["run_link"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["version"] = attrs["version"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelVersionDatabricks.
@@ -6726,9 +6869,9 @@ func (o *ModelVersionDatabricks_SdkV2) SetTags(ctx context.Context, v []ModelVer
 
 type ModelVersionTag_SdkV2 struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *ModelVersionTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelVersionTag_SdkV2) {
@@ -6737,9 +6880,11 @@ func (newState *ModelVersionTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ModelVersionTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelVersionTag_SdkV2) {
 }
 
-func (c ModelVersionTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ModelVersionTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelVersionTag.
@@ -6777,9 +6922,9 @@ func (o ModelVersionTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Param_SdkV2 struct {
 	// Key identifying this param.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// Value associated with this param.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *Param_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Param_SdkV2) {
@@ -6788,9 +6933,11 @@ func (newState *Param_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Param_
 func (newState *Param_SdkV2) SyncEffectiveFieldsDuringRead(existingState Param_SdkV2) {
 }
 
-func (c Param_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Param_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Param.
@@ -6828,13 +6975,13 @@ func (o Param_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RegisteredModelAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *RegisteredModelAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelAccessControlRequest_SdkV2) {
@@ -6843,9 +6990,13 @@ func (newState *RegisteredModelAccessControlRequest_SdkV2) SyncEffectiveFieldsDu
 func (newState *RegisteredModelAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlRequest_SdkV2) {
 }
 
-func (c RegisteredModelAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RegisteredModelAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelAccessControlRequest.
@@ -6887,15 +7038,15 @@ func (o RegisteredModelAccessControlRequest_SdkV2) Type(ctx context.Context) att
 
 type RegisteredModelAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *RegisteredModelAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelAccessControlResponse_SdkV2) {
@@ -6904,10 +7055,14 @@ func (newState *RegisteredModelAccessControlResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *RegisteredModelAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelAccessControlResponse_SdkV2) {
 }
 
-func (c RegisteredModelAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RegisteredModelPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c RegisteredModelAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelAccessControlResponse.
@@ -6980,11 +7135,11 @@ func (o *RegisteredModelAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 }
 
 type RegisteredModelPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *RegisteredModelPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermission_SdkV2) {
@@ -6993,9 +7148,12 @@ func (newState *RegisteredModelPermission_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *RegisteredModelPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermission_SdkV2) {
 }
 
-func (c RegisteredModelPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RegisteredModelPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelPermission.
@@ -7064,11 +7222,11 @@ func (o *RegisteredModelPermission_SdkV2) SetInheritedFromObject(ctx context.Con
 }
 
 type RegisteredModelPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *RegisteredModelPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissions_SdkV2) {
@@ -7077,10 +7235,12 @@ func (newState *RegisteredModelPermissions_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *RegisteredModelPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissions_SdkV2) {
 }
 
-func (c RegisteredModelPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RegisteredModelAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c RegisteredModelPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelPermissions.
@@ -7149,9 +7309,9 @@ func (o *RegisteredModelPermissions_SdkV2) SetAccessControlList(ctx context.Cont
 }
 
 type RegisteredModelPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *RegisteredModelPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegisteredModelPermissionsDescription_SdkV2) {
@@ -7160,9 +7320,11 @@ func (newState *RegisteredModelPermissionsDescription_SdkV2) SyncEffectiveFields
 func (newState *RegisteredModelPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsDescription_SdkV2) {
 }
 
-func (c RegisteredModelPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RegisteredModelPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelPermissionsDescription.
@@ -7199,7 +7361,7 @@ func (o RegisteredModelPermissionsDescription_SdkV2) Type(ctx context.Context) a
 }
 
 type RegisteredModelPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The registered model for which to get or manage permissions.
 	RegisteredModelId types.String `tfsdk:"-"`
 }
@@ -7210,11 +7372,11 @@ func (newState *RegisteredModelPermissionsRequest_SdkV2) SyncEffectiveFieldsDuri
 func (newState *RegisteredModelPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegisteredModelPermissionsRequest_SdkV2) {
 }
 
-func (c RegisteredModelPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RegisteredModelAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "registered_model_id")...)
+func (c RegisteredModelPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["registered_model_id"] = attrs["registered_model_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegisteredModelPermissionsRequest.
@@ -7282,9 +7444,9 @@ func (o *RegisteredModelPermissionsRequest_SdkV2) SetAccessControlList(ctx conte
 
 type RegistryWebhook_SdkV2 struct {
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -7318,17 +7480,17 @@ type RegistryWebhook_SdkV2 struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events"`
 
-	HttpUrlSpec types.List `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.List `tfsdk:"http_url_spec"`
 	// Webhook ID
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	JobSpec types.List `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.List `tfsdk:"job_spec"`
 	// Time of the object at last update, as a Unix timestamp in milliseconds.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Name of the model whose events would trigger this webhook.
-	ModelName types.String `tfsdk:"model_name" tf:"optional"`
+	ModelName types.String `tfsdk:"model_name"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -7337,7 +7499,7 @@ type RegistryWebhook_SdkV2 struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *RegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegistryWebhook_SdkV2) {
@@ -7346,11 +7508,20 @@ func (newState *RegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *RegistryWebhook_SdkV2) SyncEffectiveFieldsDuringRead(existingState RegistryWebhook_SdkV2) {
 }
 
-func (c RegistryWebhook_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	HttpUrlSpecWithoutSecret_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "http_url_spec")...)
-	JobSpecWithoutSecret_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "job_spec")...)
+func (c RegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["events"] = attrs["events"].SetOptional()
+	attrs["http_url_spec"] = attrs["http_url_spec"].SetOptional()
+	attrs["http_url_spec"] = attrs["http_url_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["job_spec"] = attrs["job_spec"].SetOptional()
+	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegistryWebhook.
@@ -7490,9 +7661,9 @@ func (o *RegistryWebhook_SdkV2) SetJobSpec(ctx context.Context, v JobSpecWithout
 
 type RejectTransitionRequest_SdkV2 struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Target stage of the transition. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -7502,9 +7673,9 @@ type RejectTransitionRequest_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage types.String `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *RejectTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequest_SdkV2) {
@@ -7513,12 +7684,13 @@ func (newState *RejectTransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *RejectTransitionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequest_SdkV2) {
 }
 
-func (c RejectTransitionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "stage")...)
-	cs.SetRequired(append(path, "version")...)
+func (c RejectTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RejectTransitionRequest.
@@ -7560,7 +7732,7 @@ func (o RejectTransitionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RejectTransitionRequestResponse_SdkV2 struct {
 	// Activity recorded for the action.
-	Activity types.List `tfsdk:"activity" tf:"optional,object"`
+	Activity types.List `tfsdk:"activity"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RejectTransitionRequestResponse.
@@ -7626,9 +7798,9 @@ func (o *RejectTransitionRequestResponse_SdkV2) SetActivity(ctx context.Context,
 
 type RenameModelRequest_SdkV2 struct {
 	// Registered model unique name identifier.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// If provided, updates the name for this `registered_model`.
-	NewName types.String `tfsdk:"new_name" tf:"optional"`
+	NewName types.String `tfsdk:"new_name"`
 }
 
 func (newState *RenameModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelRequest_SdkV2) {
@@ -7637,10 +7809,11 @@ func (newState *RenameModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *RenameModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RenameModelRequest_SdkV2) {
 }
 
-func (c RenameModelRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
+func (c RenameModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["new_name"] = attrs["new_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RenameModelRequest.
@@ -7677,7 +7850,7 @@ func (o RenameModelRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RenameModelResponse_SdkV2 struct {
-	RegisteredModel types.List `tfsdk:"registered_model" tf:"optional,object"`
+	RegisteredModel types.List `tfsdk:"registered_model"`
 }
 
 func (newState *RenameModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RenameModelResponse_SdkV2) {
@@ -7686,10 +7859,11 @@ func (newState *RenameModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *RenameModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RenameModelResponse_SdkV2) {
 }
 
-func (c RenameModelResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Model_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "registered_model")...)
+func (c RenameModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["registered_model"] = attrs["registered_model"].SetOptional()
+	attrs["registered_model"] = attrs["registered_model"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RenameModelResponse.
@@ -7755,7 +7929,7 @@ func (o *RenameModelResponse_SdkV2) SetRegisteredModel(ctx context.Context, v Mo
 
 type RestoreExperiment_SdkV2 struct {
 	// ID of the associated experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 }
 
 func (newState *RestoreExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreExperiment_SdkV2) {
@@ -7764,10 +7938,10 @@ func (newState *RestoreExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *RestoreExperiment_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreExperiment_SdkV2) {
 }
 
-func (c RestoreExperiment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
+func (c RestoreExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreExperiment.
@@ -7810,9 +7984,9 @@ func (newState *RestoreExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *RestoreExperimentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreExperimentResponse_SdkV2) {
 }
 
-func (c RestoreExperimentResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RestoreExperimentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreExperimentResponse.
@@ -7844,7 +8018,7 @@ func (o RestoreExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RestoreRun_SdkV2 struct {
 	// ID of the run to restore.
-	RunId types.String `tfsdk:"run_id" tf:""`
+	RunId types.String `tfsdk:"run_id"`
 }
 
 func (newState *RestoreRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRun_SdkV2) {
@@ -7853,10 +8027,10 @@ func (newState *RestoreRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RestoreRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreRun_SdkV2) {
 }
 
-func (c RestoreRun_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "run_id")...)
+func (c RestoreRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRun.
@@ -7899,9 +8073,9 @@ func (newState *RestoreRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *RestoreRunResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreRunResponse_SdkV2) {
 }
 
-func (c RestoreRunResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RestoreRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRunResponse.
@@ -7933,14 +8107,14 @@ func (o RestoreRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RestoreRuns_SdkV2 struct {
 	// The ID of the experiment containing the runs to restore.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// An optional positive integer indicating the maximum number of runs to
 	// restore. The maximum allowed value for max_runs is 10000.
-	MaxRuns types.Int64 `tfsdk:"max_runs" tf:"optional"`
+	MaxRuns types.Int64 `tfsdk:"max_runs"`
 	// The minimum deletion timestamp in milliseconds since the UNIX epoch for
 	// restoring runs. Only runs deleted no earlier than this timestamp are
 	// restored.
-	MinTimestampMillis types.Int64 `tfsdk:"min_timestamp_millis" tf:""`
+	MinTimestampMillis types.Int64 `tfsdk:"min_timestamp_millis"`
 }
 
 func (newState *RestoreRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRuns_SdkV2) {
@@ -7949,11 +8123,12 @@ func (newState *RestoreRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RestoreRuns_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreRuns_SdkV2) {
 }
 
-func (c RestoreRuns_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
-	cs.SetRequired(append(path, "min_timestamp_millis")...)
+func (c RestoreRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["max_runs"] = attrs["max_runs"].SetOptional()
+	attrs["min_timestamp_millis"] = attrs["min_timestamp_millis"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRuns.
@@ -7993,7 +8168,7 @@ func (o RestoreRuns_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RestoreRunsResponse_SdkV2 struct {
 	// The number of runs restored.
-	RunsRestored types.Int64 `tfsdk:"runs_restored" tf:"optional"`
+	RunsRestored types.Int64 `tfsdk:"runs_restored"`
 }
 
 func (newState *RestoreRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreRunsResponse_SdkV2) {
@@ -8002,9 +8177,10 @@ func (newState *RestoreRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *RestoreRunsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreRunsResponse_SdkV2) {
 }
 
-func (c RestoreRunsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RestoreRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["runs_restored"] = attrs["runs_restored"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreRunsResponse.
@@ -8040,11 +8216,11 @@ func (o RestoreRunsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Run_SdkV2 struct {
 	// Run data.
-	Data types.List `tfsdk:"data" tf:"optional,object"`
+	Data types.List `tfsdk:"data"`
 	// Run metadata.
-	Info types.List `tfsdk:"info" tf:"optional,object"`
+	Info types.List `tfsdk:"info"`
 	// Run inputs.
-	Inputs types.List `tfsdk:"inputs" tf:"optional,object"`
+	Inputs types.List `tfsdk:"inputs"`
 }
 
 func (newState *Run_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run_SdkV2) {
@@ -8053,12 +8229,15 @@ func (newState *Run_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run_SdkV
 func (newState *Run_SdkV2) SyncEffectiveFieldsDuringRead(existingState Run_SdkV2) {
 }
 
-func (c Run_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RunData_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "data")...)
-	RunInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "info")...)
-	RunInputs_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "inputs")...)
+func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["data"] = attrs["data"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["info"] = attrs["info"].SetOptional()
+	attrs["info"] = attrs["info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["inputs"] = attrs["inputs"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Run.
@@ -8186,11 +8365,11 @@ func (o *Run_SdkV2) SetInputs(ctx context.Context, v RunInputs_SdkV2) {
 
 type RunData_SdkV2 struct {
 	// Run metrics.
-	Metrics types.List `tfsdk:"metrics" tf:"optional"`
+	Metrics types.List `tfsdk:"metrics"`
 	// Run parameters.
-	Params types.List `tfsdk:"params" tf:"optional"`
+	Params types.List `tfsdk:"params"`
 	// Additional metadata key-value pairs.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *RunData_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunData_SdkV2) {
@@ -8199,12 +8378,12 @@ func (newState *RunData_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunD
 func (newState *RunData_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunData_SdkV2) {
 }
 
-func (c RunData_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Metric_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "metrics")...)
-	Param_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "params")...)
-	RunTag_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c RunData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunData.
@@ -8335,26 +8514,26 @@ type RunInfo_SdkV2 struct {
 	// local path (starting with "/"), or a distributed file system (DFS) path,
 	// like `s3://bucket/directory` or `dbfs:/my/directory`. If not set, the
 	// local `./mlruns` directory is chosen.
-	ArtifactUri types.String `tfsdk:"artifact_uri" tf:"optional"`
+	ArtifactUri types.String `tfsdk:"artifact_uri"`
 	// Unix timestamp of when the run ended in milliseconds.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The experiment ID.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:"optional"`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// Current life cycle stage of the experiment : OneOf("active", "deleted")
-	LifecycleStage types.String `tfsdk:"lifecycle_stage" tf:"optional"`
+	LifecycleStage types.String `tfsdk:"lifecycle_stage"`
 	// Unique identifier for the run.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use run_id instead] Unique identifier for the run. This
 	// field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid"`
 	// Unix timestamp of when the run started in milliseconds.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Current status of the run.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// User who initiated the run. This field is deprecated as of MLflow 1.0,
 	// and will be removed in a future MLflow release. Use 'mlflow.user' tag
 	// instead.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *RunInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInfo_SdkV2) {
@@ -8363,9 +8542,18 @@ func (newState *RunInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunI
 func (newState *RunInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunInfo_SdkV2) {
 }
 
-func (c RunInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RunInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifact_uri"] = attrs["artifact_uri"].SetOptional()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["lifecycle_stage"] = attrs["lifecycle_stage"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunInfo.
@@ -8417,7 +8605,7 @@ func (o RunInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RunInputs_SdkV2 struct {
 	// Run metrics.
-	DatasetInputs types.List `tfsdk:"dataset_inputs" tf:"optional"`
+	DatasetInputs types.List `tfsdk:"dataset_inputs"`
 }
 
 func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInputs_SdkV2) {
@@ -8426,10 +8614,10 @@ func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ru
 func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunInputs_SdkV2) {
 }
 
-func (c RunInputs_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DatasetInput_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "dataset_inputs")...)
+func (c RunInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_inputs"] = attrs["dataset_inputs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunInputs.
@@ -8495,9 +8683,9 @@ func (o *RunInputs_SdkV2) SetDatasetInputs(ctx context.Context, v []DatasetInput
 
 type RunTag_SdkV2 struct {
 	// The tag key.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The tag value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *RunTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTag_SdkV2) {
@@ -8506,9 +8694,11 @@ func (newState *RunTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTa
 func (newState *RunTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunTag_SdkV2) {
 }
 
-func (c RunTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RunTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunTag.
@@ -8547,19 +8737,19 @@ func (o RunTag_SdkV2) Type(ctx context.Context) attr.Type {
 type SearchExperiments_SdkV2 struct {
 	// String representing a SQL filter condition (e.g. "name ILIKE
 	// 'my-experiment%'")
-	Filter types.String `tfsdk:"filter" tf:"optional"`
+	Filter types.String `tfsdk:"filter"`
 	// Maximum number of experiments desired. Max threshold is 3000.
-	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional"`
+	MaxResults types.Int64 `tfsdk:"max_results"`
 	// List of columns for ordering search results, which can include experiment
 	// name and last updated timestamp with an optional "DESC" or "ASC"
 	// annotation, where "ASC" is the default. Tiebreaks are done by experiment
 	// id DESC.
-	OrderBy types.List `tfsdk:"order_by" tf:"optional"`
+	OrderBy types.List `tfsdk:"order_by"`
 	// Token indicating the page of experiments to fetch
-	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+	PageToken types.String `tfsdk:"page_token"`
 	// Qualifier for type of experiments to be returned. If unspecified, return
 	// only active experiments.
-	ViewType types.String `tfsdk:"view_type" tf:"optional"`
+	ViewType types.String `tfsdk:"view_type"`
 }
 
 func (newState *SearchExperiments_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchExperiments_SdkV2) {
@@ -8568,9 +8758,14 @@ func (newState *SearchExperiments_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *SearchExperiments_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchExperiments_SdkV2) {
 }
 
-func (c SearchExperiments_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SearchExperiments_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["view_type"] = attrs["view_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchExperiments.
@@ -8644,10 +8839,10 @@ func (o *SearchExperiments_SdkV2) SetOrderBy(ctx context.Context, v []types.Stri
 
 type SearchExperimentsResponse_SdkV2 struct {
 	// Experiments that match the search criteria
-	Experiments types.List `tfsdk:"experiments" tf:"optional"`
+	Experiments types.List `tfsdk:"experiments"`
 	// Token that can be used to retrieve the next page of experiments. An empty
 	// token means that no more experiments are available for retrieval.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *SearchExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchExperimentsResponse_SdkV2) {
@@ -8656,10 +8851,11 @@ func (newState *SearchExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *SearchExperimentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchExperimentsResponse_SdkV2) {
 }
 
-func (c SearchExperimentsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Experiment_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "experiments")...)
+func (c SearchExperimentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiments"] = attrs["experiments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchExperimentsResponse.
@@ -8810,10 +9006,10 @@ func (o *SearchModelVersionsRequest_SdkV2) SetOrderBy(ctx context.Context, v []t
 
 type SearchModelVersionsResponse_SdkV2 struct {
 	// Models that match the search criteria
-	ModelVersions types.List `tfsdk:"model_versions" tf:"optional"`
+	ModelVersions types.List `tfsdk:"model_versions"`
 	// Pagination token to request next page of models for the same search
 	// query.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *SearchModelVersionsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelVersionsResponse_SdkV2) {
@@ -8822,10 +9018,11 @@ func (newState *SearchModelVersionsResponse_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *SearchModelVersionsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchModelVersionsResponse_SdkV2) {
 }
 
-func (c SearchModelVersionsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ModelVersion_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "model_versions")...)
+func (c SearchModelVersionsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_versions"] = attrs["model_versions"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchModelVersionsResponse.
@@ -8976,9 +9173,9 @@ func (o *SearchModelsRequest_SdkV2) SetOrderBy(ctx context.Context, v []types.St
 
 type SearchModelsResponse_SdkV2 struct {
 	// Pagination token to request the next page of models.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Registered Models that match the search criteria.
-	RegisteredModels types.List `tfsdk:"registered_models" tf:"optional"`
+	RegisteredModels types.List `tfsdk:"registered_models"`
 }
 
 func (newState *SearchModelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchModelsResponse_SdkV2) {
@@ -8987,10 +9184,11 @@ func (newState *SearchModelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *SearchModelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchModelsResponse_SdkV2) {
 }
 
-func (c SearchModelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Model_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "registered_models")...)
+func (c SearchModelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["registered_models"] = attrs["registered_models"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchModelsResponse.
@@ -9058,7 +9256,7 @@ func (o *SearchModelsResponse_SdkV2) SetRegisteredModels(ctx context.Context, v 
 
 type SearchRuns_SdkV2 struct {
 	// List of experiment IDs to search over.
-	ExperimentIds types.List `tfsdk:"experiment_ids" tf:"optional"`
+	ExperimentIds types.List `tfsdk:"experiment_ids"`
 	// A filter expression over params, metrics, and tags, that allows returning
 	// a subset of runs. The syntax is a subset of SQL that supports ANDing
 	// together binary operations between a param, metric, or tag and a
@@ -9071,21 +9269,21 @@ type SearchRuns_SdkV2 struct {
 	// and tags."user-name" = 'Tomas'`
 	//
 	// Supported operators are `=`, `!=`, `>`, `>=`, `<`, and `<=`.
-	Filter types.String `tfsdk:"filter" tf:"optional"`
+	Filter types.String `tfsdk:"filter"`
 	// Maximum number of runs desired. Max threshold is 50000
-	MaxResults types.Int64 `tfsdk:"max_results" tf:"optional"`
+	MaxResults types.Int64 `tfsdk:"max_results"`
 	// List of columns to be ordered by, including attributes, params, metrics,
 	// and tags with an optional "DESC" or "ASC" annotation, where "ASC" is the
 	// default. Example: ["params.input DESC", "metrics.alpha ASC",
 	// "metrics.rmse"] Tiebreaks are done by start_time DESC followed by run_id
 	// for runs with the same start time (and this is the default ordering
 	// criterion if order_by is not provided).
-	OrderBy types.List `tfsdk:"order_by" tf:"optional"`
+	OrderBy types.List `tfsdk:"order_by"`
 	// Token for the current page of runs.
-	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+	PageToken types.String `tfsdk:"page_token"`
 	// Whether to display only active, only deleted, or all runs. Defaults to
 	// only active runs.
-	RunViewType types.String `tfsdk:"run_view_type" tf:"optional"`
+	RunViewType types.String `tfsdk:"run_view_type"`
 }
 
 func (newState *SearchRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRuns_SdkV2) {
@@ -9094,9 +9292,15 @@ func (newState *SearchRuns_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SearchRuns_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchRuns_SdkV2) {
 }
 
-func (c SearchRuns_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SearchRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_ids"] = attrs["experiment_ids"].SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["run_view_type"] = attrs["run_view_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchRuns.
@@ -9201,9 +9405,9 @@ func (o *SearchRuns_SdkV2) SetOrderBy(ctx context.Context, v []types.String) {
 
 type SearchRunsResponse_SdkV2 struct {
 	// Token for the next page of runs.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Runs that match the search criteria.
-	Runs types.List `tfsdk:"runs" tf:"optional"`
+	Runs types.List `tfsdk:"runs"`
 }
 
 func (newState *SearchRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchRunsResponse_SdkV2) {
@@ -9212,10 +9416,11 @@ func (newState *SearchRunsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *SearchRunsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchRunsResponse_SdkV2) {
 }
 
-func (c SearchRunsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Run_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "runs")...)
+func (c SearchRunsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["runs"] = attrs["runs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchRunsResponse.
@@ -9283,14 +9488,14 @@ func (o *SearchRunsResponse_SdkV2) SetRuns(ctx context.Context, v []Run_SdkV2) {
 
 type SetExperimentTag_SdkV2 struct {
 	// ID of the experiment under which to log the tag. Must be provided.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// Name of the tag. Maximum size depends on storage backend. All storage
 	// backends are guaranteed to support key values up to 250 bytes in size.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// String value of the tag being logged. Maximum size depends on storage
 	// backend. All storage backends are guaranteed to support key values up to
 	// 5000 bytes in size.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *SetExperimentTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetExperimentTag_SdkV2) {
@@ -9299,12 +9504,12 @@ func (newState *SetExperimentTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *SetExperimentTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetExperimentTag_SdkV2) {
 }
 
-func (c SetExperimentTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "value")...)
+func (c SetExperimentTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetExperimentTag.
@@ -9351,9 +9556,9 @@ func (newState *SetExperimentTagResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *SetExperimentTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetExperimentTagResponse_SdkV2) {
 }
 
-func (c SetExperimentTagResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SetExperimentTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetExperimentTagResponse.
@@ -9388,13 +9593,13 @@ type SetModelTagRequest_SdkV2 struct {
 	// this name already exists, its preexisting value will be replaced by the
 	// specified `value`. All storage backends are guaranteed to support key
 	// values up to 250 bytes in size.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// Unique name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// String value of the tag being logged. Maximum size depends on storage
 	// backend. All storage backends are guaranteed to support key values up to
 	// 5000 bytes in size.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *SetModelTagRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelTagRequest_SdkV2) {
@@ -9403,12 +9608,12 @@ func (newState *SetModelTagRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *SetModelTagRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetModelTagRequest_SdkV2) {
 }
 
-func (c SetModelTagRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "value")...)
+func (c SetModelTagRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelTagRequest.
@@ -9455,9 +9660,9 @@ func (newState *SetModelTagResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *SetModelTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetModelTagResponse_SdkV2) {
 }
 
-func (c SetModelTagResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SetModelTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelTagResponse.
@@ -9492,15 +9697,15 @@ type SetModelVersionTagRequest_SdkV2 struct {
 	// this name already exists, its preexisting value will be replaced by the
 	// specified `value`. All storage backends are guaranteed to support key
 	// values up to 250 bytes in size.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// Unique name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// String value of the tag being logged. Maximum size depends on storage
 	// backend. All storage backends are guaranteed to support key values up to
 	// 5000 bytes in size.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 	// Model version number.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *SetModelVersionTagRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetModelVersionTagRequest_SdkV2) {
@@ -9509,13 +9714,13 @@ func (newState *SetModelVersionTagRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *SetModelVersionTagRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagRequest_SdkV2) {
 }
 
-func (c SetModelVersionTagRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "value")...)
-	cs.SetRequired(append(path, "version")...)
+func (c SetModelVersionTagRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelVersionTagRequest.
@@ -9564,9 +9769,9 @@ func (newState *SetModelVersionTagResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *SetModelVersionTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetModelVersionTagResponse_SdkV2) {
 }
 
-func (c SetModelVersionTagResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SetModelVersionTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetModelVersionTagResponse.
@@ -9599,16 +9804,16 @@ func (o SetModelVersionTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type SetTag_SdkV2 struct {
 	// Name of the tag. Maximum size depends on storage backend. All storage
 	// backends are guaranteed to support key values up to 250 bytes in size.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the tag. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use run_id instead] ID of the run under which to log the
 	// tag. This field will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid"`
 	// String value of the tag being logged. Maximum size depends on storage
 	// backend. All storage backends are guaranteed to support key values up to
 	// 5000 bytes in size.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *SetTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTag_SdkV2) {
@@ -9617,11 +9822,13 @@ func (newState *SetTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetTa
 func (newState *SetTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetTag_SdkV2) {
 }
 
-func (c SetTag_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "value")...)
+func (c SetTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetTag.
@@ -9670,9 +9877,9 @@ func (newState *SetTagResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *SetTagResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetTagResponse_SdkV2) {
 }
 
-func (c SetTagResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SetTagResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetTagResponse.
@@ -9705,9 +9912,9 @@ func (o SetTagResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Test webhook response object.
 type TestRegistryWebhook_SdkV2 struct {
 	// Body of the response from the webhook URL
-	Body types.String `tfsdk:"body" tf:"optional"`
+	Body types.String `tfsdk:"body"`
 	// Status code returned by the webhook URL
-	StatusCode types.Int64 `tfsdk:"status_code" tf:"optional"`
+	StatusCode types.Int64 `tfsdk:"status_code"`
 }
 
 func (newState *TestRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhook_SdkV2) {
@@ -9716,9 +9923,11 @@ func (newState *TestRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *TestRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhook_SdkV2) {
 }
 
-func (c TestRegistryWebhook_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TestRegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["body"] = attrs["body"].SetOptional()
+	attrs["status_code"] = attrs["status_code"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhook.
@@ -9758,9 +9967,9 @@ type TestRegistryWebhookRequest_SdkV2 struct {
 	// If `event` is specified, the test trigger uses the specified event. If
 	// `event` is not specified, the test trigger uses a randomly chosen event
 	// associated with the webhook.
-	Event types.String `tfsdk:"event" tf:"optional"`
+	Event types.String `tfsdk:"event"`
 	// Webhook ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *TestRegistryWebhookRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookRequest_SdkV2) {
@@ -9769,10 +9978,11 @@ func (newState *TestRegistryWebhookRequest_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *TestRegistryWebhookRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookRequest_SdkV2) {
 }
 
-func (c TestRegistryWebhookRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
+func (c TestRegistryWebhookRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["event"] = attrs["event"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhookRequest.
@@ -9810,7 +10020,7 @@ func (o TestRegistryWebhookRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TestRegistryWebhookResponse_SdkV2 struct {
 	// Test webhook response object.
-	Webhook types.List `tfsdk:"webhook" tf:"optional,object"`
+	Webhook types.List `tfsdk:"webhook"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhookResponse.
@@ -9877,11 +10087,11 @@ func (o *TestRegistryWebhookResponse_SdkV2) SetWebhook(ctx context.Context, v Te
 type TransitionModelVersionStageDatabricks_SdkV2 struct {
 	// Specifies whether to archive all current model versions in the target
 	// stage.
-	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions" tf:""`
+	ArchiveExistingVersions types.Bool `tfsdk:"archive_existing_versions"`
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Name of the model.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Target stage of the transition. Valid values are:
 	//
 	// * `None`: The initial stage of a model version.
@@ -9891,9 +10101,9 @@ type TransitionModelVersionStageDatabricks_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	Stage types.String `tfsdk:"stage" tf:""`
+	Stage types.String `tfsdk:"stage"`
 	// Version of the model.
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *TransitionModelVersionStageDatabricks_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionModelVersionStageDatabricks_SdkV2) {
@@ -9902,13 +10112,14 @@ func (newState *TransitionModelVersionStageDatabricks_SdkV2) SyncEffectiveFields
 func (newState *TransitionModelVersionStageDatabricks_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransitionModelVersionStageDatabricks_SdkV2) {
 }
 
-func (c TransitionModelVersionStageDatabricks_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "archive_existing_versions")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "stage")...)
-	cs.SetRequired(append(path, "version")...)
+func (c TransitionModelVersionStageDatabricks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["archive_existing_versions"] = attrs["archive_existing_versions"].SetRequired()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionModelVersionStageDatabricks.
@@ -9953,11 +10164,11 @@ func (o TransitionModelVersionStageDatabricks_SdkV2) Type(ctx context.Context) a
 // Transition request details.
 type TransitionRequest_SdkV2 struct {
 	// Array of actions on the activity allowed for the current viewer.
-	AvailableActions types.List `tfsdk:"available_actions" tf:"optional"`
+	AvailableActions types.List `tfsdk:"available_actions"`
 	// User-provided comment associated with the transition request.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Creation time of the object, as a Unix timestamp in milliseconds.
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Target stage of the transition (if the activity is stage transition
 	// related). Valid values are:
 	//
@@ -9968,9 +10179,9 @@ type TransitionRequest_SdkV2 struct {
 	// * `Production`: Production stage.
 	//
 	// * `Archived`: Archived stage.
-	ToStage types.String `tfsdk:"to_stage" tf:"optional"`
+	ToStage types.String `tfsdk:"to_stage"`
 	// The username of the user that created the object.
-	UserId types.String `tfsdk:"user_id" tf:"optional"`
+	UserId types.String `tfsdk:"user_id"`
 }
 
 func (newState *TransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionRequest_SdkV2) {
@@ -9979,9 +10190,14 @@ func (newState *TransitionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *TransitionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransitionRequest_SdkV2) {
 }
 
-func (c TransitionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["available_actions"] = attrs["available_actions"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["to_stage"] = attrs["to_stage"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionRequest.
@@ -10054,7 +10270,7 @@ func (o *TransitionRequest_SdkV2) SetAvailableActions(ctx context.Context, v []t
 }
 
 type TransitionStageResponse_SdkV2 struct {
-	ModelVersion types.List `tfsdk:"model_version" tf:"optional,object"`
+	ModelVersion types.List `tfsdk:"model_version"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionStageResponse.
@@ -10120,9 +10336,9 @@ func (o *TransitionStageResponse_SdkV2) SetModelVersion(ctx context.Context, v M
 
 type UpdateComment_SdkV2 struct {
 	// User-provided comment on the action.
-	Comment types.String `tfsdk:"comment" tf:""`
+	Comment types.String `tfsdk:"comment"`
 	// Unique identifier of an activity
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *UpdateComment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComment_SdkV2) {
@@ -10131,11 +10347,11 @@ func (newState *UpdateComment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *UpdateComment_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateComment_SdkV2) {
 }
 
-func (c UpdateComment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "comment")...)
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateComment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateComment.
@@ -10173,7 +10389,7 @@ func (o UpdateComment_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateCommentResponse_SdkV2 struct {
 	// Comment details.
-	Comment types.List `tfsdk:"comment" tf:"optional,object"`
+	Comment types.List `tfsdk:"comment"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCommentResponse.
@@ -10239,10 +10455,10 @@ func (o *UpdateCommentResponse_SdkV2) SetComment(ctx context.Context, v CommentO
 
 type UpdateExperiment_SdkV2 struct {
 	// ID of the associated experiment.
-	ExperimentId types.String `tfsdk:"experiment_id" tf:""`
+	ExperimentId types.String `tfsdk:"experiment_id"`
 	// If provided, the experiment's name is changed to the new name. The new
 	// name must be unique.
-	NewName types.String `tfsdk:"new_name" tf:"optional"`
+	NewName types.String `tfsdk:"new_name"`
 }
 
 func (newState *UpdateExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExperiment_SdkV2) {
@@ -10251,10 +10467,11 @@ func (newState *UpdateExperiment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *UpdateExperiment_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExperiment_SdkV2) {
 }
 
-func (c UpdateExperiment_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "experiment_id")...)
+func (c UpdateExperiment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetRequired()
+	attrs["new_name"] = attrs["new_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExperiment.
@@ -10299,9 +10516,9 @@ func (newState *UpdateExperimentResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *UpdateExperimentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateExperimentResponse_SdkV2) {
 }
 
-func (c UpdateExperimentResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UpdateExperimentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExperimentResponse.
@@ -10333,9 +10550,9 @@ func (o UpdateExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateModelRequest_SdkV2 struct {
 	// If provided, updates the description for this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Registered model unique name identifier.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *UpdateModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelRequest_SdkV2) {
@@ -10344,10 +10561,11 @@ func (newState *UpdateModelRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *UpdateModelRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateModelRequest_SdkV2) {
 }
 
-func (c UpdateModelRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
+func (c UpdateModelRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelRequest.
@@ -10415,11 +10633,11 @@ func (o UpdateModelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateModelVersionRequest_SdkV2 struct {
 	// If provided, updates the description for this `registered_model`.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Name of the registered model
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Model version number
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateModelVersionRequest_SdkV2) {
@@ -10428,11 +10646,12 @@ func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *UpdateModelVersionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateModelVersionRequest_SdkV2) {
 }
 
-func (c UpdateModelVersionRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "version")...)
+func (c UpdateModelVersionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["version"] = attrs["version"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateModelVersionRequest.
@@ -10502,7 +10721,7 @@ func (o UpdateModelVersionResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateRegistryWebhook_SdkV2 struct {
 	// User-specified description for the webhook.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Events that can trigger a registry webhook: * `MODEL_VERSION_CREATED`: A
 	// new model version was created for the associated model.
 	//
@@ -10536,13 +10755,13 @@ type UpdateRegistryWebhook_SdkV2 struct {
 	//
 	// * `TRANSITION_REQUEST_TO_ARCHIVED_CREATED`: A user requested a model
 	// version be archived.
-	Events types.List `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events"`
 
-	HttpUrlSpec types.List `tfsdk:"http_url_spec" tf:"optional,object"`
+	HttpUrlSpec types.List `tfsdk:"http_url_spec"`
 	// Webhook ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 
-	JobSpec types.List `tfsdk:"job_spec" tf:"optional,object"`
+	JobSpec types.List `tfsdk:"job_spec"`
 	// Enable or disable triggering the webhook, or put the webhook into test
 	// mode. The default is `ACTIVE`: * `ACTIVE`: Webhook is triggered when an
 	// associated event happens.
@@ -10551,7 +10770,7 @@ type UpdateRegistryWebhook_SdkV2 struct {
 	//
 	// * `TEST_MODE`: Webhook can be triggered through the test endpoint, but is
 	// not triggered on a real event.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *UpdateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRegistryWebhook_SdkV2) {
@@ -10560,12 +10779,17 @@ func (newState *UpdateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *UpdateRegistryWebhook_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRegistryWebhook_SdkV2) {
 }
 
-func (c UpdateRegistryWebhook_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	HttpUrlSpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "http_url_spec")...)
-	cs.SetRequired(append(path, "id")...)
-	JobSpec_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "job_spec")...)
+func (c UpdateRegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["events"] = attrs["events"].SetOptional()
+	attrs["http_url_spec"] = attrs["http_url_spec"].SetOptional()
+	attrs["http_url_spec"] = attrs["http_url_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["job_spec"] = attrs["job_spec"].SetOptional()
+	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRegistryWebhook.
@@ -10699,14 +10923,14 @@ func (o *UpdateRegistryWebhook_SdkV2) SetJobSpec(ctx context.Context, v JobSpec_
 
 type UpdateRun_SdkV2 struct {
 	// Unix timestamp in milliseconds of when the run ended.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// ID of the run to update. Must be provided.
-	RunId types.String `tfsdk:"run_id" tf:"optional"`
+	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use run_id instead] ID of the run to update.. This field
 	// will be removed in a future MLflow version.
-	RunUuid types.String `tfsdk:"run_uuid" tf:"optional"`
+	RunUuid types.String `tfsdk:"run_uuid"`
 	// Updated status of the run.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *UpdateRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRun_SdkV2) {
@@ -10715,9 +10939,13 @@ func (newState *UpdateRun_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Up
 func (newState *UpdateRun_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRun_SdkV2) {
 }
 
-func (c UpdateRun_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UpdateRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRun.
@@ -10759,7 +10987,7 @@ func (o UpdateRun_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateRunResponse_SdkV2 struct {
 	// Updated metadata of the run.
-	RunInfo types.List `tfsdk:"run_info" tf:"optional,object"`
+	RunInfo types.List `tfsdk:"run_info"`
 }
 
 func (newState *UpdateRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRunResponse_SdkV2) {
@@ -10768,10 +10996,11 @@ func (newState *UpdateRunResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *UpdateRunResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRunResponse_SdkV2) {
 }
 
-func (c UpdateRunResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RunInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "run_info")...)
+func (c UpdateRunResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_info"] = attrs["run_info"].SetOptional()
+	attrs["run_info"] = attrs["run_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRunResponse.

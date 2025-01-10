@@ -26,22 +26,22 @@ import (
 type BaseJob struct {
 	// The time at which this job was created in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC).
-	CreatedTime types.Int64 `tfsdk:"created_time" tf:"optional"`
+	CreatedTime types.Int64 `tfsdk:"created_time"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// The id of the budget policy used by this job for cost attribution
 	// purposes. This may be set through (in order of precedence): 1. Budget
 	// admins through the account or workspace console 2. Jobs UI in the job
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The canonical identifier for this job.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings types.Object `tfsdk:"settings" tf:"optional,object"`
+	Settings types.Object `tfsdk:"settings"`
 }
 
 func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
@@ -50,11 +50,14 @@ func (newState *BaseJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseJob) {
 func (newState *BaseJob) SyncEffectiveFieldsDuringRead(existingState BaseJob) {
 }
 
-func (c BaseJob) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "effective_budget_policy_id")...)
-	JobSettings{}.ApplySchemaCustomizations(cs, append(path, "settings")...)
+func (c BaseJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_time"] = attrs["created_time"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["settings"] = attrs["settings"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BaseJob.
@@ -134,28 +137,28 @@ type BaseRun struct {
 	// original attempt’s ID and an incrementing `attempt_number`. Runs are
 	// retried only until they succeed, and the maximum `attempt_number` is the
 	// same as the `max_retries` value for the job.
-	AttemptNumber types.Int64 `tfsdk:"attempt_number" tf:"optional"`
+	AttemptNumber types.Int64 `tfsdk:"attempt_number"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
 	// `setup_duration`, `execution_duration`, and the `cleanup_duration`. The
 	// `cleanup_duration` field is set to 0 for multitask job runs. The total
 	// duration of a multitask job run is the value of the `run_duration` field.
-	CleanupDuration types.Int64 `tfsdk:"cleanup_duration" tf:"optional"`
+	CleanupDuration types.Int64 `tfsdk:"cleanup_duration"`
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance types.Object `tfsdk:"cluster_instance" tf:"optional,object"`
+	ClusterInstance types.Object `tfsdk:"cluster_instance"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec types.Object `tfsdk:"cluster_spec" tf:"optional,object"`
+	ClusterSpec types.Object `tfsdk:"cluster_spec"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -163,7 +166,7 @@ type BaseRun struct {
 	// The `execution_duration` field is set to 0 for multitask job runs. The
 	// total duration of a multitask job run is the value of the `run_duration`
 	// field.
-	ExecutionDuration types.Int64 `tfsdk:"execution_duration" tf:"optional"`
+	ExecutionDuration types.Int64 `tfsdk:"execution_duration"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -174,53 +177,53 @@ type BaseRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters" tf:"optional"`
+	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run
-	JobParameters types.List `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.List `tfsdk:"job_parameters"`
 	// ID of the job run that this run belongs to. For legacy and single-task
 	// job runs the field is populated with the job run ID. For task runs, the
 	// field is populated with the ID of the job run that the task run belongs
 	// to.
-	JobRunId types.Int64 `tfsdk:"job_run_id" tf:"optional"`
+	JobRunId types.Int64 `tfsdk:"job_run_id"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
-	NumberInJob types.Int64 `tfsdk:"number_in_job" tf:"optional"`
+	NumberInJob types.Int64 `tfsdk:"number_in_job"`
 	// If this run is a retry of a prior run attempt, this field contains the
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
-	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
+	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id"`
 	// The parameters used for this run.
-	OverridingParameters types.Object `tfsdk:"overriding_parameters" tf:"optional,object"`
+	OverridingParameters types.Object `tfsdk:"overriding_parameters"`
 	// The time in milliseconds that the run has spent in the queue.
-	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
+	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// The repair history of the run.
-	RepairHistory types.List `tfsdk:"repair_history" tf:"optional"`
+	RepairHistory types.List `tfsdk:"repair_history"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
-	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
+	RunDuration types.Int64 `tfsdk:"run_duration"`
 	// The canonical identifier of the run. This ID is unique across all runs of
 	// all jobs.
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 	// An optional name for the run. The maximum length is 4096 bytes in UTF-8
 	// encoding.
-	RunName types.String `tfsdk:"run_name" tf:"optional"`
+	RunName types.String `tfsdk:"run_name"`
 	// The URL to the detail page of the run.
-	RunPageUrl types.String `tfsdk:"run_page_url" tf:"optional"`
+	RunPageUrl types.String `tfsdk:"run_page_url"`
 	// The type of a run. * `JOB_RUN`: Normal job run. A run created with
 	// :method:jobs/runNow. * `WORKFLOW_RUN`: Workflow run. A run created with
 	// [dbutils.notebook.run]. * `SUBMIT_RUN`: Submit run. A run created with
 	// :method:jobs/submit.
 	//
 	// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-	RunType types.String `tfsdk:"run_type" tf:"optional"`
+	RunType types.String `tfsdk:"run_type"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -228,19 +231,19 @@ type BaseRun struct {
 	// `cleanup_duration`. The `setup_duration` field is set to 0 for multitask
 	// job runs. The total duration of a multitask job run is the value of the
 	// `run_duration` field.
-	SetupDuration types.Int64 `tfsdk:"setup_duration" tf:"optional"`
+	SetupDuration types.Int64 `tfsdk:"setup_duration"`
 	// The time at which this run was started in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC). This may not be the time when the job
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
-	State types.Object `tfsdk:"state" tf:"optional,object"`
+	State types.Object `tfsdk:"state"`
 	// The current status of the run
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
-	Tasks types.List `tfsdk:"tasks" tf:"optional"`
+	Tasks types.List `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
 	// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
@@ -253,9 +256,9 @@ type BaseRun struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
 	// restart a continuous job run.
-	Trigger types.String `tfsdk:"trigger" tf:"optional"`
+	Trigger types.String `tfsdk:"trigger"`
 	// Additional details about what triggered the run
-	TriggerInfo types.Object `tfsdk:"trigger_info" tf:"optional,object"`
+	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
 func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
@@ -264,21 +267,40 @@ func (newState *BaseRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseRun) {
 func (newState *BaseRun) SyncEffectiveFieldsDuringRead(existingState BaseRun) {
 }
 
-func (c BaseRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ClusterInstance{}.ApplySchemaCustomizations(cs, append(path, "cluster_instance")...)
-	ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "cluster_spec")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	JobCluster{}.ApplySchemaCustomizations(cs, append(path, "job_clusters")...)
-	JobParameter{}.ApplySchemaCustomizations(cs, append(path, "job_parameters")...)
-	RunParameters{}.ApplySchemaCustomizations(cs, append(path, "overriding_parameters")...)
-	RepairHistoryItem{}.ApplySchemaCustomizations(cs, append(path, "repair_history")...)
-	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "schedule")...)
-	RunState{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	RunStatus{}.ApplySchemaCustomizations(cs, append(path, "status")...)
-	RunTask{}.ApplySchemaCustomizations(cs, append(path, "tasks")...)
-	TriggerInfo{}.ApplySchemaCustomizations(cs, append(path, "trigger_info")...)
+func (c BaseRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
+	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
+	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
+	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["job_clusters"] = attrs["job_clusters"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["job_run_id"] = attrs["job_run_id"].SetOptional()
+	attrs["number_in_job"] = attrs["number_in_job"].SetOptional()
+	attrs["original_attempt_run_id"] = attrs["original_attempt_run_id"].SetOptional()
+	attrs["overriding_parameters"] = attrs["overriding_parameters"].SetOptional()
+	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
+	attrs["repair_history"] = attrs["repair_history"].SetOptional()
+	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
+	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["setup_duration"] = attrs["setup_duration"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["tasks"] = attrs["tasks"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BaseRun.
@@ -724,9 +746,9 @@ func (o *BaseRun) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
 type CancelAllRuns struct {
 	// Optional boolean parameter to cancel all queued runs. If no job_id is
 	// provided, all queued runs in the workspace are canceled.
-	AllQueuedRuns types.Bool `tfsdk:"all_queued_runs" tf:"optional"`
+	AllQueuedRuns types.Bool `tfsdk:"all_queued_runs"`
 	// The canonical identifier of the job to cancel all runs of.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 }
 
 func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRuns) {
@@ -735,9 +757,11 @@ func (newState *CancelAllRuns) SyncEffectiveFieldsDuringCreateOrUpdate(plan Canc
 func (newState *CancelAllRuns) SyncEffectiveFieldsDuringRead(existingState CancelAllRuns) {
 }
 
-func (c CancelAllRuns) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CancelAllRuns) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_queued_runs"] = attrs["all_queued_runs"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRuns.
@@ -805,7 +829,7 @@ func (o CancelAllRunsResponse) Type(ctx context.Context) attr.Type {
 
 type CancelRun struct {
 	// This field is required.
-	RunId types.Int64 `tfsdk:"run_id" tf:""`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRun) {
@@ -814,10 +838,10 @@ func (newState *CancelRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRu
 func (newState *CancelRun) SyncEffectiveFieldsDuringRead(existingState CancelRun) {
 }
 
-func (c CancelRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "run_id")...)
+func (c CancelRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRun.
@@ -885,10 +909,10 @@ func (o CancelRunResponse) Type(ctx context.Context) attr.Type {
 type CleanRoomTaskRunState struct {
 	// A value indicating the run's current lifecycle state. This field is
 	// always available in the response.
-	LifeCycleState types.String `tfsdk:"life_cycle_state" tf:"optional"`
+	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// A value indicating the run's result. This field is only available for
 	// terminal lifecycle states.
-	ResultState types.String `tfsdk:"result_state" tf:"optional"`
+	ResultState types.String `tfsdk:"result_state"`
 }
 
 func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomTaskRunState) {
@@ -897,9 +921,11 @@ func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *CleanRoomTaskRunState) SyncEffectiveFieldsDuringRead(existingState CleanRoomTaskRunState) {
 }
 
-func (c CleanRoomTaskRunState) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CleanRoomTaskRunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
+	attrs["result_state"] = attrs["result_state"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomTaskRunState.
@@ -937,15 +963,15 @@ func (o CleanRoomTaskRunState) Type(ctx context.Context) attr.Type {
 
 type CleanRoomsNotebookTask struct {
 	// The clean room that the notebook belongs to.
-	CleanRoomName types.String `tfsdk:"clean_room_name" tf:""`
+	CleanRoomName types.String `tfsdk:"clean_room_name"`
 	// Checksum to validate the freshness of the notebook resource (i.e. the
 	// notebook being run is the latest version). It can be fetched by calling
 	// the :method:cleanroomassets/get API.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Base parameters to be used for the clean room notebook job.
-	NotebookBaseParameters types.Map `tfsdk:"notebook_base_parameters" tf:"optional"`
+	NotebookBaseParameters types.Map `tfsdk:"notebook_base_parameters"`
 	// Name of the notebook being run.
-	NotebookName types.String `tfsdk:"notebook_name" tf:""`
+	NotebookName types.String `tfsdk:"notebook_name"`
 }
 
 func (newState *CleanRoomsNotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTask) {
@@ -954,11 +980,13 @@ func (newState *CleanRoomsNotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CleanRoomsNotebookTask) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTask) {
 }
 
-func (c CleanRoomsNotebookTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "clean_room_name")...)
-	cs.SetRequired(append(path, "notebook_name")...)
+func (c CleanRoomsNotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["notebook_base_parameters"] = attrs["notebook_base_parameters"].SetOptional()
+	attrs["notebook_name"] = attrs["notebook_name"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomsNotebookTask.
@@ -1037,7 +1065,7 @@ type ClusterInstance struct {
 	//
 	// The response won’t include this field if the identifier is not
 	// available yet.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The canonical identifier for the Spark context used by a run. This field
 	// is filled in once the run begins execution. This value can be used to
 	// view the Spark UI by browsing to
@@ -1046,7 +1074,7 @@ type ClusterInstance struct {
 	//
 	// The response won’t include this field if the identifier is not
 	// available yet.
-	SparkContextId types.String `tfsdk:"spark_context_id" tf:"optional"`
+	SparkContextId types.String `tfsdk:"spark_context_id"`
 }
 
 func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterInstance) {
@@ -1055,9 +1083,11 @@ func (newState *ClusterInstance) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cl
 func (newState *ClusterInstance) SyncEffectiveFieldsDuringRead(existingState ClusterInstance) {
 }
 
-func (c ClusterInstance) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ClusterInstance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["spark_context_id"] = attrs["spark_context_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterInstance.
@@ -1098,16 +1128,16 @@ type ClusterSpec struct {
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
-	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
+	ExistingClusterId types.String `tfsdk:"existing_cluster_id"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
-	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
+	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"library" tf:"optional"`
+	Libraries types.List `tfsdk:"library"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster types.Object `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
@@ -1116,10 +1146,13 @@ func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cluste
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
 }
 
-func (c ClusterSpec) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	compute_tf.ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "new_cluster")...)
+func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
+	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
+	attrs["library"] = attrs["library"].SetOptional()
+	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterSpec.
@@ -1221,7 +1254,7 @@ func (o *ClusterSpec) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpe
 type ConditionTask struct {
 	// The left operand of the condition task. Can be either a string value or a
 	// job state or parameter reference.
-	Left types.String `tfsdk:"left" tf:""`
+	Left types.String `tfsdk:"left"`
 	// * `EQUAL_TO`, `NOT_EQUAL` operators perform string comparison of their
 	// operands. This means that `“12.0” == “12”` will evaluate to
 	// `false`. * `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`,
@@ -1232,10 +1265,10 @@ type ConditionTask struct {
 	// The boolean comparison to task values can be implemented with operators
 	// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it
 	// will be serialized to `“true”` or `“false”` for the comparison.
-	Op types.String `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op"`
 	// The right operand of the condition task. Can be either a string value or
 	// a job state or parameter reference.
-	Right types.String `tfsdk:"right" tf:""`
+	Right types.String `tfsdk:"right"`
 }
 
 func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConditionTask) {
@@ -1244,12 +1277,12 @@ func (newState *ConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cond
 func (newState *ConditionTask) SyncEffectiveFieldsDuringRead(existingState ConditionTask) {
 }
 
-func (c ConditionTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "left")...)
-	cs.SetRequired(append(path, "op")...)
-	cs.SetRequired(append(path, "right")...)
+func (c ConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["left"] = attrs["left"].SetRequired()
+	attrs["op"] = attrs["op"].SetRequired()
+	attrs["right"] = attrs["right"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ConditionTask.
@@ -1290,7 +1323,7 @@ func (o ConditionTask) Type(ctx context.Context) attr.Type {
 type Continuous struct {
 	// Indicate whether the continuous execution of the job is paused or not.
 	// Defaults to UNPAUSED.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status"`
 }
 
 func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continuous) {
@@ -1299,9 +1332,10 @@ func (newState *Continuous) SyncEffectiveFieldsDuringCreateOrUpdate(plan Continu
 func (newState *Continuous) SyncEffectiveFieldsDuringRead(existingState Continuous) {
 }
 
-func (c Continuous) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Continuous) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Continuous.
@@ -1337,40 +1371,40 @@ func (o Continuous) Type(ctx context.Context) attr.Type {
 
 type CreateJob struct {
 	// List of permissions to set on the job.
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The id of the user specified budget policy to use for this job. If not
 	// specified, a default budget policy may be applied when creating or
 	// modifying the job. See `effective_budget_policy_id` for the budget policy
 	// used by this workload.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous types.Object `tfsdk:"continuous" tf:"optional,object"`
+	Continuous types.Object `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
-	Deployment types.Object `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.Object `tfsdk:"deployment"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
 	// `EDITABLE`: The job is in an editable state and can be modified.
-	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
+	EditMode types.String `tfsdk:"edit_mode"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by serverless tasks of this job. An environment is required to
 	// be present for serverless tasks. For serverless notebook tasks, the
 	// environment is accessible in the notebook environment panel. For other
 	// serverless tasks, the task environment is required to be specified using
 	// environment_key in the task settings.
-	Environments types.List `tfsdk:"environment" tf:"optional"`
+	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
-	Format types.String `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -1381,13 +1415,13 @@ type CreateJob struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// An optional set of health rules that can be defined for this job.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_cluster" tf:"optional"`
+	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -1399,45 +1433,45 @@ type CreateJob struct {
 	// runs. However, from then on, new runs are skipped unless there are fewer
 	// than 3 active runs. This value cannot exceed 1000. Setting this value to
 	// `0` causes all new runs to be skipped.
-	MaxConcurrentRuns types.Int64 `tfsdk:"max_concurrent_runs" tf:"optional"`
+	MaxConcurrentRuns types.Int64 `tfsdk:"max_concurrent_runs"`
 	// An optional name for the job. The maximum length is 4096 bytes in UTF-8
 	// encoding.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
-	Parameters types.List `tfsdk:"parameter" tf:"optional"`
+	Parameters types.List `tfsdk:"parameter"`
 	// The queue settings of the job.
-	Queue types.Object `tfsdk:"queue" tf:"optional,object"`
+	Queue types.Object `tfsdk:"queue"`
 	// Write-only setting. Specifies the user or service principal that the job
 	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.
-	RunAs types.Object `tfsdk:"run_as" tf:"optional,object"`
+	RunAs types.Object `tfsdk:"run_as"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
-	Tags types.Map `tfsdk:"tags" tf:"optional"`
+	Tags types.Map `tfsdk:"tags"`
 	// A list of task specifications to be executed by this job.
-	Tasks types.List `tfsdk:"task" tf:"optional"`
+	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger types.Object `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.Object `tfsdk:"trigger"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJob) {
@@ -1446,25 +1480,33 @@ func (newState *CreateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateJo
 func (newState *CreateJob) SyncEffectiveFieldsDuringRead(existingState CreateJob) {
 }
 
-func (c CreateJob) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobAccessControlRequest{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	Continuous{}.ApplySchemaCustomizations(cs, append(path, "continuous")...)
-	JobDeployment{}.ApplySchemaCustomizations(cs, append(path, "deployment")...)
-	JobEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	JobEnvironment{}.ApplySchemaCustomizations(cs, append(path, "environment")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	JobsHealthRules{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	JobCluster{}.ApplySchemaCustomizations(cs, append(path, "job_cluster")...)
-	JobNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	JobParameterDefinition{}.ApplySchemaCustomizations(cs, append(path, "parameter")...)
-	QueueSettings{}.ApplySchemaCustomizations(cs, append(path, "queue")...)
-	JobRunAs{}.ApplySchemaCustomizations(cs, append(path, "run_as")...)
-	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "schedule")...)
-	Task{}.ApplySchemaCustomizations(cs, append(path, "task")...)
-	TriggerSettings{}.ApplySchemaCustomizations(cs, append(path, "trigger")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c CreateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
+	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateJob.
@@ -2041,7 +2083,7 @@ func (o *CreateJob) SetWebhookNotifications(ctx context.Context, v WebhookNotifi
 // Job was created successfully
 type CreateResponse struct {
 	// The canonical identifier for the newly created job.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 }
 
 func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
@@ -2050,9 +2092,10 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
-func (c CreateResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
@@ -2088,17 +2131,17 @@ func (o CreateResponse) Type(ctx context.Context) attr.Type {
 
 type CronSchedule struct {
 	// Indicate whether this schedule is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// A Cron expression using Quartz syntax that describes the schedule for a
 	// job. See [Cron Trigger] for details. This field is required.
 	//
 	// [Cron Trigger]: http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
-	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression" tf:""`
+	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression"`
 	// A Java timezone ID. The schedule for a job is resolved with respect to
 	// this timezone. See [Java TimeZone] for details. This field is required.
 	//
 	// [Java TimeZone]: https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html
-	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
+	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
 func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
@@ -2107,11 +2150,12 @@ func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronS
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
 }
 
-func (c CronSchedule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "quartz_cron_expression")...)
-	cs.SetRequired(append(path, "timezone_id")...)
+func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
+	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
@@ -2152,11 +2196,11 @@ func (o CronSchedule) Type(ctx context.Context) attr.Type {
 type DbtOutput struct {
 	// An optional map of headers to send when retrieving the artifact from the
 	// `artifacts_link`.
-	ArtifactsHeaders types.Map `tfsdk:"artifacts_headers" tf:"optional"`
+	ArtifactsHeaders types.Map `tfsdk:"artifacts_headers"`
 	// A pre-signed URL to download the (compressed) dbt artifacts. This link is
 	// valid for a limited time (30 minutes). This information is only available
 	// after the run has finished.
-	ArtifactsLink types.String `tfsdk:"artifacts_link" tf:"optional"`
+	ArtifactsLink types.String `tfsdk:"artifacts_link"`
 }
 
 func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutput) {
@@ -2165,9 +2209,11 @@ func (newState *DbtOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtOutpu
 func (newState *DbtOutput) SyncEffectiveFieldsDuringRead(existingState DbtOutput) {
 }
 
-func (c DbtOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DbtOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["artifacts_headers"] = attrs["artifacts_headers"].SetOptional()
+	attrs["artifacts_link"] = attrs["artifacts_link"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtOutput.
@@ -2238,22 +2284,22 @@ type DbtTask struct {
 	// 3-level namespace of Unity Catalog (catalog / schema / relation). The
 	// catalog value can only be specified if a warehouse_id is specified.
 	// Requires dbt-databricks >= 1.1.1.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// A list of dbt commands to execute. All commands must start with `dbt`.
 	// This parameter must not be empty. A maximum of up to 10 commands can be
 	// provided.
-	Commands types.List `tfsdk:"commands" tf:""`
+	Commands types.List `tfsdk:"commands"`
 	// Optional (relative) path to the profiles directory. Can only be specified
 	// if no warehouse_id is specified. If no warehouse_id is specified and this
 	// folder is unset, the root directory is used.
-	ProfilesDirectory types.String `tfsdk:"profiles_directory" tf:"optional"`
+	ProfilesDirectory types.String `tfsdk:"profiles_directory"`
 	// Path to the project directory. Optional for Git sourced tasks, in which
 	// case if no value is provided, the root of the Git repository is used.
-	ProjectDirectory types.String `tfsdk:"project_directory" tf:"optional"`
+	ProjectDirectory types.String `tfsdk:"project_directory"`
 	// Optional schema to write to. This parameter is only used when a
 	// warehouse_id is also provided. If not provided, the `default` schema is
 	// used.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// Optional location type of the project directory. When set to `WORKSPACE`,
 	// the project will be retrieved from the local Databricks workspace. When
 	// set to `GIT`, the project will be retrieved from a Git repository defined
@@ -2262,12 +2308,12 @@ type DbtTask struct {
 	//
 	// * `WORKSPACE`: Project is located in Databricks workspace. * `GIT`:
 	// Project is located in cloud Git provider.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 	// ID of the SQL warehouse to connect to. If provided, we automatically
 	// generate and provide the profile and connection details to dbt. It can be
 	// overridden on a per-command basis by using the `--profiles-dir` command
 	// line argument.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
@@ -2276,10 +2322,16 @@ func (newState *DbtTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbtTask) {
 func (newState *DbtTask) SyncEffectiveFieldsDuringRead(existingState DbtTask) {
 }
 
-func (c DbtTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "commands")...)
+func (c DbtTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["commands"] = attrs["commands"].SetRequired()
+	attrs["profiles_directory"] = attrs["profiles_directory"].SetOptional()
+	attrs["project_directory"] = attrs["project_directory"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DbtTask.
@@ -2357,7 +2409,7 @@ func (o *DbtTask) SetCommands(ctx context.Context, v []types.String) {
 
 type DeleteJob struct {
 	// The canonical identifier of the job to delete. This field is required.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 }
 
 func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJob) {
@@ -2366,10 +2418,10 @@ func (newState *DeleteJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteJo
 func (newState *DeleteJob) SyncEffectiveFieldsDuringRead(existingState DeleteJob) {
 }
 
-func (c DeleteJob) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
+func (c DeleteJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteJob.
@@ -2435,7 +2487,7 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 
 type DeleteRun struct {
 	// ID of the run to delete.
-	RunId types.Int64 `tfsdk:"run_id" tf:""`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRun) {
@@ -2444,10 +2496,10 @@ func (newState *DeleteRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRu
 func (newState *DeleteRun) SyncEffectiveFieldsDuringRead(existingState DeleteRun) {
 }
 
-func (c DeleteRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "run_id")...)
+func (c DeleteRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRun.
@@ -2516,17 +2568,17 @@ func (o DeleteRunResponse) Type(ctx context.Context) attr.Type {
 type EnforcePolicyComplianceForJobResponseJobClusterSettingsChange struct {
 	// The field where this change would be made, prepended with the job cluster
 	// key.
-	Field types.String `tfsdk:"field" tf:"optional"`
+	Field types.String `tfsdk:"field"`
 	// The new value of this field after enforcing policy compliance (either a
 	// number, a boolean, or a string) converted to a string. This is intended
 	// to be read by a human. The typed new value of this field can be retrieved
 	// by reading the settings field in the API response.
-	NewValue types.String `tfsdk:"new_value" tf:"optional"`
+	NewValue types.String `tfsdk:"new_value"`
 	// The previous value of this field before enforcing policy compliance
 	// (either a number, a boolean, or a string) converted to a string. This is
 	// intended to be read by a human. The type of the field can be retrieved by
 	// reading the settings field in the API response.
-	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
+	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
 func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
@@ -2535,9 +2587,12 @@ func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) S
 func (newState *EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) {
 }
 
-func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["field"] = attrs["field"].SetOptional()
+	attrs["new_value"] = attrs["new_value"].SetOptional()
+	attrs["previous_value"] = attrs["previous_value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceForJobResponseJobClusterSettingsChange.
@@ -2577,10 +2632,10 @@ func (o EnforcePolicyComplianceForJobResponseJobClusterSettingsChange) Type(ctx 
 
 type EnforcePolicyComplianceRequest struct {
 	// The ID of the job you want to enforce policy compliance on.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// If set, previews changes made to the job to comply with its policy, but
 	// does not update the job.
-	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
 func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceRequest) {
@@ -2589,10 +2644,11 @@ func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringCreateO
 func (newState *EnforcePolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceRequest) {
 }
 
-func (c EnforcePolicyComplianceRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
+func (c EnforcePolicyComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceRequest.
@@ -2631,18 +2687,18 @@ func (o EnforcePolicyComplianceRequest) Type(ctx context.Context) attr.Type {
 type EnforcePolicyComplianceResponse struct {
 	// Whether any changes have been made to the job cluster settings for the
 	// job to become compliant with its policies.
-	HasChanges types.Bool `tfsdk:"has_changes" tf:"optional"`
+	HasChanges types.Bool `tfsdk:"has_changes"`
 	// A list of job cluster changes that have been made to the job’s cluster
 	// settings in order for all job clusters to become compliant with their
 	// policies.
-	JobClusterChanges types.List `tfsdk:"job_cluster_changes" tf:"optional"`
+	JobClusterChanges types.List `tfsdk:"job_cluster_changes"`
 	// Updated job settings after policy enforcement. Policy enforcement only
 	// applies to job clusters that are created when running the job (which are
 	// specified in new_cluster) and does not apply to existing all-purpose
 	// clusters. Updated job settings are derived by applying policy default
 	// values to the existing job clusters in order to satisfy policy
 	// requirements.
-	Settings types.Object `tfsdk:"settings" tf:"optional,object"`
+	Settings types.Object `tfsdk:"settings"`
 }
 
 func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforcePolicyComplianceResponse) {
@@ -2651,11 +2707,12 @@ func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringCreate
 func (newState *EnforcePolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforcePolicyComplianceResponse) {
 }
 
-func (c EnforcePolicyComplianceResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EnforcePolicyComplianceForJobResponseJobClusterSettingsChange{}.ApplySchemaCustomizations(cs, append(path, "job_cluster_changes")...)
-	JobSettings{}.ApplySchemaCustomizations(cs, append(path, "settings")...)
+func (c EnforcePolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_changes"] = attrs["has_changes"].SetOptional()
+	attrs["job_cluster_changes"] = attrs["job_cluster_changes"].SetOptional()
+	attrs["settings"] = attrs["settings"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforcePolicyComplianceResponse.
@@ -2759,7 +2816,7 @@ type ExportRunOutput struct {
 	// script].
 	//
 	// [Python script]: https://docs.databricks.com/en/_static/examples/extract.py
-	Views types.List `tfsdk:"views" tf:"optional"`
+	Views types.List `tfsdk:"views"`
 }
 
 func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunOutput) {
@@ -2768,10 +2825,10 @@ func (newState *ExportRunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ex
 func (newState *ExportRunOutput) SyncEffectiveFieldsDuringRead(existingState ExportRunOutput) {
 }
 
-func (c ExportRunOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ViewItem{}.ApplySchemaCustomizations(cs, append(path, "views")...)
+func (c ExportRunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["views"] = attrs["views"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunOutput.
@@ -2880,15 +2937,15 @@ type FileArrivalTriggerConfiguration struct {
 	// If set, the trigger starts a run only after the specified amount of time
 	// passed since the last time the trigger fired. The minimum allowed value
 	// is 60 seconds
-	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds" tf:"optional"`
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
 	// URL to be monitored for file arrivals. The path must point to the root or
 	// a subpath of the external location.
-	Url types.String `tfsdk:"url" tf:""`
+	Url types.String `tfsdk:"url"`
 	// If set, the trigger starts a run only after no file activity has occurred
 	// for the specified amount of time. This makes it possible to wait for a
 	// batch of incoming files to arrive before triggering a run. The minimum
 	// allowed value is 60 seconds.
-	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
 func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileArrivalTriggerConfiguration) {
@@ -2897,10 +2954,12 @@ func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *FileArrivalTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState FileArrivalTriggerConfiguration) {
 }
 
-func (c FileArrivalTriggerConfiguration) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "url")...)
+func (c FileArrivalTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["url"] = attrs["url"].SetRequired()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileArrivalTriggerConfiguration.
@@ -2940,9 +2999,9 @@ func (o FileArrivalTriggerConfiguration) Type(ctx context.Context) attr.Type {
 
 type ForEachStats struct {
 	// Sample of 3 most common error messages occurred during the iteration.
-	ErrorMessageStats types.List `tfsdk:"error_message_stats" tf:"optional"`
+	ErrorMessageStats types.List `tfsdk:"error_message_stats"`
 	// Describes stats of the iteration. Only latest retries are considered.
-	TaskRunStats types.Object `tfsdk:"task_run_stats" tf:"optional,object"`
+	TaskRunStats types.Object `tfsdk:"task_run_stats"`
 }
 
 func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachStats) {
@@ -2951,11 +3010,11 @@ func (newState *ForEachStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEa
 func (newState *ForEachStats) SyncEffectiveFieldsDuringRead(existingState ForEachStats) {
 }
 
-func (c ForEachStats) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ForEachTaskErrorMessageStats{}.ApplySchemaCustomizations(cs, append(path, "error_message_stats")...)
-	ForEachTaskTaskRunStats{}.ApplySchemaCustomizations(cs, append(path, "task_run_stats")...)
+func (c ForEachStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error_message_stats"] = attrs["error_message_stats"].SetOptional()
+	attrs["task_run_stats"] = attrs["task_run_stats"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachStats.
@@ -3054,12 +3113,12 @@ type ForEachTask struct {
 	// An optional maximum allowed number of concurrent runs of the task. Set
 	// this value if you want to be able to execute multiple runs of the task
 	// concurrently.
-	Concurrency types.Int64 `tfsdk:"concurrency" tf:"optional"`
+	Concurrency types.Int64 `tfsdk:"concurrency"`
 	// Array for task to iterate on. This can be a JSON string or a reference to
 	// an array parameter.
-	Inputs types.String `tfsdk:"inputs" tf:""`
+	Inputs types.String `tfsdk:"inputs"`
 	// Configuration for the task that will be run for each element in the array
-	Task types.Object `tfsdk:"task" tf:"object"`
+	Task types.Object `tfsdk:"task"`
 }
 
 func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTask) {
@@ -3068,12 +3127,12 @@ func (newState *ForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEac
 func (newState *ForEachTask) SyncEffectiveFieldsDuringRead(existingState ForEachTask) {
 }
 
-func (c ForEachTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "inputs")...)
-	cs.SetRequired(append(path, "task")...)
-	Task{}.ApplySchemaCustomizations(cs, append(path, "task")...)
+func (c ForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["concurrency"] = attrs["concurrency"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].SetRequired()
+	attrs["task"] = attrs["task"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTask.
@@ -3144,11 +3203,11 @@ func (o *ForEachTask) SetTask(ctx context.Context, v Task) {
 type ForEachTaskErrorMessageStats struct {
 	// Describes the count of such error message encountered during the
 	// iterations.
-	Count types.Int64 `tfsdk:"count" tf:"optional"`
+	Count types.Int64 `tfsdk:"count"`
 	// Describes the error message occured during the iterations.
-	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// Describes the termination reason for the error message.
-	TerminationCategory types.String `tfsdk:"termination_category" tf:"optional"`
+	TerminationCategory types.String `tfsdk:"termination_category"`
 }
 
 func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskErrorMessageStats) {
@@ -3157,9 +3216,12 @@ func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringCreateOrU
 func (newState *ForEachTaskErrorMessageStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskErrorMessageStats) {
 }
 
-func (c ForEachTaskErrorMessageStats) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ForEachTaskErrorMessageStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["termination_category"] = attrs["termination_category"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTaskErrorMessageStats.
@@ -3200,17 +3262,17 @@ func (o ForEachTaskErrorMessageStats) Type(ctx context.Context) attr.Type {
 type ForEachTaskTaskRunStats struct {
 	// Describes the iteration runs having an active lifecycle state or an
 	// active run sub state.
-	ActiveIterations types.Int64 `tfsdk:"active_iterations" tf:"optional"`
+	ActiveIterations types.Int64 `tfsdk:"active_iterations"`
 	// Describes the number of failed and succeeded iteration runs.
-	CompletedIterations types.Int64 `tfsdk:"completed_iterations" tf:"optional"`
+	CompletedIterations types.Int64 `tfsdk:"completed_iterations"`
 	// Describes the number of failed iteration runs.
-	FailedIterations types.Int64 `tfsdk:"failed_iterations" tf:"optional"`
+	FailedIterations types.Int64 `tfsdk:"failed_iterations"`
 	// Describes the number of iteration runs that have been scheduled.
-	ScheduledIterations types.Int64 `tfsdk:"scheduled_iterations" tf:"optional"`
+	ScheduledIterations types.Int64 `tfsdk:"scheduled_iterations"`
 	// Describes the number of succeeded iteration runs.
-	SucceededIterations types.Int64 `tfsdk:"succeeded_iterations" tf:"optional"`
+	SucceededIterations types.Int64 `tfsdk:"succeeded_iterations"`
 	// Describes the length of the list of items to iterate over.
-	TotalIterations types.Int64 `tfsdk:"total_iterations" tf:"optional"`
+	TotalIterations types.Int64 `tfsdk:"total_iterations"`
 }
 
 func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForEachTaskTaskRunStats) {
@@ -3219,9 +3281,15 @@ func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ForEachTaskTaskRunStats) SyncEffectiveFieldsDuringRead(existingState ForEachTaskTaskRunStats) {
 }
 
-func (c ForEachTaskTaskRunStats) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ForEachTaskTaskRunStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active_iterations"] = attrs["active_iterations"].SetOptional()
+	attrs["completed_iterations"] = attrs["completed_iterations"].SetOptional()
+	attrs["failed_iterations"] = attrs["failed_iterations"].SetOptional()
+	attrs["scheduled_iterations"] = attrs["scheduled_iterations"].SetOptional()
+	attrs["succeeded_iterations"] = attrs["succeeded_iterations"].SetOptional()
+	attrs["total_iterations"] = attrs["total_iterations"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ForEachTaskTaskRunStats.
@@ -3304,7 +3372,7 @@ func (o GetJobPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
 
 type GetJobPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsResponse) {
@@ -3313,10 +3381,10 @@ func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *GetJobPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsResponse) {
 }
 
-func (c GetJobPermissionLevelsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobPermissionsDescription{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetJobPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsResponse.
@@ -3497,13 +3565,13 @@ type GetPolicyComplianceResponse struct {
 	// of compliance if a policy they are using was updated after the job was
 	// last edited and some of its job clusters no longer comply with their
 	// updated policies.
-	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	IsCompliant types.Bool `tfsdk:"is_compliant"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. An identifier for the job cluster is prepended to the
 	// path. The values indicate an error message describing the policy
 	// validation error.
-	Violations types.Map `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations"`
 }
 
 func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceResponse) {
@@ -3512,9 +3580,11 @@ func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *GetPolicyComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceResponse) {
 }
 
-func (c GetPolicyComplianceResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GetPolicyComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["violations"] = attrs["violations"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceResponse.
@@ -3674,7 +3744,7 @@ type GitSnapshot struct {
 	// Commit that was used to execute the run. If git_branch was specified,
 	// this points to the HEAD of the branch at the time of the run; if git_tag
 	// was specified, this points to the commit the tag points to.
-	UsedCommit types.String `tfsdk:"used_commit" tf:"optional"`
+	UsedCommit types.String `tfsdk:"used_commit"`
 }
 
 func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSnapshot) {
@@ -3683,9 +3753,10 @@ func (newState *GitSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSna
 func (newState *GitSnapshot) SyncEffectiveFieldsDuringRead(existingState GitSnapshot) {
 }
 
-func (c GitSnapshot) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GitSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["used_commit"] = attrs["used_commit"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GitSnapshot.
@@ -3732,24 +3803,24 @@ func (o GitSnapshot) Type(ctx context.Context) attr.Type {
 type GitSource struct {
 	// Name of the branch to be checked out and used by this job. This field
 	// cannot be specified in conjunction with git_tag or git_commit.
-	GitBranch types.String `tfsdk:"branch" tf:"optional"`
+	GitBranch types.String `tfsdk:"branch"`
 	// Commit to be checked out and used by this job. This field cannot be
 	// specified in conjunction with git_branch or git_tag.
-	GitCommit types.String `tfsdk:"commit" tf:"optional"`
+	GitCommit types.String `tfsdk:"commit"`
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
-	GitProvider types.String `tfsdk:"git_provider" tf:""`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
-	GitSnapshot types.Object `tfsdk:"git_snapshot" tf:"optional,object"`
+	GitSnapshot types.Object `tfsdk:"git_snapshot"`
 	// Name of the tag to be checked out and used by this job. This field cannot
 	// be specified in conjunction with git_branch or git_commit.
-	GitTag types.String `tfsdk:"tag" tf:"optional"`
+	GitTag types.String `tfsdk:"tag"`
 	// URL of the repository to be cloned by this job.
-	GitUrl types.String `tfsdk:"url" tf:""`
+	GitUrl types.String `tfsdk:"url"`
 	// The source of the job specification in the remote repository when the job
 	// is source controlled.
-	JobSource types.Object `tfsdk:"job_source" tf:"optional,object"`
+	JobSource types.Object `tfsdk:"job_source"`
 }
 
 func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSource) {
@@ -3758,13 +3829,16 @@ func (newState *GitSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan GitSourc
 func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource) {
 }
 
-func (c GitSource) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "git_provider")...)
-	GitSnapshot{}.ApplySchemaCustomizations(cs, append(path, "git_snapshot")...)
-	cs.SetRequired(append(path, "url")...)
-	JobSource{}.ApplySchemaCustomizations(cs, append(path, "job_source")...)
+func (c GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["commit"] = attrs["commit"].SetOptional()
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_snapshot"] = attrs["git_snapshot"].SetOptional()
+	attrs["tag"] = attrs["tag"].SetOptional()
+	attrs["url"] = attrs["url"].SetRequired()
+	attrs["job_source"] = attrs["job_source"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GitSource.
@@ -3873,19 +3947,19 @@ func (o *GitSource) SetJobSource(ctx context.Context, v JobSource) {
 type Job struct {
 	// The time at which this job was created in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC).
-	CreatedTime types.Int64 `tfsdk:"created_time" tf:"optional"`
+	CreatedTime types.Int64 `tfsdk:"created_time"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// The id of the budget policy used by this job for cost attribution
 	// purposes. This may be set through (in order of precedence): 1. Budget
 	// admins through the account or workspace console 2. Jobs UI in the job
 	// details page and Jobs API using `budget_policy_id` 3. Inferred default
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"computed"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The canonical identifier for this job.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// The email of an active workspace user or the application ID of a service
 	// principal that the job runs as. This value can be changed by setting the
 	// `run_as` field when creating or updating a job.
@@ -3893,10 +3967,10 @@ type Job struct {
 	// By default, `run_as_user_name` is based on the current job settings and
 	// is set to the creator of the job if job access control is disabled or to
 	// the user with the `is_owner` permission if job access control is enabled.
-	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
+	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 	// Settings for this job and all of its runs. These settings can be updated
 	// using the `resetJob` method.
-	Settings types.Object `tfsdk:"settings" tf:"optional,object"`
+	Settings types.Object `tfsdk:"settings"`
 }
 
 func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
@@ -3905,11 +3979,15 @@ func (newState *Job) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job) {
 func (newState *Job) SyncEffectiveFieldsDuringRead(existingState Job) {
 }
 
-func (c Job) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "effective_budget_policy_id")...)
-	JobSettings{}.ApplySchemaCustomizations(cs, append(path, "settings")...)
+func (c Job) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_time"] = attrs["created_time"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
+	attrs["settings"] = attrs["settings"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Job.
@@ -3985,13 +4063,13 @@ func (o *Job) SetSettings(ctx context.Context, v JobSettings) {
 
 type JobAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlRequest) {
@@ -4000,9 +4078,13 @@ func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState JobAccessControlRequest) {
 }
 
-func (c JobAccessControlRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobAccessControlRequest.
@@ -4044,15 +4126,15 @@ func (o JobAccessControlRequest) Type(ctx context.Context) attr.Type {
 
 type JobAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobAccessControlResponse) {
@@ -4061,10 +4143,14 @@ func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *JobAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState JobAccessControlResponse) {
 }
 
-func (c JobAccessControlResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobPermission{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c JobAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobAccessControlResponse.
@@ -4140,9 +4226,9 @@ type JobCluster struct {
 	// A unique name for the job cluster. This field is required and must be
 	// unique within the job. `JobTaskSettings` may refer to this field to
 	// determine which cluster to launch for the task execution.
-	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:""`
+	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// If new_cluster, a description of a cluster that is created for each task.
-	NewCluster types.Object `tfsdk:"new_cluster" tf:"object"`
+	NewCluster types.Object `tfsdk:"new_cluster"`
 }
 
 func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCluster) {
@@ -4151,12 +4237,11 @@ func (newState *JobCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobClus
 func (newState *JobCluster) SyncEffectiveFieldsDuringRead(existingState JobCluster) {
 }
 
-func (c JobCluster) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_cluster_key")...)
-	cs.SetRequired(append(path, "new_cluster")...)
-	compute_tf.ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "new_cluster")...)
+func (c JobCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetRequired()
+	attrs["new_cluster"] = attrs["new_cluster"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCluster.
@@ -4224,15 +4309,15 @@ func (o *JobCluster) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpec
 
 type JobCompliance struct {
 	// Whether this job is in compliance with the latest version of its policy.
-	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	IsCompliant types.Bool `tfsdk:"is_compliant"`
 	// Canonical unique identifier for a job.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. An identifier for the job cluster is prepended to the
 	// path. The values indicate an error message describing the policy
 	// validation error.
-	Violations types.Map `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations"`
 }
 
 func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobCompliance) {
@@ -4241,10 +4326,12 @@ func (newState *JobCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobC
 func (newState *JobCompliance) SyncEffectiveFieldsDuringRead(existingState JobCompliance) {
 }
 
-func (c JobCompliance) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
+func (c JobCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["violations"] = attrs["violations"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobCompliance.
@@ -4316,9 +4403,9 @@ type JobDeployment struct {
 	// The kind of deployment that manages the job.
 	//
 	// * `BUNDLE`: The job is managed by Databricks Asset Bundle.
-	Kind types.String `tfsdk:"kind" tf:""`
+	Kind types.String `tfsdk:"kind"`
 	// Path of the file that contains deployment metadata.
-	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
+	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
 func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobDeployment) {
@@ -4327,10 +4414,11 @@ func (newState *JobDeployment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobD
 func (newState *JobDeployment) SyncEffectiveFieldsDuringRead(existingState JobDeployment) {
 }
 
-func (c JobDeployment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "kind")...)
+func (c JobDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kind"] = attrs["kind"].SetRequired()
+	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobDeployment.
@@ -4370,22 +4458,22 @@ type JobEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
 	// run is skipped. This field is `deprecated`. Please use the
 	// `notification_settings.no_alert_for_skipped_runs` field.
-	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
+	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
 	// the `health` field. If no rule for the `RUN_DURATION_SECONDS` metric is
 	// specified in the `health` field for the job, notifications are not sent.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded" tf:"optional"`
+	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// A list of email addresses to be notified when a run unsuccessfully
 	// completes. A run is considered to have completed unsuccessfully if it
 	// ends with an `INTERNAL_ERROR` `life_cycle_state` or a `FAILED`, or
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
-	OnFailure types.List `tfsdk:"on_failure" tf:"optional"`
+	OnFailure types.List `tfsdk:"on_failure"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnStart types.List `tfsdk:"on_start" tf:"optional"`
+	OnStart types.List `tfsdk:"on_start"`
 	// A list of email addresses to notify when any streaming backlog thresholds
 	// are exceeded for any stream. Streaming backlog thresholds can be set in
 	// the `health` field using the following metrics:
@@ -4393,13 +4481,13 @@ type JobEmailNotifications struct {
 	// `STREAMING_BACKLOG_SECONDS`, or `STREAMING_BACKLOG_FILES`. Alerting is
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded" tf:"optional"`
+	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
 	// A list of email addresses to be notified when a run successfully
 	// completes. A run is considered to have completed successfully if it ends
 	// with a `TERMINATED` `life_cycle_state` and a `SUCCESS` result_state. If
 	// not specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnSuccess types.List `tfsdk:"on_success" tf:"optional"`
+	OnSuccess types.List `tfsdk:"on_success"`
 }
 
 func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEmailNotifications) {
@@ -4408,9 +4496,15 @@ func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobEmailNotifications) SyncEffectiveFieldsDuringRead(existingState JobEmailNotifications) {
 }
 
-func (c JobEmailNotifications) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
+	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
+	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_start"] = attrs["on_start"].SetOptional()
+	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
+	attrs["on_success"] = attrs["on_success"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEmailNotifications.
@@ -4602,11 +4696,11 @@ func (o *JobEmailNotifications) SetOnSuccess(ctx context.Context, v []types.Stri
 
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
-	EnvironmentKey types.String `tfsdk:"environment_key" tf:""`
+	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// The environment entity used to preserve serverless environment side panel
 	// and jobs' environment for non-notebook task. In this minimal environment
 	// spec, only pip dependencies are supported.
-	Spec types.Object `tfsdk:"spec" tf:"optional,object"`
+	Spec types.Object `tfsdk:"spec"`
 }
 
 func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobEnvironment) {
@@ -4615,11 +4709,11 @@ func (newState *JobEnvironment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobEnvironment) SyncEffectiveFieldsDuringRead(existingState JobEnvironment) {
 }
 
-func (c JobEnvironment) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "environment_key")...)
-	compute_tf.Environment{}.ApplySchemaCustomizations(cs, append(path, "spec")...)
+func (c JobEnvironment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["environment_key"] = attrs["environment_key"].SetRequired()
+	attrs["spec"] = attrs["spec"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobEnvironment.
@@ -4688,10 +4782,10 @@ func (o *JobEnvironment) SetSpec(ctx context.Context, v compute_tf.Environment) 
 type JobNotificationSettings struct {
 	// If true, do not send notifications to recipients specified in
 	// `on_failure` if the run is canceled.
-	NoAlertForCanceledRuns types.Bool `tfsdk:"no_alert_for_canceled_runs" tf:"optional"`
+	NoAlertForCanceledRuns types.Bool `tfsdk:"no_alert_for_canceled_runs"`
 	// If true, do not send notifications to recipients specified in
 	// `on_failure` if the run is skipped.
-	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
+	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
 func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobNotificationSettings) {
@@ -4700,9 +4794,11 @@ func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *JobNotificationSettings) SyncEffectiveFieldsDuringRead(existingState JobNotificationSettings) {
 }
 
-func (c JobNotificationSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["no_alert_for_canceled_runs"] = attrs["no_alert_for_canceled_runs"].SetOptional()
+	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobNotificationSettings.
@@ -4740,11 +4836,11 @@ func (o JobNotificationSettings) Type(ctx context.Context) attr.Type {
 
 type JobParameter struct {
 	// The optional default value of the parameter
-	Default types.String `tfsdk:"default" tf:"optional"`
+	Default types.String `tfsdk:"default"`
 	// The name of the parameter
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The value used in the run
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameter) {
@@ -4753,9 +4849,12 @@ func (newState *JobParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPa
 func (newState *JobParameter) SyncEffectiveFieldsDuringRead(existingState JobParameter) {
 }
 
-func (c JobParameter) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobParameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default"] = attrs["default"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobParameter.
@@ -4795,10 +4894,10 @@ func (o JobParameter) Type(ctx context.Context) attr.Type {
 
 type JobParameterDefinition struct {
 	// Default value of the parameter.
-	Default types.String `tfsdk:"default" tf:""`
+	Default types.String `tfsdk:"default"`
 	// The name of the defined parameter. May only contain alphanumeric
 	// characters, `_`, `-`, and `.`
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobParameterDefinition) {
@@ -4807,11 +4906,11 @@ func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *JobParameterDefinition) SyncEffectiveFieldsDuringRead(existingState JobParameterDefinition) {
 }
 
-func (c JobParameterDefinition) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "default")...)
-	cs.SetRequired(append(path, "name")...)
+func (c JobParameterDefinition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default"] = attrs["default"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobParameterDefinition.
@@ -4848,11 +4947,11 @@ func (o JobParameterDefinition) Type(ctx context.Context) attr.Type {
 }
 
 type JobPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermission) {
@@ -4861,9 +4960,12 @@ func (newState *JobPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobP
 func (newState *JobPermission) SyncEffectiveFieldsDuringRead(existingState JobPermission) {
 }
 
-func (c JobPermission) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermission.
@@ -4932,11 +5034,11 @@ func (o *JobPermission) SetInheritedFromObject(ctx context.Context, v []types.St
 }
 
 type JobPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissions) {
@@ -4945,10 +5047,12 @@ func (newState *JobPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobPermissions) SyncEffectiveFieldsDuringRead(existingState JobPermissions) {
 }
 
-func (c JobPermissions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobAccessControlResponse{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c JobPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissions.
@@ -5017,9 +5121,9 @@ func (o *JobPermissions) SetAccessControlList(ctx context.Context, v []JobAccess
 }
 
 type JobPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobPermissionsDescription) {
@@ -5028,9 +5132,11 @@ func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *JobPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState JobPermissionsDescription) {
 }
 
-func (c JobPermissionsDescription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsDescription.
@@ -5067,7 +5173,7 @@ func (o JobPermissionsDescription) Type(ctx context.Context) attr.Type {
 }
 
 type JobPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The job for which to get or manage permissions.
 	JobId types.String `tfsdk:"-"`
 }
@@ -5078,11 +5184,11 @@ func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *JobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState JobPermissionsRequest) {
 }
 
-func (c JobPermissionsRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobAccessControlRequest{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "job_id")...)
+func (c JobPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobPermissionsRequest.
@@ -5156,10 +5262,10 @@ func (o *JobPermissionsRequest) SetAccessControlList(ctx context.Context, v []Jo
 type JobRunAs struct {
 	// Application ID of an active service principal. Setting this field
 	// requires the `servicePrincipal/user` role.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// The email of an active workspace user. Non-admin users can only set this
 	// field to their own email.
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs) {
@@ -5168,9 +5274,11 @@ func (newState *JobRunAs) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobRunAs)
 func (newState *JobRunAs) SyncEffectiveFieldsDuringRead(existingState JobRunAs) {
 }
 
-func (c JobRunAs) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c JobRunAs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobRunAs.
@@ -5211,35 +5319,35 @@ type JobSettings struct {
 	// specified, a default budget policy may be applied when creating or
 	// modifying the job. See `effective_budget_policy_id` for the budget policy
 	// used by this workload.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// An optional continuous property for this job. The continuous property
 	// will ensure that there is always one run executing. Only one of
 	// `schedule` and `continuous` can be used.
-	Continuous types.Object `tfsdk:"continuous" tf:"optional,object"`
+	Continuous types.Object `tfsdk:"continuous"`
 	// Deployment information for jobs managed by external sources.
-	Deployment types.Object `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.Object `tfsdk:"deployment"`
 	// An optional description for the job. The maximum length is 27700
 	// characters in UTF-8 encoding.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Edit mode of the job.
 	//
 	// * `UI_LOCKED`: The job is in a locked UI state and cannot be modified. *
 	// `EDITABLE`: The job is in an editable state and can be modified.
-	EditMode types.String `tfsdk:"edit_mode" tf:"optional"`
+	EditMode types.String `tfsdk:"edit_mode"`
 	// An optional set of email addresses that is notified when runs of this job
 	// begin or complete as well as when this job is deleted.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by serverless tasks of this job. An environment is required to
 	// be present for serverless tasks. For serverless notebook tasks, the
 	// environment is accessible in the notebook environment panel. For other
 	// serverless tasks, the task environment is required to be specified using
 	// environment_key in the task settings.
-	Environments types.List `tfsdk:"environment" tf:"optional"`
+	Environments types.List `tfsdk:"environment"`
 	// Used to tell what is the format of the job. This field is ignored in
 	// Create/Update/Reset calls. When using the Jobs API 2.1 this value is
 	// always set to `"MULTI_TASK"`.
-	Format types.String `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -5250,13 +5358,13 @@ type JobSettings struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// An optional set of health rules that can be defined for this job.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_cluster" tf:"optional"`
+	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
 	// job concurrently. This is useful for example if you trigger your job on a
@@ -5268,45 +5376,45 @@ type JobSettings struct {
 	// runs. However, from then on, new runs are skipped unless there are fewer
 	// than 3 active runs. This value cannot exceed 1000. Setting this value to
 	// `0` causes all new runs to be skipped.
-	MaxConcurrentRuns types.Int64 `tfsdk:"max_concurrent_runs" tf:"optional"`
+	MaxConcurrentRuns types.Int64 `tfsdk:"max_concurrent_runs"`
 	// An optional name for the job. The maximum length is 4096 bytes in UTF-8
 	// encoding.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// job.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
-	Parameters types.List `tfsdk:"parameter" tf:"optional"`
+	Parameters types.List `tfsdk:"parameter"`
 	// The queue settings of the job.
-	Queue types.Object `tfsdk:"queue" tf:"optional,object"`
+	Queue types.Object `tfsdk:"queue"`
 	// Write-only setting. Specifies the user or service principal that the job
 	// runs as. If not specified, the job runs as the user who created the job.
 	//
 	// Either `user_name` or `service_principal_name` should be specified. If
 	// not, an error is thrown.
-	RunAs types.Object `tfsdk:"run_as" tf:"optional,object"`
+	RunAs types.Object `tfsdk:"run_as"`
 	// An optional periodic schedule for this job. The default behavior is that
 	// the job only runs when triggered by clicking “Run Now” in the Jobs UI
 	// or sending an API request to `runNow`.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// A map of tags associated with the job. These are forwarded to the cluster
 	// as cluster tags for jobs clusters, and are subject to the same
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
-	Tags types.Map `tfsdk:"tags" tf:"optional"`
+	Tags types.Map `tfsdk:"tags"`
 	// A list of task specifications to be executed by this job.
-	Tasks types.List `tfsdk:"task" tf:"optional"`
+	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A configuration to trigger a run when certain conditions are met. The
 	// default behavior is that the job runs only when triggered by clicking
 	// “Run Now” in the Jobs UI or sending an API request to `runNow`.
-	Trigger types.Object `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.Object `tfsdk:"trigger"`
 	// A collection of system notification IDs to notify when runs of this job
 	// begin or complete.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSettings) {
@@ -5315,24 +5423,32 @@ func (newState *JobSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSet
 func (newState *JobSettings) SyncEffectiveFieldsDuringRead(existingState JobSettings) {
 }
 
-func (c JobSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Continuous{}.ApplySchemaCustomizations(cs, append(path, "continuous")...)
-	JobDeployment{}.ApplySchemaCustomizations(cs, append(path, "deployment")...)
-	JobEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	JobEnvironment{}.ApplySchemaCustomizations(cs, append(path, "environment")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	JobsHealthRules{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	JobCluster{}.ApplySchemaCustomizations(cs, append(path, "job_cluster")...)
-	JobNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	JobParameterDefinition{}.ApplySchemaCustomizations(cs, append(path, "parameter")...)
-	QueueSettings{}.ApplySchemaCustomizations(cs, append(path, "queue")...)
-	JobRunAs{}.ApplySchemaCustomizations(cs, append(path, "run_as")...)
-	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "schedule")...)
-	Task{}.ApplySchemaCustomizations(cs, append(path, "task")...)
-	TriggerSettings{}.ApplySchemaCustomizations(cs, append(path, "trigger")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c JobSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment"] = attrs["environment"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["job_cluster"] = attrs["job_cluster"].SetOptional()
+	attrs["max_concurrent_runs"] = attrs["max_concurrent_runs"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["task"] = attrs["task"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSettings.
@@ -5887,11 +6003,11 @@ type JobSource struct {
 	// disconnected from the remote job specification and is allowed for live
 	// edit. Import the remote job specification again from UI to make the job
 	// fully synced.
-	DirtyState types.String `tfsdk:"dirty_state" tf:"optional"`
+	DirtyState types.String `tfsdk:"dirty_state"`
 	// Name of the branch which the job is imported from.
-	ImportFromGitBranch types.String `tfsdk:"import_from_git_branch" tf:""`
+	ImportFromGitBranch types.String `tfsdk:"import_from_git_branch"`
 	// Path of the job YAML file that contains the job specification.
-	JobConfigPath types.String `tfsdk:"job_config_path" tf:""`
+	JobConfigPath types.String `tfsdk:"job_config_path"`
 }
 
 func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSource) {
@@ -5900,11 +6016,12 @@ func (newState *JobSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobSourc
 func (newState *JobSource) SyncEffectiveFieldsDuringRead(existingState JobSource) {
 }
 
-func (c JobSource) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "import_from_git_branch")...)
-	cs.SetRequired(append(path, "job_config_path")...)
+func (c JobSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dirty_state"] = attrs["dirty_state"].SetOptional()
+	attrs["import_from_git_branch"] = attrs["import_from_git_branch"].SetRequired()
+	attrs["job_config_path"] = attrs["job_config_path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobSource.
@@ -5955,13 +6072,13 @@ type JobsHealthRule struct {
 	// across all streams. This metric is in Public Preview. *
 	// `STREAMING_BACKLOG_FILES`: An estimate of the maximum number of
 	// outstanding files across all streams. This metric is in Public Preview.
-	Metric types.String `tfsdk:"metric" tf:""`
+	Metric types.String `tfsdk:"metric"`
 	// Specifies the operator used to compare the health metric value with the
 	// specified threshold.
-	Op types.String `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op"`
 	// Specifies the threshold value that the health metric should obey to
 	// satisfy the health rule.
-	Value types.Int64 `tfsdk:"value" tf:""`
+	Value types.Int64 `tfsdk:"value"`
 }
 
 func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRule) {
@@ -5970,12 +6087,12 @@ func (newState *JobsHealthRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Job
 func (newState *JobsHealthRule) SyncEffectiveFieldsDuringRead(existingState JobsHealthRule) {
 }
 
-func (c JobsHealthRule) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "metric")...)
-	cs.SetRequired(append(path, "op")...)
-	cs.SetRequired(append(path, "value")...)
+func (c JobsHealthRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["metric"] = attrs["metric"].SetRequired()
+	attrs["op"] = attrs["op"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobsHealthRule.
@@ -6015,7 +6132,7 @@ func (o JobsHealthRule) Type(ctx context.Context) attr.Type {
 
 // An optional set of health rules that can be defined for this job.
 type JobsHealthRules struct {
-	Rules types.List `tfsdk:"rules" tf:"optional"`
+	Rules types.List `tfsdk:"rules"`
 }
 
 func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan JobsHealthRules) {
@@ -6024,10 +6141,10 @@ func (newState *JobsHealthRules) SyncEffectiveFieldsDuringCreateOrUpdate(plan Jo
 func (newState *JobsHealthRules) SyncEffectiveFieldsDuringRead(existingState JobsHealthRules) {
 }
 
-func (c JobsHealthRules) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobsHealthRule{}.ApplySchemaCustomizations(cs, append(path, "rules")...)
+func (c JobsHealthRules) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["rules"] = attrs["rules"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in JobsHealthRules.
@@ -6093,15 +6210,15 @@ func (o *JobsHealthRules) SetRules(ctx context.Context, v []JobsHealthRule) {
 
 type ListJobComplianceForPolicyResponse struct {
 	// A list of jobs and their policy compliance statuses.
-	Jobs types.List `tfsdk:"jobs" tf:"optional"`
+	Jobs types.List `tfsdk:"jobs"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If this field is not in the response, it means no further
 	// results for the request.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// This field represents the pagination token to retrieve the previous page
 	// of results. If this field is not in the response, it means no further
 	// results for the request.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
 func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceForPolicyResponse) {
@@ -6110,10 +6227,12 @@ func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringCre
 func (newState *ListJobComplianceForPolicyResponse) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceForPolicyResponse) {
 }
 
-func (c ListJobComplianceForPolicyResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobCompliance{}.ApplySchemaCustomizations(cs, append(path, "jobs")...)
+func (c ListJobComplianceForPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["jobs"] = attrs["jobs"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceForPolicyResponse.
@@ -6290,15 +6409,15 @@ func (o ListJobsRequest) Type(ctx context.Context) attr.Type {
 type ListJobsResponse struct {
 	// If true, additional jobs matching the provided filter are available for
 	// listing.
-	HasMore types.Bool `tfsdk:"has_more" tf:"optional"`
+	HasMore types.Bool `tfsdk:"has_more"`
 	// The list of jobs. Only included in the response if there are jobs to
 	// list.
-	Jobs types.List `tfsdk:"jobs" tf:"optional"`
+	Jobs types.List `tfsdk:"jobs"`
 	// A token that can be used to list the next page of jobs (if applicable).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// A token that can be used to list the previous page of jobs (if
 	// applicable).
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
 func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsResponse) {
@@ -6307,10 +6426,13 @@ func (newState *ListJobsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListJobsResponse) SyncEffectiveFieldsDuringRead(existingState ListJobsResponse) {
 }
 
-func (c ListJobsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	BaseJob{}.ApplySchemaCustomizations(cs, append(path, "jobs")...)
+func (c ListJobsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_more"] = attrs["has_more"].SetOptional()
+	attrs["jobs"] = attrs["jobs"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsResponse.
@@ -6473,15 +6595,15 @@ func (o ListRunsRequest) Type(ctx context.Context) attr.Type {
 type ListRunsResponse struct {
 	// If true, additional runs matching the provided filter are available for
 	// listing.
-	HasMore types.Bool `tfsdk:"has_more" tf:"optional"`
+	HasMore types.Bool `tfsdk:"has_more"`
 	// A token that can be used to list the next page of runs (if applicable).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// A token that can be used to list the previous page of runs (if
 	// applicable).
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 	// A list of runs, from most recently started to least. Only included in the
 	// response if there are runs to list.
-	Runs types.List `tfsdk:"runs" tf:"optional"`
+	Runs types.List `tfsdk:"runs"`
 }
 
 func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsResponse) {
@@ -6490,10 +6612,13 @@ func (newState *ListRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan L
 func (newState *ListRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListRunsResponse) {
 }
 
-func (c ListRunsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	BaseRun{}.ApplySchemaCustomizations(cs, append(path, "runs")...)
+func (c ListRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_more"] = attrs["has_more"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
+	attrs["runs"] = attrs["runs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsResponse.
@@ -6570,9 +6695,9 @@ type NotebookOutput struct {
 	// a larger result, your job can store the results in a cloud storage
 	// service. This field is absent if `dbutils.notebook.exit()` was never
 	// called.
-	Result types.String `tfsdk:"result" tf:"optional"`
+	Result types.String `tfsdk:"result"`
 	// Whether or not the result was truncated.
-	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+	Truncated types.Bool `tfsdk:"truncated"`
 }
 
 func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookOutput) {
@@ -6581,9 +6706,11 @@ func (newState *NotebookOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Not
 func (newState *NotebookOutput) SyncEffectiveFieldsDuringRead(existingState NotebookOutput) {
 }
 
-func (c NotebookOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c NotebookOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["result"] = attrs["result"].SetOptional()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookOutput.
@@ -6637,12 +6764,12 @@ type NotebookTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-widgets
-	BaseParameters types.Map `tfsdk:"base_parameters" tf:"optional"`
+	BaseParameters types.Map `tfsdk:"base_parameters"`
 	// The path of the notebook to be run in the Databricks workspace or remote
 	// repository. For notebooks stored in the Databricks workspace, the path
 	// must be absolute and begin with a slash. For notebooks stored in a remote
 	// repository, the path must be relative. This field is required.
-	NotebookPath types.String `tfsdk:"notebook_path" tf:""`
+	NotebookPath types.String `tfsdk:"notebook_path"`
 	// Optional location type of the notebook. When set to `WORKSPACE`, the
 	// notebook will be retrieved from the local Databricks workspace. When set
 	// to `GIT`, the notebook will be retrieved from a Git repository defined in
@@ -6650,14 +6777,14 @@ type NotebookTask struct {
 	// `git_source` is defined and `WORKSPACE` otherwise. * `WORKSPACE`:
 	// Notebook is located in Databricks workspace. * `GIT`: Notebook is located
 	// in cloud Git provider.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 	// Optional `warehouse_id` to run the notebook on a SQL warehouse. Classic
 	// SQL warehouses are NOT supported, please use serverless or pro SQL
 	// warehouses.
 	//
 	// Note that SQL warehouses only support SQL cells; if the notebook contains
 	// non-SQL cells, the run will fail.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookTask) {
@@ -6666,10 +6793,13 @@ func (newState *NotebookTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Noteb
 func (newState *NotebookTask) SyncEffectiveFieldsDuringRead(existingState NotebookTask) {
 }
 
-func (c NotebookTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "notebook_path")...)
+func (c NotebookTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_parameters"] = attrs["base_parameters"].SetOptional()
+	attrs["notebook_path"] = attrs["notebook_path"].SetRequired()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookTask.
@@ -6741,9 +6871,9 @@ func (o *NotebookTask) SetBaseParameters(ctx context.Context, v map[string]types
 
 type PeriodicTriggerConfiguration struct {
 	// The interval at which the trigger should run.
-	Interval types.Int64 `tfsdk:"interval" tf:""`
+	Interval types.Int64 `tfsdk:"interval"`
 	// The unit of time for the interval.
-	Unit types.String `tfsdk:"unit" tf:""`
+	Unit types.String `tfsdk:"unit"`
 }
 
 func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan PeriodicTriggerConfiguration) {
@@ -6752,11 +6882,11 @@ func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PeriodicTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState PeriodicTriggerConfiguration) {
 }
 
-func (c PeriodicTriggerConfiguration) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "interval")...)
-	cs.SetRequired(append(path, "unit")...)
+func (c PeriodicTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["interval"] = attrs["interval"].SetRequired()
+	attrs["unit"] = attrs["unit"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PeriodicTriggerConfiguration.
@@ -6794,7 +6924,7 @@ func (o PeriodicTriggerConfiguration) Type(ctx context.Context) attr.Type {
 
 type PipelineParams struct {
 	// If true, triggers a full refresh on the delta live table.
-	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+	FullRefresh types.Bool `tfsdk:"full_refresh"`
 }
 
 func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineParams) {
@@ -6803,9 +6933,10 @@ func (newState *PipelineParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pip
 func (newState *PipelineParams) SyncEffectiveFieldsDuringRead(existingState PipelineParams) {
 }
 
-func (c PipelineParams) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PipelineParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineParams.
@@ -6841,9 +6972,9 @@ func (o PipelineParams) Type(ctx context.Context) attr.Type {
 
 type PipelineTask struct {
 	// If true, triggers a full refresh on the delta live table.
-	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// The full name of the pipeline task to execute.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:""`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
 func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTask) {
@@ -6852,10 +6983,11 @@ func (newState *PipelineTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pipel
 func (newState *PipelineTask) SyncEffectiveFieldsDuringRead(existingState PipelineTask) {
 }
 
-func (c PipelineTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "pipeline_id")...)
+func (c PipelineTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineTask.
@@ -6895,16 +7027,16 @@ type PythonWheelTask struct {
 	// Named entry point to use, if it does not exist in the metadata of the
 	// package it executes the function from the package directly using
 	// `$packageName.$entryPoint()`
-	EntryPoint types.String `tfsdk:"entry_point" tf:""`
+	EntryPoint types.String `tfsdk:"entry_point"`
 	// Command-line parameters passed to Python wheel task in the form of
 	// `["--name=task", "--data=dbfs:/path/to/data.json"]`. Leave it empty if
 	// `parameters` is not null.
-	NamedParameters types.Map `tfsdk:"named_parameters" tf:"optional"`
+	NamedParameters types.Map `tfsdk:"named_parameters"`
 	// Name of the package to execute
-	PackageName types.String `tfsdk:"package_name" tf:""`
+	PackageName types.String `tfsdk:"package_name"`
 	// Command-line parameters passed to Python wheel task. Leave it empty if
 	// `named_parameters` is not null.
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonWheelTask) {
@@ -6913,11 +7045,13 @@ func (newState *PythonWheelTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Py
 func (newState *PythonWheelTask) SyncEffectiveFieldsDuringRead(existingState PythonWheelTask) {
 }
 
-func (c PythonWheelTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "entry_point")...)
-	cs.SetRequired(append(path, "package_name")...)
+func (c PythonWheelTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entry_point"] = attrs["entry_point"].SetRequired()
+	attrs["named_parameters"] = attrs["named_parameters"].SetOptional()
+	attrs["package_name"] = attrs["package_name"].SetRequired()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PythonWheelTask.
@@ -7023,10 +7157,10 @@ type QueueDetails struct {
 	// per-job limit of concurrent job runs. *
 	// `ACTIVE_RUN_JOB_TASKS_LIMIT_REACHED`: The run was queued due to reaching
 	// the workspace limit of active run job tasks.
-	Code types.String `tfsdk:"code" tf:"optional"`
+	Code types.String `tfsdk:"code"`
 	// A descriptive message with the queuing details. This field is
 	// unstructured, and its exact format is subject to change.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 }
 
 func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueDetails) {
@@ -7035,9 +7169,11 @@ func (newState *QueueDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queue
 func (newState *QueueDetails) SyncEffectiveFieldsDuringRead(existingState QueueDetails) {
 }
 
-func (c QueueDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c QueueDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code"] = attrs["code"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueueDetails.
@@ -7075,7 +7211,7 @@ func (o QueueDetails) Type(ctx context.Context) attr.Type {
 
 type QueueSettings struct {
 	// If true, enable queueing for the job. This is a required field.
-	Enabled types.Bool `tfsdk:"enabled" tf:""`
+	Enabled types.Bool `tfsdk:"enabled"`
 }
 
 func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueueSettings) {
@@ -7084,10 +7220,10 @@ func (newState *QueueSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Queu
 func (newState *QueueSettings) SyncEffectiveFieldsDuringRead(existingState QueueSettings) {
 }
 
-func (c QueueSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "enabled")...)
+func (c QueueSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueueSettings.
@@ -7123,22 +7259,22 @@ func (o QueueSettings) Type(ctx context.Context) attr.Type {
 
 type RepairHistoryItem struct {
 	// The end time of the (repaired) run.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The ID of the repair. Only returned for the items that represent a repair
 	// in `repair_history`.
-	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	Id types.Int64 `tfsdk:"id"`
 	// The start time of the (repaired) run.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
-	State types.Object `tfsdk:"state" tf:"optional,object"`
+	State types.Object `tfsdk:"state"`
 	// The current status of the run
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 	// The run IDs of the task runs that ran as part of this repair history
 	// item.
-	TaskRunIds types.List `tfsdk:"task_run_ids" tf:"optional"`
+	TaskRunIds types.List `tfsdk:"task_run_ids"`
 	// The repair history item type. Indicates whether a run is the original run
 	// or a repair run.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairHistoryItem) {
@@ -7147,11 +7283,16 @@ func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState RepairHistoryItem) {
 }
 
-func (c RepairHistoryItem) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RunState{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	RunStatus{}.ApplySchemaCustomizations(cs, append(path, "status")...)
+func (c RepairHistoryItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["task_run_ids"] = attrs["task_run_ids"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairHistoryItem.
@@ -7289,7 +7430,7 @@ type RepairRun struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands" tf:"optional"`
+	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -7302,14 +7443,14 @@ type RepairRun struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	JarParams types.List `tfsdk:"jar_params" tf:"optional"`
+	JarParams types.List `tfsdk:"jar_params"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
-	JobParameters types.Map `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.Map `tfsdk:"job_parameters"`
 	// The ID of the latest repair. This parameter is not required when
 	// repairing a run for the first time, but must be provided on subsequent
 	// requests to repair the same run.
-	LatestRepairId types.Int64 `tfsdk:"latest_repair_id" tf:"optional"`
+	LatestRepairId types.Int64 `tfsdk:"latest_repair_id"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -7329,11 +7470,11 @@ type RepairRun struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params" tf:"optional"`
+	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams types.Object `tfsdk:"pipeline_params" tf:"optional,object"`
+	PipelineParams types.Object `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params" tf:"optional"`
+	PythonNamedParams types.Map `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -7351,18 +7492,18 @@ type RepairRun struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params" tf:"optional"`
+	PythonParams types.List `tfsdk:"python_params"`
 	// If true, repair all failed tasks. Only one of `rerun_tasks` or
 	// `rerun_all_failed_tasks` can be used.
-	RerunAllFailedTasks types.Bool `tfsdk:"rerun_all_failed_tasks" tf:"optional"`
+	RerunAllFailedTasks types.Bool `tfsdk:"rerun_all_failed_tasks"`
 	// If true, repair all tasks that depend on the tasks in `rerun_tasks`, even
 	// if they were previously successful. Can be also used in combination with
 	// `rerun_all_failed_tasks`.
-	RerunDependentTasks types.Bool `tfsdk:"rerun_dependent_tasks" tf:"optional"`
+	RerunDependentTasks types.Bool `tfsdk:"rerun_dependent_tasks"`
 	// The task keys of the task runs to repair.
-	RerunTasks types.List `tfsdk:"rerun_tasks" tf:"optional"`
+	RerunTasks types.List `tfsdk:"rerun_tasks"`
 	// The job run ID of the run to repair. The run must not be in progress.
-	RunId types.Int64 `tfsdk:"run_id" tf:""`
+	RunId types.Int64 `tfsdk:"run_id"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -7381,11 +7522,11 @@ type RepairRun struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params" tf:"optional"`
+	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params" tf:"optional"`
+	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
 func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRun) {
@@ -7394,11 +7535,23 @@ func (newState *RepairRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRu
 func (newState *RepairRun) SyncEffectiveFieldsDuringRead(existingState RepairRun) {
 }
 
-func (c RepairRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PipelineParams{}.ApplySchemaCustomizations(cs, append(path, "pipeline_params")...)
-	cs.SetRequired(append(path, "run_id")...)
+func (c RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["rerun_all_failed_tasks"] = attrs["rerun_all_failed_tasks"].SetOptional()
+	attrs["rerun_dependent_tasks"] = attrs["rerun_dependent_tasks"].SetOptional()
+	attrs["rerun_tasks"] = attrs["rerun_tasks"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRun.
@@ -7753,7 +7906,7 @@ func (o *RepairRun) SetSqlParams(ctx context.Context, v map[string]types.String)
 type RepairRunResponse struct {
 	// The ID of the repair. Must be provided in subsequent repairs using the
 	// `latest_repair_id` field to ensure sequential repairs.
-	RepairId types.Int64 `tfsdk:"repair_id" tf:"optional"`
+	RepairId types.Int64 `tfsdk:"repair_id"`
 }
 
 func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepairRunResponse) {
@@ -7762,9 +7915,10 @@ func (newState *RepairRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *RepairRunResponse) SyncEffectiveFieldsDuringRead(existingState RepairRunResponse) {
 }
 
-func (c RepairRunResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RepairRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repair_id"] = attrs["repair_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepairRunResponse.
@@ -7800,13 +7954,13 @@ func (o RepairRunResponse) Type(ctx context.Context) attr.Type {
 
 type ResetJob struct {
 	// The canonical identifier of the job to reset. This field is required.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// The new settings of the job. These settings completely replace the old
 	// settings.
 	//
 	// Changes to the field `JobBaseSettings.timeout_seconds` are applied to
 	// active runs. Changes to other fields are applied to future runs only.
-	NewSettings types.Object `tfsdk:"new_settings" tf:"object"`
+	NewSettings types.Object `tfsdk:"new_settings"`
 }
 
 func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob) {
@@ -7815,12 +7969,11 @@ func (newState *ResetJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetJob)
 func (newState *ResetJob) SyncEffectiveFieldsDuringRead(existingState ResetJob) {
 }
 
-func (c ResetJob) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
-	cs.SetRequired(append(path, "new_settings")...)
-	JobSettings{}.ApplySchemaCustomizations(cs, append(path, "new_settings")...)
+func (c ResetJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetJob.
@@ -7917,9 +8070,9 @@ func (o ResetResponse) Type(ctx context.Context) attr.Type {
 }
 
 type ResolvedConditionTaskValues struct {
-	Left types.String `tfsdk:"left" tf:"optional"`
+	Left types.String `tfsdk:"left"`
 
-	Right types.String `tfsdk:"right" tf:"optional"`
+	Right types.String `tfsdk:"right"`
 }
 
 func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedConditionTaskValues) {
@@ -7928,9 +8081,11 @@ func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ResolvedConditionTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedConditionTaskValues) {
 }
 
-func (c ResolvedConditionTaskValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedConditionTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["left"] = attrs["left"].SetOptional()
+	attrs["right"] = attrs["right"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedConditionTaskValues.
@@ -7967,7 +8122,7 @@ func (o ResolvedConditionTaskValues) Type(ctx context.Context) attr.Type {
 }
 
 type ResolvedDbtTaskValues struct {
-	Commands types.List `tfsdk:"commands" tf:"optional"`
+	Commands types.List `tfsdk:"commands"`
 }
 
 func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedDbtTaskValues) {
@@ -7976,9 +8131,10 @@ func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ResolvedDbtTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedDbtTaskValues) {
 }
 
-func (c ResolvedDbtTaskValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedDbtTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["commands"] = attrs["commands"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedDbtTaskValues.
@@ -8043,7 +8199,7 @@ func (o *ResolvedDbtTaskValues) SetCommands(ctx context.Context, v []types.Strin
 }
 
 type ResolvedNotebookTaskValues struct {
-	BaseParameters types.Map `tfsdk:"base_parameters" tf:"optional"`
+	BaseParameters types.Map `tfsdk:"base_parameters"`
 }
 
 func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedNotebookTaskValues) {
@@ -8052,9 +8208,10 @@ func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedNotebookTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedNotebookTaskValues) {
 }
 
-func (c ResolvedNotebookTaskValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedNotebookTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["base_parameters"] = attrs["base_parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedNotebookTaskValues.
@@ -8119,7 +8276,7 @@ func (o *ResolvedNotebookTaskValues) SetBaseParameters(ctx context.Context, v ma
 }
 
 type ResolvedParamPairValues struct {
-	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters"`
 }
 
 func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedParamPairValues) {
@@ -8128,9 +8285,10 @@ func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ResolvedParamPairValues) SyncEffectiveFieldsDuringRead(existingState ResolvedParamPairValues) {
 }
 
-func (c ResolvedParamPairValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedParamPairValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedParamPairValues.
@@ -8195,9 +8353,9 @@ func (o *ResolvedParamPairValues) SetParameters(ctx context.Context, v map[strin
 }
 
 type ResolvedPythonWheelTaskValues struct {
-	NamedParameters types.Map `tfsdk:"named_parameters" tf:"optional"`
+	NamedParameters types.Map `tfsdk:"named_parameters"`
 
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedPythonWheelTaskValues) {
@@ -8206,9 +8364,11 @@ func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringCreateOr
 func (newState *ResolvedPythonWheelTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedPythonWheelTaskValues) {
 }
 
-func (c ResolvedPythonWheelTaskValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedPythonWheelTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["named_parameters"] = attrs["named_parameters"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedPythonWheelTaskValues.
@@ -8304,9 +8464,9 @@ func (o *ResolvedPythonWheelTaskValues) SetParameters(ctx context.Context, v []t
 }
 
 type ResolvedRunJobTaskValues struct {
-	JobParameters types.Map `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.Map `tfsdk:"job_parameters"`
 
-	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters"`
 }
 
 func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedRunJobTaskValues) {
@@ -8315,9 +8475,11 @@ func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ResolvedRunJobTaskValues) SyncEffectiveFieldsDuringRead(existingState ResolvedRunJobTaskValues) {
 }
 
-func (c ResolvedRunJobTaskValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedRunJobTaskValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedRunJobTaskValues.
@@ -8413,7 +8575,7 @@ func (o *ResolvedRunJobTaskValues) SetParameters(ctx context.Context, v map[stri
 }
 
 type ResolvedStringParamsValues struct {
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedStringParamsValues) {
@@ -8422,9 +8584,10 @@ func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ResolvedStringParamsValues) SyncEffectiveFieldsDuringRead(existingState ResolvedStringParamsValues) {
 }
 
-func (c ResolvedStringParamsValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ResolvedStringParamsValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedStringParamsValues.
@@ -8489,25 +8652,25 @@ func (o *ResolvedStringParamsValues) SetParameters(ctx context.Context, v []type
 }
 
 type ResolvedValues struct {
-	ConditionTask types.Object `tfsdk:"condition_task" tf:"optional,object"`
+	ConditionTask types.Object `tfsdk:"condition_task"`
 
-	DbtTask types.Object `tfsdk:"dbt_task" tf:"optional,object"`
+	DbtTask types.Object `tfsdk:"dbt_task"`
 
-	NotebookTask types.Object `tfsdk:"notebook_task" tf:"optional,object"`
+	NotebookTask types.Object `tfsdk:"notebook_task"`
 
-	PythonWheelTask types.Object `tfsdk:"python_wheel_task" tf:"optional,object"`
+	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
 
-	RunJobTask types.Object `tfsdk:"run_job_task" tf:"optional,object"`
+	RunJobTask types.Object `tfsdk:"run_job_task"`
 
-	SimulationTask types.Object `tfsdk:"simulation_task" tf:"optional,object"`
+	SimulationTask types.Object `tfsdk:"simulation_task"`
 
-	SparkJarTask types.Object `tfsdk:"spark_jar_task" tf:"optional,object"`
+	SparkJarTask types.Object `tfsdk:"spark_jar_task"`
 
-	SparkPythonTask types.Object `tfsdk:"spark_python_task" tf:"optional,object"`
+	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
 
-	SparkSubmitTask types.Object `tfsdk:"spark_submit_task" tf:"optional,object"`
+	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 
-	SqlTask types.Object `tfsdk:"sql_task" tf:"optional,object"`
+	SqlTask types.Object `tfsdk:"sql_task"`
 }
 
 func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResolvedValues) {
@@ -8516,19 +8679,19 @@ func (newState *ResolvedValues) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResolvedValues) SyncEffectiveFieldsDuringRead(existingState ResolvedValues) {
 }
 
-func (c ResolvedValues) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ResolvedConditionTaskValues{}.ApplySchemaCustomizations(cs, append(path, "condition_task")...)
-	ResolvedDbtTaskValues{}.ApplySchemaCustomizations(cs, append(path, "dbt_task")...)
-	ResolvedNotebookTaskValues{}.ApplySchemaCustomizations(cs, append(path, "notebook_task")...)
-	ResolvedPythonWheelTaskValues{}.ApplySchemaCustomizations(cs, append(path, "python_wheel_task")...)
-	ResolvedRunJobTaskValues{}.ApplySchemaCustomizations(cs, append(path, "run_job_task")...)
-	ResolvedParamPairValues{}.ApplySchemaCustomizations(cs, append(path, "simulation_task")...)
-	ResolvedStringParamsValues{}.ApplySchemaCustomizations(cs, append(path, "spark_jar_task")...)
-	ResolvedStringParamsValues{}.ApplySchemaCustomizations(cs, append(path, "spark_python_task")...)
-	ResolvedStringParamsValues{}.ApplySchemaCustomizations(cs, append(path, "spark_submit_task")...)
-	ResolvedParamPairValues{}.ApplySchemaCustomizations(cs, append(path, "sql_task")...)
+func (c ResolvedValues) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
+	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
+	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
+	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
+	attrs["simulation_task"] = attrs["simulation_task"].SetOptional()
+	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
+	attrs["spark_python_task"] = attrs["spark_python_task"].SetOptional()
+	attrs["spark_submit_task"] = attrs["spark_submit_task"].SetOptional()
+	attrs["sql_task"] = attrs["sql_task"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResolvedValues.
@@ -8880,28 +9043,28 @@ type Run struct {
 	// original attempt’s ID and an incrementing `attempt_number`. Runs are
 	// retried only until they succeed, and the maximum `attempt_number` is the
 	// same as the `max_retries` value for the job.
-	AttemptNumber types.Int64 `tfsdk:"attempt_number" tf:"optional"`
+	AttemptNumber types.Int64 `tfsdk:"attempt_number"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
 	// `setup_duration`, `execution_duration`, and the `cleanup_duration`. The
 	// `cleanup_duration` field is set to 0 for multitask job runs. The total
 	// duration of a multitask job run is the value of the `run_duration` field.
-	CleanupDuration types.Int64 `tfsdk:"cleanup_duration" tf:"optional"`
+	CleanupDuration types.Int64 `tfsdk:"cleanup_duration"`
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance types.Object `tfsdk:"cluster_instance" tf:"optional,object"`
+	ClusterInstance types.Object `tfsdk:"cluster_instance"`
 	// A snapshot of the job’s cluster specification when this run was
 	// created.
-	ClusterSpec types.Object `tfsdk:"cluster_spec" tf:"optional,object"`
+	ClusterSpec types.Object `tfsdk:"cluster_spec"`
 	// The creator user name. This field won’t be included in the response if
 	// the user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -8909,7 +9072,7 @@ type Run struct {
 	// The `execution_duration` field is set to 0 for multitask job runs. The
 	// total duration of a multitask job run is the value of the `run_duration`
 	// field.
-	ExecutionDuration types.Int64 `tfsdk:"execution_duration" tf:"optional"`
+	ExecutionDuration types.Int64 `tfsdk:"execution_duration"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -8920,58 +9083,58 @@ type Run struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// Only populated by for-each iterations. The parent for-each task is
 	// located in tasks array.
-	Iterations types.List `tfsdk:"iterations" tf:"optional"`
+	Iterations types.List `tfsdk:"iterations"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
 	// You must declare dependent libraries in task settings.
-	JobClusters types.List `tfsdk:"job_clusters" tf:"optional"`
+	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
-	JobId types.Int64 `tfsdk:"job_id" tf:"optional"`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run
-	JobParameters types.List `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.List `tfsdk:"job_parameters"`
 	// ID of the job run that this run belongs to. For legacy and single-task
 	// job runs the field is populated with the job run ID. For task runs, the
 	// field is populated with the ID of the job run that the task run belongs
 	// to.
-	JobRunId types.Int64 `tfsdk:"job_run_id" tf:"optional"`
+	JobRunId types.Int64 `tfsdk:"job_run_id"`
 	// A token that can be used to list the next page of sub-resources.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
-	NumberInJob types.Int64 `tfsdk:"number_in_job" tf:"optional"`
+	NumberInJob types.Int64 `tfsdk:"number_in_job"`
 	// If this run is a retry of a prior run attempt, this field contains the
 	// run_id of the original attempt; otherwise, it is the same as the run_id.
-	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id" tf:"optional"`
+	OriginalAttemptRunId types.Int64 `tfsdk:"original_attempt_run_id"`
 	// The parameters used for this run.
-	OverridingParameters types.Object `tfsdk:"overriding_parameters" tf:"optional,object"`
+	OverridingParameters types.Object `tfsdk:"overriding_parameters"`
 	// The time in milliseconds that the run has spent in the queue.
-	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
+	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// The repair history of the run.
-	RepairHistory types.List `tfsdk:"repair_history" tf:"optional"`
+	RepairHistory types.List `tfsdk:"repair_history"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
-	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
+	RunDuration types.Int64 `tfsdk:"run_duration"`
 	// The canonical identifier of the run. This ID is unique across all runs of
 	// all jobs.
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 	// An optional name for the run. The maximum length is 4096 bytes in UTF-8
 	// encoding.
-	RunName types.String `tfsdk:"run_name" tf:"optional"`
+	RunName types.String `tfsdk:"run_name"`
 	// The URL to the detail page of the run.
-	RunPageUrl types.String `tfsdk:"run_page_url" tf:"optional"`
+	RunPageUrl types.String `tfsdk:"run_page_url"`
 	// The type of a run. * `JOB_RUN`: Normal job run. A run created with
 	// :method:jobs/runNow. * `WORKFLOW_RUN`: Workflow run. A run created with
 	// [dbutils.notebook.run]. * `SUBMIT_RUN`: Submit run. A run created with
 	// :method:jobs/submit.
 	//
 	// [dbutils.notebook.run]: https://docs.databricks.com/dev-tools/databricks-utils.html#dbutils-workflow
-	RunType types.String `tfsdk:"run_type" tf:"optional"`
+	RunType types.String `tfsdk:"run_type"`
 	// The cron schedule that triggered this run if it was triggered by the
 	// periodic scheduler.
-	Schedule types.Object `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -8979,19 +9142,19 @@ type Run struct {
 	// `cleanup_duration`. The `setup_duration` field is set to 0 for multitask
 	// job runs. The total duration of a multitask job run is the value of the
 	// `run_duration` field.
-	SetupDuration types.Int64 `tfsdk:"setup_duration" tf:"optional"`
+	SetupDuration types.Int64 `tfsdk:"setup_duration"`
 	// The time at which this run was started in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC). This may not be the time when the job
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
-	State types.Object `tfsdk:"state" tf:"optional,object"`
+	State types.Object `tfsdk:"state"`
 	// The current status of the run
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
 	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
-	Tasks types.List `tfsdk:"tasks" tf:"optional"`
+	Tasks types.List `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
 	// * `PERIODIC`: Schedules that periodically trigger runs, such as a cron
@@ -9004,9 +9167,9 @@ type Run struct {
 	// arrival. * `TABLE`: Indicates a run that is triggered by a table update.
 	// * `CONTINUOUS_RESTART`: Indicates a run created by user to manually
 	// restart a continuous job run.
-	Trigger types.String `tfsdk:"trigger" tf:"optional"`
+	Trigger types.String `tfsdk:"trigger"`
 	// Additional details about what triggered the run
-	TriggerInfo types.Object `tfsdk:"trigger_info" tf:"optional,object"`
+	TriggerInfo types.Object `tfsdk:"trigger_info"`
 }
 
 func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
@@ -9015,22 +9178,42 @@ func (newState *Run) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run) {
 func (newState *Run) SyncEffectiveFieldsDuringRead(existingState Run) {
 }
 
-func (c Run) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ClusterInstance{}.ApplySchemaCustomizations(cs, append(path, "cluster_instance")...)
-	ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "cluster_spec")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	RunTask{}.ApplySchemaCustomizations(cs, append(path, "iterations")...)
-	JobCluster{}.ApplySchemaCustomizations(cs, append(path, "job_clusters")...)
-	JobParameter{}.ApplySchemaCustomizations(cs, append(path, "job_parameters")...)
-	RunParameters{}.ApplySchemaCustomizations(cs, append(path, "overriding_parameters")...)
-	RepairHistoryItem{}.ApplySchemaCustomizations(cs, append(path, "repair_history")...)
-	CronSchedule{}.ApplySchemaCustomizations(cs, append(path, "schedule")...)
-	RunState{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	RunStatus{}.ApplySchemaCustomizations(cs, append(path, "status")...)
-	RunTask{}.ApplySchemaCustomizations(cs, append(path, "tasks")...)
-	TriggerInfo{}.ApplySchemaCustomizations(cs, append(path, "trigger_info")...)
+func (c Run) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
+	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
+	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
+	attrs["cluster_spec"] = attrs["cluster_spec"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["iterations"] = attrs["iterations"].SetOptional()
+	attrs["job_clusters"] = attrs["job_clusters"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["job_run_id"] = attrs["job_run_id"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["number_in_job"] = attrs["number_in_job"].SetOptional()
+	attrs["original_attempt_run_id"] = attrs["original_attempt_run_id"].SetOptional()
+	attrs["overriding_parameters"] = attrs["overriding_parameters"].SetOptional()
+	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
+	attrs["repair_history"] = attrs["repair_history"].SetOptional()
+	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
+	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["setup_duration"] = attrs["setup_duration"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["tasks"] = attrs["tasks"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Run.
@@ -9509,7 +9692,7 @@ func (o *Run) SetTriggerInfo(ctx context.Context, v TriggerInfo) {
 type RunConditionTask struct {
 	// The left operand of the condition task. Can be either a string value or a
 	// job state or parameter reference.
-	Left types.String `tfsdk:"left" tf:""`
+	Left types.String `tfsdk:"left"`
 	// * `EQUAL_TO`, `NOT_EQUAL` operators perform string comparison of their
 	// operands. This means that `“12.0” == “12”` will evaluate to
 	// `false`. * `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`,
@@ -9520,13 +9703,13 @@ type RunConditionTask struct {
 	// The boolean comparison to task values can be implemented with operators
 	// `EQUAL_TO`, `NOT_EQUAL`. If a task value was set to a boolean value, it
 	// will be serialized to `“true”` or `“false”` for the comparison.
-	Op types.String `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op"`
 	// The condition expression evaluation result. Filled in if the task was
 	// successfully completed. Can be `"true"` or `"false"`
-	Outcome types.String `tfsdk:"outcome" tf:"optional"`
+	Outcome types.String `tfsdk:"outcome"`
 	// The right operand of the condition task. Can be either a string value or
 	// a job state or parameter reference.
-	Right types.String `tfsdk:"right" tf:""`
+	Right types.String `tfsdk:"right"`
 }
 
 func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunConditionTask) {
@@ -9535,12 +9718,13 @@ func (newState *RunConditionTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan R
 func (newState *RunConditionTask) SyncEffectiveFieldsDuringRead(existingState RunConditionTask) {
 }
 
-func (c RunConditionTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "left")...)
-	cs.SetRequired(append(path, "op")...)
-	cs.SetRequired(append(path, "right")...)
+func (c RunConditionTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["left"] = attrs["left"].SetRequired()
+	attrs["op"] = attrs["op"].SetRequired()
+	attrs["outcome"] = attrs["outcome"].SetOptional()
+	attrs["right"] = attrs["right"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunConditionTask.
@@ -9584,15 +9768,15 @@ type RunForEachTask struct {
 	// An optional maximum allowed number of concurrent runs of the task. Set
 	// this value if you want to be able to execute multiple runs of the task
 	// concurrently.
-	Concurrency types.Int64 `tfsdk:"concurrency" tf:"optional"`
+	Concurrency types.Int64 `tfsdk:"concurrency"`
 	// Array for task to iterate on. This can be a JSON string or a reference to
 	// an array parameter.
-	Inputs types.String `tfsdk:"inputs" tf:""`
+	Inputs types.String `tfsdk:"inputs"`
 	// Read only field. Populated for GetRun and ListRuns RPC calls and stores
 	// the execution stats of an For each task
-	Stats types.Object `tfsdk:"stats" tf:"optional,object"`
+	Stats types.Object `tfsdk:"stats"`
 	// Configuration for the task that will be run for each element in the array
-	Task types.Object `tfsdk:"task" tf:"object"`
+	Task types.Object `tfsdk:"task"`
 }
 
 func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunForEachTask) {
@@ -9601,13 +9785,13 @@ func (newState *RunForEachTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunForEachTask) SyncEffectiveFieldsDuringRead(existingState RunForEachTask) {
 }
 
-func (c RunForEachTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "inputs")...)
-	ForEachStats{}.ApplySchemaCustomizations(cs, append(path, "stats")...)
-	cs.SetRequired(append(path, "task")...)
-	Task{}.ApplySchemaCustomizations(cs, append(path, "task")...)
+func (c RunForEachTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["concurrency"] = attrs["concurrency"].SetOptional()
+	attrs["inputs"] = attrs["inputs"].SetRequired()
+	attrs["stats"] = attrs["stats"].SetOptional()
+	attrs["task"] = attrs["task"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunForEachTask.
@@ -9708,7 +9892,7 @@ func (o *RunForEachTask) SetTask(ctx context.Context, v Task) {
 
 type RunJobOutput struct {
 	// The run id of the triggered job run
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobOutput) {
@@ -9717,9 +9901,10 @@ func (newState *RunJobOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJo
 func (newState *RunJobOutput) SyncEffectiveFieldsDuringRead(existingState RunJobOutput) {
 }
 
-func (c RunJobOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RunJobOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunJobOutput.
@@ -9757,7 +9942,7 @@ type RunJobTask struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands" tf:"optional"`
+	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -9770,11 +9955,11 @@ type RunJobTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	JarParams types.List `tfsdk:"jar_params" tf:"optional"`
+	JarParams types.List `tfsdk:"jar_params"`
 	// ID of the job to trigger.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used to trigger the job.
-	JobParameters types.Map `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.Map `tfsdk:"job_parameters"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -9794,11 +9979,11 @@ type RunJobTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params" tf:"optional"`
+	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams types.Object `tfsdk:"pipeline_params" tf:"optional,object"`
+	PipelineParams types.Object `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params" tf:"optional"`
+	PythonNamedParams types.Map `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -9816,7 +10001,7 @@ type RunJobTask struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params" tf:"optional"`
+	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -9835,11 +10020,11 @@ type RunJobTask struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params" tf:"optional"`
+	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params" tf:"optional"`
+	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
 func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobTask) {
@@ -9848,11 +10033,19 @@ func (newState *RunJobTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunJobT
 func (newState *RunJobTask) SyncEffectiveFieldsDuringRead(existingState RunJobTask) {
 }
 
-func (c RunJobTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
-	PipelineParams{}.ApplySchemaCustomizations(cs, append(path, "pipeline_params")...)
+func (c RunJobTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunJobTask.
@@ -10170,7 +10363,7 @@ type RunNow struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands" tf:"optional"`
+	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// An optional token to guarantee the idempotency of job run requests. If a
 	// run with the provided token already exists, the request does not create a
 	// new run but returns the ID of the existing run instead. If a run with the
@@ -10185,7 +10378,7 @@ type RunNow struct {
 	// For more information, see [How to ensure idempotency for jobs].
 	//
 	// [How to ensure idempotency for jobs]: https://kb.databricks.com/jobs/jobs-idempotency.html
-	IdempotencyToken types.String `tfsdk:"idempotency_token" tf:"optional"`
+	IdempotencyToken types.String `tfsdk:"idempotency_token"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -10198,12 +10391,12 @@ type RunNow struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	JarParams types.List `tfsdk:"jar_params" tf:"optional"`
+	JarParams types.List `tfsdk:"jar_params"`
 	// The ID of the job to be executed
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// Job-level parameters used in the run. for example `"param":
 	// "overriding_val"`
-	JobParameters types.Map `tfsdk:"job_parameters" tf:"optional"`
+	JobParameters types.Map `tfsdk:"job_parameters"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -10223,14 +10416,14 @@ type RunNow struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params" tf:"optional"`
+	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
-	Only types.List `tfsdk:"only" tf:"optional"`
+	Only types.List `tfsdk:"only"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams types.Object `tfsdk:"pipeline_params" tf:"optional,object"`
+	PipelineParams types.Object `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params" tf:"optional"`
+	PythonNamedParams types.Map `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -10248,9 +10441,9 @@ type RunNow struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params" tf:"optional"`
+	PythonParams types.List `tfsdk:"python_params"`
 	// The queue settings of the run.
-	Queue types.Object `tfsdk:"queue" tf:"optional,object"`
+	Queue types.Object `tfsdk:"queue"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -10269,11 +10462,11 @@ type RunNow struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params" tf:"optional"`
+	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params" tf:"optional"`
+	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
 func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
@@ -10282,12 +10475,22 @@ func (newState *RunNow) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNow) {
 func (newState *RunNow) SyncEffectiveFieldsDuringRead(existingState RunNow) {
 }
 
-func (c RunNow) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
-	PipelineParams{}.ApplySchemaCustomizations(cs, append(path, "pipeline_params")...)
-	QueueSettings{}.ApplySchemaCustomizations(cs, append(path, "queue")...)
+func (c RunNow) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["only"] = attrs["only"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNow.
@@ -10669,9 +10872,9 @@ func (o *RunNow) SetSqlParams(ctx context.Context, v map[string]types.String) {
 type RunNowResponse struct {
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
-	NumberInJob types.Int64 `tfsdk:"number_in_job" tf:"optional"`
+	NumberInJob types.Int64 `tfsdk:"number_in_job"`
 	// The globally unique ID of the newly triggered run.
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunNowResponse) {
@@ -10680,9 +10883,11 @@ func (newState *RunNowResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Run
 func (newState *RunNowResponse) SyncEffectiveFieldsDuringRead(existingState RunNowResponse) {
 }
 
-func (c RunNowResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RunNowResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["number_in_job"] = attrs["number_in_job"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunNowResponse.
@@ -10721,16 +10926,16 @@ func (o RunNowResponse) Type(ctx context.Context) attr.Type {
 // Run output was retrieved successfully.
 type RunOutput struct {
 	// The output of a dbt task, if available.
-	DbtOutput types.Object `tfsdk:"dbt_output" tf:"optional,object"`
+	DbtOutput types.Object `tfsdk:"dbt_output"`
 	// An error message indicating why a task failed or why output is not
 	// available. The message is unstructured, and its exact format is subject
 	// to change.
-	Error types.String `tfsdk:"error" tf:"optional"`
+	Error types.String `tfsdk:"error"`
 	// If there was an error executing the run, this field contains any
 	// available stack traces.
-	ErrorTrace types.String `tfsdk:"error_trace" tf:"optional"`
+	ErrorTrace types.String `tfsdk:"error_trace"`
 
-	Info types.String `tfsdk:"info" tf:"optional"`
+	Info types.String `tfsdk:"info"`
 	// The output from tasks that write to standard streams (stdout/stderr) such
 	// as spark_jar_task, spark_python_task, python_wheel_task.
 	//
@@ -10738,11 +10943,11 @@ type RunOutput struct {
 	// spark_submit_task.
 	//
 	// Databricks restricts this API to return the last 5 MB of these logs.
-	Logs types.String `tfsdk:"logs" tf:"optional"`
+	Logs types.String `tfsdk:"logs"`
 	// Whether the logs are truncated.
-	LogsTruncated types.Bool `tfsdk:"logs_truncated" tf:"optional"`
+	LogsTruncated types.Bool `tfsdk:"logs_truncated"`
 	// All details of the run except for its output.
-	Metadata types.Object `tfsdk:"metadata" tf:"optional,object"`
+	Metadata types.Object `tfsdk:"metadata"`
 	// The output of a notebook task, if available. A notebook task that
 	// terminates (either successfully or with a failure) without calling
 	// `dbutils.notebook.exit()` is considered to have an empty output. This
@@ -10751,11 +10956,11 @@ type RunOutput struct {
 	// the [ClusterLogConf] field to configure log storage for the job cluster.
 	//
 	// [ClusterLogConf]: https://docs.databricks.com/dev-tools/api/latest/clusters.html#clusterlogconf
-	NotebookOutput types.Object `tfsdk:"notebook_output" tf:"optional,object"`
+	NotebookOutput types.Object `tfsdk:"notebook_output"`
 	// The output of a run job task, if available
-	RunJobOutput types.Object `tfsdk:"run_job_output" tf:"optional,object"`
+	RunJobOutput types.Object `tfsdk:"run_job_output"`
 	// The output of a SQL task, if available.
-	SqlOutput types.Object `tfsdk:"sql_output" tf:"optional,object"`
+	SqlOutput types.Object `tfsdk:"sql_output"`
 }
 
 func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutput) {
@@ -10764,14 +10969,19 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunOutpu
 func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput) {
 }
 
-func (c RunOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DbtOutput{}.ApplySchemaCustomizations(cs, append(path, "dbt_output")...)
-	Run{}.ApplySchemaCustomizations(cs, append(path, "metadata")...)
-	NotebookOutput{}.ApplySchemaCustomizations(cs, append(path, "notebook_output")...)
-	RunJobOutput{}.ApplySchemaCustomizations(cs, append(path, "run_job_output")...)
-	SqlOutput{}.ApplySchemaCustomizations(cs, append(path, "sql_output")...)
+func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_output"] = attrs["dbt_output"].SetOptional()
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["error_trace"] = attrs["error_trace"].SetOptional()
+	attrs["info"] = attrs["info"].SetOptional()
+	attrs["logs"] = attrs["logs"].SetOptional()
+	attrs["logs_truncated"] = attrs["logs_truncated"].SetOptional()
+	attrs["metadata"] = attrs["metadata"].SetOptional()
+	attrs["notebook_output"] = attrs["notebook_output"].SetOptional()
+	attrs["run_job_output"] = attrs["run_job_output"].SetOptional()
+	attrs["sql_output"] = attrs["sql_output"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunOutput.
@@ -10973,7 +11183,7 @@ type RunParameters struct {
 	// An array of commands to execute for jobs with the dbt task, for example
 	// `"dbt_commands": ["dbt deps", "dbt seed", "dbt deps", "dbt seed", "dbt
 	// run"]`
-	DbtCommands types.List `tfsdk:"dbt_commands" tf:"optional"`
+	DbtCommands types.List `tfsdk:"dbt_commands"`
 	// A list of parameters for jobs with Spark JAR tasks, for example
 	// `"jar_params": ["john doe", "35"]`. The parameters are used to invoke the
 	// main function of the main class specified in the Spark JAR task. If not
@@ -10986,7 +11196,7 @@ type RunParameters struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	JarParams types.List `tfsdk:"jar_params" tf:"optional"`
+	JarParams types.List `tfsdk:"jar_params"`
 	// A map from keys to values for jobs with notebook task, for example
 	// `"notebook_params": {"name": "john doe", "age": "35"}`. The map is passed
 	// to the notebook and is accessible through the [dbutils.widgets.get]
@@ -11006,11 +11216,11 @@ type RunParameters struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
-	NotebookParams types.Map `tfsdk:"notebook_params" tf:"optional"`
+	NotebookParams types.Map `tfsdk:"notebook_params"`
 	// Controls whether the pipeline should perform a full refresh
-	PipelineParams types.Object `tfsdk:"pipeline_params" tf:"optional,object"`
+	PipelineParams types.Object `tfsdk:"pipeline_params"`
 
-	PythonNamedParams types.Map `tfsdk:"python_named_params" tf:"optional"`
+	PythonNamedParams types.Map `tfsdk:"python_named_params"`
 	// A list of parameters for jobs with Python tasks, for example
 	// `"python_params": ["john doe", "35"]`. The parameters are passed to
 	// Python file as command-line parameters. If specified upon `run-now`, it
@@ -11028,7 +11238,7 @@ type RunParameters struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	PythonParams types.List `tfsdk:"python_params" tf:"optional"`
+	PythonParams types.List `tfsdk:"python_params"`
 	// A list of parameters for jobs with spark submit task, for example
 	// `"spark_submit_params": ["--class",
 	// "org.apache.spark.examples.SparkPi"]`. The parameters are passed to
@@ -11047,11 +11257,11 @@ type RunParameters struct {
 	// non-ASCII characters are Chinese, Japanese kanjis, and emojis.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	SparkSubmitParams types.List `tfsdk:"spark_submit_params" tf:"optional"`
+	SparkSubmitParams types.List `tfsdk:"spark_submit_params"`
 	// A map from keys to values for jobs with SQL task, for example
 	// `"sql_params": {"name": "john doe", "age": "35"}`. The SQL alert task
 	// does not support custom parameters.
-	SqlParams types.Map `tfsdk:"sql_params" tf:"optional"`
+	SqlParams types.Map `tfsdk:"sql_params"`
 }
 
 func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunParameters) {
@@ -11060,10 +11270,17 @@ func (newState *RunParameters) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunP
 func (newState *RunParameters) SyncEffectiveFieldsDuringRead(existingState RunParameters) {
 }
 
-func (c RunParameters) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PipelineParams{}.ApplySchemaCustomizations(cs, append(path, "pipeline_params")...)
+func (c RunParameters) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbt_commands"] = attrs["dbt_commands"].SetOptional()
+	attrs["jar_params"] = attrs["jar_params"].SetOptional()
+	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
+	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
+	attrs["python_params"] = attrs["python_params"].SetOptional()
+	attrs["spark_submit_params"] = attrs["spark_submit_params"].SetOptional()
+	attrs["sql_params"] = attrs["sql_params"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunParameters.
@@ -11348,18 +11565,18 @@ func (o *RunParameters) SetSqlParams(ctx context.Context, v map[string]types.Str
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
 	// always available in the response.
-	LifeCycleState types.String `tfsdk:"life_cycle_state" tf:"optional"`
+	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// The reason indicating why the run was queued.
-	QueueReason types.String `tfsdk:"queue_reason" tf:"optional"`
+	QueueReason types.String `tfsdk:"queue_reason"`
 	// A value indicating the run's result. This field is only available for
 	// terminal lifecycle states.
-	ResultState types.String `tfsdk:"result_state" tf:"optional"`
+	ResultState types.String `tfsdk:"result_state"`
 	// A descriptive message for the current state. This field is unstructured,
 	// and its exact format is subject to change.
-	StateMessage types.String `tfsdk:"state_message" tf:"optional"`
+	StateMessage types.String `tfsdk:"state_message"`
 	// A value indicating whether a run was canceled manually by a user or by
 	// the scheduler because the run timed out.
-	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout" tf:"optional"`
+	UserCancelledOrTimedout types.Bool `tfsdk:"user_cancelled_or_timedout"`
 }
 
 func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState) {
@@ -11368,9 +11585,14 @@ func (newState *RunState) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunState)
 func (newState *RunState) SyncEffectiveFieldsDuringRead(existingState RunState) {
 }
 
-func (c RunState) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RunState) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
+	attrs["queue_reason"] = attrs["queue_reason"].SetOptional()
+	attrs["result_state"] = attrs["result_state"].SetOptional()
+	attrs["state_message"] = attrs["state_message"].SetOptional()
+	attrs["user_cancelled_or_timedout"] = attrs["user_cancelled_or_timedout"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunState.
@@ -11415,12 +11637,12 @@ func (o RunState) Type(ctx context.Context) attr.Type {
 // The current status of the run
 type RunStatus struct {
 	// If the run was queued, details about the reason for queuing the run.
-	QueueDetails types.Object `tfsdk:"queue_details" tf:"optional,object"`
+	QueueDetails types.Object `tfsdk:"queue_details"`
 	// The current state of the run.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// If the run is in a TERMINATING or TERMINATED state, details about the
 	// reason for terminating the run.
-	TerminationDetails types.Object `tfsdk:"termination_details" tf:"optional,object"`
+	TerminationDetails types.Object `tfsdk:"termination_details"`
 }
 
 func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatus) {
@@ -11429,11 +11651,12 @@ func (newState *RunStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunStatu
 func (newState *RunStatus) SyncEffectiveFieldsDuringRead(existingState RunStatus) {
 }
 
-func (c RunStatus) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueueDetails{}.ApplySchemaCustomizations(cs, append(path, "queue_details")...)
-	TerminationDetails{}.ApplySchemaCustomizations(cs, append(path, "termination_details")...)
+func (c RunStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["queue_details"] = attrs["queue_details"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["termination_details"] = attrs["termination_details"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunStatus.
@@ -11539,48 +11762,48 @@ type RunTask struct {
 	// original attempt’s ID and an incrementing `attempt_number`. Runs are
 	// retried only until they succeed, and the maximum `attempt_number` is the
 	// same as the `max_retries` value for the job.
-	AttemptNumber types.Int64 `tfsdk:"attempt_number" tf:"optional"`
+	AttemptNumber types.Int64 `tfsdk:"attempt_number"`
 	// The task runs a [clean rooms] notebook when the
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The time in milliseconds it took to terminate the cluster and clean up
 	// any associated artifacts. The duration of a task run is the sum of the
 	// `setup_duration`, `execution_duration`, and the `cleanup_duration`. The
 	// `cleanup_duration` field is set to 0 for multitask job runs. The total
 	// duration of a multitask job run is the value of the `run_duration` field.
-	CleanupDuration types.Int64 `tfsdk:"cleanup_duration" tf:"optional"`
+	CleanupDuration types.Int64 `tfsdk:"cleanup_duration"`
 	// The cluster used for this run. If the run is specified to use a new
 	// cluster, this field is set once the Jobs service has requested a cluster
 	// for the run.
-	ClusterInstance types.Object `tfsdk:"cluster_instance" tf:"optional,object"`
+	ClusterInstance types.Object `tfsdk:"cluster_instance"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
-	ConditionTask types.Object `tfsdk:"condition_task" tf:"optional,object"`
+	ConditionTask types.Object `tfsdk:"condition_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
-	DbtTask types.Object `tfsdk:"dbt_task" tf:"optional,object"`
+	DbtTask types.Object `tfsdk:"dbt_task"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
 	// assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on" tf:"optional"`
+	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
-	EnvironmentKey types.String `tfsdk:"environment_key" tf:"optional"`
+	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// The time in milliseconds it took to execute the commands in the JAR or
 	// notebook until they completed, failed, timed out, were cancelled, or
 	// encountered an unexpected error. The duration of a task run is the sum of
@@ -11588,15 +11811,15 @@ type RunTask struct {
 	// The `execution_duration` field is set to 0 for multitask job runs. The
 	// total duration of a multitask job run is the value of the `run_duration`
 	// field.
-	ExecutionDuration types.Int64 `tfsdk:"execution_duration" tf:"optional"`
+	ExecutionDuration types.Int64 `tfsdk:"execution_duration"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
-	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
+	ExistingClusterId types.String `tfsdk:"existing_cluster_id"`
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
-	ForEachTask types.Object `tfsdk:"for_each_task" tf:"optional,object"`
+	ForEachTask types.Object `tfsdk:"for_each_task"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks. If `git_source` is set,
@@ -11605,46 +11828,46 @@ type RunTask struct {
 	// `WORKSPACE` on the task. Note: dbt and SQL File tasks support only
 	// version-controlled sources. If dbt or SQL File tasks are used,
 	// `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
-	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
+	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"library" tf:"optional"`
+	Libraries types.List `tfsdk:"library"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster types.Object `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.Object `tfsdk:"new_cluster"`
 	// The task runs a notebook when the `notebook_task` field is present.
-	NotebookTask types.Object `tfsdk:"notebook_task" tf:"optional,object"`
+	NotebookTask types.Object `tfsdk:"notebook_task"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
-	PipelineTask types.Object `tfsdk:"pipeline_task" tf:"optional,object"`
+	PipelineTask types.Object `tfsdk:"pipeline_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
-	PythonWheelTask types.Object `tfsdk:"python_wheel_task" tf:"optional,object"`
+	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
 	// The time in milliseconds that the run has spent in the queue.
-	QueueDuration types.Int64 `tfsdk:"queue_duration" tf:"optional"`
+	QueueDuration types.Int64 `tfsdk:"queue_duration"`
 	// Parameter values including resolved references
-	ResolvedValues types.Object `tfsdk:"resolved_values" tf:"optional,object"`
+	ResolvedValues types.Object `tfsdk:"resolved_values"`
 	// The time in milliseconds it took the job run and all of its repairs to
 	// finish.
-	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
+	RunDuration types.Int64 `tfsdk:"run_duration"`
 	// The ID of the task run.
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 	// An optional value indicating the condition that determines whether the
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
-	RunIf types.String `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if"`
 	// The task triggers another job when the `run_job_task` field is present.
-	RunJobTask types.Object `tfsdk:"run_job_task" tf:"optional,object"`
+	RunJobTask types.Object `tfsdk:"run_job_task"`
 
-	RunPageUrl types.String `tfsdk:"run_page_url" tf:"optional"`
+	RunPageUrl types.String `tfsdk:"run_page_url"`
 	// The time in milliseconds it took to set up the cluster. For runs that run
 	// on new clusters this is the cluster creation time, for runs that run on
 	// existing clusters this time should be very short. The duration of a task
@@ -11652,12 +11875,12 @@ type RunTask struct {
 	// `cleanup_duration`. The `setup_duration` field is set to 0 for multitask
 	// job runs. The total duration of a multitask job run is the value of the
 	// `run_duration` field.
-	SetupDuration types.Int64 `tfsdk:"setup_duration" tf:"optional"`
+	SetupDuration types.Int64 `tfsdk:"setup_duration"`
 	// The task runs a JAR when the `spark_jar_task` field is present.
-	SparkJarTask types.Object `tfsdk:"spark_jar_task" tf:"optional,object"`
+	SparkJarTask types.Object `tfsdk:"spark_jar_task"`
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
-	SparkPythonTask types.Object `tfsdk:"spark_python_task" tf:"optional,object"`
+	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
 	// (Legacy) The task runs the spark-submit script when the
 	// `spark_submit_task` field is present. This task can run only on new
 	// clusters and is not compatible with serverless compute.
@@ -11676,31 +11899,31 @@ type RunTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask types.Object `tfsdk:"spark_submit_task" tf:"optional,object"`
+	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
-	SqlTask types.Object `tfsdk:"sql_task" tf:"optional,object"`
+	SqlTask types.Object `tfsdk:"sql_task"`
 	// The time at which this run was started in epoch milliseconds
 	// (milliseconds since 1/1/1970 UTC). This may not be the time when the job
 	// task starts executing, for example, if the job is scheduled to run on a
 	// new cluster, this is the time the cluster creation call is issued.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Deprecated. Please use the `status` field instead.
-	State types.Object `tfsdk:"state" tf:"optional,object"`
+	State types.Object `tfsdk:"state"`
 	// The current status of the run
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
 	// updated or reset.
-	TaskKey types.String `tfsdk:"task_key" tf:""`
+	TaskKey types.String `tfsdk:"task_key"`
 	// An optional timeout applied to each run of this job task. A value of `0`
 	// means no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
@@ -11709,32 +11932,49 @@ func (newState *RunTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunTask) {
 func (newState *RunTask) SyncEffectiveFieldsDuringRead(existingState RunTask) {
 }
 
-func (c RunTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CleanRoomsNotebookTask{}.ApplySchemaCustomizations(cs, append(path, "clean_rooms_notebook_task")...)
-	ClusterInstance{}.ApplySchemaCustomizations(cs, append(path, "cluster_instance")...)
-	RunConditionTask{}.ApplySchemaCustomizations(cs, append(path, "condition_task")...)
-	DbtTask{}.ApplySchemaCustomizations(cs, append(path, "dbt_task")...)
-	TaskDependency{}.ApplySchemaCustomizations(cs, append(path, "depends_on")...)
-	JobEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	RunForEachTask{}.ApplySchemaCustomizations(cs, append(path, "for_each_task")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	compute_tf.ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "new_cluster")...)
-	NotebookTask{}.ApplySchemaCustomizations(cs, append(path, "notebook_task")...)
-	TaskNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	PipelineTask{}.ApplySchemaCustomizations(cs, append(path, "pipeline_task")...)
-	PythonWheelTask{}.ApplySchemaCustomizations(cs, append(path, "python_wheel_task")...)
-	ResolvedValues{}.ApplySchemaCustomizations(cs, append(path, "resolved_values")...)
-	RunJobTask{}.ApplySchemaCustomizations(cs, append(path, "run_job_task")...)
-	SparkJarTask{}.ApplySchemaCustomizations(cs, append(path, "spark_jar_task")...)
-	SparkPythonTask{}.ApplySchemaCustomizations(cs, append(path, "spark_python_task")...)
-	SparkSubmitTask{}.ApplySchemaCustomizations(cs, append(path, "spark_submit_task")...)
-	SqlTask{}.ApplySchemaCustomizations(cs, append(path, "sql_task")...)
-	RunState{}.ApplySchemaCustomizations(cs, append(path, "state")...)
-	RunStatus{}.ApplySchemaCustomizations(cs, append(path, "status")...)
-	cs.SetRequired(append(path, "task_key")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attempt_number"] = attrs["attempt_number"].SetOptional()
+	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
+	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
+	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
+	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
+	attrs["depends_on"] = attrs["depends_on"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
+	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
+	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
+	attrs["library"] = attrs["library"].SetOptional()
+	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
+	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
+	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
+	attrs["resolved_values"] = attrs["resolved_values"].SetOptional()
+	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
+	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
+	attrs["setup_duration"] = attrs["setup_duration"].SetOptional()
+	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
+	attrs["spark_python_task"] = attrs["spark_python_task"].SetOptional()
+	attrs["spark_submit_task"] = attrs["spark_submit_task"].SetOptional()
+	attrs["sql_task"] = attrs["sql_task"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["task_key"] = attrs["task_key"].SetRequired()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RunTask.
@@ -12517,20 +12757,20 @@ func (o *RunTask) SetWebhookNotifications(ctx context.Context, v WebhookNotifica
 type SparkJarTask struct {
 	// Deprecated since 04/2016. Provide a `jar` through the `libraries` field
 	// instead. For an example, see :method:jobs/create.
-	JarUri types.String `tfsdk:"jar_uri" tf:"optional"`
+	JarUri types.String `tfsdk:"jar_uri"`
 	// The full name of the class containing the main method to be executed.
 	// This class must be contained in a JAR provided as a library.
 	//
 	// The code must use `SparkContext.getOrCreate` to obtain a Spark context;
 	// otherwise, runs of the job fail.
-	MainClassName types.String `tfsdk:"main_class_name" tf:"optional"`
+	MainClassName types.String `tfsdk:"main_class_name"`
 	// Parameters passed to the main method.
 	//
 	// Use [Task parameter variables] to set parameters containing information
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask) {
@@ -12539,9 +12779,12 @@ func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Spark
 func (newState *SparkJarTask) SyncEffectiveFieldsDuringRead(existingState SparkJarTask) {
 }
 
-func (c SparkJarTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SparkJarTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["jar_uri"] = attrs["jar_uri"].SetOptional()
+	attrs["main_class_name"] = attrs["main_class_name"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkJarTask.
@@ -12616,13 +12859,13 @@ type SparkPythonTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// The Python file to be executed. Cloud file URIs (such as dbfs:/, s3:/,
 	// adls:/, gcs:/) and workspace paths are supported. For python files stored
 	// in the Databricks workspace, the path must be absolute and begin with
 	// `/`. For files stored in a remote repository, the path must be relative.
 	// This field is required.
-	PythonFile types.String `tfsdk:"python_file" tf:""`
+	PythonFile types.String `tfsdk:"python_file"`
 	// Optional location type of the Python file. When set to `WORKSPACE` or not
 	// specified, the file will be retrieved from the local Databricks workspace
 	// or cloud location (if the `python_file` has a URI format). When set to
@@ -12632,7 +12875,7 @@ type SparkPythonTask struct {
 	// * `WORKSPACE`: The Python file is located in a Databricks workspace or at
 	// a cloud filesystem URI. * `GIT`: The Python file is located in a remote
 	// Git repository.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 }
 
 func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkPythonTask) {
@@ -12641,10 +12884,12 @@ func (newState *SparkPythonTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkPythonTask) SyncEffectiveFieldsDuringRead(existingState SparkPythonTask) {
 }
 
-func (c SparkPythonTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "python_file")...)
+func (c SparkPythonTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["python_file"] = attrs["python_file"].SetRequired()
+	attrs["source"] = attrs["source"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkPythonTask.
@@ -12719,7 +12964,7 @@ type SparkSubmitTask struct {
 	// about job runs.
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 }
 
 func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkSubmitTask) {
@@ -12728,9 +12973,10 @@ func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sp
 func (newState *SparkSubmitTask) SyncEffectiveFieldsDuringRead(existingState SparkSubmitTask) {
 }
 
-func (c SparkSubmitTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SparkSubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["parameters"] = attrs["parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkSubmitTask.
@@ -12800,16 +13046,16 @@ type SqlAlertOutput struct {
 	// * UNKNOWN: alert yet to be evaluated * OK: alert evaluated and did not
 	// fulfill trigger conditions * TRIGGERED: alert evaluated and fulfilled
 	// trigger conditions
-	AlertState types.String `tfsdk:"alert_state" tf:"optional"`
+	AlertState types.String `tfsdk:"alert_state"`
 	// The link to find the output results.
-	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
+	OutputLink types.String `tfsdk:"output_link"`
 	// The text of the SQL query. Can Run permission of the SQL query associated
 	// with the SQL alert is required to view this field.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Information about SQL statements executed in the run.
-	SqlStatements types.List `tfsdk:"sql_statements" tf:"optional"`
+	SqlStatements types.List `tfsdk:"sql_statements"`
 	// The canonical identifier of the SQL warehouse.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlAlertOutput) {
@@ -12818,10 +13064,14 @@ func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlAlertOutput) SyncEffectiveFieldsDuringRead(existingState SqlAlertOutput) {
 }
 
-func (c SqlAlertOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlStatementOutput{}.ApplySchemaCustomizations(cs, append(path, "sql_statements")...)
+func (c SqlAlertOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_state"] = attrs["alert_state"].SetOptional()
+	attrs["output_link"] = attrs["output_link"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["sql_statements"] = attrs["sql_statements"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlAlertOutput.
@@ -12895,9 +13145,9 @@ func (o *SqlAlertOutput) SetSqlStatements(ctx context.Context, v []SqlStatementO
 
 type SqlDashboardOutput struct {
 	// The canonical identifier of the SQL warehouse.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 	// Widgets executed in the run. Only SQL query based widgets are listed.
-	Widgets types.List `tfsdk:"widgets" tf:"optional"`
+	Widgets types.List `tfsdk:"widgets"`
 }
 
 func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardOutput) {
@@ -12906,10 +13156,11 @@ func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlDashboardOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardOutput) {
 }
 
-func (c SqlDashboardOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlDashboardWidgetOutput{}.ApplySchemaCustomizations(cs, append(path, "widgets")...)
+func (c SqlDashboardOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+	attrs["widgets"] = attrs["widgets"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlDashboardOutput.
@@ -12977,19 +13228,19 @@ func (o *SqlDashboardOutput) SetWidgets(ctx context.Context, v []SqlDashboardWid
 
 type SqlDashboardWidgetOutput struct {
 	// Time (in epoch milliseconds) when execution of the SQL widget ends.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// The information about the error when execution fails.
-	Error types.Object `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error"`
 	// The link to find the output results.
-	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
+	OutputLink types.String `tfsdk:"output_link"`
 	// Time (in epoch milliseconds) when execution of the SQL widget starts.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// The execution status of the SQL widget.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// The canonical identifier of the SQL widget.
-	WidgetId types.String `tfsdk:"widget_id" tf:"optional"`
+	WidgetId types.String `tfsdk:"widget_id"`
 	// The title of the SQL widget.
-	WidgetTitle types.String `tfsdk:"widget_title" tf:"optional"`
+	WidgetTitle types.String `tfsdk:"widget_title"`
 }
 
 func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlDashboardWidgetOutput) {
@@ -12998,10 +13249,16 @@ func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *SqlDashboardWidgetOutput) SyncEffectiveFieldsDuringRead(existingState SqlDashboardWidgetOutput) {
 }
 
-func (c SqlDashboardWidgetOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlOutputError{}.ApplySchemaCustomizations(cs, append(path, "error")...)
+func (c SqlDashboardWidgetOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["output_link"] = attrs["output_link"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["widget_id"] = attrs["widget_id"].SetOptional()
+	attrs["widget_title"] = attrs["widget_title"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlDashboardWidgetOutput.
@@ -13079,11 +13336,11 @@ func (o *SqlDashboardWidgetOutput) SetError(ctx context.Context, v SqlOutputErro
 
 type SqlOutput struct {
 	// The output of a SQL alert task, if available.
-	AlertOutput types.Object `tfsdk:"alert_output" tf:"optional,object"`
+	AlertOutput types.Object `tfsdk:"alert_output"`
 	// The output of a SQL dashboard task, if available.
-	DashboardOutput types.Object `tfsdk:"dashboard_output" tf:"optional,object"`
+	DashboardOutput types.Object `tfsdk:"dashboard_output"`
 	// The output of a SQL query task, if available.
-	QueryOutput types.Object `tfsdk:"query_output" tf:"optional,object"`
+	QueryOutput types.Object `tfsdk:"query_output"`
 }
 
 func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutput) {
@@ -13092,12 +13349,12 @@ func (newState *SqlOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutpu
 func (newState *SqlOutput) SyncEffectiveFieldsDuringRead(existingState SqlOutput) {
 }
 
-func (c SqlOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlAlertOutput{}.ApplySchemaCustomizations(cs, append(path, "alert_output")...)
-	SqlDashboardOutput{}.ApplySchemaCustomizations(cs, append(path, "dashboard_output")...)
-	SqlQueryOutput{}.ApplySchemaCustomizations(cs, append(path, "query_output")...)
+func (c SqlOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_output"] = attrs["alert_output"].SetOptional()
+	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
+	attrs["query_output"] = attrs["query_output"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlOutput.
@@ -13225,7 +13482,7 @@ func (o *SqlOutput) SetQueryOutput(ctx context.Context, v SqlQueryOutput) {
 
 type SqlOutputError struct {
 	// The error message when execution fails.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 }
 
 func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlOutputError) {
@@ -13234,9 +13491,10 @@ func (newState *SqlOutputError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlOutputError) SyncEffectiveFieldsDuringRead(existingState SqlOutputError) {
 }
 
-func (c SqlOutputError) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SqlOutputError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlOutputError.
@@ -13271,16 +13529,16 @@ func (o SqlOutputError) Type(ctx context.Context) attr.Type {
 }
 
 type SqlQueryOutput struct {
-	EndpointId types.String `tfsdk:"endpoint_id" tf:"optional"`
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// The link to find the output results.
-	OutputLink types.String `tfsdk:"output_link" tf:"optional"`
+	OutputLink types.String `tfsdk:"output_link"`
 	// The text of the SQL query. Can Run permission of the SQL query is
 	// required to view this field.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Information about SQL statements executed in the run.
-	SqlStatements types.List `tfsdk:"sql_statements" tf:"optional"`
+	SqlStatements types.List `tfsdk:"sql_statements"`
 	// The canonical identifier of the SQL warehouse.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlQueryOutput) {
@@ -13289,10 +13547,14 @@ func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sql
 func (newState *SqlQueryOutput) SyncEffectiveFieldsDuringRead(existingState SqlQueryOutput) {
 }
 
-func (c SqlQueryOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlStatementOutput{}.ApplySchemaCustomizations(cs, append(path, "sql_statements")...)
+func (c SqlQueryOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
+	attrs["output_link"] = attrs["output_link"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["sql_statements"] = attrs["sql_statements"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlQueryOutput.
@@ -13366,7 +13628,7 @@ func (o *SqlQueryOutput) SetSqlStatements(ctx context.Context, v []SqlStatementO
 
 type SqlStatementOutput struct {
 	// A key that can be used to look up query details.
-	LookupKey types.String `tfsdk:"lookup_key" tf:"optional"`
+	LookupKey types.String `tfsdk:"lookup_key"`
 }
 
 func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlStatementOutput) {
@@ -13375,9 +13637,10 @@ func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *SqlStatementOutput) SyncEffectiveFieldsDuringRead(existingState SqlStatementOutput) {
 }
 
-func (c SqlStatementOutput) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SqlStatementOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lookup_key"] = attrs["lookup_key"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlStatementOutput.
@@ -13413,22 +13676,22 @@ func (o SqlStatementOutput) Type(ctx context.Context) attr.Type {
 
 type SqlTask struct {
 	// If alert, indicates that this job must refresh a SQL alert.
-	Alert types.Object `tfsdk:"alert" tf:"optional,object"`
+	Alert types.Object `tfsdk:"alert"`
 	// If dashboard, indicates that this job must refresh a SQL dashboard.
-	Dashboard types.Object `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard"`
 	// If file, indicates that this job runs a SQL file in a remote Git
 	// repository.
-	File types.Object `tfsdk:"file" tf:"optional,object"`
+	File types.Object `tfsdk:"file"`
 	// Parameters to be used for each run of this job. The SQL alert task does
 	// not support custom parameters.
-	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters"`
 	// If query, indicates that this job must execute a SQL query.
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 	// The canonical identifier of the SQL warehouse. Recommended to use with
 	// serverless or pro SQL warehouses. Classic SQL warehouses are only
 	// supported for SQL alert, dashboard and query tasks and are limited to
 	// scheduled single-task jobs.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:""`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
@@ -13437,14 +13700,15 @@ func (newState *SqlTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTask) {
 func (newState *SqlTask) SyncEffectiveFieldsDuringRead(existingState SqlTask) {
 }
 
-func (c SqlTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SqlTaskAlert{}.ApplySchemaCustomizations(cs, append(path, "alert")...)
-	SqlTaskDashboard{}.ApplySchemaCustomizations(cs, append(path, "dashboard")...)
-	SqlTaskFile{}.ApplySchemaCustomizations(cs, append(path, "file")...)
-	SqlTaskQuery{}.ApplySchemaCustomizations(cs, append(path, "query")...)
-	cs.SetRequired(append(path, "warehouse_id")...)
+func (c SqlTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["dashboard"] = attrs["dashboard"].SetOptional()
+	attrs["file"] = attrs["file"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTask.
@@ -13636,11 +13900,11 @@ func (o *SqlTask) SetQuery(ctx context.Context, v SqlTaskQuery) {
 
 type SqlTaskAlert struct {
 	// The canonical identifier of the SQL alert.
-	AlertId types.String `tfsdk:"alert_id" tf:""`
+	AlertId types.String `tfsdk:"alert_id"`
 	// If true, the alert notifications are not sent to subscribers.
-	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
+	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions"`
 	// If specified, alert notifications are sent to subscribers.
-	Subscriptions types.List `tfsdk:"subscriptions" tf:"optional"`
+	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
 func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskAlert) {
@@ -13649,11 +13913,12 @@ func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskAlert) SyncEffectiveFieldsDuringRead(existingState SqlTaskAlert) {
 }
 
-func (c SqlTaskAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "alert_id")...)
-	SqlTaskSubscription{}.ApplySchemaCustomizations(cs, append(path, "subscriptions")...)
+func (c SqlTaskAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_id"] = attrs["alert_id"].SetRequired()
+	attrs["pause_subscriptions"] = attrs["pause_subscriptions"].SetOptional()
+	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskAlert.
@@ -13723,14 +13988,14 @@ func (o *SqlTaskAlert) SetSubscriptions(ctx context.Context, v []SqlTaskSubscrip
 
 type SqlTaskDashboard struct {
 	// Subject of the email sent to subscribers of this task.
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// The canonical identifier of the SQL dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// If true, the dashboard snapshot is not taken, and emails are not sent to
 	// subscribers.
-	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions" tf:"optional"`
+	PauseSubscriptions types.Bool `tfsdk:"pause_subscriptions"`
 	// If specified, dashboard snapshots are sent to subscriptions.
-	Subscriptions types.List `tfsdk:"subscriptions" tf:"optional"`
+	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
 func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskDashboard) {
@@ -13739,11 +14004,13 @@ func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan S
 func (newState *SqlTaskDashboard) SyncEffectiveFieldsDuringRead(existingState SqlTaskDashboard) {
 }
 
-func (c SqlTaskDashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
-	SqlTaskSubscription{}.ApplySchemaCustomizations(cs, append(path, "subscriptions")...)
+func (c SqlTaskDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["pause_subscriptions"] = attrs["pause_subscriptions"].SetOptional()
+	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskDashboard.
@@ -13816,7 +14083,7 @@ func (o *SqlTaskDashboard) SetSubscriptions(ctx context.Context, v []SqlTaskSubs
 type SqlTaskFile struct {
 	// Path of the SQL file. Must be relative if the source is a remote Git
 	// repository and absolute for workspace paths.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 	// Optional location type of the SQL file. When set to `WORKSPACE`, the SQL
 	// file will be retrieved from the local Databricks workspace. When set to
 	// `GIT`, the SQL file will be retrieved from a Git repository defined in
@@ -13825,7 +14092,7 @@ type SqlTaskFile struct {
 	//
 	// * `WORKSPACE`: SQL file is located in Databricks workspace. * `GIT`: SQL
 	// file is located in cloud Git provider.
-	Source types.String `tfsdk:"source" tf:"optional"`
+	Source types.String `tfsdk:"source"`
 }
 
 func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskFile) {
@@ -13834,10 +14101,11 @@ func (newState *SqlTaskFile) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTas
 func (newState *SqlTaskFile) SyncEffectiveFieldsDuringRead(existingState SqlTaskFile) {
 }
 
-func (c SqlTaskFile) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c SqlTaskFile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["source"] = attrs["source"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskFile.
@@ -13875,7 +14143,7 @@ func (o SqlTaskFile) Type(ctx context.Context) attr.Type {
 
 type SqlTaskQuery struct {
 	// The canonical identifier of the SQL query.
-	QueryId types.String `tfsdk:"query_id" tf:""`
+	QueryId types.String `tfsdk:"query_id"`
 }
 
 func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskQuery) {
@@ -13884,10 +14152,10 @@ func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTa
 func (newState *SqlTaskQuery) SyncEffectiveFieldsDuringRead(existingState SqlTaskQuery) {
 }
 
-func (c SqlTaskQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "query_id")...)
+func (c SqlTaskQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_id"] = attrs["query_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskQuery.
@@ -13926,11 +14194,11 @@ type SqlTaskSubscription struct {
 	// notification. This parameter is mutually exclusive with user_name. You
 	// cannot set both destination_id and user_name for subscription
 	// notifications.
-	DestinationId types.String `tfsdk:"destination_id" tf:"optional"`
+	DestinationId types.String `tfsdk:"destination_id"`
 	// The user name to receive the subscription email. This parameter is
 	// mutually exclusive with destination_id. You cannot set both
 	// destination_id and user_name for subscription notifications.
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan SqlTaskSubscription) {
@@ -13939,9 +14207,11 @@ func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *SqlTaskSubscription) SyncEffectiveFieldsDuringRead(existingState SqlTaskSubscription) {
 }
 
-func (c SqlTaskSubscription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SqlTaskSubscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SqlTaskSubscription.
@@ -13979,16 +14249,16 @@ func (o SqlTaskSubscription) Type(ctx context.Context) attr.Type {
 
 type SubmitRun struct {
 	// List of permissions to set on the job.
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The user specified id of the budget policy to use for this one-time run.
 	// If not specified, the run will be not be attributed to any budget policy.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// An optional set of email addresses notified when the run begins or
 	// completes.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// A list of task execution environment specifications that can be
 	// referenced by tasks of this run.
-	Environments types.List `tfsdk:"environments" tf:"optional"`
+	Environments types.List `tfsdk:"environments"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks.
@@ -13999,9 +14269,9 @@ type SubmitRun struct {
 	//
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
-	GitSource types.Object `tfsdk:"git_source" tf:"optional,object"`
+	GitSource types.Object `tfsdk:"git_source"`
 	// An optional set of health rules that can be defined for this job.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// An optional token that can be used to guarantee the idempotency of job
 	// run requests. If a run with the provided token already exists, the
 	// request does not create a new run but returns the ID of the existing run
@@ -14017,26 +14287,26 @@ type SubmitRun struct {
 	// For more information, see [How to ensure idempotency for jobs].
 	//
 	// [How to ensure idempotency for jobs]: https://kb.databricks.com/jobs/jobs-idempotency.html
-	IdempotencyToken types.String `tfsdk:"idempotency_token" tf:"optional"`
+	IdempotencyToken types.String `tfsdk:"idempotency_token"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// run.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// The queue settings of the one-time run.
-	Queue types.Object `tfsdk:"queue" tf:"optional,object"`
+	Queue types.Object `tfsdk:"queue"`
 	// Specifies the user or service principal that the job runs as. If not
 	// specified, the job runs as the user who submits the request.
-	RunAs types.Object `tfsdk:"run_as" tf:"optional,object"`
+	RunAs types.Object `tfsdk:"run_as"`
 	// An optional name for the run. The default value is `Untitled`.
-	RunName types.String `tfsdk:"run_name" tf:"optional"`
+	RunName types.String `tfsdk:"run_name"`
 
-	Tasks types.List `tfsdk:"tasks" tf:"optional"`
+	Tasks types.List `tfsdk:"tasks"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRun) {
@@ -14045,19 +14315,23 @@ func (newState *SubmitRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRu
 func (newState *SubmitRun) SyncEffectiveFieldsDuringRead(existingState SubmitRun) {
 }
 
-func (c SubmitRun) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	JobAccessControlRequest{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	JobEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	JobEnvironment{}.ApplySchemaCustomizations(cs, append(path, "environments")...)
-	GitSource{}.ApplySchemaCustomizations(cs, append(path, "git_source")...)
-	JobsHealthRules{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	JobNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	QueueSettings{}.ApplySchemaCustomizations(cs, append(path, "queue")...)
-	JobRunAs{}.ApplySchemaCustomizations(cs, append(path, "run_as")...)
-	SubmitTask{}.ApplySchemaCustomizations(cs, append(path, "tasks")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c SubmitRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environments"] = attrs["environments"].SetOptional()
+	attrs["git_source"] = attrs["git_source"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["idempotency_token"] = attrs["idempotency_token"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["queue"] = attrs["queue"].SetOptional()
+	attrs["run_as"] = attrs["run_as"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
+	attrs["tasks"] = attrs["tasks"].SetOptional()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRun.
@@ -14411,7 +14685,7 @@ func (o *SubmitRun) SetWebhookNotifications(ctx context.Context, v WebhookNotifi
 // Run was created and started successfully.
 type SubmitRunResponse struct {
 	// The canonical identifier for the newly submitted run.
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitRunResponse) {
@@ -14420,9 +14694,10 @@ func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SubmitRunResponse) SyncEffectiveFieldsDuringRead(existingState SubmitRunResponse) {
 }
 
-func (c SubmitRunResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SubmitRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitRunResponse.
@@ -14461,70 +14736,70 @@ type SubmitTask struct {
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
-	ConditionTask types.Object `tfsdk:"condition_task" tf:"optional,object"`
+	ConditionTask types.Object `tfsdk:"condition_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
-	DbtTask types.Object `tfsdk:"dbt_task" tf:"optional,object"`
+	DbtTask types.Object `tfsdk:"dbt_task"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete successfully before
 	// executing this task. The key is `task_key`, and the value is the name
 	// assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on" tf:"optional"`
+	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
-	EnvironmentKey types.String `tfsdk:"environment_key" tf:"optional"`
+	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
-	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
+	ExistingClusterId types.String `tfsdk:"existing_cluster_id"`
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
-	ForEachTask types.Object `tfsdk:"for_each_task" tf:"optional,object"`
+	ForEachTask types.Object `tfsdk:"for_each_task"`
 	// An optional set of health rules that can be defined for this job.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"library" tf:"optional"`
+	Libraries types.List `tfsdk:"library"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster types.Object `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.Object `tfsdk:"new_cluster"`
 	// The task runs a notebook when the `notebook_task` field is present.
-	NotebookTask types.Object `tfsdk:"notebook_task" tf:"optional,object"`
+	NotebookTask types.Object `tfsdk:"notebook_task"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task run.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
-	PipelineTask types.Object `tfsdk:"pipeline_task" tf:"optional,object"`
+	PipelineTask types.Object `tfsdk:"pipeline_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
-	PythonWheelTask types.Object `tfsdk:"python_wheel_task" tf:"optional,object"`
+	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
 	// An optional value indicating the condition that determines whether the
 	// task should be run once its dependencies have been completed. When
 	// omitted, defaults to `ALL_SUCCESS`. See :method:jobs/create for a list of
 	// possible values.
-	RunIf types.String `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if"`
 	// The task triggers another job when the `run_job_task` field is present.
-	RunJobTask types.Object `tfsdk:"run_job_task" tf:"optional,object"`
+	RunJobTask types.Object `tfsdk:"run_job_task"`
 	// The task runs a JAR when the `spark_jar_task` field is present.
-	SparkJarTask types.Object `tfsdk:"spark_jar_task" tf:"optional,object"`
+	SparkJarTask types.Object `tfsdk:"spark_jar_task"`
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
-	SparkPythonTask types.Object `tfsdk:"spark_python_task" tf:"optional,object"`
+	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
 	// (Legacy) The task runs the spark-submit script when the
 	// `spark_submit_task` field is present. This task can run only on new
 	// clusters and is not compatible with serverless compute.
@@ -14543,22 +14818,22 @@ type SubmitTask struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask types.Object `tfsdk:"spark_submit_task" tf:"optional,object"`
+	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
-	SqlTask types.Object `tfsdk:"sql_task" tf:"optional,object"`
+	SqlTask types.Object `tfsdk:"sql_task"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
 	// updated or reset.
-	TaskKey types.String `tfsdk:"task_key" tf:""`
+	TaskKey types.String `tfsdk:"task_key"`
 	// An optional timeout applied to each run of this job task. A value of `0`
 	// means no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A collection of system notification IDs to notify when the run begins or
 	// completes. The default behavior is to not send any system notifications.
 	// Task webhooks respect the task notification settings.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitTask) {
@@ -14567,28 +14842,34 @@ func (newState *SubmitTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubmitT
 func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTask) {
 }
 
-func (c SubmitTask) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CleanRoomsNotebookTask{}.ApplySchemaCustomizations(cs, append(path, "clean_rooms_notebook_task")...)
-	ConditionTask{}.ApplySchemaCustomizations(cs, append(path, "condition_task")...)
-	DbtTask{}.ApplySchemaCustomizations(cs, append(path, "dbt_task")...)
-	TaskDependency{}.ApplySchemaCustomizations(cs, append(path, "depends_on")...)
-	JobEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	ForEachTask{}.ApplySchemaCustomizations(cs, append(path, "for_each_task")...)
-	JobsHealthRules{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	compute_tf.ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "new_cluster")...)
-	NotebookTask{}.ApplySchemaCustomizations(cs, append(path, "notebook_task")...)
-	TaskNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	PipelineTask{}.ApplySchemaCustomizations(cs, append(path, "pipeline_task")...)
-	PythonWheelTask{}.ApplySchemaCustomizations(cs, append(path, "python_wheel_task")...)
-	RunJobTask{}.ApplySchemaCustomizations(cs, append(path, "run_job_task")...)
-	SparkJarTask{}.ApplySchemaCustomizations(cs, append(path, "spark_jar_task")...)
-	SparkPythonTask{}.ApplySchemaCustomizations(cs, append(path, "spark_python_task")...)
-	SparkSubmitTask{}.ApplySchemaCustomizations(cs, append(path, "spark_submit_task")...)
-	SqlTask{}.ApplySchemaCustomizations(cs, append(path, "sql_task")...)
-	cs.SetRequired(append(path, "task_key")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
+	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
+	attrs["depends_on"] = attrs["depends_on"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
+	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["library"] = attrs["library"].SetOptional()
+	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
+	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
+	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
+	attrs["spark_python_task"] = attrs["spark_python_task"].SetOptional()
+	attrs["spark_submit_task"] = attrs["spark_submit_task"].SetOptional()
+	attrs["sql_task"] = attrs["sql_task"].SetOptional()
+	attrs["task_key"] = attrs["task_key"].SetRequired()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubmitTask.
@@ -15224,19 +15505,19 @@ func (o *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotif
 
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
-	Condition types.String `tfsdk:"condition" tf:"optional"`
+	Condition types.String `tfsdk:"condition"`
 	// If set, the trigger starts a run only after the specified amount of time
 	// has passed since the last time the trigger fired. The minimum allowed
 	// value is 60 seconds.
-	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds" tf:"optional"`
+	MinTimeBetweenTriggersSeconds types.Int64 `tfsdk:"min_time_between_triggers_seconds"`
 	// A list of Delta tables to monitor for changes. The table name must be in
 	// the format `catalog_name.schema_name.table_name`.
-	TableNames types.List `tfsdk:"table_names" tf:"optional"`
+	TableNames types.List `tfsdk:"table_names"`
 	// If set, the trigger starts a run only after no table updates have
 	// occurred for the specified time and can be used to wait for a series of
 	// table updates before triggering a run. The minimum allowed value is 60
 	// seconds.
-	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds" tf:"optional"`
+	WaitAfterLastChangeSeconds types.Int64 `tfsdk:"wait_after_last_change_seconds"`
 }
 
 func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableUpdateTriggerConfiguration) {
@@ -15245,9 +15526,13 @@ func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringCreate
 func (newState *TableUpdateTriggerConfiguration) SyncEffectiveFieldsDuringRead(existingState TableUpdateTriggerConfiguration) {
 }
 
-func (c TableUpdateTriggerConfiguration) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TableUpdateTriggerConfiguration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
+	attrs["table_names"] = attrs["table_names"].SetOptional()
+	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TableUpdateTriggerConfiguration.
@@ -15322,76 +15607,76 @@ type Task struct {
 	// `clean_rooms_notebook_task` field is present.
 	//
 	// [clean rooms]: https://docs.databricks.com/en/clean-rooms/index.html
-	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task" tf:"optional,object"`
+	CleanRoomsNotebookTask types.Object `tfsdk:"clean_rooms_notebook_task"`
 	// The task evaluates a condition that can be used to control the execution
 	// of other tasks when the `condition_task` field is present. The condition
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
-	ConditionTask types.Object `tfsdk:"condition_task" tf:"optional,object"`
+	ConditionTask types.Object `tfsdk:"condition_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
-	DbtTask types.Object `tfsdk:"dbt_task" tf:"optional,object"`
+	DbtTask types.Object `tfsdk:"dbt_task"`
 	// An optional array of objects specifying the dependency graph of the task.
 	// All tasks specified in this field must complete before executing this
 	// task. The task will run only if the `run_if` condition is true. The key
 	// is `task_key`, and the value is the name assigned to the dependent task.
-	DependsOn types.List `tfsdk:"depends_on" tf:"optional"`
+	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// An option to disable auto optimization in serverless
-	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization" tf:"optional"`
+	DisableAutoOptimization types.Bool `tfsdk:"disable_auto_optimization"`
 	// An optional set of email addresses that is notified when runs of this
 	// task begin or complete as well as when this task is deleted. The default
 	// behavior is to not send any emails.
-	EmailNotifications types.Object `tfsdk:"email_notifications" tf:"optional,object"`
+	EmailNotifications types.Object `tfsdk:"email_notifications"`
 	// The key that references an environment spec in a job. This field is
 	// required for Python script, Python wheel and dbt tasks when using
 	// serverless compute.
-	EnvironmentKey types.String `tfsdk:"environment_key" tf:"optional"`
+	EnvironmentKey types.String `tfsdk:"environment_key"`
 	// If existing_cluster_id, the ID of an existing cluster that is used for
 	// all runs. When running jobs or tasks on an existing cluster, you may need
 	// to manually restart the cluster if it stops responding. We suggest
 	// running jobs and tasks on new clusters for greater reliability
-	ExistingClusterId types.String `tfsdk:"existing_cluster_id" tf:"optional"`
+	ExistingClusterId types.String `tfsdk:"existing_cluster_id"`
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
-	ForEachTask types.Object `tfsdk:"for_each_task" tf:"optional,object"`
+	ForEachTask types.Object `tfsdk:"for_each_task"`
 	// An optional set of health rules that can be defined for this job.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
 	// in `job.settings.job_clusters`.
-	JobClusterKey types.String `tfsdk:"job_cluster_key" tf:"optional"`
+	JobClusterKey types.String `tfsdk:"job_cluster_key"`
 	// An optional list of libraries to be installed on the cluster. The default
 	// value is an empty list.
-	Libraries types.List `tfsdk:"library" tf:"optional"`
+	Libraries types.List `tfsdk:"library"`
 	// An optional maximum number of times to retry an unsuccessful run. A run
 	// is considered to be unsuccessful if it completes with the `FAILED`
 	// result_state or `INTERNAL_ERROR` `life_cycle_state`. The value `-1` means
 	// to retry indefinitely and the value `0` means to never retry.
-	MaxRetries types.Int64 `tfsdk:"max_retries" tf:"optional"`
+	MaxRetries types.Int64 `tfsdk:"max_retries"`
 	// An optional minimal interval in milliseconds between the start of the
 	// failed run and the subsequent retry run. The default behavior is that
 	// unsuccessful runs are immediately retried.
-	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis" tf:"optional"`
+	MinRetryIntervalMillis types.Int64 `tfsdk:"min_retry_interval_millis"`
 	// If new_cluster, a description of a new cluster that is created for each
 	// run.
-	NewCluster types.Object `tfsdk:"new_cluster" tf:"optional,object"`
+	NewCluster types.Object `tfsdk:"new_cluster"`
 	// The task runs a notebook when the `notebook_task` field is present.
-	NotebookTask types.Object `tfsdk:"notebook_task" tf:"optional,object"`
+	NotebookTask types.Object `tfsdk:"notebook_task"`
 	// Optional notification settings that are used when sending notifications
 	// to each of the `email_notifications` and `webhook_notifications` for this
 	// task.
-	NotificationSettings types.Object `tfsdk:"notification_settings" tf:"optional,object"`
+	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
-	PipelineTask types.Object `tfsdk:"pipeline_task" tf:"optional,object"`
+	PipelineTask types.Object `tfsdk:"pipeline_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
-	PythonWheelTask types.Object `tfsdk:"python_wheel_task" tf:"optional,object"`
+	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
 	// An optional policy to specify whether to retry a job when it times out.
 	// The default behavior is to not retry on timeout.
-	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout" tf:"optional"`
+	RetryOnTimeout types.Bool `tfsdk:"retry_on_timeout"`
 	// An optional value specifying the condition determining whether the task
 	// is run once its dependencies have been completed.
 	//
@@ -15401,14 +15686,14 @@ type Task struct {
 	// executed * `ALL_DONE`: All dependencies have been completed *
 	// `AT_LEAST_ONE_FAILED`: At least one dependency failed * `ALL_FAILED`: ALl
 	// dependencies have failed
-	RunIf types.String `tfsdk:"run_if" tf:"optional"`
+	RunIf types.String `tfsdk:"run_if"`
 	// The task triggers another job when the `run_job_task` field is present.
-	RunJobTask types.Object `tfsdk:"run_job_task" tf:"optional,object"`
+	RunJobTask types.Object `tfsdk:"run_job_task"`
 	// The task runs a JAR when the `spark_jar_task` field is present.
-	SparkJarTask types.Object `tfsdk:"spark_jar_task" tf:"optional,object"`
+	SparkJarTask types.Object `tfsdk:"spark_jar_task"`
 	// The task runs a Python file when the `spark_python_task` field is
 	// present.
-	SparkPythonTask types.Object `tfsdk:"spark_python_task" tf:"optional,object"`
+	SparkPythonTask types.Object `tfsdk:"spark_python_task"`
 	// (Legacy) The task runs the spark-submit script when the
 	// `spark_submit_task` field is present. This task can run only on new
 	// clusters and is not compatible with serverless compute.
@@ -15427,22 +15712,22 @@ type Task struct {
 	//
 	// The `--jars`, `--py-files`, `--files` arguments support DBFS and S3
 	// paths.
-	SparkSubmitTask types.Object `tfsdk:"spark_submit_task" tf:"optional,object"`
+	SparkSubmitTask types.Object `tfsdk:"spark_submit_task"`
 	// The task runs a SQL query or file, or it refreshes a SQL alert or a
 	// legacy SQL dashboard when the `sql_task` field is present.
-	SqlTask types.Object `tfsdk:"sql_task" tf:"optional,object"`
+	SqlTask types.Object `tfsdk:"sql_task"`
 	// A unique name for the task. This field is used to refer to this task from
 	// other tasks. This field is required and must be unique within its parent
 	// job. On Update or Reset, this field is used to reference the tasks to be
 	// updated or reset.
-	TaskKey types.String `tfsdk:"task_key" tf:""`
+	TaskKey types.String `tfsdk:"task_key"`
 	// An optional timeout applied to each run of this job task. A value of `0`
 	// means no timeout.
-	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds" tf:"optional"`
+	TimeoutSeconds types.Int64 `tfsdk:"timeout_seconds"`
 	// A collection of system notification IDs to notify when runs of this task
 	// begin or complete. The default behavior is to not send any system
 	// notifications.
-	WebhookNotifications types.Object `tfsdk:"webhook_notifications" tf:"optional,object"`
+	WebhookNotifications types.Object `tfsdk:"webhook_notifications"`
 }
 
 func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
@@ -15451,28 +15736,39 @@ func (newState *Task) SyncEffectiveFieldsDuringCreateOrUpdate(plan Task) {
 func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 }
 
-func (c Task) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CleanRoomsNotebookTask{}.ApplySchemaCustomizations(cs, append(path, "clean_rooms_notebook_task")...)
-	ConditionTask{}.ApplySchemaCustomizations(cs, append(path, "condition_task")...)
-	DbtTask{}.ApplySchemaCustomizations(cs, append(path, "dbt_task")...)
-	TaskDependency{}.ApplySchemaCustomizations(cs, append(path, "depends_on")...)
-	TaskEmailNotifications{}.ApplySchemaCustomizations(cs, append(path, "email_notifications")...)
-	ForEachTask{}.ApplySchemaCustomizations(cs, append(path, "for_each_task")...)
-	JobsHealthRules{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	compute_tf.ClusterSpec{}.ApplySchemaCustomizations(cs, append(path, "new_cluster")...)
-	NotebookTask{}.ApplySchemaCustomizations(cs, append(path, "notebook_task")...)
-	TaskNotificationSettings{}.ApplySchemaCustomizations(cs, append(path, "notification_settings")...)
-	PipelineTask{}.ApplySchemaCustomizations(cs, append(path, "pipeline_task")...)
-	PythonWheelTask{}.ApplySchemaCustomizations(cs, append(path, "python_wheel_task")...)
-	RunJobTask{}.ApplySchemaCustomizations(cs, append(path, "run_job_task")...)
-	SparkJarTask{}.ApplySchemaCustomizations(cs, append(path, "spark_jar_task")...)
-	SparkPythonTask{}.ApplySchemaCustomizations(cs, append(path, "spark_python_task")...)
-	SparkSubmitTask{}.ApplySchemaCustomizations(cs, append(path, "spark_submit_task")...)
-	SqlTask{}.ApplySchemaCustomizations(cs, append(path, "sql_task")...)
-	cs.SetRequired(append(path, "task_key")...)
-	WebhookNotifications{}.ApplySchemaCustomizations(cs, append(path, "webhook_notifications")...)
+func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
+	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
+	attrs["depends_on"] = attrs["depends_on"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disable_auto_optimization"] = attrs["disable_auto_optimization"].SetOptional()
+	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
+	attrs["environment_key"] = attrs["environment_key"].SetOptional()
+	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
+	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
+	attrs["library"] = attrs["library"].SetOptional()
+	attrs["max_retries"] = attrs["max_retries"].SetOptional()
+	attrs["min_retry_interval_millis"] = attrs["min_retry_interval_millis"].SetOptional()
+	attrs["new_cluster"] = attrs["new_cluster"].SetOptional()
+	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
+	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
+	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
+	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
+	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
+	attrs["spark_python_task"] = attrs["spark_python_task"].SetOptional()
+	attrs["spark_submit_task"] = attrs["spark_submit_task"].SetOptional()
+	attrs["sql_task"] = attrs["sql_task"].SetOptional()
+	attrs["task_key"] = attrs["task_key"].SetRequired()
+	attrs["timeout_seconds"] = attrs["timeout_seconds"].SetOptional()
+	attrs["webhook_notifications"] = attrs["webhook_notifications"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Task.
@@ -16119,9 +16415,9 @@ func (o *Task) SetWebhookNotifications(ctx context.Context, v WebhookNotificatio
 type TaskDependency struct {
 	// Can only be specified on condition task dependencies. The outcome of the
 	// dependent task that must be met for this task to run.
-	Outcome types.String `tfsdk:"outcome" tf:"optional"`
+	Outcome types.String `tfsdk:"outcome"`
 	// The name of the task this task depends on.
-	TaskKey types.String `tfsdk:"task_key" tf:""`
+	TaskKey types.String `tfsdk:"task_key"`
 }
 
 func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskDependency) {
@@ -16130,10 +16426,11 @@ func (newState *TaskDependency) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tas
 func (newState *TaskDependency) SyncEffectiveFieldsDuringRead(existingState TaskDependency) {
 }
 
-func (c TaskDependency) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "task_key")...)
+func (c TaskDependency) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["outcome"] = attrs["outcome"].SetOptional()
+	attrs["task_key"] = attrs["task_key"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskDependency.
@@ -16173,22 +16470,22 @@ type TaskEmailNotifications struct {
 	// If true, do not send email to recipients specified in `on_failure` if the
 	// run is skipped. This field is `deprecated`. Please use the
 	// `notification_settings.no_alert_for_skipped_runs` field.
-	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
+	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 	// A list of email addresses to be notified when the duration of a run
 	// exceeds the threshold specified for the `RUN_DURATION_SECONDS` metric in
 	// the `health` field. If no rule for the `RUN_DURATION_SECONDS` metric is
 	// specified in the `health` field for the job, notifications are not sent.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded" tf:"optional"`
+	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// A list of email addresses to be notified when a run unsuccessfully
 	// completes. A run is considered to have completed unsuccessfully if it
 	// ends with an `INTERNAL_ERROR` `life_cycle_state` or a `FAILED`, or
 	// `TIMED_OUT` result_state. If this is not specified on job creation,
 	// reset, or update the list is empty, and notifications are not sent.
-	OnFailure types.List `tfsdk:"on_failure" tf:"optional"`
+	OnFailure types.List `tfsdk:"on_failure"`
 	// A list of email addresses to be notified when a run begins. If not
 	// specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnStart types.List `tfsdk:"on_start" tf:"optional"`
+	OnStart types.List `tfsdk:"on_start"`
 	// A list of email addresses to notify when any streaming backlog thresholds
 	// are exceeded for any stream. Streaming backlog thresholds can be set in
 	// the `health` field using the following metrics:
@@ -16196,13 +16493,13 @@ type TaskEmailNotifications struct {
 	// `STREAMING_BACKLOG_SECONDS`, or `STREAMING_BACKLOG_FILES`. Alerting is
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded" tf:"optional"`
+	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
 	// A list of email addresses to be notified when a run successfully
 	// completes. A run is considered to have completed successfully if it ends
 	// with a `TERMINATED` `life_cycle_state` and a `SUCCESS` result_state. If
 	// not specified on job creation, reset, or update, the list is empty, and
 	// notifications are not sent.
-	OnSuccess types.List `tfsdk:"on_success" tf:"optional"`
+	OnSuccess types.List `tfsdk:"on_success"`
 }
 
 func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskEmailNotifications) {
@@ -16211,9 +16508,15 @@ func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TaskEmailNotifications) SyncEffectiveFieldsDuringRead(existingState TaskEmailNotifications) {
 }
 
-func (c TaskEmailNotifications) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TaskEmailNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
+	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
+	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_start"] = attrs["on_start"].SetOptional()
+	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
+	attrs["on_success"] = attrs["on_success"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskEmailNotifications.
@@ -16407,13 +16710,13 @@ type TaskNotificationSettings struct {
 	// If true, do not send notifications to recipients specified in `on_start`
 	// for the retried runs and do not send notifications to recipients
 	// specified in `on_failure` until the last retry of the run.
-	AlertOnLastAttempt types.Bool `tfsdk:"alert_on_last_attempt" tf:"optional"`
+	AlertOnLastAttempt types.Bool `tfsdk:"alert_on_last_attempt"`
 	// If true, do not send notifications to recipients specified in
 	// `on_failure` if the run is canceled.
-	NoAlertForCanceledRuns types.Bool `tfsdk:"no_alert_for_canceled_runs" tf:"optional"`
+	NoAlertForCanceledRuns types.Bool `tfsdk:"no_alert_for_canceled_runs"`
 	// If true, do not send notifications to recipients specified in
 	// `on_failure` if the run is skipped.
-	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs" tf:"optional"`
+	NoAlertForSkippedRuns types.Bool `tfsdk:"no_alert_for_skipped_runs"`
 }
 
 func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskNotificationSettings) {
@@ -16422,9 +16725,12 @@ func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *TaskNotificationSettings) SyncEffectiveFieldsDuringRead(existingState TaskNotificationSettings) {
 }
 
-func (c TaskNotificationSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TaskNotificationSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_on_last_attempt"] = attrs["alert_on_last_attempt"].SetOptional()
+	attrs["no_alert_for_canceled_runs"] = attrs["no_alert_for_canceled_runs"].SetOptional()
+	attrs["no_alert_for_skipped_runs"] = attrs["no_alert_for_skipped_runs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskNotificationSettings.
@@ -16508,10 +16814,10 @@ type TerminationDetails struct {
 	// The run was skipped due to reaching the job level queue size limit.
 	//
 	// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
-	Code types.String `tfsdk:"code" tf:"optional"`
+	Code types.String `tfsdk:"code"`
 	// A descriptive message with the termination details. This field is
 	// unstructured and the format might change.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// * `SUCCESS`: The run terminated without any issues * `INTERNAL_ERROR`: An
 	// error occurred in the Databricks platform. Please look at the [status
 	// page] or contact support if the issue persists. * `CLIENT_ERROR`: The run
@@ -16520,7 +16826,7 @@ type TerminationDetails struct {
 	// issue with your cloud provider.
 	//
 	// [status page]: https://status.databricks.com/
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationDetails) {
@@ -16529,9 +16835,12 @@ func (newState *TerminationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *TerminationDetails) SyncEffectiveFieldsDuringRead(existingState TerminationDetails) {
 }
 
-func (c TerminationDetails) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TerminationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code"] = attrs["code"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TerminationDetails.
@@ -16572,7 +16881,7 @@ func (o TerminationDetails) Type(ctx context.Context) attr.Type {
 // Additional details about what triggered the run
 type TriggerInfo struct {
 	// The run id of the Run Job task run
-	RunId types.Int64 `tfsdk:"run_id" tf:"optional"`
+	RunId types.Int64 `tfsdk:"run_id"`
 }
 
 func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerInfo) {
@@ -16581,9 +16890,10 @@ func (newState *TriggerInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Trigge
 func (newState *TriggerInfo) SyncEffectiveFieldsDuringRead(existingState TriggerInfo) {
 }
 
-func (c TriggerInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TriggerInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerInfo.
@@ -16619,15 +16929,15 @@ func (o TriggerInfo) Type(ctx context.Context) attr.Type {
 
 type TriggerSettings struct {
 	// File arrival trigger settings.
-	FileArrival types.Object `tfsdk:"file_arrival" tf:"optional,object"`
+	FileArrival types.Object `tfsdk:"file_arrival"`
 	// Whether this trigger is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// Periodic trigger settings.
-	Periodic types.Object `tfsdk:"periodic" tf:"optional,object"`
+	Periodic types.Object `tfsdk:"periodic"`
 	// Old table trigger settings name. Deprecated in favor of `table_update`.
-	Table types.Object `tfsdk:"table" tf:"optional,object"`
+	Table types.Object `tfsdk:"table"`
 
-	TableUpdate types.Object `tfsdk:"table_update" tf:"optional,object"`
+	TableUpdate types.Object `tfsdk:"table_update"`
 }
 
 func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan TriggerSettings) {
@@ -16636,13 +16946,14 @@ func (newState *TriggerSettings) SyncEffectiveFieldsDuringCreateOrUpdate(plan Tr
 func (newState *TriggerSettings) SyncEffectiveFieldsDuringRead(existingState TriggerSettings) {
 }
 
-func (c TriggerSettings) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileArrivalTriggerConfiguration{}.ApplySchemaCustomizations(cs, append(path, "file_arrival")...)
-	PeriodicTriggerConfiguration{}.ApplySchemaCustomizations(cs, append(path, "periodic")...)
-	TableUpdateTriggerConfiguration{}.ApplySchemaCustomizations(cs, append(path, "table")...)
-	TableUpdateTriggerConfiguration{}.ApplySchemaCustomizations(cs, append(path, "table_update")...)
+func (c TriggerSettings) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["periodic"] = attrs["periodic"].SetOptional()
+	attrs["table"] = attrs["table"].SetOptional()
+	attrs["table_update"] = attrs["table_update"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TriggerSettings.
@@ -16805,9 +17116,9 @@ type UpdateJob struct {
 	// Remove top-level fields in the job settings. Removing nested fields is
 	// not supported, except for tasks and job clusters (`tasks/task_1`). This
 	// field is optional.
-	FieldsToRemove types.List `tfsdk:"fields_to_remove" tf:"optional"`
+	FieldsToRemove types.List `tfsdk:"fields_to_remove"`
 	// The canonical identifier of the job to update. This field is required.
-	JobId types.Int64 `tfsdk:"job_id" tf:""`
+	JobId types.Int64 `tfsdk:"job_id"`
 	// The new settings for the job.
 	//
 	// Top-level fields specified in `new_settings` are completely replaced,
@@ -16819,7 +17130,7 @@ type UpdateJob struct {
 	//
 	// Changes to the field `JobSettings.timeout_seconds` are applied to active
 	// runs. Changes to other fields are applied to future runs only.
-	NewSettings types.Object `tfsdk:"new_settings" tf:"optional,object"`
+	NewSettings types.Object `tfsdk:"new_settings"`
 }
 
 func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJob) {
@@ -16828,11 +17139,12 @@ func (newState *UpdateJob) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateJo
 func (newState *UpdateJob) SyncEffectiveFieldsDuringRead(existingState UpdateJob) {
 }
 
-func (c UpdateJob) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "job_id")...)
-	JobSettings{}.ApplySchemaCustomizations(cs, append(path, "new_settings")...)
+func (c UpdateJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fields_to_remove"] = attrs["fields_to_remove"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["new_settings"] = attrs["new_settings"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateJob.
@@ -16961,13 +17273,13 @@ func (o UpdateResponse) Type(ctx context.Context) attr.Type {
 
 type ViewItem struct {
 	// Content of the view.
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 	// Name of the view item. In the case of code view, it would be the
 	// notebook’s name. In the case of dashboard view, it would be the
 	// dashboard’s name.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Type of the view item.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem) {
@@ -16976,9 +17288,12 @@ func (newState *ViewItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan ViewItem)
 func (newState *ViewItem) SyncEffectiveFieldsDuringRead(existingState ViewItem) {
 }
 
-func (c ViewItem) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ViewItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ViewItem.
@@ -17017,7 +17332,7 @@ func (o ViewItem) Type(ctx context.Context) attr.Type {
 }
 
 type Webhook struct {
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
@@ -17026,10 +17341,10 @@ func (newState *Webhook) SyncEffectiveFieldsDuringCreateOrUpdate(plan Webhook) {
 func (newState *Webhook) SyncEffectiveFieldsDuringRead(existingState Webhook) {
 }
 
-func (c Webhook) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
+func (c Webhook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Webhook.
@@ -17068,13 +17383,13 @@ type WebhookNotifications struct {
 	// a run exceeds the threshold specified for the `RUN_DURATION_SECONDS`
 	// metric in the `health` field. A maximum of 3 destinations can be
 	// specified for the `on_duration_warning_threshold_exceeded` property.
-	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded" tf:"optional"`
+	OnDurationWarningThresholdExceeded types.List `tfsdk:"on_duration_warning_threshold_exceeded"`
 	// An optional list of system notification IDs to call when the run fails. A
 	// maximum of 3 destinations can be specified for the `on_failure` property.
-	OnFailure types.List `tfsdk:"on_failure" tf:"optional"`
+	OnFailure types.List `tfsdk:"on_failure"`
 	// An optional list of system notification IDs to call when the run starts.
 	// A maximum of 3 destinations can be specified for the `on_start` property.
-	OnStart types.List `tfsdk:"on_start" tf:"optional"`
+	OnStart types.List `tfsdk:"on_start"`
 	// An optional list of system notification IDs to call when any streaming
 	// backlog thresholds are exceeded for any stream. Streaming backlog
 	// thresholds can be set in the `health` field using the following metrics:
@@ -17083,11 +17398,11 @@ type WebhookNotifications struct {
 	// based on the 10-minute average of these metrics. If the issue persists,
 	// notifications are resent every 30 minutes. A maximum of 3 destinations
 	// can be specified for the `on_streaming_backlog_exceeded` property.
-	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded" tf:"optional"`
+	OnStreamingBacklogExceeded types.List `tfsdk:"on_streaming_backlog_exceeded"`
 	// An optional list of system notification IDs to call when the run
 	// completes successfully. A maximum of 3 destinations can be specified for
 	// the `on_success` property.
-	OnSuccess types.List `tfsdk:"on_success" tf:"optional"`
+	OnSuccess types.List `tfsdk:"on_success"`
 }
 
 func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(plan WebhookNotifications) {
@@ -17096,14 +17411,14 @@ func (newState *WebhookNotifications) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *WebhookNotifications) SyncEffectiveFieldsDuringRead(existingState WebhookNotifications) {
 }
 
-func (c WebhookNotifications) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Webhook{}.ApplySchemaCustomizations(cs, append(path, "on_duration_warning_threshold_exceeded")...)
-	Webhook{}.ApplySchemaCustomizations(cs, append(path, "on_failure")...)
-	Webhook{}.ApplySchemaCustomizations(cs, append(path, "on_start")...)
-	Webhook{}.ApplySchemaCustomizations(cs, append(path, "on_streaming_backlog_exceeded")...)
-	Webhook{}.ApplySchemaCustomizations(cs, append(path, "on_success")...)
+func (c WebhookNotifications) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["on_duration_warning_threshold_exceeded"] = attrs["on_duration_warning_threshold_exceeded"].SetOptional()
+	attrs["on_failure"] = attrs["on_failure"].SetOptional()
+	attrs["on_start"] = attrs["on_start"].SetOptional()
+	attrs["on_streaming_backlog_exceeded"] = attrs["on_streaming_backlog_exceeded"].SetOptional()
+	attrs["on_success"] = attrs["on_success"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WebhookNotifications.

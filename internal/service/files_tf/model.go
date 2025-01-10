@@ -25,9 +25,9 @@ import (
 type AddBlock struct {
 	// The base64-encoded data to append to the stream. This has a limit of 1
 	// MB.
-	Data types.String `tfsdk:"data" tf:""`
+	Data types.String `tfsdk:"data"`
 	// The handle on an open stream.
-	Handle types.Int64 `tfsdk:"handle" tf:""`
+	Handle types.Int64 `tfsdk:"handle"`
 }
 
 func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock) {
@@ -36,11 +36,11 @@ func (newState *AddBlock) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddBlock)
 func (newState *AddBlock) SyncEffectiveFieldsDuringRead(existingState AddBlock) {
 }
 
-func (c AddBlock) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "data")...)
-	cs.SetRequired(append(path, "handle")...)
+func (c AddBlock) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetRequired()
+	attrs["handle"] = attrs["handle"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlock.
@@ -85,9 +85,9 @@ func (newState *AddBlockResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan A
 func (newState *AddBlockResponse) SyncEffectiveFieldsDuringRead(existingState AddBlockResponse) {
 }
 
-func (c AddBlockResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AddBlockResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddBlockResponse.
@@ -119,7 +119,7 @@ func (o AddBlockResponse) Type(ctx context.Context) attr.Type {
 
 type Close struct {
 	// The handle on an open stream.
-	Handle types.Int64 `tfsdk:"handle" tf:""`
+	Handle types.Int64 `tfsdk:"handle"`
 }
 
 func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
@@ -128,10 +128,10 @@ func (newState *Close) SyncEffectiveFieldsDuringCreateOrUpdate(plan Close) {
 func (newState *Close) SyncEffectiveFieldsDuringRead(existingState Close) {
 }
 
-func (c Close) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "handle")...)
+func (c Close) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["handle"] = attrs["handle"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Close.
@@ -174,9 +174,9 @@ func (newState *CloseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Clos
 func (newState *CloseResponse) SyncEffectiveFieldsDuringRead(existingState CloseResponse) {
 }
 
-func (c CloseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CloseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloseResponse.
@@ -208,9 +208,9 @@ func (o CloseResponse) Type(ctx context.Context) attr.Type {
 
 type Create struct {
 	// The flag that specifies whether to overwrite existing file/files.
-	Overwrite types.Bool `tfsdk:"overwrite" tf:"optional"`
+	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The path of the new file. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
@@ -219,10 +219,11 @@ func (newState *Create) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create) {
 func (newState *Create) SyncEffectiveFieldsDuringRead(existingState Create) {
 }
 
-func (c Create) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Create) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Create.
@@ -328,7 +329,7 @@ func (o CreateDirectoryResponse) Type(ctx context.Context) attr.Type {
 type CreateResponse struct {
 	// Handle which should subsequently be passed into the AddBlock and Close
 	// calls when writing to a file through a stream.
-	Handle types.Int64 `tfsdk:"handle" tf:"optional"`
+	Handle types.Int64 `tfsdk:"handle"`
 }
 
 func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
@@ -337,9 +338,10 @@ func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Cre
 func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
 }
 
-func (c CreateResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["handle"] = attrs["handle"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
@@ -376,10 +378,10 @@ func (o CreateResponse) Type(ctx context.Context) attr.Type {
 type Delete struct {
 	// The path of the file or directory to delete. The path should be the
 	// absolute DBFS path.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 	// Whether or not to recursively delete the directory's contents. Deleting
 	// empty directories can be done without providing the recursive flag.
-	Recursive types.Bool `tfsdk:"recursive" tf:"optional"`
+	Recursive types.Bool `tfsdk:"recursive"`
 }
 
 func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
@@ -388,10 +390,11 @@ func (newState *Delete) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete) {
 func (newState *Delete) SyncEffectiveFieldsDuringRead(existingState Delete) {
 }
 
-func (c Delete) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Delete) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["recursive"] = attrs["recursive"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
@@ -540,9 +543,9 @@ func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan Del
 func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
-func (c DeleteResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -574,16 +577,16 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 
 type DirectoryEntry struct {
 	// The length of the file in bytes. This field is omitted for directories.
-	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
+	FileSize types.Int64 `tfsdk:"file_size"`
 	// True if the path is a directory.
-	IsDirectory types.Bool `tfsdk:"is_directory" tf:"optional"`
+	IsDirectory types.Bool `tfsdk:"is_directory"`
 	// Last modification time of given file in milliseconds since unix epoch.
-	LastModified types.Int64 `tfsdk:"last_modified" tf:"optional"`
+	LastModified types.Int64 `tfsdk:"last_modified"`
 	// The name of the file or directory. This is the last component of the
 	// path.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The absolute path of the file or directory.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectoryEntry) {
@@ -592,9 +595,14 @@ func (newState *DirectoryEntry) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dir
 func (newState *DirectoryEntry) SyncEffectiveFieldsDuringRead(existingState DirectoryEntry) {
 }
 
-func (c DirectoryEntry) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DirectoryEntry) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_size"] = attrs["file_size"].SetOptional()
+	attrs["is_directory"] = attrs["is_directory"].SetOptional()
+	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectoryEntry.
@@ -722,13 +730,13 @@ func (o DownloadResponse) Type(ctx context.Context) attr.Type {
 
 type FileInfo struct {
 	// The length of the file in bytes. This field is omitted for directories.
-	FileSize types.Int64 `tfsdk:"file_size" tf:"optional"`
+	FileSize types.Int64 `tfsdk:"file_size"`
 	// True if the path is a directory.
-	IsDir types.Bool `tfsdk:"is_dir" tf:"optional"`
+	IsDir types.Bool `tfsdk:"is_dir"`
 	// Last modification time of given file in milliseconds since epoch.
-	ModificationTime types.Int64 `tfsdk:"modification_time" tf:"optional"`
+	ModificationTime types.Int64 `tfsdk:"modification_time"`
 	// The absolute path of the file or directory.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
@@ -737,9 +745,13 @@ func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo)
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
 }
 
-func (c FileInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_size"] = attrs["file_size"].SetOptional()
+	attrs["is_dir"] = attrs["is_dir"].SetOptional()
+	attrs["modification_time"] = attrs["modification_time"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
@@ -1065,9 +1077,9 @@ func (o ListDirectoryContentsRequest) Type(ctx context.Context) attr.Type {
 
 type ListDirectoryResponse struct {
 	// Array of DirectoryEntry.
-	Contents types.List `tfsdk:"contents" tf:"optional"`
+	Contents types.List `tfsdk:"contents"`
 	// A token, which can be sent as `page_token` to retrieve the next page.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDirectoryResponse) {
@@ -1076,10 +1088,11 @@ func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *ListDirectoryResponse) SyncEffectiveFieldsDuringRead(existingState ListDirectoryResponse) {
 }
 
-func (c ListDirectoryResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DirectoryEntry{}.ApplySchemaCustomizations(cs, append(path, "contents")...)
+func (c ListDirectoryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDirectoryResponse.
@@ -1148,7 +1161,7 @@ func (o *ListDirectoryResponse) SetContents(ctx context.Context, v []DirectoryEn
 type ListStatusResponse struct {
 	// A list of FileInfo's that describe contents of directory or file. See
 	// example above.
-	Files types.List `tfsdk:"files" tf:"optional"`
+	Files types.List `tfsdk:"files"`
 }
 
 func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListStatusResponse) {
@@ -1157,10 +1170,10 @@ func (newState *ListStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListStatusResponse) SyncEffectiveFieldsDuringRead(existingState ListStatusResponse) {
 }
 
-func (c ListStatusResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	FileInfo{}.ApplySchemaCustomizations(cs, append(path, "files")...)
+func (c ListStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["files"] = attrs["files"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListStatusResponse.
@@ -1226,7 +1239,7 @@ func (o *ListStatusResponse) SetFiles(ctx context.Context, v []FileInfo) {
 
 type MkDirs struct {
 	// The path of the new directory. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
@@ -1235,10 +1248,10 @@ func (newState *MkDirs) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkDirs) {
 func (newState *MkDirs) SyncEffectiveFieldsDuringRead(existingState MkDirs) {
 }
 
-func (c MkDirs) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c MkDirs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirs.
@@ -1281,9 +1294,9 @@ func (newState *MkDirsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MkD
 func (newState *MkDirsResponse) SyncEffectiveFieldsDuringRead(existingState MkDirsResponse) {
 }
 
-func (c MkDirsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MkDirsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkDirsResponse.
@@ -1316,10 +1329,10 @@ func (o MkDirsResponse) Type(ctx context.Context) attr.Type {
 type Move struct {
 	// The destination path of the file or directory. The path should be the
 	// absolute DBFS path.
-	DestinationPath types.String `tfsdk:"destination_path" tf:""`
+	DestinationPath types.String `tfsdk:"destination_path"`
 	// The source path of the file or directory. The path should be the absolute
 	// DBFS path.
-	SourcePath types.String `tfsdk:"source_path" tf:""`
+	SourcePath types.String `tfsdk:"source_path"`
 }
 
 func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
@@ -1328,11 +1341,11 @@ func (newState *Move) SyncEffectiveFieldsDuringCreateOrUpdate(plan Move) {
 func (newState *Move) SyncEffectiveFieldsDuringRead(existingState Move) {
 }
 
-func (c Move) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "destination_path")...)
-	cs.SetRequired(append(path, "source_path")...)
+func (c Move) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_path"] = attrs["destination_path"].SetRequired()
+	attrs["source_path"] = attrs["source_path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Move.
@@ -1377,9 +1390,9 @@ func (newState *MoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan MoveR
 func (newState *MoveResponse) SyncEffectiveFieldsDuringRead(existingState MoveResponse) {
 }
 
-func (c MoveResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MoveResponse.
@@ -1411,11 +1424,11 @@ func (o MoveResponse) Type(ctx context.Context) attr.Type {
 
 type Put struct {
 	// This parameter might be absent, and instead a posted file will be used.
-	Contents types.String `tfsdk:"contents" tf:"optional"`
+	Contents types.String `tfsdk:"contents"`
 	// The flag that specifies whether to overwrite existing file/files.
-	Overwrite types.Bool `tfsdk:"overwrite" tf:"optional"`
+	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The path of the new file. The path should be the absolute DBFS path.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
@@ -1424,10 +1437,12 @@ func (newState *Put) SyncEffectiveFieldsDuringCreateOrUpdate(plan Put) {
 func (newState *Put) SyncEffectiveFieldsDuringRead(existingState Put) {
 }
 
-func (c Put) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Put) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["contents"] = attrs["contents"].SetOptional()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Put.
@@ -1474,9 +1489,9 @@ func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRes
 func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
 }
 
-func (c PutResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
@@ -1556,9 +1571,9 @@ type ReadResponse struct {
 	// The number of bytes read (could be less than ``length`` if we hit end of
 	// file). This refers to number of bytes read in unencoded version (response
 	// data is base64-encoded).
-	BytesRead types.Int64 `tfsdk:"bytes_read" tf:"optional"`
+	BytesRead types.Int64 `tfsdk:"bytes_read"`
 	// The base64-encoded contents of the file read.
-	Data types.String `tfsdk:"data" tf:"optional"`
+	Data types.String `tfsdk:"data"`
 }
 
 func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadResponse) {
@@ -1567,9 +1582,11 @@ func (newState *ReadResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReadR
 func (newState *ReadResponse) SyncEffectiveFieldsDuringRead(existingState ReadResponse) {
 }
 
-func (c ReadResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ReadResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bytes_read"] = attrs["bytes_read"].SetOptional()
+	attrs["data"] = attrs["data"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReadResponse.

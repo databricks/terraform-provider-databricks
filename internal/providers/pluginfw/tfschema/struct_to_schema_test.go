@@ -16,29 +16,61 @@ import (
 )
 
 type TestStringTfSdk struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
+}
+
+func (TestStringTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	return attrs
 }
 
 type TestBoolTfSdk struct {
-	Enabled types.Bool `tfsdk:"enabled" tf:""`
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+func (TestBoolTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetRequired()
+	return attrs
 }
 
 type TestIntTfSdk struct {
-	Workers types.Int64 `tfsdk:"workers" tf:"optional"`
+	Workers types.Int64 `tfsdk:"workers"`
+}
+
+func (TestIntTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["workers"] = attrs["workers"].SetOptional()
+	return attrs
 }
 
 type TestComputedTfSdk struct {
-	ComputedTag  types.String `tfsdk:"computedtag" tf:"computed"`
-	MultipleTags types.String `tfsdk:"multipletags" tf:"computed,optional"`
-	NonComputed  types.String `tfsdk:"noncomputed" tf:"optional"`
+	ComputedTag  types.String `tfsdk:"computedtag"`
+	MultipleTags types.String `tfsdk:"multipletags"`
+	NonComputed  types.String `tfsdk:"noncomputed"`
+}
+
+func (TestComputedTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["computedtag"] = attrs["computedtag"].SetComputed()
+	attrs["multipletags"] = attrs["multipletags"].SetComputed().SetOptional()
+	attrs["noncomputed"] = attrs["noncomputed"].SetOptional()
+	return attrs
 }
 
 type TestFloatTfSdk struct {
-	Float types.Float64 `tfsdk:"float" tf:"optional"`
+	Float types.Float64 `tfsdk:"float"`
+}
+
+func (TestFloatTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["float"] = attrs["float"].SetOptional()
+	return attrs
 }
 
 type TestListTfSdk struct {
-	Repeated types.List `tfsdk:"repeated" tf:"optional"`
+	Repeated types.List `tfsdk:"repeated"`
+}
+
+func (TestListTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["repeated"] = attrs["repeated"].SetOptional()
+	return attrs
 }
 
 func (TestListTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -48,7 +80,12 @@ func (TestListTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Ty
 }
 
 type TestMapTfSdk struct {
-	Attributes types.Map `tfsdk:"attributes" tf:"optional"`
+	Attributes types.Map `tfsdk:"attributes"`
+}
+
+func (TestMapTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	return attrs
 }
 
 func (TestMapTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -58,7 +95,12 @@ func (TestMapTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Typ
 }
 
 type TestObjectTfSdk struct {
-	Object types.Object `tfsdk:"object" tf:"optional"`
+	Object types.Object `tfsdk:"object"`
+}
+
+func (TestObjectTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["object"] = attrs["object"].SetOptional()
+	return attrs
 }
 
 func (TestObjectTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -68,7 +110,12 @@ func (TestObjectTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.
 }
 
 type TestNestedListTfSdk struct {
-	NestedList types.List `tfsdk:"nested_list" tf:"optional"`
+	NestedList types.List `tfsdk:"nested_list"`
+}
+
+func (TestNestedListTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["nested_list"] = attrs["nested_list"].SetOptional()
+	return attrs
 }
 
 func (TestNestedListTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -78,12 +125,23 @@ func (TestNestedListTfSdk) GetComplexFieldTypes(context.Context) map[string]refl
 }
 
 type DummyNested struct {
-	Name    types.String `tfsdk:"name" tf:"optional"`
-	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
+	Name    types.String `tfsdk:"name"`
+	Enabled types.Bool   `tfsdk:"enabled"`
+}
+
+func (DummyNested) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	return attrs
 }
 
 type TestNestedMapTfSdk struct {
-	NestedMap types.Map `tfsdk:"nested_map" tf:"optional"`
+	NestedMap types.Map `tfsdk:"nested_map"`
+}
+
+func (TestNestedMapTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["nested_map"] = attrs["nested_map"].SetOptional()
+	return attrs
 }
 
 func (TestNestedMapTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
@@ -93,6 +151,10 @@ func (TestNestedMapTfSdk) GetComplexFieldTypes(context.Context) map[string]refle
 }
 
 var dummyType = tfcommon.NewObjectTyper(DummyNested{}).Type(context.Background()).(types.ObjectType)
+
+type TestDeprecatedTfTags struct {
+	Foo types.String `tfsdk:"foo" tf:"computed"`
+}
 
 var tests = []struct {
 	name       string
@@ -225,15 +287,30 @@ func testStructToSchemaPanics(t *testing.T, testStruct any, expectedError string
 }
 
 type TestTfSdkList struct {
-	Description types.List `tfsdk:"description" tf:"optional"`
+	Description types.List `tfsdk:"description"`
+}
+
+func (TestTfSdkList) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	return attrs
 }
 
 type TestTfSdkMapWithoutMetadata struct {
-	Description types.Map `tfsdk:"description" tf:"optional"`
+	Description types.Map `tfsdk:"description"`
+}
+
+func (TestTfSdkMapWithoutMetadata) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	return attrs
 }
 
 type TestSliceOfSlice struct {
-	NestedList [][]string `tfsdk:"nested_list" tf:"optional"`
+	NestedList [][]string `tfsdk:"nested_list"`
+}
+
+func (TestSliceOfSlice) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["nested_list"] = attrs["nested_list"].SetOptional()
+	return attrs
 }
 
 var error_tests = []struct {
@@ -277,4 +354,13 @@ func TestComputedField(t *testing.T) {
 
 	// Test that NonComputed field is not computed
 	assert.True(t, !scm.Attributes["noncomputed"].IsComputed())
+}
+
+func TestDeprecatedTagsPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Expected panic for TestDeprecatedTfTags")
+		}
+	}()
+	ResourceStructToSchema(context.Background(), TestDeprecatedTfTags{}, nil)
 }

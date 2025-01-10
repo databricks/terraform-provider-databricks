@@ -17,13 +17,14 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type AibiDashboardEmbeddingAccessPolicy_SdkV2 struct {
-	AccessPolicyType types.String `tfsdk:"access_policy_type" tf:""`
+	AccessPolicyType types.String `tfsdk:"access_policy_type"`
 }
 
 func (newState *AibiDashboardEmbeddingAccessPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicy_SdkV2) {
@@ -32,10 +33,10 @@ func (newState *AibiDashboardEmbeddingAccessPolicy_SdkV2) SyncEffectiveFieldsDur
 func (newState *AibiDashboardEmbeddingAccessPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicy_SdkV2) {
 }
 
-func (c AibiDashboardEmbeddingAccessPolicy_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "access_policy_type")...)
+func (c AibiDashboardEmbeddingAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_policy_type"] = attrs["access_policy_type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AibiDashboardEmbeddingAccessPolicy.
@@ -70,7 +71,7 @@ func (o AibiDashboardEmbeddingAccessPolicy_SdkV2) Type(ctx context.Context) attr
 }
 
 type AibiDashboardEmbeddingAccessPolicySetting_SdkV2 struct {
-	AibiDashboardEmbeddingAccessPolicy types.List `tfsdk:"aibi_dashboard_embedding_access_policy" tf:"object"`
+	AibiDashboardEmbeddingAccessPolicy types.List `tfsdk:"aibi_dashboard_embedding_access_policy"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -78,13 +79,13 @@ type AibiDashboardEmbeddingAccessPolicySetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingAccessPolicySetting_SdkV2) {
@@ -93,11 +94,13 @@ func (newState *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SyncEffectiveFi
 func (newState *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingAccessPolicySetting_SdkV2) {
 }
 
-func (c AibiDashboardEmbeddingAccessPolicySetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "aibi_dashboard_embedding_access_policy")...)
-	AibiDashboardEmbeddingAccessPolicy_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "aibi_dashboard_embedding_access_policy")...)
+func (c AibiDashboardEmbeddingAccessPolicySetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].SetRequired()
+	attrs["aibi_dashboard_embedding_access_policy"] = attrs["aibi_dashboard_embedding_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AibiDashboardEmbeddingAccessPolicySetting.
@@ -166,7 +169,7 @@ func (o *AibiDashboardEmbeddingAccessPolicySetting_SdkV2) SetAibiDashboardEmbedd
 }
 
 type AibiDashboardEmbeddingApprovedDomains_SdkV2 struct {
-	ApprovedDomains types.List `tfsdk:"approved_domains" tf:"optional"`
+	ApprovedDomains types.List `tfsdk:"approved_domains"`
 }
 
 func (newState *AibiDashboardEmbeddingApprovedDomains_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomains_SdkV2) {
@@ -175,9 +178,10 @@ func (newState *AibiDashboardEmbeddingApprovedDomains_SdkV2) SyncEffectiveFields
 func (newState *AibiDashboardEmbeddingApprovedDomains_SdkV2) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomains_SdkV2) {
 }
 
-func (c AibiDashboardEmbeddingApprovedDomains_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AibiDashboardEmbeddingApprovedDomains_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["approved_domains"] = attrs["approved_domains"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AibiDashboardEmbeddingApprovedDomains.
@@ -242,7 +246,7 @@ func (o *AibiDashboardEmbeddingApprovedDomains_SdkV2) SetApprovedDomains(ctx con
 }
 
 type AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2 struct {
-	AibiDashboardEmbeddingApprovedDomains types.List `tfsdk:"aibi_dashboard_embedding_approved_domains" tf:"object"`
+	AibiDashboardEmbeddingApprovedDomains types.List `tfsdk:"aibi_dashboard_embedding_approved_domains"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -250,13 +254,13 @@ type AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) {
@@ -265,11 +269,13 @@ func (newState *AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) SyncEffectiv
 func (newState *AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) {
 }
 
-func (c AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "aibi_dashboard_embedding_approved_domains")...)
-	AibiDashboardEmbeddingApprovedDomains_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "aibi_dashboard_embedding_approved_domains")...)
+func (c AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].SetRequired()
+	attrs["aibi_dashboard_embedding_approved_domains"] = attrs["aibi_dashboard_embedding_approved_domains"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AibiDashboardEmbeddingApprovedDomainsSetting.
@@ -338,7 +344,7 @@ func (o *AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2) SetAibiDashboardEmb
 }
 
 type AutomaticClusterUpdateSetting_SdkV2 struct {
-	AutomaticClusterUpdateWorkspace types.List `tfsdk:"automatic_cluster_update_workspace" tf:"object"`
+	AutomaticClusterUpdateWorkspace types.List `tfsdk:"automatic_cluster_update_workspace"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -346,13 +352,13 @@ type AutomaticClusterUpdateSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *AutomaticClusterUpdateSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutomaticClusterUpdateSetting_SdkV2) {
@@ -361,11 +367,13 @@ func (newState *AutomaticClusterUpdateSetting_SdkV2) SyncEffectiveFieldsDuringCr
 func (newState *AutomaticClusterUpdateSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState AutomaticClusterUpdateSetting_SdkV2) {
 }
 
-func (c AutomaticClusterUpdateSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "automatic_cluster_update_workspace")...)
-	ClusterAutoRestartMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "automatic_cluster_update_workspace")...)
+func (c AutomaticClusterUpdateSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].SetRequired()
+	attrs["automatic_cluster_update_workspace"] = attrs["automatic_cluster_update_workspace"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutomaticClusterUpdateSetting.
@@ -434,7 +442,7 @@ func (o *AutomaticClusterUpdateSetting_SdkV2) SetAutomaticClusterUpdateWorkspace
 }
 
 type BooleanMessage_SdkV2 struct {
-	Value types.Bool `tfsdk:"value" tf:"optional"`
+	Value types.Bool `tfsdk:"value"`
 }
 
 func (newState *BooleanMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BooleanMessage_SdkV2) {
@@ -443,9 +451,10 @@ func (newState *BooleanMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *BooleanMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState BooleanMessage_SdkV2) {
 }
 
-func (c BooleanMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c BooleanMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BooleanMessage.
@@ -480,20 +489,20 @@ func (o BooleanMessage_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterAutoRestartMessage_SdkV2 struct {
-	CanToggle types.Bool `tfsdk:"can_toggle" tf:"optional"`
+	CanToggle types.Bool `tfsdk:"can_toggle"`
 
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// Contains an information about the enablement status judging (e.g. whether
 	// the enterprise tier is enabled) This is only additional information that
 	// MUST NOT be used to decide whether the setting is enabled or not. This is
 	// intended to use only for purposes like showing an error message to the
 	// customer with the additional details. For example, using these details we
 	// can check why exactly the feature is disabled for this customer.
-	EnablementDetails types.List `tfsdk:"enablement_details" tf:"optional,object"`
+	EnablementDetails types.List `tfsdk:"enablement_details"`
 
-	MaintenanceWindow types.List `tfsdk:"maintenance_window" tf:"optional,object"`
+	MaintenanceWindow types.List `tfsdk:"maintenance_window"`
 
-	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available" tf:"optional"`
+	RestartEvenIfNoUpdatesAvailable types.Bool `tfsdk:"restart_even_if_no_updates_available"`
 }
 
 func (newState *ClusterAutoRestartMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessage_SdkV2) {
@@ -502,11 +511,16 @@ func (newState *ClusterAutoRestartMessage_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *ClusterAutoRestartMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessage_SdkV2) {
 }
 
-func (c ClusterAutoRestartMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ClusterAutoRestartMessageEnablementDetails_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "enablement_details")...)
-	ClusterAutoRestartMessageMaintenanceWindow_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "maintenance_window")...)
+func (c ClusterAutoRestartMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["can_toggle"] = attrs["can_toggle"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["enablement_details"] = attrs["enablement_details"].SetOptional()
+	attrs["enablement_details"] = attrs["enablement_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["maintenance_window"] = attrs["maintenance_window"].SetOptional()
+	attrs["maintenance_window"] = attrs["maintenance_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["restart_even_if_no_updates_available"] = attrs["restart_even_if_no_updates_available"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAutoRestartMessage.
@@ -615,12 +629,12 @@ func (o *ClusterAutoRestartMessage_SdkV2) SetMaintenanceWindow(ctx context.Conte
 // the feature is disabled for this customer.
 type ClusterAutoRestartMessageEnablementDetails_SdkV2 struct {
 	// The feature is force enabled if compliance mode is active
-	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode" tf:"optional"`
+	ForcedForComplianceMode types.Bool `tfsdk:"forced_for_compliance_mode"`
 	// The feature is unavailable if the corresponding entitlement disabled (see
 	// getShieldEntitlementEnable)
-	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement" tf:"optional"`
+	UnavailableForDisabledEntitlement types.Bool `tfsdk:"unavailable_for_disabled_entitlement"`
 	// The feature is unavailable if the customer doesn't have enterprise tier
-	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier" tf:"optional"`
+	UnavailableForNonEnterpriseTier types.Bool `tfsdk:"unavailable_for_non_enterprise_tier"`
 }
 
 func (newState *ClusterAutoRestartMessageEnablementDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageEnablementDetails_SdkV2) {
@@ -629,9 +643,12 @@ func (newState *ClusterAutoRestartMessageEnablementDetails_SdkV2) SyncEffectiveF
 func (newState *ClusterAutoRestartMessageEnablementDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageEnablementDetails_SdkV2) {
 }
 
-func (c ClusterAutoRestartMessageEnablementDetails_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ClusterAutoRestartMessageEnablementDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["forced_for_compliance_mode"] = attrs["forced_for_compliance_mode"].SetOptional()
+	attrs["unavailable_for_disabled_entitlement"] = attrs["unavailable_for_disabled_entitlement"].SetOptional()
+	attrs["unavailable_for_non_enterprise_tier"] = attrs["unavailable_for_non_enterprise_tier"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAutoRestartMessageEnablementDetails.
@@ -670,7 +687,7 @@ func (o ClusterAutoRestartMessageEnablementDetails_SdkV2) Type(ctx context.Conte
 }
 
 type ClusterAutoRestartMessageMaintenanceWindow_SdkV2 struct {
-	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule" tf:"optional,object"`
+	WeekDayBasedSchedule types.List `tfsdk:"week_day_based_schedule"`
 }
 
 func (newState *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindow_SdkV2) {
@@ -679,10 +696,11 @@ func (newState *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SyncEffectiveF
 func (newState *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindow_SdkV2) {
 }
 
-func (c ClusterAutoRestartMessageMaintenanceWindow_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "week_day_based_schedule")...)
+func (c ClusterAutoRestartMessageMaintenanceWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["week_day_based_schedule"] = attrs["week_day_based_schedule"].SetOptional()
+	attrs["week_day_based_schedule"] = attrs["week_day_based_schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAutoRestartMessageMaintenanceWindow.
@@ -747,11 +765,11 @@ func (o *ClusterAutoRestartMessageMaintenanceWindow_SdkV2) SetWeekDayBasedSchedu
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2 struct {
-	DayOfWeek types.String `tfsdk:"day_of_week" tf:"optional"`
+	DayOfWeek types.String `tfsdk:"day_of_week"`
 
-	Frequency types.String `tfsdk:"frequency" tf:"optional"`
+	Frequency types.String `tfsdk:"frequency"`
 
-	WindowStartTime types.List `tfsdk:"window_start_time" tf:"optional,object"`
+	WindowStartTime types.List `tfsdk:"window_start_time"`
 }
 
 func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) {
@@ -760,10 +778,13 @@ func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_S
 func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) {
 }
 
-func (c ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "window_start_time")...)
+func (c ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["day_of_week"] = attrs["day_of_week"].SetOptional()
+	attrs["frequency"] = attrs["frequency"].SetOptional()
+	attrs["window_start_time"] = attrs["window_start_time"].SetOptional()
+	attrs["window_start_time"] = attrs["window_start_time"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule.
@@ -832,9 +853,9 @@ func (o *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) S
 }
 
 type ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2 struct {
-	Hours types.Int64 `tfsdk:"hours" tf:"optional"`
+	Hours types.Int64 `tfsdk:"hours"`
 
-	Minutes types.Int64 `tfsdk:"minutes" tf:"optional"`
+	Minutes types.Int64 `tfsdk:"minutes"`
 }
 
 func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) {
@@ -843,9 +864,11 @@ func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2)
 func (newState *ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) {
 }
 
-func (c ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["hours"] = attrs["hours"].SetOptional()
+	attrs["minutes"] = attrs["minutes"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAutoRestartMessageMaintenanceWindowWindowStartTime.
@@ -884,9 +907,9 @@ func (o ClusterAutoRestartMessageMaintenanceWindowWindowStartTime_SdkV2) Type(ct
 // SHIELD feature: CSP
 type ComplianceSecurityProfile_SdkV2 struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
-	ComplianceStandards types.List `tfsdk:"compliance_standards" tf:"optional"`
+	ComplianceStandards types.List `tfsdk:"compliance_standards"`
 
-	IsEnabled types.Bool `tfsdk:"is_enabled" tf:"optional"`
+	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
 func (newState *ComplianceSecurityProfile_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile_SdkV2) {
@@ -895,9 +918,11 @@ func (newState *ComplianceSecurityProfile_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *ComplianceSecurityProfile_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile_SdkV2) {
 }
 
-func (c ComplianceSecurityProfile_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ComplianceSecurityProfile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compliance_standards"] = attrs["compliance_standards"].SetOptional()
+	attrs["is_enabled"] = attrs["is_enabled"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplianceSecurityProfile.
@@ -965,7 +990,7 @@ func (o *ComplianceSecurityProfile_SdkV2) SetComplianceStandards(ctx context.Con
 
 type ComplianceSecurityProfileSetting_SdkV2 struct {
 	// SHIELD feature: CSP
-	ComplianceSecurityProfileWorkspace types.List `tfsdk:"compliance_security_profile_workspace" tf:"object"`
+	ComplianceSecurityProfileWorkspace types.List `tfsdk:"compliance_security_profile_workspace"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -973,13 +998,13 @@ type ComplianceSecurityProfileSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *ComplianceSecurityProfileSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfileSetting_SdkV2) {
@@ -988,11 +1013,13 @@ func (newState *ComplianceSecurityProfileSetting_SdkV2) SyncEffectiveFieldsDurin
 func (newState *ComplianceSecurityProfileSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfileSetting_SdkV2) {
 }
 
-func (c ComplianceSecurityProfileSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "compliance_security_profile_workspace")...)
-	ComplianceSecurityProfile_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "compliance_security_profile_workspace")...)
+func (c ComplianceSecurityProfileSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compliance_security_profile_workspace"] = attrs["compliance_security_profile_workspace"].SetRequired()
+	attrs["compliance_security_profile_workspace"] = attrs["compliance_security_profile_workspace"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplianceSecurityProfileSetting.
@@ -1061,15 +1088,15 @@ func (o *ComplianceSecurityProfileSetting_SdkV2) SetComplianceSecurityProfileWor
 }
 
 type Config_SdkV2 struct {
-	Email types.List `tfsdk:"email" tf:"optional,object"`
+	Email types.List `tfsdk:"email"`
 
-	GenericWebhook types.List `tfsdk:"generic_webhook" tf:"optional,object"`
+	GenericWebhook types.List `tfsdk:"generic_webhook"`
 
-	MicrosoftTeams types.List `tfsdk:"microsoft_teams" tf:"optional,object"`
+	MicrosoftTeams types.List `tfsdk:"microsoft_teams"`
 
-	Pagerduty types.List `tfsdk:"pagerduty" tf:"optional,object"`
+	Pagerduty types.List `tfsdk:"pagerduty"`
 
-	Slack types.List `tfsdk:"slack" tf:"optional,object"`
+	Slack types.List `tfsdk:"slack"`
 }
 
 func (newState *Config_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Config_SdkV2) {
@@ -1078,14 +1105,19 @@ func (newState *Config_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Confi
 func (newState *Config_SdkV2) SyncEffectiveFieldsDuringRead(existingState Config_SdkV2) {
 }
 
-func (c Config_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EmailConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "email")...)
-	GenericWebhookConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "generic_webhook")...)
-	MicrosoftTeamsConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "microsoft_teams")...)
-	PagerdutyConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "pagerduty")...)
-	SlackConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "slack")...)
+func (c Config_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["email"] = attrs["email"].SetOptional()
+	attrs["email"] = attrs["email"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["generic_webhook"] = attrs["generic_webhook"].SetOptional()
+	attrs["generic_webhook"] = attrs["generic_webhook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["microsoft_teams"] = attrs["microsoft_teams"].SetOptional()
+	attrs["microsoft_teams"] = attrs["microsoft_teams"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pagerduty"] = attrs["pagerduty"].SetOptional()
+	attrs["pagerduty"] = attrs["pagerduty"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["slack"] = attrs["slack"].SetOptional()
+	attrs["slack"] = attrs["slack"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Config.
@@ -1275,16 +1307,16 @@ func (o *Config_SdkV2) SetSlack(ctx context.Context, v SlackConfig_SdkV2) {
 
 // Details required to configure a block list or allow list.
 type CreateIpAccessList_SdkV2 struct {
-	IpAddresses types.List `tfsdk:"ip_addresses" tf:"optional"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
-	Label types.String `tfsdk:"label" tf:""`
+	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
 	// case-sensitive:
 	//
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType types.String `tfsdk:"list_type" tf:""`
+	ListType types.String `tfsdk:"list_type"`
 }
 
 func (newState *CreateIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessList_SdkV2) {
@@ -1293,11 +1325,12 @@ func (newState *CreateIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateIpAccessList_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateIpAccessList_SdkV2) {
 }
 
-func (c CreateIpAccessList_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "label")...)
-	cs.SetRequired(append(path, "list_type")...)
+func (c CreateIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
+	attrs["label"] = attrs["label"].SetRequired()
+	attrs["list_type"] = attrs["list_type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateIpAccessList.
@@ -1368,7 +1401,7 @@ func (o *CreateIpAccessList_SdkV2) SetIpAddresses(ctx context.Context, v []types
 // An IP access list was successfully created.
 type CreateIpAccessListResponse_SdkV2 struct {
 	// Definition of an IP Access list
-	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list"`
 }
 
 func (newState *CreateIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateIpAccessListResponse_SdkV2) {
@@ -1377,10 +1410,11 @@ func (newState *CreateIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *CreateIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateIpAccessListResponse_SdkV2) {
 }
 
-func (c CreateIpAccessListResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	IpAccessListInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ip_access_list")...)
+func (c CreateIpAccessListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
+	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateIpAccessListResponse.
@@ -1449,11 +1483,11 @@ type CreateNetworkConnectivityConfigRequest_SdkV2 struct {
 	// alphanumeric characters, hyphens, and underscores. The length must be
 	// between 3 and 30 characters. The name must match the regular expression
 	// `^[0-9a-zA-Z-_]{3,30}$`.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The region for the network connectivity configuration. Only workspaces in
 	// the same region can be attached to the network connectivity
 	// configuration.
-	Region types.String `tfsdk:"region" tf:""`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *CreateNetworkConnectivityConfigRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNetworkConnectivityConfigRequest_SdkV2) {
@@ -1462,11 +1496,11 @@ func (newState *CreateNetworkConnectivityConfigRequest_SdkV2) SyncEffectiveField
 func (newState *CreateNetworkConnectivityConfigRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateNetworkConnectivityConfigRequest_SdkV2) {
 }
 
-func (c CreateNetworkConnectivityConfigRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "region")...)
+func (c CreateNetworkConnectivityConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["region"] = attrs["region"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNetworkConnectivityConfigRequest.
@@ -1505,9 +1539,9 @@ func (o CreateNetworkConnectivityConfigRequest_SdkV2) Type(ctx context.Context) 
 type CreateNotificationDestinationRequest_SdkV2 struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// The display name for the notification destination.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 }
 
 func (newState *CreateNotificationDestinationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateNotificationDestinationRequest_SdkV2) {
@@ -1516,10 +1550,12 @@ func (newState *CreateNotificationDestinationRequest_SdkV2) SyncEffectiveFieldsD
 func (newState *CreateNotificationDestinationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateNotificationDestinationRequest_SdkV2) {
 }
 
-func (c CreateNotificationDestinationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Config_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
+func (c CreateNotificationDestinationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["display_name"] = attrs["display_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateNotificationDestinationRequest.
@@ -1588,11 +1624,11 @@ func (o *CreateNotificationDestinationRequest_SdkV2) SetConfig(ctx context.Conte
 // Configuration details for creating on-behalf tokens.
 type CreateOboTokenRequest_SdkV2 struct {
 	// Application ID of the service principal.
-	ApplicationId types.String `tfsdk:"application_id" tf:""`
+	ApplicationId types.String `tfsdk:"application_id"`
 	// Comment that describes the purpose of the token.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// The number of seconds before the token expires.
-	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds" tf:"optional"`
+	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
 }
 
 func (newState *CreateOboTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOboTokenRequest_SdkV2) {
@@ -1601,10 +1637,12 @@ func (newState *CreateOboTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *CreateOboTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateOboTokenRequest_SdkV2) {
 }
 
-func (c CreateOboTokenRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "application_id")...)
+func (c CreateOboTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["application_id"] = attrs["application_id"].SetRequired()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOboTokenRequest.
@@ -1644,9 +1682,9 @@ func (o CreateOboTokenRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 // An on-behalf token was successfully created for the service principal.
 type CreateOboTokenResponse_SdkV2 struct {
-	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info"`
 	// Value of the token.
-	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
+	TokenValue types.String `tfsdk:"token_value"`
 }
 
 func (newState *CreateOboTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateOboTokenResponse_SdkV2) {
@@ -1655,10 +1693,12 @@ func (newState *CreateOboTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *CreateOboTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateOboTokenResponse_SdkV2) {
 }
 
-func (c CreateOboTokenResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_info")...)
+func (c CreateOboTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_info"] = attrs["token_info"].SetOptional()
+	attrs["token_info"] = attrs["token_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["token_value"] = attrs["token_value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateOboTokenResponse.
@@ -1728,11 +1768,11 @@ type CreatePrivateEndpointRuleRequest_SdkV2 struct {
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
-	GroupId types.String `tfsdk:"group_id" tf:""`
+	GroupId types.String `tfsdk:"group_id"`
 	// Your Network Connectvity Configuration ID.
 	NetworkConnectivityConfigId types.String `tfsdk:"-"`
 	// The Azure resource ID of the target resource.
-	ResourceId types.String `tfsdk:"resource_id" tf:""`
+	ResourceId types.String `tfsdk:"resource_id"`
 }
 
 func (newState *CreatePrivateEndpointRuleRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePrivateEndpointRuleRequest_SdkV2) {
@@ -1741,12 +1781,12 @@ func (newState *CreatePrivateEndpointRuleRequest_SdkV2) SyncEffectiveFieldsDurin
 func (newState *CreatePrivateEndpointRuleRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePrivateEndpointRuleRequest_SdkV2) {
 }
 
-func (c CreatePrivateEndpointRuleRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "group_id")...)
-	cs.SetRequired(append(path, "network_connectivity_config_id")...)
-	cs.SetRequired(append(path, "resource_id")...)
+func (c CreatePrivateEndpointRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
+	attrs["resource_id"] = attrs["resource_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePrivateEndpointRuleRequest.
@@ -1786,11 +1826,11 @@ func (o CreatePrivateEndpointRuleRequest_SdkV2) Type(ctx context.Context) attr.T
 
 type CreateTokenRequest_SdkV2 struct {
 	// Optional description to attach to the token.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// The lifetime of the token, in seconds.
 	//
 	// If the lifetime is not specified, this token remains valid indefinitely.
-	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds" tf:"optional"`
+	LifetimeSeconds types.Int64 `tfsdk:"lifetime_seconds"`
 }
 
 func (newState *CreateTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTokenRequest_SdkV2) {
@@ -1799,9 +1839,11 @@ func (newState *CreateTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTokenRequest_SdkV2) {
 }
 
-func (c CreateTokenRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["lifetime_seconds"] = attrs["lifetime_seconds"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTokenRequest.
@@ -1839,9 +1881,9 @@ func (o CreateTokenRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateTokenResponse_SdkV2 struct {
 	// The information for the new token.
-	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info"`
 	// The value of the new token.
-	TokenValue types.String `tfsdk:"token_value" tf:"optional"`
+	TokenValue types.String `tfsdk:"token_value"`
 }
 
 func (newState *CreateTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTokenResponse_SdkV2) {
@@ -1850,10 +1892,12 @@ func (newState *CreateTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *CreateTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTokenResponse_SdkV2) {
 }
 
-func (c CreateTokenResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PublicTokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_info")...)
+func (c CreateTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_info"] = attrs["token_info"].SetOptional()
+	attrs["token_info"] = attrs["token_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["token_value"] = attrs["token_value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTokenResponse.
@@ -1923,9 +1967,9 @@ func (o *CreateTokenResponse_SdkV2) SetTokenInfo(ctx context.Context, v PublicTo
 type CspEnablementAccount_SdkV2 struct {
 	// Set by customers when they request Compliance Security Profile (CSP)
 	// Invariants are enforced in Settings policy.
-	ComplianceStandards types.List `tfsdk:"compliance_standards" tf:"optional"`
+	ComplianceStandards types.List `tfsdk:"compliance_standards"`
 	// Enforced = it cannot be overriden at workspace level.
-	IsEnforced types.Bool `tfsdk:"is_enforced" tf:"optional"`
+	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
 func (newState *CspEnablementAccount_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccount_SdkV2) {
@@ -1934,9 +1978,11 @@ func (newState *CspEnablementAccount_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CspEnablementAccount_SdkV2) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccount_SdkV2) {
 }
 
-func (c CspEnablementAccount_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CspEnablementAccount_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compliance_standards"] = attrs["compliance_standards"].SetOptional()
+	attrs["is_enforced"] = attrs["is_enforced"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CspEnablementAccount.
@@ -2004,7 +2050,7 @@ func (o *CspEnablementAccount_SdkV2) SetComplianceStandards(ctx context.Context,
 
 type CspEnablementAccountSetting_SdkV2 struct {
 	// Account level policy for CSP
-	CspEnablementAccount types.List `tfsdk:"csp_enablement_account" tf:"object"`
+	CspEnablementAccount types.List `tfsdk:"csp_enablement_account"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -2012,13 +2058,13 @@ type CspEnablementAccountSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *CspEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CspEnablementAccountSetting_SdkV2) {
@@ -2027,11 +2073,13 @@ func (newState *CspEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *CspEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState CspEnablementAccountSetting_SdkV2) {
 }
 
-func (c CspEnablementAccountSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "csp_enablement_account")...)
-	CspEnablementAccount_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "csp_enablement_account")...)
+func (c CspEnablementAccountSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["csp_enablement_account"] = attrs["csp_enablement_account"].SetRequired()
+	attrs["csp_enablement_account"] = attrs["csp_enablement_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CspEnablementAccountSetting.
@@ -2116,15 +2164,15 @@ type DefaultNamespaceSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 
-	Namespace types.List `tfsdk:"namespace" tf:"object"`
+	Namespace types.List `tfsdk:"namespace"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *DefaultNamespaceSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DefaultNamespaceSetting_SdkV2) {
@@ -2133,11 +2181,13 @@ func (newState *DefaultNamespaceSetting_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *DefaultNamespaceSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState DefaultNamespaceSetting_SdkV2) {
 }
 
-func (c DefaultNamespaceSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "namespace")...)
-	StringMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "namespace")...)
+func (c DefaultNamespaceSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["namespace"] = attrs["namespace"].SetRequired()
+	attrs["namespace"] = attrs["namespace"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DefaultNamespaceSetting.
@@ -2294,7 +2344,7 @@ type DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) {
@@ -2303,10 +2353,10 @@ func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) S
 func (newState *DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) {
 }
 
-func (c DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteAibiDashboardEmbeddingAccessPolicySettingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingAccessPolicySettingResponse.
@@ -2392,7 +2442,7 @@ type DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) {
@@ -2401,10 +2451,10 @@ func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2
 func (newState *DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) {
 }
 
-func (c DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAibiDashboardEmbeddingApprovedDomainsSettingResponse.
@@ -2490,7 +2540,7 @@ type DeleteDefaultNamespaceSettingResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteDefaultNamespaceSettingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDefaultNamespaceSettingResponse_SdkV2) {
@@ -2499,10 +2549,10 @@ func (newState *DeleteDefaultNamespaceSettingResponse_SdkV2) SyncEffectiveFields
 func (newState *DeleteDefaultNamespaceSettingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDefaultNamespaceSettingResponse_SdkV2) {
 }
 
-func (c DeleteDefaultNamespaceSettingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteDefaultNamespaceSettingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDefaultNamespaceSettingResponse.
@@ -2588,7 +2638,7 @@ type DeleteDisableLegacyAccessResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteDisableLegacyAccessResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyAccessResponse_SdkV2) {
@@ -2597,10 +2647,10 @@ func (newState *DeleteDisableLegacyAccessResponse_SdkV2) SyncEffectiveFieldsDuri
 func (newState *DeleteDisableLegacyAccessResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyAccessResponse_SdkV2) {
 }
 
-func (c DeleteDisableLegacyAccessResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteDisableLegacyAccessResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDisableLegacyAccessResponse.
@@ -2686,7 +2736,7 @@ type DeleteDisableLegacyDbfsResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteDisableLegacyDbfsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyDbfsResponse_SdkV2) {
@@ -2695,10 +2745,10 @@ func (newState *DeleteDisableLegacyDbfsResponse_SdkV2) SyncEffectiveFieldsDuring
 func (newState *DeleteDisableLegacyDbfsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyDbfsResponse_SdkV2) {
 }
 
-func (c DeleteDisableLegacyDbfsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteDisableLegacyDbfsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDisableLegacyDbfsResponse.
@@ -2784,7 +2834,7 @@ type DeleteDisableLegacyFeaturesResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteDisableLegacyFeaturesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDisableLegacyFeaturesResponse_SdkV2) {
@@ -2793,10 +2843,10 @@ func (newState *DeleteDisableLegacyFeaturesResponse_SdkV2) SyncEffectiveFieldsDu
 func (newState *DeleteDisableLegacyFeaturesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDisableLegacyFeaturesResponse_SdkV2) {
 }
 
-func (c DeleteDisableLegacyFeaturesResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteDisableLegacyFeaturesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDisableLegacyFeaturesResponse.
@@ -3022,7 +3072,7 @@ type DeletePersonalComputeSettingResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeletePersonalComputeSettingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePersonalComputeSettingResponse_SdkV2) {
@@ -3031,10 +3081,10 @@ func (newState *DeletePersonalComputeSettingResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *DeletePersonalComputeSettingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePersonalComputeSettingResponse_SdkV2) {
 }
 
-func (c DeletePersonalComputeSettingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeletePersonalComputeSettingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePersonalComputeSettingResponse.
@@ -3191,7 +3241,7 @@ type DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2 struct {
 	// delete pattern to perform setting deletions in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// DELETE request to identify the rule set version you are deleting.
-	Etag types.String `tfsdk:"etag" tf:""`
+	Etag types.String `tfsdk:"etag"`
 }
 
 func (newState *DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) {
@@ -3200,10 +3250,10 @@ func (newState *DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) SyncEffectiv
 func (newState *DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) {
 }
 
-func (c DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "etag")...)
+func (c DeleteRestrictWorkspaceAdminsSettingResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRestrictWorkspaceAdminsSettingResponse.
@@ -3275,7 +3325,7 @@ func (o DeleteTokenManagementRequest_SdkV2) Type(ctx context.Context) attr.Type 
 }
 
 type DisableLegacyAccess_SdkV2 struct {
-	DisableLegacyAccess types.List `tfsdk:"disable_legacy_access" tf:"object"`
+	DisableLegacyAccess types.List `tfsdk:"disable_legacy_access"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -3283,13 +3333,13 @@ type DisableLegacyAccess_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *DisableLegacyAccess_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyAccess_SdkV2) {
@@ -3298,11 +3348,13 @@ func (newState *DisableLegacyAccess_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *DisableLegacyAccess_SdkV2) SyncEffectiveFieldsDuringRead(existingState DisableLegacyAccess_SdkV2) {
 }
 
-func (c DisableLegacyAccess_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "disable_legacy_access")...)
-	BooleanMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "disable_legacy_access")...)
+func (c DisableLegacyAccess_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disable_legacy_access"] = attrs["disable_legacy_access"].SetRequired()
+	attrs["disable_legacy_access"] = attrs["disable_legacy_access"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DisableLegacyAccess.
@@ -3371,7 +3423,7 @@ func (o *DisableLegacyAccess_SdkV2) SetDisableLegacyAccess(ctx context.Context, 
 }
 
 type DisableLegacyDbfs_SdkV2 struct {
-	DisableLegacyDbfs types.List `tfsdk:"disable_legacy_dbfs" tf:"object"`
+	DisableLegacyDbfs types.List `tfsdk:"disable_legacy_dbfs"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -3379,13 +3431,13 @@ type DisableLegacyDbfs_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *DisableLegacyDbfs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyDbfs_SdkV2) {
@@ -3394,11 +3446,13 @@ func (newState *DisableLegacyDbfs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DisableLegacyDbfs_SdkV2) SyncEffectiveFieldsDuringRead(existingState DisableLegacyDbfs_SdkV2) {
 }
 
-func (c DisableLegacyDbfs_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "disable_legacy_dbfs")...)
-	BooleanMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "disable_legacy_dbfs")...)
+func (c DisableLegacyDbfs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disable_legacy_dbfs"] = attrs["disable_legacy_dbfs"].SetRequired()
+	attrs["disable_legacy_dbfs"] = attrs["disable_legacy_dbfs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DisableLegacyDbfs.
@@ -3467,7 +3521,7 @@ func (o *DisableLegacyDbfs_SdkV2) SetDisableLegacyDbfs(ctx context.Context, v Bo
 }
 
 type DisableLegacyFeatures_SdkV2 struct {
-	DisableLegacyFeatures types.List `tfsdk:"disable_legacy_features" tf:"object"`
+	DisableLegacyFeatures types.List `tfsdk:"disable_legacy_features"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -3475,13 +3529,13 @@ type DisableLegacyFeatures_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *DisableLegacyFeatures_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DisableLegacyFeatures_SdkV2) {
@@ -3490,11 +3544,13 @@ func (newState *DisableLegacyFeatures_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *DisableLegacyFeatures_SdkV2) SyncEffectiveFieldsDuringRead(existingState DisableLegacyFeatures_SdkV2) {
 }
 
-func (c DisableLegacyFeatures_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "disable_legacy_features")...)
-	BooleanMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "disable_legacy_features")...)
+func (c DisableLegacyFeatures_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disable_legacy_features"] = attrs["disable_legacy_features"].SetRequired()
+	attrs["disable_legacy_features"] = attrs["disable_legacy_features"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DisableLegacyFeatures.
@@ -3568,7 +3624,7 @@ func (o *DisableLegacyFeatures_SdkV2) SetDisableLegacyFeatures(ctx context.Conte
 // dataplane, see networkconfig.textproto).
 type EgressNetworkPolicy_SdkV2 struct {
 	// The access policy enforced for egress traffic to the internet.
-	InternetAccess types.List `tfsdk:"internet_access" tf:"optional,object"`
+	InternetAccess types.List `tfsdk:"internet_access"`
 }
 
 func (newState *EgressNetworkPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicy_SdkV2) {
@@ -3577,10 +3633,11 @@ func (newState *EgressNetworkPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *EgressNetworkPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicy_SdkV2) {
 }
 
-func (c EgressNetworkPolicy_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EgressNetworkPolicyInternetAccessPolicy_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "internet_access")...)
+func (c EgressNetworkPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["internet_access"] = attrs["internet_access"].SetOptional()
+	attrs["internet_access"] = attrs["internet_access"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicy.
@@ -3645,19 +3702,19 @@ func (o *EgressNetworkPolicy_SdkV2) SetInternetAccess(ctx context.Context, v Egr
 }
 
 type EgressNetworkPolicyInternetAccessPolicy_SdkV2 struct {
-	AllowedInternetDestinations types.List `tfsdk:"allowed_internet_destinations" tf:"optional"`
+	AllowedInternetDestinations types.List `tfsdk:"allowed_internet_destinations"`
 
-	AllowedStorageDestinations types.List `tfsdk:"allowed_storage_destinations" tf:"optional"`
+	AllowedStorageDestinations types.List `tfsdk:"allowed_storage_destinations"`
 	// Optional. If not specified, assume the policy is enforced for all
 	// workloads.
-	LogOnlyMode types.List `tfsdk:"log_only_mode" tf:"optional,object"`
+	LogOnlyMode types.List `tfsdk:"log_only_mode"`
 	// At which level can Databricks and Databricks managed compute access
 	// Internet. FULL_ACCESS: Databricks can access Internet. No blocking rules
 	// will apply. RESTRICTED_ACCESS: Databricks can only access explicitly
 	// allowed internet and storage destinations, as well as UC connections and
 	// external locations. PRIVATE_ACCESS_ONLY (not used): Databricks can only
 	// access destinations via private link.
-	RestrictionMode types.String `tfsdk:"restriction_mode" tf:"optional"`
+	RestrictionMode types.String `tfsdk:"restriction_mode"`
 }
 
 func (newState *EgressNetworkPolicyInternetAccessPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicy_SdkV2) {
@@ -3666,12 +3723,14 @@ func (newState *EgressNetworkPolicyInternetAccessPolicy_SdkV2) SyncEffectiveFiel
 func (newState *EgressNetworkPolicyInternetAccessPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicy_SdkV2) {
 }
 
-func (c EgressNetworkPolicyInternetAccessPolicy_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "allowed_internet_destinations")...)
-	EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "allowed_storage_destinations")...)
-	EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "log_only_mode")...)
+func (c EgressNetworkPolicyInternetAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_internet_destinations"] = attrs["allowed_internet_destinations"].SetOptional()
+	attrs["allowed_storage_destinations"] = attrs["allowed_storage_destinations"].SetOptional()
+	attrs["log_only_mode"] = attrs["log_only_mode"].SetOptional()
+	attrs["log_only_mode"] = attrs["log_only_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["restriction_mode"] = attrs["restriction_mode"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicy.
@@ -3803,15 +3862,15 @@ func (o *EgressNetworkPolicyInternetAccessPolicy_SdkV2) SetLogOnlyMode(ctx conte
 // restricted. We only support domain name (FQDN) destinations for the time
 // being, though going forwards we want to support host names and IP addresses.
 type EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2 struct {
-	Destination types.String `tfsdk:"destination" tf:"optional"`
+	Destination types.String `tfsdk:"destination"`
 	// The filtering protocol used by the DP. For private and public preview,
 	// SEG will only support TCP filtering (i.e. DNS based filtering, filtering
 	// by destination IP address), so protocol will be set to TCP by default and
 	// hidden from the user. In the future, users may be able to select HTTP
 	// filtering (i.e. SNI based filtering, filtering by FQDN).
-	Protocol types.String `tfsdk:"protocol" tf:"optional"`
+	Protocol types.String `tfsdk:"protocol"`
 
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) {
@@ -3820,9 +3879,12 @@ func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2
 func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) {
 }
 
-func (c EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetOptional()
+	attrs["protocol"] = attrs["protocol"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyInternetDestination.
@@ -3861,9 +3923,9 @@ func (o EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) Type(c
 }
 
 type EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2 struct {
-	LogOnlyModeType types.String `tfsdk:"log_only_mode_type" tf:"optional"`
+	LogOnlyModeType types.String `tfsdk:"log_only_mode_type"`
 
-	Workloads types.List `tfsdk:"workloads" tf:"optional"`
+	Workloads types.List `tfsdk:"workloads"`
 }
 
 func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) {
@@ -3872,9 +3934,11 @@ func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) SyncEf
 func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) {
 }
 
-func (c EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["log_only_mode_type"] = attrs["log_only_mode_type"].SetOptional()
+	attrs["workloads"] = attrs["workloads"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyLogOnlyMode.
@@ -3942,21 +4006,21 @@ func (o *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) SetWorkloads(
 
 // Users can specify accessible storage destinations.
 type EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2 struct {
-	AllowedPaths types.List `tfsdk:"allowed_paths" tf:"optional"`
+	AllowedPaths types.List `tfsdk:"allowed_paths"`
 
-	AzureContainer types.String `tfsdk:"azure_container" tf:"optional"`
+	AzureContainer types.String `tfsdk:"azure_container"`
 
-	AzureDnsZone types.String `tfsdk:"azure_dns_zone" tf:"optional"`
+	AzureDnsZone types.String `tfsdk:"azure_dns_zone"`
 
-	AzureStorageAccount types.String `tfsdk:"azure_storage_account" tf:"optional"`
+	AzureStorageAccount types.String `tfsdk:"azure_storage_account"`
 
-	AzureStorageService types.String `tfsdk:"azure_storage_service" tf:"optional"`
+	AzureStorageService types.String `tfsdk:"azure_storage_service"`
 
-	BucketName types.String `tfsdk:"bucket_name" tf:"optional"`
+	BucketName types.String `tfsdk:"bucket_name"`
 
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) {
@@ -3965,9 +4029,17 @@ func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2)
 func (newState *EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) SyncEffectiveFieldsDuringRead(existingState EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) {
 }
 
-func (c EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allowed_paths"] = attrs["allowed_paths"].SetOptional()
+	attrs["azure_container"] = attrs["azure_container"].SetOptional()
+	attrs["azure_dns_zone"] = attrs["azure_dns_zone"].SetOptional()
+	attrs["azure_storage_account"] = attrs["azure_storage_account"].SetOptional()
+	attrs["azure_storage_service"] = attrs["azure_storage_service"].SetOptional()
+	attrs["bucket_name"] = attrs["bucket_name"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EgressNetworkPolicyInternetAccessPolicyStorageDestination.
@@ -4047,7 +4119,7 @@ func (o *EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) SetAll
 
 type EmailConfig_SdkV2 struct {
 	// Email addresses to notify.
-	Addresses types.List `tfsdk:"addresses" tf:"optional"`
+	Addresses types.List `tfsdk:"addresses"`
 }
 
 func (newState *EmailConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmailConfig_SdkV2) {
@@ -4056,9 +4128,10 @@ func (newState *EmailConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *EmailConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmailConfig_SdkV2) {
 }
 
-func (c EmailConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EmailConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["addresses"] = attrs["addresses"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EmailConfig.
@@ -4131,9 +4204,9 @@ func (newState *Empty_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty_
 func (newState *Empty_SdkV2) SyncEffectiveFieldsDuringRead(existingState Empty_SdkV2) {
 }
 
-func (c Empty_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Empty_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Empty.
@@ -4165,7 +4238,7 @@ func (o Empty_SdkV2) Type(ctx context.Context) attr.Type {
 
 // SHIELD feature: ESM
 type EnhancedSecurityMonitoring_SdkV2 struct {
-	IsEnabled types.Bool `tfsdk:"is_enabled" tf:"optional"`
+	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
 func (newState *EnhancedSecurityMonitoring_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoring_SdkV2) {
@@ -4174,9 +4247,10 @@ func (newState *EnhancedSecurityMonitoring_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *EnhancedSecurityMonitoring_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoring_SdkV2) {
 }
 
-func (c EnhancedSecurityMonitoring_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EnhancedSecurityMonitoring_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_enabled"] = attrs["is_enabled"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnhancedSecurityMonitoring.
@@ -4212,7 +4286,7 @@ func (o EnhancedSecurityMonitoring_SdkV2) Type(ctx context.Context) attr.Type {
 
 type EnhancedSecurityMonitoringSetting_SdkV2 struct {
 	// SHIELD feature: ESM
-	EnhancedSecurityMonitoringWorkspace types.List `tfsdk:"enhanced_security_monitoring_workspace" tf:"object"`
+	EnhancedSecurityMonitoringWorkspace types.List `tfsdk:"enhanced_security_monitoring_workspace"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -4220,13 +4294,13 @@ type EnhancedSecurityMonitoringSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *EnhancedSecurityMonitoringSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnhancedSecurityMonitoringSetting_SdkV2) {
@@ -4235,11 +4309,13 @@ func (newState *EnhancedSecurityMonitoringSetting_SdkV2) SyncEffectiveFieldsDuri
 func (newState *EnhancedSecurityMonitoringSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState EnhancedSecurityMonitoringSetting_SdkV2) {
 }
 
-func (c EnhancedSecurityMonitoringSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "enhanced_security_monitoring_workspace")...)
-	EnhancedSecurityMonitoring_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "enhanced_security_monitoring_workspace")...)
+func (c EnhancedSecurityMonitoringSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enhanced_security_monitoring_workspace"] = attrs["enhanced_security_monitoring_workspace"].SetRequired()
+	attrs["enhanced_security_monitoring_workspace"] = attrs["enhanced_security_monitoring_workspace"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnhancedSecurityMonitoringSetting.
@@ -4309,7 +4385,7 @@ func (o *EnhancedSecurityMonitoringSetting_SdkV2) SetEnhancedSecurityMonitoringW
 
 // Account level policy for ESM
 type EsmEnablementAccount_SdkV2 struct {
-	IsEnforced types.Bool `tfsdk:"is_enforced" tf:"optional"`
+	IsEnforced types.Bool `tfsdk:"is_enforced"`
 }
 
 func (newState *EsmEnablementAccount_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccount_SdkV2) {
@@ -4318,9 +4394,10 @@ func (newState *EsmEnablementAccount_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *EsmEnablementAccount_SdkV2) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccount_SdkV2) {
 }
 
-func (c EsmEnablementAccount_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EsmEnablementAccount_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_enforced"] = attrs["is_enforced"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EsmEnablementAccount.
@@ -4356,7 +4433,7 @@ func (o EsmEnablementAccount_SdkV2) Type(ctx context.Context) attr.Type {
 
 type EsmEnablementAccountSetting_SdkV2 struct {
 	// Account level policy for ESM
-	EsmEnablementAccount types.List `tfsdk:"esm_enablement_account" tf:"object"`
+	EsmEnablementAccount types.List `tfsdk:"esm_enablement_account"`
 	// etag used for versioning. The response is at least as fresh as the eTag
 	// provided. This is used for optimistic concurrency control as a way to
 	// help prevent simultaneous writes of a setting overwriting each other. It
@@ -4364,13 +4441,13 @@ type EsmEnablementAccountSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *EsmEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EsmEnablementAccountSetting_SdkV2) {
@@ -4379,11 +4456,13 @@ func (newState *EsmEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *EsmEnablementAccountSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState EsmEnablementAccountSetting_SdkV2) {
 }
 
-func (c EsmEnablementAccountSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "esm_enablement_account")...)
-	EsmEnablementAccount_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "esm_enablement_account")...)
+func (c EsmEnablementAccountSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["esm_enablement_account"] = attrs["esm_enablement_account"].SetRequired()
+	attrs["esm_enablement_account"] = attrs["esm_enablement_account"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EsmEnablementAccountSetting.
@@ -4454,16 +4533,16 @@ func (o *EsmEnablementAccountSetting_SdkV2) SetEsmEnablementAccount(ctx context.
 // The exchange token is the result of the token exchange with the IdP
 type ExchangeToken_SdkV2 struct {
 	// The requested token.
-	Credential types.String `tfsdk:"credential" tf:"optional"`
+	Credential types.String `tfsdk:"credential"`
 	// The end-of-life timestamp of the token. The value is in milliseconds
 	// since the Unix epoch.
-	CredentialEolTime types.Int64 `tfsdk:"credentialEolTime" tf:"optional"`
+	CredentialEolTime types.Int64 `tfsdk:"credentialEolTime"`
 	// User ID of the user that owns this token.
-	OwnerId types.Int64 `tfsdk:"ownerId" tf:"optional"`
+	OwnerId types.Int64 `tfsdk:"ownerId"`
 	// The scopes of access granted in the token.
-	Scopes types.List `tfsdk:"scopes" tf:"optional"`
+	Scopes types.List `tfsdk:"scopes"`
 	// The type of this exchange token
-	TokenType types.String `tfsdk:"tokenType" tf:"optional"`
+	TokenType types.String `tfsdk:"tokenType"`
 }
 
 func (newState *ExchangeToken_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeToken_SdkV2) {
@@ -4472,9 +4551,14 @@ func (newState *ExchangeToken_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ExchangeToken_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExchangeToken_SdkV2) {
 }
 
-func (c ExchangeToken_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExchangeToken_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential"] = attrs["credential"].SetOptional()
+	attrs["credentialEolTime"] = attrs["credentialEolTime"].SetOptional()
+	attrs["ownerId"] = attrs["ownerId"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
+	attrs["tokenType"] = attrs["tokenType"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeToken.
@@ -4549,11 +4633,11 @@ func (o *ExchangeToken_SdkV2) SetScopes(ctx context.Context, v []types.String) {
 // Exchange a token with the IdP
 type ExchangeTokenRequest_SdkV2 struct {
 	// The partition of Credentials store
-	PartitionId types.List `tfsdk:"partitionId" tf:"object"`
+	PartitionId types.List `tfsdk:"partitionId"`
 	// Array of scopes for the token request.
-	Scopes types.List `tfsdk:"scopes" tf:""`
+	Scopes types.List `tfsdk:"scopes"`
 	// A list of token types being requested
-	TokenType types.List `tfsdk:"tokenType" tf:""`
+	TokenType types.List `tfsdk:"tokenType"`
 }
 
 func (newState *ExchangeTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeTokenRequest_SdkV2) {
@@ -4562,13 +4646,13 @@ func (newState *ExchangeTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ExchangeTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExchangeTokenRequest_SdkV2) {
 }
 
-func (c ExchangeTokenRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "partitionId")...)
-	PartitionId_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "partitionId")...)
-	cs.SetRequired(append(path, "scopes")...)
-	cs.SetRequired(append(path, "tokenType")...)
+func (c ExchangeTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["partitionId"] = attrs["partitionId"].SetRequired()
+	attrs["partitionId"] = attrs["partitionId"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["scopes"] = attrs["scopes"].SetRequired()
+	attrs["tokenType"] = attrs["tokenType"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeTokenRequest.
@@ -4696,7 +4780,7 @@ func (o *ExchangeTokenRequest_SdkV2) SetTokenType(ctx context.Context, v []types
 
 // Exhanged tokens were successfully returned.
 type ExchangeTokenResponse_SdkV2 struct {
-	Values types.List `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values"`
 }
 
 func (newState *ExchangeTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeTokenResponse_SdkV2) {
@@ -4705,10 +4789,10 @@ func (newState *ExchangeTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *ExchangeTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExchangeTokenResponse_SdkV2) {
 }
 
-func (c ExchangeTokenResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExchangeToken_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "values")...)
+func (c ExchangeTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["values"] = attrs["values"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeTokenResponse.
@@ -4775,7 +4859,7 @@ func (o *ExchangeTokenResponse_SdkV2) SetValues(ctx context.Context, v []Exchang
 // An IP access list was successfully returned.
 type FetchIpAccessListResponse_SdkV2 struct {
 	// Definition of an IP Access list
-	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list"`
 }
 
 func (newState *FetchIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FetchIpAccessListResponse_SdkV2) {
@@ -4784,10 +4868,11 @@ func (newState *FetchIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *FetchIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState FetchIpAccessListResponse_SdkV2) {
 }
 
-func (c FetchIpAccessListResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	IpAccessListInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ip_access_list")...)
+func (c FetchIpAccessListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
+	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FetchIpAccessListResponse.
@@ -4853,17 +4938,17 @@ func (o *FetchIpAccessListResponse_SdkV2) SetIpAccessList(ctx context.Context, v
 
 type GenericWebhookConfig_SdkV2 struct {
 	// [Input-Only][Optional] Password for webhook.
-	Password types.String `tfsdk:"password" tf:"optional"`
+	Password types.String `tfsdk:"password"`
 	// [Output-Only] Whether password is set.
-	PasswordSet types.Bool `tfsdk:"password_set" tf:"optional"`
+	PasswordSet types.Bool `tfsdk:"password_set"`
 	// [Input-Only] URL for webhook.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
-	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
+	UrlSet types.Bool `tfsdk:"url_set"`
 	// [Input-Only][Optional] Username for webhook.
-	Username types.String `tfsdk:"username" tf:"optional"`
+	Username types.String `tfsdk:"username"`
 	// [Output-Only] Whether username is set.
-	UsernameSet types.Bool `tfsdk:"username_set" tf:"optional"`
+	UsernameSet types.Bool `tfsdk:"username_set"`
 }
 
 func (newState *GenericWebhookConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenericWebhookConfig_SdkV2) {
@@ -4872,9 +4957,15 @@ func (newState *GenericWebhookConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *GenericWebhookConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenericWebhookConfig_SdkV2) {
 }
 
-func (c GenericWebhookConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GenericWebhookConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["password"] = attrs["password"].SetOptional()
+	attrs["password_set"] = attrs["password_set"].SetOptional()
+	attrs["url"] = attrs["url"].SetOptional()
+	attrs["url_set"] = attrs["url_set"].SetOptional()
+	attrs["username"] = attrs["username"].SetOptional()
+	attrs["username_set"] = attrs["username_set"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenericWebhookConfig.
@@ -5467,7 +5558,7 @@ func (o GetIpAccessListRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetIpAccessListResponse_SdkV2 struct {
 	// Definition of an IP Access list
-	IpAccessList types.List `tfsdk:"ip_access_list" tf:"optional,object"`
+	IpAccessList types.List `tfsdk:"ip_access_list"`
 }
 
 func (newState *GetIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListResponse_SdkV2) {
@@ -5476,10 +5567,11 @@ func (newState *GetIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *GetIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListResponse_SdkV2) {
 }
 
-func (c GetIpAccessListResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	IpAccessListInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ip_access_list")...)
+func (c GetIpAccessListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
+	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIpAccessListResponse.
@@ -5545,7 +5637,7 @@ func (o *GetIpAccessListResponse_SdkV2) SetIpAccessList(ctx context.Context, v I
 
 // IP access lists were successfully returned.
 type GetIpAccessListsResponse_SdkV2 struct {
-	IpAccessLists types.List `tfsdk:"ip_access_lists" tf:"optional"`
+	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
 func (newState *GetIpAccessListsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIpAccessListsResponse_SdkV2) {
@@ -5554,10 +5646,10 @@ func (newState *GetIpAccessListsResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *GetIpAccessListsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetIpAccessListsResponse_SdkV2) {
 }
 
-func (c GetIpAccessListsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	IpAccessListInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ip_access_lists")...)
+func (c GetIpAccessListsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_access_lists"] = attrs["ip_access_lists"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIpAccessListsResponse.
@@ -5896,7 +5988,7 @@ func (o GetTokenManagementRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetTokenPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetTokenPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenPermissionLevelsResponse_SdkV2) {
@@ -5905,10 +5997,10 @@ func (newState *GetTokenPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDurin
 func (newState *GetTokenPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetTokenPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetTokenPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetTokenPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTokenPermissionLevelsResponse.
@@ -5974,7 +6066,7 @@ func (o *GetTokenPermissionLevelsResponse_SdkV2) SetPermissionLevels(ctx context
 
 // Token with specified Token ID was successfully returned.
 type GetTokenResponse_SdkV2 struct {
-	TokenInfo types.List `tfsdk:"token_info" tf:"optional,object"`
+	TokenInfo types.List `tfsdk:"token_info"`
 }
 
 func (newState *GetTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetTokenResponse_SdkV2) {
@@ -5983,10 +6075,11 @@ func (newState *GetTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *GetTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetTokenResponse_SdkV2) {
 }
 
-func (c GetTokenResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_info")...)
+func (c GetTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_info"] = attrs["token_info"].SetOptional()
+	attrs["token_info"] = attrs["token_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetTokenResponse.
@@ -6053,30 +6146,30 @@ func (o *GetTokenResponse_SdkV2) SetTokenInfo(ctx context.Context, v TokenInfo_S
 // Definition of an IP Access list
 type IpAccessListInfo_SdkV2 struct {
 	// Total number of IP or CIDR values.
-	AddressCount types.Int64 `tfsdk:"address_count" tf:"optional"`
+	AddressCount types.Int64 `tfsdk:"address_count"`
 	// Creation timestamp in milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// User ID of the user who created this list.
-	CreatedBy types.Int64 `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.Int64 `tfsdk:"created_by"`
 	// Specifies whether this IP access list is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 
-	IpAddresses types.List `tfsdk:"ip_addresses" tf:"optional"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
-	Label types.String `tfsdk:"label" tf:"optional"`
+	Label types.String `tfsdk:"label"`
 	// Universally unique identifier (UUID) of the IP access list.
-	ListId types.String `tfsdk:"list_id" tf:"optional"`
+	ListId types.String `tfsdk:"list_id"`
 	// Type of IP access list. Valid values are as follows and are
 	// case-sensitive:
 	//
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType types.String `tfsdk:"list_type" tf:"optional"`
+	ListType types.String `tfsdk:"list_type"`
 	// Update timestamp in milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// User ID of the user who updated this list.
-	UpdatedBy types.Int64 `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.Int64 `tfsdk:"updated_by"`
 }
 
 func (newState *IpAccessListInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IpAccessListInfo_SdkV2) {
@@ -6085,9 +6178,19 @@ func (newState *IpAccessListInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *IpAccessListInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState IpAccessListInfo_SdkV2) {
 }
 
-func (c IpAccessListInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c IpAccessListInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["address_count"] = attrs["address_count"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
+	attrs["label"] = attrs["label"].SetOptional()
+	attrs["list_id"] = attrs["list_id"].SetOptional()
+	attrs["list_type"] = attrs["list_type"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IpAccessListInfo.
@@ -6171,7 +6274,7 @@ func (o *IpAccessListInfo_SdkV2) SetIpAddresses(ctx context.Context, v []types.S
 
 // IP access lists were successfully returned.
 type ListIpAccessListResponse_SdkV2 struct {
-	IpAccessLists types.List `tfsdk:"ip_access_lists" tf:"optional"`
+	IpAccessLists types.List `tfsdk:"ip_access_lists"`
 }
 
 func (newState *ListIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIpAccessListResponse_SdkV2) {
@@ -6180,10 +6283,10 @@ func (newState *ListIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *ListIpAccessListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListIpAccessListResponse_SdkV2) {
 }
 
-func (c ListIpAccessListResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	IpAccessListInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "ip_access_lists")...)
+func (c ListIpAccessListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ip_access_lists"] = attrs["ip_access_lists"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIpAccessListResponse.
@@ -6248,10 +6351,10 @@ func (o *ListIpAccessListResponse_SdkV2) SetIpAccessLists(ctx context.Context, v
 }
 
 type ListNccAzurePrivateEndpointRulesResponse_SdkV2 struct {
-	Items types.List `tfsdk:"items" tf:"optional"`
+	Items types.List `tfsdk:"items"`
 	// A token that can be used to get the next page of results. If null, there
 	// are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNccAzurePrivateEndpointRulesResponse_SdkV2) {
@@ -6260,10 +6363,11 @@ func (newState *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SyncEffectiveFie
 func (newState *ListNccAzurePrivateEndpointRulesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListNccAzurePrivateEndpointRulesResponse_SdkV2) {
 }
 
-func (c ListNccAzurePrivateEndpointRulesResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	NccAzurePrivateEndpointRule_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "items")...)
+func (c ListNccAzurePrivateEndpointRulesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["items"] = attrs["items"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNccAzurePrivateEndpointRulesResponse.
@@ -6367,10 +6471,10 @@ func (o ListNetworkConnectivityConfigurationsRequest_SdkV2) Type(ctx context.Con
 }
 
 type ListNetworkConnectivityConfigurationsResponse_SdkV2 struct {
-	Items types.List `tfsdk:"items" tf:"optional"`
+	Items types.List `tfsdk:"items"`
 	// A token that can be used to get the next page of results. If null, there
 	// are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListNetworkConnectivityConfigurationsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNetworkConnectivityConfigurationsResponse_SdkV2) {
@@ -6379,10 +6483,11 @@ func (newState *ListNetworkConnectivityConfigurationsResponse_SdkV2) SyncEffecti
 func (newState *ListNetworkConnectivityConfigurationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListNetworkConnectivityConfigurationsResponse_SdkV2) {
 }
 
-func (c ListNetworkConnectivityConfigurationsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	NetworkConnectivityConfiguration_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "items")...)
+func (c ListNetworkConnectivityConfigurationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["items"] = attrs["items"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNetworkConnectivityConfigurationsResponse.
@@ -6490,9 +6595,9 @@ func (o ListNotificationDestinationsRequest_SdkV2) Type(ctx context.Context) att
 
 type ListNotificationDestinationsResponse_SdkV2 struct {
 	// Page token for next of results.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 func (newState *ListNotificationDestinationsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResponse_SdkV2) {
@@ -6501,10 +6606,11 @@ func (newState *ListNotificationDestinationsResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *ListNotificationDestinationsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResponse_SdkV2) {
 }
 
-func (c ListNotificationDestinationsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ListNotificationDestinationsResult_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "results")...)
+func (c ListNotificationDestinationsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNotificationDestinationsResponse.
@@ -6573,11 +6679,11 @@ func (o *ListNotificationDestinationsResponse_SdkV2) SetResults(ctx context.Cont
 type ListNotificationDestinationsResult_SdkV2 struct {
 	// [Output-only] The type of the notification destination. The type can not
 	// be changed once set.
-	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
+	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying notification destination.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *ListNotificationDestinationsResult_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNotificationDestinationsResult_SdkV2) {
@@ -6586,9 +6692,12 @@ func (newState *ListNotificationDestinationsResult_SdkV2) SyncEffectiveFieldsDur
 func (newState *ListNotificationDestinationsResult_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListNotificationDestinationsResult_SdkV2) {
 }
 
-func (c ListNotificationDestinationsResult_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ListNotificationDestinationsResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_type"] = attrs["destination_type"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNotificationDestinationsResult.
@@ -6669,7 +6778,7 @@ func (o ListPrivateEndpointRulesRequest_SdkV2) Type(ctx context.Context) attr.Ty
 
 type ListPublicTokensResponse_SdkV2 struct {
 	// The information for each token.
-	TokenInfos types.List `tfsdk:"token_infos" tf:"optional"`
+	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
 func (newState *ListPublicTokensResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPublicTokensResponse_SdkV2) {
@@ -6678,10 +6787,10 @@ func (newState *ListPublicTokensResponse_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *ListPublicTokensResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPublicTokensResponse_SdkV2) {
 }
 
-func (c ListPublicTokensResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	PublicTokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_infos")...)
+func (c ListPublicTokensResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_infos"] = attrs["token_infos"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPublicTokensResponse.
@@ -6789,7 +6898,7 @@ func (o ListTokenManagementRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Tokens were successfully returned.
 type ListTokensResponse_SdkV2 struct {
 	// Token metadata of each user-created token in the workspace
-	TokenInfos types.List `tfsdk:"token_infos" tf:"optional"`
+	TokenInfos types.List `tfsdk:"token_infos"`
 }
 
 func (newState *ListTokensResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTokensResponse_SdkV2) {
@@ -6798,10 +6907,10 @@ func (newState *ListTokensResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListTokensResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListTokensResponse_SdkV2) {
 }
 
-func (c ListTokensResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "token_infos")...)
+func (c ListTokensResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_infos"] = attrs["token_infos"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTokensResponse.
@@ -6867,9 +6976,9 @@ func (o *ListTokensResponse_SdkV2) SetTokenInfos(ctx context.Context, v []TokenI
 
 type MicrosoftTeamsConfig_SdkV2 struct {
 	// [Input-Only] URL for Microsoft Teams.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
-	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
+	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
 func (newState *MicrosoftTeamsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MicrosoftTeamsConfig_SdkV2) {
@@ -6878,9 +6987,11 @@ func (newState *MicrosoftTeamsConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *MicrosoftTeamsConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState MicrosoftTeamsConfig_SdkV2) {
 }
 
-func (c MicrosoftTeamsConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MicrosoftTeamsConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["url"] = attrs["url"].SetOptional()
+	attrs["url_set"] = attrs["url_set"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MicrosoftTeamsConfig.
@@ -6921,7 +7032,7 @@ func (o MicrosoftTeamsConfig_SdkV2) Type(ctx context.Context) attr.Type {
 type NccAwsStableIpRule_SdkV2 struct {
 	// The list of stable IP CIDR blocks from which Databricks network traffic
 	// originates when accessing your resources.
-	CidrBlocks types.List `tfsdk:"cidr_blocks" tf:"optional"`
+	CidrBlocks types.List `tfsdk:"cidr_blocks"`
 }
 
 func (newState *NccAwsStableIpRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAwsStableIpRule_SdkV2) {
@@ -6930,9 +7041,10 @@ func (newState *NccAwsStableIpRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *NccAwsStableIpRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccAwsStableIpRule_SdkV2) {
 }
 
-func (c NccAwsStableIpRule_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c NccAwsStableIpRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cidr_blocks"] = attrs["cidr_blocks"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccAwsStableIpRule.
@@ -7010,28 +7122,28 @@ type NccAzurePrivateEndpointRule_SdkV2 struct {
 	// DISCONNECTED: Connection was removed by the private link resource owner,
 	// the private endpoint becomes informative and should be deleted for
 	// clean-up.
-	ConnectionState types.String `tfsdk:"connection_state" tf:"optional"`
+	ConnectionState types.String `tfsdk:"connection_state"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Whether this private endpoint is deactivated.
-	Deactivated types.Bool `tfsdk:"deactivated" tf:"computed"`
+	Deactivated types.Bool `tfsdk:"deactivated"`
 	// Time in epoch milliseconds when this object was deactivated.
-	DeactivatedAt types.Int64 `tfsdk:"deactivated_at" tf:"computed"`
+	DeactivatedAt types.Int64 `tfsdk:"deactivated_at"`
 	// The name of the Azure private endpoint resource.
-	EndpointName types.String `tfsdk:"endpoint_name" tf:"computed"`
+	EndpointName types.String `tfsdk:"endpoint_name"`
 	// The sub-resource type (group ID) of the target resource. Note that to
 	// connect to workspace root storage (root DBFS), you need two endpoints,
 	// one for `blob` and one for `dfs`.
-	GroupId types.String `tfsdk:"group_id" tf:"optional"`
+	GroupId types.String `tfsdk:"group_id"`
 	// The ID of a network connectivity configuration, which is the parent
 	// resource of this private endpoint rule object.
-	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"optional"`
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
 	// The Azure resource ID of the target resource.
-	ResourceId types.String `tfsdk:"resource_id" tf:"optional"`
+	ResourceId types.String `tfsdk:"resource_id"`
 	// The ID of a private endpoint rule.
-	RuleId types.String `tfsdk:"rule_id" tf:"computed"`
+	RuleId types.String `tfsdk:"rule_id"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"computed"`
+	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
 func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzurePrivateEndpointRule_SdkV2) {
@@ -7040,15 +7152,19 @@ func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccAzurePrivateEndpointRule_SdkV2) {
 }
 
-func (c NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "creation_time")...)
-	cs.SetComputed(append(path, "deactivated")...)
-	cs.SetComputed(append(path, "deactivated_at")...)
-	cs.SetComputed(append(path, "endpoint_name")...)
-	cs.SetComputed(append(path, "rule_id")...)
-	cs.SetComputed(append(path, "updated_time")...)
+func (c NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["deactivated"] = attrs["deactivated"].SetComputed()
+	attrs["deactivated_at"] = attrs["deactivated_at"].SetComputed()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
+	attrs["group_id"] = attrs["group_id"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
+	attrs["resource_id"] = attrs["resource_id"].SetOptional()
+	attrs["rule_id"] = attrs["rule_id"].SetComputed()
+	attrs["updated_time"] = attrs["updated_time"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccAzurePrivateEndpointRule.
@@ -7106,11 +7222,11 @@ func (o NccAzurePrivateEndpointRule_SdkV2) Type(ctx context.Context) attr.Type {
 type NccAzureServiceEndpointRule_SdkV2 struct {
 	// The list of subnets from which Databricks network traffic originates when
 	// accessing your Azure resources.
-	Subnets types.List `tfsdk:"subnets" tf:"optional"`
+	Subnets types.List `tfsdk:"subnets"`
 	// The Azure region in which this service endpoint rule applies.
-	TargetRegion types.String `tfsdk:"target_region" tf:"optional"`
+	TargetRegion types.String `tfsdk:"target_region"`
 	// The Azure services to which this service endpoint rule applies to.
-	TargetServices types.List `tfsdk:"target_services" tf:"optional"`
+	TargetServices types.List `tfsdk:"target_services"`
 }
 
 func (newState *NccAzureServiceEndpointRule_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccAzureServiceEndpointRule_SdkV2) {
@@ -7119,9 +7235,12 @@ func (newState *NccAzureServiceEndpointRule_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *NccAzureServiceEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccAzureServiceEndpointRule_SdkV2) {
 }
 
-func (c NccAzureServiceEndpointRule_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c NccAzureServiceEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["subnets"] = attrs["subnets"].SetOptional()
+	attrs["target_region"] = attrs["target_region"].SetOptional()
+	attrs["target_services"] = attrs["target_services"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccAzureServiceEndpointRule.
@@ -7224,10 +7343,10 @@ type NccEgressConfig_SdkV2 struct {
 	// The network connectivity rules that are applied by default without
 	// resource specific configurations. You can find the stable network
 	// information of your serverless compute resources here.
-	DefaultRules types.List `tfsdk:"default_rules" tf:"computed,object"`
+	DefaultRules types.List `tfsdk:"default_rules"`
 	// The network connectivity rules that configured for each destinations.
 	// These rules override default rules.
-	TargetRules types.List `tfsdk:"target_rules" tf:"optional,object"`
+	TargetRules types.List `tfsdk:"target_rules"`
 }
 
 func (newState *NccEgressConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressConfig_SdkV2) {
@@ -7236,12 +7355,13 @@ func (newState *NccEgressConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *NccEgressConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccEgressConfig_SdkV2) {
 }
 
-func (c NccEgressConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "default_rules")...)
-	NccEgressDefaultRules_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "default_rules")...)
-	NccEgressTargetRules_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "target_rules")...)
+func (c NccEgressConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_rules"] = attrs["default_rules"].SetComputed()
+	attrs["default_rules"] = attrs["default_rules"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["target_rules"] = attrs["target_rules"].SetOptional()
+	attrs["target_rules"] = attrs["target_rules"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccEgressConfig.
@@ -7343,11 +7463,11 @@ type NccEgressDefaultRules_SdkV2 struct {
 	// The stable AWS IP CIDR blocks. You can use these to configure the
 	// firewall of your resources to allow traffic from your Databricks
 	// workspace.
-	AwsStableIpRule types.List `tfsdk:"aws_stable_ip_rule" tf:"optional,object"`
+	AwsStableIpRule types.List `tfsdk:"aws_stable_ip_rule"`
 	// The stable Azure service endpoints. You can configure the firewall of
 	// your Azure resources to allow traffic from your Databricks serverless
 	// compute resources.
-	AzureServiceEndpointRule types.List `tfsdk:"azure_service_endpoint_rule" tf:"optional,object"`
+	AzureServiceEndpointRule types.List `tfsdk:"azure_service_endpoint_rule"`
 }
 
 func (newState *NccEgressDefaultRules_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressDefaultRules_SdkV2) {
@@ -7356,11 +7476,13 @@ func (newState *NccEgressDefaultRules_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *NccEgressDefaultRules_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccEgressDefaultRules_SdkV2) {
 }
 
-func (c NccEgressDefaultRules_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	NccAwsStableIpRule_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "aws_stable_ip_rule")...)
-	NccAzureServiceEndpointRule_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "azure_service_endpoint_rule")...)
+func (c NccEgressDefaultRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_stable_ip_rule"] = attrs["aws_stable_ip_rule"].SetOptional()
+	attrs["aws_stable_ip_rule"] = attrs["aws_stable_ip_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["azure_service_endpoint_rule"] = attrs["azure_service_endpoint_rule"].SetOptional()
+	attrs["azure_service_endpoint_rule"] = attrs["azure_service_endpoint_rule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccEgressDefaultRules.
@@ -7458,7 +7580,7 @@ func (o *NccEgressDefaultRules_SdkV2) SetAzureServiceEndpointRule(ctx context.Co
 // The network connectivity rules that configured for each destinations. These
 // rules override default rules.
 type NccEgressTargetRules_SdkV2 struct {
-	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules" tf:"optional"`
+	AzurePrivateEndpointRules types.List `tfsdk:"azure_private_endpoint_rules"`
 }
 
 func (newState *NccEgressTargetRules_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NccEgressTargetRules_SdkV2) {
@@ -7467,10 +7589,10 @@ func (newState *NccEgressTargetRules_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *NccEgressTargetRules_SdkV2) SyncEffectiveFieldsDuringRead(existingState NccEgressTargetRules_SdkV2) {
 }
 
-func (c NccEgressTargetRules_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	NccAzurePrivateEndpointRule_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "azure_private_endpoint_rules")...)
+func (c NccEgressTargetRules_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["azure_private_endpoint_rules"] = attrs["azure_private_endpoint_rules"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NccEgressTargetRules.
@@ -7536,25 +7658,25 @@ func (o *NccEgressTargetRules_SdkV2) SetAzurePrivateEndpointRules(ctx context.Co
 
 type NetworkConnectivityConfiguration_SdkV2 struct {
 	// The Databricks account ID that hosts the credential.
-	AccountId types.String `tfsdk:"account_id" tf:"optional"`
+	AccountId types.String `tfsdk:"account_id"`
 	// Time in epoch milliseconds when this object was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"computed"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// The network connectivity rules that apply to network traffic from your
 	// serverless compute resources.
-	EgressConfig types.List `tfsdk:"egress_config" tf:"optional,object"`
+	EgressConfig types.List `tfsdk:"egress_config"`
 	// The name of the network connectivity configuration. The name can contain
 	// alphanumeric characters, hyphens, and underscores. The length must be
 	// between 3 and 30 characters. The name must match the regular expression
 	// `^[0-9a-zA-Z-_]{3,30}$`.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Databricks network connectivity configuration ID.
-	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id" tf:"computed"`
+	NetworkConnectivityConfigId types.String `tfsdk:"network_connectivity_config_id"`
 	// The region for the network connectivity configuration. Only workspaces in
 	// the same region can be attached to the network connectivity
 	// configuration.
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 	// Time in epoch milliseconds when this object was updated.
-	UpdatedTime types.Int64 `tfsdk:"updated_time" tf:"computed"`
+	UpdatedTime types.Int64 `tfsdk:"updated_time"`
 }
 
 func (newState *NetworkConnectivityConfiguration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NetworkConnectivityConfiguration_SdkV2) {
@@ -7563,13 +7685,17 @@ func (newState *NetworkConnectivityConfiguration_SdkV2) SyncEffectiveFieldsDurin
 func (newState *NetworkConnectivityConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existingState NetworkConnectivityConfiguration_SdkV2) {
 }
 
-func (c NetworkConnectivityConfiguration_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetComputed(append(path, "creation_time")...)
-	NccEgressConfig_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "egress_config")...)
-	cs.SetComputed(append(path, "network_connectivity_config_id")...)
-	cs.SetComputed(append(path, "updated_time")...)
+func (c NetworkConnectivityConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["account_id"] = attrs["account_id"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetComputed()
+	attrs["egress_config"] = attrs["egress_config"].SetOptional()
+	attrs["egress_config"] = attrs["egress_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetComputed()
+	attrs["region"] = attrs["region"].SetOptional()
+	attrs["updated_time"] = attrs["updated_time"].SetComputed()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NetworkConnectivityConfiguration.
@@ -7649,14 +7775,14 @@ type NotificationDestination_SdkV2 struct {
 	// The configuration for the notification destination. Will be exactly one
 	// of the nested configs. Only returns for users with workspace admin
 	// permissions.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// [Output-only] The type of the notification destination. The type can not
 	// be changed once set.
-	DestinationType types.String `tfsdk:"destination_type" tf:"optional"`
+	DestinationType types.String `tfsdk:"destination_type"`
 	// The display name for the notification destination.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying notification destination.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *NotificationDestination_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotificationDestination_SdkV2) {
@@ -7665,10 +7791,14 @@ func (newState *NotificationDestination_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *NotificationDestination_SdkV2) SyncEffectiveFieldsDuringRead(existingState NotificationDestination_SdkV2) {
 }
 
-func (c NotificationDestination_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Config_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
+func (c NotificationDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["destination_type"] = attrs["destination_type"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NotificationDestination.
@@ -7740,9 +7870,9 @@ func (o *NotificationDestination_SdkV2) SetConfig(ctx context.Context, v Config_
 
 type PagerdutyConfig_SdkV2 struct {
 	// [Input-Only] Integration key for PagerDuty.
-	IntegrationKey types.String `tfsdk:"integration_key" tf:"optional"`
+	IntegrationKey types.String `tfsdk:"integration_key"`
 	// [Output-Only] Whether integration key is set.
-	IntegrationKeySet types.Bool `tfsdk:"integration_key_set" tf:"optional"`
+	IntegrationKeySet types.Bool `tfsdk:"integration_key_set"`
 }
 
 func (newState *PagerdutyConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PagerdutyConfig_SdkV2) {
@@ -7751,9 +7881,11 @@ func (newState *PagerdutyConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *PagerdutyConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PagerdutyConfig_SdkV2) {
 }
 
-func (c PagerdutyConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PagerdutyConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["integration_key"] = attrs["integration_key"].SetOptional()
+	attrs["integration_key_set"] = attrs["integration_key_set"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PagerdutyConfig.
@@ -7792,7 +7924,7 @@ func (o PagerdutyConfig_SdkV2) Type(ctx context.Context) attr.Type {
 // Partition by workspace or account
 type PartitionId_SdkV2 struct {
 	// The ID of the workspace.
-	WorkspaceId types.Int64 `tfsdk:"workspaceId" tf:"optional"`
+	WorkspaceId types.Int64 `tfsdk:"workspaceId"`
 }
 
 func (newState *PartitionId_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PartitionId_SdkV2) {
@@ -7801,9 +7933,10 @@ func (newState *PartitionId_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *PartitionId_SdkV2) SyncEffectiveFieldsDuringRead(existingState PartitionId_SdkV2) {
 }
 
-func (c PartitionId_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PartitionId_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["workspaceId"] = attrs["workspaceId"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PartitionId.
@@ -7845,7 +7978,7 @@ type PersonalComputeMessage_SdkV2 struct {
 	// users or groups to be added to the ACLs of that workspace’s Personal
 	// Compute default policy before they will be able to create compute
 	// resources through that policy.
-	Value types.String `tfsdk:"value" tf:""`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *PersonalComputeMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeMessage_SdkV2) {
@@ -7854,10 +7987,10 @@ func (newState *PersonalComputeMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PersonalComputeMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState PersonalComputeMessage_SdkV2) {
 }
 
-func (c PersonalComputeMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "value")...)
+func (c PersonalComputeMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PersonalComputeMessage.
@@ -7899,15 +8032,15 @@ type PersonalComputeSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 
-	PersonalCompute types.List `tfsdk:"personal_compute" tf:"object"`
+	PersonalCompute types.List `tfsdk:"personal_compute"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *PersonalComputeSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalComputeSetting_SdkV2) {
@@ -7916,11 +8049,13 @@ func (newState *PersonalComputeSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *PersonalComputeSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState PersonalComputeSetting_SdkV2) {
 }
 
-func (c PersonalComputeSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "personal_compute")...)
-	PersonalComputeMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "personal_compute")...)
+func (c PersonalComputeSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["personal_compute"] = attrs["personal_compute"].SetRequired()
+	attrs["personal_compute"] = attrs["personal_compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PersonalComputeSetting.
@@ -7990,14 +8125,14 @@ func (o *PersonalComputeSetting_SdkV2) SetPersonalCompute(ctx context.Context, v
 
 type PublicTokenInfo_SdkV2 struct {
 	// Comment the token was created with, if applicable.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// Server time (in epoch milliseconds) when the token was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Server time (in epoch milliseconds) when the token will expire, or -1 if
 	// not applicable.
-	ExpiryTime types.Int64 `tfsdk:"expiry_time" tf:"optional"`
+	ExpiryTime types.Int64 `tfsdk:"expiry_time"`
 	// The ID of this token.
-	TokenId types.String `tfsdk:"token_id" tf:"optional"`
+	TokenId types.String `tfsdk:"token_id"`
 }
 
 func (newState *PublicTokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublicTokenInfo_SdkV2) {
@@ -8006,9 +8141,13 @@ func (newState *PublicTokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *PublicTokenInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState PublicTokenInfo_SdkV2) {
 }
 
-func (c PublicTokenInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c PublicTokenInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["expiry_time"] = attrs["expiry_time"].SetOptional()
+	attrs["token_id"] = attrs["token_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublicTokenInfo.
@@ -8051,20 +8190,20 @@ func (o PublicTokenInfo_SdkV2) Type(ctx context.Context) attr.Type {
 // Details required to replace an IP access list.
 type ReplaceIpAccessList_SdkV2 struct {
 	// Specifies whether this IP access list is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:""`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
 
-	IpAddresses types.List `tfsdk:"ip_addresses" tf:"optional"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
-	Label types.String `tfsdk:"label" tf:""`
+	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
 	// case-sensitive:
 	//
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType types.String `tfsdk:"list_type" tf:""`
+	ListType types.String `tfsdk:"list_type"`
 }
 
 func (newState *ReplaceIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReplaceIpAccessList_SdkV2) {
@@ -8073,13 +8212,14 @@ func (newState *ReplaceIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ReplaceIpAccessList_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReplaceIpAccessList_SdkV2) {
 }
 
-func (c ReplaceIpAccessList_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "enabled")...)
-	cs.SetRequired(append(path, "ip_access_list_id")...)
-	cs.SetRequired(append(path, "label")...)
-	cs.SetRequired(append(path, "list_type")...)
+func (c ReplaceIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetRequired()
+	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
+	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
+	attrs["label"] = attrs["label"].SetRequired()
+	attrs["list_type"] = attrs["list_type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReplaceIpAccessList.
@@ -8182,7 +8322,7 @@ func (o ReplaceResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RestrictWorkspaceAdminsMessage_SdkV2 struct {
-	Status types.String `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *RestrictWorkspaceAdminsMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsMessage_SdkV2) {
@@ -8191,10 +8331,10 @@ func (newState *RestrictWorkspaceAdminsMessage_SdkV2) SyncEffectiveFieldsDuringC
 func (newState *RestrictWorkspaceAdminsMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsMessage_SdkV2) {
 }
 
-func (c RestrictWorkspaceAdminsMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "status")...)
+func (c RestrictWorkspaceAdminsMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["status"] = attrs["status"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestrictWorkspaceAdminsMessage.
@@ -8236,15 +8376,15 @@ type RestrictWorkspaceAdminsSetting_SdkV2 struct {
 	// update pattern to perform setting updates in order to avoid race
 	// conditions. That is, get an etag from a GET request, and pass it with the
 	// PATCH request to identify the setting version you are updating.
-	Etag types.String `tfsdk:"etag" tf:"optional"`
+	Etag types.String `tfsdk:"etag"`
 
-	RestrictWorkspaceAdmins types.List `tfsdk:"restrict_workspace_admins" tf:"object"`
+	RestrictWorkspaceAdmins types.List `tfsdk:"restrict_workspace_admins"`
 	// Name of the corresponding setting. This field is populated in the
 	// response, but it will not be respected even if it's set in the request
 	// body. The setting name in the path parameter will be respected instead.
 	// Setting name is required to be 'default' if the setting only has one
 	// instance per workspace.
-	SettingName types.String `tfsdk:"setting_name" tf:"optional"`
+	SettingName types.String `tfsdk:"setting_name"`
 }
 
 func (newState *RestrictWorkspaceAdminsSetting_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestrictWorkspaceAdminsSetting_SdkV2) {
@@ -8253,11 +8393,13 @@ func (newState *RestrictWorkspaceAdminsSetting_SdkV2) SyncEffectiveFieldsDuringC
 func (newState *RestrictWorkspaceAdminsSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestrictWorkspaceAdminsSetting_SdkV2) {
 }
 
-func (c RestrictWorkspaceAdminsSetting_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "restrict_workspace_admins")...)
-	RestrictWorkspaceAdminsMessage_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "restrict_workspace_admins")...)
+func (c RestrictWorkspaceAdminsSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].SetRequired()
+	attrs["restrict_workspace_admins"] = attrs["restrict_workspace_admins"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestrictWorkspaceAdminsSetting.
@@ -8327,7 +8469,7 @@ func (o *RestrictWorkspaceAdminsSetting_SdkV2) SetRestrictWorkspaceAdmins(ctx co
 
 type RevokeTokenRequest_SdkV2 struct {
 	// The ID of the token to be revoked.
-	TokenId types.String `tfsdk:"token_id" tf:""`
+	TokenId types.String `tfsdk:"token_id"`
 }
 
 func (newState *RevokeTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RevokeTokenRequest_SdkV2) {
@@ -8336,10 +8478,10 @@ func (newState *RevokeTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *RevokeTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RevokeTokenRequest_SdkV2) {
 }
 
-func (c RevokeTokenRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "token_id")...)
+func (c RevokeTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token_id"] = attrs["token_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeTokenRequest.
@@ -8382,9 +8524,9 @@ func (newState *RevokeTokenResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *RevokeTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RevokeTokenResponse_SdkV2) {
 }
 
-func (c RevokeTokenResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RevokeTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RevokeTokenResponse.
@@ -8446,9 +8588,9 @@ func (o SetStatusResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type SlackConfig_SdkV2 struct {
 	// [Input-Only] URL for Slack destination.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 	// [Output-Only] Whether URL is set.
-	UrlSet types.Bool `tfsdk:"url_set" tf:"optional"`
+	UrlSet types.Bool `tfsdk:"url_set"`
 }
 
 func (newState *SlackConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SlackConfig_SdkV2) {
@@ -8457,9 +8599,11 @@ func (newState *SlackConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SlackConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState SlackConfig_SdkV2) {
 }
 
-func (c SlackConfig_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SlackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["url"] = attrs["url"].SetOptional()
+	attrs["url_set"] = attrs["url_set"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SlackConfig.
@@ -8497,7 +8641,7 @@ func (o SlackConfig_SdkV2) Type(ctx context.Context) attr.Type {
 
 type StringMessage_SdkV2 struct {
 	// Represents a generic string value.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *StringMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StringMessage_SdkV2) {
@@ -8506,9 +8650,10 @@ func (newState *StringMessage_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *StringMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState StringMessage_SdkV2) {
 }
 
-func (c StringMessage_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c StringMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StringMessage.
@@ -8544,13 +8689,13 @@ func (o StringMessage_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TokenAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *TokenAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlRequest_SdkV2) {
@@ -8559,9 +8704,13 @@ func (newState *TokenAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *TokenAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlRequest_SdkV2) {
 }
 
-func (c TokenAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenAccessControlRequest.
@@ -8603,15 +8752,15 @@ func (o TokenAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TokenAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *TokenAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenAccessControlResponse_SdkV2) {
@@ -8620,10 +8769,14 @@ func (newState *TokenAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *TokenAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenAccessControlResponse_SdkV2) {
 }
 
-func (c TokenAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c TokenAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenAccessControlResponse.
@@ -8698,24 +8851,24 @@ func (o *TokenAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context
 type TokenInfo_SdkV2 struct {
 	// Comment that describes the purpose of the token, specified by the token
 	// creator.
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// User ID of the user that created the token.
-	CreatedById types.Int64 `tfsdk:"created_by_id" tf:"optional"`
+	CreatedById types.Int64 `tfsdk:"created_by_id"`
 	// Username of the user that created the token.
-	CreatedByUsername types.String `tfsdk:"created_by_username" tf:"optional"`
+	CreatedByUsername types.String `tfsdk:"created_by_username"`
 	// Timestamp when the token was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// Timestamp when the token expires.
-	ExpiryTime types.Int64 `tfsdk:"expiry_time" tf:"optional"`
+	ExpiryTime types.Int64 `tfsdk:"expiry_time"`
 	// Approximate timestamp for the day the token was last used. Accurate up to
 	// 1 day.
-	LastUsedDay types.Int64 `tfsdk:"last_used_day" tf:"optional"`
+	LastUsedDay types.Int64 `tfsdk:"last_used_day"`
 	// User ID of the user that owns the token.
-	OwnerId types.Int64 `tfsdk:"owner_id" tf:"optional"`
+	OwnerId types.Int64 `tfsdk:"owner_id"`
 	// ID of the token.
-	TokenId types.String `tfsdk:"token_id" tf:"optional"`
+	TokenId types.String `tfsdk:"token_id"`
 	// If applicable, the ID of the workspace that the token was created in.
-	WorkspaceId types.Int64 `tfsdk:"workspace_id" tf:"optional"`
+	WorkspaceId types.Int64 `tfsdk:"workspace_id"`
 }
 
 func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo_SdkV2) {
@@ -8724,9 +8877,18 @@ func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan To
 func (newState *TokenInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenInfo_SdkV2) {
 }
 
-func (c TokenInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_by_id"] = attrs["created_by_id"].SetOptional()
+	attrs["created_by_username"] = attrs["created_by_username"].SetOptional()
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["expiry_time"] = attrs["expiry_time"].SetOptional()
+	attrs["last_used_day"] = attrs["last_used_day"].SetOptional()
+	attrs["owner_id"] = attrs["owner_id"].SetOptional()
+	attrs["token_id"] = attrs["token_id"].SetOptional()
+	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenInfo.
@@ -8777,11 +8939,11 @@ func (o TokenInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TokenPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *TokenPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermission_SdkV2) {
@@ -8790,9 +8952,12 @@ func (newState *TokenPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *TokenPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenPermission_SdkV2) {
 }
 
-func (c TokenPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenPermission.
@@ -8861,11 +9026,11 @@ func (o *TokenPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []
 }
 
 type TokenPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *TokenPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissions_SdkV2) {
@@ -8874,10 +9039,12 @@ func (newState *TokenPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TokenPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenPermissions_SdkV2) {
 }
 
-func (c TokenPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c TokenPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenPermissions.
@@ -8946,9 +9113,9 @@ func (o *TokenPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []T
 }
 
 type TokenPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *TokenPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissionsDescription_SdkV2) {
@@ -8957,9 +9124,11 @@ func (newState *TokenPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCrea
 func (newState *TokenPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsDescription_SdkV2) {
 }
 
-func (c TokenPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TokenPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenPermissionsDescription.
@@ -8996,7 +9165,7 @@ func (o TokenPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type TokenPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 }
 
 func (newState *TokenPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenPermissionsRequest_SdkV2) {
@@ -9005,10 +9174,10 @@ func (newState *TokenPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *TokenPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TokenPermissionsRequest_SdkV2) {
 }
 
-func (c TokenPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TokenAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c TokenPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenPermissionsRequest.
@@ -9076,14 +9245,14 @@ func (o *TokenPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context
 type UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) {
@@ -9092,13 +9261,13 @@ func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) Sy
 func (newState *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) {
 }
 
-func (c UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	AibiDashboardEmbeddingAccessPolicySetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAibiDashboardEmbeddingAccessPolicySettingRequest.
@@ -9170,14 +9339,14 @@ func (o *UpdateAibiDashboardEmbeddingAccessPolicySettingRequest_SdkV2) SetSettin
 type UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) {
@@ -9186,13 +9355,13 @@ func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2)
 func (newState *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) {
 }
 
-func (c UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	AibiDashboardEmbeddingApprovedDomainsSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest.
@@ -9264,14 +9433,14 @@ func (o *UpdateAibiDashboardEmbeddingApprovedDomainsSettingRequest_SdkV2) SetSet
 type UpdateAutomaticClusterUpdateSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateAutomaticClusterUpdateSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAutomaticClusterUpdateSettingRequest_SdkV2) {
@@ -9280,13 +9449,13 @@ func (newState *UpdateAutomaticClusterUpdateSettingRequest_SdkV2) SyncEffectiveF
 func (newState *UpdateAutomaticClusterUpdateSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAutomaticClusterUpdateSettingRequest_SdkV2) {
 }
 
-func (c UpdateAutomaticClusterUpdateSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	AutomaticClusterUpdateSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateAutomaticClusterUpdateSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAutomaticClusterUpdateSettingRequest.
@@ -9358,14 +9527,14 @@ func (o *UpdateAutomaticClusterUpdateSettingRequest_SdkV2) SetSetting(ctx contex
 type UpdateComplianceSecurityProfileSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateComplianceSecurityProfileSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateComplianceSecurityProfileSettingRequest_SdkV2) {
@@ -9374,13 +9543,13 @@ func (newState *UpdateComplianceSecurityProfileSettingRequest_SdkV2) SyncEffecti
 func (newState *UpdateComplianceSecurityProfileSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateComplianceSecurityProfileSettingRequest_SdkV2) {
 }
 
-func (c UpdateComplianceSecurityProfileSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	ComplianceSecurityProfileSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateComplianceSecurityProfileSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateComplianceSecurityProfileSettingRequest.
@@ -9452,14 +9621,14 @@ func (o *UpdateComplianceSecurityProfileSettingRequest_SdkV2) SetSetting(ctx con
 type UpdateCspEnablementAccountSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateCspEnablementAccountSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCspEnablementAccountSettingRequest_SdkV2) {
@@ -9468,13 +9637,13 @@ func (newState *UpdateCspEnablementAccountSettingRequest_SdkV2) SyncEffectiveFie
 func (newState *UpdateCspEnablementAccountSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCspEnablementAccountSettingRequest_SdkV2) {
 }
 
-func (c UpdateCspEnablementAccountSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	CspEnablementAccountSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateCspEnablementAccountSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCspEnablementAccountSettingRequest.
@@ -9546,12 +9715,12 @@ func (o *UpdateCspEnablementAccountSettingRequest_SdkV2) SetSetting(ctx context.
 type UpdateDefaultNamespaceSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 	// This represents the setting configuration for the default namespace in
 	// the Databricks workspace. Setting the default catalog for the workspace
 	// determines the catalog that is used when queries do not reference a fully
@@ -9561,7 +9730,7 @@ type UpdateDefaultNamespaceSettingRequest_SdkV2 struct {
 	// assumed). This setting requires a restart of clusters and SQL warehouses
 	// to take effect. Additionally, the default namespace only applies when
 	// using Unity Catalog-enabled compute.
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateDefaultNamespaceSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDefaultNamespaceSettingRequest_SdkV2) {
@@ -9570,13 +9739,13 @@ func (newState *UpdateDefaultNamespaceSettingRequest_SdkV2) SyncEffectiveFieldsD
 func (newState *UpdateDefaultNamespaceSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateDefaultNamespaceSettingRequest_SdkV2) {
 }
 
-func (c UpdateDefaultNamespaceSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	DefaultNamespaceSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateDefaultNamespaceSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDefaultNamespaceSettingRequest.
@@ -9648,14 +9817,14 @@ func (o *UpdateDefaultNamespaceSettingRequest_SdkV2) SetSetting(ctx context.Cont
 type UpdateDisableLegacyAccessRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateDisableLegacyAccessRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyAccessRequest_SdkV2) {
@@ -9664,13 +9833,13 @@ func (newState *UpdateDisableLegacyAccessRequest_SdkV2) SyncEffectiveFieldsDurin
 func (newState *UpdateDisableLegacyAccessRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyAccessRequest_SdkV2) {
 }
 
-func (c UpdateDisableLegacyAccessRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	DisableLegacyAccess_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateDisableLegacyAccessRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyAccessRequest.
@@ -9742,14 +9911,14 @@ func (o *UpdateDisableLegacyAccessRequest_SdkV2) SetSetting(ctx context.Context,
 type UpdateDisableLegacyDbfsRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateDisableLegacyDbfsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyDbfsRequest_SdkV2) {
@@ -9758,13 +9927,13 @@ func (newState *UpdateDisableLegacyDbfsRequest_SdkV2) SyncEffectiveFieldsDuringC
 func (newState *UpdateDisableLegacyDbfsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyDbfsRequest_SdkV2) {
 }
 
-func (c UpdateDisableLegacyDbfsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	DisableLegacyDbfs_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateDisableLegacyDbfsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyDbfsRequest.
@@ -9836,14 +10005,14 @@ func (o *UpdateDisableLegacyDbfsRequest_SdkV2) SetSetting(ctx context.Context, v
 type UpdateDisableLegacyFeaturesRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateDisableLegacyFeaturesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDisableLegacyFeaturesRequest_SdkV2) {
@@ -9852,13 +10021,13 @@ func (newState *UpdateDisableLegacyFeaturesRequest_SdkV2) SyncEffectiveFieldsDur
 func (newState *UpdateDisableLegacyFeaturesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateDisableLegacyFeaturesRequest_SdkV2) {
 }
 
-func (c UpdateDisableLegacyFeaturesRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	DisableLegacyFeatures_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateDisableLegacyFeaturesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDisableLegacyFeaturesRequest.
@@ -9930,14 +10099,14 @@ func (o *UpdateDisableLegacyFeaturesRequest_SdkV2) SetSetting(ctx context.Contex
 type UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) {
@@ -9946,13 +10115,13 @@ func (newState *UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) SyncEffect
 func (newState *UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) {
 }
 
-func (c UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	EnhancedSecurityMonitoringSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnhancedSecurityMonitoringSettingRequest.
@@ -10024,14 +10193,14 @@ func (o *UpdateEnhancedSecurityMonitoringSettingRequest_SdkV2) SetSetting(ctx co
 type UpdateEsmEnablementAccountSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateEsmEnablementAccountSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEsmEnablementAccountSettingRequest_SdkV2) {
@@ -10040,13 +10209,13 @@ func (newState *UpdateEsmEnablementAccountSettingRequest_SdkV2) SyncEffectiveFie
 func (newState *UpdateEsmEnablementAccountSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateEsmEnablementAccountSettingRequest_SdkV2) {
 }
 
-func (c UpdateEsmEnablementAccountSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	EsmEnablementAccountSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateEsmEnablementAccountSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEsmEnablementAccountSettingRequest.
@@ -10117,20 +10286,20 @@ func (o *UpdateEsmEnablementAccountSettingRequest_SdkV2) SetSetting(ctx context.
 // Details required to update an IP access list.
 type UpdateIpAccessList_SdkV2 struct {
 	// Specifies whether this IP access list is enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The ID for the corresponding IP access list
 	IpAccessListId types.String `tfsdk:"-"`
 
-	IpAddresses types.List `tfsdk:"ip_addresses" tf:"optional"`
+	IpAddresses types.List `tfsdk:"ip_addresses"`
 	// Label for the IP access list. This **cannot** be empty.
-	Label types.String `tfsdk:"label" tf:"optional"`
+	Label types.String `tfsdk:"label"`
 	// Type of IP access list. Valid values are as follows and are
 	// case-sensitive:
 	//
 	// * `ALLOW`: An allow list. Include this IP or range. * `BLOCK`: A block
 	// list. Exclude this IP or range. IP addresses in the block list are
 	// excluded even if they are included in an allow list.
-	ListType types.String `tfsdk:"list_type" tf:"optional"`
+	ListType types.String `tfsdk:"list_type"`
 }
 
 func (newState *UpdateIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateIpAccessList_SdkV2) {
@@ -10139,10 +10308,14 @@ func (newState *UpdateIpAccessList_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *UpdateIpAccessList_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateIpAccessList_SdkV2) {
 }
 
-func (c UpdateIpAccessList_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "ip_access_list_id")...)
+func (c UpdateIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["ip_access_list_id"] = attrs["ip_access_list_id"].SetRequired()
+	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
+	attrs["label"] = attrs["label"].SetOptional()
+	attrs["list_type"] = attrs["list_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateIpAccessList.
@@ -10217,9 +10390,9 @@ func (o *UpdateIpAccessList_SdkV2) SetIpAddresses(ctx context.Context, v []types
 type UpdateNotificationDestinationRequest_SdkV2 struct {
 	// The configuration for the notification destination. Must wrap EXACTLY one
 	// of the nested configs.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// The display name for the notification destination.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying notification destination.
 	Id types.String `tfsdk:"-"`
 }
@@ -10230,11 +10403,13 @@ func (newState *UpdateNotificationDestinationRequest_SdkV2) SyncEffectiveFieldsD
 func (newState *UpdateNotificationDestinationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateNotificationDestinationRequest_SdkV2) {
 }
 
-func (c UpdateNotificationDestinationRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Config_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "config")...)
-	cs.SetRequired(append(path, "id")...)
+func (c UpdateNotificationDestinationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateNotificationDestinationRequest.
@@ -10306,14 +10481,14 @@ func (o *UpdateNotificationDestinationRequest_SdkV2) SetConfig(ctx context.Conte
 type UpdatePersonalComputeSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdatePersonalComputeSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalComputeSettingRequest_SdkV2) {
@@ -10322,13 +10497,13 @@ func (newState *UpdatePersonalComputeSettingRequest_SdkV2) SyncEffectiveFieldsDu
 func (newState *UpdatePersonalComputeSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalComputeSettingRequest_SdkV2) {
 }
 
-func (c UpdatePersonalComputeSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	PersonalComputeSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdatePersonalComputeSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalComputeSettingRequest.
@@ -10430,14 +10605,14 @@ func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2 struct {
 	// This should always be set to true for Settings API. Added for AIP
 	// compliance.
-	AllowMissing types.Bool `tfsdk:"allow_missing" tf:""`
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	FieldMask types.String `tfsdk:"field_mask" tf:""`
+	FieldMask types.String `tfsdk:"field_mask"`
 
-	Setting types.List `tfsdk:"setting" tf:"object"`
+	Setting types.List `tfsdk:"setting"`
 }
 
 func (newState *UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) {
@@ -10446,13 +10621,13 @@ func (newState *UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) SyncEffective
 func (newState *UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) {
 }
 
-func (c UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "allow_missing")...)
-	cs.SetRequired(append(path, "field_mask")...)
-	cs.SetRequired(append(path, "setting")...)
-	RestrictWorkspaceAdminsSetting_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "setting")...)
+func (c UpdateRestrictWorkspaceAdminsSettingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRestrictWorkspaceAdminsSettingRequest.

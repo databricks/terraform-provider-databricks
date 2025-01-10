@@ -25,7 +25,13 @@ type dataSourceApps struct {
 }
 
 type dataApps struct {
-	Apps types.List `tfsdk:"app" tf:"computed"`
+	Apps types.List `tfsdk:"app"`
+}
+
+func (dataApps) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetComputed()
+
+	return attrs
 }
 
 func (dataApps) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

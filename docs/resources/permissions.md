@@ -901,7 +901,7 @@ General Permissions API does not apply to access control for tables and they hav
 
 ## Data Access with Unity Catalog
 
-Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
+Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) or [databricks_grant](grant.md) resource.
 
 ## Argument Reference
 

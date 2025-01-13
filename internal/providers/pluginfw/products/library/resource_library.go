@@ -143,7 +143,12 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		Libraries: []compute.Library{libGoSDK},
 	}
 	req.Plan.GetAttribute(ctx, path.Root("cluster_id"), &installLib.ClusterId)
-	err := w.Libraries.Install(ctx, installLib)
+	_, err := clusters.StartClusterAndGetInfo(ctx, w, installLib.ClusterId)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to start and get cluster", err.Error())
+		return
+	}
+	err = w.Libraries.Install(ctx, installLib)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to install library", err.Error())
 		return

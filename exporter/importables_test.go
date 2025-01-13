@@ -69,6 +69,7 @@ func importContextForTest() *importContext {
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
 		tfvars:                    map[string]string{},
+		noFormat:                  true,
 	}
 }
 

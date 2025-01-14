@@ -34,8 +34,17 @@ type FunctionsDataSource struct {
 type FunctionsData struct {
 	CatalogName   types.String `tfsdk:"catalog_name"`
 	SchemaName    types.String `tfsdk:"schema_name"`
-	IncludeBrowse types.Bool   `tfsdk:"include_browse" tf:"optional"`
-	Functions     types.List   `tfsdk:"functions" tf:"optional,computed"`
+	IncludeBrowse types.Bool   `tfsdk:"include_browse"`
+	Functions     types.List   `tfsdk:"functions"`
+}
+
+func (FunctionsData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetRequired()
+	attrs["schema_name"] = attrs["schema_name"].SetRequired()
+	attrs["include_browse"] = attrs["include_browse"].SetOptional()
+	attrs["functions"] = attrs["functions"].SetOptional().SetComputed()
+
+	return attrs
 }
 
 func (FunctionsData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {

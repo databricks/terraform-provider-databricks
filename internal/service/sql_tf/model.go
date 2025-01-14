@@ -23,12 +23,12 @@ import (
 )
 
 type AccessControl struct {
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query *
 	// `CAN_EDIT`: Can edit the query * `CAN_MANAGE`: Can manage the query
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *AccessControl) SyncEffectiveFieldsDuringCreateOrUpdate(plan AccessControl) {
@@ -37,9 +37,12 @@ func (newState *AccessControl) SyncEffectiveFieldsDuringCreateOrUpdate(plan Acce
 func (newState *AccessControl) SyncEffectiveFieldsDuringRead(existingState AccessControl) {
 }
 
-func (c AccessControl) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AccessControl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AccessControl.
@@ -79,48 +82,48 @@ func (o AccessControl) Type(ctx context.Context) attr.Type {
 
 type Alert struct {
 	// Trigger conditions of the alert.
-	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	CustomBody types.String `tfsdk:"custom_body"`
 	// Custom subject of alert notification, if it exists. This can include
 	// email subject entries and Slack notification headers, for example. See
 	// [here] for custom templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// The display name of the alert.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The workspace state of the alert. Used for tracking trashed status.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// Whether to notify alert subscribers when alert returns back to normal.
-	NotifyOnOk types.Bool `tfsdk:"notify_on_ok" tf:"optional"`
+	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// The workspace path of the folder containing the alert.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// UUID of the query attached to the alert.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds an alert must wait after being triggered to rearm
 	// itself. After rearming, it can be triggered again. If 0 or not specified,
 	// the alert will not be triggered again.
-	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 	// Current state of the alert's trigger status. This field is set to UNKNOWN
 	// if the alert has not yet been evaluated or ran into an error during the
 	// last evaluation.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
-	TriggerTime types.String `tfsdk:"trigger_time" tf:"optional"`
+	TriggerTime types.String `tfsdk:"trigger_time"`
 	// The timestamp indicating when the alert was updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *Alert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert) {
@@ -129,10 +132,24 @@ func (newState *Alert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert) {
 func (newState *Alert) SyncEffectiveFieldsDuringRead(existingState Alert) {
 }
 
-func (c Alert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertCondition{}.ApplySchemaCustomizations(cs, append(path, "condition")...)
+func (c Alert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["custom_body"] = attrs["custom_body"].SetOptional()
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["trigger_time"] = attrs["trigger_time"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Alert.
@@ -226,14 +243,14 @@ func (o *Alert) SetCondition(ctx context.Context, v AlertCondition) {
 
 type AlertCondition struct {
 	// Alert state if result is empty.
-	EmptyResultState types.String `tfsdk:"empty_result_state" tf:"optional"`
+	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Operator used for comparison in alert evaluation.
-	Op types.String `tfsdk:"op" tf:"optional"`
+	Op types.String `tfsdk:"op"`
 	// Name of the column from the query result to use for comparison in alert
 	// evaluation.
-	Operand types.Object `tfsdk:"operand" tf:"optional,object"`
+	Operand types.Object `tfsdk:"operand"`
 	// Threshold value used for comparison in alert evaluation.
-	Threshold types.Object `tfsdk:"threshold" tf:"optional,object"`
+	Threshold types.Object `tfsdk:"threshold"`
 }
 
 func (newState *AlertCondition) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertCondition) {
@@ -242,11 +259,13 @@ func (newState *AlertCondition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Ale
 func (newState *AlertCondition) SyncEffectiveFieldsDuringRead(existingState AlertCondition) {
 }
 
-func (c AlertCondition) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertConditionOperand{}.ApplySchemaCustomizations(cs, append(path, "operand")...)
-	AlertConditionThreshold{}.ApplySchemaCustomizations(cs, append(path, "threshold")...)
+func (c AlertCondition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["empty_result_state"] = attrs["empty_result_state"].SetOptional()
+	attrs["op"] = attrs["op"].SetOptional()
+	attrs["operand"] = attrs["operand"].SetOptional()
+	attrs["threshold"] = attrs["threshold"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertCondition.
@@ -346,7 +365,7 @@ func (o *AlertCondition) SetThreshold(ctx context.Context, v AlertConditionThres
 }
 
 type AlertConditionOperand struct {
-	Column types.Object `tfsdk:"column" tf:"optional,object"`
+	Column types.Object `tfsdk:"column"`
 }
 
 func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionOperand) {
@@ -355,10 +374,10 @@ func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *AlertConditionOperand) SyncEffectiveFieldsDuringRead(existingState AlertConditionOperand) {
 }
 
-func (c AlertConditionOperand) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertOperandColumn{}.ApplySchemaCustomizations(cs, append(path, "column")...)
+func (c AlertConditionOperand) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column"] = attrs["column"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertConditionOperand.
@@ -423,7 +442,7 @@ func (o *AlertConditionOperand) SetColumn(ctx context.Context, v AlertOperandCol
 }
 
 type AlertConditionThreshold struct {
-	Value types.Object `tfsdk:"value" tf:"optional,object"`
+	Value types.Object `tfsdk:"value"`
 }
 
 func (newState *AlertConditionThreshold) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertConditionThreshold) {
@@ -432,10 +451,10 @@ func (newState *AlertConditionThreshold) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *AlertConditionThreshold) SyncEffectiveFieldsDuringRead(existingState AlertConditionThreshold) {
 }
 
-func (c AlertConditionThreshold) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertOperandValue{}.ApplySchemaCustomizations(cs, append(path, "value")...)
+func (c AlertConditionThreshold) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertConditionThreshold.
@@ -500,7 +519,7 @@ func (o *AlertConditionThreshold) SetValue(ctx context.Context, v AlertOperandVa
 }
 
 type AlertOperandColumn struct {
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *AlertOperandColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOperandColumn) {
@@ -509,9 +528,10 @@ func (newState *AlertOperandColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *AlertOperandColumn) SyncEffectiveFieldsDuringRead(existingState AlertOperandColumn) {
 }
 
-func (c AlertOperandColumn) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AlertOperandColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertOperandColumn.
@@ -546,11 +566,11 @@ func (o AlertOperandColumn) Type(ctx context.Context) attr.Type {
 }
 
 type AlertOperandValue struct {
-	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
+	BoolValue types.Bool `tfsdk:"bool_value"`
 
-	DoubleValue types.Float64 `tfsdk:"double_value" tf:"optional"`
+	DoubleValue types.Float64 `tfsdk:"double_value"`
 
-	StringValue types.String `tfsdk:"string_value" tf:"optional"`
+	StringValue types.String `tfsdk:"string_value"`
 }
 
 func (newState *AlertOperandValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOperandValue) {
@@ -559,9 +579,12 @@ func (newState *AlertOperandValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *AlertOperandValue) SyncEffectiveFieldsDuringRead(existingState AlertOperandValue) {
 }
 
-func (c AlertOperandValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c AlertOperandValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bool_value"] = attrs["bool_value"].SetOptional()
+	attrs["double_value"] = attrs["double_value"].SetOptional()
+	attrs["string_value"] = attrs["string_value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertOperandValue.
@@ -602,29 +625,29 @@ func (o AlertOperandValue) Type(ctx context.Context) attr.Type {
 // Alert configuration options.
 type AlertOptions struct {
 	// Name of column in the query result to compare in alert evaluation.
-	Column types.String `tfsdk:"column" tf:""`
+	Column types.String `tfsdk:"column"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	CustomBody types.String `tfsdk:"custom_body"`
 	// Custom subject of alert notification, if it exists. This includes email
 	// subject, Slack notification header, etc. See [here] for custom templating
 	// instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// State that alert evaluates to when query result is empty.
-	EmptyResultState types.String `tfsdk:"empty_result_state" tf:"optional"`
+	EmptyResultState types.String `tfsdk:"empty_result_state"`
 	// Whether or not the alert is muted. If an alert is muted, it will not
 	// notify users and notification destinations when triggered.
-	Muted types.Bool `tfsdk:"muted" tf:"optional"`
+	Muted types.Bool `tfsdk:"muted"`
 	// Operator used to compare in alert evaluation: `>`, `>=`, `<`, `<=`, `==`,
 	// `!=`
-	Op types.String `tfsdk:"op" tf:""`
+	Op types.String `tfsdk:"op"`
 	// Value used to compare in alert evaluation. Supported types include
 	// strings (eg. 'foobar'), floats (eg. 123.4), and booleans (true).
-	Value types.Object `tfsdk:"value" tf:""`
+	Value types.Object `tfsdk:"value"`
 }
 
 func (newState *AlertOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertOptions) {
@@ -633,12 +656,16 @@ func (newState *AlertOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Alert
 func (newState *AlertOptions) SyncEffectiveFieldsDuringRead(existingState AlertOptions) {
 }
 
-func (c AlertOptions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "column")...)
-	cs.SetRequired(append(path, "op")...)
-	cs.SetRequired(append(path, "value")...)
+func (c AlertOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column"] = attrs["column"].SetRequired()
+	attrs["custom_body"] = attrs["custom_body"].SetOptional()
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["empty_result_state"] = attrs["empty_result_state"].SetOptional()
+	attrs["muted"] = attrs["muted"].SetOptional()
+	attrs["op"] = attrs["op"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertOptions.
@@ -686,44 +713,44 @@ func (o AlertOptions) Type(ctx context.Context) attr.Type {
 
 type AlertQuery struct {
 	// The timestamp when this query was created.
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// Data source ID maps to the ID of the data source used by the resource and
 	// is distinct from the warehouse ID. [Learn more]
 	//
 	// [Learn more]: https://docs.databricks.com/api/workspace/datasources/list
-	DataSourceId types.String `tfsdk:"data_source_id" tf:"optional"`
+	DataSourceId types.String `tfsdk:"data_source_id"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Query ID.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Indicates whether the query is trashed. Trashed queries can't be used in
 	// dashboards, or appear in search results. If this boolean is `true`, the
 	// `options` property for this query includes a `moved_to_trash_at`
 	// timestamp. Trashed queries are permanently deleted after 30 days.
-	IsArchived types.Bool `tfsdk:"is_archived" tf:"optional"`
+	IsArchived types.Bool `tfsdk:"is_archived"`
 	// Whether the query is a draft. Draft queries only appear in list views for
 	// their owners. Visualizations from draft queries cannot appear on
 	// dashboards.
-	IsDraft types.Bool `tfsdk:"is_draft" tf:"optional"`
+	IsDraft types.Bool `tfsdk:"is_draft"`
 	// Text parameter types are not safe from SQL injection for all types of
 	// data source. Set this Boolean parameter to `true` if a query either does
 	// not use any text type parameters or uses a data source type where text
 	// type parameters are handled safely.
-	IsSafe types.Bool `tfsdk:"is_safe" tf:"optional"`
+	IsSafe types.Bool `tfsdk:"is_safe"`
 	// The title of this query that appears in list views, widget headings, and
 	// on the query page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 
-	Options types.Object `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options"`
 	// The text of the query to be run.
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The timestamp at which this query was last updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 	// The ID of the user who owns the query.
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *AlertQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertQuery) {
@@ -732,10 +759,22 @@ func (newState *AlertQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertQu
 func (newState *AlertQuery) SyncEffectiveFieldsDuringRead(existingState AlertQuery) {
 }
 
-func (c AlertQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
+func (c AlertQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_archived"] = attrs["is_archived"].SetOptional()
+	attrs["is_draft"] = attrs["is_draft"].SetOptional()
+	attrs["is_safe"] = attrs["is_safe"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertQuery.
@@ -858,13 +897,13 @@ func (o *AlertQuery) SetTags(ctx context.Context, v []types.String) {
 type BaseChunkInfo struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
-	ByteCount types.Int64 `tfsdk:"byte_count" tf:"optional"`
+	ByteCount types.Int64 `tfsdk:"byte_count"`
 	// The position within the sequence of result set chunks.
-	ChunkIndex types.Int64 `tfsdk:"chunk_index" tf:"optional"`
+	ChunkIndex types.Int64 `tfsdk:"chunk_index"`
 	// The number of rows within the result chunk.
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 	// The starting row offset within the result set.
-	RowOffset types.Int64 `tfsdk:"row_offset" tf:"optional"`
+	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
 func (newState *BaseChunkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan BaseChunkInfo) {
@@ -873,9 +912,13 @@ func (newState *BaseChunkInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Base
 func (newState *BaseChunkInfo) SyncEffectiveFieldsDuringRead(existingState BaseChunkInfo) {
 }
 
-func (c BaseChunkInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c BaseChunkInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["byte_count"] = attrs["byte_count"].SetOptional()
+	attrs["chunk_index"] = attrs["chunk_index"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["row_offset"] = attrs["row_offset"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BaseChunkInfo.
@@ -986,9 +1029,9 @@ func (o CancelExecutionResponse) Type(ctx context.Context) attr.Type {
 // Configures the channel name and DBSQL version of the warehouse.
 // CHANNEL_NAME_CUSTOM should be chosen only when `dbsql_version` is specified.
 type Channel struct {
-	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
+	DbsqlVersion types.String `tfsdk:"dbsql_version"`
 
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *Channel) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channel) {
@@ -997,9 +1040,11 @@ func (newState *Channel) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channel) {
 func (newState *Channel) SyncEffectiveFieldsDuringRead(existingState Channel) {
 }
 
-func (c Channel) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Channel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbsql_version"] = attrs["dbsql_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Channel.
@@ -1038,9 +1083,9 @@ func (o Channel) Type(ctx context.Context) attr.Type {
 // Details about a Channel.
 type ChannelInfo struct {
 	// DB SQL Version the Channel is mapped to.
-	DbsqlVersion types.String `tfsdk:"dbsql_version" tf:"optional"`
+	DbsqlVersion types.String `tfsdk:"dbsql_version"`
 	// Name of the channel
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *ChannelInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChannelInfo) {
@@ -1049,9 +1094,11 @@ func (newState *ChannelInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Channe
 func (newState *ChannelInfo) SyncEffectiveFieldsDuringRead(existingState ChannelInfo) {
 }
 
-func (c ChannelInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ChannelInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbsql_version"] = attrs["dbsql_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChannelInfo.
@@ -1089,22 +1136,22 @@ func (o ChannelInfo) Type(ctx context.Context) attr.Type {
 
 type ColumnInfo struct {
 	// The name of the column.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The ordinal position of the column (starting at position 0).
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
+	Position types.Int64 `tfsdk:"position"`
 	// The format of the interval type.
-	TypeIntervalType types.String `tfsdk:"type_interval_type" tf:"optional"`
+	TypeIntervalType types.String `tfsdk:"type_interval_type"`
 	// The name of the base data type. This doesn't include details for complex
 	// types such as STRUCT, MAP or ARRAY.
-	TypeName types.String `tfsdk:"type_name" tf:"optional"`
+	TypeName types.String `tfsdk:"type_name"`
 	// Specifies the number of digits in a number. This applies to the DECIMAL
 	// type.
-	TypePrecision types.Int64 `tfsdk:"type_precision" tf:"optional"`
+	TypePrecision types.Int64 `tfsdk:"type_precision"`
 	// Specifies the number of digits to the right of the decimal point in a
 	// number. This applies to the DECIMAL type.
-	TypeScale types.Int64 `tfsdk:"type_scale" tf:"optional"`
+	TypeScale types.Int64 `tfsdk:"type_scale"`
 	// The full SQL type specification.
-	TypeText types.String `tfsdk:"type_text" tf:"optional"`
+	TypeText types.String `tfsdk:"type_text"`
 }
 
 func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo) {
@@ -1113,9 +1160,16 @@ func (newState *ColumnInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnI
 func (newState *ColumnInfo) SyncEffectiveFieldsDuringRead(existingState ColumnInfo) {
 }
 
-func (c ColumnInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ColumnInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["type_interval_type"] = attrs["type_interval_type"].SetOptional()
+	attrs["type_name"] = attrs["type_name"].SetOptional()
+	attrs["type_precision"] = attrs["type_precision"].SetOptional()
+	attrs["type_scale"] = attrs["type_scale"].SetOptional()
+	attrs["type_text"] = attrs["type_text"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnInfo.
@@ -1163,17 +1217,17 @@ func (o ColumnInfo) Type(ctx context.Context) attr.Type {
 
 type CreateAlert struct {
 	// Name of the alert.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Alert configuration options.
-	Options types.Object `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 	// Query ID.
-	QueryId types.String `tfsdk:"query_id" tf:""`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds after being triggered before the alert rearms itself
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
-	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
+	Rearm types.Int64 `tfsdk:"rearm"`
 }
 
 func (newState *CreateAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlert) {
@@ -1182,13 +1236,14 @@ func (newState *CreateAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Create
 func (newState *CreateAlert) SyncEffectiveFieldsDuringRead(existingState CreateAlert) {
 }
 
-func (c CreateAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "options")...)
-	AlertOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	cs.SetRequired(append(path, "query_id")...)
+func (c CreateAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["rearm"] = attrs["rearm"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlert.
@@ -1261,7 +1316,7 @@ func (o *CreateAlert) SetOptions(ctx context.Context, v AlertOptions) {
 }
 
 type CreateAlertRequest struct {
-	Alert types.Object `tfsdk:"alert" tf:"optional,object"`
+	Alert types.Object `tfsdk:"alert"`
 }
 
 func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertRequest) {
@@ -1270,10 +1325,10 @@ func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringRead(existingState CreateAlertRequest) {
 }
 
-func (c CreateAlertRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CreateAlertRequestAlert{}.ApplySchemaCustomizations(cs, append(path, "alert")...)
+func (c CreateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertRequest.
@@ -1339,30 +1394,30 @@ func (o *CreateAlertRequest) SetAlert(ctx context.Context, v CreateAlertRequestA
 
 type CreateAlertRequestAlert struct {
 	// Trigger conditions of the alert.
-	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	CustomBody types.String `tfsdk:"custom_body"`
 	// Custom subject of alert notification, if it exists. This can include
 	// email subject entries and Slack notification headers, for example. See
 	// [here] for custom templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// The display name of the alert.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Whether to notify alert subscribers when alert returns back to normal.
-	NotifyOnOk types.Bool `tfsdk:"notify_on_ok" tf:"optional"`
+	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The workspace path of the folder containing the alert.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// UUID of the query attached to the alert.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds an alert must wait after being triggered to rearm
 	// itself. After rearming, it can be triggered again. If 0 or not specified,
 	// the alert will not be triggered again.
-	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
 func (newState *CreateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertRequestAlert) {
@@ -1371,10 +1426,17 @@ func (newState *CreateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateAlertRequestAlert) SyncEffectiveFieldsDuringRead(existingState CreateAlertRequestAlert) {
 }
 
-func (c CreateAlertRequestAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertCondition{}.ApplySchemaCustomizations(cs, append(path, "condition")...)
+func (c CreateAlertRequestAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["custom_body"] = attrs["custom_body"].SetOptional()
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertRequestAlert.
@@ -1453,7 +1515,7 @@ func (o *CreateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 }
 
 type CreateQueryRequest struct {
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 }
 
 func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryRequest) {
@@ -1462,10 +1524,10 @@ func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringRead(existingState CreateQueryRequest) {
 }
 
-func (c CreateQueryRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CreateQueryRequestQuery{}.ApplySchemaCustomizations(cs, append(path, "query")...)
+func (c CreateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query"] = attrs["query"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryRequest.
@@ -1531,29 +1593,29 @@ func (o *CreateQueryRequest) SetQuery(ctx context.Context, v CreateQueryRequestQ
 
 type CreateQueryRequestQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
-	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
 	// Name of the catalog where this query will be executed.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Display name of the query that appears in list views, widget headings,
 	// and on the query page.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// List of query parameter definitions.
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Workspace path of the workspace folder containing the object.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Sets the "Run as" role for the object.
-	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryRequestQuery) {
@@ -1562,10 +1624,20 @@ func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingState CreateQueryRequestQuery) {
 }
 
-func (c CreateQueryRequestQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryParameter{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
+func (c CreateQueryRequestQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_auto_limit"] = attrs["apply_auto_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryRequestQuery.
@@ -1682,18 +1754,18 @@ func (o *CreateQueryRequestQuery) SetTags(ctx context.Context, v []types.String)
 type CreateQueryVisualizationsLegacyRequest struct {
 	// A short description of this visualization. This is not displayed in the
 	// UI.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The name of the visualization that appears on dashboards and the query
 	// screen.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The options object varies widely from one visualization type to the next
 	// and is unsupported. Databricks does not recommend modifying visualization
 	// settings in JSON.
-	Options types.Object `tfsdk:"options" tf:""`
+	Options types.Object `tfsdk:"options"`
 	// The identifier returned by :method:queries/create
-	QueryId types.String `tfsdk:"query_id" tf:""`
+	QueryId types.String `tfsdk:"query_id"`
 	// The type of visualization: chart, table, pivot table, and so on.
-	Type_ types.String `tfsdk:"type" tf:""`
+	Type_ types.String `tfsdk:"type"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryVisualizationsLegacyRequest.
@@ -1736,7 +1808,7 @@ func (o CreateQueryVisualizationsLegacyRequest) Type(ctx context.Context) attr.T
 }
 
 type CreateVisualizationRequest struct {
-	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization"`
 }
 
 func (newState *CreateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVisualizationRequest) {
@@ -1745,10 +1817,10 @@ func (newState *CreateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *CreateVisualizationRequest) SyncEffectiveFieldsDuringRead(existingState CreateVisualizationRequest) {
 }
 
-func (c CreateVisualizationRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CreateVisualizationRequestVisualization{}.ApplySchemaCustomizations(cs, append(path, "visualization")...)
+func (c CreateVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["visualization"] = attrs["visualization"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVisualizationRequest.
@@ -1814,19 +1886,19 @@ func (o *CreateVisualizationRequest) SetVisualization(ctx context.Context, v Cre
 
 type CreateVisualizationRequestVisualization struct {
 	// The display name of the visualization.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID of the query that the visualization is attached to.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// The visualization options varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying
 	// visualization options directly.
-	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	SerializedOptions types.String `tfsdk:"serialized_options"`
 	// The visualization query plan varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying the
 	// visualization query plan directly.
-	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan"`
 	// The type of visualization: counter, table, funnel, and so on.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *CreateVisualizationRequestVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVisualizationRequestVisualization) {
@@ -1835,9 +1907,14 @@ func (newState *CreateVisualizationRequestVisualization) SyncEffectiveFieldsDuri
 func (newState *CreateVisualizationRequestVisualization) SyncEffectiveFieldsDuringRead(existingState CreateVisualizationRequestVisualization) {
 }
 
-func (c CreateVisualizationRequestVisualization) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateVisualizationRequestVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["serialized_options"] = attrs["serialized_options"].SetOptional()
+	attrs["serialized_query_plan"] = attrs["serialized_query_plan"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVisualizationRequestVisualization.
@@ -1888,33 +1965,33 @@ type CreateWarehouseRequest struct {
 	// autostop.
 	//
 	// Defaults to 120 mins
-	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
+	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
 	// Channel Details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large
-	ClusterSize types.String `tfsdk:"cluster_size" tf:"optional"`
+	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
-	CreatorName types.String `tfsdk:"creator_name" tf:"optional"`
+	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to false.
-	EnablePhoton types.Bool `tfsdk:"enable_photon" tf:"optional"`
+	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
-	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
+	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
 	// Supported values: - Must be >= min_num_clusters - Must be <= 30.
 	//
 	// Defaults to min_clusters if unset.
-	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters" tf:"optional"`
+	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters"`
 	// Minimum number of available clusters that will be maintained for this SQL
 	// warehouse. Increasing this will ensure that a larger number of clusters
 	// are always running and therefore may reduce the cold start time for new
@@ -1924,23 +2001,23 @@ type CreateWarehouseRequest struct {
 	// Supported values: - Must be > 0 - Must be <= min(max_num_clusters, 30)
 	//
 	// Defaults to 1
-	MinNumClusters types.Int64 `tfsdk:"min_num_clusters" tf:"optional"`
+	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
 	// Logical name for the cluster.
 	//
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Configurations whether the warehouse should use spot instances.
-	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
+	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
-	WarehouseType types.String `tfsdk:"warehouse_type" tf:"optional"`
+	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
 func (newState *CreateWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWarehouseRequest) {
@@ -1949,11 +2026,22 @@ func (newState *CreateWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *CreateWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState CreateWarehouseRequest) {
 }
 
-func (c CreateWarehouseRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	EndpointTags{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c CreateWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWarehouseRequest.
@@ -2072,7 +2160,7 @@ func (o *CreateWarehouseRequest) SetTags(ctx context.Context, v EndpointTags) {
 
 type CreateWarehouseResponse struct {
 	// Id for the SQL warehouse. This value is unique across all SQL warehouses.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *CreateWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWarehouseResponse) {
@@ -2081,9 +2169,10 @@ func (newState *CreateWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState CreateWarehouseResponse) {
 }
 
-func (c CreateWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c CreateWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWarehouseResponse.
@@ -2119,19 +2208,19 @@ func (o CreateWarehouseResponse) Type(ctx context.Context) attr.Type {
 
 type CreateWidget struct {
 	// Dashboard ID returned by :method:dashboards/create.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// Widget ID returned by :method:dashboardwidgets/create
 	Id types.String `tfsdk:"-"`
 
-	Options types.Object `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options"`
 	// If this is a textbox widget, the application displays this text. This
 	// field is ignored if the widget contains a visualization in the
 	// `visualization` field.
-	Text types.String `tfsdk:"text" tf:"optional"`
+	Text types.String `tfsdk:"text"`
 	// Query Vizualization ID returned by :method:queryvisualizations/create.
-	VisualizationId types.String `tfsdk:"visualization_id" tf:"optional"`
+	VisualizationId types.String `tfsdk:"visualization_id"`
 	// Width of a widget
-	Width types.Int64 `tfsdk:"width" tf:""`
+	Width types.Int64 `tfsdk:"width"`
 }
 
 func (newState *CreateWidget) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWidget) {
@@ -2140,14 +2229,15 @@ func (newState *CreateWidget) SyncEffectiveFieldsDuringCreateOrUpdate(plan Creat
 func (newState *CreateWidget) SyncEffectiveFieldsDuringRead(existingState CreateWidget) {
 }
 
-func (c CreateWidget) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "options")...)
-	WidgetOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	cs.SetRequired(append(path, "width")...)
+func (c CreateWidget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["text"] = attrs["text"].SetOptional()
+	attrs["visualization_id"] = attrs["visualization_id"].SetOptional()
+	attrs["width"] = attrs["width"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWidget.
@@ -2225,49 +2315,49 @@ func (o *CreateWidget) SetOptions(ctx context.Context, v WidgetOptions) {
 // boxes.
 type Dashboard struct {
 	// Whether the authenticated user can edit the query definition.
-	CanEdit types.Bool `tfsdk:"can_edit" tf:"optional"`
+	CanEdit types.Bool `tfsdk:"can_edit"`
 	// Timestamp when this dashboard was created.
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// In the web application, query filters that share a name are coupled to a
 	// single selection box if this value is `true`.
-	DashboardFiltersEnabled types.Bool `tfsdk:"dashboard_filters_enabled" tf:"optional"`
+	DashboardFiltersEnabled types.Bool `tfsdk:"dashboard_filters_enabled"`
 	// The ID for this dashboard.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Indicates whether a dashboard is trashed. Trashed dashboards won't appear
 	// in list views. If this boolean is `true`, the `options` property for this
 	// dashboard includes a `moved_to_trash_at` timestamp. Items in trash are
 	// permanently deleted after 30 days.
-	IsArchived types.Bool `tfsdk:"is_archived" tf:"optional"`
+	IsArchived types.Bool `tfsdk:"is_archived"`
 	// Whether a dashboard is a draft. Draft dashboards only appear in list
 	// views for their owners.
-	IsDraft types.Bool `tfsdk:"is_draft" tf:"optional"`
+	IsDraft types.Bool `tfsdk:"is_draft"`
 	// Indicates whether this query object appears in the current user's
 	// favorites list. This flag determines whether the star icon for favorites
 	// is selected.
-	IsFavorite types.Bool `tfsdk:"is_favorite" tf:"optional"`
+	IsFavorite types.Bool `tfsdk:"is_favorite"`
 	// The title of the dashboard that appears in list views and at the top of
 	// the dashboard page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 
-	Options types.Object `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 	// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query *
 	// `CAN_EDIT`: Can edit the query * `CAN_MANAGE`: Can manage the query
-	PermissionTier types.String `tfsdk:"permission_tier" tf:"optional"`
+	PermissionTier types.String `tfsdk:"permission_tier"`
 	// URL slug. Usually mirrors the query name with dashes (`-`) instead of
 	// spaces. Appears in the URL for this query.
-	Slug types.String `tfsdk:"slug" tf:"optional"`
+	Slug types.String `tfsdk:"slug"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this dashboard was last updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 
-	User types.Object `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user"`
 	// The ID of the user who owns the dashboard.
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 
-	Widgets types.List `tfsdk:"widgets" tf:"optional"`
+	Widgets types.List `tfsdk:"widgets"`
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
@@ -2276,12 +2366,26 @@ func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboar
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
 }
 
-func (c Dashboard) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DashboardOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	User{}.ApplySchemaCustomizations(cs, append(path, "user")...)
-	Widget{}.ApplySchemaCustomizations(cs, append(path, "widgets")...)
+func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["can_edit"] = attrs["can_edit"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["dashboard_filters_enabled"] = attrs["dashboard_filters_enabled"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_archived"] = attrs["is_archived"].SetOptional()
+	attrs["is_draft"] = attrs["is_draft"].SetOptional()
+	attrs["is_favorite"] = attrs["is_favorite"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["permission_tier"] = attrs["permission_tier"].SetOptional()
+	attrs["slug"] = attrs["slug"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["user"] = attrs["user"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["widgets"] = attrs["widgets"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Dashboard.
@@ -2468,13 +2572,13 @@ type DashboardEditContent struct {
 	DashboardId types.String `tfsdk:"-"`
 	// The title of this dashboard that appears in list views and at the top of
 	// the dashboard page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
 	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
 	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
+	RunAsRole types.String `tfsdk:"run_as_role"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *DashboardEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardEditContent) {
@@ -2483,10 +2587,13 @@ func (newState *DashboardEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DashboardEditContent) SyncEffectiveFieldsDuringRead(existingState DashboardEditContent) {
 }
 
-func (c DashboardEditContent) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dashboard_id")...)
+func (c DashboardEditContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardEditContent.
@@ -2560,7 +2667,7 @@ type DashboardOptions struct {
 	// The timestamp when this dashboard was moved to trash. Only present when
 	// the `is_archived` property is `true`. Trashed items are deleted after
 	// thirty days.
-	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at" tf:"optional"`
+	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at"`
 }
 
 func (newState *DashboardOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardOptions) {
@@ -2569,9 +2676,10 @@ func (newState *DashboardOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan D
 func (newState *DashboardOptions) SyncEffectiveFieldsDuringRead(existingState DashboardOptions) {
 }
 
-func (c DashboardOptions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DashboardOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["moved_to_trash_at"] = attrs["moved_to_trash_at"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardOptions.
@@ -2607,21 +2715,21 @@ func (o DashboardOptions) Type(ctx context.Context) attr.Type {
 
 type DashboardPostContent struct {
 	// Indicates whether the dashboard filters are enabled
-	DashboardFiltersEnabled types.Bool `tfsdk:"dashboard_filters_enabled" tf:"optional"`
+	DashboardFiltersEnabled types.Bool `tfsdk:"dashboard_filters_enabled"`
 	// Indicates whether this dashboard object should appear in the current
 	// user's favorites list.
-	IsFavorite types.Bool `tfsdk:"is_favorite" tf:"optional"`
+	IsFavorite types.Bool `tfsdk:"is_favorite"`
 	// The title of this dashboard that appears in list views and at the top of
 	// the dashboard page.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
 	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
 	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
+	RunAsRole types.String `tfsdk:"run_as_role"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *DashboardPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardPostContent) {
@@ -2630,10 +2738,15 @@ func (newState *DashboardPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DashboardPostContent) SyncEffectiveFieldsDuringRead(existingState DashboardPostContent) {
 }
 
-func (c DashboardPostContent) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
+func (c DashboardPostContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_filters_enabled"] = attrs["dashboard_filters_enabled"].SetOptional()
+	attrs["is_favorite"] = attrs["is_favorite"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardPostContent.
@@ -2713,26 +2826,26 @@ type DataSource struct {
 	// is distinct from the warehouse ID. [Learn more]
 	//
 	// [Learn more]: https://docs.databricks.com/api/workspace/datasources/list
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The string name of this data source / SQL warehouse as it appears in the
 	// Databricks SQL web application.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Reserved for internal use.
-	PauseReason types.String `tfsdk:"pause_reason" tf:"optional"`
+	PauseReason types.String `tfsdk:"pause_reason"`
 	// Reserved for internal use.
-	Paused types.Int64 `tfsdk:"paused" tf:"optional"`
+	Paused types.Int64 `tfsdk:"paused"`
 	// Reserved for internal use.
-	SupportsAutoLimit types.Bool `tfsdk:"supports_auto_limit" tf:"optional"`
+	SupportsAutoLimit types.Bool `tfsdk:"supports_auto_limit"`
 	// Reserved for internal use.
-	Syntax types.String `tfsdk:"syntax" tf:"optional"`
+	Syntax types.String `tfsdk:"syntax"`
 	// The type of data source. For SQL warehouses, this will be
 	// `databricks_internal`.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 	// Reserved for internal use.
-	ViewOnly types.Bool `tfsdk:"view_only" tf:"optional"`
+	ViewOnly types.Bool `tfsdk:"view_only"`
 	// The ID of the associated SQL warehouse, if this data source is backed by
 	// a SQL warehouse.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *DataSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataSource) {
@@ -2741,9 +2854,18 @@ func (newState *DataSource) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataSou
 func (newState *DataSource) SyncEffectiveFieldsDuringRead(existingState DataSource) {
 }
 
-func (c DataSource) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DataSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["pause_reason"] = attrs["pause_reason"].SetOptional()
+	attrs["paused"] = attrs["paused"].SetOptional()
+	attrs["supports_auto_limit"] = attrs["supports_auto_limit"].SetOptional()
+	attrs["syntax"] = attrs["syntax"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["view_only"] = attrs["view_only"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataSource.
@@ -2794,9 +2916,9 @@ func (o DataSource) Type(ctx context.Context) attr.Type {
 }
 
 type DateRange struct {
-	End types.String `tfsdk:"end" tf:""`
+	End types.String `tfsdk:"end"`
 
-	Start types.String `tfsdk:"start" tf:""`
+	Start types.String `tfsdk:"start"`
 }
 
 func (newState *DateRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRange) {
@@ -2805,11 +2927,11 @@ func (newState *DateRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRang
 func (newState *DateRange) SyncEffectiveFieldsDuringRead(existingState DateRange) {
 }
 
-func (c DateRange) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "end")...)
-	cs.SetRequired(append(path, "start")...)
+func (c DateRange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end"] = attrs["end"].SetRequired()
+	attrs["start"] = attrs["start"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DateRange.
@@ -2847,14 +2969,14 @@ func (o DateRange) Type(ctx context.Context) attr.Type {
 
 type DateRangeValue struct {
 	// Manually specified date-time range value.
-	DateRangeValue types.Object `tfsdk:"date_range_value" tf:"optional,object"`
+	DateRangeValue types.Object `tfsdk:"date_range_value"`
 	// Dynamic date-time range value based on current date-time.
-	DynamicDateRangeValue types.String `tfsdk:"dynamic_date_range_value" tf:"optional"`
+	DynamicDateRangeValue types.String `tfsdk:"dynamic_date_range_value"`
 	// Date-time precision to format the value into when the query is run.
 	// Defaults to DAY_PRECISION (YYYY-MM-DD).
-	Precision types.String `tfsdk:"precision" tf:"optional"`
+	Precision types.String `tfsdk:"precision"`
 
-	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week" tf:"optional"`
+	StartDayOfWeek types.Int64 `tfsdk:"start_day_of_week"`
 }
 
 func (newState *DateRangeValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateRangeValue) {
@@ -2863,10 +2985,13 @@ func (newState *DateRangeValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dat
 func (newState *DateRangeValue) SyncEffectiveFieldsDuringRead(existingState DateRangeValue) {
 }
 
-func (c DateRangeValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DateRange{}.ApplySchemaCustomizations(cs, append(path, "date_range_value")...)
+func (c DateRangeValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["date_range_value"] = attrs["date_range_value"].SetOptional()
+	attrs["dynamic_date_range_value"] = attrs["dynamic_date_range_value"].SetOptional()
+	attrs["precision"] = attrs["precision"].SetOptional()
+	attrs["start_day_of_week"] = attrs["start_day_of_week"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DateRangeValue.
@@ -2938,12 +3063,12 @@ func (o *DateRangeValue) SetDateRangeValue(ctx context.Context, v DateRange) {
 
 type DateValue struct {
 	// Manually specified date-time value.
-	DateValue types.String `tfsdk:"date_value" tf:"optional"`
+	DateValue types.String `tfsdk:"date_value"`
 	// Dynamic date-time value based on current date-time.
-	DynamicDateValue types.String `tfsdk:"dynamic_date_value" tf:"optional"`
+	DynamicDateValue types.String `tfsdk:"dynamic_date_value"`
 	// Date-time precision to format the value into when the query is run.
 	// Defaults to DAY_PRECISION (YYYY-MM-DD).
-	Precision types.String `tfsdk:"precision" tf:"optional"`
+	Precision types.String `tfsdk:"precision"`
 }
 
 func (newState *DateValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateValue) {
@@ -2952,9 +3077,12 @@ func (newState *DateValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan DateValu
 func (newState *DateValue) SyncEffectiveFieldsDuringRead(existingState DateValue) {
 }
 
-func (c DateValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DateValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["date_value"] = attrs["date_value"].SetOptional()
+	attrs["dynamic_date_value"] = attrs["dynamic_date_value"].SetOptional()
+	attrs["precision"] = attrs["precision"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DateValue.
@@ -3286,9 +3414,9 @@ func (newState *DeleteWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *DeleteWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState DeleteWarehouseResponse) {
 }
 
-func (c DeleteWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWarehouseResponse.
@@ -3321,15 +3449,15 @@ func (o DeleteWarehouseResponse) Type(ctx context.Context) attr.Type {
 type EditAlert struct {
 	AlertId types.String `tfsdk:"-"`
 	// Name of the alert.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Alert configuration options.
-	Options types.Object `tfsdk:"options" tf:"object"`
+	Options types.Object `tfsdk:"options"`
 	// Query ID.
-	QueryId types.String `tfsdk:"query_id" tf:""`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds after being triggered before the alert rearms itself
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
-	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
+	Rearm types.Int64 `tfsdk:"rearm"`
 }
 
 func (newState *EditAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditAlert) {
@@ -3338,14 +3466,14 @@ func (newState *EditAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditAler
 func (newState *EditAlert) SyncEffectiveFieldsDuringRead(existingState EditAlert) {
 }
 
-func (c EditAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "alert_id")...)
-	cs.SetRequired(append(path, "name")...)
-	cs.SetRequired(append(path, "options")...)
-	AlertOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	cs.SetRequired(append(path, "query_id")...)
+func (c EditAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_id"] = attrs["alert_id"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["rearm"] = attrs["rearm"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditAlert.
@@ -3424,35 +3552,35 @@ type EditWarehouseRequest struct {
 	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
 	//
 	// Defaults to 120 mins
-	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
+	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
 	// Channel Details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large
-	ClusterSize types.String `tfsdk:"cluster_size" tf:"optional"`
+	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
-	CreatorName types.String `tfsdk:"creator_name" tf:"optional"`
+	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to false.
-	EnablePhoton types.Bool `tfsdk:"enable_photon" tf:"optional"`
+	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute.
-	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
+	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Required. Id of the warehouse to configure.
 	Id types.String `tfsdk:"-"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
 	// Supported values: - Must be >= min_num_clusters - Must be <= 30.
 	//
 	// Defaults to min_clusters if unset.
-	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters" tf:"optional"`
+	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters"`
 	// Minimum number of available clusters that will be maintained for this SQL
 	// warehouse. Increasing this will ensure that a larger number of clusters
 	// are always running and therefore may reduce the cold start time for new
@@ -3462,23 +3590,23 @@ type EditWarehouseRequest struct {
 	// Supported values: - Must be > 0 - Must be <= min(max_num_clusters, 30)
 	//
 	// Defaults to 1
-	MinNumClusters types.Int64 `tfsdk:"min_num_clusters" tf:"optional"`
+	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
 	// Logical name for the cluster.
 	//
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Configurations whether the warehouse should use spot instances.
-	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
+	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
-	WarehouseType types.String `tfsdk:"warehouse_type" tf:"optional"`
+	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
 func (newState *EditWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditWarehouseRequest) {
@@ -3487,12 +3615,23 @@ func (newState *EditWarehouseRequest) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *EditWarehouseRequest) SyncEffectiveFieldsDuringRead(existingState EditWarehouseRequest) {
 }
 
-func (c EditWarehouseRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	cs.SetRequired(append(path, "id")...)
-	EndpointTags{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c EditWarehouseRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditWarehouseRequest.
@@ -3620,9 +3759,9 @@ func (newState *EditWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *EditWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState EditWarehouseResponse) {
 }
 
-func (c EditWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EditWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditWarehouseResponse.
@@ -3663,9 +3802,9 @@ func (newState *Empty) SyncEffectiveFieldsDuringCreateOrUpdate(plan Empty) {
 func (newState *Empty) SyncEffectiveFieldsDuringRead(existingState Empty) {
 }
 
-func (c Empty) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Empty) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Empty.
@@ -3696,9 +3835,9 @@ func (o Empty) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointConfPair struct {
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *EndpointConfPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointConfPair) {
@@ -3707,9 +3846,11 @@ func (newState *EndpointConfPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan E
 func (newState *EndpointConfPair) SyncEffectiveFieldsDuringRead(existingState EndpointConfPair) {
 }
 
-func (c EndpointConfPair) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EndpointConfPair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointConfPair.
@@ -3747,17 +3888,17 @@ func (o EndpointConfPair) Type(ctx context.Context) attr.Type {
 
 type EndpointHealth struct {
 	// Details about errors that are causing current degraded/failed status.
-	Details types.String `tfsdk:"details" tf:"optional"`
+	Details types.String `tfsdk:"details"`
 	// The reason for failure to bring up clusters for this warehouse. This is
 	// available when status is 'FAILED' and sometimes when it is DEGRADED.
-	FailureReason types.Object `tfsdk:"failure_reason" tf:"optional,object"`
+	FailureReason types.Object `tfsdk:"failure_reason"`
 	// Deprecated. split into summary and details for security
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// Health status of the warehouse.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// A short summary of the health status in case of degraded/failed
 	// warehouses.
-	Summary types.String `tfsdk:"summary" tf:"optional"`
+	Summary types.String `tfsdk:"summary"`
 }
 
 func (newState *EndpointHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointHealth) {
@@ -3766,10 +3907,14 @@ func (newState *EndpointHealth) SyncEffectiveFieldsDuringCreateOrUpdate(plan End
 func (newState *EndpointHealth) SyncEffectiveFieldsDuringRead(existingState EndpointHealth) {
 }
 
-func (c EndpointHealth) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TerminationReason{}.ApplySchemaCustomizations(cs, append(path, "failure_reason")...)
+func (c EndpointHealth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["details"] = attrs["details"].SetOptional()
+	attrs["failure_reason"] = attrs["failure_reason"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["summary"] = attrs["summary"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointHealth.
@@ -3848,40 +3993,40 @@ type EndpointInfo struct {
 	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
 	//
 	// Defaults to 120 mins
-	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
+	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
 	// Channel Details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large
-	ClusterSize types.String `tfsdk:"cluster_size" tf:"optional"`
+	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
-	CreatorName types.String `tfsdk:"creator_name" tf:"optional"`
+	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to false.
-	EnablePhoton types.Bool `tfsdk:"enable_photon" tf:"optional"`
+	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
-	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
+	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// unique identifier for warehouse
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
-	JdbcUrl types.String `tfsdk:"jdbc_url" tf:"optional"`
+	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
 	// Supported values: - Must be >= min_num_clusters - Must be <= 30.
 	//
 	// Defaults to min_clusters if unset.
-	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters" tf:"optional"`
+	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters"`
 	// Minimum number of available clusters that will be maintained for this SQL
 	// warehouse. Increasing this will ensure that a larger number of clusters
 	// are always running and therefore may reduce the cold start time for new
@@ -3891,31 +4036,31 @@ type EndpointInfo struct {
 	// Supported values: - Must be > 0 - Must be <= min(max_num_clusters, 30)
 	//
 	// Defaults to 1
-	MinNumClusters types.Int64 `tfsdk:"min_num_clusters" tf:"optional"`
+	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
 	// Logical name for the cluster.
 	//
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// current number of active sessions for the warehouse
-	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions" tf:"optional"`
+	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
 	// current number of clusters running for the service
-	NumClusters types.Int64 `tfsdk:"num_clusters" tf:"optional"`
+	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
-	OdbcParams types.Object `tfsdk:"odbc_params" tf:"optional,object"`
+	OdbcParams types.Object `tfsdk:"odbc_params"`
 	// Configurations whether the warehouse should use spot instances.
-	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
+	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// State of the warehouse
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
-	WarehouseType types.String `tfsdk:"warehouse_type" tf:"optional"`
+	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
 func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo) {
@@ -3924,13 +4069,29 @@ func (newState *EndpointInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 func (newState *EndpointInfo) SyncEffectiveFieldsDuringRead(existingState EndpointInfo) {
 }
 
-func (c EndpointInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	EndpointHealth{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	OdbcParams{}.ApplySchemaCustomizations(cs, append(path, "odbc_params")...)
-	EndpointTags{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c EndpointInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["num_active_sessions"] = attrs["num_active_sessions"].SetOptional()
+	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
+	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointInfo.
@@ -4120,9 +4281,9 @@ func (o *EndpointInfo) SetTags(ctx context.Context, v EndpointTags) {
 }
 
 type EndpointTagPair struct {
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *EndpointTagPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTagPair) {
@@ -4131,9 +4292,11 @@ func (newState *EndpointTagPair) SyncEffectiveFieldsDuringCreateOrUpdate(plan En
 func (newState *EndpointTagPair) SyncEffectiveFieldsDuringRead(existingState EndpointTagPair) {
 }
 
-func (c EndpointTagPair) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c EndpointTagPair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointTagPair.
@@ -4170,7 +4333,7 @@ func (o EndpointTagPair) Type(ctx context.Context) attr.Type {
 }
 
 type EndpointTags struct {
-	CustomTags types.List `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.List `tfsdk:"custom_tags"`
 }
 
 func (newState *EndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags) {
@@ -4179,10 +4342,10 @@ func (newState *EndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan Endpo
 func (newState *EndpointTags) SyncEffectiveFieldsDuringRead(existingState EndpointTags) {
 }
 
-func (c EndpointTags) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EndpointTagPair{}.ApplySchemaCustomizations(cs, append(path, "custom_tags")...)
+func (c EndpointTags) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointTags.
@@ -4248,11 +4411,11 @@ func (o *EndpointTags) SetCustomTags(ctx context.Context, v []EndpointTagPair) {
 
 type EnumValue struct {
 	// List of valid query parameter values, newline delimited.
-	EnumOptions types.String `tfsdk:"enum_options" tf:"optional"`
+	EnumOptions types.String `tfsdk:"enum_options"`
 	// If specified, allows multiple values to be selected for this parameter.
-	MultiValuesOptions types.Object `tfsdk:"multi_values_options" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multi_values_options"`
 	// List of selected query parameter values.
-	Values types.List `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values"`
 }
 
 func (newState *EnumValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnumValue) {
@@ -4261,10 +4424,12 @@ func (newState *EnumValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnumValu
 func (newState *EnumValue) SyncEffectiveFieldsDuringRead(existingState EnumValue) {
 }
 
-func (c EnumValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	MultiValuesOptions{}.ApplySchemaCustomizations(cs, append(path, "multi_values_options")...)
+func (c EnumValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enum_options"] = attrs["enum_options"].SetOptional()
+	attrs["multi_values_options"] = attrs["multi_values_options"].SetOptional()
+	attrs["values"] = attrs["values"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnumValue.
@@ -4368,14 +4533,14 @@ type ExecuteStatementRequest struct {
 	// byte limit, then `truncated` in the response is set to `true`. When using
 	// `EXTERNAL_LINKS` disposition, a default `byte_limit` of 100 GiB is
 	// applied if `byte_limit` is not explcitly set.
-	ByteLimit types.Int64 `tfsdk:"byte_limit" tf:"optional"`
+	ByteLimit types.Int64 `tfsdk:"byte_limit"`
 	// Sets default catalog for statement execution, similar to [`USE CATALOG`]
 	// in SQL.
 	//
 	// [`USE CATALOG`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-catalog.html
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 
-	Disposition types.String `tfsdk:"disposition" tf:"optional"`
+	Disposition types.String `tfsdk:"disposition"`
 	// Statement execution supports three result formats: `JSON_ARRAY`
 	// (default), `ARROW_STREAM`, and `CSV`.
 	//
@@ -4412,7 +4577,7 @@ type ExecuteStatementRequest struct {
 	//
 	// [Apache Arrow streaming format]: https://arrow.apache.org/docs/format/Columnar.html#ipc-streaming-format
 	// [RFC 4180]: https://www.rfc-editor.org/rfc/rfc4180
-	Format types.String `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format"`
 	// When `wait_timeout > 0s`, the call will block up to the specified time.
 	// If the statement execution doesn't finish within this time,
 	// `on_wait_timeout` determines whether the execution should continue or be
@@ -4421,7 +4586,7 @@ type ExecuteStatementRequest struct {
 	// polling with :method:statementexecution/getStatement. When set to
 	// `CANCEL`, the statement execution is canceled and the call returns with a
 	// `CANCELED` state.
-	OnWaitTimeout types.String `tfsdk:"on_wait_timeout" tf:"optional"`
+	OnWaitTimeout types.String `tfsdk:"on_wait_timeout"`
 	// A list of parameters to pass into a SQL statement containing parameter
 	// markers. A parameter consists of a name, a value, and optionally a type.
 	// To represent a NULL value, the `value` field may be omitted or set to
@@ -4452,19 +4617,19 @@ type ExecuteStatementRequest struct {
 	//
 	// [Parameter markers]: https://docs.databricks.com/sql/language-manual/sql-ref-parameter-marker.html
 	// [`cast` function]: https://docs.databricks.com/sql/language-manual/functions/cast.html
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Applies the given row limit to the statement's result set, but unlike the
 	// `LIMIT` clause in SQL, it also sets the `truncated` field in the response
 	// to indicate whether the result was trimmed due to the limit or not.
-	RowLimit types.Int64 `tfsdk:"row_limit" tf:"optional"`
+	RowLimit types.Int64 `tfsdk:"row_limit"`
 	// Sets default schema for statement execution, similar to [`USE SCHEMA`] in
 	// SQL.
 	//
 	// [`USE SCHEMA`]: https://docs.databricks.com/sql/language-manual/sql-ref-syntax-ddl-use-schema.html
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// The SQL statement to execute. The statement can optionally be
 	// parameterized, see `parameters`.
-	Statement types.String `tfsdk:"statement" tf:""`
+	Statement types.String `tfsdk:"statement"`
 	// The time in seconds the call will wait for the statement's result set as
 	// `Ns`, where `N` can be set to 0 or to a value between 5 and 50.
 	//
@@ -4479,12 +4644,12 @@ type ExecuteStatementRequest struct {
 	// manifest and result data (or a `FAILED` state in case of an execution
 	// error). If the statement takes longer to execute, `on_wait_timeout`
 	// determines what should happen after the timeout is reached.
-	WaitTimeout types.String `tfsdk:"wait_timeout" tf:"optional"`
+	WaitTimeout types.String `tfsdk:"wait_timeout"`
 	// Warehouse upon which to execute a statement. See also [What are SQL
 	// warehouses?]
 	//
 	// [What are SQL warehouses?]: https://docs.databricks.com/sql/admin/warehouse-type.html
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:""`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *ExecuteStatementRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExecuteStatementRequest) {
@@ -4493,12 +4658,20 @@ func (newState *ExecuteStatementRequest) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ExecuteStatementRequest) SyncEffectiveFieldsDuringRead(existingState ExecuteStatementRequest) {
 }
 
-func (c ExecuteStatementRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	StatementParameterListItem{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
-	cs.SetRequired(append(path, "statement")...)
-	cs.SetRequired(append(path, "warehouse_id")...)
+func (c ExecuteStatementRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["byte_limit"] = attrs["byte_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["disposition"] = attrs["disposition"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["on_wait_timeout"] = attrs["on_wait_timeout"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["row_limit"] = attrs["row_limit"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["statement"] = attrs["statement"].SetRequired()
+	attrs["wait_timeout"] = attrs["wait_timeout"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExecuteStatementRequest.
@@ -4585,34 +4758,34 @@ func (o *ExecuteStatementRequest) SetParameters(ctx context.Context, v []Stateme
 type ExternalLink struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
-	ByteCount types.Int64 `tfsdk:"byte_count" tf:"optional"`
+	ByteCount types.Int64 `tfsdk:"byte_count"`
 	// The position within the sequence of result set chunks.
-	ChunkIndex types.Int64 `tfsdk:"chunk_index" tf:"optional"`
+	ChunkIndex types.Int64 `tfsdk:"chunk_index"`
 	// Indicates the date-time that the given external link will expire and
 	// becomes invalid, after which point a new `external_link` must be
 	// requested.
-	Expiration types.String `tfsdk:"expiration" tf:"optional"`
+	Expiration types.String `tfsdk:"expiration"`
 
-	ExternalLink types.String `tfsdk:"external_link" tf:"optional"`
+	ExternalLink types.String `tfsdk:"external_link"`
 	// HTTP headers that must be included with a GET request to the
 	// `external_link`. Each header is provided as a key-value pair. Headers are
 	// typically used to pass a decryption key to the external service. The
 	// values of these headers should be considered sensitive and the client
 	// should not expose these values in a log.
-	HttpHeaders types.Map `tfsdk:"http_headers" tf:"optional"`
+	HttpHeaders types.Map `tfsdk:"http_headers"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
-	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index" tf:"optional"`
+	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index"`
 	// When fetching, provides a link to fetch the _next_ chunk. If absent,
 	// indicates there are no more chunks. This link is an absolute `path` to be
 	// joined with your `$DATABRICKS_HOST`, and should be treated as an opaque
 	// link. This is an alternative to using `next_chunk_index`.
-	NextChunkInternalLink types.String `tfsdk:"next_chunk_internal_link" tf:"optional"`
+	NextChunkInternalLink types.String `tfsdk:"next_chunk_internal_link"`
 	// The number of rows within the result chunk.
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 	// The starting row offset within the result set.
-	RowOffset types.Int64 `tfsdk:"row_offset" tf:"optional"`
+	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
 func (newState *ExternalLink) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalLink) {
@@ -4621,9 +4794,18 @@ func (newState *ExternalLink) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exter
 func (newState *ExternalLink) SyncEffectiveFieldsDuringRead(existingState ExternalLink) {
 }
 
-func (c ExternalLink) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExternalLink) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["byte_count"] = attrs["byte_count"].SetOptional()
+	attrs["chunk_index"] = attrs["chunk_index"].SetOptional()
+	attrs["expiration"] = attrs["expiration"].SetOptional()
+	attrs["external_link"] = attrs["external_link"].SetOptional()
+	attrs["http_headers"] = attrs["http_headers"].SetOptional()
+	attrs["next_chunk_index"] = attrs["next_chunk_index"].SetOptional()
+	attrs["next_chunk_internal_link"] = attrs["next_chunk_internal_link"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["row_offset"] = attrs["row_offset"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalLink.
@@ -4925,11 +5107,11 @@ func (o GetQueryRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetResponse struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// An object's type and UUID, separated by a forward slash (/) character.
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 	// A singular noun object type.
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetResponse.
@@ -5115,7 +5297,7 @@ func (o GetWarehousePermissionLevelsRequest) Type(ctx context.Context) attr.Type
 
 type GetWarehousePermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetWarehousePermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehousePermissionLevelsResponse) {
@@ -5124,10 +5306,10 @@ func (newState *GetWarehousePermissionLevelsResponse) SyncEffectiveFieldsDuringC
 func (newState *GetWarehousePermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionLevelsResponse) {
 }
 
-func (c GetWarehousePermissionLevelsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WarehousePermissionsDescription{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetWarehousePermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehousePermissionLevelsResponse.
@@ -5272,40 +5454,40 @@ type GetWarehouseResponse struct {
 	// Supported values: - Must be == 0 or >= 10 mins - 0 indicates no autostop.
 	//
 	// Defaults to 120 mins
-	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins" tf:"optional"`
+	AutoStopMins types.Int64 `tfsdk:"auto_stop_mins"`
 	// Channel Details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Size of the clusters allocated for this warehouse. Increasing the size of
 	// a spark cluster allows you to run larger queries on it. If you want to
 	// increase the number of concurrent queries, please tune max_num_clusters.
 	//
 	// Supported values: - 2X-Small - X-Small - Small - Medium - Large - X-Large
 	// - 2X-Large - 3X-Large - 4X-Large
-	ClusterSize types.String `tfsdk:"cluster_size" tf:"optional"`
+	ClusterSize types.String `tfsdk:"cluster_size"`
 	// warehouse creator name
-	CreatorName types.String `tfsdk:"creator_name" tf:"optional"`
+	CreatorName types.String `tfsdk:"creator_name"`
 	// Configures whether the warehouse should use Photon optimized clusters.
 	//
 	// Defaults to false.
-	EnablePhoton types.Bool `tfsdk:"enable_photon" tf:"optional"`
+	EnablePhoton types.Bool `tfsdk:"enable_photon"`
 	// Configures whether the warehouse should use serverless compute
-	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute" tf:"optional"`
+	EnableServerlessCompute types.Bool `tfsdk:"enable_serverless_compute"`
 	// Optional health status. Assume the warehouse is healthy if this field is
 	// not set.
-	Health types.Object `tfsdk:"health" tf:"optional,object"`
+	Health types.Object `tfsdk:"health"`
 	// unique identifier for warehouse
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Deprecated. Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// the jdbc connection string for this warehouse
-	JdbcUrl types.String `tfsdk:"jdbc_url" tf:"optional"`
+	JdbcUrl types.String `tfsdk:"jdbc_url"`
 	// Maximum number of clusters that the autoscaler will create to handle
 	// concurrent queries.
 	//
 	// Supported values: - Must be >= min_num_clusters - Must be <= 30.
 	//
 	// Defaults to min_clusters if unset.
-	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters" tf:"optional"`
+	MaxNumClusters types.Int64 `tfsdk:"max_num_clusters"`
 	// Minimum number of available clusters that will be maintained for this SQL
 	// warehouse. Increasing this will ensure that a larger number of clusters
 	// are always running and therefore may reduce the cold start time for new
@@ -5315,31 +5497,31 @@ type GetWarehouseResponse struct {
 	// Supported values: - Must be > 0 - Must be <= min(max_num_clusters, 30)
 	//
 	// Defaults to 1
-	MinNumClusters types.Int64 `tfsdk:"min_num_clusters" tf:"optional"`
+	MinNumClusters types.Int64 `tfsdk:"min_num_clusters"`
 	// Logical name for the cluster.
 	//
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// current number of active sessions for the warehouse
-	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions" tf:"optional"`
+	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
 	// current number of clusters running for the service
-	NumClusters types.Int64 `tfsdk:"num_clusters" tf:"optional"`
+	NumClusters types.Int64 `tfsdk:"num_clusters"`
 	// ODBC parameters for the SQL warehouse
-	OdbcParams types.Object `tfsdk:"odbc_params" tf:"optional,object"`
+	OdbcParams types.Object `tfsdk:"odbc_params"`
 	// Configurations whether the warehouse should use spot instances.
-	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy" tf:"optional"`
+	SpotInstancePolicy types.String `tfsdk:"spot_instance_policy"`
 	// State of the warehouse
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// A set of key-value pairs that will be tagged on all resources (e.g., AWS
 	// instances and EBS volumes) associated with this SQL warehouse.
 	//
 	// Supported values: - Number of tags < 45.
-	Tags types.Object `tfsdk:"tags" tf:"optional,object"`
+	Tags types.Object `tfsdk:"tags"`
 	// Warehouse type: `PRO` or `CLASSIC`. If you want to use serverless
 	// compute, you must set to `PRO` and also set the field
 	// `enable_serverless_compute` to `true`.
-	WarehouseType types.String `tfsdk:"warehouse_type" tf:"optional"`
+	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
 func (newState *GetWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehouseResponse) {
@@ -5348,13 +5530,29 @@ func (newState *GetWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *GetWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState GetWarehouseResponse) {
 }
 
-func (c GetWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	EndpointHealth{}.ApplySchemaCustomizations(cs, append(path, "health")...)
-	OdbcParams{}.ApplySchemaCustomizations(cs, append(path, "odbc_params")...)
-	EndpointTags{}.ApplySchemaCustomizations(cs, append(path, "tags")...)
+func (c GetWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_stop_mins"] = attrs["auto_stop_mins"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["creator_name"] = attrs["creator_name"].SetOptional()
+	attrs["enable_photon"] = attrs["enable_photon"].SetOptional()
+	attrs["enable_serverless_compute"] = attrs["enable_serverless_compute"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["jdbc_url"] = attrs["jdbc_url"].SetOptional()
+	attrs["max_num_clusters"] = attrs["max_num_clusters"].SetOptional()
+	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["num_active_sessions"] = attrs["num_active_sessions"].SetOptional()
+	attrs["num_clusters"] = attrs["num_clusters"].SetOptional()
+	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehouseResponse.
@@ -5545,30 +5743,30 @@ func (o *GetWarehouseResponse) SetTags(ctx context.Context, v EndpointTags) {
 
 type GetWorkspaceWarehouseConfigResponse struct {
 	// Optional: Channel selection details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Deprecated: Use sql_configuration_parameters
-	ConfigParam types.Object `tfsdk:"config_param" tf:"optional,object"`
+	ConfigParam types.Object `tfsdk:"config_param"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig types.List `tfsdk:"data_access_config" tf:"optional"`
+	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types" tf:"optional"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
-	GlobalParam types.Object `tfsdk:"global_param" tf:"optional,object"`
+	GlobalParam types.Object `tfsdk:"global_param"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
 	// Cloud Storage
-	GoogleServiceAccount types.String `tfsdk:"google_service_account" tf:"optional"`
+	GoogleServiceAccount types.String `tfsdk:"google_service_account"`
 	// AWS Only: Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Security policy for warehouses
-	SecurityPolicy types.String `tfsdk:"security_policy" tf:"optional"`
+	SecurityPolicy types.String `tfsdk:"security_policy"`
 	// SQL configuration parameters
-	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
+	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
 }
 
 func (newState *GetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceWarehouseConfigResponse) {
@@ -5577,15 +5775,18 @@ func (newState *GetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringCr
 func (newState *GetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceWarehouseConfigResponse) {
 }
 
-func (c GetWorkspaceWarehouseConfigResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "config_param")...)
-	EndpointConfPair{}.ApplySchemaCustomizations(cs, append(path, "data_access_config")...)
-	WarehouseTypePair{}.ApplySchemaCustomizations(cs, append(path, "enabled_warehouse_types")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "global_param")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "sql_configuration_parameters")...)
+func (c GetWorkspaceWarehouseConfigResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["config_param"] = attrs["config_param"].SetOptional()
+	attrs["data_access_config"] = attrs["data_access_config"].SetOptional()
+	attrs["enabled_warehouse_types"] = attrs["enabled_warehouse_types"].SetOptional()
+	attrs["global_param"] = attrs["global_param"].SetOptional()
+	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["security_policy"] = attrs["security_policy"].SetOptional()
+	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceWarehouseConfigResponse.
@@ -5812,31 +6013,31 @@ func (o *GetWorkspaceWarehouseConfigResponse) SetSqlConfigurationParameters(ctx 
 
 type LegacyAlert struct {
 	// Timestamp when the alert was created.
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// Alert ID.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Timestamp when the alert was last triggered.
-	LastTriggeredAt types.String `tfsdk:"last_triggered_at" tf:"optional"`
+	LastTriggeredAt types.String `tfsdk:"last_triggered_at"`
 	// Name of the alert.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Alert configuration options.
-	Options types.Object `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 	// Number of seconds after being triggered before the alert rearms itself
 	// and can be triggered again. If `null`, alert will never be triggered
 	// again.
-	Rearm types.Int64 `tfsdk:"rearm" tf:"optional"`
+	Rearm types.Int64 `tfsdk:"rearm"`
 	// State of the alert. Possible values are: `unknown` (yet to be evaluated),
 	// `triggered` (evaluated and fulfilled trigger conditions), or `ok`
 	// (evaluated and did not fulfill trigger conditions).
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 
-	User types.Object `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user"`
 }
 
 func (newState *LegacyAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyAlert) {
@@ -5845,12 +6046,20 @@ func (newState *LegacyAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan Legacy
 func (newState *LegacyAlert) SyncEffectiveFieldsDuringRead(existingState LegacyAlert) {
 }
 
-func (c LegacyAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	AlertQuery{}.ApplySchemaCustomizations(cs, append(path, "query")...)
-	User{}.ApplySchemaCustomizations(cs, append(path, "user")...)
+func (c LegacyAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_triggered_at"] = attrs["last_triggered_at"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["rearm"] = attrs["rearm"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["user"] = attrs["user"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LegacyAlert.
@@ -5995,72 +6204,72 @@ func (o *LegacyAlert) SetUser(ctx context.Context, v User) {
 type LegacyQuery struct {
 	// Describes whether the authenticated user is allowed to edit the
 	// definition of this query.
-	CanEdit types.Bool `tfsdk:"can_edit" tf:"optional"`
+	CanEdit types.Bool `tfsdk:"can_edit"`
 	// The timestamp when this query was created.
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// Data source ID maps to the ID of the data source used by the resource and
 	// is distinct from the warehouse ID. [Learn more]
 	//
 	// [Learn more]: https://docs.databricks.com/api/workspace/datasources/list
-	DataSourceId types.String `tfsdk:"data_source_id" tf:"optional"`
+	DataSourceId types.String `tfsdk:"data_source_id"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Query ID.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Indicates whether the query is trashed. Trashed queries can't be used in
 	// dashboards, or appear in search results. If this boolean is `true`, the
 	// `options` property for this query includes a `moved_to_trash_at`
 	// timestamp. Trashed queries are permanently deleted after 30 days.
-	IsArchived types.Bool `tfsdk:"is_archived" tf:"optional"`
+	IsArchived types.Bool `tfsdk:"is_archived"`
 	// Whether the query is a draft. Draft queries only appear in list views for
 	// their owners. Visualizations from draft queries cannot appear on
 	// dashboards.
-	IsDraft types.Bool `tfsdk:"is_draft" tf:"optional"`
+	IsDraft types.Bool `tfsdk:"is_draft"`
 	// Whether this query object appears in the current user's favorites list.
 	// This flag determines whether the star icon for favorites is selected.
-	IsFavorite types.Bool `tfsdk:"is_favorite" tf:"optional"`
+	IsFavorite types.Bool `tfsdk:"is_favorite"`
 	// Text parameter types are not safe from SQL injection for all types of
 	// data source. Set this Boolean parameter to `true` if a query either does
 	// not use any text type parameters or uses a data source type where text
 	// type parameters are handled safely.
-	IsSafe types.Bool `tfsdk:"is_safe" tf:"optional"`
+	IsSafe types.Bool `tfsdk:"is_safe"`
 
-	LastModifiedBy types.Object `tfsdk:"last_modified_by" tf:"optional,object"`
+	LastModifiedBy types.Object `tfsdk:"last_modified_by"`
 	// The ID of the user who last saved changes to this query.
-	LastModifiedById types.Int64 `tfsdk:"last_modified_by_id" tf:"optional"`
+	LastModifiedById types.Int64 `tfsdk:"last_modified_by_id"`
 	// If there is a cached result for this query and user, this field includes
 	// the query result ID. If this query uses parameters, this field is always
 	// null.
-	LatestQueryDataId types.String `tfsdk:"latest_query_data_id" tf:"optional"`
+	LatestQueryDataId types.String `tfsdk:"latest_query_data_id"`
 	// The title of this query that appears in list views, widget headings, and
 	// on the query page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 
-	Options types.Object `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 	// * `CAN_VIEW`: Can view the query * `CAN_RUN`: Can run the query *
 	// `CAN_EDIT`: Can edit the query * `CAN_MANAGE`: Can manage the query
-	PermissionTier types.String `tfsdk:"permission_tier" tf:"optional"`
+	PermissionTier types.String `tfsdk:"permission_tier"`
 	// The text of the query to be run.
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 	// A SHA-256 hash of the query text along with the authenticated user ID.
-	QueryHash types.String `tfsdk:"query_hash" tf:"optional"`
+	QueryHash types.String `tfsdk:"query_hash"`
 	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
 	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
 	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
+	RunAsRole types.String `tfsdk:"run_as_role"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// The timestamp at which this query was last updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 
-	User types.Object `tfsdk:"user" tf:"optional,object"`
+	User types.Object `tfsdk:"user"`
 	// The ID of the user who owns the query.
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 
-	Visualizations types.List `tfsdk:"visualizations" tf:"optional"`
+	Visualizations types.List `tfsdk:"visualizations"`
 }
 
 func (newState *LegacyQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyQuery) {
@@ -6069,13 +6278,33 @@ func (newState *LegacyQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan Legacy
 func (newState *LegacyQuery) SyncEffectiveFieldsDuringRead(existingState LegacyQuery) {
 }
 
-func (c LegacyQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	User{}.ApplySchemaCustomizations(cs, append(path, "last_modified_by")...)
-	QueryOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	User{}.ApplySchemaCustomizations(cs, append(path, "user")...)
-	LegacyVisualization{}.ApplySchemaCustomizations(cs, append(path, "visualizations")...)
+func (c LegacyQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["can_edit"] = attrs["can_edit"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_archived"] = attrs["is_archived"].SetOptional()
+	attrs["is_draft"] = attrs["is_draft"].SetOptional()
+	attrs["is_favorite"] = attrs["is_favorite"].SetOptional()
+	attrs["is_safe"] = attrs["is_safe"].SetOptional()
+	attrs["last_modified_by"] = attrs["last_modified_by"].SetOptional()
+	attrs["last_modified_by_id"] = attrs["last_modified_by_id"].SetOptional()
+	attrs["latest_query_data_id"] = attrs["latest_query_data_id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["permission_tier"] = attrs["permission_tier"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["query_hash"] = attrs["query_hash"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["user"] = attrs["user"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["visualizations"] = attrs["visualizations"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LegacyQuery.
@@ -6307,25 +6536,25 @@ func (o *LegacyQuery) SetVisualizations(ctx context.Context, v []LegacyVisualiza
 // same endpoint. Databricks does not recommend constructing ad-hoc
 // visualizations entirely in JSON.
 type LegacyVisualization struct {
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// A short description of this visualization. This is not displayed in the
 	// UI.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The UUID for this visualization.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The name of the visualization that appears on dashboards and the query
 	// screen.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The options object varies widely from one visualization type to the next
 	// and is unsupported. Databricks does not recommend modifying visualization
 	// settings in JSON.
-	Options types.Object `tfsdk:"options" tf:"optional"`
+	Options types.Object `tfsdk:"options"`
 
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 	// The type of visualization: chart, table, pivot table, and so on.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
 func (newState *LegacyVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan LegacyVisualization) {
@@ -6334,10 +6563,17 @@ func (newState *LegacyVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *LegacyVisualization) SyncEffectiveFieldsDuringRead(existingState LegacyVisualization) {
 }
 
-func (c LegacyVisualization) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	LegacyQuery{}.ApplySchemaCustomizations(cs, append(path, "query")...)
+func (c LegacyVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LegacyVisualization.
@@ -6456,9 +6692,9 @@ func (o ListAlertsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListAlertsResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsResponse) {
@@ -6467,10 +6703,11 @@ func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListAlertsResponse) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponse) {
 }
 
-func (c ListAlertsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ListAlertsResponseAlert{}.ApplySchemaCustomizations(cs, append(path, "results")...)
+func (c ListAlertsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsResponse.
@@ -6538,46 +6775,46 @@ func (o *ListAlertsResponse) SetResults(ctx context.Context, v []ListAlertsRespo
 
 type ListAlertsResponseAlert struct {
 	// Trigger conditions of the alert.
-	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition"`
 	// The timestamp indicating when the alert was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	CustomBody types.String `tfsdk:"custom_body"`
 	// Custom subject of alert notification, if it exists. This can include
 	// email subject entries and Slack notification headers, for example. See
 	// [here] for custom templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// The display name of the alert.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the alert.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The workspace state of the alert. Used for tracking trashed status.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// Whether to notify alert subscribers when alert returns back to normal.
-	NotifyOnOk types.Bool `tfsdk:"notify_on_ok" tf:"optional"`
+	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// UUID of the query attached to the alert.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds an alert must wait after being triggered to rearm
 	// itself. After rearming, it can be triggered again. If 0 or not specified,
 	// the alert will not be triggered again.
-	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 	// Current state of the alert's trigger status. This field is set to UNKNOWN
 	// if the alert has not yet been evaluated or ran into an error during the
 	// last evaluation.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// Timestamp when the alert was last triggered, if the alert has been
 	// triggered before.
-	TriggerTime types.String `tfsdk:"trigger_time" tf:"optional"`
+	TriggerTime types.String `tfsdk:"trigger_time"`
 	// The timestamp indicating when the alert was updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *ListAlertsResponseAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsResponseAlert) {
@@ -6586,10 +6823,23 @@ func (newState *ListAlertsResponseAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListAlertsResponseAlert) SyncEffectiveFieldsDuringRead(existingState ListAlertsResponseAlert) {
 }
 
-func (c ListAlertsResponseAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertCondition{}.ApplySchemaCustomizations(cs, append(path, "condition")...)
+func (c ListAlertsResponseAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["custom_body"] = attrs["custom_body"].SetOptional()
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["trigger_time"] = attrs["trigger_time"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsResponseAlert.
@@ -6832,11 +7082,11 @@ func (o ListQueriesRequest) Type(ctx context.Context) attr.Type {
 
 type ListQueriesResponse struct {
 	// Whether there is another page of results.
-	HasNextPage types.Bool `tfsdk:"has_next_page" tf:"optional"`
+	HasNextPage types.Bool `tfsdk:"has_next_page"`
 	// A token that can be used to get the next page of results.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Res types.List `tfsdk:"res" tf:"optional"`
+	Res types.List `tfsdk:"res"`
 }
 
 func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueriesResponse) {
@@ -6845,10 +7095,12 @@ func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ListQueriesResponse) SyncEffectiveFieldsDuringRead(existingState ListQueriesResponse) {
 }
 
-func (c ListQueriesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryInfo{}.ApplySchemaCustomizations(cs, append(path, "res")...)
+func (c ListQueriesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["has_next_page"] = attrs["has_next_page"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["res"] = attrs["res"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueriesResponse.
@@ -7001,9 +7253,9 @@ func (o *ListQueryHistoryRequest) SetFilterBy(ctx context.Context, v QueryFilter
 }
 
 type ListQueryObjectsResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 func (newState *ListQueryObjectsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryObjectsResponse) {
@@ -7012,10 +7264,11 @@ func (newState *ListQueryObjectsResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListQueryObjectsResponse) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponse) {
 }
 
-func (c ListQueryObjectsResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ListQueryObjectsResponseQuery{}.ApplySchemaCustomizations(cs, append(path, "results")...)
+func (c ListQueryObjectsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueryObjectsResponse.
@@ -7083,39 +7336,39 @@ func (o *ListQueryObjectsResponse) SetResults(ctx context.Context, v []ListQuery
 
 type ListQueryObjectsResponseQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
-	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
 	// Name of the catalog where this query will be executed.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// Timestamp when this query was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Display name of the query that appears in list views, widget headings,
 	// and on the query page.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the query.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Username of the user who last saved changes to this query.
-	LastModifierUserName types.String `tfsdk:"last_modifier_user_name" tf:"optional"`
+	LastModifierUserName types.String `tfsdk:"last_modifier_user_name"`
 	// Indicates whether the query is trashed.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// Username of the user that owns the query.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// List of query parameter definitions.
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Sets the "Run as" role for the object.
-	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// ID of the SQL warehouse attached to the query.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryObjectsResponseQuery) {
@@ -7124,10 +7377,25 @@ func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListQueryObjectsResponseQuery) SyncEffectiveFieldsDuringRead(existingState ListQueryObjectsResponseQuery) {
 }
 
-func (c ListQueryObjectsResponseQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryParameter{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
+func (c ListQueryObjectsResponseQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_auto_limit"] = attrs["apply_auto_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_modifier_user_name"] = attrs["last_modifier_user_name"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueryObjectsResponseQuery.
@@ -7252,13 +7520,13 @@ func (o *ListQueryObjectsResponseQuery) SetTags(ctx context.Context, v []types.S
 
 type ListResponse struct {
 	// The total number of dashboards.
-	Count types.Int64 `tfsdk:"count" tf:"optional"`
+	Count types.Int64 `tfsdk:"count"`
 	// The current page being displayed.
-	Page types.Int64 `tfsdk:"page" tf:"optional"`
+	Page types.Int64 `tfsdk:"page"`
 	// The number of dashboards per page.
-	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
+	PageSize types.Int64 `tfsdk:"page_size"`
 	// List of dashboards returned.
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListResponse.
@@ -7373,9 +7641,9 @@ func (o ListVisualizationsForQueryRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListVisualizationsForQueryResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 func (newState *ListVisualizationsForQueryResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVisualizationsForQueryResponse) {
@@ -7384,10 +7652,11 @@ func (newState *ListVisualizationsForQueryResponse) SyncEffectiveFieldsDuringCre
 func (newState *ListVisualizationsForQueryResponse) SyncEffectiveFieldsDuringRead(existingState ListVisualizationsForQueryResponse) {
 }
 
-func (c ListVisualizationsForQueryResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Visualization{}.ApplySchemaCustomizations(cs, append(path, "results")...)
+func (c ListVisualizationsForQueryResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVisualizationsForQueryResponse.
@@ -7493,7 +7762,7 @@ func (o ListWarehousesRequest) Type(ctx context.Context) attr.Type {
 
 type ListWarehousesResponse struct {
 	// A list of warehouses and their configurations.
-	Warehouses types.List `tfsdk:"warehouses" tf:"optional"`
+	Warehouses types.List `tfsdk:"warehouses"`
 }
 
 func (newState *ListWarehousesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWarehousesResponse) {
@@ -7502,10 +7771,10 @@ func (newState *ListWarehousesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListWarehousesResponse) SyncEffectiveFieldsDuringRead(existingState ListWarehousesResponse) {
 }
 
-func (c ListWarehousesResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EndpointInfo{}.ApplySchemaCustomizations(cs, append(path, "warehouses")...)
+func (c ListWarehousesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["warehouses"] = attrs["warehouses"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWarehousesResponse.
@@ -7571,12 +7840,12 @@ func (o *ListWarehousesResponse) SetWarehouses(ctx context.Context, v []Endpoint
 
 type MultiValuesOptions struct {
 	// Character that prefixes each selected parameter value.
-	Prefix types.String `tfsdk:"prefix" tf:"optional"`
+	Prefix types.String `tfsdk:"prefix"`
 	// Character that separates each selected parameter value. Defaults to a
 	// comma.
-	Separator types.String `tfsdk:"separator" tf:"optional"`
+	Separator types.String `tfsdk:"separator"`
 	// Character that suffixes each selected parameter value.
-	Suffix types.String `tfsdk:"suffix" tf:"optional"`
+	Suffix types.String `tfsdk:"suffix"`
 }
 
 func (newState *MultiValuesOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan MultiValuesOptions) {
@@ -7585,9 +7854,12 @@ func (newState *MultiValuesOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *MultiValuesOptions) SyncEffectiveFieldsDuringRead(existingState MultiValuesOptions) {
 }
 
-func (c MultiValuesOptions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MultiValuesOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["prefix"] = attrs["prefix"].SetOptional()
+	attrs["separator"] = attrs["separator"].SetOptional()
+	attrs["suffix"] = attrs["suffix"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MultiValuesOptions.
@@ -7626,7 +7898,7 @@ func (o MultiValuesOptions) Type(ctx context.Context) attr.Type {
 }
 
 type NumericValue struct {
-	Value types.Float64 `tfsdk:"value" tf:"optional"`
+	Value types.Float64 `tfsdk:"value"`
 }
 
 func (newState *NumericValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan NumericValue) {
@@ -7635,9 +7907,10 @@ func (newState *NumericValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Numer
 func (newState *NumericValue) SyncEffectiveFieldsDuringRead(existingState NumericValue) {
 }
 
-func (c NumericValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c NumericValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NumericValue.
@@ -7672,13 +7945,13 @@ func (o NumericValue) Type(ctx context.Context) attr.Type {
 }
 
 type OdbcParams struct {
-	Hostname types.String `tfsdk:"hostname" tf:"optional"`
+	Hostname types.String `tfsdk:"hostname"`
 
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 
-	Port types.Int64 `tfsdk:"port" tf:"optional"`
+	Port types.Int64 `tfsdk:"port"`
 
-	Protocol types.String `tfsdk:"protocol" tf:"optional"`
+	Protocol types.String `tfsdk:"protocol"`
 }
 
 func (newState *OdbcParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan OdbcParams) {
@@ -7687,9 +7960,13 @@ func (newState *OdbcParams) SyncEffectiveFieldsDuringCreateOrUpdate(plan OdbcPar
 func (newState *OdbcParams) SyncEffectiveFieldsDuringRead(existingState OdbcParams) {
 }
 
-func (c OdbcParams) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c OdbcParams) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["hostname"] = attrs["hostname"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["port"] = attrs["port"].SetOptional()
+	attrs["protocol"] = attrs["protocol"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in OdbcParams.
@@ -7732,22 +8009,22 @@ func (o OdbcParams) Type(ctx context.Context) attr.Type {
 type Parameter struct {
 	// List of valid parameter values, newline delimited. Only applies for
 	// dropdown list parameters.
-	EnumOptions types.String `tfsdk:"enumOptions" tf:"optional"`
+	EnumOptions types.String `tfsdk:"enumOptions"`
 	// If specified, allows multiple values to be selected for this parameter.
 	// Only applies to dropdown list and query-based dropdown list parameters.
-	MultiValuesOptions types.Object `tfsdk:"multiValuesOptions" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multiValuesOptions"`
 	// The literal parameter marker that appears between double curly braces in
 	// the query text.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The UUID of the query that provides the parameter values. Only applies
 	// for query-based dropdown list parameters.
-	QueryId types.String `tfsdk:"queryId" tf:"optional"`
+	QueryId types.String `tfsdk:"queryId"`
 	// The text displayed in a parameter picking widget.
-	Title types.String `tfsdk:"title" tf:"optional"`
+	Title types.String `tfsdk:"title"`
 	// Parameters can have several different types.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 	// The default value for this parameter.
-	Value types.Object `tfsdk:"value" tf:"optional"`
+	Value types.Object `tfsdk:"value"`
 }
 
 func (newState *Parameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Parameter) {
@@ -7756,10 +8033,16 @@ func (newState *Parameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Paramete
 func (newState *Parameter) SyncEffectiveFieldsDuringRead(existingState Parameter) {
 }
 
-func (c Parameter) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	MultiValuesOptions{}.ApplySchemaCustomizations(cs, append(path, "multiValuesOptions")...)
+func (c Parameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enumOptions"] = attrs["enumOptions"].SetOptional()
+	attrs["multiValuesOptions"] = attrs["multiValuesOptions"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["queryId"] = attrs["queryId"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Parameter.
@@ -7837,41 +8120,41 @@ func (o *Parameter) SetMultiValuesOptions(ctx context.Context, v MultiValuesOpti
 
 type Query struct {
 	// Whether to apply a 1000 row limit to the query result.
-	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
 	// Name of the catalog where this query will be executed.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// Timestamp when this query was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Display name of the query that appears in list views, widget headings,
 	// and on the query page.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the query.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Username of the user who last saved changes to this query.
-	LastModifierUserName types.String `tfsdk:"last_modifier_user_name" tf:"optional"`
+	LastModifierUserName types.String `tfsdk:"last_modifier_user_name"`
 	// Indicates whether the query is trashed.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"optional"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// Username of the user that owns the query.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// List of query parameter definitions.
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Workspace path of the workspace folder containing the object.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// Text of the query to be run.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Sets the "Run as" role for the object.
-	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// Timestamp when this query was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// ID of the SQL warehouse attached to the query.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *Query) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query) {
@@ -7880,10 +8163,26 @@ func (newState *Query) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query) {
 func (newState *Query) SyncEffectiveFieldsDuringRead(existingState Query) {
 }
 
-func (c Query) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryParameter{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
+func (c Query) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_auto_limit"] = attrs["apply_auto_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_modifier_user_name"] = attrs["last_modifier_user_name"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Query.
@@ -8010,11 +8309,11 @@ func (o *Query) SetTags(ctx context.Context, v []types.String) {
 
 type QueryBackedValue struct {
 	// If specified, allows multiple values to be selected for this parameter.
-	MultiValuesOptions types.Object `tfsdk:"multi_values_options" tf:"optional,object"`
+	MultiValuesOptions types.Object `tfsdk:"multi_values_options"`
 	// UUID of the query that provides the parameter values.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// List of selected query parameter values.
-	Values types.List `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values"`
 }
 
 func (newState *QueryBackedValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryBackedValue) {
@@ -8023,10 +8322,12 @@ func (newState *QueryBackedValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan Q
 func (newState *QueryBackedValue) SyncEffectiveFieldsDuringRead(existingState QueryBackedValue) {
 }
 
-func (c QueryBackedValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	MultiValuesOptions{}.ApplySchemaCustomizations(cs, append(path, "multi_values_options")...)
+func (c QueryBackedValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["multi_values_options"] = attrs["multi_values_options"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["values"] = attrs["values"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryBackedValue.
@@ -8128,27 +8429,27 @@ type QueryEditContent struct {
 	// is distinct from the warehouse ID. [Learn more]
 	//
 	// [Learn more]: https://docs.databricks.com/api/workspace/datasources/list
-	DataSourceId types.String `tfsdk:"data_source_id" tf:"optional"`
+	DataSourceId types.String `tfsdk:"data_source_id"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The title of this query that appears in list views, widget headings, and
 	// on the query page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Exclusively used for storing a list parameter definitions. A parameter is
 	// an object with `title`, `name`, `type`, and `value` properties. The
 	// `value` field here is the default value. It can be overridden at runtime.
-	Options types.Object `tfsdk:"options" tf:"optional"`
+	Options types.Object `tfsdk:"options"`
 	// The text of the query to be run.
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 
 	QueryId types.String `tfsdk:"-"`
 	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
 	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
 	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
+	RunAsRole types.String `tfsdk:"run_as_role"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *QueryEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryEditContent) {
@@ -8157,10 +8458,17 @@ func (newState *QueryEditContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Q
 func (newState *QueryEditContent) SyncEffectiveFieldsDuringRead(existingState QueryEditContent) {
 }
 
-func (c QueryEditContent) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "query_id")...)
+func (c QueryEditContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryEditContent.
@@ -8241,15 +8549,15 @@ func (o *QueryEditContent) SetTags(ctx context.Context, v []types.String) {
 type QueryFilter struct {
 	// A range filter for query submitted time. The time range must be <= 30
 	// days.
-	QueryStartTimeRange types.Object `tfsdk:"query_start_time_range" tf:"optional,object"`
+	QueryStartTimeRange types.Object `tfsdk:"query_start_time_range"`
 	// A list of statement IDs.
-	StatementIds types.List `tfsdk:"statement_ids" tf:"optional"`
+	StatementIds types.List `tfsdk:"statement_ids"`
 
-	Statuses types.List `tfsdk:"statuses" tf:"optional"`
+	Statuses types.List `tfsdk:"statuses"`
 	// A list of user IDs who ran the queries.
-	UserIds types.List `tfsdk:"user_ids" tf:"optional"`
+	UserIds types.List `tfsdk:"user_ids"`
 	// A list of warehouse IDs.
-	WarehouseIds types.List `tfsdk:"warehouse_ids" tf:"optional"`
+	WarehouseIds types.List `tfsdk:"warehouse_ids"`
 }
 
 func (newState *QueryFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryFilter) {
@@ -8258,10 +8566,14 @@ func (newState *QueryFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryF
 func (newState *QueryFilter) SyncEffectiveFieldsDuringRead(existingState QueryFilter) {
 }
 
-func (c QueryFilter) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	TimeRange{}.ApplySchemaCustomizations(cs, append(path, "query_start_time_range")...)
+func (c QueryFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query_start_time_range"] = attrs["query_start_time_range"].SetOptional()
+	attrs["statement_ids"] = attrs["statement_ids"].SetOptional()
+	attrs["statuses"] = attrs["statuses"].SetOptional()
+	attrs["user_ids"] = attrs["user_ids"].SetOptional()
+	attrs["warehouse_ids"] = attrs["warehouse_ids"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryFilter.
@@ -8451,54 +8763,54 @@ func (o *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
 
 type QueryInfo struct {
 	// SQL Warehouse channel information at the time of query execution
-	ChannelUsed types.Object `tfsdk:"channel_used" tf:"optional,object"`
+	ChannelUsed types.Object `tfsdk:"channel_used"`
 	// Total execution time of the statement ( excluding result fetch time ).
-	Duration types.Int64 `tfsdk:"duration" tf:"optional"`
+	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
-	EndpointId types.String `tfsdk:"endpoint_id" tf:"optional"`
+	EndpointId types.String `tfsdk:"endpoint_id"`
 	// Message describing why the query could not complete.
-	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// The ID of the user whose credentials were used to run the query.
-	ExecutedAsUserId types.Int64 `tfsdk:"executed_as_user_id" tf:"optional"`
+	ExecutedAsUserId types.Int64 `tfsdk:"executed_as_user_id"`
 	// The email address or username of the user whose credentials were used to
 	// run the query.
-	ExecutedAsUserName types.String `tfsdk:"executed_as_user_name" tf:"optional"`
+	ExecutedAsUserName types.String `tfsdk:"executed_as_user_name"`
 	// The time execution of the query ended.
-	ExecutionEndTimeMs types.Int64 `tfsdk:"execution_end_time_ms" tf:"optional"`
+	ExecutionEndTimeMs types.Int64 `tfsdk:"execution_end_time_ms"`
 	// Whether more updates for the query are expected.
-	IsFinal types.Bool `tfsdk:"is_final" tf:"optional"`
+	IsFinal types.Bool `tfsdk:"is_final"`
 	// A key that can be used to look up query details.
-	LookupKey types.String `tfsdk:"lookup_key" tf:"optional"`
+	LookupKey types.String `tfsdk:"lookup_key"`
 	// Metrics about query execution.
-	Metrics types.Object `tfsdk:"metrics" tf:"optional,object"`
+	Metrics types.Object `tfsdk:"metrics"`
 	// Whether plans exist for the execution, or the reason why they are missing
-	PlansState types.String `tfsdk:"plans_state" tf:"optional"`
+	PlansState types.String `tfsdk:"plans_state"`
 	// The time the query ended.
-	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms" tf:"optional"`
+	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms"`
 	// The query ID.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// The time the query started.
-	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms" tf:"optional"`
+	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms"`
 	// The text of the query.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// The number of results returned by the query.
-	RowsProduced types.Int64 `tfsdk:"rows_produced" tf:"optional"`
+	RowsProduced types.Int64 `tfsdk:"rows_produced"`
 	// URL to the Spark UI query plan.
-	SparkUiUrl types.String `tfsdk:"spark_ui_url" tf:"optional"`
+	SparkUiUrl types.String `tfsdk:"spark_ui_url"`
 	// Type of statement for this query
-	StatementType types.String `tfsdk:"statement_type" tf:"optional"`
+	StatementType types.String `tfsdk:"statement_type"`
 	// Query status with one the following values:
 	//
 	// - `QUEUED`: Query has been received and queued. - `RUNNING`: Query has
 	// started. - `CANCELED`: Query has been cancelled by the user. - `FAILED`:
 	// Query has failed. - `FINISHED`: Query has completed.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// The ID of the user who ran the query.
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 	// The email address or username of the user who ran the query.
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 	// Warehouse ID.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *QueryInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryInfo) {
@@ -8507,11 +8819,31 @@ func (newState *QueryInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryInf
 func (newState *QueryInfo) SyncEffectiveFieldsDuringRead(existingState QueryInfo) {
 }
 
-func (c QueryInfo) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ChannelInfo{}.ApplySchemaCustomizations(cs, append(path, "channel_used")...)
-	QueryMetrics{}.ApplySchemaCustomizations(cs, append(path, "metrics")...)
+func (c QueryInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel_used"] = attrs["channel_used"].SetOptional()
+	attrs["duration"] = attrs["duration"].SetOptional()
+	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["executed_as_user_id"] = attrs["executed_as_user_id"].SetOptional()
+	attrs["executed_as_user_name"] = attrs["executed_as_user_name"].SetOptional()
+	attrs["execution_end_time_ms"] = attrs["execution_end_time_ms"].SetOptional()
+	attrs["is_final"] = attrs["is_final"].SetOptional()
+	attrs["lookup_key"] = attrs["lookup_key"].SetOptional()
+	attrs["metrics"] = attrs["metrics"].SetOptional()
+	attrs["plans_state"] = attrs["plans_state"].SetOptional()
+	attrs["query_end_time_ms"] = attrs["query_end_time_ms"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["query_start_time_ms"] = attrs["query_start_time_ms"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["rows_produced"] = attrs["rows_produced"].SetOptional()
+	attrs["spark_ui_url"] = attrs["spark_ui_url"].SetOptional()
+	attrs["statement_type"] = attrs["statement_type"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryInfo.
@@ -8648,13 +8980,13 @@ func (o *QueryInfo) SetMetrics(ctx context.Context, v QueryMetrics) {
 
 type QueryList struct {
 	// The total number of queries.
-	Count types.Int64 `tfsdk:"count" tf:"optional"`
+	Count types.Int64 `tfsdk:"count"`
 	// The page number that is currently displayed.
-	Page types.Int64 `tfsdk:"page" tf:"optional"`
+	Page types.Int64 `tfsdk:"page"`
 	// The number of queries per page.
-	PageSize types.Int64 `tfsdk:"page_size" tf:"optional"`
+	PageSize types.Int64 `tfsdk:"page_size"`
 	// List of queries returned.
-	Results types.List `tfsdk:"results" tf:"optional"`
+	Results types.List `tfsdk:"results"`
 }
 
 func (newState *QueryList) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryList) {
@@ -8663,10 +8995,13 @@ func (newState *QueryList) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryLis
 func (newState *QueryList) SyncEffectiveFieldsDuringRead(existingState QueryList) {
 }
 
-func (c QueryList) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	LegacyQuery{}.ApplySchemaCustomizations(cs, append(path, "results")...)
+func (c QueryList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["page"] = attrs["page"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryList.
@@ -8740,61 +9075,61 @@ func (o *QueryList) SetResults(ctx context.Context, v []LegacyQuery) {
 // Metrics come from the driver and are stored in the history service database.
 type QueryMetrics struct {
 	// Time spent loading metadata and optimizing the query, in milliseconds.
-	CompilationTimeMs types.Int64 `tfsdk:"compilation_time_ms" tf:"optional"`
+	CompilationTimeMs types.Int64 `tfsdk:"compilation_time_ms"`
 	// Time spent executing the query, in milliseconds.
-	ExecutionTimeMs types.Int64 `tfsdk:"execution_time_ms" tf:"optional"`
+	ExecutionTimeMs types.Int64 `tfsdk:"execution_time_ms"`
 	// Total amount of data sent over the network between executor nodes during
 	// shuffle, in bytes.
-	NetworkSentBytes types.Int64 `tfsdk:"network_sent_bytes" tf:"optional"`
+	NetworkSentBytes types.Int64 `tfsdk:"network_sent_bytes"`
 	// Timestamp of when the query was enqueued waiting while the warehouse was
 	// at max load. This field is optional and will not appear if the query
 	// skipped the overloading queue.
-	OverloadingQueueStartTimestamp types.Int64 `tfsdk:"overloading_queue_start_timestamp" tf:"optional"`
+	OverloadingQueueStartTimestamp types.Int64 `tfsdk:"overloading_queue_start_timestamp"`
 	// Total execution time for all individual Photon query engine tasks in the
 	// query, in milliseconds.
-	PhotonTotalTimeMs types.Int64 `tfsdk:"photon_total_time_ms" tf:"optional"`
+	PhotonTotalTimeMs types.Int64 `tfsdk:"photon_total_time_ms"`
 	// Timestamp of when the query was enqueued waiting for a cluster to be
 	// provisioned for the warehouse. This field is optional and will not appear
 	// if the query skipped the provisioning queue.
-	ProvisioningQueueStartTimestamp types.Int64 `tfsdk:"provisioning_queue_start_timestamp" tf:"optional"`
+	ProvisioningQueueStartTimestamp types.Int64 `tfsdk:"provisioning_queue_start_timestamp"`
 	// Total number of bytes in all tables not read due to pruning
-	PrunedBytes types.Int64 `tfsdk:"pruned_bytes" tf:"optional"`
+	PrunedBytes types.Int64 `tfsdk:"pruned_bytes"`
 	// Total number of files from all tables not read due to pruning
-	PrunedFilesCount types.Int64 `tfsdk:"pruned_files_count" tf:"optional"`
+	PrunedFilesCount types.Int64 `tfsdk:"pruned_files_count"`
 	// Timestamp of when the underlying compute started compilation of the
 	// query.
-	QueryCompilationStartTimestamp types.Int64 `tfsdk:"query_compilation_start_timestamp" tf:"optional"`
+	QueryCompilationStartTimestamp types.Int64 `tfsdk:"query_compilation_start_timestamp"`
 	// Total size of data read by the query, in bytes.
-	ReadBytes types.Int64 `tfsdk:"read_bytes" tf:"optional"`
+	ReadBytes types.Int64 `tfsdk:"read_bytes"`
 	// Size of persistent data read from the cache, in bytes.
-	ReadCacheBytes types.Int64 `tfsdk:"read_cache_bytes" tf:"optional"`
+	ReadCacheBytes types.Int64 `tfsdk:"read_cache_bytes"`
 	// Number of files read after pruning
-	ReadFilesCount types.Int64 `tfsdk:"read_files_count" tf:"optional"`
+	ReadFilesCount types.Int64 `tfsdk:"read_files_count"`
 	// Number of partitions read after pruning.
-	ReadPartitionsCount types.Int64 `tfsdk:"read_partitions_count" tf:"optional"`
+	ReadPartitionsCount types.Int64 `tfsdk:"read_partitions_count"`
 	// Size of persistent data read from cloud object storage on your cloud
 	// tenant, in bytes.
-	ReadRemoteBytes types.Int64 `tfsdk:"read_remote_bytes" tf:"optional"`
+	ReadRemoteBytes types.Int64 `tfsdk:"read_remote_bytes"`
 	// Time spent fetching the query results after the execution finished, in
 	// milliseconds.
-	ResultFetchTimeMs types.Int64 `tfsdk:"result_fetch_time_ms" tf:"optional"`
+	ResultFetchTimeMs types.Int64 `tfsdk:"result_fetch_time_ms"`
 	// `true` if the query result was fetched from cache, `false` otherwise.
-	ResultFromCache types.Bool `tfsdk:"result_from_cache" tf:"optional"`
+	ResultFromCache types.Bool `tfsdk:"result_from_cache"`
 	// Total number of rows returned by the query.
-	RowsProducedCount types.Int64 `tfsdk:"rows_produced_count" tf:"optional"`
+	RowsProducedCount types.Int64 `tfsdk:"rows_produced_count"`
 	// Total number of rows read by the query.
-	RowsReadCount types.Int64 `tfsdk:"rows_read_count" tf:"optional"`
+	RowsReadCount types.Int64 `tfsdk:"rows_read_count"`
 	// Size of data temporarily written to disk while executing the query, in
 	// bytes.
-	SpillToDiskBytes types.Int64 `tfsdk:"spill_to_disk_bytes" tf:"optional"`
+	SpillToDiskBytes types.Int64 `tfsdk:"spill_to_disk_bytes"`
 	// Sum of execution time for all of the query’s tasks, in milliseconds.
-	TaskTotalTimeMs types.Int64 `tfsdk:"task_total_time_ms" tf:"optional"`
+	TaskTotalTimeMs types.Int64 `tfsdk:"task_total_time_ms"`
 	// Total execution time of the query from the client’s point of view, in
 	// milliseconds.
-	TotalTimeMs types.Int64 `tfsdk:"total_time_ms" tf:"optional"`
+	TotalTimeMs types.Int64 `tfsdk:"total_time_ms"`
 	// Size pf persistent data written to cloud object storage in your cloud
 	// tenant, in bytes.
-	WriteRemoteBytes types.Int64 `tfsdk:"write_remote_bytes" tf:"optional"`
+	WriteRemoteBytes types.Int64 `tfsdk:"write_remote_bytes"`
 }
 
 func (newState *QueryMetrics) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryMetrics) {
@@ -8803,9 +9138,31 @@ func (newState *QueryMetrics) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query
 func (newState *QueryMetrics) SyncEffectiveFieldsDuringRead(existingState QueryMetrics) {
 }
 
-func (c QueryMetrics) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c QueryMetrics) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compilation_time_ms"] = attrs["compilation_time_ms"].SetOptional()
+	attrs["execution_time_ms"] = attrs["execution_time_ms"].SetOptional()
+	attrs["network_sent_bytes"] = attrs["network_sent_bytes"].SetOptional()
+	attrs["overloading_queue_start_timestamp"] = attrs["overloading_queue_start_timestamp"].SetOptional()
+	attrs["photon_total_time_ms"] = attrs["photon_total_time_ms"].SetOptional()
+	attrs["provisioning_queue_start_timestamp"] = attrs["provisioning_queue_start_timestamp"].SetOptional()
+	attrs["pruned_bytes"] = attrs["pruned_bytes"].SetOptional()
+	attrs["pruned_files_count"] = attrs["pruned_files_count"].SetOptional()
+	attrs["query_compilation_start_timestamp"] = attrs["query_compilation_start_timestamp"].SetOptional()
+	attrs["read_bytes"] = attrs["read_bytes"].SetOptional()
+	attrs["read_cache_bytes"] = attrs["read_cache_bytes"].SetOptional()
+	attrs["read_files_count"] = attrs["read_files_count"].SetOptional()
+	attrs["read_partitions_count"] = attrs["read_partitions_count"].SetOptional()
+	attrs["read_remote_bytes"] = attrs["read_remote_bytes"].SetOptional()
+	attrs["result_fetch_time_ms"] = attrs["result_fetch_time_ms"].SetOptional()
+	attrs["result_from_cache"] = attrs["result_from_cache"].SetOptional()
+	attrs["rows_produced_count"] = attrs["rows_produced_count"].SetOptional()
+	attrs["rows_read_count"] = attrs["rows_read_count"].SetOptional()
+	attrs["spill_to_disk_bytes"] = attrs["spill_to_disk_bytes"].SetOptional()
+	attrs["task_total_time_ms"] = attrs["task_total_time_ms"].SetOptional()
+	attrs["total_time_ms"] = attrs["total_time_ms"].SetOptional()
+	attrs["write_remote_bytes"] = attrs["write_remote_bytes"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryMetrics.
@@ -8883,15 +9240,15 @@ func (o QueryMetrics) Type(ctx context.Context) attr.Type {
 
 type QueryOptions struct {
 	// The name of the catalog to execute this query in.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// The timestamp when this query was moved to trash. Only present when the
 	// `is_archived` property is `true`. Trashed items are deleted after thirty
 	// days.
-	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at" tf:"optional"`
+	MovedToTrashAt types.String `tfsdk:"moved_to_trash_at"`
 
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// The name of the schema to execute this query in.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 }
 
 func (newState *QueryOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryOptions) {
@@ -8900,10 +9257,13 @@ func (newState *QueryOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Query
 func (newState *QueryOptions) SyncEffectiveFieldsDuringRead(existingState QueryOptions) {
 }
 
-func (c QueryOptions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Parameter{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
+func (c QueryOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["moved_to_trash_at"] = attrs["moved_to_trash_at"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryOptions.
@@ -8976,23 +9336,23 @@ func (o *QueryOptions) SetParameters(ctx context.Context, v []Parameter) {
 type QueryParameter struct {
 	// Date-range query parameter value. Can only specify one of
 	// `dynamic_date_range_value` or `date_range_value`.
-	DateRangeValue types.Object `tfsdk:"date_range_value" tf:"optional,object"`
+	DateRangeValue types.Object `tfsdk:"date_range_value"`
 	// Date query parameter value. Can only specify one of `dynamic_date_value`
 	// or `date_value`.
-	DateValue types.Object `tfsdk:"date_value" tf:"optional,object"`
+	DateValue types.Object `tfsdk:"date_value"`
 	// Dropdown query parameter value.
-	EnumValue types.Object `tfsdk:"enum_value" tf:"optional,object"`
+	EnumValue types.Object `tfsdk:"enum_value"`
 	// Literal parameter marker that appears between double curly braces in the
 	// query text.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Numeric query parameter value.
-	NumericValue types.Object `tfsdk:"numeric_value" tf:"optional,object"`
+	NumericValue types.Object `tfsdk:"numeric_value"`
 	// Query-based dropdown query parameter value.
-	QueryBackedValue types.Object `tfsdk:"query_backed_value" tf:"optional,object"`
+	QueryBackedValue types.Object `tfsdk:"query_backed_value"`
 	// Text query parameter value.
-	TextValue types.Object `tfsdk:"text_value" tf:"optional,object"`
+	TextValue types.Object `tfsdk:"text_value"`
 	// Text displayed in the user-facing parameter widget in the UI.
-	Title types.String `tfsdk:"title" tf:"optional"`
+	Title types.String `tfsdk:"title"`
 }
 
 func (newState *QueryParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryParameter) {
@@ -9001,15 +9361,17 @@ func (newState *QueryParameter) SyncEffectiveFieldsDuringCreateOrUpdate(plan Que
 func (newState *QueryParameter) SyncEffectiveFieldsDuringRead(existingState QueryParameter) {
 }
 
-func (c QueryParameter) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	DateRangeValue{}.ApplySchemaCustomizations(cs, append(path, "date_range_value")...)
-	DateValue{}.ApplySchemaCustomizations(cs, append(path, "date_value")...)
-	EnumValue{}.ApplySchemaCustomizations(cs, append(path, "enum_value")...)
-	NumericValue{}.ApplySchemaCustomizations(cs, append(path, "numeric_value")...)
-	QueryBackedValue{}.ApplySchemaCustomizations(cs, append(path, "query_backed_value")...)
-	TextValue{}.ApplySchemaCustomizations(cs, append(path, "text_value")...)
+func (c QueryParameter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["date_range_value"] = attrs["date_range_value"].SetOptional()
+	attrs["date_value"] = attrs["date_value"].SetOptional()
+	attrs["enum_value"] = attrs["enum_value"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["numeric_value"] = attrs["numeric_value"].SetOptional()
+	attrs["query_backed_value"] = attrs["query_backed_value"].SetOptional()
+	attrs["text_value"] = attrs["text_value"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryParameter.
@@ -9237,27 +9599,27 @@ type QueryPostContent struct {
 	// is distinct from the warehouse ID. [Learn more]
 	//
 	// [Learn more]: https://docs.databricks.com/api/workspace/datasources/list
-	DataSourceId types.String `tfsdk:"data_source_id" tf:"optional"`
+	DataSourceId types.String `tfsdk:"data_source_id"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The title of this query that appears in list views, widget headings, and
 	// on the query page.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Exclusively used for storing a list parameter definitions. A parameter is
 	// an object with `title`, `name`, `type`, and `value` properties. The
 	// `value` field here is the default value. It can be overridden at runtime.
-	Options types.Object `tfsdk:"options" tf:"optional"`
+	Options types.Object `tfsdk:"options"`
 	// The identifier of the workspace folder containing the object.
-	Parent types.String `tfsdk:"parent" tf:"optional"`
+	Parent types.String `tfsdk:"parent"`
 	// The text of the query to be run.
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 	// Sets the **Run as** role for the object. Must be set to one of `"viewer"`
 	// (signifying "run as viewer" behavior) or `"owner"` (signifying "run as
 	// owner" behavior)
-	RunAsRole types.String `tfsdk:"run_as_role" tf:"optional"`
+	RunAsRole types.String `tfsdk:"run_as_role"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 }
 
 func (newState *QueryPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryPostContent) {
@@ -9266,9 +9628,17 @@ func (newState *QueryPostContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan Q
 func (newState *QueryPostContent) SyncEffectiveFieldsDuringRead(existingState QueryPostContent) {
 }
 
-func (c QueryPostContent) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c QueryPostContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_source_id"] = attrs["data_source_id"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["parent"] = attrs["parent"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryPostContent.
@@ -9348,9 +9718,9 @@ func (o *QueryPostContent) SetTags(ctx context.Context, v []types.String) {
 
 type RepeatedEndpointConfPairs struct {
 	// Deprecated: Use configuration_pairs
-	ConfigPair types.List `tfsdk:"config_pair" tf:"optional"`
+	ConfigPair types.List `tfsdk:"config_pair"`
 
-	ConfigurationPairs types.List `tfsdk:"configuration_pairs" tf:"optional"`
+	ConfigurationPairs types.List `tfsdk:"configuration_pairs"`
 }
 
 func (newState *RepeatedEndpointConfPairs) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepeatedEndpointConfPairs) {
@@ -9359,11 +9729,11 @@ func (newState *RepeatedEndpointConfPairs) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *RepeatedEndpointConfPairs) SyncEffectiveFieldsDuringRead(existingState RepeatedEndpointConfPairs) {
 }
 
-func (c RepeatedEndpointConfPairs) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	EndpointConfPair{}.ApplySchemaCustomizations(cs, append(path, "config_pair")...)
-	EndpointConfPair{}.ApplySchemaCustomizations(cs, append(path, "configuration_pairs")...)
+func (c RepeatedEndpointConfPairs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config_pair"] = attrs["config_pair"].SetOptional()
+	attrs["configuration_pairs"] = attrs["configuration_pairs"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepeatedEndpointConfPairs.
@@ -9563,28 +9933,28 @@ func (o RestoreResponse) Type(ctx context.Context) attr.Type {
 type ResultData struct {
 	// The number of bytes in the result chunk. This field is not available when
 	// using `INLINE` disposition.
-	ByteCount types.Int64 `tfsdk:"byte_count" tf:"optional"`
+	ByteCount types.Int64 `tfsdk:"byte_count"`
 	// The position within the sequence of result set chunks.
-	ChunkIndex types.Int64 `tfsdk:"chunk_index" tf:"optional"`
+	ChunkIndex types.Int64 `tfsdk:"chunk_index"`
 	// The `JSON_ARRAY` format is an array of arrays of values, where each
 	// non-null value is formatted as a string. Null values are encoded as JSON
 	// `null`.
-	DataArray types.List `tfsdk:"data_array" tf:"optional"`
+	DataArray types.List `tfsdk:"data_array"`
 
-	ExternalLinks types.List `tfsdk:"external_links" tf:"optional"`
+	ExternalLinks types.List `tfsdk:"external_links"`
 	// When fetching, provides the `chunk_index` for the _next_ chunk. If
 	// absent, indicates there are no more chunks. The next chunk can be fetched
 	// with a :method:statementexecution/getStatementResultChunkN request.
-	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index" tf:"optional"`
+	NextChunkIndex types.Int64 `tfsdk:"next_chunk_index"`
 	// When fetching, provides a link to fetch the _next_ chunk. If absent,
 	// indicates there are no more chunks. This link is an absolute `path` to be
 	// joined with your `$DATABRICKS_HOST`, and should be treated as an opaque
 	// link. This is an alternative to using `next_chunk_index`.
-	NextChunkInternalLink types.String `tfsdk:"next_chunk_internal_link" tf:"optional"`
+	NextChunkInternalLink types.String `tfsdk:"next_chunk_internal_link"`
 	// The number of rows within the result chunk.
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 	// The starting row offset within the result set.
-	RowOffset types.Int64 `tfsdk:"row_offset" tf:"optional"`
+	RowOffset types.Int64 `tfsdk:"row_offset"`
 }
 
 func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData) {
@@ -9593,10 +9963,17 @@ func (newState *ResultData) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultD
 func (newState *ResultData) SyncEffectiveFieldsDuringRead(existingState ResultData) {
 }
 
-func (c ResultData) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ExternalLink{}.ApplySchemaCustomizations(cs, append(path, "external_links")...)
+func (c ResultData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["byte_count"] = attrs["byte_count"].SetOptional()
+	attrs["chunk_index"] = attrs["chunk_index"].SetOptional()
+	attrs["data_array"] = attrs["data_array"].SetOptional()
+	attrs["external_links"] = attrs["external_links"].SetOptional()
+	attrs["next_chunk_index"] = attrs["next_chunk_index"].SetOptional()
+	attrs["next_chunk_internal_link"] = attrs["next_chunk_internal_link"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["row_offset"] = attrs["row_offset"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResultData.
@@ -9708,21 +10085,21 @@ func (o *ResultData) SetExternalLinks(ctx context.Context, v []ExternalLink) {
 // The result manifest provides schema and metadata for the result set.
 type ResultManifest struct {
 	// Array of result set chunk metadata.
-	Chunks types.List `tfsdk:"chunks" tf:"optional"`
+	Chunks types.List `tfsdk:"chunks"`
 
-	Format types.String `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format"`
 	// The schema is an ordered list of column descriptions.
-	Schema types.Object `tfsdk:"schema" tf:"optional,object"`
+	Schema types.Object `tfsdk:"schema"`
 	// The total number of bytes in the result set. This field is not available
 	// when using `INLINE` disposition.
-	TotalByteCount types.Int64 `tfsdk:"total_byte_count" tf:"optional"`
+	TotalByteCount types.Int64 `tfsdk:"total_byte_count"`
 	// The total number of chunks that the result set has been divided into.
-	TotalChunkCount types.Int64 `tfsdk:"total_chunk_count" tf:"optional"`
+	TotalChunkCount types.Int64 `tfsdk:"total_chunk_count"`
 	// The total number of rows in the result set.
-	TotalRowCount types.Int64 `tfsdk:"total_row_count" tf:"optional"`
+	TotalRowCount types.Int64 `tfsdk:"total_row_count"`
 	// Indicates whether the result is truncated due to `row_limit` or
 	// `byte_limit`.
-	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+	Truncated types.Bool `tfsdk:"truncated"`
 }
 
 func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest) {
@@ -9731,11 +10108,16 @@ func (newState *ResultManifest) SyncEffectiveFieldsDuringCreateOrUpdate(plan Res
 func (newState *ResultManifest) SyncEffectiveFieldsDuringRead(existingState ResultManifest) {
 }
 
-func (c ResultManifest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	BaseChunkInfo{}.ApplySchemaCustomizations(cs, append(path, "chunks")...)
-	ResultSchema{}.ApplySchemaCustomizations(cs, append(path, "schema")...)
+func (c ResultManifest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["chunks"] = attrs["chunks"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["total_byte_count"] = attrs["total_byte_count"].SetOptional()
+	attrs["total_chunk_count"] = attrs["total_chunk_count"].SetOptional()
+	attrs["total_row_count"] = attrs["total_row_count"].SetOptional()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResultManifest.
@@ -9842,9 +10224,9 @@ func (o *ResultManifest) SetSchema(ctx context.Context, v ResultSchema) {
 
 // The schema is an ordered list of column descriptions.
 type ResultSchema struct {
-	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
+	ColumnCount types.Int64 `tfsdk:"column_count"`
 
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 func (newState *ResultSchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultSchema) {
@@ -9853,10 +10235,11 @@ func (newState *ResultSchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan Resul
 func (newState *ResultSchema) SyncEffectiveFieldsDuringRead(existingState ResultSchema) {
 }
 
-func (c ResultSchema) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ColumnInfo{}.ApplySchemaCustomizations(cs, append(path, "columns")...)
+func (c ResultSchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_count"] = attrs["column_count"].SetOptional()
+	attrs["columns"] = attrs["columns"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResultSchema.
@@ -9923,9 +10306,9 @@ func (o *ResultSchema) SetColumns(ctx context.Context, v []ColumnInfo) {
 }
 
 type ServiceError struct {
-	ErrorCode types.String `tfsdk:"error_code" tf:"optional"`
+	ErrorCode types.String `tfsdk:"error_code"`
 	// A brief summary of the error condition.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 }
 
 func (newState *ServiceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan ServiceError) {
@@ -9934,9 +10317,11 @@ func (newState *ServiceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan Servi
 func (newState *ServiceError) SyncEffectiveFieldsDuringRead(existingState ServiceError) {
 }
 
-func (c ServiceError) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ServiceError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error_code"] = attrs["error_code"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ServiceError.
@@ -9974,7 +10359,7 @@ func (o ServiceError) Type(ctx context.Context) attr.Type {
 
 // Set object ACL
 type SetRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// Object ID. The ACL for the object with this UUID is overwritten by this
 	// request's POST content.
 	ObjectId types.String `tfsdk:"-"`
@@ -10048,11 +10433,11 @@ func (o *SetRequest) SetAccessControlList(ctx context.Context, v []AccessControl
 }
 
 type SetResponse struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// An object's type and UUID, separated by a forward slash (/) character.
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 	// A singular noun object type.
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetResponse.
@@ -10122,30 +10507,30 @@ func (o *SetResponse) SetAccessControlList(ctx context.Context, v []AccessContro
 
 type SetWorkspaceWarehouseConfigRequest struct {
 	// Optional: Channel selection details
-	Channel types.Object `tfsdk:"channel" tf:"optional,object"`
+	Channel types.Object `tfsdk:"channel"`
 	// Deprecated: Use sql_configuration_parameters
-	ConfigParam types.Object `tfsdk:"config_param" tf:"optional,object"`
+	ConfigParam types.Object `tfsdk:"config_param"`
 	// Spark confs for external hive metastore configuration JSON serialized
 	// size must be less than <= 512K
-	DataAccessConfig types.List `tfsdk:"data_access_config" tf:"optional"`
+	DataAccessConfig types.List `tfsdk:"data_access_config"`
 	// List of Warehouse Types allowed in this workspace (limits allowed value
 	// of the type field in CreateWarehouse and EditWarehouse). Note: Some types
 	// cannot be disabled, they don't need to be specified in
 	// SetWorkspaceWarehouseConfig. Note: Disabling a type may cause existing
 	// warehouses to be converted to another type. Used by frontend to save
 	// specific type availability in the warehouse create and edit form UI.
-	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types" tf:"optional"`
+	EnabledWarehouseTypes types.List `tfsdk:"enabled_warehouse_types"`
 	// Deprecated: Use sql_configuration_parameters
-	GlobalParam types.Object `tfsdk:"global_param" tf:"optional,object"`
+	GlobalParam types.Object `tfsdk:"global_param"`
 	// GCP only: Google Service Account used to pass to cluster to access Google
 	// Cloud Storage
-	GoogleServiceAccount types.String `tfsdk:"google_service_account" tf:"optional"`
+	GoogleServiceAccount types.String `tfsdk:"google_service_account"`
 	// AWS Only: Instance profile used to pass IAM role to the cluster
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Security policy for warehouses
-	SecurityPolicy types.String `tfsdk:"security_policy" tf:"optional"`
+	SecurityPolicy types.String `tfsdk:"security_policy"`
 	// SQL configuration parameters
-	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters" tf:"optional,object"`
+	SqlConfigurationParameters types.Object `tfsdk:"sql_configuration_parameters"`
 }
 
 func (newState *SetWorkspaceWarehouseConfigRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetWorkspaceWarehouseConfigRequest) {
@@ -10154,15 +10539,18 @@ func (newState *SetWorkspaceWarehouseConfigRequest) SyncEffectiveFieldsDuringCre
 func (newState *SetWorkspaceWarehouseConfigRequest) SyncEffectiveFieldsDuringRead(existingState SetWorkspaceWarehouseConfigRequest) {
 }
 
-func (c SetWorkspaceWarehouseConfigRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	Channel{}.ApplySchemaCustomizations(cs, append(path, "channel")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "config_param")...)
-	EndpointConfPair{}.ApplySchemaCustomizations(cs, append(path, "data_access_config")...)
-	WarehouseTypePair{}.ApplySchemaCustomizations(cs, append(path, "enabled_warehouse_types")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "global_param")...)
-	RepeatedEndpointConfPairs{}.ApplySchemaCustomizations(cs, append(path, "sql_configuration_parameters")...)
+func (c SetWorkspaceWarehouseConfigRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["config_param"] = attrs["config_param"].SetOptional()
+	attrs["data_access_config"] = attrs["data_access_config"].SetOptional()
+	attrs["enabled_warehouse_types"] = attrs["enabled_warehouse_types"].SetOptional()
+	attrs["global_param"] = attrs["global_param"].SetOptional()
+	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["security_policy"] = attrs["security_policy"].SetOptional()
+	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetWorkspaceWarehouseConfigRequest.
@@ -10396,9 +10784,9 @@ func (newState *SetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringCr
 func (newState *SetWorkspaceWarehouseConfigResponse) SyncEffectiveFieldsDuringRead(existingState SetWorkspaceWarehouseConfigResponse) {
 }
 
-func (c SetWorkspaceWarehouseConfigResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SetWorkspaceWarehouseConfigResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetWorkspaceWarehouseConfigResponse.
@@ -10474,9 +10862,9 @@ func (newState *StartWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *StartWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState StartWarehouseResponse) {
 }
 
-func (c StartWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c StartWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartWarehouseResponse.
@@ -10508,7 +10896,7 @@ func (o StartWarehouseResponse) Type(ctx context.Context) attr.Type {
 
 type StatementParameterListItem struct {
 	// The name of a parameter marker to be substituted in the statement.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The data type, given as a string. For example: `INT`, `STRING`,
 	// `DECIMAL(10,2)`. If no type is given the type is assumed to be `STRING`.
 	// Complex types, such as `ARRAY`, `MAP`, and `STRUCT` are not supported.
@@ -10516,10 +10904,10 @@ type StatementParameterListItem struct {
 	// reference.
 	//
 	// [Data types]: https://docs.databricks.com/sql/language-manual/functions/cast.html
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 	// The value to substitute, represented as a string. If omitted, the value
 	// is interpreted as NULL.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *StatementParameterListItem) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementParameterListItem) {
@@ -10528,10 +10916,12 @@ func (newState *StatementParameterListItem) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *StatementParameterListItem) SyncEffectiveFieldsDuringRead(existingState StatementParameterListItem) {
 }
 
-func (c StatementParameterListItem) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "name")...)
+func (c StatementParameterListItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StatementParameterListItem.
@@ -10571,15 +10961,15 @@ func (o StatementParameterListItem) Type(ctx context.Context) attr.Type {
 
 type StatementResponse struct {
 	// The result manifest provides schema and metadata for the result set.
-	Manifest types.Object `tfsdk:"manifest" tf:"optional,object"`
+	Manifest types.Object `tfsdk:"manifest"`
 
-	Result types.Object `tfsdk:"result" tf:"optional,object"`
+	Result types.Object `tfsdk:"result"`
 	// The statement ID is returned upon successfully submitting a SQL
 	// statement, and is a required reference for all subsequent calls.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	StatementId types.String `tfsdk:"statement_id"`
 	// The status response includes execution state and if relevant, error
 	// information.
-	Status types.Object `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 }
 
 func (newState *StatementResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementResponse) {
@@ -10588,12 +10978,13 @@ func (newState *StatementResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *StatementResponse) SyncEffectiveFieldsDuringRead(existingState StatementResponse) {
 }
 
-func (c StatementResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ResultManifest{}.ApplySchemaCustomizations(cs, append(path, "manifest")...)
-	ResultData{}.ApplySchemaCustomizations(cs, append(path, "result")...)
-	StatementStatus{}.ApplySchemaCustomizations(cs, append(path, "status")...)
+func (c StatementResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["manifest"] = attrs["manifest"].SetOptional()
+	attrs["result"] = attrs["result"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StatementResponse.
@@ -10724,7 +11115,7 @@ func (o *StatementResponse) SetStatus(ctx context.Context, v StatementStatus) {
 // The status response includes execution state and if relevant, error
 // information.
 type StatementStatus struct {
-	Error types.Object `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error"`
 	// Statement execution state: - `PENDING`: waiting for warehouse -
 	// `RUNNING`: running - `SUCCEEDED`: execution was successful, result data
 	// available for fetch - `FAILED`: execution failed; reason for failure
@@ -10732,7 +11123,7 @@ type StatementStatus struct {
 	// come from explicit cancel call, or timeout with `on_wait_timeout=CANCEL`
 	// - `CLOSED`: execution successful, and statement closed; result no longer
 	// available for fetch
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *StatementStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan StatementStatus) {
@@ -10741,10 +11132,11 @@ func (newState *StatementStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan St
 func (newState *StatementStatus) SyncEffectiveFieldsDuringRead(existingState StatementStatus) {
 }
 
-func (c StatementStatus) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ServiceError{}.ApplySchemaCustomizations(cs, append(path, "error")...)
+func (c StatementStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StatementStatus.
@@ -10856,9 +11248,9 @@ func (newState *StopWarehouseResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *StopWarehouseResponse) SyncEffectiveFieldsDuringRead(existingState StopWarehouseResponse) {
 }
 
-func (c StopWarehouseResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c StopWarehouseResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopWarehouseResponse.
@@ -10889,7 +11281,7 @@ func (o StopWarehouseResponse) Type(ctx context.Context) attr.Type {
 }
 
 type Success struct {
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 }
 
 func (newState *Success) SyncEffectiveFieldsDuringCreateOrUpdate(plan Success) {
@@ -10898,9 +11290,10 @@ func (newState *Success) SyncEffectiveFieldsDuringCreateOrUpdate(plan Success) {
 func (newState *Success) SyncEffectiveFieldsDuringRead(existingState Success) {
 }
 
-func (c Success) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Success) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Success.
@@ -10936,12 +11329,12 @@ func (o Success) Type(ctx context.Context) attr.Type {
 
 type TerminationReason struct {
 	// status code indicating why the cluster was terminated
-	Code types.String `tfsdk:"code" tf:"optional"`
+	Code types.String `tfsdk:"code"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters"`
 	// type of the termination
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationReason) {
@@ -10950,9 +11343,12 @@ func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
 }
 
-func (c TerminationReason) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code"] = attrs["code"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TerminationReason.
@@ -11021,7 +11417,7 @@ func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]type
 }
 
 type TextValue struct {
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *TextValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextValue) {
@@ -11030,9 +11426,10 @@ func (newState *TextValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextValu
 func (newState *TextValue) SyncEffectiveFieldsDuringRead(existingState TextValue) {
 }
 
-func (c TextValue) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TextValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TextValue.
@@ -11068,9 +11465,9 @@ func (o TextValue) Type(ctx context.Context) attr.Type {
 
 type TimeRange struct {
 	// The end time in milliseconds.
-	EndTimeMs types.Int64 `tfsdk:"end_time_ms" tf:"optional"`
+	EndTimeMs types.Int64 `tfsdk:"end_time_ms"`
 	// The start time in milliseconds.
-	StartTimeMs types.Int64 `tfsdk:"start_time_ms" tf:"optional"`
+	StartTimeMs types.Int64 `tfsdk:"start_time_ms"`
 }
 
 func (newState *TimeRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan TimeRange) {
@@ -11079,9 +11476,11 @@ func (newState *TimeRange) SyncEffectiveFieldsDuringCreateOrUpdate(plan TimeRang
 func (newState *TimeRange) SyncEffectiveFieldsDuringRead(existingState TimeRange) {
 }
 
-func (c TimeRange) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TimeRange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["end_time_ms"] = attrs["end_time_ms"].SetOptional()
+	attrs["start_time_ms"] = attrs["start_time_ms"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TimeRange.
@@ -11119,7 +11518,7 @@ func (o TimeRange) Type(ctx context.Context) attr.Type {
 
 type TransferOwnershipObjectId struct {
 	// Email address for the new owner, who must exist in the workspace.
-	NewOwner types.String `tfsdk:"new_owner" tf:"optional"`
+	NewOwner types.String `tfsdk:"new_owner"`
 }
 
 func (newState *TransferOwnershipObjectId) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransferOwnershipObjectId) {
@@ -11128,9 +11527,10 @@ func (newState *TransferOwnershipObjectId) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *TransferOwnershipObjectId) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipObjectId) {
 }
 
-func (c TransferOwnershipObjectId) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c TransferOwnershipObjectId) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["new_owner"] = attrs["new_owner"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransferOwnershipObjectId.
@@ -11167,7 +11567,7 @@ func (o TransferOwnershipObjectId) Type(ctx context.Context) attr.Type {
 // Transfer object ownership
 type TransferOwnershipRequest struct {
 	// Email address for the new owner, who must exist in the workspace.
-	NewOwner types.String `tfsdk:"new_owner" tf:"optional"`
+	NewOwner types.String `tfsdk:"new_owner"`
 	// The ID of the object on which to change ownership.
 	ObjectId types.Object `tfsdk:"-"`
 	// The type of object on which to change ownership.
@@ -11312,14 +11712,14 @@ func (o TrashQueryRequest) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateAlertRequest struct {
-	Alert types.Object `tfsdk:"alert" tf:"optional,object"`
+	Alert types.Object `tfsdk:"alert"`
 
 	Id types.String `tfsdk:"-"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
 func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertRequest) {
@@ -11328,12 +11728,12 @@ func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringRead(existingState UpdateAlertRequest) {
 }
 
-func (c UpdateAlertRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	UpdateAlertRequestAlert{}.ApplySchemaCustomizations(cs, append(path, "alert")...)
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "update_mask")...)
+func (c UpdateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertRequest.
@@ -11403,31 +11803,31 @@ func (o *UpdateAlertRequest) SetAlert(ctx context.Context, v UpdateAlertRequestA
 
 type UpdateAlertRequestAlert struct {
 	// Trigger conditions of the alert.
-	Condition types.Object `tfsdk:"condition" tf:"optional,object"`
+	Condition types.Object `tfsdk:"condition"`
 	// Custom body of alert notification, if it exists. See [here] for custom
 	// templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomBody types.String `tfsdk:"custom_body" tf:"optional"`
+	CustomBody types.String `tfsdk:"custom_body"`
 	// Custom subject of alert notification, if it exists. This can include
 	// email subject entries and Slack notification headers, for example. See
 	// [here] for custom templating instructions.
 	//
 	// [here]: https://docs.databricks.com/sql/user/alerts/index.html
-	CustomSubject types.String `tfsdk:"custom_subject" tf:"optional"`
+	CustomSubject types.String `tfsdk:"custom_subject"`
 	// The display name of the alert.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Whether to notify alert subscribers when alert returns back to normal.
-	NotifyOnOk types.Bool `tfsdk:"notify_on_ok" tf:"optional"`
+	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
 	// The owner's username. This field is set to "Unavailable" if the user has
 	// been deleted.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// UUID of the query attached to the alert.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// Number of seconds an alert must wait after being triggered to rearm
 	// itself. After rearming, it can be triggered again. If 0 or not specified,
 	// the alert will not be triggered again.
-	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger" tf:"optional"`
+	SecondsToRetrigger types.Int64 `tfsdk:"seconds_to_retrigger"`
 }
 
 func (newState *UpdateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertRequestAlert) {
@@ -11436,10 +11836,17 @@ func (newState *UpdateAlertRequestAlert) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *UpdateAlertRequestAlert) SyncEffectiveFieldsDuringRead(existingState UpdateAlertRequestAlert) {
 }
 
-func (c UpdateAlertRequestAlert) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AlertCondition{}.ApplySchemaCustomizations(cs, append(path, "condition")...)
+func (c UpdateAlertRequestAlert) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["custom_body"] = attrs["custom_body"].SetOptional()
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertRequestAlert.
@@ -11520,12 +11927,12 @@ func (o *UpdateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 type UpdateQueryRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Query types.Object `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 	// Field mask is required to be passed into the PATCH request. Field mask
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
 func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateQueryRequest) {
@@ -11534,12 +11941,12 @@ func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringRead(existingState UpdateQueryRequest) {
 }
 
-func (c UpdateQueryRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
-	UpdateQueryRequestQuery{}.ApplySchemaCustomizations(cs, append(path, "query")...)
-	cs.SetRequired(append(path, "update_mask")...)
+func (c UpdateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateQueryRequest.
@@ -11609,29 +12016,29 @@ func (o *UpdateQueryRequest) SetQuery(ctx context.Context, v UpdateQueryRequestQ
 
 type UpdateQueryRequestQuery struct {
 	// Whether to apply a 1000 row limit to the query result.
-	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit" tf:"optional"`
+	ApplyAutoLimit types.Bool `tfsdk:"apply_auto_limit"`
 	// Name of the catalog where this query will be executed.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// General description that conveys additional information about this query
 	// such as usage notes.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Display name of the query that appears in list views, widget headings,
 	// and on the query page.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Username of the user that owns the query.
-	OwnerUserName types.String `tfsdk:"owner_user_name" tf:"optional"`
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
 	// List of query parameter definitions.
-	Parameters types.List `tfsdk:"parameters" tf:"optional"`
+	Parameters types.List `tfsdk:"parameters"`
 	// Text of the query to be run.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// Sets the "Run as" role for the object.
-	RunAsMode types.String `tfsdk:"run_as_mode" tf:"optional"`
+	RunAsMode types.String `tfsdk:"run_as_mode"`
 	// Name of the schema where this query will be executed.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 	// ID of the SQL warehouse attached to the query.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateQueryRequestQuery) {
@@ -11640,10 +12047,20 @@ func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *UpdateQueryRequestQuery) SyncEffectiveFieldsDuringRead(existingState UpdateQueryRequestQuery) {
 }
 
-func (c UpdateQueryRequestQuery) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	QueryParameter{}.ApplySchemaCustomizations(cs, append(path, "parameters")...)
+func (c UpdateQueryRequestQuery) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_auto_limit"] = attrs["apply_auto_limit"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateQueryRequestQuery.
@@ -11792,9 +12209,9 @@ type UpdateVisualizationRequest struct {
 	// specifies which fields of the setting payload will be updated. The field
 	// mask needs to be supplied as single string. To specify multiple fields in
 	// the field mask, use comma as the separator (no space).
-	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+	UpdateMask types.String `tfsdk:"update_mask"`
 
-	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization"`
 }
 
 func (newState *UpdateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVisualizationRequest) {
@@ -11803,12 +12220,12 @@ func (newState *UpdateVisualizationRequest) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UpdateVisualizationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateVisualizationRequest) {
 }
 
-func (c UpdateVisualizationRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "id")...)
-	cs.SetRequired(append(path, "update_mask")...)
-	UpdateVisualizationRequestVisualization{}.ApplySchemaCustomizations(cs, append(path, "visualization")...)
+func (c UpdateVisualizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+	attrs["visualization"] = attrs["visualization"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateVisualizationRequest.
@@ -11878,17 +12295,17 @@ func (o *UpdateVisualizationRequest) SetVisualization(ctx context.Context, v Upd
 
 type UpdateVisualizationRequestVisualization struct {
 	// The display name of the visualization.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The visualization options varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying
 	// visualization options directly.
-	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	SerializedOptions types.String `tfsdk:"serialized_options"`
 	// The visualization query plan varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying the
 	// visualization query plan directly.
-	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan"`
 	// The type of visualization: counter, table, funnel, and so on.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *UpdateVisualizationRequestVisualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateVisualizationRequestVisualization) {
@@ -11897,9 +12314,13 @@ func (newState *UpdateVisualizationRequestVisualization) SyncEffectiveFieldsDuri
 func (newState *UpdateVisualizationRequestVisualization) SyncEffectiveFieldsDuringRead(existingState UpdateVisualizationRequestVisualization) {
 }
 
-func (c UpdateVisualizationRequestVisualization) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UpdateVisualizationRequestVisualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["serialized_options"] = attrs["serialized_options"].SetOptional()
+	attrs["serialized_query_plan"] = attrs["serialized_query_plan"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateVisualizationRequestVisualization.
@@ -11940,11 +12361,11 @@ func (o UpdateVisualizationRequestVisualization) Type(ctx context.Context) attr.
 }
 
 type User struct {
-	Email types.String `tfsdk:"email" tf:"optional"`
+	Email types.String `tfsdk:"email"`
 
-	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	Id types.Int64 `tfsdk:"id"`
 
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
@@ -11953,9 +12374,12 @@ func (newState *User) SyncEffectiveFieldsDuringCreateOrUpdate(plan User) {
 func (newState *User) SyncEffectiveFieldsDuringRead(existingState User) {
 }
 
-func (c User) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c User) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["email"] = attrs["email"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in User.
@@ -11995,25 +12419,25 @@ func (o User) Type(ctx context.Context) attr.Type {
 
 type Visualization struct {
 	// The timestamp indicating when the visualization was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"optional"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// The display name of the visualization.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// UUID identifying the visualization.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// UUID of the query that the visualization is attached to.
-	QueryId types.String `tfsdk:"query_id" tf:"optional"`
+	QueryId types.String `tfsdk:"query_id"`
 	// The visualization options varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying
 	// visualization options directly.
-	SerializedOptions types.String `tfsdk:"serialized_options" tf:"optional"`
+	SerializedOptions types.String `tfsdk:"serialized_options"`
 	// The visualization query plan varies widely from one visualization type to
 	// the next and is unsupported. Databricks does not recommend modifying the
 	// visualization query plan directly.
-	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan" tf:"optional"`
+	SerializedQueryPlan types.String `tfsdk:"serialized_query_plan"`
 	// The type of visualization: counter, table, funnel, and so on.
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 	// The timestamp indicating when the visualization was updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"optional"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *Visualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan Visualization) {
@@ -12022,9 +12446,17 @@ func (newState *Visualization) SyncEffectiveFieldsDuringCreateOrUpdate(plan Visu
 func (newState *Visualization) SyncEffectiveFieldsDuringRead(existingState Visualization) {
 }
 
-func (c Visualization) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c Visualization) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["serialized_options"] = attrs["serialized_options"].SetOptional()
+	attrs["serialized_query_plan"] = attrs["serialized_query_plan"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Visualization.
@@ -12074,13 +12506,13 @@ func (o Visualization) Type(ctx context.Context) attr.Type {
 
 type WarehouseAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *WarehouseAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseAccessControlRequest) {
@@ -12089,9 +12521,13 @@ func (newState *WarehouseAccessControlRequest) SyncEffectiveFieldsDuringCreateOr
 func (newState *WarehouseAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlRequest) {
 }
 
-func (c WarehouseAccessControlRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WarehouseAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehouseAccessControlRequest.
@@ -12133,15 +12569,15 @@ func (o WarehouseAccessControlRequest) Type(ctx context.Context) attr.Type {
 
 type WarehouseAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *WarehouseAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseAccessControlResponse) {
@@ -12150,10 +12586,14 @@ func (newState *WarehouseAccessControlResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *WarehouseAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState WarehouseAccessControlResponse) {
 }
 
-func (c WarehouseAccessControlResponse) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WarehousePermission{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c WarehouseAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehouseAccessControlResponse.
@@ -12226,11 +12666,11 @@ func (o *WarehouseAccessControlResponse) SetAllPermissions(ctx context.Context, 
 }
 
 type WarehousePermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *WarehousePermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermission) {
@@ -12239,9 +12679,12 @@ func (newState *WarehousePermission) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *WarehousePermission) SyncEffectiveFieldsDuringRead(existingState WarehousePermission) {
 }
 
-func (c WarehousePermission) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WarehousePermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehousePermission.
@@ -12310,11 +12753,11 @@ func (o *WarehousePermission) SetInheritedFromObject(ctx context.Context, v []ty
 }
 
 type WarehousePermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *WarehousePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermissions) {
@@ -12323,10 +12766,12 @@ func (newState *WarehousePermissions) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *WarehousePermissions) SyncEffectiveFieldsDuringRead(existingState WarehousePermissions) {
 }
 
-func (c WarehousePermissions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WarehouseAccessControlResponse{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c WarehousePermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehousePermissions.
@@ -12395,9 +12840,9 @@ func (o *WarehousePermissions) SetAccessControlList(ctx context.Context, v []War
 }
 
 type WarehousePermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *WarehousePermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehousePermissionsDescription) {
@@ -12406,9 +12851,11 @@ func (newState *WarehousePermissionsDescription) SyncEffectiveFieldsDuringCreate
 func (newState *WarehousePermissionsDescription) SyncEffectiveFieldsDuringRead(existingState WarehousePermissionsDescription) {
 }
 
-func (c WarehousePermissionsDescription) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WarehousePermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehousePermissionsDescription.
@@ -12445,7 +12892,7 @@ func (o WarehousePermissionsDescription) Type(ctx context.Context) attr.Type {
 }
 
 type WarehousePermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
 }
@@ -12456,11 +12903,11 @@ func (newState *WarehousePermissionsRequest) SyncEffectiveFieldsDuringCreateOrUp
 func (newState *WarehousePermissionsRequest) SyncEffectiveFieldsDuringRead(existingState WarehousePermissionsRequest) {
 }
 
-func (c WarehousePermissionsRequest) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WarehouseAccessControlRequest{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "warehouse_id")...)
+func (c WarehousePermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehousePermissionsRequest.
@@ -12529,9 +12976,9 @@ func (o *WarehousePermissionsRequest) SetAccessControlList(ctx context.Context, 
 type WarehouseTypePair struct {
 	// If set to false the specific warehouse type will not be be allowed as a
 	// value for warehouse_type in CreateWarehouse and EditWarehouse
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// Warehouse type: `PRO` or `CLASSIC`.
-	WarehouseType types.String `tfsdk:"warehouse_type" tf:"optional"`
+	WarehouseType types.String `tfsdk:"warehouse_type"`
 }
 
 func (newState *WarehouseTypePair) SyncEffectiveFieldsDuringCreateOrUpdate(plan WarehouseTypePair) {
@@ -12540,9 +12987,11 @@ func (newState *WarehouseTypePair) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *WarehouseTypePair) SyncEffectiveFieldsDuringRead(existingState WarehouseTypePair) {
 }
 
-func (c WarehouseTypePair) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WarehouseTypePair) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WarehouseTypePair.
@@ -12580,17 +13029,17 @@ func (o WarehouseTypePair) Type(ctx context.Context) attr.Type {
 
 type Widget struct {
 	// The unique ID for this widget.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	Options types.Object `tfsdk:"options" tf:"optional,object"`
+	Options types.Object `tfsdk:"options"`
 	// The visualization description API changes frequently and is unsupported.
 	// You can duplicate a visualization by copying description objects received
 	// _from the API_ and then using them to create a new one with a POST
 	// request to the same endpoint. Databricks does not recommend constructing
 	// ad-hoc visualizations entirely in JSON.
-	Visualization types.Object `tfsdk:"visualization" tf:"optional,object"`
+	Visualization types.Object `tfsdk:"visualization"`
 	// Unused field.
-	Width types.Int64 `tfsdk:"width" tf:"optional"`
+	Width types.Int64 `tfsdk:"width"`
 }
 
 func (newState *Widget) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widget) {
@@ -12599,11 +13048,13 @@ func (newState *Widget) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widget) {
 func (newState *Widget) SyncEffectiveFieldsDuringRead(existingState Widget) {
 }
 
-func (c Widget) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WidgetOptions{}.ApplySchemaCustomizations(cs, append(path, "options")...)
-	LegacyVisualization{}.ApplySchemaCustomizations(cs, append(path, "visualization")...)
+func (c Widget) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
+	attrs["visualization"] = attrs["visualization"].SetOptional()
+	attrs["width"] = attrs["width"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Widget.
@@ -12704,22 +13155,22 @@ func (o *Widget) SetVisualization(ctx context.Context, v LegacyVisualization) {
 
 type WidgetOptions struct {
 	// Timestamp when this object was created
-	CreatedAt types.String `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.String `tfsdk:"created_at"`
 	// Custom description of the widget
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Whether this widget is hidden on the dashboard.
-	IsHidden types.Bool `tfsdk:"isHidden" tf:"optional"`
+	IsHidden types.Bool `tfsdk:"isHidden"`
 	// How parameters used by the visualization in this widget relate to other
 	// widgets on the dashboard. Databricks does not recommend modifying this
 	// definition in JSON.
-	ParameterMappings types.Object `tfsdk:"parameterMappings" tf:"optional"`
+	ParameterMappings types.Object `tfsdk:"parameterMappings"`
 	// Coordinates of this widget on a dashboard. This portion of the API
 	// changes frequently and is unsupported.
-	Position types.Object `tfsdk:"position" tf:"optional,object"`
+	Position types.Object `tfsdk:"position"`
 	// Custom title of the widget
-	Title types.String `tfsdk:"title" tf:"optional"`
+	Title types.String `tfsdk:"title"`
 	// Timestamp of the last time this object was updated.
-	UpdatedAt types.String `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.String `tfsdk:"updated_at"`
 }
 
 func (newState *WidgetOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetOptions) {
@@ -12728,10 +13179,16 @@ func (newState *WidgetOptions) SyncEffectiveFieldsDuringCreateOrUpdate(plan Widg
 func (newState *WidgetOptions) SyncEffectiveFieldsDuringRead(existingState WidgetOptions) {
 }
 
-func (c WidgetOptions) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WidgetPosition{}.ApplySchemaCustomizations(cs, append(path, "position")...)
+func (c WidgetOptions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["isHidden"] = attrs["isHidden"].SetOptional()
+	attrs["parameterMappings"] = attrs["parameterMappings"].SetOptional()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WidgetOptions.
@@ -12811,15 +13268,15 @@ func (o *WidgetOptions) SetPosition(ctx context.Context, v WidgetPosition) {
 // frequently and is unsupported.
 type WidgetPosition struct {
 	// reserved for internal use
-	AutoHeight types.Bool `tfsdk:"autoHeight" tf:"optional"`
+	AutoHeight types.Bool `tfsdk:"autoHeight"`
 	// column in the dashboard grid. Values start with 0
-	Col types.Int64 `tfsdk:"col" tf:"optional"`
+	Col types.Int64 `tfsdk:"col"`
 	// row in the dashboard grid. Values start with 0
-	Row types.Int64 `tfsdk:"row" tf:"optional"`
+	Row types.Int64 `tfsdk:"row"`
 	// width of the widget measured in dashboard grid cells
-	SizeX types.Int64 `tfsdk:"sizeX" tf:"optional"`
+	SizeX types.Int64 `tfsdk:"sizeX"`
 	// height of the widget measured in dashboard grid cells
-	SizeY types.Int64 `tfsdk:"sizeY" tf:"optional"`
+	SizeY types.Int64 `tfsdk:"sizeY"`
 }
 
 func (newState *WidgetPosition) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetPosition) {
@@ -12828,9 +13285,14 @@ func (newState *WidgetPosition) SyncEffectiveFieldsDuringCreateOrUpdate(plan Wid
 func (newState *WidgetPosition) SyncEffectiveFieldsDuringRead(existingState WidgetPosition) {
 }
 
-func (c WidgetPosition) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WidgetPosition) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoHeight"] = attrs["autoHeight"].SetOptional()
+	attrs["col"] = attrs["col"].SetOptional()
+	attrs["row"] = attrs["row"].SetOptional()
+	attrs["sizeX"] = attrs["sizeX"].SetOptional()
+	attrs["sizeY"] = attrs["sizeY"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WidgetPosition.

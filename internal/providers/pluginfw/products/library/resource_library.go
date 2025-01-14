@@ -75,7 +75,7 @@ func readLibrary(ctx context.Context, w *databricks.WorkspaceClient, waitParams 
 type LibraryExtended struct {
 	compute_tf.Library_SdkV2
 	ClusterId types.String `tfsdk:"cluster_id"`
-	ID        types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
+	ID        types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
 }
 
 type LibraryResource struct {
@@ -103,6 +103,8 @@ func (r *LibraryResource) Schema(ctx context.Context, req resource.SchemaRequest
 				c.AddPlanModifier(listplanmodifier.RequiresReplace(), field)
 			}
 		}
+		c.SetRequired("cluster_id")
+		c.SetOptional("id")
 		c.SetComputed("id")
 		return c
 	})
@@ -141,7 +143,12 @@ func (r *LibraryResource) Create(ctx context.Context, req resource.CreateRequest
 		Libraries: []compute.Library{libGoSDK},
 	}
 	req.Plan.GetAttribute(ctx, path.Root("cluster_id"), &installLib.ClusterId)
-	err := w.Libraries.Install(ctx, installLib)
+	_, err := clusters.StartClusterAndGetInfo(ctx, w, installLib.ClusterId)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to start and get cluster", err.Error())
+		return
+	}
+	err = w.Libraries.Install(ctx, installLib)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to install library", err.Error())
 		return

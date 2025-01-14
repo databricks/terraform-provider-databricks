@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -24,9 +25,9 @@ import (
 
 type AclItem_SdkV2 struct {
 	// The permission level applied to the principal.
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 	// The principal in which the permission is applied.
-	Principal types.String `tfsdk:"principal" tf:""`
+	Principal types.String `tfsdk:"principal"`
 }
 
 func (newState *AclItem_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AclItem_SdkV2) {
@@ -35,11 +36,11 @@ func (newState *AclItem_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AclI
 func (newState *AclItem_SdkV2) SyncEffectiveFieldsDuringRead(existingState AclItem_SdkV2) {
 }
 
-func (c AclItem_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "permission")...)
-	cs.SetRequired(append(path, "principal")...)
+func (c AclItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AclItem.
@@ -77,10 +78,10 @@ func (o AclItem_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AzureKeyVaultSecretScopeMetadata_SdkV2 struct {
 	// The DNS of the KeyVault
-	DnsName types.String `tfsdk:"dns_name" tf:""`
+	DnsName types.String `tfsdk:"dns_name"`
 	// The resource id of the azure KeyVault that user wants to associate the
 	// scope with.
-	ResourceId types.String `tfsdk:"resource_id" tf:""`
+	ResourceId types.String `tfsdk:"resource_id"`
 }
 
 func (newState *AzureKeyVaultSecretScopeMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureKeyVaultSecretScopeMetadata_SdkV2) {
@@ -89,11 +90,11 @@ func (newState *AzureKeyVaultSecretScopeMetadata_SdkV2) SyncEffectiveFieldsDurin
 func (newState *AzureKeyVaultSecretScopeMetadata_SdkV2) SyncEffectiveFieldsDuringRead(existingState AzureKeyVaultSecretScopeMetadata_SdkV2) {
 }
 
-func (c AzureKeyVaultSecretScopeMetadata_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "dns_name")...)
-	cs.SetRequired(append(path, "resource_id")...)
+func (c AzureKeyVaultSecretScopeMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dns_name"] = attrs["dns_name"].SetRequired()
+	attrs["resource_id"] = attrs["resource_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AzureKeyVaultSecretScopeMetadata.
@@ -134,7 +135,7 @@ type CreateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
 	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
 	// `awsCodeCommit`.
-	GitProvider types.String `tfsdk:"git_provider" tf:""`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// The username or email provided with your Git provider account, depending
 	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
 	// Azure DevOps Services, either email or username may be used. For GitLab,
@@ -142,13 +143,13 @@ type CreateCredentialsRequest_SdkV2 struct {
 	// BitBucket or BitBucket Server, username must be used. For all other
 	// providers please see your provider's Personal Access Token authentication
 	// documentation to see what is supported.
-	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+	GitUsername types.String `tfsdk:"git_username"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
 	// scoped access tokens. [Learn more].
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
-	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
+	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
 }
 
 func (newState *CreateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialsRequest_SdkV2) {
@@ -157,10 +158,12 @@ func (newState *CreateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *CreateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialsRequest_SdkV2) {
 }
 
-func (c CreateCredentialsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "git_provider")...)
+func (c CreateCredentialsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
+	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialsRequest.
@@ -200,12 +203,12 @@ func (o CreateCredentialsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateCredentialsResponse_SdkV2 struct {
 	// ID of the credential object in the workspace.
-	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	CredentialId types.Int64 `tfsdk:"credential_id"`
 	// The Git provider associated with the credential.
-	GitProvider types.String `tfsdk:"git_provider" tf:""`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// The username or email provided with your Git provider account and
 	// associated with the credential.
-	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+	GitUsername types.String `tfsdk:"git_username"`
 }
 
 func (newState *CreateCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCredentialsResponse_SdkV2) {
@@ -214,11 +217,12 @@ func (newState *CreateCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *CreateCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCredentialsResponse_SdkV2) {
 }
 
-func (c CreateCredentialsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "credential_id")...)
-	cs.SetRequired(append(path, "git_provider")...)
+func (c CreateCredentialsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCredentialsResponse.
@@ -260,17 +264,17 @@ type CreateRepoRequest_SdkV2 struct {
 	// Desired path for the repo in the workspace. Almost any path in the
 	// workspace can be chosen. If repo is created in `/Repos`, path must be in
 	// the format `/Repos/{folder}/{repo-name}`.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 	// Git provider. This field is case-insensitive. The available Git providers
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
 	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
 	// `awsCodeCommit`.
-	Provider types.String `tfsdk:"provider" tf:""`
+	Provider types.String `tfsdk:"provider"`
 	// If specified, the repo will be created with sparse checkout enabled. You
 	// cannot enable/disable sparse checkout after the repo is created.
-	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the Git repository to be linked.
-	Url types.String `tfsdk:"url" tf:""`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *CreateRepoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRepoRequest_SdkV2) {
@@ -279,12 +283,14 @@ func (newState *CreateRepoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *CreateRepoRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRepoRequest_SdkV2) {
 }
 
-func (c CreateRepoRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "provider")...)
-	SparseCheckout_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "sparse_checkout")...)
-	cs.SetRequired(append(path, "url")...)
+func (c CreateRepoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRepoRequest.
@@ -356,20 +362,20 @@ func (o *CreateRepoRequest_SdkV2) SetSparseCheckout(ctx context.Context, v Spars
 
 type CreateRepoResponse_SdkV2 struct {
 	// Branch that the Git folder (repo) is checked out to.
-	Branch types.String `tfsdk:"branch" tf:"optional"`
+	Branch types.String `tfsdk:"branch"`
 	// SHA-1 hash representing the commit ID of the current HEAD of the Git
 	// folder (repo).
-	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
+	HeadCommitId types.String `tfsdk:"head_commit_id"`
 	// ID of the Git folder (repo) object in the workspace.
-	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository.
-	Provider types.String `tfsdk:"provider" tf:"optional"`
+	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *CreateRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateRepoResponse_SdkV2) {
@@ -378,10 +384,17 @@ func (newState *CreateRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *CreateRepoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateRepoResponse_SdkV2) {
 }
 
-func (c CreateRepoResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SparseCheckout_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "sparse_checkout")...)
+func (c CreateRepoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["head_commit_id"] = attrs["head_commit_id"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["provider"] = attrs["provider"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateRepoResponse.
@@ -459,15 +472,15 @@ func (o *CreateRepoResponse_SdkV2) SetSparseCheckout(ctx context.Context, v Spar
 
 type CreateScope_SdkV2 struct {
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	BackendAzureKeyvault types.List `tfsdk:"backend_azure_keyvault" tf:"optional,object"`
+	BackendAzureKeyvault types.List `tfsdk:"backend_azure_keyvault"`
 	// The principal that is initially granted `MANAGE` permission to the
 	// created scope.
-	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal" tf:"optional"`
+	InitialManagePrincipal types.String `tfsdk:"initial_manage_principal"`
 	// Scope name requested by the user. Scope names are unique.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 	// The backend type the scope will be created with. If not specified, will
 	// default to `DATABRICKS`
-	ScopeBackendType types.String `tfsdk:"scope_backend_type" tf:"optional"`
+	ScopeBackendType types.String `tfsdk:"scope_backend_type"`
 }
 
 func (newState *CreateScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScope_SdkV2) {
@@ -476,11 +489,14 @@ func (newState *CreateScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *CreateScope_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateScope_SdkV2) {
 }
 
-func (c CreateScope_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AzureKeyVaultSecretScopeMetadata_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "backend_azure_keyvault")...)
-	cs.SetRequired(append(path, "scope")...)
+func (c CreateScope_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["backend_azure_keyvault"] = attrs["backend_azure_keyvault"].SetOptional()
+	attrs["backend_azure_keyvault"] = attrs["backend_azure_keyvault"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["initial_manage_principal"] = attrs["initial_manage_principal"].SetOptional()
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["scope_backend_type"] = attrs["scope_backend_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScope.
@@ -582,12 +598,12 @@ func (o CreateScopeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CredentialInfo_SdkV2 struct {
 	// ID of the credential object in the workspace.
-	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	CredentialId types.Int64 `tfsdk:"credential_id"`
 	// The Git provider associated with the credential.
-	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// The username or email provided with your Git provider account and
 	// associated with the credential.
-	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+	GitUsername types.String `tfsdk:"git_username"`
 }
 
 func (newState *CredentialInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CredentialInfo_SdkV2) {
@@ -596,10 +612,12 @@ func (newState *CredentialInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *CredentialInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState CredentialInfo_SdkV2) {
 }
 
-func (c CredentialInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "credential_id")...)
+func (c CredentialInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["git_provider"] = attrs["git_provider"].SetOptional()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CredentialInfo.
@@ -639,12 +657,12 @@ func (o CredentialInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Delete_SdkV2 struct {
 	// The absolute path of the notebook or directory.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 	// The flag that specifies whether to delete the object recursively. It is
 	// `false` by default. Please note this deleting directory is not atomic. If
 	// it fails in the middle, some of objects under this directory may be
 	// deleted and cannot be undone.
-	Recursive types.Bool `tfsdk:"recursive" tf:"optional"`
+	Recursive types.Bool `tfsdk:"recursive"`
 }
 
 func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delete_SdkV2) {
@@ -653,10 +671,11 @@ func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Delet
 func (newState *Delete_SdkV2) SyncEffectiveFieldsDuringRead(existingState Delete_SdkV2) {
 }
 
-func (c Delete_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Delete_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
+	attrs["recursive"] = attrs["recursive"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Delete.
@@ -694,9 +713,9 @@ func (o Delete_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteAcl_SdkV2 struct {
 	// The principal to remove an existing ACL from.
-	Principal types.String `tfsdk:"principal" tf:""`
+	Principal types.String `tfsdk:"principal"`
 	// The name of the scope to remove permissions from.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 }
 
 func (newState *DeleteAcl_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAcl_SdkV2) {
@@ -705,11 +724,11 @@ func (newState *DeleteAcl_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan De
 func (newState *DeleteAcl_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAcl_SdkV2) {
 }
 
-func (c DeleteAcl_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "principal")...)
-	cs.SetRequired(append(path, "scope")...)
+func (c DeleteAcl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAcl.
@@ -821,9 +840,9 @@ func (newState *DeleteCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *DeleteCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCredentialsResponse_SdkV2) {
 }
 
-func (c DeleteCredentialsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteCredentialsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCredentialsResponse.
@@ -899,9 +918,9 @@ func (newState *DeleteRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *DeleteRepoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRepoResponse_SdkV2) {
 }
 
-func (c DeleteRepoResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteRepoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRepoResponse.
@@ -940,9 +959,9 @@ func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
 }
 
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -974,7 +993,7 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteScope_SdkV2 struct {
 	// Name of the scope to delete.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 }
 
 func (newState *DeleteScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScope_SdkV2) {
@@ -983,10 +1002,10 @@ func (newState *DeleteScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *DeleteScope_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteScope_SdkV2) {
 }
 
-func (c DeleteScope_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "scope")...)
+func (c DeleteScope_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scope"] = attrs["scope"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScope.
@@ -1052,9 +1071,9 @@ func (o DeleteScopeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DeleteSecret_SdkV2 struct {
 	// Name of the secret to delete.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// The name of the scope that contains the secret to delete.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 }
 
 func (newState *DeleteSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSecret_SdkV2) {
@@ -1063,11 +1082,11 @@ func (newState *DeleteSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteSecret_SdkV2) {
 }
 
-func (c DeleteSecret_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "scope")...)
+func (c DeleteSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSecret.
@@ -1112,9 +1131,9 @@ func (newState *DeleteSecretResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteSecretResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteSecretResponse_SdkV2) {
 }
 
-func (c DeleteSecretResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c DeleteSecretResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSecretResponse.
@@ -1202,9 +1221,9 @@ func (o ExportRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ExportResponse_SdkV2 struct {
 	// The base64-encoded content. If the limit (10MB) is exceeded, exception
 	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 	// The file type of the exported file.
-	FileType types.String `tfsdk:"file_type" tf:"optional"`
+	FileType types.String `tfsdk:"file_type"`
 }
 
 func (newState *ExportResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportResponse_SdkV2) {
@@ -1213,9 +1232,11 @@ func (newState *ExportResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ExportResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExportResponse_SdkV2) {
 }
 
-func (c ExportResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ExportResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["file_type"] = attrs["file_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportResponse.
@@ -1331,12 +1352,12 @@ func (o GetCredentialsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetCredentialsResponse_SdkV2 struct {
 	// ID of the credential object in the workspace.
-	CredentialId types.Int64 `tfsdk:"credential_id" tf:""`
+	CredentialId types.Int64 `tfsdk:"credential_id"`
 	// The Git provider associated with the credential.
-	GitProvider types.String `tfsdk:"git_provider" tf:"optional"`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// The username or email provided with your Git provider account and
 	// associated with the credential.
-	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+	GitUsername types.String `tfsdk:"git_username"`
 }
 
 func (newState *GetCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsResponse_SdkV2) {
@@ -1345,10 +1366,12 @@ func (newState *GetCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *GetCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCredentialsResponse_SdkV2) {
 }
 
-func (c GetCredentialsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "credential_id")...)
+func (c GetCredentialsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["git_provider"] = attrs["git_provider"].SetOptional()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsResponse.
@@ -1425,7 +1448,7 @@ func (o GetRepoPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Typ
 
 type GetRepoPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetRepoPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoPermissionLevelsResponse_SdkV2) {
@@ -1434,10 +1457,10 @@ func (newState *GetRepoPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuring
 func (newState *GetRepoPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRepoPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetRepoPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetRepoPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRepoPermissionLevelsResponse.
@@ -1577,19 +1600,19 @@ func (o GetRepoRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetRepoResponse_SdkV2 struct {
 	// Branch that the local version of the repo is checked out to.
-	Branch types.String `tfsdk:"branch" tf:"optional"`
+	Branch types.String `tfsdk:"branch"`
 	// SHA-1 hash representing the commit ID of the current HEAD of the repo.
-	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
+	HeadCommitId types.String `tfsdk:"head_commit_id"`
 	// ID of the Git folder (repo) object in the workspace.
-	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	Id types.Int64 `tfsdk:"id"`
 	// Path of the Git folder (repo) in the workspace.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 	// Git provider of the linked Git repository.
-	Provider types.String `tfsdk:"provider" tf:"optional"`
+	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout settings for the Git folder (repo).
-	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the linked Git repository.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *GetRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRepoResponse_SdkV2) {
@@ -1598,10 +1621,17 @@ func (newState *GetRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *GetRepoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRepoResponse_SdkV2) {
 }
 
-func (c GetRepoResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SparseCheckout_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "sparse_checkout")...)
+func (c GetRepoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["head_commit_id"] = attrs["head_commit_id"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["provider"] = attrs["provider"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRepoResponse.
@@ -1720,9 +1750,9 @@ func (o GetSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetSecretResponse_SdkV2 struct {
 	// A unique name to identify the secret.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The value of the secret in its byte representation.
-	Value types.String `tfsdk:"value" tf:"optional"`
+	Value types.String `tfsdk:"value"`
 }
 
 func (newState *GetSecretResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSecretResponse_SdkV2) {
@@ -1731,9 +1761,11 @@ func (newState *GetSecretResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *GetSecretResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetSecretResponse_SdkV2) {
 }
 
-func (c GetSecretResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c GetSecretResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSecretResponse.
@@ -1849,7 +1881,7 @@ func (o GetWorkspaceObjectPermissionLevelsRequest_SdkV2) Type(ctx context.Contex
 
 type GetWorkspaceObjectPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWorkspaceObjectPermissionLevelsResponse_SdkV2) {
@@ -1858,10 +1890,10 @@ func (newState *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncEffectiveF
 func (newState *GetWorkspaceObjectPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWorkspaceObjectPermissionLevelsResponse_SdkV2) {
 }
 
-func (c GetWorkspaceObjectPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WorkspaceObjectPermissionsDescription_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "permission_levels")...)
+func (c GetWorkspaceObjectPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWorkspaceObjectPermissionLevelsResponse.
@@ -1972,7 +2004,7 @@ type Import_SdkV2 struct {
 	// If the limit (10MB) is exceeded, exception with error code
 	// **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown. This parameter might be absent,
 	// and instead a posted file is used.
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 	// This specifies the format of the file to be imported.
 	//
 	// The value is case sensitive.
@@ -1986,17 +2018,17 @@ type Import_SdkV2 struct {
 	// notebook is imported in Databricks archive format. Required for
 	// directories. - `R_MARKDOWN`: The notebook is imported from R Markdown
 	// format.
-	Format types.String `tfsdk:"format" tf:"optional"`
+	Format types.String `tfsdk:"format"`
 	// The language of the object. This value is set only if the object type is
 	// `NOTEBOOK`.
-	Language types.String `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language"`
 	// The flag that specifies whether to overwrite existing object. It is
 	// `false` by default. For `DBC` format, `overwrite` is not supported since
 	// it may contain a directory.
-	Overwrite types.Bool `tfsdk:"overwrite" tf:"optional"`
+	Overwrite types.Bool `tfsdk:"overwrite"`
 	// The absolute path of the object or directory. Importing a directory is
 	// only supported for the `DBC` and `SOURCE` formats.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *Import_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Import_SdkV2) {
@@ -2005,10 +2037,14 @@ func (newState *Import_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Impor
 func (newState *Import_SdkV2) SyncEffectiveFieldsDuringRead(existingState Import_SdkV2) {
 }
 
-func (c Import_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Import_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["format"] = attrs["format"].SetOptional()
+	attrs["language"] = attrs["language"].SetOptional()
+	attrs["overwrite"] = attrs["overwrite"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Import.
@@ -2059,9 +2095,9 @@ func (newState *ImportResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *ImportResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ImportResponse_SdkV2) {
 }
 
-func (c ImportResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ImportResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ImportResponse.
@@ -2130,7 +2166,7 @@ func (o ListAclsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListAclsResponse_SdkV2 struct {
 	// The associated ACLs rule applied to principals in the given scope.
-	Items types.List `tfsdk:"items" tf:"optional"`
+	Items types.List `tfsdk:"items"`
 }
 
 func (newState *ListAclsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAclsResponse_SdkV2) {
@@ -2139,10 +2175,10 @@ func (newState *ListAclsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *ListAclsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAclsResponse_SdkV2) {
 }
 
-func (c ListAclsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AclItem_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "items")...)
+func (c ListAclsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["items"] = attrs["items"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAclsResponse.
@@ -2208,7 +2244,7 @@ func (o *ListAclsResponse_SdkV2) SetItems(ctx context.Context, v []AclItem_SdkV2
 
 type ListCredentialsResponse_SdkV2 struct {
 	// List of credentials.
-	Credentials types.List `tfsdk:"credentials" tf:"optional"`
+	Credentials types.List `tfsdk:"credentials"`
 }
 
 func (newState *ListCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCredentialsResponse_SdkV2) {
@@ -2217,10 +2253,10 @@ func (newState *ListCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOr
 func (newState *ListCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCredentialsResponse_SdkV2) {
 }
 
-func (c ListCredentialsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	CredentialInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "credentials")...)
+func (c ListCredentialsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credentials"] = attrs["credentials"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCredentialsResponse.
@@ -2332,9 +2368,9 @@ func (o ListReposRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListReposResponse_SdkV2 struct {
 	// Token that can be specified as a query parameter to the `GET /repos`
 	// endpoint to retrieve the next page of results.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// List of Git folders (repos).
-	Repos types.List `tfsdk:"repos" tf:"optional"`
+	Repos types.List `tfsdk:"repos"`
 }
 
 func (newState *ListReposResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListReposResponse_SdkV2) {
@@ -2343,10 +2379,11 @@ func (newState *ListReposResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *ListReposResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListReposResponse_SdkV2) {
 }
 
-func (c ListReposResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "repos")...)
+func (c ListReposResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["repos"] = attrs["repos"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListReposResponse.
@@ -2414,7 +2451,7 @@ func (o *ListReposResponse_SdkV2) SetRepos(ctx context.Context, v []RepoInfo_Sdk
 
 type ListResponse_SdkV2 struct {
 	// List of objects.
-	Objects types.List `tfsdk:"objects" tf:"optional"`
+	Objects types.List `tfsdk:"objects"`
 }
 
 func (newState *ListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse_SdkV2) {
@@ -2423,10 +2460,10 @@ func (newState *ListResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *ListResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListResponse_SdkV2) {
 }
 
-func (c ListResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	ObjectInfo_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "objects")...)
+func (c ListResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["objects"] = attrs["objects"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListResponse.
@@ -2492,7 +2529,7 @@ func (o *ListResponse_SdkV2) SetObjects(ctx context.Context, v []ObjectInfo_SdkV
 
 type ListScopesResponse_SdkV2 struct {
 	// The available secret scopes.
-	Scopes types.List `tfsdk:"scopes" tf:"optional"`
+	Scopes types.List `tfsdk:"scopes"`
 }
 
 func (newState *ListScopesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListScopesResponse_SdkV2) {
@@ -2501,10 +2538,10 @@ func (newState *ListScopesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *ListScopesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListScopesResponse_SdkV2) {
 }
 
-func (c ListScopesResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SecretScope_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "scopes")...)
+func (c ListScopesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scopes"] = attrs["scopes"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListScopesResponse.
@@ -2607,7 +2644,7 @@ func (o ListSecretsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListSecretsResponse_SdkV2 struct {
 	// Metadata information of all secrets contained within the given scope.
-	Secrets types.List `tfsdk:"secrets" tf:"optional"`
+	Secrets types.List `tfsdk:"secrets"`
 }
 
 func (newState *ListSecretsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSecretsResponse_SdkV2) {
@@ -2616,10 +2653,10 @@ func (newState *ListSecretsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpda
 func (newState *ListSecretsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSecretsResponse_SdkV2) {
 }
 
-func (c ListSecretsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SecretMetadata_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "secrets")...)
+func (c ListSecretsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["secrets"] = attrs["secrets"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSecretsResponse.
@@ -2728,7 +2765,7 @@ type Mkdirs_SdkV2 struct {
 	// The absolute path of the directory. If the parent directories do not
 	// exist, it will also create them. If the directory already exists, this
 	// command will do nothing and succeed.
-	Path types.String `tfsdk:"path" tf:""`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *Mkdirs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mkdirs_SdkV2) {
@@ -2737,10 +2774,10 @@ func (newState *Mkdirs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Mkdir
 func (newState *Mkdirs_SdkV2) SyncEffectiveFieldsDuringRead(existingState Mkdirs_SdkV2) {
 }
 
-func (c Mkdirs_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "path")...)
+func (c Mkdirs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Mkdirs.
@@ -2783,9 +2820,9 @@ func (newState *MkdirsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *MkdirsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState MkdirsResponse_SdkV2) {
 }
 
-func (c MkdirsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c MkdirsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MkdirsResponse.
@@ -2817,27 +2854,27 @@ func (o MkdirsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ObjectInfo_SdkV2 struct {
 	// Only applicable to files. The creation UTC timestamp.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The language of the object. This value is set only if the object type is
 	// `NOTEBOOK`.
-	Language types.String `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language"`
 	// Only applicable to files, the last modified UTC timestamp.
-	ModifiedAt types.Int64 `tfsdk:"modified_at" tf:"optional"`
+	ModifiedAt types.Int64 `tfsdk:"modified_at"`
 	// Unique identifier for the object.
-	ObjectId types.Int64 `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.Int64 `tfsdk:"object_id"`
 	// The type of the object in workspace.
 	//
 	// - `NOTEBOOK`: document that contains runnable code, visualizations, and
 	// explanatory text. - `DIRECTORY`: directory - `LIBRARY`: library - `FILE`:
 	// file - `REPO`: repository - `DASHBOARD`: Lakeview dashboard
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 	// The absolute path of the object.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 	// A unique identifier for the object that is consistent across all
 	// Databricks APIs.
-	ResourceId types.String `tfsdk:"resource_id" tf:"optional"`
+	ResourceId types.String `tfsdk:"resource_id"`
 	// Only applicable to files. The file size in bytes can be returned.
-	Size types.Int64 `tfsdk:"size" tf:"optional"`
+	Size types.Int64 `tfsdk:"size"`
 }
 
 func (newState *ObjectInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ObjectInfo_SdkV2) {
@@ -2846,9 +2883,17 @@ func (newState *ObjectInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan O
 func (newState *ObjectInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ObjectInfo_SdkV2) {
 }
 
-func (c ObjectInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c ObjectInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["language"] = attrs["language"].SetOptional()
+	attrs["modified_at"] = attrs["modified_at"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["resource_id"] = attrs["resource_id"].SetOptional()
+	attrs["size"] = attrs["size"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ObjectInfo.
@@ -2898,11 +2943,11 @@ func (o ObjectInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PutAcl_SdkV2 struct {
 	// The permission level applied to the principal.
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 	// The principal in which the permission is applied.
-	Principal types.String `tfsdk:"principal" tf:""`
+	Principal types.String `tfsdk:"principal"`
 	// The name of the scope to apply permissions to.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 }
 
 func (newState *PutAcl_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAcl_SdkV2) {
@@ -2911,12 +2956,12 @@ func (newState *PutAcl_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAc
 func (newState *PutAcl_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutAcl_SdkV2) {
 }
 
-func (c PutAcl_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "permission")...)
-	cs.SetRequired(append(path, "principal")...)
-	cs.SetRequired(append(path, "scope")...)
+func (c PutAcl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["principal"] = attrs["principal"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAcl.
@@ -2986,13 +3031,13 @@ func (o PutAclResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PutSecret_SdkV2 struct {
 	// If specified, value will be stored as bytes.
-	BytesValue types.String `tfsdk:"bytes_value" tf:"optional"`
+	BytesValue types.String `tfsdk:"bytes_value"`
 	// A unique name to identify the secret.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// The name of the scope to which the secret will be associated with.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 	// If specified, note that the value will be stored in UTF-8 (MB4) form.
-	StringValue types.String `tfsdk:"string_value" tf:"optional"`
+	StringValue types.String `tfsdk:"string_value"`
 }
 
 func (newState *PutSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutSecret_SdkV2) {
@@ -3001,11 +3046,13 @@ func (newState *PutSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Pu
 func (newState *PutSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState PutSecret_SdkV2) {
 }
 
-func (c PutSecret_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "key")...)
-	cs.SetRequired(append(path, "scope")...)
+func (c PutSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bytes_value"] = attrs["bytes_value"].SetOptional()
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+	attrs["string_value"] = attrs["string_value"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutSecret.
@@ -3077,13 +3124,13 @@ func (o PutSecretResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RepoAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *RepoAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlRequest_SdkV2) {
@@ -3092,9 +3139,13 @@ func (newState *RepoAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *RepoAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlRequest_SdkV2) {
 }
 
-func (c RepoAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RepoAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoAccessControlRequest.
@@ -3136,15 +3187,15 @@ func (o RepoAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type RepoAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *RepoAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoAccessControlResponse_SdkV2) {
@@ -3153,10 +3204,14 @@ func (newState *RepoAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *RepoAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoAccessControlResponse_SdkV2) {
 }
 
-func (c RepoAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c RepoAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoAccessControlResponse.
@@ -3231,19 +3286,19 @@ func (o *RepoAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context,
 // Git folder (repo) information.
 type RepoInfo_SdkV2 struct {
 	// Name of the current git branch of the git folder (repo).
-	Branch types.String `tfsdk:"branch" tf:"optional"`
+	Branch types.String `tfsdk:"branch"`
 	// Current git commit id of the git folder (repo).
-	HeadCommitId types.String `tfsdk:"head_commit_id" tf:"optional"`
+	HeadCommitId types.String `tfsdk:"head_commit_id"`
 	// Id of the git folder (repo) in the Workspace.
-	Id types.Int64 `tfsdk:"id" tf:"optional"`
+	Id types.Int64 `tfsdk:"id"`
 	// Root path of the git folder (repo) in the Workspace.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 	// Git provider of the remote git repository, e.g. `gitHub`.
-	Provider types.String `tfsdk:"provider" tf:"optional"`
+	Provider types.String `tfsdk:"provider"`
 	// Sparse checkout config for the git folder (repo).
-	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// URL of the remote git repository.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo_SdkV2) {
@@ -3252,10 +3307,17 @@ func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Rep
 func (newState *RepoInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoInfo_SdkV2) {
 }
 
-func (c RepoInfo_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	SparseCheckout_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "sparse_checkout")...)
+func (c RepoInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["head_commit_id"] = attrs["head_commit_id"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["provider"] = attrs["provider"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["url"] = attrs["url"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoInfo.
@@ -3332,11 +3394,11 @@ func (o *RepoInfo_SdkV2) SetSparseCheckout(ctx context.Context, v SparseCheckout
 }
 
 type RepoPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *RepoPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermission_SdkV2) {
@@ -3345,9 +3407,12 @@ func (newState *RepoPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *RepoPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoPermission_SdkV2) {
 }
 
-func (c RepoPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RepoPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoPermission.
@@ -3416,11 +3481,11 @@ func (o *RepoPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []t
 }
 
 type RepoPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *RepoPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissions_SdkV2) {
@@ -3429,10 +3494,12 @@ func (newState *RepoPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *RepoPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoPermissions_SdkV2) {
 }
 
-func (c RepoPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c RepoPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoPermissions.
@@ -3501,9 +3568,9 @@ func (o *RepoPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []Re
 }
 
 type RepoPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *RepoPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoPermissionsDescription_SdkV2) {
@@ -3512,9 +3579,11 @@ func (newState *RepoPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *RepoPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoPermissionsDescription_SdkV2) {
 }
 
-func (c RepoPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c RepoPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoPermissionsDescription.
@@ -3551,7 +3620,7 @@ func (o RepoPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RepoPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The repo for which to get or manage permissions.
 	RepoId types.String `tfsdk:"-"`
 }
@@ -3562,11 +3631,11 @@ func (newState *RepoPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *RepoPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RepoPermissionsRequest_SdkV2) {
 }
 
-func (c RepoPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	RepoAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "repo_id")...)
+func (c RepoPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoPermissionsRequest.
@@ -3634,9 +3703,9 @@ func (o *RepoPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context,
 
 type SecretMetadata_SdkV2 struct {
 	// A unique name to identify the secret.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// The last updated timestamp (in milliseconds) for the secret.
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 }
 
 func (newState *SecretMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretMetadata_SdkV2) {
@@ -3645,9 +3714,11 @@ func (newState *SecretMetadata_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *SecretMetadata_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecretMetadata_SdkV2) {
 }
 
-func (c SecretMetadata_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SecretMetadata_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SecretMetadata.
@@ -3685,11 +3756,11 @@ func (o SecretMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 
 type SecretScope_SdkV2 struct {
 	// The type of secret scope backend.
-	BackendType types.String `tfsdk:"backend_type" tf:"optional"`
+	BackendType types.String `tfsdk:"backend_type"`
 	// The metadata for the secret scope if the type is `AZURE_KEYVAULT`
-	KeyvaultMetadata types.List `tfsdk:"keyvault_metadata" tf:"optional,object"`
+	KeyvaultMetadata types.List `tfsdk:"keyvault_metadata"`
 	// A unique name to identify the secret scope.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *SecretScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SecretScope_SdkV2) {
@@ -3698,10 +3769,13 @@ func (newState *SecretScope_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan 
 func (newState *SecretScope_SdkV2) SyncEffectiveFieldsDuringRead(existingState SecretScope_SdkV2) {
 }
 
-func (c SecretScope_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	AzureKeyVaultSecretScopeMetadata_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "keyvault_metadata")...)
+func (c SecretScope_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["backend_type"] = attrs["backend_type"].SetOptional()
+	attrs["keyvault_metadata"] = attrs["keyvault_metadata"].SetOptional()
+	attrs["keyvault_metadata"] = attrs["keyvault_metadata"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SecretScope.
@@ -3775,7 +3849,7 @@ type SparseCheckout_SdkV2 struct {
 	// details.
 	//
 	// [cone mode handling]: https://git-scm.com/docs/git-sparse-checkout#_internalscone_mode_handling
-	Patterns types.List `tfsdk:"patterns" tf:"optional"`
+	Patterns types.List `tfsdk:"patterns"`
 }
 
 func (newState *SparseCheckout_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckout_SdkV2) {
@@ -3784,9 +3858,10 @@ func (newState *SparseCheckout_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *SparseCheckout_SdkV2) SyncEffectiveFieldsDuringRead(existingState SparseCheckout_SdkV2) {
 }
 
-func (c SparseCheckout_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SparseCheckout_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["patterns"] = attrs["patterns"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparseCheckout.
@@ -3856,7 +3931,7 @@ type SparseCheckoutUpdate_SdkV2 struct {
 	// details.
 	//
 	// [cone mode handling]: https://git-scm.com/docs/git-sparse-checkout#_internalscone_mode_handling
-	Patterns types.List `tfsdk:"patterns" tf:"optional"`
+	Patterns types.List `tfsdk:"patterns"`
 }
 
 func (newState *SparseCheckoutUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparseCheckoutUpdate_SdkV2) {
@@ -3865,9 +3940,10 @@ func (newState *SparseCheckoutUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *SparseCheckoutUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState SparseCheckoutUpdate_SdkV2) {
 }
 
-func (c SparseCheckoutUpdate_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c SparseCheckoutUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["patterns"] = attrs["patterns"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparseCheckoutUpdate.
@@ -3938,7 +4014,7 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// are `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`,
 	// `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition` and
 	// `awsCodeCommit`.
-	GitProvider types.String `tfsdk:"git_provider" tf:""`
+	GitProvider types.String `tfsdk:"git_provider"`
 	// The username or email provided with your Git provider account, depending
 	// on which provider you are using. For GitHub, GitHub Enterprise Server, or
 	// Azure DevOps Services, either email or username may be used. For GitLab,
@@ -3946,13 +4022,13 @@ type UpdateCredentialsRequest_SdkV2 struct {
 	// BitBucket or BitBucket Server, username must be used. For all other
 	// providers please see your provider's Personal Access Token authentication
 	// documentation to see what is supported.
-	GitUsername types.String `tfsdk:"git_username" tf:"optional"`
+	GitUsername types.String `tfsdk:"git_username"`
 	// The personal access token used to authenticate to the corresponding Git
 	// provider. For certain providers, support may exist for other types of
 	// scoped access tokens. [Learn more].
 	//
 	// [Learn more]: https://docs.databricks.com/repos/get-access-tokens-from-git-provider.html
-	PersonalAccessToken types.String `tfsdk:"personal_access_token" tf:"optional"`
+	PersonalAccessToken types.String `tfsdk:"personal_access_token"`
 }
 
 func (newState *UpdateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCredentialsRequest_SdkV2) {
@@ -3961,11 +4037,13 @@ func (newState *UpdateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringCreateO
 func (newState *UpdateCredentialsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialsRequest_SdkV2) {
 }
 
-func (c UpdateCredentialsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "credential_id")...)
-	cs.SetRequired(append(path, "git_provider")...)
+func (c UpdateCredentialsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_id"] = attrs["credential_id"].SetRequired()
+	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_username"] = attrs["git_username"].SetOptional()
+	attrs["personal_access_token"] = attrs["personal_access_token"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCredentialsRequest.
@@ -4014,9 +4092,9 @@ func (newState *UpdateCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *UpdateCredentialsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCredentialsResponse_SdkV2) {
 }
 
-func (c UpdateCredentialsResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UpdateCredentialsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCredentialsResponse.
@@ -4048,17 +4126,17 @@ func (o UpdateCredentialsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateRepoRequest_SdkV2 struct {
 	// Branch that the local version of the repo is checked out to.
-	Branch types.String `tfsdk:"branch" tf:"optional"`
+	Branch types.String `tfsdk:"branch"`
 	// ID of the Git folder (repo) object in the workspace.
 	RepoId types.Int64 `tfsdk:"-"`
 	// If specified, update the sparse checkout settings. The update will fail
 	// if sparse checkout is not enabled for the repo.
-	SparseCheckout types.List `tfsdk:"sparse_checkout" tf:"optional,object"`
+	SparseCheckout types.List `tfsdk:"sparse_checkout"`
 	// Tag that the local version of the repo is checked out to. Updating the
 	// repo to a tag puts the repo in a detached HEAD state. Before committing
 	// new changes, you must update the repo to a branch instead of the detached
 	// HEAD.
-	Tag types.String `tfsdk:"tag" tf:"optional"`
+	Tag types.String `tfsdk:"tag"`
 }
 
 func (newState *UpdateRepoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateRepoRequest_SdkV2) {
@@ -4067,11 +4145,14 @@ func (newState *UpdateRepoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate
 func (newState *UpdateRepoRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRepoRequest_SdkV2) {
 }
 
-func (c UpdateRepoRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	cs.SetRequired(append(path, "repo_id")...)
-	SparseCheckoutUpdate_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "sparse_checkout")...)
+func (c UpdateRepoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["branch"] = attrs["branch"].SetOptional()
+	attrs["repo_id"] = attrs["repo_id"].SetRequired()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].SetOptional()
+	attrs["sparse_checkout"] = attrs["sparse_checkout"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["tag"] = attrs["tag"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRepoRequest.
@@ -4150,9 +4231,9 @@ func (newState *UpdateRepoResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *UpdateRepoResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateRepoResponse_SdkV2) {
 }
 
-func (c UpdateRepoResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c UpdateRepoResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateRepoResponse.
@@ -4184,13 +4265,13 @@ func (o UpdateRepoResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type WorkspaceObjectAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *WorkspaceObjectAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlRequest_SdkV2) {
@@ -4199,9 +4280,13 @@ func (newState *WorkspaceObjectAccessControlRequest_SdkV2) SyncEffectiveFieldsDu
 func (newState *WorkspaceObjectAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlRequest_SdkV2) {
 }
 
-func (c WorkspaceObjectAccessControlRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WorkspaceObjectAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectAccessControlRequest.
@@ -4243,15 +4328,15 @@ func (o WorkspaceObjectAccessControlRequest_SdkV2) Type(ctx context.Context) att
 
 type WorkspaceObjectAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *WorkspaceObjectAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectAccessControlResponse_SdkV2) {
@@ -4260,10 +4345,14 @@ func (newState *WorkspaceObjectAccessControlResponse_SdkV2) SyncEffectiveFieldsD
 func (newState *WorkspaceObjectAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectAccessControlResponse_SdkV2) {
 }
 
-func (c WorkspaceObjectAccessControlResponse_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WorkspaceObjectPermission_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "all_permissions")...)
+func (c WorkspaceObjectAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectAccessControlResponse.
@@ -4336,11 +4425,11 @@ func (o *WorkspaceObjectAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 }
 
 type WorkspaceObjectPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *WorkspaceObjectPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermission_SdkV2) {
@@ -4349,9 +4438,12 @@ func (newState *WorkspaceObjectPermission_SdkV2) SyncEffectiveFieldsDuringCreate
 func (newState *WorkspaceObjectPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermission_SdkV2) {
 }
 
-func (c WorkspaceObjectPermission_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WorkspaceObjectPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectPermission.
@@ -4420,11 +4512,11 @@ func (o *WorkspaceObjectPermission_SdkV2) SetInheritedFromObject(ctx context.Con
 }
 
 type WorkspaceObjectPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *WorkspaceObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissions_SdkV2) {
@@ -4433,10 +4525,12 @@ func (newState *WorkspaceObjectPermissions_SdkV2) SyncEffectiveFieldsDuringCreat
 func (newState *WorkspaceObjectPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissions_SdkV2) {
 }
 
-func (c WorkspaceObjectPermissions_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WorkspaceObjectAccessControlResponse_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
+func (c WorkspaceObjectPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectPermissions.
@@ -4505,9 +4599,9 @@ func (o *WorkspaceObjectPermissions_SdkV2) SetAccessControlList(ctx context.Cont
 }
 
 type WorkspaceObjectPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *WorkspaceObjectPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceObjectPermissionsDescription_SdkV2) {
@@ -4516,9 +4610,11 @@ func (newState *WorkspaceObjectPermissionsDescription_SdkV2) SyncEffectiveFields
 func (newState *WorkspaceObjectPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissionsDescription_SdkV2) {
 }
 
-func (c WorkspaceObjectPermissionsDescription_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
+func (c WorkspaceObjectPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectPermissionsDescription.
@@ -4555,7 +4651,7 @@ func (o WorkspaceObjectPermissionsDescription_SdkV2) Type(ctx context.Context) a
 }
 
 type WorkspaceObjectPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The workspace object for which to get or manage permissions.
 	WorkspaceObjectId types.String `tfsdk:"-"`
 	// The workspace object type for which to get or manage permissions.
@@ -4568,12 +4664,12 @@ func (newState *WorkspaceObjectPermissionsRequest_SdkV2) SyncEffectiveFieldsDuri
 func (newState *WorkspaceObjectPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState WorkspaceObjectPermissionsRequest_SdkV2) {
 }
 
-func (c WorkspaceObjectPermissionsRequest_SdkV2) ApplySchemaCustomizations(cs tfschema.CustomizableSchema, path ...string) tfschema.CustomizableSchema {
-	WorkspaceObjectAccessControlRequest_SdkV2{}.ApplySchemaCustomizations(cs, append(path, "access_control_list")...)
-	cs.SetRequired(append(path, "workspace_object_id")...)
-	cs.SetRequired(append(path, "workspace_object_type")...)
+func (c WorkspaceObjectPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["workspace_object_id"] = attrs["workspace_object_id"].SetRequired()
+	attrs["workspace_object_type"] = attrs["workspace_object_type"].SetRequired()
 
-	return cs
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceObjectPermissionsRequest.

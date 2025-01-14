@@ -38,6 +38,11 @@ type BaseJob_SdkV2 struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// Indicates if the job has more sub-resources (`tasks`, `job_clusters`)
+	// that are not shown. They can be accessed via :method:jobs/get endpoint.
+	// It is only relevant for API 2.2 :method:jobs/list requests with
+	// `expand_tasks=true`.
+	HasMore types.Bool `tfsdk:"has_more"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id"`
 	// Settings for this job and all of its runs. These settings can be updated
@@ -55,6 +60,7 @@ func (c BaseJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -85,6 +91,7 @@ func (o BaseJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
 			"settings":                   o.Settings,
 		})
@@ -97,6 +104,7 @@ func (o BaseJob_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
 			"settings": basetypes.ListType{
 				ElemType: JobSettings_SdkV2{}.Type(ctx),
@@ -180,9 +188,16 @@ type BaseRun_SdkV2 struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.List `tfsdk:"git_source"`
+	// Indicates if the run has more sub-resources (`tasks`, `job_clusters`)
+	// that are not shown. They can be accessed via :method:jobs/getrun
+	// endpoint. It is only relevant for API 2.2 :method:jobs/listruns requests
+	// with `expand_tasks=true`.
+	HasMore types.Bool `tfsdk:"has_more"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings.
+	// You must declare dependent libraries in task settings. If more than 100
+	// job clusters are available, you can paginate through them using
+	// :method:jobs/getrun.
 	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -244,7 +259,10 @@ type BaseRun_SdkV2 struct {
 	// The current status of the run
 	Status types.List `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
-	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
+	// which you can use to call `JobsGetOutput` to retrieve the run resutls. If
+	// more than 100 tasks are available, you can paginate through them using
+	// :method:jobs/getrun. Use the `next_page_token` field at the object root
+	// to determine if more results are available.
 	Tasks types.List `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
@@ -282,6 +300,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_clusters"] = attrs["job_clusters"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
@@ -353,6 +372,7 @@ func (o BaseRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"end_time":                o.EndTime,
 			"execution_duration":      o.ExecutionDuration,
 			"git_source":              o.GitSource,
+			"has_more":                o.HasMore,
 			"job_clusters":            o.JobClusters,
 			"job_id":                  o.JobId,
 			"job_parameters":          o.JobParameters,
@@ -397,6 +417,7 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
+			"has_more": types.BoolType,
 			"job_clusters": basetypes.ListType{
 				ElemType: JobCluster_SdkV2{}.Type(ctx),
 			},
@@ -1431,7 +1452,9 @@ type CreateJob_SdkV2 struct {
 	Health types.List `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings.
+	// You must declare dependent libraries in task settings. If more than 100
+	// job clusters are available, you can paginate through them using
+	// :method:jobs/get.
 	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
@@ -1471,7 +1494,10 @@ type CreateJob_SdkV2 struct {
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
 	Tags types.Map `tfsdk:"tags"`
-	// A list of task specifications to be executed by this job.
+	// A list of task specifications to be executed by this job. If more than
+	// 100 tasks are available, you can paginate through them using
+	// :method:jobs/get. Use the `next_page_token` field at the object root to
+	// determine if more results are available.
 	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
@@ -3515,6 +3541,9 @@ type GetJobRequest_SdkV2 struct {
 	// The canonical identifier of the job to retrieve information about. This
 	// field is required.
 	JobId types.Int64 `tfsdk:"-"`
+	// Use `next_page_token` returned from the previous GetJob to request the
+	// next page of the job's sub-resources.
+	PageToken types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobRequest.
@@ -3535,7 +3564,8 @@ func (o GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"job_id": o.JobId,
+			"job_id":     o.JobId,
+			"page_token": o.PageToken,
 		})
 }
 
@@ -3543,7 +3573,8 @@ func (o GetJobRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetJobRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"job_id": types.Int64Type,
+			"job_id":     types.Int64Type,
+			"page_token": types.StringType,
 		},
 	}
 }
@@ -3718,8 +3749,8 @@ type GetRunRequest_SdkV2 struct {
 	IncludeHistory types.Bool `tfsdk:"-"`
 	// Whether to include resolved parameter values in the response.
 	IncludeResolvedValues types.Bool `tfsdk:"-"`
-	// To list the next page of job tasks, set this field to the value of the
-	// `next_page_token` returned in the GetJob response.
+	// Use `next_page_token` returned from the previous GetRun to request the
+	// next page of the run's sub-resources.
 	PageToken types.String `tfsdk:"-"`
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
@@ -3985,8 +4016,15 @@ type Job_SdkV2 struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// Indicates if the job has more sub-resources (`tasks`, `job_clusters`)
+	// that are not shown. They can be accessed via :method:jobs/get endpoint.
+	// It is only relevant for API 2.2 :method:jobs/list requests with
+	// `expand_tasks=true`.
+	HasMore types.Bool `tfsdk:"has_more"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id"`
+	// A token that can be used to list the next page of sub-resources.
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// The email of an active workspace user or the application ID of a service
 	// principal that the job runs as. This value can be changed by setting the
 	// `run_as` field when creating or updating a job.
@@ -4010,7 +4048,9 @@ func (c Job_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["created_time"] = attrs["created_time"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
 	attrs["settings"] = attrs["settings"].SetOptional()
 	attrs["settings"] = attrs["settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4041,7 +4081,9 @@ func (o Job_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"created_time":               o.CreatedTime,
 			"creator_user_name":          o.CreatorUserName,
 			"effective_budget_policy_id": o.EffectiveBudgetPolicyId,
+			"has_more":                   o.HasMore,
 			"job_id":                     o.JobId,
+			"next_page_token":            o.NextPageToken,
 			"run_as_user_name":           o.RunAsUserName,
 			"settings":                   o.Settings,
 		})
@@ -4054,7 +4096,9 @@ func (o Job_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_time":               types.Int64Type,
 			"creator_user_name":          types.StringType,
 			"effective_budget_policy_id": types.StringType,
+			"has_more":                   types.BoolType,
 			"job_id":                     types.Int64Type,
+			"next_page_token":            types.StringType,
 			"run_as_user_name":           types.StringType,
 			"settings": basetypes.ListType{
 				ElemType: JobSettings_SdkV2{}.Type(ctx),
@@ -5393,7 +5437,9 @@ type JobSettings_SdkV2 struct {
 	Health types.List `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings.
+	// You must declare dependent libraries in task settings. If more than 100
+	// job clusters are available, you can paginate through them using
+	// :method:jobs/get.
 	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
@@ -5433,7 +5479,10 @@ type JobSettings_SdkV2 struct {
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
 	Tags types.Map `tfsdk:"tags"`
-	// A list of task specifications to be executed by this job.
+	// A list of task specifications to be executed by this job. If more than
+	// 100 tasks are available, you can paginate through them using
+	// :method:jobs/get. Use the `next_page_token` field at the object root to
+	// determine if more results are available.
 	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
@@ -6391,7 +6440,9 @@ func (o ListJobComplianceRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 // List jobs
 type ListJobsRequest_SdkV2 struct {
-	// Whether to include task and cluster details in the response.
+	// Whether to include task and cluster details in the response. Note that in
+	// API 2.2, only the first 100 elements will be shown. Use :method:jobs/get
+	// to paginate through all tasks and clusters.
 	ExpandTasks types.Bool `tfsdk:"-"`
 	// The number of jobs to return. This value must be greater than 0 and less
 	// or equal to 100. The default value is 20.
@@ -6554,7 +6605,9 @@ type ListRunsRequest_SdkV2 struct {
 	// results; otherwise, lists both active and completed runs. This field
 	// cannot be `true` when active_only is `true`.
 	CompletedOnly types.Bool `tfsdk:"-"`
-	// Whether to include task and cluster details in the response.
+	// Whether to include task and cluster details in the response. Note that in
+	// API 2.2, only the first 100 elements will be shown. Use
+	// :method:jobs/getrun to paginate through all tasks and clusters.
 	ExpandTasks types.Bool `tfsdk:"-"`
 	// The job for which to list runs. If omitted, the Jobs service lists runs
 	// from all jobs.
@@ -9139,12 +9192,19 @@ type Run_SdkV2 struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.List `tfsdk:"git_source"`
+	// Indicates if the run has more sub-resources (`tasks`, `job_clusters`)
+	// that are not shown. They can be accessed via :method:jobs/getrun
+	// endpoint. It is only relevant for API 2.2 :method:jobs/listruns requests
+	// with `expand_tasks=true`.
+	HasMore types.Bool `tfsdk:"has_more"`
 	// Only populated by for-each iterations. The parent for-each task is
 	// located in tasks array.
 	Iterations types.List `tfsdk:"iterations"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings.
+	// You must declare dependent libraries in task settings. If more than 100
+	// job clusters are available, you can paginate through them using
+	// :method:jobs/getrun.
 	JobClusters types.List `tfsdk:"job_clusters"`
 	// The canonical identifier of the job that contains this run.
 	JobId types.Int64 `tfsdk:"job_id"`
@@ -9208,7 +9268,10 @@ type Run_SdkV2 struct {
 	// The current status of the run
 	Status types.List `tfsdk:"status"`
 	// The list of tasks performed by the run. Each task has its own `run_id`
-	// which you can use to call `JobsGetOutput` to retrieve the run resutls.
+	// which you can use to call `JobsGetOutput` to retrieve the run resutls. If
+	// more than 100 tasks are available, you can paginate through them using
+	// :method:jobs/getrun. Use the `next_page_token` field at the object root
+	// to determine if more results are available.
 	Tasks types.List `tfsdk:"tasks"`
 	// The type of trigger that fired this run.
 	//
@@ -9246,6 +9309,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["has_more"] = attrs["has_more"].SetOptional()
 	attrs["iterations"] = attrs["iterations"].SetOptional()
 	attrs["job_clusters"] = attrs["job_clusters"].SetOptional()
 	attrs["job_id"] = attrs["job_id"].SetOptional()
@@ -9320,6 +9384,7 @@ func (o Run_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"end_time":                o.EndTime,
 			"execution_duration":      o.ExecutionDuration,
 			"git_source":              o.GitSource,
+			"has_more":                o.HasMore,
 			"iterations":              o.Iterations,
 			"job_clusters":            o.JobClusters,
 			"job_id":                  o.JobId,
@@ -9366,6 +9431,7 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
+			"has_more": types.BoolType,
 			"iterations": basetypes.ListType{
 				ElemType: RunTask_SdkV2{}.Type(ctx),
 			},

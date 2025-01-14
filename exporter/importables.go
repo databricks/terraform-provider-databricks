@@ -40,7 +40,6 @@ import (
 	tfsql "github.com/databricks/terraform-provider-databricks/sql"
 	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
-	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -238,7 +237,9 @@ var resourcesMap map[string]importable = map[string]importable{
 					Resource: "databricks_instance_pool",
 					ID:       pool.InstancePoolId,
 				})
-				log.Printf("[INFO] Imported %d instance pools", i)
+				if i%50 == 0 {
+					log.Printf("[INFO] Imported %d instance pools", i)
+				}
 			}
 			return nil
 		},
@@ -720,7 +721,6 @@ var resourcesMap map[string]importable = map[string]importable{
 					return err
 				}
 				i++
-				log.Printf("[TRACE] Scanning %d:  %v", i, policy)
 				family, isBuiltin := builtInClusterPolicies[policy.PolicyFamilyId]
 				if policy.PolicyFamilyId != "" && isBuiltin && family.Name == policy.Name &&
 					policy.PolicyFamilyDefinitionOverrides == "" {
@@ -920,8 +920,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					continue
 				}
 				if len(g.Members) > 10 {
-					log.Printf("[INFO] Importing %d members of %s",
-						len(g.Members), g.DisplayName)
+					log.Printf("[INFO] Importing %d members of %s", len(g.Members), g.DisplayName)
 				}
 				for _, parent := range g.Groups {
 					ic.Emit(&resource{
@@ -1578,8 +1577,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name:           workspaceObjectResouceName,
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			contentB64, err := notebooksAPI.Export(r.ID, ic.notebooksFormat)
+			resp, err := ic.workspaceClient.Workspace.Export(ic.Context, sdk_workspace.ExportRequest{
+				Path:   r.ID,
+				Format: sdk_workspace.ExportFormat(ic.notebooksFormat),
+			})
 			if err != nil {
 				if apierr.IsMissing(err) {
 					ic.addIgnoredResource(fmt.Sprintf("databricks_notebook. path=%s", r.ID))
@@ -1597,7 +1598,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			r.Data.Set("format", ic.notebooksFormat)
 			objectId := r.Data.Get("object_id").(int)
 			name := fileNameNormalizationRegex.ReplaceAllString(r.ID[1:], "_") + "_" + strconv.Itoa(objectId) + fileExtension
-			content, _ := base64.StdEncoding.DecodeString(contentB64)
+			content, _ := base64.StdEncoding.DecodeString(resp.Content)
 			fileName, err := ic.saveFileIn("notebooks", name, []byte(content))
 			if err != nil {
 				return err
@@ -1626,8 +1627,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Name:           workspaceObjectResouceName,
 		Import: func(ic *importContext, r *resource) error {
 			ic.emitUserOrServicePrincipalForPath(r.ID, "/Users")
-			notebooksAPI := workspace.NewNotebooksAPI(ic.Context, ic.Client)
-			contentB64, err := notebooksAPI.Export(r.ID, "AUTO")
+			resp, err := ic.workspaceClient.Workspace.Export(ic.Context, sdk_workspace.ExportRequest{
+				Path:   r.ID,
+				Format: sdk_workspace.ExportFormatAuto,
+			})
 			if err != nil {
 				if apierr.IsMissing(err) {
 					ic.addIgnoredResource(fmt.Sprintf("databricks_workspace_file. path=%s", r.ID))
@@ -1643,7 +1646,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				parts[plen-1] = parts[plen-1] + "_" + strconv.Itoa(objectId)
 			}
 			name := fileNameNormalizationRegex.ReplaceAllString(strings.Join(parts, "/")[1:], "_")
-			content, _ := base64.StdEncoding.DecodeString(contentB64)
+			content, _ := base64.StdEncoding.DecodeString(resp.Content)
 			fileName, err := ic.saveFileIn("workspace_files", name, []byte(content))
 			if err != nil {
 				return err
@@ -2343,7 +2346,7 @@ var resourcesMap map[string]importable = map[string]importable{
 					ID:       mse.Config.AutoCaptureConfig.CatalogName + "." + mse.Config.AutoCaptureConfig.SchemaName,
 				})
 			}
-			// TODO: add auto-capture for AI Gateway
+			// Auto-capture for AI Gateway
 			if mse.AiGateway != nil && mse.AiGateway.InferenceTableConfig != nil &&
 				mse.AiGateway.InferenceTableConfig.CatalogName != "" &&
 				mse.AiGateway.InferenceTableConfig.SchemaName != "" {

@@ -17,7 +17,6 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
-	"github.com/databricks/terraform-provider-databricks/internal/service/oauth2_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -1567,6 +1566,59 @@ func (o *CreateServingEndpoint_SdkV2) SetTags(ctx context.Context, v []EndpointT
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
+}
+
+type DataPlaneInfo_SdkV2 struct {
+	// Authorization details as a string.
+	AuthorizationDetails types.String `tfsdk:"authorization_details"`
+	// The URL of the endpoint for this operation in the dataplane.
+	EndpointUrl types.String `tfsdk:"endpoint_url"`
+}
+
+func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneInfo_SdkV2) {
+}
+
+func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo_SdkV2) {
+}
+
+func (c DataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["authorization_details"] = attrs["authorization_details"].SetOptional()
+	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataPlaneInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DataPlaneInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DataPlaneInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DataPlaneInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"authorization_details": o.AuthorizationDetails,
+			"endpoint_url":          o.EndpointUrl,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DataPlaneInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"authorization_details": types.StringType,
+			"endpoint_url":          types.StringType,
+		},
+	}
 }
 
 type DatabricksModelServingConfig_SdkV2 struct {
@@ -3766,7 +3818,7 @@ func (c ModelDataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 // SDK values.
 func (a ModelDataPlaneInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"query_info": reflect.TypeOf(oauth2_tf.DataPlaneInfo_SdkV2{}),
+		"query_info": reflect.TypeOf(DataPlaneInfo_SdkV2{}),
 	}
 }
 
@@ -3786,21 +3838,21 @@ func (o ModelDataPlaneInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"query_info": basetypes.ListType{
-				ElemType: oauth2_tf.DataPlaneInfo_SdkV2{}.Type(ctx),
+				ElemType: DataPlaneInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetQueryInfo returns the value of the QueryInfo field in ModelDataPlaneInfo_SdkV2 as
-// a oauth2_tf.DataPlaneInfo_SdkV2 value.
+// a DataPlaneInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ModelDataPlaneInfo_SdkV2) GetQueryInfo(ctx context.Context) (oauth2_tf.DataPlaneInfo_SdkV2, bool) {
-	var e oauth2_tf.DataPlaneInfo_SdkV2
+func (o *ModelDataPlaneInfo_SdkV2) GetQueryInfo(ctx context.Context) (DataPlaneInfo_SdkV2, bool) {
+	var e DataPlaneInfo_SdkV2
 	if o.QueryInfo.IsNull() || o.QueryInfo.IsUnknown() {
 		return e, false
 	}
-	var v []oauth2_tf.DataPlaneInfo_SdkV2
+	var v []DataPlaneInfo_SdkV2
 	d := o.QueryInfo.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -3812,7 +3864,7 @@ func (o *ModelDataPlaneInfo_SdkV2) GetQueryInfo(ctx context.Context) (oauth2_tf.
 }
 
 // SetQueryInfo sets the value of the QueryInfo field in ModelDataPlaneInfo_SdkV2.
-func (o *ModelDataPlaneInfo_SdkV2) SetQueryInfo(ctx context.Context, v oauth2_tf.DataPlaneInfo_SdkV2) {
+func (o *ModelDataPlaneInfo_SdkV2) SetQueryInfo(ctx context.Context, v DataPlaneInfo_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_info"]
 	o.QueryInfo = types.ListValueMust(t, vs)

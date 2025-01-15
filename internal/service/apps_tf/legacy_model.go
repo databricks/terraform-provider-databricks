@@ -15,7 +15,9 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -24,47 +26,72 @@ import (
 type App_SdkV2 struct {
 	// The active deployment of the app. A deployment is considered active when
 	// it has been deployed to the app compute.
-	ActiveDeployment types.List `tfsdk:"active_deployment" tf:"computed,object"`
+	ActiveDeployment types.List `tfsdk:"active_deployment"`
 
-	AppStatus types.List `tfsdk:"app_status" tf:"computed,object"`
+	AppStatus types.List `tfsdk:"app_status"`
 
-	ComputeStatus types.List `tfsdk:"compute_status" tf:"computed,object"`
+	ComputeStatus types.List `tfsdk:"compute_status"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// The email of the user that created the app.
-	Creator types.String `tfsdk:"creator" tf:"computed"`
+	Creator types.String `tfsdk:"creator"`
 	// The default workspace file system path of the source code from which app
 	// deployment are created. This field tracks the workspace source code path
 	// of the last active deployment.
-	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path" tf:"computed"`
+	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
-	PendingDeployment types.List `tfsdk:"pending_deployment" tf:"computed,object"`
+	PendingDeployment types.List `tfsdk:"pending_deployment"`
 	// Resources for the app.
-	Resources types.List `tfsdk:"resources" tf:"optional"`
+	Resources types.List `tfsdk:"resources"`
 
-	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id" tf:"computed"`
+	ServicePrincipalClientId types.String `tfsdk:"service_principal_client_id"`
 
-	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id" tf:"computed"`
+	ServicePrincipalId types.Int64 `tfsdk:"service_principal_id"`
 
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"computed"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// The update time of the app. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// The email of the user that last updated the app.
-	Updater types.String `tfsdk:"updater" tf:"computed"`
+	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
-	Url types.String `tfsdk:"url" tf:"computed"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *App_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan App_SdkV2) {
 }
 
 func (newState *App_SdkV2) SyncEffectiveFieldsDuringRead(existingState App_SdkV2) {
+}
+
+func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active_deployment"] = attrs["active_deployment"].SetComputed()
+	attrs["active_deployment"] = attrs["active_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["app_status"] = attrs["app_status"].SetComputed()
+	attrs["app_status"] = attrs["app_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["compute_status"] = attrs["compute_status"].SetComputed()
+	attrs["compute_status"] = attrs["compute_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["pending_deployment"] = attrs["pending_deployment"].SetComputed()
+	attrs["pending_deployment"] = attrs["pending_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["resources"] = attrs["resources"].SetOptional()
+	attrs["service_principal_client_id"] = attrs["service_principal_client_id"].SetComputed()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetComputed()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["updater"] = attrs["updater"].SetComputed()
+	attrs["url"] = attrs["url"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in App.
@@ -276,19 +303,28 @@ func (o *App_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
 
 type AppAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *AppAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlRequest_SdkV2) {
 }
 
 func (newState *AppAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppAccessControlRequest_SdkV2) {
+}
+
+func (c AppAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppAccessControlRequest.
@@ -330,21 +366,31 @@ func (o AppAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *AppAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppAccessControlResponse_SdkV2) {
 }
 
 func (newState *AppAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppAccessControlResponse_SdkV2) {
+}
+
+func (c AppAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppAccessControlResponse.
@@ -418,15 +464,15 @@ func (o *AppAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, 
 
 type AppDeployment_SdkV2 struct {
 	// The creation time of the deployment. Formatted timestamp in ISO 6801.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// The email of the user creates the deployment.
-	Creator types.String `tfsdk:"creator" tf:"computed"`
+	Creator types.String `tfsdk:"creator"`
 	// The deployment artifacts for an app.
-	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts" tf:"computed,object"`
+	DeploymentArtifacts types.List `tfsdk:"deployment_artifacts"`
 	// The unique id of the deployment.
-	DeploymentId types.String `tfsdk:"deployment_id" tf:"optional"`
+	DeploymentId types.String `tfsdk:"deployment_id"`
 	// The mode of which the deployment will manage the source code.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
+	Mode types.String `tfsdk:"mode"`
 	// The workspace file system path of the source code used to create the app
 	// deployment. This is different from
 	// `deployment_artifacts.source_code_path`, which is the path used by the
@@ -434,17 +480,32 @@ type AppDeployment_SdkV2 struct {
 	// the app in the workspace during deployment creation, whereas the latter
 	// provides a system generated stable snapshotted source code path used by
 	// the deployment.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
+	SourceCodePath types.String `tfsdk:"source_code_path"`
 	// Status and status message of the deployment
-	Status types.List `tfsdk:"status" tf:"computed,object"`
+	Status types.List `tfsdk:"status"`
 	// The update time of the deployment. Formatted timestamp in ISO 6801.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *AppDeployment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeployment_SdkV2) {
 }
 
 func (newState *AppDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeployment_SdkV2) {
+}
+
+func (c AppDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].SetComputed()
+	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
+	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppDeployment.
@@ -554,13 +615,19 @@ func (o *AppDeployment_SdkV2) SetStatus(ctx context.Context, v AppDeploymentStat
 type AppDeploymentArtifacts_SdkV2 struct {
 	// The snapshotted workspace file system path of the source code loaded by
 	// the deployed app.
-	SourceCodePath types.String `tfsdk:"source_code_path" tf:"optional"`
+	SourceCodePath types.String `tfsdk:"source_code_path"`
 }
 
 func (newState *AppDeploymentArtifacts_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentArtifacts_SdkV2) {
 }
 
 func (newState *AppDeploymentArtifacts_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeploymentArtifacts_SdkV2) {
+}
+
+func (c AppDeploymentArtifacts_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppDeploymentArtifacts.
@@ -596,15 +663,22 @@ func (o AppDeploymentArtifacts_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppDeploymentStatus_SdkV2 struct {
 	// Message corresponding with the deployment state.
-	Message types.String `tfsdk:"message" tf:"computed"`
+	Message types.String `tfsdk:"message"`
 	// State of the deployment.
-	State types.String `tfsdk:"state" tf:"computed"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *AppDeploymentStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppDeploymentStatus_SdkV2) {
 }
 
 func (newState *AppDeploymentStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppDeploymentStatus_SdkV2) {
+}
+
+func (c AppDeploymentStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppDeploymentStatus.
@@ -641,17 +715,25 @@ func (o AppDeploymentStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppPermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *AppPermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermission_SdkV2) {
 }
 
 func (newState *AppPermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermission_SdkV2) {
+}
+
+func (c AppPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermission.
@@ -720,17 +802,25 @@ func (o *AppPermission_SdkV2) SetInheritedFromObject(ctx context.Context, v []ty
 }
 
 type AppPermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *AppPermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissions_SdkV2) {
 }
 
 func (newState *AppPermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissions_SdkV2) {
+}
+
+func (c AppPermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissions.
@@ -799,15 +889,22 @@ func (o *AppPermissions_SdkV2) SetAccessControlList(ctx context.Context, v []App
 }
 
 type AppPermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *AppPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppPermissionsDescription_SdkV2) {
 }
 
 func (newState *AppPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissionsDescription_SdkV2) {
+}
+
+func (c AppPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsDescription.
@@ -844,7 +941,7 @@ func (o AppPermissionsDescription_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AppPermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
 }
@@ -853,6 +950,13 @@ func (newState *AppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *AppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppPermissionsRequest_SdkV2) {
+}
+
+func (c AppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppPermissionsRequest.
@@ -920,23 +1024,38 @@ func (o *AppPermissionsRequest_SdkV2) SetAccessControlList(ctx context.Context, 
 
 type AppResource_SdkV2 struct {
 	// Description of the App Resource.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	Job types.List `tfsdk:"job" tf:"optional,object"`
+	Job types.List `tfsdk:"job"`
 	// Name of the App Resource.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	Secret types.List `tfsdk:"secret" tf:"optional,object"`
+	Secret types.List `tfsdk:"secret"`
 
-	ServingEndpoint types.List `tfsdk:"serving_endpoint" tf:"optional,object"`
+	ServingEndpoint types.List `tfsdk:"serving_endpoint"`
 
-	SqlWarehouse types.List `tfsdk:"sql_warehouse" tf:"optional,object"`
+	SqlWarehouse types.List `tfsdk:"sql_warehouse"`
 }
 
 func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResource_SdkV2) {
 }
 
 func (newState *AppResource_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResource_SdkV2) {
+}
+
+func (c AppResource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["job"] = attrs["job"].SetOptional()
+	attrs["job"] = attrs["job"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["secret"] = attrs["secret"].SetOptional()
+	attrs["secret"] = attrs["secret"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["serving_endpoint"] = attrs["serving_endpoint"].SetOptional()
+	attrs["serving_endpoint"] = attrs["serving_endpoint"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sql_warehouse"] = attrs["sql_warehouse"].SetOptional()
+	attrs["sql_warehouse"] = attrs["sql_warehouse"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResource.
@@ -1099,16 +1218,23 @@ func (o *AppResource_SdkV2) SetSqlWarehouse(ctx context.Context, v AppResourceSq
 
 type AppResourceJob_SdkV2 struct {
 	// Id of the job to grant permission on.
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Permissions to grant on the Job. Supported permissions are: "CAN_MANAGE",
 	// "IS_OWNER", "CAN_MANAGE_RUN", "CAN_VIEW".
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 }
 
 func (newState *AppResourceJob_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceJob_SdkV2) {
 }
 
 func (newState *AppResourceJob_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceJob_SdkV2) {
+}
+
+func (c AppResourceJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceJob.
@@ -1146,18 +1272,26 @@ func (o AppResourceJob_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppResourceSecret_SdkV2 struct {
 	// Key of the secret to grant permission on.
-	Key types.String `tfsdk:"key" tf:""`
+	Key types.String `tfsdk:"key"`
 	// Permission to grant on the secret scope. For secrets, only one permission
 	// is allowed. Permission must be one of: "READ", "WRITE", "MANAGE".
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 	// Scope of the secret to grant permission on.
-	Scope types.String `tfsdk:"scope" tf:""`
+	Scope types.String `tfsdk:"scope"`
 }
 
 func (newState *AppResourceSecret_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSecret_SdkV2) {
 }
 
 func (newState *AppResourceSecret_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceSecret_SdkV2) {
+}
+
+func (c AppResourceSecret_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["scope"] = attrs["scope"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceSecret.
@@ -1197,16 +1331,23 @@ func (o AppResourceSecret_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppResourceServingEndpoint_SdkV2 struct {
 	// Name of the serving endpoint to grant permission on.
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Permission to grant on the serving endpoint. Supported permissions are:
 	// "CAN_MANAGE", "CAN_QUERY", "CAN_VIEW".
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 }
 
 func (newState *AppResourceServingEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceServingEndpoint_SdkV2) {
 }
 
 func (newState *AppResourceServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceServingEndpoint_SdkV2) {
+}
+
+func (c AppResourceServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceServingEndpoint.
@@ -1244,16 +1385,23 @@ func (o AppResourceServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 
 type AppResourceSqlWarehouse_SdkV2 struct {
 	// Id of the SQL warehouse to grant permission on.
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Permission to grant on the SQL warehouse. Supported permissions are:
 	// "CAN_MANAGE", "CAN_USE", "IS_OWNER".
-	Permission types.String `tfsdk:"permission" tf:""`
+	Permission types.String `tfsdk:"permission"`
 }
 
 func (newState *AppResourceSqlWarehouse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AppResourceSqlWarehouse_SdkV2) {
 }
 
 func (newState *AppResourceSqlWarehouse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AppResourceSqlWarehouse_SdkV2) {
+}
+
+func (c AppResourceSqlWarehouse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["permission"] = attrs["permission"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AppResourceSqlWarehouse.
@@ -1291,15 +1439,22 @@ func (o AppResourceSqlWarehouse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ApplicationStatus_SdkV2 struct {
 	// Application status message
-	Message types.String `tfsdk:"message" tf:"computed"`
+	Message types.String `tfsdk:"message"`
 	// State of the application.
-	State types.String `tfsdk:"state" tf:"computed"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *ApplicationStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApplicationStatus_SdkV2) {
 }
 
 func (newState *ApplicationStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApplicationStatus_SdkV2) {
+}
+
+func (c ApplicationStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApplicationStatus.
@@ -1337,15 +1492,22 @@ func (o ApplicationStatus_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ComputeStatus_SdkV2 struct {
 	// Compute status message
-	Message types.String `tfsdk:"message" tf:"computed"`
+	Message types.String `tfsdk:"message"`
 	// State of the app compute.
-	State types.String `tfsdk:"state" tf:"computed"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *ComputeStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeStatus_SdkV2) {
 }
 
 func (newState *ComputeStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComputeStatus_SdkV2) {
+}
+
+func (c ComputeStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+	attrs["state"] = attrs["state"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComputeStatus.
@@ -1383,15 +1545,9 @@ func (o ComputeStatus_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Create an app deployment
 type CreateAppDeploymentRequest_SdkV2 struct {
-	AppDeployment types.List `tfsdk:"app_deployment" tf:"optional,object"`
+	AppDeployment types.List `tfsdk:"app_deployment"`
 	// The name of the app.
 	AppName types.String `tfsdk:"-"`
-}
-
-func (newState *CreateAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest_SdkV2) {
-}
-
-func (newState *CreateAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppDeploymentRequest.
@@ -1459,13 +1615,7 @@ func (o *CreateAppDeploymentRequest_SdkV2) SetAppDeployment(ctx context.Context,
 
 // Create an app
 type CreateAppRequest_SdkV2 struct {
-	App types.List `tfsdk:"app" tf:"optional,object"`
-}
-
-func (newState *CreateAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest_SdkV2) {
-}
-
-func (newState *CreateAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAppRequest_SdkV2) {
+	App types.List `tfsdk:"app"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppRequest.
@@ -1535,12 +1685,6 @@ type DeleteAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAppRequest_SdkV2) {
-}
-
-func (newState *DeleteAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAppRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1578,12 +1722,6 @@ type GetAppDeploymentRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 	// The unique id of the deployment.
 	DeploymentId types.String `tfsdk:"-"`
-}
-
-func (newState *GetAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppDeploymentRequest_SdkV2) {
-}
-
-func (newState *GetAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppDeploymentRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppDeploymentRequest.
@@ -1625,12 +1763,6 @@ type GetAppPermissionLevelsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
-func (newState *GetAppPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsRequest_SdkV2) {
-}
-
-func (newState *GetAppPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1664,13 +1796,19 @@ func (o GetAppPermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr.Type
 
 type GetAppPermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetAppPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsResponse_SdkV2) {
 }
 
 func (newState *GetAppPermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsResponse_SdkV2) {
+}
+
+func (c GetAppPermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionLevelsResponse.
@@ -1740,12 +1878,6 @@ type GetAppPermissionsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
-func (newState *GetAppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionsRequest_SdkV2) {
-}
-
-func (newState *GetAppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1781,12 +1913,6 @@ func (o GetAppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppRequest_SdkV2) {
-}
-
-func (newState *GetAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppRequest.
@@ -1831,12 +1957,6 @@ type ListAppDeploymentsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListAppDeploymentsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsRequest_SdkV2) {
-}
-
-func (newState *ListAppDeploymentsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1874,15 +1994,22 @@ func (o ListAppDeploymentsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListAppDeploymentsResponse_SdkV2 struct {
 	// Deployment history of the app.
-	AppDeployments types.List `tfsdk:"app_deployments" tf:"optional"`
+	AppDeployments types.List `tfsdk:"app_deployments"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListAppDeploymentsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsResponse_SdkV2) {
 }
 
 func (newState *ListAppDeploymentsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsResponse_SdkV2) {
+}
+
+func (c ListAppDeploymentsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_deployments"] = attrs["app_deployments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentsResponse.
@@ -1957,12 +2084,6 @@ type ListAppsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListAppsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsRequest_SdkV2) {
-}
-
-func (newState *ListAppsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1997,15 +2118,22 @@ func (o ListAppsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListAppsResponse_SdkV2 struct {
-	Apps types.List `tfsdk:"apps" tf:"optional"`
+	Apps types.List `tfsdk:"apps"`
 	// Pagination token to request the next page of apps.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListAppsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsResponse_SdkV2) {
 }
 
 func (newState *ListAppsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppsResponse_SdkV2) {
+}
+
+func (c ListAppsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apps"] = attrs["apps"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppsResponse.
@@ -2082,6 +2210,12 @@ func (newState *StartAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *StartAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartAppRequest_SdkV2) {
 }
 
+func (c StartAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2124,6 +2258,12 @@ func (newState *StopAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *StopAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopAppRequest_SdkV2) {
 }
 
+func (c StopAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2157,16 +2297,10 @@ func (o StopAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Update an app
 type UpdateAppRequest_SdkV2 struct {
-	App types.List `tfsdk:"app" tf:"optional,object"`
+	App types.List `tfsdk:"app"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest_SdkV2) {
-}
-
-func (newState *UpdateAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAppRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAppRequest.

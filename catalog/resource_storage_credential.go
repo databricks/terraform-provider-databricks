@@ -185,6 +185,9 @@ func ResourceStorageCredential() common.Resource {
 				if d.HasChange("read_only") {
 					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
 				}
+				if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+					update.DatabricksGcpServiceAccount = nil
+				}
 				update.Owner = ""
 				_, err := acc.StorageCredentials.Update(ctx, catalog.AccountsUpdateStorageCredential{
 					CredentialInfo:        &update,
@@ -231,6 +234,9 @@ func ResourceStorageCredential() common.Resource {
 
 				if d.HasChange("read_only") {
 					update.ForceSendFields = append(update.ForceSendFields, "ReadOnly")
+				}
+				if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+					update.DatabricksGcpServiceAccount = nil
 				}
 				update.Owner = ""
 				_, err = w.StorageCredentials.Update(ctx, update)

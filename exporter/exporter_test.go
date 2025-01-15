@@ -746,6 +746,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
 			ic.exportSecrets = true
+			ic.noFormat = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -826,6 +827,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
 
@@ -1024,6 +1026,7 @@ func TestImportingClusters(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			ic.enableListing("compute")
 			ic.enableServices("access,users,policies,compute,secrets,groups,storage")
 
@@ -1252,6 +1255,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.enableListing("jobs")
 			ic.mounts = true
+			ic.noFormat = true
 			ic.meAdmin = true
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1525,6 +1529,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.enableListing("jobs")
 			ic.mounts = true
+			ic.noFormat = true
 			ic.meAdmin = true
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1621,6 +1626,7 @@ func TestImportingSecrets(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			ic.enableListing("secrets")
 			services, _ := ic.allServicesAndListing()
 			ic.enableServices(services)
@@ -1686,6 +1692,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("workspace")
 			services, _ := ic.allServicesAndListing()
@@ -1725,6 +1732,7 @@ func TestImportingUser(t *testing.T) {
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.setClientsForTests()
 			err := resourcesMap["databricks_user"].Search(ic, &resource{
 				Resource: "databricks_user",
@@ -1792,6 +1800,7 @@ func TestImportingRepos(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("repos")
 
@@ -1862,6 +1871,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			services := "workspace,access"
 			ic.enableListing(services)
@@ -2003,6 +2013,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("sql-dashboards,queries,sql-endpoints,alerts")
 			ic.enableServices("sql-dashboards,queries,alerts,sql-endpoints,access")
@@ -2225,6 +2236,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("dlt")
 			ic.enableServices("dlt,access,notebooks,users,repos,secrets,wsfiles")
@@ -2328,6 +2340,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.match = "test"
 			ic.enableListing("dlt")
@@ -2371,6 +2384,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("sql-endpoints")
 
@@ -2466,6 +2480,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("notebooks,wsfiles")
 			ic.excludeRegexStr = "databricks_automl"
@@ -2567,6 +2582,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("notebooks,wsfiles")
 			ic.excludeRegexStr = "databricks_automl"
@@ -2660,6 +2676,7 @@ func TestImportingModelServing(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("model-serving")
 			ic.enableServices("model-serving")
@@ -2727,6 +2744,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("mlflow-webhooks")
 
@@ -2741,6 +2759,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.enableServices("model-serving")
 			ic.incremental = true
 
@@ -2752,6 +2771,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.enableServices("model-serving")
 			ic.incremental = true
 			ic.updatedSinceStr = "aaa"
@@ -2873,6 +2893,7 @@ resource "databricks_pipeline" "def" {
 `), 0700)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			services := "dlt,mlflow-webhooks"
 			ic.enableListing(services)
@@ -2956,6 +2977,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("jobs")
 			ic.match = "runjobtask"
@@ -3031,6 +3053,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("dashboards")
 			ic.enableServices("dashboards")
@@ -3163,6 +3186,7 @@ func TestNotificationDestinationExport(t *testing.T) {
 		defer os.RemoveAll(tmpDir)
 
 		ic := newImportContext(client)
+		ic.noFormat = true
 		ic.Directory = tmpDir
 		ic.enableListing("settings")
 		ic.enableServices("settings")

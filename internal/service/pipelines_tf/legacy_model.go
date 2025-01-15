@@ -15,8 +15,10 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -25,70 +27,106 @@ import (
 type CreatePipeline_SdkV2 struct {
 	// If false, deployment will fail if name conflicts with that of another
 	// pipeline.
-	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names"`
 	// Budget policy of this pipeline.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// DLT Release Channel that specifies which version to use.
-	Channel types.String `tfsdk:"channel" tf:"optional"`
+	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters types.List `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration types.Map `tfsdk:"configuration" tf:"optional"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
-	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
+	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
-	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
-	Development types.Bool `tfsdk:"development" tf:"optional"`
+	Development types.Bool `tfsdk:"development"`
 
-	DryRun types.Bool `tfsdk:"dry_run" tf:"optional"`
+	DryRun types.Bool `tfsdk:"dry_run"`
 	// Pipeline product edition.
-	Edition types.String `tfsdk:"edition" tf:"optional"`
+	Edition types.String `tfsdk:"edition"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.List `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition"`
 	// Unique identifier for this pipeline.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications types.List `tfsdk:"notifications" tf:"optional"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
-	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
-	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
-	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
+	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
-	Storage types.String `tfsdk:"storage" tf:"optional"`
+	Storage types.String `tfsdk:"storage"`
 	// Target schema (database) to add tables in this pipeline to. If not
 	// specified, no data is published to the Hive metastore or Unity Catalog.
 	// To publish to Unity Catalog, also specify `catalog`.
-	Target types.String `tfsdk:"target" tf:"optional"`
+	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger"`
 }
 
 func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipeline_SdkV2) {
 }
 
 func (newState *CreatePipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePipeline_SdkV2) {
+}
+
+func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["dry_run"] = attrs["dry_run"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipeline.
@@ -463,16 +501,24 @@ func (o *CreatePipeline_SdkV2) SetTrigger(ctx context.Context, v PipelineTrigger
 
 type CreatePipelineResponse_SdkV2 struct {
 	// Only returned when dry_run is true.
-	EffectiveSettings types.List `tfsdk:"effective_settings" tf:"optional,object"`
+	EffectiveSettings types.List `tfsdk:"effective_settings"`
 	// The unique identifier for the newly created pipeline. Only returned when
 	// dry_run is false.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 }
 
 func (newState *CreatePipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePipelineResponse_SdkV2) {
 }
 
 func (newState *CreatePipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePipelineResponse_SdkV2) {
+}
+
+func (c CreatePipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_settings"] = attrs["effective_settings"].SetOptional()
+	attrs["effective_settings"] = attrs["effective_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePipelineResponse.
@@ -539,15 +585,22 @@ func (o *CreatePipelineResponse_SdkV2) SetEffectiveSettings(ctx context.Context,
 }
 
 type CronTrigger_SdkV2 struct {
-	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule" tf:"optional"`
+	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule"`
 
-	TimezoneId types.String `tfsdk:"timezone_id" tf:"optional"`
+	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
 func (newState *CronTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronTrigger_SdkV2) {
 }
 
 func (newState *CronTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState CronTrigger_SdkV2) {
+}
+
+func (c CronTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quartz_cron_schedule"] = attrs["quartz_cron_schedule"].SetOptional()
+	attrs["timezone_id"] = attrs["timezone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronTrigger.
@@ -585,15 +638,22 @@ func (o CronTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DataPlaneId_SdkV2 struct {
 	// The instance name of the data plane emitting an event.
-	Instance types.String `tfsdk:"instance" tf:"optional"`
+	Instance types.String `tfsdk:"instance"`
 	// A sequence number, unique and increasing within the data plane instance.
-	SeqNo types.Int64 `tfsdk:"seq_no" tf:"optional"`
+	SeqNo types.Int64 `tfsdk:"seq_no"`
 }
 
 func (newState *DataPlaneId_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneId_SdkV2) {
 }
 
 func (newState *DataPlaneId_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneId_SdkV2) {
+}
+
+func (c DataPlaneId_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance"] = attrs["instance"].SetOptional()
+	attrs["seq_no"] = attrs["seq_no"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataPlaneId.
@@ -632,12 +692,6 @@ func (o DataPlaneId_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete a pipeline
 type DeletePipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *DeletePipelineRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineRequest_SdkV2) {
-}
-
-func (newState *DeletePipelineRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineRequest.
@@ -680,6 +734,11 @@ func (newState *DeletePipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeletePipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePipelineResponse_SdkV2) {
 }
 
+func (c DeletePipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -710,74 +769,111 @@ func (o DeletePipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type EditPipeline_SdkV2 struct {
 	// If false, deployment will fail if name has changed and conflicts the name
 	// of another pipeline.
-	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names" tf:"optional"`
+	AllowDuplicateNames types.Bool `tfsdk:"allow_duplicate_names"`
 	// Budget policy of this pipeline.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// DLT Release Channel that specifies which version to use.
-	Channel types.String `tfsdk:"channel" tf:"optional"`
+	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters types.List `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration types.Map `tfsdk:"configuration" tf:"optional"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
-	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
+	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
-	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
-	Development types.Bool `tfsdk:"development" tf:"optional"`
+	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
-	Edition types.String `tfsdk:"edition" tf:"optional"`
+	Edition types.String `tfsdk:"edition"`
 	// If present, the last-modified time of the pipeline settings before the
 	// edit. If the settings were modified after that time, then the request
 	// will fail with a conflict.
-	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified" tf:"optional"`
+	ExpectedLastModified types.Int64 `tfsdk:"expected_last_modified"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.List `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition"`
 	// Unique identifier for this pipeline.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications types.List `tfsdk:"notifications" tf:"optional"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
-	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	Photon types.Bool `tfsdk:"photon"`
 	// Unique identifier for this pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Restart window of this pipeline.
-	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
-	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
+	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
-	Storage types.String `tfsdk:"storage" tf:"optional"`
+	Storage types.String `tfsdk:"storage"`
 	// Target schema (database) to add tables in this pipeline to. If not
 	// specified, no data is published to the Hive metastore or Unity Catalog.
 	// To publish to Unity Catalog, also specify `catalog`.
-	Target types.String `tfsdk:"target" tf:"optional"`
+	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger"`
 }
 
 func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPipeline_SdkV2) {
 }
 
 func (newState *EditPipeline_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPipeline_SdkV2) {
+}
+
+func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_duplicate_names"] = attrs["allow_duplicate_names"].SetOptional()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipeline.
@@ -1161,6 +1257,11 @@ func (newState *EditPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *EditPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditPipelineResponse_SdkV2) {
 }
 
+func (c EditPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1190,15 +1291,22 @@ func (o EditPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ErrorDetail_SdkV2 struct {
 	// The exception thrown for this error, with its chain of cause.
-	Exceptions types.List `tfsdk:"exceptions" tf:"optional"`
+	Exceptions types.List `tfsdk:"exceptions"`
 	// Whether this error is considered fatal, that is, unrecoverable.
-	Fatal types.Bool `tfsdk:"fatal" tf:"optional"`
+	Fatal types.Bool `tfsdk:"fatal"`
 }
 
 func (newState *ErrorDetail_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ErrorDetail_SdkV2) {
 }
 
 func (newState *ErrorDetail_SdkV2) SyncEffectiveFieldsDuringRead(existingState ErrorDetail_SdkV2) {
+}
+
+func (c ErrorDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exceptions"] = attrs["exceptions"].SetOptional()
+	attrs["fatal"] = attrs["fatal"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ErrorDetail.
@@ -1266,13 +1374,19 @@ func (o *ErrorDetail_SdkV2) SetExceptions(ctx context.Context, v []SerializedExc
 
 type FileLibrary_SdkV2 struct {
 	// The absolute path of the file.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *FileLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileLibrary_SdkV2) {
 }
 
 func (newState *FileLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState FileLibrary_SdkV2) {
+}
+
+func (c FileLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileLibrary.
@@ -1308,15 +1422,22 @@ func (o FileLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 
 type Filters_SdkV2 struct {
 	// Paths to exclude.
-	Exclude types.List `tfsdk:"exclude" tf:"optional"`
+	Exclude types.List `tfsdk:"exclude"`
 	// Paths to include.
-	Include types.List `tfsdk:"include" tf:"optional"`
+	Include types.List `tfsdk:"include"`
 }
 
 func (newState *Filters_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Filters_SdkV2) {
 }
 
 func (newState *Filters_SdkV2) SyncEffectiveFieldsDuringRead(existingState Filters_SdkV2) {
+}
+
+func (c Filters_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exclude"] = attrs["exclude"].SetOptional()
+	attrs["include"] = attrs["include"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Filters.
@@ -1417,12 +1538,6 @@ type GetPipelinePermissionLevelsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPipelinePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsRequest_SdkV2) {
-}
-
-func (newState *GetPipelinePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1456,13 +1571,19 @@ func (o GetPipelinePermissionLevelsRequest_SdkV2) Type(ctx context.Context) attr
 
 type GetPipelinePermissionLevelsResponse_SdkV2 struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetPipelinePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsResponse_SdkV2) {
 }
 
 func (newState *GetPipelinePermissionLevelsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsResponse_SdkV2) {
+}
+
+func (c GetPipelinePermissionLevelsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsResponse.
@@ -1532,12 +1653,6 @@ type GetPipelinePermissionsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionsRequest_SdkV2) {
-}
-
-func (newState *GetPipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1574,12 +1689,6 @@ type GetPipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPipelineRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineRequest_SdkV2) {
-}
-
-func (newState *GetPipelineRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1613,37 +1722,55 @@ func (o GetPipelineRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetPipelineResponse_SdkV2 struct {
 	// An optional message detailing the cause of the pipeline state.
-	Cause types.String `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause"`
 	// The ID of the cluster that the pipeline is running on.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The username of the pipeline creator.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Serverless budget policy ID of this pipeline.
-	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id" tf:"optional"`
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The health of a pipeline.
-	Health types.String `tfsdk:"health" tf:"optional"`
+	Health types.String `tfsdk:"health"`
 	// The last time the pipeline settings were modified or created.
-	LastModified types.Int64 `tfsdk:"last_modified" tf:"optional"`
+	LastModified types.Int64 `tfsdk:"last_modified"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
 	// update first.
-	LatestUpdates types.List `tfsdk:"latest_updates" tf:"optional"`
+	LatestUpdates types.List `tfsdk:"latest_updates"`
 	// A human friendly identifier for the pipeline, taken from the `spec`.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The ID of the pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Username of the user that the pipeline will run on behalf of.
-	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
+	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 	// The pipeline specification. This field is not returned when called by
 	// `ListPipelines`.
-	Spec types.List `tfsdk:"spec" tf:"optional,object"`
+	Spec types.List `tfsdk:"spec"`
 	// The pipeline state.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *GetPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineResponse_SdkV2) {
 }
 
 func (newState *GetPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelineResponse_SdkV2) {
+}
+
+func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["last_modified"] = attrs["last_modified"].SetOptional()
+	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["state"] = attrs["state"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineResponse.
@@ -1766,12 +1893,6 @@ type GetUpdateRequest_SdkV2 struct {
 	UpdateId types.String `tfsdk:"-"`
 }
 
-func (newState *GetUpdateRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateRequest_SdkV2) {
-}
-
-func (newState *GetUpdateRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1807,13 +1928,20 @@ func (o GetUpdateRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetUpdateResponse_SdkV2 struct {
 	// The current update info.
-	Update types.List `tfsdk:"update" tf:"optional,object"`
+	Update types.List `tfsdk:"update"`
 }
 
 func (newState *GetUpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateResponse_SdkV2) {
 }
 
 func (newState *GetUpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetUpdateResponse_SdkV2) {
+}
+
+func (c GetUpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["update"] = attrs["update"].SetOptional()
+	attrs["update"] = attrs["update"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateResponse.
@@ -1879,17 +2007,28 @@ func (o *GetUpdateResponse_SdkV2) SetUpdate(ctx context.Context, v UpdateInfo_Sd
 
 type IngestionConfig_SdkV2 struct {
 	// Select a specific source report.
-	Report types.List `tfsdk:"report" tf:"optional,object"`
+	Report types.List `tfsdk:"report"`
 	// Select all tables from a specific source schema.
-	Schema types.List `tfsdk:"schema" tf:"optional,object"`
+	Schema types.List `tfsdk:"schema"`
 	// Select a specific source table.
-	Table types.List `tfsdk:"table" tf:"optional,object"`
+	Table types.List `tfsdk:"table"`
 }
 
 func (newState *IngestionConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionConfig_SdkV2) {
 }
 
 func (newState *IngestionConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionConfig_SdkV2) {
+}
+
+func (c IngestionConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["report"] = attrs["report"].SetOptional()
+	attrs["report"] = attrs["report"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["schema"] = attrs["schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["table"] = attrs["table"].SetOptional()
+	attrs["table"] = attrs["table"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionConfig.
@@ -2019,27 +2158,37 @@ type IngestionGatewayPipelineDefinition_SdkV2 struct {
 	// [Deprecated, use connection_name instead] Immutable. The Unity Catalog
 	// connection that this gateway pipeline uses to communicate with the
 	// source.
-	ConnectionId types.String `tfsdk:"connection_id" tf:"optional"`
+	ConnectionId types.String `tfsdk:"connection_id"`
 	// Immutable. The Unity Catalog connection that this gateway pipeline uses
 	// to communicate with the source.
-	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
+	ConnectionName types.String `tfsdk:"connection_name"`
 	// Required, Immutable. The name of the catalog for the gateway pipeline's
 	// storage location.
-	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog" tf:"optional"`
+	GatewayStorageCatalog types.String `tfsdk:"gateway_storage_catalog"`
 	// Optional. The Unity Catalog-compatible name for the gateway storage
 	// location. This is the destination to use for the data that is extracted
 	// by the gateway. Delta Live Tables system will automatically create the
 	// storage location under the catalog and schema.
-	GatewayStorageName types.String `tfsdk:"gateway_storage_name" tf:"optional"`
+	GatewayStorageName types.String `tfsdk:"gateway_storage_name"`
 	// Required, Immutable. The name of the schema for the gateway pipelines's
 	// storage location.
-	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema" tf:"optional"`
+	GatewayStorageSchema types.String `tfsdk:"gateway_storage_schema"`
 }
 
 func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionGatewayPipelineDefinition_SdkV2) {
 }
 
 func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionGatewayPipelineDefinition_SdkV2) {
+}
+
+func (c IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_id"] = attrs["connection_id"].SetOptional()
+	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetOptional()
+	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
+	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionGatewayPipelineDefinition.
@@ -2085,23 +2234,33 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// Immutable. The Unity Catalog connection that this ingestion pipeline uses
 	// to communicate with the source. This is used with connectors for
 	// applications like Salesforce, Workday, and so on.
-	ConnectionName types.String `tfsdk:"connection_name" tf:"optional"`
+	ConnectionName types.String `tfsdk:"connection_name"`
 	// Immutable. Identifier for the gateway that is used by this ingestion
 	// pipeline to communicate with the source database. This is used with
 	// connectors to databases like SQL Server.
-	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id" tf:"optional"`
+	IngestionGatewayId types.String `tfsdk:"ingestion_gateway_id"`
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
-	Objects types.List `tfsdk:"objects" tf:"optional"`
+	Objects types.List `tfsdk:"objects"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
-	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
 func (newState *IngestionPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan IngestionPipelineDefinition_SdkV2) {
 }
 
 func (newState *IngestionPipelineDefinition_SdkV2) SyncEffectiveFieldsDuringRead(existingState IngestionPipelineDefinition_SdkV2) {
+}
+
+func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_name"] = attrs["connection_name"].SetOptional()
+	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
+	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in IngestionPipelineDefinition.
@@ -2227,12 +2386,6 @@ type ListPipelineEventsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
-func (newState *ListPipelineEventsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsRequest_SdkV2) {
-}
-
-func (newState *ListPipelineEventsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2304,17 +2457,25 @@ func (o *ListPipelineEventsRequest_SdkV2) SetOrderBy(ctx context.Context, v []ty
 
 type ListPipelineEventsResponse_SdkV2 struct {
 	// The list of events matching the request criteria.
-	Events types.List `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events"`
 	// If present, a token to fetch the next page of events.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// If present, a token to fetch the previous page of events.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
 func (newState *ListPipelineEventsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsResponse_SdkV2) {
 }
 
 func (newState *ListPipelineEventsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsResponse_SdkV2) {
+}
+
+func (c ListPipelineEventsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["events"] = attrs["events"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsResponse.
@@ -2407,12 +2568,6 @@ type ListPipelinesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListPipelinesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesRequest_SdkV2) {
-}
-
-func (newState *ListPipelinesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2482,15 +2637,22 @@ func (o *ListPipelinesRequest_SdkV2) SetOrderBy(ctx context.Context, v []types.S
 
 type ListPipelinesResponse_SdkV2 struct {
 	// If present, a token to fetch the next page of events.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// The list of events matching the request criteria.
-	Statuses types.List `tfsdk:"statuses" tf:"optional"`
+	Statuses types.List `tfsdk:"statuses"`
 }
 
 func (newState *ListPipelinesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesResponse_SdkV2) {
 }
 
 func (newState *ListPipelinesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelinesResponse_SdkV2) {
+}
+
+func (c ListPipelinesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["statuses"] = attrs["statuses"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesResponse.
@@ -2568,12 +2730,6 @@ type ListUpdatesRequest_SdkV2 struct {
 	UntilUpdateId types.String `tfsdk:"-"`
 }
 
-func (newState *ListUpdatesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesRequest_SdkV2) {
-}
-
-func (newState *ListUpdatesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2614,18 +2770,26 @@ func (o ListUpdatesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type ListUpdatesResponse_SdkV2 struct {
 	// If present, then there are more results, and this a token to be used in a
 	// subsequent request to fetch the next page.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// If present, then this token can be used in a subsequent request to fetch
 	// the previous page.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 
-	Updates types.List `tfsdk:"updates" tf:"optional"`
+	Updates types.List `tfsdk:"updates"`
 }
 
 func (newState *ListUpdatesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesResponse_SdkV2) {
 }
 
 func (newState *ListUpdatesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListUpdatesResponse_SdkV2) {
+}
+
+func (c ListUpdatesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
+	attrs["updates"] = attrs["updates"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesResponse.
@@ -2702,6 +2866,11 @@ func (newState *ManualTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 func (newState *ManualTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState ManualTrigger_SdkV2) {
 }
 
+func (c ManualTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ManualTrigger.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2731,13 +2900,19 @@ func (o ManualTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 
 type NotebookLibrary_SdkV2 struct {
 	// The absolute path of the notebook.
-	Path types.String `tfsdk:"path" tf:"optional"`
+	Path types.String `tfsdk:"path"`
 }
 
 func (newState *NotebookLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NotebookLibrary_SdkV2) {
 }
 
 func (newState *NotebookLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState NotebookLibrary_SdkV2) {
+}
+
+func (c NotebookLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["path"] = attrs["path"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NotebookLibrary.
@@ -2779,15 +2954,22 @@ type Notifications_SdkV2 struct {
 	// `on-update-failure`: Each time a pipeline update fails. *
 	// `on-update-fatal-failure`: A pipeline update fails with a non-retryable
 	// (fatal) error. * `on-flow-failure`: A single data flow fails.
-	Alerts types.List `tfsdk:"alerts" tf:"optional"`
+	Alerts types.List `tfsdk:"alerts"`
 	// A list of email addresses notified when a configured alert is triggered.
-	EmailRecipients types.List `tfsdk:"email_recipients" tf:"optional"`
+	EmailRecipients types.List `tfsdk:"email_recipients"`
 }
 
 func (newState *Notifications_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Notifications_SdkV2) {
 }
 
 func (newState *Notifications_SdkV2) SyncEffectiveFieldsDuringRead(existingState Notifications_SdkV2) {
+}
+
+func (c Notifications_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alerts"] = attrs["alerts"].SetOptional()
+	attrs["email_recipients"] = attrs["email_recipients"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Notifications.
@@ -2884,46 +3066,68 @@ func (o *Notifications_SdkV2) SetEmailRecipients(ctx context.Context, v []types.
 
 type Origin_SdkV2 struct {
 	// The id of a batch. Unique within a flow.
-	BatchId types.Int64 `tfsdk:"batch_id" tf:"optional"`
+	BatchId types.Int64 `tfsdk:"batch_id"`
 	// The cloud provider, e.g., AWS or Azure.
-	Cloud types.String `tfsdk:"cloud" tf:"optional"`
+	Cloud types.String `tfsdk:"cloud"`
 	// The id of the cluster where an execution happens. Unique within a region.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The name of a dataset. Unique within a pipeline.
-	DatasetName types.String `tfsdk:"dataset_name" tf:"optional"`
+	DatasetName types.String `tfsdk:"dataset_name"`
 	// The id of the flow. Globally unique. Incremental queries will generally
 	// reuse the same id while complete queries will have a new id per update.
-	FlowId types.String `tfsdk:"flow_id" tf:"optional"`
+	FlowId types.String `tfsdk:"flow_id"`
 	// The name of the flow. Not unique.
-	FlowName types.String `tfsdk:"flow_name" tf:"optional"`
+	FlowName types.String `tfsdk:"flow_name"`
 	// The optional host name where the event was triggered
-	Host types.String `tfsdk:"host" tf:"optional"`
+	Host types.String `tfsdk:"host"`
 	// The id of a maintenance run. Globally unique.
-	MaintenanceId types.String `tfsdk:"maintenance_id" tf:"optional"`
+	MaintenanceId types.String `tfsdk:"maintenance_id"`
 	// Materialization name.
-	MaterializationName types.String `tfsdk:"materialization_name" tf:"optional"`
+	MaterializationName types.String `tfsdk:"materialization_name"`
 	// The org id of the user. Unique within a cloud.
-	OrgId types.Int64 `tfsdk:"org_id" tf:"optional"`
+	OrgId types.Int64 `tfsdk:"org_id"`
 	// The id of the pipeline. Globally unique.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// The name of the pipeline. Not unique.
-	PipelineName types.String `tfsdk:"pipeline_name" tf:"optional"`
+	PipelineName types.String `tfsdk:"pipeline_name"`
 	// The cloud region.
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 	// The id of the request that caused an update.
-	RequestId types.String `tfsdk:"request_id" tf:"optional"`
+	RequestId types.String `tfsdk:"request_id"`
 	// The id of a (delta) table. Globally unique.
-	TableId types.String `tfsdk:"table_id" tf:"optional"`
+	TableId types.String `tfsdk:"table_id"`
 	// The Unity Catalog id of the MV or ST being updated.
-	UcResourceId types.String `tfsdk:"uc_resource_id" tf:"optional"`
+	UcResourceId types.String `tfsdk:"uc_resource_id"`
 	// The id of an execution. Globally unique.
-	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+	UpdateId types.String `tfsdk:"update_id"`
 }
 
 func (newState *Origin_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Origin_SdkV2) {
 }
 
 func (newState *Origin_SdkV2) SyncEffectiveFieldsDuringRead(existingState Origin_SdkV2) {
+}
+
+func (c Origin_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["batch_id"] = attrs["batch_id"].SetOptional()
+	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
+	attrs["flow_id"] = attrs["flow_id"].SetOptional()
+	attrs["flow_name"] = attrs["flow_name"].SetOptional()
+	attrs["host"] = attrs["host"].SetOptional()
+	attrs["maintenance_id"] = attrs["maintenance_id"].SetOptional()
+	attrs["materialization_name"] = attrs["materialization_name"].SetOptional()
+	attrs["org_id"] = attrs["org_id"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["pipeline_name"] = attrs["pipeline_name"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
+	attrs["request_id"] = attrs["request_id"].SetOptional()
+	attrs["table_id"] = attrs["table_id"].SetOptional()
+	attrs["uc_resource_id"] = attrs["uc_resource_id"].SetOptional()
+	attrs["update_id"] = attrs["update_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Origin.
@@ -2991,19 +3195,28 @@ func (o Origin_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PipelineAccessControlRequest_SdkV2 struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *PipelineAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlRequest_SdkV2) {
 }
 
 func (newState *PipelineAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlRequest_SdkV2) {
+}
+
+func (c PipelineAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineAccessControlRequest.
@@ -3045,21 +3258,31 @@ func (o PipelineAccessControlRequest_SdkV2) Type(ctx context.Context) attr.Type 
 
 type PipelineAccessControlResponse_SdkV2 struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *PipelineAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineAccessControlResponse_SdkV2) {
 }
 
 func (newState *PipelineAccessControlResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineAccessControlResponse_SdkV2) {
+}
+
+func (c PipelineAccessControlResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineAccessControlResponse.
@@ -3134,24 +3357,24 @@ func (o *PipelineAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Cont
 type PipelineCluster_SdkV2 struct {
 	// Note: This field won't be persisted. Only API users will check this
 	// field.
-	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values" tf:"optional"`
+	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values"`
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.List `tfsdk:"autoscale"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.List `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.List `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Only dbfs destinations are supported. Only one destination
 	// can be specified for one cluster. If the conf is given, the logs will be
 	// delivered to the destination every `5 mins`. The destination of driver
 	// logs is `$destination/$clusterId/driver`, while the destination of
 	// executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -3160,37 +3383,37 @@ type PipelineCluster_SdkV2 struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Whether to enable local disk encryption for the cluster.
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.List `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// A label for the cluster specification, either `default` to configure the
 	// default cluster, or `maintenance` to configure the maintenance cluster.
 	// This field is optional. The default value is `default`.
-	Label types.String `tfsdk:"label" tf:"optional"`
+	Label types.String `tfsdk:"label"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -3201,13 +3424,13 @@ type PipelineCluster_SdkV2 struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. See :method:clusters/create for more
 	// details.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -3221,17 +3444,46 @@ type PipelineCluster_SdkV2 struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 }
 
 func (newState *PipelineCluster_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineCluster_SdkV2) {
 }
 
 func (newState *PipelineCluster_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineCluster_SdkV2) {
+}
+
+func (c PipelineCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autoscale"] = attrs["autoscale"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["label"] = attrs["label"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineCluster.
@@ -3595,23 +3847,31 @@ func (o *PipelineCluster_SdkV2) SetSshPublicKeys(ctx context.Context, v []types.
 type PipelineClusterAutoscale_SdkV2 struct {
 	// The maximum number of workers to which the cluster can scale up when
 	// overloaded. `max_workers` must be strictly greater than `min_workers`.
-	MaxWorkers types.Int64 `tfsdk:"max_workers" tf:""`
+	MaxWorkers types.Int64 `tfsdk:"max_workers"`
 	// The minimum number of workers the cluster can scale down to when
 	// underutilized. It is also the initial number of workers the cluster will
 	// have after creation.
-	MinWorkers types.Int64 `tfsdk:"min_workers" tf:""`
+	MinWorkers types.Int64 `tfsdk:"min_workers"`
 	// Databricks Enhanced Autoscaling optimizes cluster utilization by
 	// automatically allocating cluster resources based on workload volume, with
 	// minimal impact to the data processing latency of your pipelines. Enhanced
 	// Autoscaling is available for `updates` clusters only. The legacy
 	// autoscaling feature is used for `maintenance` clusters.
-	Mode types.String `tfsdk:"mode" tf:"optional"`
+	Mode types.String `tfsdk:"mode"`
 }
 
 func (newState *PipelineClusterAutoscale_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineClusterAutoscale_SdkV2) {
 }
 
 func (newState *PipelineClusterAutoscale_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineClusterAutoscale_SdkV2) {
+}
+
+func (c PipelineClusterAutoscale_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_workers"] = attrs["max_workers"].SetRequired()
+	attrs["min_workers"] = attrs["min_workers"].SetRequired()
+	attrs["mode"] = attrs["mode"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineClusterAutoscale.
@@ -3651,15 +3911,22 @@ func (o PipelineClusterAutoscale_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PipelineDeployment_SdkV2 struct {
 	// The deployment method that manages the pipeline.
-	Kind types.String `tfsdk:"kind" tf:"optional"`
+	Kind types.String `tfsdk:"kind"`
 	// The path to the file containing metadata about the deployment.
-	MetadataFilePath types.String `tfsdk:"metadata_file_path" tf:"optional"`
+	MetadataFilePath types.String `tfsdk:"metadata_file_path"`
 }
 
 func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineDeployment_SdkV2) {
 }
 
 func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineDeployment_SdkV2) {
+}
+
+func (c PipelineDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineDeployment.
@@ -3697,29 +3964,46 @@ func (o PipelineDeployment_SdkV2) Type(ctx context.Context) attr.Type {
 
 type PipelineEvent_SdkV2 struct {
 	// Information about an error captured by the event.
-	Error types.List `tfsdk:"error" tf:"optional,object"`
+	Error types.List `tfsdk:"error"`
 	// The event type. Should always correspond to the details
-	EventType types.String `tfsdk:"event_type" tf:"optional"`
+	EventType types.String `tfsdk:"event_type"`
 	// A time-based, globally unique id.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The severity level of the event.
-	Level types.String `tfsdk:"level" tf:"optional"`
+	Level types.String `tfsdk:"level"`
 	// Maturity level for event_type.
-	MaturityLevel types.String `tfsdk:"maturity_level" tf:"optional"`
+	MaturityLevel types.String `tfsdk:"maturity_level"`
 	// The display message associated with the event.
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// Describes where the event originates from.
-	Origin types.List `tfsdk:"origin" tf:"optional,object"`
+	Origin types.List `tfsdk:"origin"`
 	// A sequencing object to identify and order events.
-	Sequence types.List `tfsdk:"sequence" tf:"optional,object"`
+	Sequence types.List `tfsdk:"sequence"`
 	// The time of the event.
-	Timestamp types.String `tfsdk:"timestamp" tf:"optional"`
+	Timestamp types.String `tfsdk:"timestamp"`
 }
 
 func (newState *PipelineEvent_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineEvent_SdkV2) {
 }
 
 func (newState *PipelineEvent_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineEvent_SdkV2) {
+}
+
+func (c PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["error"] = attrs["error"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["event_type"] = attrs["event_type"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["level"] = attrs["level"].SetOptional()
+	attrs["maturity_level"] = attrs["maturity_level"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["origin"] = attrs["origin"].SetOptional()
+	attrs["origin"] = attrs["origin"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["sequence"] = attrs["sequence"].SetOptional()
+	attrs["sequence"] = attrs["sequence"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineEvent.
@@ -3860,22 +4144,35 @@ func (o *PipelineEvent_SdkV2) SetSequence(ctx context.Context, v Sequencing_SdkV
 type PipelineLibrary_SdkV2 struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
-	File types.List `tfsdk:"file" tf:"optional,object"`
+	File types.List `tfsdk:"file"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
-	Jar types.String `tfsdk:"jar" tf:"optional"`
+	Jar types.String `tfsdk:"jar"`
 	// Specification of a maven library to be installed.
-	Maven types.List `tfsdk:"maven" tf:"optional,object"`
+	Maven types.List `tfsdk:"maven"`
 	// The path to a notebook that defines a pipeline and is stored in the
 	// Databricks workspace.
-	Notebook types.List `tfsdk:"notebook" tf:"optional,object"`
+	Notebook types.List `tfsdk:"notebook"`
 	// URI of the whl to be installed.
-	Whl types.String `tfsdk:"whl" tf:"optional"`
+	Whl types.String `tfsdk:"whl"`
 }
 
 func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineLibrary_SdkV2) {
 }
 
 func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineLibrary_SdkV2) {
+}
+
+func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file"] = attrs["file"].SetOptional()
+	attrs["file"] = attrs["file"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["jar"] = attrs["jar"].SetOptional()
+	attrs["maven"] = attrs["maven"].SetOptional()
+	attrs["maven"] = attrs["maven"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["notebook"] = attrs["notebook"].SetOptional()
+	attrs["notebook"] = attrs["notebook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["whl"] = attrs["whl"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineLibrary.
@@ -4006,17 +4303,25 @@ func (o *PipelineLibrary_SdkV2) SetNotebook(ctx context.Context, v NotebookLibra
 }
 
 type PipelinePermission_SdkV2 struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *PipelinePermission_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermission_SdkV2) {
 }
 
 func (newState *PipelinePermission_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermission_SdkV2) {
+}
+
+func (c PipelinePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermission.
@@ -4085,17 +4390,25 @@ func (o *PipelinePermission_SdkV2) SetInheritedFromObject(ctx context.Context, v
 }
 
 type PipelinePermissions_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *PipelinePermissions_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissions_SdkV2) {
 }
 
 func (newState *PipelinePermissions_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissions_SdkV2) {
+}
+
+func (c PipelinePermissions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissions.
@@ -4164,15 +4477,22 @@ func (o *PipelinePermissions_SdkV2) SetAccessControlList(ctx context.Context, v 
 }
 
 type PipelinePermissionsDescription_SdkV2 struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *PipelinePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelinePermissionsDescription_SdkV2) {
 }
 
 func (newState *PipelinePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsDescription_SdkV2) {
+}
+
+func (c PipelinePermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsDescription.
@@ -4209,7 +4529,7 @@ func (o PipelinePermissionsDescription_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type PipelinePermissionsRequest_SdkV2 struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The pipeline for which to get or manage permissions.
 	PipelineId types.String `tfsdk:"-"`
 }
@@ -4218,6 +4538,13 @@ func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreat
 }
 
 func (newState *PipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelinePermissionsRequest_SdkV2) {
+}
+
+func (c PipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelinePermissionsRequest.
@@ -4285,66 +4612,100 @@ func (o *PipelinePermissionsRequest_SdkV2) SetAccessControlList(ctx context.Cont
 
 type PipelineSpec_SdkV2 struct {
 	// Budget policy of this pipeline.
-	BudgetPolicyId types.String `tfsdk:"budget_policy_id" tf:"optional"`
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// A catalog in Unity Catalog to publish data from this pipeline to. If
 	// `target` is specified, tables in this pipeline are published to a
 	// `target` schema inside `catalog` (for example,
 	// `catalog`.`target`.`table`). If `target` is not specified, no data is
 	// published to Unity Catalog.
-	Catalog types.String `tfsdk:"catalog" tf:"optional"`
+	Catalog types.String `tfsdk:"catalog"`
 	// DLT Release Channel that specifies which version to use.
-	Channel types.String `tfsdk:"channel" tf:"optional"`
+	Channel types.String `tfsdk:"channel"`
 	// Cluster settings for this pipeline deployment.
-	Clusters types.List `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters"`
 	// String-String configuration for this pipeline execution.
-	Configuration types.Map `tfsdk:"configuration" tf:"optional"`
+	Configuration types.Map `tfsdk:"configuration"`
 	// Whether the pipeline is continuous or triggered. This replaces `trigger`.
-	Continuous types.Bool `tfsdk:"continuous" tf:"optional"`
+	Continuous types.Bool `tfsdk:"continuous"`
 	// Deployment type of this pipeline.
-	Deployment types.List `tfsdk:"deployment" tf:"optional,object"`
+	Deployment types.List `tfsdk:"deployment"`
 	// Whether the pipeline is in Development mode. Defaults to false.
-	Development types.Bool `tfsdk:"development" tf:"optional"`
+	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
-	Edition types.String `tfsdk:"edition" tf:"optional"`
+	Edition types.String `tfsdk:"edition"`
 	// Filters on which Pipeline packages to include in the deployed graph.
-	Filters types.List `tfsdk:"filters" tf:"optional,object"`
+	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
-	GatewayDefinition types.List `tfsdk:"gateway_definition" tf:"optional,object"`
+	GatewayDefinition types.List `tfsdk:"gateway_definition"`
 	// Unique identifier for this pipeline.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
 	// be used with the 'libraries', 'target' or 'catalog' settings.
-	IngestionDefinition types.List `tfsdk:"ingestion_definition" tf:"optional,object"`
+	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Friendly identifier for this pipeline.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// List of notification settings for this pipeline.
-	Notifications types.List `tfsdk:"notifications" tf:"optional"`
+	Notifications types.List `tfsdk:"notifications"`
 	// Whether Photon is enabled for this pipeline.
-	Photon types.Bool `tfsdk:"photon" tf:"optional"`
+	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
-	RestartWindow types.List `tfsdk:"restart_window" tf:"optional,object"`
+	RestartWindow types.List `tfsdk:"restart_window"`
 	// The default schema (database) where tables are read from or published to.
 	// The presence of this field implies that the pipeline is in direct
 	// publishing mode.
-	Schema types.String `tfsdk:"schema" tf:"optional"`
+	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
-	Serverless types.Bool `tfsdk:"serverless" tf:"optional"`
+	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
-	Storage types.String `tfsdk:"storage" tf:"optional"`
+	Storage types.String `tfsdk:"storage"`
 	// Target schema (database) to add tables in this pipeline to. If not
 	// specified, no data is published to the Hive metastore or Unity Catalog.
 	// To publish to Unity Catalog, also specify `catalog`.
-	Target types.String `tfsdk:"target" tf:"optional"`
+	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
-	Trigger types.List `tfsdk:"trigger" tf:"optional,object"`
+	Trigger types.List `tfsdk:"trigger"`
 }
 
 func (newState *PipelineSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineSpec_SdkV2) {
 }
 
 func (newState *PipelineSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineSpec_SdkV2) {
+}
+
+func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["channel"] = attrs["channel"].SetOptional()
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["configuration"] = attrs["configuration"].SetOptional()
+	attrs["continuous"] = attrs["continuous"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["development"] = attrs["development"].SetOptional()
+	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
+	attrs["gateway_definition"] = attrs["gateway_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].SetOptional()
+	attrs["ingestion_definition"] = attrs["ingestion_definition"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notifications"] = attrs["notifications"].SetOptional()
+	attrs["photon"] = attrs["photon"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["serverless"] = attrs["serverless"].SetOptional()
+	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["target"] = attrs["target"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineSpec.
@@ -4715,29 +5076,42 @@ func (o *PipelineSpec_SdkV2) SetTrigger(ctx context.Context, v PipelineTrigger_S
 
 type PipelineStateInfo_SdkV2 struct {
 	// The unique identifier of the cluster running the pipeline.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The username of the pipeline creator.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// The health of a pipeline.
-	Health types.String `tfsdk:"health" tf:"optional"`
+	Health types.String `tfsdk:"health"`
 	// Status of the latest updates for the pipeline. Ordered with the newest
 	// update first.
-	LatestUpdates types.List `tfsdk:"latest_updates" tf:"optional"`
+	LatestUpdates types.List `tfsdk:"latest_updates"`
 	// The user-friendly name of the pipeline.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The unique identifier of the pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// The username that the pipeline runs as. This is a read only value derived
 	// from the pipeline owner.
-	RunAsUserName types.String `tfsdk:"run_as_user_name" tf:"optional"`
+	RunAsUserName types.String `tfsdk:"run_as_user_name"`
 	// The pipeline state.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *PipelineStateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineStateInfo_SdkV2) {
 }
 
 func (newState *PipelineStateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineStateInfo_SdkV2) {
+}
+
+func (c PipelineStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["health"] = attrs["health"].SetOptional()
+	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineStateInfo.
@@ -4816,15 +5190,24 @@ func (o *PipelineStateInfo_SdkV2) SetLatestUpdates(ctx context.Context, v []Upda
 }
 
 type PipelineTrigger_SdkV2 struct {
-	Cron types.List `tfsdk:"cron" tf:"optional,object"`
+	Cron types.List `tfsdk:"cron"`
 
-	Manual types.List `tfsdk:"manual" tf:"optional,object"`
+	Manual types.List `tfsdk:"manual"`
 }
 
 func (newState *PipelineTrigger_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PipelineTrigger_SdkV2) {
 }
 
 func (newState *PipelineTrigger_SdkV2) SyncEffectiveFieldsDuringRead(existingState PipelineTrigger_SdkV2) {
+}
+
+func (c PipelineTrigger_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cron"] = attrs["cron"].SetOptional()
+	attrs["cron"] = attrs["cron"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["manual"] = attrs["manual"].SetOptional()
+	attrs["manual"] = attrs["manual"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PipelineTrigger.
@@ -4921,24 +5304,35 @@ func (o *PipelineTrigger_SdkV2) SetManual(ctx context.Context, v ManualTrigger_S
 
 type ReportSpec_SdkV2 struct {
 	// Required. Destination catalog to store table.
-	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
+	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store table.
-	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
+	DestinationSchema types.String `tfsdk:"destination_schema"`
 	// Required. Destination table name. The pipeline fails if a table with that
 	// name already exists.
-	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
+	DestinationTable types.String `tfsdk:"destination_table"`
 	// Required. Report URL in the source system.
-	SourceUrl types.String `tfsdk:"source_url" tf:"optional"`
+	SourceUrl types.String `tfsdk:"source_url"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object.
-	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
 func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ReportSpec_SdkV2) {
 }
 
 func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState ReportSpec_SdkV2) {
+}
+
+func (c ReportSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
+	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_table"] = attrs["destination_table"].SetOptional()
+	attrs["source_url"] = attrs["source_url"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ReportSpec.
@@ -5014,21 +5408,29 @@ type RestartWindow_SdkV2 struct {
 	// Days of week in which the restart is allowed to happen (within a
 	// five-hour window starting at start_hour). If not specified all days of
 	// the week will be used.
-	DaysOfWeek types.List `tfsdk:"days_of_week" tf:"optional"`
+	DaysOfWeek types.List `tfsdk:"days_of_week"`
 	// An integer between 0 and 23 denoting the start hour for the restart
 	// window in the 24-hour day. Continuous pipeline restart is triggered only
 	// within a five-hour window starting at this hour.
-	StartHour types.Int64 `tfsdk:"start_hour" tf:""`
+	StartHour types.Int64 `tfsdk:"start_hour"`
 	// Time zone id of restart window. See
 	// https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html
 	// for details. If not specified, UTC will be used.
-	TimeZoneId types.String `tfsdk:"time_zone_id" tf:"optional"`
+	TimeZoneId types.String `tfsdk:"time_zone_id"`
 }
 
 func (newState *RestartWindow_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartWindow_SdkV2) {
 }
 
 func (newState *RestartWindow_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestartWindow_SdkV2) {
+}
+
+func (c RestartWindow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["days_of_week"] = attrs["days_of_week"].SetOptional()
+	attrs["start_hour"] = attrs["start_hour"].SetRequired()
+	attrs["time_zone_id"] = attrs["time_zone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartWindow.
@@ -5098,26 +5500,37 @@ func (o *RestartWindow_SdkV2) SetDaysOfWeek(ctx context.Context, v []types.Strin
 
 type SchemaSpec_SdkV2 struct {
 	// Required. Destination catalog to store tables.
-	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
+	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store tables in. Tables with the same
 	// name as the source tables are created in this destination schema. The
 	// pipeline fails If a table with the same name already exists.
-	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
+	DestinationSchema types.String `tfsdk:"destination_schema"`
 	// The source catalog name. Might be optional depending on the type of
 	// source.
-	SourceCatalog types.String `tfsdk:"source_catalog" tf:"optional"`
+	SourceCatalog types.String `tfsdk:"source_catalog"`
 	// Required. Schema name in the source database.
-	SourceSchema types.String `tfsdk:"source_schema" tf:"optional"`
+	SourceSchema types.String `tfsdk:"source_schema"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in this schema and override the
 	// table_configuration defined in the IngestionPipelineDefinition object.
-	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
 func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SchemaSpec_SdkV2) {
 }
 
 func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState SchemaSpec_SdkV2) {
+}
+
+func (c SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
+	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+	attrs["source_schema"] = attrs["source_schema"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SchemaSpec.
@@ -5191,15 +5604,23 @@ func (o *SchemaSpec_SdkV2) SetTableConfiguration(ctx context.Context, v TableSpe
 
 type Sequencing_SdkV2 struct {
 	// A sequence number, unique and increasing within the control plane.
-	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no" tf:"optional"`
+	ControlPlaneSeqNo types.Int64 `tfsdk:"control_plane_seq_no"`
 	// the ID assigned by the data plane.
-	DataPlaneId types.List `tfsdk:"data_plane_id" tf:"optional,object"`
+	DataPlaneId types.List `tfsdk:"data_plane_id"`
 }
 
 func (newState *Sequencing_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Sequencing_SdkV2) {
 }
 
 func (newState *Sequencing_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sequencing_SdkV2) {
+}
+
+func (c Sequencing_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["control_plane_seq_no"] = attrs["control_plane_seq_no"].SetOptional()
+	attrs["data_plane_id"] = attrs["data_plane_id"].SetOptional()
+	attrs["data_plane_id"] = attrs["data_plane_id"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Sequencing.
@@ -5267,17 +5688,25 @@ func (o *Sequencing_SdkV2) SetDataPlaneId(ctx context.Context, v DataPlaneId_Sdk
 
 type SerializedException_SdkV2 struct {
 	// Runtime class of the exception
-	ClassName types.String `tfsdk:"class_name" tf:"optional"`
+	ClassName types.String `tfsdk:"class_name"`
 	// Exception message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// Stack trace consisting of a list of stack frames
-	Stack types.List `tfsdk:"stack" tf:"optional"`
+	Stack types.List `tfsdk:"stack"`
 }
 
 func (newState *SerializedException_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SerializedException_SdkV2) {
 }
 
 func (newState *SerializedException_SdkV2) SyncEffectiveFieldsDuringRead(existingState SerializedException_SdkV2) {
+}
+
+func (c SerializedException_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["class_name"] = attrs["class_name"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["stack"] = attrs["stack"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SerializedException.
@@ -5347,19 +5776,28 @@ func (o *SerializedException_SdkV2) SetStack(ctx context.Context, v []StackFrame
 
 type StackFrame_SdkV2 struct {
 	// Class from which the method call originated
-	DeclaringClass types.String `tfsdk:"declaring_class" tf:"optional"`
+	DeclaringClass types.String `tfsdk:"declaring_class"`
 	// File where the method is defined
-	FileName types.String `tfsdk:"file_name" tf:"optional"`
+	FileName types.String `tfsdk:"file_name"`
 	// Line from which the method was called
-	LineNumber types.Int64 `tfsdk:"line_number" tf:"optional"`
+	LineNumber types.Int64 `tfsdk:"line_number"`
 	// Name of the method which was called
-	MethodName types.String `tfsdk:"method_name" tf:"optional"`
+	MethodName types.String `tfsdk:"method_name"`
 }
 
 func (newState *StackFrame_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StackFrame_SdkV2) {
 }
 
 func (newState *StackFrame_SdkV2) SyncEffectiveFieldsDuringRead(existingState StackFrame_SdkV2) {
+}
+
+func (c StackFrame_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["declaring_class"] = attrs["declaring_class"].SetOptional()
+	attrs["file_name"] = attrs["file_name"].SetOptional()
+	attrs["line_number"] = attrs["line_number"].SetOptional()
+	attrs["method_name"] = attrs["method_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StackFrame.
@@ -5400,30 +5838,41 @@ func (o StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type StartUpdate_SdkV2 struct {
-	Cause types.String `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause"`
 	// If true, this update will reset all tables before running.
-	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	FullRefreshSelection types.List `tfsdk:"full_refresh_selection" tf:"optional"`
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
 
 	PipelineId types.String `tfsdk:"-"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	RefreshSelection types.List `tfsdk:"refresh_selection" tf:"optional"`
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
-	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
 func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdate_SdkV2) {
 }
 
 func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartUpdate_SdkV2) {
+}
+
+func (c StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdate.
@@ -5527,13 +5976,19 @@ func (o *StartUpdate_SdkV2) SetRefreshSelection(ctx context.Context, v []types.S
 }
 
 type StartUpdateResponse_SdkV2 struct {
-	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+	UpdateId types.String `tfsdk:"update_id"`
 }
 
 func (newState *StartUpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartUpdateResponse_SdkV2) {
 }
 
 func (newState *StartUpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartUpdateResponse_SdkV2) {
+}
+
+func (c StartUpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["update_id"] = attrs["update_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartUpdateResponse.
@@ -5576,6 +6031,11 @@ func (newState *StopPipelineResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *StopPipelineResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopPipelineResponse_SdkV2) {
 }
 
+func (c StopPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopPipelineResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5606,12 +6066,6 @@ func (o StopPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Stop a pipeline
 type StopRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
-}
-
-func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest_SdkV2) {
-}
-
-func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.
@@ -5647,29 +6101,42 @@ func (o StopRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type TableSpec_SdkV2 struct {
 	// Required. Destination catalog to store table.
-	DestinationCatalog types.String `tfsdk:"destination_catalog" tf:"optional"`
+	DestinationCatalog types.String `tfsdk:"destination_catalog"`
 	// Required. Destination schema to store table.
-	DestinationSchema types.String `tfsdk:"destination_schema" tf:"optional"`
+	DestinationSchema types.String `tfsdk:"destination_schema"`
 	// Optional. Destination table name. The pipeline fails if a table with that
 	// name already exists. If not set, the source table name is used.
-	DestinationTable types.String `tfsdk:"destination_table" tf:"optional"`
+	DestinationTable types.String `tfsdk:"destination_table"`
 	// Source catalog name. Might be optional depending on the type of source.
-	SourceCatalog types.String `tfsdk:"source_catalog" tf:"optional"`
+	SourceCatalog types.String `tfsdk:"source_catalog"`
 	// Schema name in the source database. Might be optional depending on the
 	// type of source.
-	SourceSchema types.String `tfsdk:"source_schema" tf:"optional"`
+	SourceSchema types.String `tfsdk:"source_schema"`
 	// Required. Table name in the source database.
-	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
+	SourceTable types.String `tfsdk:"source_table"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// override the table_configuration defined in the
 	// IngestionPipelineDefinition object and the SchemaSpec.
-	TableConfiguration types.List `tfsdk:"table_configuration" tf:"optional,object"`
+	TableConfiguration types.List `tfsdk:"table_configuration"`
 }
 
 func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpec_SdkV2) {
 }
 
 func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState TableSpec_SdkV2) {
+}
+
+func (c TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
+	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_table"] = attrs["destination_table"].SetOptional()
+	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
+	attrs["source_schema"] = attrs["source_schema"].SetOptional()
+	attrs["source_table"] = attrs["source_table"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
+	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TableSpec.
@@ -5747,22 +6214,31 @@ func (o *TableSpec_SdkV2) SetTableConfiguration(ctx context.Context, v TableSpec
 
 type TableSpecificConfig_SdkV2 struct {
 	// The primary key of the table used to apply changes.
-	PrimaryKeys types.List `tfsdk:"primary_keys" tf:"optional"`
+	PrimaryKeys types.List `tfsdk:"primary_keys"`
 	// If true, formula fields defined in the table are included in the
 	// ingestion. This setting is only valid for the Salesforce connector
-	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields" tf:"optional"`
+	SalesforceIncludeFormulaFields types.Bool `tfsdk:"salesforce_include_formula_fields"`
 	// The SCD type to use to ingest the table.
-	ScdType types.String `tfsdk:"scd_type" tf:"optional"`
+	ScdType types.String `tfsdk:"scd_type"`
 	// The column names specifying the logical order of events in the source
 	// data. Delta Live Tables uses this sequencing to handle change events that
 	// arrive out of order.
-	SequenceBy types.List `tfsdk:"sequence_by" tf:"optional"`
+	SequenceBy types.List `tfsdk:"sequence_by"`
 }
 
 func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TableSpecificConfig_SdkV2) {
 }
 
 func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState TableSpecificConfig_SdkV2) {
+}
+
+func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
+	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
+	attrs["scd_type"] = attrs["scd_type"].SetOptional()
+	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TableSpecificConfig.
@@ -5863,41 +6339,58 @@ func (o *TableSpecificConfig_SdkV2) SetSequenceBy(ctx context.Context, v []types
 
 type UpdateInfo_SdkV2 struct {
 	// What triggered this update.
-	Cause types.String `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause"`
 	// The ID of the cluster that the update is running on.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The pipeline configuration with system defaults applied where unspecified
 	// by the user. Not returned by ListUpdates.
-	Config types.List `tfsdk:"config" tf:"optional,object"`
+	Config types.List `tfsdk:"config"`
 	// The time when this update was created.
-	CreationTime types.Int64 `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.Int64 `tfsdk:"creation_time"`
 	// If true, this update will reset all tables before running.
-	FullRefresh types.Bool `tfsdk:"full_refresh" tf:"optional"`
+	FullRefresh types.Bool `tfsdk:"full_refresh"`
 	// A list of tables to update with fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	FullRefreshSelection types.List `tfsdk:"full_refresh_selection" tf:"optional"`
+	FullRefreshSelection types.List `tfsdk:"full_refresh_selection"`
 	// The ID of the pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// A list of tables to update without fullRefresh. If both refresh_selection
 	// and full_refresh_selection are empty, this is a full graph update. Full
 	// Refresh on a table means that the states of the table will be reset
 	// before the refresh.
-	RefreshSelection types.List `tfsdk:"refresh_selection" tf:"optional"`
+	RefreshSelection types.List `tfsdk:"refresh_selection"`
 	// The update state.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// The ID of this update.
-	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+	UpdateId types.String `tfsdk:"update_id"`
 	// If true, this update only validates the correctness of pipeline source
 	// code but does not materialize or publish any datasets.
-	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
 func (newState *UpdateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInfo_SdkV2) {
 }
 
 func (newState *UpdateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateInfo_SdkV2) {
+}
+
+func (c UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetOptional()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
+	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["update_id"] = attrs["update_id"].SetOptional()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInfo.
@@ -6040,17 +6533,25 @@ func (o *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 }
 
 type UpdateStateInfo_SdkV2 struct {
-	CreationTime types.String `tfsdk:"creation_time" tf:"optional"`
+	CreationTime types.String `tfsdk:"creation_time"`
 
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 
-	UpdateId types.String `tfsdk:"update_id" tf:"optional"`
+	UpdateId types.String `tfsdk:"update_id"`
 }
 
 func (newState *UpdateStateInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateStateInfo_SdkV2) {
 }
 
 func (newState *UpdateStateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateStateInfo_SdkV2) {
+}
+
+func (c UpdateStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_time"] = attrs["creation_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["update_id"] = attrs["update_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateStateInfo.

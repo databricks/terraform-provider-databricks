@@ -13,7 +13,10 @@ on:
 
 jobs:
   comment-on-pr:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
     permissions:
       pull-requests: write
 
@@ -44,13 +47,13 @@ jobs:
           gh pr comment ${{ github.event.pull_request.number }} --body \
           "<!-- INTEGRATION_TESTS_MANUAL -->
           If integration tests don't run automatically, an authorized user can run them manually by following the instructions below:
-          
+
           Trigger:
           [go/deco-tests-run/terraform](https://go/deco-tests-run/terraform)
 
           Inputs:
           * PR number: ${{github.event.pull_request.number}}
           * Commit SHA: \`${{ env.COMMIT_SHA }}\`
-          
+
           Checks will be approved automatically on success.
           "

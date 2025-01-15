@@ -69,6 +69,7 @@ func importContextForTest() *importContext {
 		services:                  map[string]struct{}{},
 		listing:                   map[string]struct{}{},
 		tfvars:                    map[string]string{},
+		noFormat:                  true,
 	}
 }
 
@@ -512,7 +513,7 @@ func TestClusterPolicyNoValues(t *testing.T) {
 	assert.Equal(t, 1, len(ic.testEmits))
 }
 
-func TestGroupCacheError(t *testing.T) {
+func TestGroupCacheAndSearchError(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			ReuseRequest: true,
@@ -527,9 +528,14 @@ func TestGroupCacheError(t *testing.T) {
 		assert.EqualError(t, err, "nope")
 
 		err = resourcesMap["databricks_group"].Search(ic, &resource{
-			ID: "nonsense",
+			Attribute: "display_name",
 		})
 		assert.EqualError(t, err, "nope")
+
+		err = resourcesMap["databricks_group"].Search(ic, &resource{
+			Attribute: "nonsense",
+		})
+		assert.EqualError(t, err, "wrong search attribute 'nonsense' for databricks_group")
 		d := scim.ResourceGroup().ToResource().TestResourceData()
 		d.Set("display_name", "nonsense")
 		err = resourcesMap["databricks_group"].Import(ic, &resource{

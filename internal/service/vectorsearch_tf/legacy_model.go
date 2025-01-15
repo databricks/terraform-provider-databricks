@@ -15,7 +15,9 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -23,13 +25,19 @@ import (
 
 type ColumnInfo_SdkV2 struct {
 	// Name of the column.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *ColumnInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ColumnInfo_SdkV2) {
 }
 
 func (newState *ColumnInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ColumnInfo_SdkV2) {
+}
+
+func (c ColumnInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ColumnInfo.
@@ -65,15 +73,22 @@ func (o ColumnInfo_SdkV2) Type(ctx context.Context) attr.Type {
 
 type CreateEndpoint_SdkV2 struct {
 	// Type of endpoint.
-	EndpointType types.String `tfsdk:"endpoint_type" tf:""`
+	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Name of endpoint
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *CreateEndpoint_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateEndpoint_SdkV2) {
 }
 
 func (newState *CreateEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateEndpoint_SdkV2) {
+}
+
+func (c CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateEndpoint.
@@ -112,12 +127,12 @@ func (o CreateEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 type CreateVectorIndexRequest_SdkV2 struct {
 	// Specification for Delta Sync Index. Required if `index_type` is
 	// `DELTA_SYNC`.
-	DeltaSyncIndexSpec types.List `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
+	DeltaSyncIndexSpec types.List `tfsdk:"delta_sync_index_spec"`
 	// Specification for Direct Vector Access Index. Required if `index_type` is
 	// `DIRECT_ACCESS`.
-	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec" tf:"optional,object"`
+	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint to be used for serving the index
-	EndpointName types.String `tfsdk:"endpoint_name" tf:""`
+	EndpointName types.String `tfsdk:"endpoint_name"`
 	// There are 2 types of Vector Search indexes:
 	//
 	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
@@ -125,17 +140,30 @@ type CreateVectorIndexRequest_SdkV2 struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType types.String `tfsdk:"index_type" tf:""`
+	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Primary key of the index
-	PrimaryKey types.String `tfsdk:"primary_key" tf:""`
+	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
 func (newState *CreateVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexRequest_SdkV2) {
 }
 
 func (newState *CreateVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexRequest_SdkV2) {
+}
+
+func (c CreateVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].SetOptional()
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
+	attrs["index_type"] = attrs["index_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["primary_key"] = attrs["primary_key"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexRequest.
@@ -239,13 +267,20 @@ func (o *CreateVectorIndexRequest_SdkV2) SetDirectAccessIndexSpec(ctx context.Co
 }
 
 type CreateVectorIndexResponse_SdkV2 struct {
-	VectorIndex types.List `tfsdk:"vector_index" tf:"optional,object"`
+	VectorIndex types.List `tfsdk:"vector_index"`
 }
 
 func (newState *CreateVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateVectorIndexResponse_SdkV2) {
 }
 
 func (newState *CreateVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateVectorIndexResponse_SdkV2) {
+}
+
+func (c CreateVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["vector_index"] = attrs["vector_index"].SetOptional()
+	attrs["vector_index"] = attrs["vector_index"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateVectorIndexResponse.
@@ -312,15 +347,22 @@ func (o *CreateVectorIndexResponse_SdkV2) SetVectorIndex(ctx context.Context, v 
 // Result of the upsert or delete operation.
 type DeleteDataResult_SdkV2 struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys" tf:"optional"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
 	// Count of successfully processed rows.
-	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
+	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
 func (newState *DeleteDataResult_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataResult_SdkV2) {
 }
 
 func (newState *DeleteDataResult_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDataResult_SdkV2) {
+}
+
+func (c DeleteDataResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["failed_primary_keys"] = attrs["failed_primary_keys"].SetOptional()
+	attrs["success_row_count"] = attrs["success_row_count"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataResult.
@@ -392,13 +434,20 @@ type DeleteDataVectorIndexRequest_SdkV2 struct {
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
 	// List of primary keys for the data to be deleted.
-	PrimaryKeys types.List `tfsdk:"primary_keys" tf:""`
+	PrimaryKeys types.List `tfsdk:"primary_keys"`
 }
 
 func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexRequest_SdkV2) {
 }
 
 func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest_SdkV2) {
+}
+
+func (c DeleteDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["primary_keys"] = attrs["primary_keys"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexRequest.
@@ -467,15 +516,23 @@ func (o *DeleteDataVectorIndexRequest_SdkV2) SetPrimaryKeys(ctx context.Context,
 // Response to a delete data vector index request.
 type DeleteDataVectorIndexResponse_SdkV2 struct {
 	// Result of the upsert or delete operation.
-	Result types.List `tfsdk:"result" tf:"optional,object"`
+	Result types.List `tfsdk:"result"`
 	// Status of the delete operation.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *DeleteDataVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexResponse_SdkV2) {
 }
 
 func (newState *DeleteDataVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexResponse_SdkV2) {
+}
+
+func (c DeleteDataVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["result"] = attrs["result"].SetOptional()
+	attrs["result"] = attrs["result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexResponse.
@@ -547,12 +604,6 @@ type DeleteEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointRequest_SdkV2) {
-}
-
-func (newState *DeleteEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -587,12 +638,6 @@ func (o DeleteEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteEndpointResponse_SdkV2 struct {
 }
 
-func (newState *DeleteEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointResponse_SdkV2) {
-}
-
-func (newState *DeleteEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointResponse_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -624,12 +669,6 @@ func (o DeleteEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexRequest_SdkV2) {
-}
-
-func (newState *DeleteIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteIndexRequest_SdkV2) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexRequest.
@@ -666,12 +705,6 @@ func (o DeleteIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexResponse_SdkV2 struct {
 }
 
-func (newState *DeleteIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexResponse_SdkV2) {
-}
-
-func (newState *DeleteIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteIndexResponse_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -704,16 +737,16 @@ type DeltaSyncVectorIndexSpecRequest_SdkV2 struct {
 	// this field blank, all columns from the source table are synced with the
 	// index. The primary key column and embedding source column or embedding
 	// vector column are always synced.
-	ColumnsToSync types.List `tfsdk:"columns_to_sync" tf:"optional"`
+	ColumnsToSync types.List `tfsdk:"columns_to_sync"`
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors. The format should be
 	// array[double].
-	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Automatically sync the vector index contents and computed
 	// embeddings to the specified Delta table. The only supported table name is
 	// the index name with the suffix `_writeback_table`.
-	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table" tf:"optional"`
+	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
 	// Pipeline execution mode.
 	//
 	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
@@ -722,15 +755,26 @@ type DeltaSyncVectorIndexSpecRequest_SdkV2 struct {
 	// available when the update started. - `CONTINUOUS`: If the pipeline uses
 	// continuous execution, the pipeline processes new data as it arrives in
 	// the source table to keep vector index fresh.
-	PipelineType types.String `tfsdk:"pipeline_type" tf:"optional"`
+	PipelineType types.String `tfsdk:"pipeline_type"`
 	// The name of the source table.
-	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
+	SourceTable types.String `tfsdk:"source_table"`
 }
 
 func (newState *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecRequest_SdkV2) {
 }
 
 func (newState *DeltaSyncVectorIndexSpecRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecRequest_SdkV2) {
+}
+
+func (c DeltaSyncVectorIndexSpecRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns_to_sync"] = attrs["columns_to_sync"].SetOptional()
+	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
+	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
+	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
+	attrs["pipeline_type"] = attrs["pipeline_type"].SetOptional()
+	attrs["source_table"] = attrs["source_table"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeltaSyncVectorIndexSpecRequest.
@@ -864,14 +908,14 @@ func (o *DeltaSyncVectorIndexSpecRequest_SdkV2) SetEmbeddingVectorColumns(ctx co
 
 type DeltaSyncVectorIndexSpecResponse_SdkV2 struct {
 	// The columns that contain the embedding source.
-	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 	// The columns that contain the embedding vectors.
-	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// [Optional] Name of the Delta table to sync the vector index contents and
 	// computed embeddings to.
-	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table" tf:"optional"`
+	EmbeddingWritebackTable types.String `tfsdk:"embedding_writeback_table"`
 	// The ID of the pipeline that is used to sync the index.
-	PipelineId types.String `tfsdk:"pipeline_id" tf:"optional"`
+	PipelineId types.String `tfsdk:"pipeline_id"`
 	// Pipeline execution mode.
 	//
 	// - `TRIGGERED`: If the pipeline uses the triggered execution mode, the
@@ -880,15 +924,26 @@ type DeltaSyncVectorIndexSpecResponse_SdkV2 struct {
 	// available when the update started. - `CONTINUOUS`: If the pipeline uses
 	// continuous execution, the pipeline processes new data as it arrives in
 	// the source table to keep vector index fresh.
-	PipelineType types.String `tfsdk:"pipeline_type" tf:"optional"`
+	PipelineType types.String `tfsdk:"pipeline_type"`
 	// The name of the source table.
-	SourceTable types.String `tfsdk:"source_table" tf:"optional"`
+	SourceTable types.String `tfsdk:"source_table"`
 }
 
 func (newState *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSyncVectorIndexSpecResponse_SdkV2) {
 }
 
 func (newState *DeltaSyncVectorIndexSpecResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeltaSyncVectorIndexSpecResponse_SdkV2) {
+}
+
+func (c DeltaSyncVectorIndexSpecResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
+	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
+	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["pipeline_type"] = attrs["pipeline_type"].SetOptional()
+	attrs["source_table"] = attrs["source_table"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeltaSyncVectorIndexSpecResponse.
@@ -993,22 +1048,30 @@ func (o *DeltaSyncVectorIndexSpecResponse_SdkV2) SetEmbeddingVectorColumns(ctx c
 
 type DirectAccessVectorIndexSpec_SdkV2 struct {
 	// Contains the optional model endpoint to use during query time.
-	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns" tf:"optional"`
+	EmbeddingSourceColumns types.List `tfsdk:"embedding_source_columns"`
 
-	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns" tf:"optional"`
+	EmbeddingVectorColumns types.List `tfsdk:"embedding_vector_columns"`
 	// The schema of the index in JSON format.
 	//
 	// Supported types are `integer`, `long`, `float`, `double`, `boolean`,
 	// `string`, `date`, `timestamp`.
 	//
 	// Supported types for vector column: `array<float>`, `array<double>`,`.
-	SchemaJson types.String `tfsdk:"schema_json" tf:"optional"`
+	SchemaJson types.String `tfsdk:"schema_json"`
 }
 
 func (newState *DirectAccessVectorIndexSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DirectAccessVectorIndexSpec_SdkV2) {
 }
 
 func (newState *DirectAccessVectorIndexSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState DirectAccessVectorIndexSpec_SdkV2) {
+}
+
+func (c DirectAccessVectorIndexSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embedding_source_columns"] = attrs["embedding_source_columns"].SetOptional()
+	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
+	attrs["schema_json"] = attrs["schema_json"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DirectAccessVectorIndexSpec.
@@ -1107,15 +1170,22 @@ func (o *DirectAccessVectorIndexSpec_SdkV2) SetEmbeddingVectorColumns(ctx contex
 
 type EmbeddingSourceColumn_SdkV2 struct {
 	// Name of the embedding model endpoint
-	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name" tf:"optional"`
+	EmbeddingModelEndpointName types.String `tfsdk:"embedding_model_endpoint_name"`
 	// Name of the column
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *EmbeddingSourceColumn_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingSourceColumn_SdkV2) {
 }
 
 func (newState *EmbeddingSourceColumn_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmbeddingSourceColumn_SdkV2) {
+}
+
+func (c EmbeddingSourceColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embedding_model_endpoint_name"] = attrs["embedding_model_endpoint_name"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EmbeddingSourceColumn.
@@ -1153,15 +1223,22 @@ func (o EmbeddingSourceColumn_SdkV2) Type(ctx context.Context) attr.Type {
 
 type EmbeddingVectorColumn_SdkV2 struct {
 	// Dimension of the embedding vector
-	EmbeddingDimension types.Int64 `tfsdk:"embedding_dimension" tf:"optional"`
+	EmbeddingDimension types.Int64 `tfsdk:"embedding_dimension"`
 	// Name of the column
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *EmbeddingVectorColumn_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EmbeddingVectorColumn_SdkV2) {
 }
 
 func (newState *EmbeddingVectorColumn_SdkV2) SyncEffectiveFieldsDuringRead(existingState EmbeddingVectorColumn_SdkV2) {
+}
+
+func (c EmbeddingVectorColumn_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["embedding_dimension"] = attrs["embedding_dimension"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EmbeddingVectorColumn.
@@ -1199,29 +1276,44 @@ func (o EmbeddingVectorColumn_SdkV2) Type(ctx context.Context) attr.Type {
 
 type EndpointInfo_SdkV2 struct {
 	// Timestamp of endpoint creation
-	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp" tf:"optional"`
+	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// Creator of the endpoint
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// Current status of the endpoint
-	EndpointStatus types.List `tfsdk:"endpoint_status" tf:"optional,object"`
+	EndpointStatus types.List `tfsdk:"endpoint_status"`
 	// Type of endpoint.
-	EndpointType types.String `tfsdk:"endpoint_type" tf:"optional"`
+	EndpointType types.String `tfsdk:"endpoint_type"`
 	// Unique identifier of the endpoint
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Timestamp of last update to the endpoint
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// User who last updated the endpoint
-	LastUpdatedUser types.String `tfsdk:"last_updated_user" tf:"optional"`
+	LastUpdatedUser types.String `tfsdk:"last_updated_user"`
 	// Name of endpoint
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Number of indexes on the endpoint
-	NumIndexes types.Int64 `tfsdk:"num_indexes" tf:"optional"`
+	NumIndexes types.Int64 `tfsdk:"num_indexes"`
 }
 
 func (newState *EndpointInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointInfo_SdkV2) {
 }
 
 func (newState *EndpointInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointInfo_SdkV2) {
+}
+
+func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["endpoint_status"] = attrs["endpoint_status"].SetOptional()
+	attrs["endpoint_status"] = attrs["endpoint_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_type"] = attrs["endpoint_type"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["last_updated_user"] = attrs["last_updated_user"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["num_indexes"] = attrs["num_indexes"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointInfo.
@@ -1304,15 +1396,22 @@ func (o *EndpointInfo_SdkV2) SetEndpointStatus(ctx context.Context, v EndpointSt
 // Status information of an endpoint
 type EndpointStatus_SdkV2 struct {
 	// Additional status message
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// Current state of the endpoint
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 }
 
 func (newState *EndpointStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointStatus_SdkV2) {
 }
 
 func (newState *EndpointStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState EndpointStatus_SdkV2) {
+}
+
+func (c EndpointStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointStatus.
@@ -1354,12 +1453,6 @@ type GetEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
-func (newState *GetEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEndpointRequest_SdkV2) {
-}
-
-func (newState *GetEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetEndpointRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1397,12 +1490,6 @@ type GetIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
-func (newState *GetIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIndexRequest_SdkV2) {
-}
-
-func (newState *GetIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetIndexRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1436,16 +1523,23 @@ func (o GetIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ListEndpointResponse_SdkV2 struct {
 	// An array of Endpoint objects
-	Endpoints types.List `tfsdk:"endpoints" tf:"optional"`
+	Endpoints types.List `tfsdk:"endpoints"`
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListEndpointResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointResponse_SdkV2) {
 }
 
 func (newState *ListEndpointResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointResponse_SdkV2) {
+}
+
+func (c ListEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoints"] = attrs["endpoints"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointResponse.
@@ -1517,12 +1611,6 @@ type ListEndpointsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListEndpointsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsRequest_SdkV2) {
-}
-
-func (newState *ListEndpointsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointsRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1562,12 +1650,6 @@ type ListIndexesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListIndexesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIndexesRequest_SdkV2) {
-}
-
-func (newState *ListIndexesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListIndexesRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIndexesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1602,13 +1684,19 @@ func (o ListIndexesRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListValue_SdkV2 struct {
-	Values types.List `tfsdk:"values" tf:"optional"`
+	Values types.List `tfsdk:"values"`
 }
 
 func (newState *ListValue_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListValue_SdkV2) {
 }
 
 func (newState *ListValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListValue_SdkV2) {
+}
+
+func (c ListValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["values"] = attrs["values"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListValue.
@@ -1675,15 +1763,22 @@ func (o *ListValue_SdkV2) SetValues(ctx context.Context, v []Value_SdkV2) {
 type ListVectorIndexesResponse_SdkV2 struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	VectorIndexes types.List `tfsdk:"vector_indexes" tf:"optional"`
+	VectorIndexes types.List `tfsdk:"vector_indexes"`
 }
 
 func (newState *ListVectorIndexesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVectorIndexesResponse_SdkV2) {
 }
 
 func (newState *ListVectorIndexesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListVectorIndexesResponse_SdkV2) {
+}
+
+func (c ListVectorIndexesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["vector_indexes"] = attrs["vector_indexes"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVectorIndexesResponse.
@@ -1752,15 +1847,23 @@ func (o *ListVectorIndexesResponse_SdkV2) SetVectorIndexes(ctx context.Context, 
 // Key-value pair.
 type MapStringValueEntry_SdkV2 struct {
 	// Column name.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// Column value, nullable.
-	Value types.List `tfsdk:"value" tf:"optional,object"`
+	Value types.List `tfsdk:"value"`
 }
 
 func (newState *MapStringValueEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MapStringValueEntry_SdkV2) {
 }
 
 func (newState *MapStringValueEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState MapStringValueEntry_SdkV2) {
+}
+
+func (c MapStringValueEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+	attrs["value"] = attrs["value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MapStringValueEntry.
@@ -1828,9 +1931,9 @@ func (o *MapStringValueEntry_SdkV2) SetValue(ctx context.Context, v Value_SdkV2)
 
 type MiniVectorIndex_SdkV2 struct {
 	// The user who created the index.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 	// Name of the endpoint associated with the index
-	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
+	EndpointName types.String `tfsdk:"endpoint_name"`
 	// There are 2 types of Vector Search indexes:
 	//
 	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
@@ -1838,17 +1941,27 @@ type MiniVectorIndex_SdkV2 struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType types.String `tfsdk:"index_type" tf:"optional"`
+	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Primary key of the index
-	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
+	PrimaryKey types.String `tfsdk:"primary_key"`
 }
 
 func (newState *MiniVectorIndex_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan MiniVectorIndex_SdkV2) {
 }
 
 func (newState *MiniVectorIndex_SdkV2) SyncEffectiveFieldsDuringRead(existingState MiniVectorIndex_SdkV2) {
+}
+
+func (c MiniVectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["index_type"] = attrs["index_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["primary_key"] = attrs["primary_key"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MiniVectorIndex.
@@ -1893,18 +2006,26 @@ func (o MiniVectorIndex_SdkV2) Type(ctx context.Context) attr.Type {
 // Request payload for getting next page of results.
 type QueryVectorIndexNextPageRequest_SdkV2 struct {
 	// Name of the endpoint.
-	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
+	EndpointName types.String `tfsdk:"endpoint_name"`
 	// Name of the vector index to query.
 	IndexName types.String `tfsdk:"-"`
 	// Page token returned from previous `QueryVectorIndex` or
 	// `QueryVectorIndexNextPage` API.
-	PageToken types.String `tfsdk:"page_token" tf:"optional"`
+	PageToken types.String `tfsdk:"page_token"`
 }
 
 func (newState *QueryVectorIndexNextPageRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexNextPageRequest_SdkV2) {
 }
 
 func (newState *QueryVectorIndexNextPageRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexNextPageRequest_SdkV2) {
+}
+
+func (c QueryVectorIndexNextPageRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexNextPageRequest.
@@ -1944,33 +2065,46 @@ func (o QueryVectorIndexNextPageRequest_SdkV2) Type(ctx context.Context) attr.Ty
 
 type QueryVectorIndexRequest_SdkV2 struct {
 	// List of column names to include in the response.
-	Columns types.List `tfsdk:"columns" tf:""`
+	Columns types.List `tfsdk:"columns"`
 	// JSON string representing query filters.
 	//
 	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
 	// 5}`: Filter for id greater than 5. - `{"id <=": 5}`: Filter for id less
 	// than equal to 5. - `{"id >=": 5}`: Filter for id greater than equal to 5.
 	// - `{"id": 5}`: Filter for id equal to 5.
-	FiltersJson types.String `tfsdk:"filters_json" tf:"optional"`
+	FiltersJson types.String `tfsdk:"filters_json"`
 	// Name of the vector index to query.
 	IndexName types.String `tfsdk:"-"`
 	// Number of results to return. Defaults to 10.
-	NumResults types.Int64 `tfsdk:"num_results" tf:"optional"`
+	NumResults types.Int64 `tfsdk:"num_results"`
 	// Query text. Required for Delta Sync Index using model endpoint.
-	QueryText types.String `tfsdk:"query_text" tf:"optional"`
+	QueryText types.String `tfsdk:"query_text"`
 	// The query type to use. Choices are `ANN` and `HYBRID`. Defaults to `ANN`.
-	QueryType types.String `tfsdk:"query_type" tf:"optional"`
+	QueryType types.String `tfsdk:"query_type"`
 	// Query vector. Required for Direct Vector Access Index and Delta Sync
 	// Index using self-managed vectors.
-	QueryVector types.List `tfsdk:"query_vector" tf:"optional"`
+	QueryVector types.List `tfsdk:"query_vector"`
 	// Threshold for the approximate nearest neighbor search. Defaults to 0.0.
-	ScoreThreshold types.Float64 `tfsdk:"score_threshold" tf:"optional"`
+	ScoreThreshold types.Float64 `tfsdk:"score_threshold"`
 }
 
 func (newState *QueryVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexRequest_SdkV2) {
 }
 
 func (newState *QueryVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexRequest_SdkV2) {
+}
+
+func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetRequired()
+	attrs["filters_json"] = attrs["filters_json"].SetOptional()
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["query_type"] = attrs["query_type"].SetOptional()
+	attrs["query_vector"] = attrs["query_vector"].SetOptional()
+	attrs["score_threshold"] = attrs["score_threshold"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexRequest.
@@ -2079,19 +2213,29 @@ func (o *QueryVectorIndexRequest_SdkV2) SetQueryVector(ctx context.Context, v []
 
 type QueryVectorIndexResponse_SdkV2 struct {
 	// Metadata about the result set.
-	Manifest types.List `tfsdk:"manifest" tf:"optional,object"`
+	Manifest types.List `tfsdk:"manifest"`
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Data returned in the query result.
-	Result types.List `tfsdk:"result" tf:"optional,object"`
+	Result types.List `tfsdk:"result"`
 }
 
 func (newState *QueryVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryVectorIndexResponse_SdkV2) {
 }
 
 func (newState *QueryVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState QueryVectorIndexResponse_SdkV2) {
+}
+
+func (c QueryVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["manifest"] = attrs["manifest"].SetOptional()
+	attrs["manifest"] = attrs["manifest"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["result"] = attrs["result"].SetOptional()
+	attrs["result"] = attrs["result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryVectorIndexResponse.
@@ -2191,15 +2335,22 @@ func (o *QueryVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v Result
 // Data returned in the query result.
 type ResultData_SdkV2 struct {
 	// Data rows returned in the query.
-	DataArray types.List `tfsdk:"data_array" tf:"optional"`
+	DataArray types.List `tfsdk:"data_array"`
 	// Number of rows in the result set.
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 }
 
 func (newState *ResultData_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultData_SdkV2) {
 }
 
 func (newState *ResultData_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResultData_SdkV2) {
+}
+
+func (c ResultData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_array"] = attrs["data_array"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResultData.
@@ -2270,15 +2421,22 @@ func (o *ResultData_SdkV2) SetDataArray(ctx context.Context, v []types.String) {
 // Metadata about the result set.
 type ResultManifest_SdkV2 struct {
 	// Number of columns in the result set.
-	ColumnCount types.Int64 `tfsdk:"column_count" tf:"optional"`
+	ColumnCount types.Int64 `tfsdk:"column_count"`
 	// Information about each column in the result set.
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 func (newState *ResultManifest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResultManifest_SdkV2) {
 }
 
 func (newState *ResultManifest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ResultManifest_SdkV2) {
+}
+
+func (c ResultManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column_count"] = attrs["column_count"].SetOptional()
+	attrs["columns"] = attrs["columns"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResultManifest.
@@ -2349,15 +2507,23 @@ type ScanVectorIndexRequest_SdkV2 struct {
 	// Name of the vector index to scan.
 	IndexName types.String `tfsdk:"-"`
 	// Primary key of the last entry returned in the previous scan.
-	LastPrimaryKey types.String `tfsdk:"last_primary_key" tf:"optional"`
+	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 	// Number of results to return. Defaults to 10.
-	NumResults types.Int64 `tfsdk:"num_results" tf:"optional"`
+	NumResults types.Int64 `tfsdk:"num_results"`
 }
 
 func (newState *ScanVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexRequest_SdkV2) {
 }
 
 func (newState *ScanVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexRequest_SdkV2) {
+}
+
+func (c ScanVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["last_primary_key"] = attrs["last_primary_key"].SetOptional()
+	attrs["num_results"] = attrs["num_results"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ScanVectorIndexRequest.
@@ -2398,15 +2564,22 @@ func (o ScanVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Response to a scan vector index request.
 type ScanVectorIndexResponse_SdkV2 struct {
 	// List of data entries
-	Data types.List `tfsdk:"data" tf:"optional"`
+	Data types.List `tfsdk:"data"`
 	// Primary key of the last entry.
-	LastPrimaryKey types.String `tfsdk:"last_primary_key" tf:"optional"`
+	LastPrimaryKey types.String `tfsdk:"last_primary_key"`
 }
 
 func (newState *ScanVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ScanVectorIndexResponse_SdkV2) {
 }
 
 func (newState *ScanVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ScanVectorIndexResponse_SdkV2) {
+}
+
+func (c ScanVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["last_primary_key"] = attrs["last_primary_key"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ScanVectorIndexResponse.
@@ -2474,13 +2647,19 @@ func (o *ScanVectorIndexResponse_SdkV2) SetData(ctx context.Context, v []Struct_
 
 type Struct_SdkV2 struct {
 	// Data entry, corresponding to a row in a vector index.
-	Fields types.List `tfsdk:"fields" tf:"optional"`
+	Fields types.List `tfsdk:"fields"`
 }
 
 func (newState *Struct_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Struct_SdkV2) {
 }
 
 func (newState *Struct_SdkV2) SyncEffectiveFieldsDuringRead(existingState Struct_SdkV2) {
+}
+
+func (c Struct_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fields"] = attrs["fields"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Struct.
@@ -2550,12 +2729,6 @@ type SyncIndexRequest_SdkV2 struct {
 	IndexName types.String `tfsdk:"-"`
 }
 
-func (newState *SyncIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexRequest_SdkV2) {
-}
-
-func (newState *SyncIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncIndexRequest_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2590,12 +2763,6 @@ func (o SyncIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type SyncIndexResponse_SdkV2 struct {
 }
 
-func (newState *SyncIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexResponse_SdkV2) {
-}
-
-func (newState *SyncIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncIndexResponse_SdkV2) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2626,15 +2793,22 @@ func (o SyncIndexResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Result of the upsert or delete operation.
 type UpsertDataResult_SdkV2 struct {
 	// List of primary keys for rows that failed to process.
-	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys" tf:"optional"`
+	FailedPrimaryKeys types.List `tfsdk:"failed_primary_keys"`
 	// Count of successfully processed rows.
-	SuccessRowCount types.Int64 `tfsdk:"success_row_count" tf:"optional"`
+	SuccessRowCount types.Int64 `tfsdk:"success_row_count"`
 }
 
 func (newState *UpsertDataResult_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataResult_SdkV2) {
 }
 
 func (newState *UpsertDataResult_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpsertDataResult_SdkV2) {
+}
+
+func (c UpsertDataResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["failed_primary_keys"] = attrs["failed_primary_keys"].SetOptional()
+	attrs["success_row_count"] = attrs["success_row_count"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataResult.
@@ -2706,13 +2880,20 @@ type UpsertDataVectorIndexRequest_SdkV2 struct {
 	// Vector Access Index.
 	IndexName types.String `tfsdk:"-"`
 	// JSON string representing the data to be upserted.
-	InputsJson types.String `tfsdk:"inputs_json" tf:""`
+	InputsJson types.String `tfsdk:"inputs_json"`
 }
 
 func (newState *UpsertDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexRequest_SdkV2) {
 }
 
 func (newState *UpsertDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexRequest_SdkV2) {
+}
+
+func (c UpsertDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_name"] = attrs["index_name"].SetRequired()
+	attrs["inputs_json"] = attrs["inputs_json"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataVectorIndexRequest.
@@ -2751,15 +2932,23 @@ func (o UpsertDataVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type 
 // Response to an upsert data vector index request.
 type UpsertDataVectorIndexResponse_SdkV2 struct {
 	// Result of the upsert or delete operation.
-	Result types.List `tfsdk:"result" tf:"optional,object"`
+	Result types.List `tfsdk:"result"`
 	// Status of the upsert operation.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *UpsertDataVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpsertDataVectorIndexResponse_SdkV2) {
 }
 
 func (newState *UpsertDataVectorIndexResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpsertDataVectorIndexResponse_SdkV2) {
+}
+
+func (c UpsertDataVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["result"] = attrs["result"].SetOptional()
+	attrs["result"] = attrs["result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpsertDataVectorIndexResponse.
@@ -2826,23 +3015,36 @@ func (o *UpsertDataVectorIndexResponse_SdkV2) SetResult(ctx context.Context, v U
 }
 
 type Value_SdkV2 struct {
-	BoolValue types.Bool `tfsdk:"bool_value" tf:"optional"`
+	BoolValue types.Bool `tfsdk:"bool_value"`
 
-	ListValue types.List `tfsdk:"list_value" tf:"optional,object"`
+	ListValue types.List `tfsdk:"list_value"`
 
-	NullValue types.String `tfsdk:"null_value" tf:"optional"`
+	NullValue types.String `tfsdk:"null_value"`
 
-	NumberValue types.Float64 `tfsdk:"number_value" tf:"optional"`
+	NumberValue types.Float64 `tfsdk:"number_value"`
 
-	StringValue types.String `tfsdk:"string_value" tf:"optional"`
+	StringValue types.String `tfsdk:"string_value"`
 
-	StructValue types.List `tfsdk:"struct_value" tf:"optional,object"`
+	StructValue types.List `tfsdk:"struct_value"`
 }
 
 func (newState *Value_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Value_SdkV2) {
 }
 
 func (newState *Value_SdkV2) SyncEffectiveFieldsDuringRead(existingState Value_SdkV2) {
+}
+
+func (c Value_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bool_value"] = attrs["bool_value"].SetOptional()
+	attrs["list_value"] = attrs["list_value"].SetOptional()
+	attrs["list_value"] = attrs["list_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["null_value"] = attrs["null_value"].SetOptional()
+	attrs["number_value"] = attrs["number_value"].SetOptional()
+	attrs["string_value"] = attrs["string_value"].SetOptional()
+	attrs["struct_value"] = attrs["struct_value"].SetOptional()
+	attrs["struct_value"] = attrs["struct_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Value.
@@ -2947,13 +3149,13 @@ func (o *Value_SdkV2) SetStructValue(ctx context.Context, v Struct_SdkV2) {
 
 type VectorIndex_SdkV2 struct {
 	// The user who created the index.
-	Creator types.String `tfsdk:"creator" tf:"optional"`
+	Creator types.String `tfsdk:"creator"`
 
-	DeltaSyncIndexSpec types.List `tfsdk:"delta_sync_index_spec" tf:"optional,object"`
+	DeltaSyncIndexSpec types.List `tfsdk:"delta_sync_index_spec"`
 
-	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec" tf:"optional,object"`
+	DirectAccessIndexSpec types.List `tfsdk:"direct_access_index_spec"`
 	// Name of the endpoint associated with the index
-	EndpointName types.String `tfsdk:"endpoint_name" tf:"optional"`
+	EndpointName types.String `tfsdk:"endpoint_name"`
 	// There are 2 types of Vector Search indexes:
 	//
 	// - `DELTA_SYNC`: An index that automatically syncs with a source Delta
@@ -2961,19 +3163,35 @@ type VectorIndex_SdkV2 struct {
 	// underlying data in the Delta Table changes. - `DIRECT_ACCESS`: An index
 	// that supports direct read and write of vectors and metadata through our
 	// REST and SDK APIs. With this model, the user manages index updates.
-	IndexType types.String `tfsdk:"index_type" tf:"optional"`
+	IndexType types.String `tfsdk:"index_type"`
 	// Name of the index
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Primary key of the index
-	PrimaryKey types.String `tfsdk:"primary_key" tf:"optional"`
+	PrimaryKey types.String `tfsdk:"primary_key"`
 
-	Status types.List `tfsdk:"status" tf:"optional,object"`
+	Status types.List `tfsdk:"status"`
 }
 
 func (newState *VectorIndex_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndex_SdkV2) {
 }
 
 func (newState *VectorIndex_SdkV2) SyncEffectiveFieldsDuringRead(existingState VectorIndex_SdkV2) {
+}
+
+func (c VectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["creator"] = attrs["creator"].SetOptional()
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].SetOptional()
+	attrs["delta_sync_index_spec"] = attrs["delta_sync_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].SetOptional()
+	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
+	attrs["index_type"] = attrs["index_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["primary_key"] = attrs["primary_key"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in VectorIndex.
@@ -3111,19 +3329,28 @@ func (o *VectorIndex_SdkV2) SetStatus(ctx context.Context, v VectorIndexStatus_S
 
 type VectorIndexStatus_SdkV2 struct {
 	// Index API Url to be used to perform operations on the index
-	IndexUrl types.String `tfsdk:"index_url" tf:"optional"`
+	IndexUrl types.String `tfsdk:"index_url"`
 	// Number of rows indexed
-	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count" tf:"optional"`
+	IndexedRowCount types.Int64 `tfsdk:"indexed_row_count"`
 	// Message associated with the index status
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 	// Whether the index is ready for search
-	Ready types.Bool `tfsdk:"ready" tf:"optional"`
+	Ready types.Bool `tfsdk:"ready"`
 }
 
 func (newState *VectorIndexStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan VectorIndexStatus_SdkV2) {
 }
 
 func (newState *VectorIndexStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState VectorIndexStatus_SdkV2) {
+}
+
+func (c VectorIndexStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["index_url"] = attrs["index_url"].SetOptional()
+	attrs["indexed_row_count"] = attrs["indexed_row_count"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["ready"] = attrs["ready"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in VectorIndexStatus.

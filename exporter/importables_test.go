@@ -403,7 +403,7 @@ func TestClusterListFails(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/list",
+			Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 			Status:   404,
 			Response: apierr.NotFound("nope"),
 		},
@@ -418,7 +418,7 @@ func TestClusterList_NoNameMatch(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.0/clusters/list",
+			Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 			Response: clusters.ClusterList{
 				Clusters: []clusters.ClusterInfo{
 					{

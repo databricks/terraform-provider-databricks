@@ -192,7 +192,7 @@ func TestImportingMounts(t *testing.T) {
 			{
 				Method:       "POST",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/events",
+				Resource:     "/api/2.1/clusters/events",
 				Response: clusters.EventsResponse{
 					Events: []clusters.ClusterEvent{},
 				},
@@ -674,7 +674,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -809,7 +809,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -864,7 +864,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list",
+				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response:     getJSONObject("test-data/clusters-list-response.json"),
 				ReuseRequest: true,
 			},
@@ -936,9 +936,10 @@ func TestImportingClusters(t *testing.T) {
 				Response: getJSONObject("test-data/get-cluster-awscluster-response.json"),
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=awscluster",
-				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=awscluster",
+				Response:     getJSONObject("test-data/libraries-cluster-status-test2.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -1593,7 +1594,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{

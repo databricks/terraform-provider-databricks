@@ -1616,6 +1616,8 @@ func (o *CreateAppDeploymentRequest_SdkV2) SetAppDeployment(ctx context.Context,
 // Create an app
 type CreateAppRequest_SdkV2 struct {
 	App types.List `tfsdk:"app"`
+	// If true, the app will not be started after creation.
+	NoCompute types.Bool `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppRequest.
@@ -1638,7 +1640,8 @@ func (o CreateAppRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"app": o.App,
+			"app":        o.App,
+			"no_compute": o.NoCompute,
 		})
 }
 
@@ -1649,6 +1652,7 @@ func (o CreateAppRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"app": basetypes.ListType{
 				ElemType: App_SdkV2{}.Type(ctx),
 			},
+			"no_compute": types.BoolType,
 		},
 	}
 }

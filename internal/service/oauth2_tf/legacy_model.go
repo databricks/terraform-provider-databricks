@@ -26,8 +26,9 @@ import (
 // Create account federation policy
 type CreateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
-	// The identifier for the federation policy. If unspecified, the id will be
-	// assigned by Databricks.
+	// The identifier for the federation policy. The identifier must contain
+	// only lowercase alphanumeric characters, numbers, hyphens, and slashes. If
+	// unspecified, the id will be assigned by Databricks.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -448,8 +449,9 @@ func (o CreatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 // Create service principal federation policy
 type CreateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
-	// The identifier for the federation policy. If unspecified, the id will be
-	// assigned by Databricks.
+	// The identifier for the federation policy. The identifier must contain
+	// only lowercase alphanumeric characters, numbers, hyphens, and slashes. If
+	// unspecified, the id will be assigned by Databricks.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -630,61 +632,9 @@ func (o CreateServicePrincipalSecretResponse_SdkV2) Type(ctx context.Context) at
 	}
 }
 
-type DataPlaneInfo_SdkV2 struct {
-	// Authorization details as a string.
-	AuthorizationDetails types.String `tfsdk:"authorization_details"`
-	// The URL of the endpoint for this operation in the dataplane.
-	EndpointUrl types.String `tfsdk:"endpoint_url"`
-}
-
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneInfo_SdkV2) {
-}
-
-func (newState *DataPlaneInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState DataPlaneInfo_SdkV2) {
-}
-
-func (c DataPlaneInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["authorization_details"] = attrs["authorization_details"].SetOptional()
-	attrs["endpoint_url"] = attrs["endpoint_url"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in DataPlaneInfo.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a DataPlaneInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, DataPlaneInfo_SdkV2
-// only implements ToObjectValue() and Type().
-func (o DataPlaneInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"authorization_details": o.AuthorizationDetails,
-			"endpoint_url":          o.EndpointUrl,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o DataPlaneInfo_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"authorization_details": types.StringType,
-			"endpoint_url":          types.StringType,
-		},
-	}
-}
-
 // Delete account federation policy
 type DeleteAccountFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -905,6 +855,7 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Delete service principal federation policy
 type DeleteServicePrincipalFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -989,9 +940,13 @@ type FederationPolicy_SdkV2 struct {
 	CreateTime types.String `tfsdk:"create_time"`
 	// Description of the federation policy.
 	Description types.String `tfsdk:"description"`
-	// Name of the federation policy. The name must contain only lowercase
-	// alphanumeric characters, numbers, and hyphens. It must be unique within
-	// the account.
+	// Resource name for the federation policy. Example values include
+	// `accounts/<account-id>/federationPolicies/my-federation-policy` for
+	// Account Federation Policies, and
+	// `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy`
+	// for Service Principal Federation Policies. Typically an output parameter,
+	// which does not need to be specified in create or update requests. If
+	// specified in a request, must match the value in the request URL.
 	Name types.String `tfsdk:"name"`
 	// Specifies the policy to use for validating OIDC claims in your federated
 	// tokens.
@@ -1093,6 +1048,7 @@ func (o *FederationPolicy_SdkV2) SetOidcPolicy(ctx context.Context, v OidcFedera
 
 // Get account federation policy
 type GetAccountFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 }
 
@@ -1739,6 +1695,7 @@ func (o *GetPublishedAppsOutput_SdkV2) SetApps(ctx context.Context, v []Publishe
 
 // Get service principal federation policy
 type GetServicePrincipalFederationPolicyRequest_SdkV2 struct {
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
@@ -2576,12 +2533,14 @@ func (o TokenAccessPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 // Update account federation policy
 type UpdateAccountFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
-
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
-	// Field mask is required to be passed into the PATCH request. Field mask
-	// specifies which fields of the setting payload will be updated. The field
-	// mask needs to be supplied as single string. To specify multiple fields in
-	// the field mask, use comma as the separator (no space).
+	// The field mask specifies which fields of the policy to update. To specify
+	// multiple fields in the field mask, use comma as the separator (no space).
+	// The special value '*' indicates that all fields should be updated (full
+	// replacement). If unspecified, all fields that are set in the policy
+	// provided in the update request will overwrite the corresponding fields in
+	// the existing policy. Example value: 'description,oidc_policy.audiences'.
 	UpdateMask types.String `tfsdk:"-"`
 }
 
@@ -2936,14 +2895,16 @@ func (o UpdatePublishedAppIntegrationOutput_SdkV2) Type(ctx context.Context) att
 // Update service principal federation policy
 type UpdateServicePrincipalFederationPolicyRequest_SdkV2 struct {
 	Policy types.List `tfsdk:"policy"`
-
+	// The identifier for the federation policy.
 	PolicyId types.String `tfsdk:"-"`
 	// The service principal id for the federation policy.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
-	// Field mask is required to be passed into the PATCH request. Field mask
-	// specifies which fields of the setting payload will be updated. The field
-	// mask needs to be supplied as single string. To specify multiple fields in
-	// the field mask, use comma as the separator (no space).
+	// The field mask specifies which fields of the policy to update. To specify
+	// multiple fields in the field mask, use comma as the separator (no space).
+	// The special value '*' indicates that all fields should be updated (full
+	// replacement). If unspecified, all fields that are set in the policy
+	// provided in the update request will overwrite the corresponding fields in
+	// the existing policy. Example value: 'description,oidc_policy.audiences'.
 	UpdateMask types.String `tfsdk:"-"`
 }
 

@@ -2413,7 +2413,8 @@ type ShareInfo struct {
 	// A list of shared data objects within the share.
 	Objects types.List `tfsdk:"object"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner"`
+	Owner          types.String `tfsdk:"owner"`
+	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Storage Location URL (full path) for the share.
 	StorageLocation types.String `tfsdk:"storage_location"`
 	// Storage root URL for the share.
@@ -2425,9 +2426,15 @@ type ShareInfo struct {
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
+	newState.EffectiveOwner = newState.Owner
+	newState.Owner = plan.Owner
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
+	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
+		newState.Owner = existingState.Owner
+	}
 }
 
 func (c ShareInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -2436,7 +2443,8 @@ func (c ShareInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["object"] = attrs["object"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
+	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
+	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetComputed()
@@ -2471,6 +2479,7 @@ func (o ShareInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"name":             o.Name,
 			"object":           o.Objects,
 			"owner":            o.Owner,
+			"effective_owner":  o.EffectiveOwner,
 			"storage_location": o.StorageLocation,
 			"storage_root":     o.StorageRoot,
 			"updated_at":       o.UpdatedAt,
@@ -2490,6 +2499,7 @@ func (o ShareInfo) Type(ctx context.Context) attr.Type {
 				ElemType: SharedDataObject{}.Type(ctx),
 			},
 			"owner":            types.StringType,
+			"effective_owner":  types.StringType,
 			"storage_location": types.StringType,
 			"storage_root":     types.StringType,
 			"updated_at":       types.Int64Type,
@@ -3219,7 +3229,8 @@ type UpdateShare struct {
 	// New name for the share.
 	NewName types.String `tfsdk:"new_name"`
 	// Username of current owner of share.
-	Owner types.String `tfsdk:"owner"`
+	Owner          types.String `tfsdk:"owner"`
+	EffectiveOwner types.String `tfsdk:"effective_owner"`
 	// Storage root URL for the share.
 	StorageRoot types.String `tfsdk:"storage_root"`
 	// Array of shared data object updates.
@@ -3227,16 +3238,23 @@ type UpdateShare struct {
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateShare) {
+	newState.EffectiveOwner = newState.Owner
+	newState.Owner = plan.Owner
 }
 
 func (newState *UpdateShare) SyncEffectiveFieldsDuringRead(existingState UpdateShare) {
+	newState.EffectiveOwner = existingState.EffectiveOwner
+	if existingState.EffectiveOwner.ValueString() == newState.Owner.ValueString() {
+		newState.Owner = existingState.Owner
+	}
 }
 
 func (c UpdateShare) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
-	attrs["owner"] = attrs["owner"].SetComputed()
+	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
+	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["storage_root"] = attrs["storage_root"].SetOptional()
 	attrs["updates"] = attrs["updates"].SetOptional()
 
@@ -3263,12 +3281,13 @@ func (o UpdateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"comment":      o.Comment,
-			"name":         o.Name,
-			"new_name":     o.NewName,
-			"owner":        o.Owner,
-			"storage_root": o.StorageRoot,
-			"updates":      o.Updates,
+			"comment":         o.Comment,
+			"name":            o.Name,
+			"new_name":        o.NewName,
+			"owner":           o.Owner,
+			"effective_owner": o.EffectiveOwner,
+			"storage_root":    o.StorageRoot,
+			"updates":         o.Updates,
 		})
 }
 
@@ -3276,11 +3295,12 @@ func (o UpdateShare) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o UpdateShare) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment":      types.StringType,
-			"name":         types.StringType,
-			"new_name":     types.StringType,
-			"owner":        types.StringType,
-			"storage_root": types.StringType,
+			"comment":         types.StringType,
+			"name":            types.StringType,
+			"new_name":        types.StringType,
+			"owner":           types.StringType,
+			"effective_owner": types.StringType,
+			"storage_root":    types.StringType,
 			"updates": basetypes.ListType{
 				ElemType: SharedDataObjectUpdate{}.Type(ctx),
 			},

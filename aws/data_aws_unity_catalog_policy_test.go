@@ -59,6 +59,59 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
               "Resource": [
                 "arn:aws:kms:databricks-kms"
               ]
+            },
+            {
+              "Sid": "ManagedFileEventsSetupStatement",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetBucketNotification",
+                "s3:PutBucketNotification",
+                "sns:ListSubscriptionsByTopic",
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sns:CreateTopic",
+                "sns:TagResource",
+                "sns:Publish",
+                "sns:Subscribe",
+                "sqs:CreateQueue",
+                "sqs:DeleteMessage",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "sqs:TagQueue",
+                "sqs:ChangeMessageVisibility",
+                "sqs:PurgeQueue"
+              ],
+              "Resource": [
+                "arn:aws:s3:::databricks-bucket",
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsListStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:ListQueues",
+                "sqs:ListQueueTags",
+                "sns:ListTopics"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "ManagedFileEventsTeardownStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sns:Unsubscribe",
+                "sns:DeleteTopic",
+                "sqs:DeleteQueue"
+              ],
+              "Resource": [
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
             }
           ]
         }`
@@ -116,6 +169,59 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
               "Resource": [
                 "arn:aws:kms:us-west-2:111122223333:key/databricks-kms"
               ]
+            },
+            {
+              "Sid": "ManagedFileEventsSetupStatement",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetBucketNotification",
+                "s3:PutBucketNotification",
+                "sns:ListSubscriptionsByTopic",
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sns:CreateTopic",
+                "sns:TagResource",
+                "sns:Publish",
+                "sns:Subscribe",
+                "sqs:CreateQueue",
+                "sqs:DeleteMessage",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "sqs:TagQueue",
+                "sqs:ChangeMessageVisibility",
+                "sqs:PurgeQueue"
+              ],
+              "Resource": [
+                "arn:aws:s3:::databricks-bucket",
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsListStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:ListQueues",
+                "sqs:ListQueueTags",
+                "sns:ListTopics"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "ManagedFileEventsTeardownStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sns:Unsubscribe",
+                "sns:DeleteTopic",
+                "sqs:DeleteQueue"
+              ],
+              "Resource": [
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
             }
           ]
         }`
@@ -160,6 +266,59 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws:iam::123456789098:role/databricks-role"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsSetupStatement",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetBucketNotification",
+                "s3:PutBucketNotification",
+                "sns:ListSubscriptionsByTopic",
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sns:CreateTopic",
+                "sns:TagResource",
+                "sns:Publish",
+                "sns:Subscribe",
+                "sqs:CreateQueue",
+                "sqs:DeleteMessage",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "sqs:TagQueue",
+                "sqs:ChangeMessageVisibility",
+                "sqs:PurgeQueue"
+              ],
+              "Resource": [
+                "arn:aws:s3:::databricks-bucket",
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsListStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:ListQueues",
+                "sqs:ListQueueTags",
+                "sns:ListTopics"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "ManagedFileEventsTeardownStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sns:Unsubscribe",
+                "sns:DeleteTopic",
+                "sqs:DeleteQueue"
+              ],
+              "Resource": [
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
               ]
             }
           ]
@@ -218,6 +377,59 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws-us-gov:kms:databricks-kms"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsSetupStatement",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetBucketNotification",
+                "s3:PutBucketNotification",
+                "sns:ListSubscriptionsByTopic",
+                "sns:GetTopicAttributes",
+                "sns:SetTopicAttributes",
+                "sns:CreateTopic",
+                "sns:TagResource",
+                "sns:Publish",
+                "sns:Subscribe",
+                "sqs:CreateQueue",
+                "sqs:DeleteMessage",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueUrl",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
+                "sqs:TagQueue",
+                "sqs:ChangeMessageVisibility",
+                "sqs:PurgeQueue"
+              ],
+              "Resource": [
+                "arn:aws-us-gov:s3:::databricks-bucket",
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
+              ]
+            },
+            {
+              "Sid": "ManagedFileEventsListStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:ListQueues",
+                "sqs:ListQueueTags",
+                "sns:ListTopics"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "ManagedFileEventsTeardownStatement",
+              "Effect": "Allow",
+              "Action": [
+                "sns:Unsubscribe",
+                "sns:DeleteTopic",
+                "sqs:DeleteQueue"
+              ],
+              "Resource": [
+                "arn:aws:sqs:*:*:*",
+                "arn:aws:sns:*:*:*"
               ]
             }
           ]

@@ -60,6 +60,59 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 			Resources: []string{kmsArn},
 		})
 	}
+	policy.Statements = append(policy.Statements, &awsIamPolicyStatement{
+			Sid: "ManagedFileEventsSetupStatement",
+			Effect: "Allow",
+			Actions: []string{
+				"s3:GetBucketNotification",
+				"s3:PutBucketNotification",
+				"sns:ListSubscriptionsByTopic",
+				"sns:GetTopicAttributes",
+				"sns:SetTopicAttributes",
+				"sns:CreateTopic",
+				"sns:TagResource",
+				"sns:Publish",
+				"sns:Subscribe",
+				"sqs:CreateQueue",
+				"sqs:DeleteMessage",
+				"sqs:ReceiveMessage",
+				"sqs:SendMessage",
+				"sqs:GetQueueUrl",
+				"sqs:GetQueueAttributes",
+				"sqs:SetQueueAttributes",
+				"sqs:TagQueue",
+				"sqs:ChangeMessageVisibility",
+				"sqs:PurgeQueue",
+			},
+			Resources: []string{
+				fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
+				"arn:aws:sqs:*:*:*",
+				"arn:aws:sns:*:*:*",
+			},
+		},
+		&awsIamPolicyStatement{
+			Sid: "ManagedFileEventsListStatement",
+			Effect: "Allow",
+			Actions: []string{
+				"sqs:ListQueues",
+				"sqs:ListQueueTags",
+				"sns:ListTopics",
+			},
+			Resources: "*",
+		},
+		&awsIamPolicyStatement{
+			Sid: "ManagedFileEventsTeardownStatement",
+			Effect: "Allow",
+			Actions: []string{
+				"sns:Unsubscribe",
+				"sns:DeleteTopic",
+				"sqs:DeleteQueue",
+			},
+			Resources: []string{
+				"arn:aws:sqs:*:*:*",
+				"arn:aws:sns:*:*:*",
+			},
+		})
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")
 	if err != nil {
 		return err

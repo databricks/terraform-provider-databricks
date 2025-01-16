@@ -160,7 +160,7 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
         changelog = f.read()
 
     # Extract the latest release section using regex
-    match = re.search(r"## Release v[\d\.]+.*?(?=\n## Release v|\Z)", changelog, re.S)
+    match = re.search(r"## Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
 
     # E.g., for new packages.
     if not match:
@@ -383,10 +383,12 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     for tag_info in tag_infos:
         # Create the tag locally
         command_tag = ['git', 'tag', tag_info.tag_name(), '-m', tag_info.content]
+        print(f'Running command: {" ".join(command_tag)}')
         subprocess.run(command_tag, check=True)
 
         # Push the tag to the remote repository
         command_push = ['git', 'push', 'origin', tag_info.tag_name()]
+        print(f'Running command: {" ".join(command_push)}')
         subprocess.run(command_push, check=True)
 
 
@@ -395,6 +397,7 @@ def run_command(command: List[str]) -> str:
     Runs a command and returns the output
     """
     output = subprocess.check_output(command)
+    print(f'Running command: {" ".join(command)}')
     return output.decode()
 
 

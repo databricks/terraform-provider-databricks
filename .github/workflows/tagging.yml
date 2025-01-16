@@ -35,7 +35,6 @@ jobs:
       - name: Set up Git configuration
         run: |
           git config user.name "Databricks SDK Release Bot"
-          git config --unset-all http.https://github.com/.extraheader
           git remote set-url origin https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}.git
 
       - name: Run Deco Taggging script

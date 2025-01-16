@@ -382,7 +382,7 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     """
     for tag_info in tag_infos:
         # Create the tag locally
-        command_tag = ['git', 'tag', '-s', tag_info.tag_name(), '-m', tag_info.content]
+        command_tag = ['git', 'tag', tag_info.tag_name(), '-m', tag_info.content]
         subprocess.run(command_tag, check=True)
 
         # Push the tag to the remote repository

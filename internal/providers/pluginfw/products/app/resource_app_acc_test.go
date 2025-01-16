@@ -147,3 +147,42 @@ func TestAccAppResource(t *testing.T) {
 		ImportStateVerifyIdentifierAttribute: "name",
 	})
 }
+
+func TestAccAppResource_NoCompute(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "{var.STICKY_RANDOM}"
+		description = "%s"
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+		`,
+		Check: func(s *terraform.State) error {
+			compute_status := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["name"]
+			fmt.Println(compute_status)
+			return nil
+		},
+	})
+}

@@ -28,6 +28,12 @@ type appResource struct {
 	NoCompute types.Bool `tfsdk:"no_compute"`
 }
 
+func (a appResource) ApplySchemaCustomizations(s map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	s["no_compute"] = s["no_compute"].SetOptional()
+	s = apps_tf.App{}.ApplySchemaCustomizations(s)
+	return s
+}
+
 func ResourceApp() resource.Resource {
 	return &resourceApp{}
 }
@@ -84,9 +90,9 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		forceSendFields = append(forceSendFields, "NoCompute")
 	}
 	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{
-		App: &appGoSdk,
-		// NoCompute: app.NoCompute.ValueBool(),
-		// ForceSendFields: forceSendFields,
+		App:             &appGoSdk,
+		NoCompute:       app.NoCompute.ValueBool(),
+		ForceSendFields: forceSendFields,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create app", err.Error())
@@ -105,21 +111,22 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Wait for the app to be created
-	finalApp, err := waiter.Get()
-	if err != nil {
-		resp.Diagnostics.AddError("error waiting for app to be ready", err.Error())
-		return
-	}
-
-	// Store the final version of the app in state
-	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, finalApp, &newApp)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Wait for the app to be created if no_compute is unspecified or false.
+	if !app.NoCompute.ValueBool() {
+		finalApp, err := waiter.Get()
+		if err != nil {
+			resp.Diagnostics.AddError("error waiting for app to be ready", err.Error())
+			return
+		}
+		// Store the final version of the app in state
+		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, finalApp, &newApp)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 }
 
@@ -186,6 +193,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Modifying no_compute after creation has no effect.
 	newApp.NoCompute = app.NoCompute
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {

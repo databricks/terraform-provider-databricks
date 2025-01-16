@@ -51,6 +51,8 @@ Code contributions—bug fixes, new development, test improvement — all follow
     git commit -m "commit message here"
     ```
 
+1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading.
+
 1. Push your changes to your GitHub repo.
 
     ```bash

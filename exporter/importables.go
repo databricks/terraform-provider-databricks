@@ -1024,6 +1024,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := strings.Split(d.Id(), "/")
 			return s[len(s)-1]
 		},
+		List: func(ic *importContext) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       "/authorization/tokens",
+					Name:     "tokens_usage",
+				})
+			}
+			return nil
+		},
 		Depends: []reference{
 			{Path: "job_id", Resource: "databricks_job"},
 			{Path: "pipeline_id", Resource: "databricks_pipeline"},

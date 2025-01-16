@@ -9,9 +9,10 @@
 ### Documentation
 
 ### Exporter
-* Refactor jobs implementation to use only Go SDK
+
+ * Refactor jobs implementation to use only Go SDK
 
 ### Internal Changes
-* Introduced new automated tagging workflow. At the time of this commit,
-the workflow must be run manually.
 
+ * Introduced new automated tagging workflow. At the time of this commit,
+   the workflow must be run manually.

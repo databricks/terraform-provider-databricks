@@ -1,5 +1,17 @@
 # Version changelog
 
+## Release v1.63.1
+
+### Exporter
+
+ * Refactor jobs implementation to use only Go SDK
+
+### Internal Changes
+
+ * Introduced new automated tagging workflow. At the time of this commit,
+   the workflow must be run manually.
+
+
 ## [Release] Release v1.63.0
 
 ### New Features and Improvements

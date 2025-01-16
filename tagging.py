@@ -421,7 +421,11 @@ def create_github_tag(tag_info: TagInfo) -> None:
     }
 
     response = requests.post(url, headers=headers, json=payload)
-    response.raise_for_status()
+    if response.status_code == 409:
+        print(f"Tag {tag_info.tag_name()} already exists, continuing...")
+    elif response.status_code != 201:
+        print(f"Error: {response.status_code}, {response.json()}")
+        response.raise_for_status()
 
     # Create the reference for the tag
     url = f"https://api.github.com/repos/{repo}/git/refs"
@@ -431,6 +435,8 @@ def create_github_tag(tag_info: TagInfo) -> None:
     }
 
     response = requests.post(url, headers=headers, json=payload)
+    if response.status_code != 201:
+        print(f"Error: {response.status_code}, {response.json()}")
     response.raise_for_status()
 
 

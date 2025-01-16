@@ -9,6 +9,7 @@ import subprocess
 import time
 import json
 from datetime import datetime
+import requests
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
 CHANGELOG_FILE_NAME = "CHANGELOG.md"
@@ -315,7 +316,6 @@ def push_changes() -> None:
     # Push the changes
     subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote
 
-
 def reset_repository(hash: Optional[str] = None) -> None:
     """
     Reset git to the specified commit. Defaults to HEAD.
@@ -381,15 +381,57 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     Creates and pushes tags to the repository.
     """
     for tag_info in tag_infos:
-        # Create the tag locally
-        command_tag = ['git', 'tag', tag_info.tag_name(), '-m', tag_info.content]
-        print(f'Running command: {" ".join(command_tag)}')
-        subprocess.run(command_tag, check=True)
+        create_github_tag(tag_info)
 
-        # Push the tag to the remote repository
-        command_push = ['git', 'push', 'origin', tag_info.tag_name()]
-        print(f'Running command: {" ".join(command_push)}')
-        subprocess.run(command_push, check=True)
+
+def get_github_token() -> str:
+    """Gets the GitHub token from the git remote URL."""
+    remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode()
+    match = re.search(r'https://x-access-token:(.+?)@github\.com', remote_url)
+    if not match:
+        raise Exception("Could not parse GitHub token from remote URL")
+    return match.group(1)
+
+
+def get_repo_name() -> str:
+    """Gets the repository name from the git remote named 'origin'."""
+    remote_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url']).strip().decode()
+    match = re.search(r'github\.com[:/](.+?)(?:\.git)?$', remote_url)
+    if not match:
+        raise Exception("Could not parse repository name from remote URL")
+    return match.group(1)
+
+
+def create_github_tag(tag_info: TagInfo) -> None:
+    """Creates a tag using the GitHub REST API."""
+    repo = get_repo_name()
+    token = get_github_token()
+    commit_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode()
+
+    url = f"https://api.github.com/repos/{repo}/git/tags"
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    payload = {
+        "tag": tag_info.tag_name(),
+        "message": tag_info.content,
+        "object": commit_sha,
+        "type": "commit"
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+
+    # Create the reference for the tag
+    url = f"https://api.github.com/repos/{repo}/git/refs"
+    payload = {
+        "ref": f"refs/tags/{tag_info.tag_name()}",
+        "sha": commit_sha
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
 
 
 def run_command(command: List[str]) -> str:

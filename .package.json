@@ -1,0 +1,5 @@
+{
+    "version": {
+        "common/version.go": "version = \"$VERSION\""
+    }
+}

@@ -11,28 +11,29 @@ subcategory: "Apps"
 
 ```hcl
 resource "databricks_app" "this" {
-  name             = "my-custom-app"
-  description      = "My app"
+  name        = "my-custom-app"
+  description = "My app"
+
   resources = [{
     name = "sql-warehouse"
     sql_warehouse = {
-      id = "e9ca293f79a74b5c"
+      id         = "e9ca293f79a74b5c"
       permission = "CAN_MANAGE"
     }
-  },
-  {
-    name = "serving-endpoint"
-    serving_endpoint = {
-      name = "databricks-meta-llama-3-1-70b-instruct"
-      permission = "CAN_MANAGE"
-    }
-  },
-  {
-    name = "job"
-    job = {
-      id = "1234"
-      permission = "CAN_MANAGE"
-    }
+    },
+    {
+      name = "serving-endpoint"
+      serving_endpoint = {
+        name       = "databricks-meta-llama-3-1-70b-instruct"
+        permission = "CAN_MANAGE"
+      }
+    },
+    {
+      name = "job"
+      job = {
+        id         = "1234"
+        permission = "CAN_MANAGE"
+      }
   }]
 }
 ```

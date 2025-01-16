@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,15 +23,22 @@ import (
 )
 
 type AddExchangeForListingRequest struct {
-	ExchangeId types.String `tfsdk:"exchange_id" tf:""`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:""`
+	ListingId types.String `tfsdk:"listing_id"`
 }
 
 func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingRequest) {
 }
 
 func (newState *AddExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingRequest) {
+}
+
+func (c AddExchangeForListingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddExchangeForListingRequest.
@@ -67,13 +75,19 @@ func (o AddExchangeForListingRequest) Type(ctx context.Context) attr.Type {
 }
 
 type AddExchangeForListingResponse struct {
-	ExchangeForListing types.List `tfsdk:"exchange_for_listing" tf:"optional,object"`
+	ExchangeForListing types.Object `tfsdk:"exchange_for_listing"`
 }
 
 func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddExchangeForListingResponse) {
 }
 
 func (newState *AddExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState AddExchangeForListingResponse) {
+}
+
+func (c AddExchangeForListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_for_listing"] = attrs["exchange_for_listing"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddExchangeForListingResponse.
@@ -104,9 +118,7 @@ func (o AddExchangeForListingResponse) ToObjectValue(ctx context.Context) basety
 func (o AddExchangeForListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange_for_listing": basetypes.ListType{
-				ElemType: ExchangeListing{}.Type(ctx),
-			},
+			"exchange_for_listing": ExchangeListing{}.Type(ctx),
 		},
 	}
 }
@@ -120,7 +132,10 @@ func (o *AddExchangeForListingResponse) GetExchangeForListing(ctx context.Contex
 		return e, false
 	}
 	var v []ExchangeListing
-	d := o.ExchangeForListing.ElementsAs(ctx, &v, true)
+	d := o.ExchangeForListing.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -132,20 +147,13 @@ func (o *AddExchangeForListingResponse) GetExchangeForListing(ctx context.Contex
 
 // SetExchangeForListing sets the value of the ExchangeForListing field in AddExchangeForListingResponse.
 func (o *AddExchangeForListingResponse) SetExchangeForListing(ctx context.Context, v ExchangeListing) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange_for_listing"]
-	o.ExchangeForListing = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ExchangeForListing = vs
 }
 
 // Get one batch of listings. One may specify up to 50 IDs per request.
 type BatchGetListingsRequest struct {
 	Ids types.List `tfsdk:"-"`
-}
-
-func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsRequest) {
-}
-
-func (newState *BatchGetListingsRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetListingsRequest.
@@ -210,13 +218,19 @@ func (o *BatchGetListingsRequest) SetIds(ctx context.Context, v []types.String) 
 }
 
 type BatchGetListingsResponse struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 }
 
 func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsResponse) {
 }
 
 func (newState *BatchGetListingsResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsResponse) {
+}
+
+func (c BatchGetListingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetListingsResponse.
@@ -285,12 +299,6 @@ type BatchGetProvidersRequest struct {
 	Ids types.List `tfsdk:"-"`
 }
 
-func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersRequest) {
-}
-
-func (newState *BatchGetProvidersRequest) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetProvidersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -353,13 +361,19 @@ func (o *BatchGetProvidersRequest) SetIds(ctx context.Context, v []types.String)
 }
 
 type BatchGetProvidersResponse struct {
-	Providers types.List `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers"`
 }
 
 func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersResponse) {
 }
 
 func (newState *BatchGetProvidersResponse) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersResponse) {
+}
+
+func (c BatchGetProvidersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["providers"] = attrs["providers"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetProvidersResponse.
@@ -424,13 +438,19 @@ func (o *BatchGetProvidersResponse) SetProviders(ctx context.Context, v []Provid
 }
 
 type ConsumerTerms struct {
-	Version types.String `tfsdk:"version" tf:""`
+	Version types.String `tfsdk:"version"`
 }
 
 func (newState *ConsumerTerms) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsumerTerms) {
 }
 
 func (newState *ConsumerTerms) SyncEffectiveFieldsDuringRead(existingState ConsumerTerms) {
+}
+
+func (c ConsumerTerms) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ConsumerTerms.
@@ -467,19 +487,28 @@ func (o ConsumerTerms) Type(ctx context.Context) attr.Type {
 // contact info for the consumer requesting data or performing a listing
 // installation
 type ContactInfo struct {
-	Company types.String `tfsdk:"company" tf:"optional"`
+	Company types.String `tfsdk:"company"`
 
-	Email types.String `tfsdk:"email" tf:"optional"`
+	Email types.String `tfsdk:"email"`
 
-	FirstName types.String `tfsdk:"first_name" tf:"optional"`
+	FirstName types.String `tfsdk:"first_name"`
 
-	LastName types.String `tfsdk:"last_name" tf:"optional"`
+	LastName types.String `tfsdk:"last_name"`
 }
 
 func (newState *ContactInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContactInfo) {
 }
 
 func (newState *ContactInfo) SyncEffectiveFieldsDuringRead(existingState ContactInfo) {
+}
+
+func (c ContactInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["company"] = attrs["company"].SetOptional()
+	attrs["email"] = attrs["email"].SetOptional()
+	attrs["first_name"] = attrs["first_name"].SetOptional()
+	attrs["last_name"] = attrs["last_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ContactInfo.
@@ -520,13 +549,19 @@ func (o ContactInfo) Type(ctx context.Context) attr.Type {
 }
 
 type CreateExchangeFilterRequest struct {
-	Filter types.List `tfsdk:"filter" tf:"object"`
+	Filter types.Object `tfsdk:"filter"`
 }
 
 func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterRequest) {
 }
 
 func (newState *CreateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterRequest) {
+}
+
+func (c CreateExchangeFilterRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeFilterRequest.
@@ -557,9 +592,7 @@ func (o CreateExchangeFilterRequest) ToObjectValue(ctx context.Context) basetype
 func (o CreateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
-			},
+			"filter": ExchangeFilter{}.Type(ctx),
 		},
 	}
 }
@@ -573,7 +606,10 @@ func (o *CreateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFi
 		return e, false
 	}
 	var v []ExchangeFilter
-	d := o.Filter.ElementsAs(ctx, &v, true)
+	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -585,19 +621,24 @@ func (o *CreateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFi
 
 // SetFilter sets the value of the Filter field in CreateExchangeFilterRequest.
 func (o *CreateExchangeFilterRequest) SetFilter(ctx context.Context, v ExchangeFilter) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
-	o.Filter = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Filter = vs
 }
 
 type CreateExchangeFilterResponse struct {
-	FilterId types.String `tfsdk:"filter_id" tf:"optional"`
+	FilterId types.String `tfsdk:"filter_id"`
 }
 
 func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeFilterResponse) {
 }
 
 func (newState *CreateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeFilterResponse) {
+}
+
+func (c CreateExchangeFilterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_id"] = attrs["filter_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeFilterResponse.
@@ -632,13 +673,19 @@ func (o CreateExchangeFilterResponse) Type(ctx context.Context) attr.Type {
 }
 
 type CreateExchangeRequest struct {
-	Exchange types.List `tfsdk:"exchange" tf:"object"`
+	Exchange types.Object `tfsdk:"exchange"`
 }
 
 func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeRequest) {
 }
 
 func (newState *CreateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState CreateExchangeRequest) {
+}
+
+func (c CreateExchangeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeRequest.
@@ -669,9 +716,7 @@ func (o CreateExchangeRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateExchangeRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
-			},
+			"exchange": Exchange{}.Type(ctx),
 		},
 	}
 }
@@ -685,7 +730,10 @@ func (o *CreateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool
 		return e, false
 	}
 	var v []Exchange
-	d := o.Exchange.ElementsAs(ctx, &v, true)
+	d := o.Exchange.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -697,19 +745,24 @@ func (o *CreateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool
 
 // SetExchange sets the value of the Exchange field in CreateExchangeRequest.
 func (o *CreateExchangeRequest) SetExchange(ctx context.Context, v Exchange) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
-	o.Exchange = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Exchange = vs
 }
 
 type CreateExchangeResponse struct {
-	ExchangeId types.String `tfsdk:"exchange_id" tf:"optional"`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 }
 
 func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateExchangeResponse) {
 }
 
 func (newState *CreateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState CreateExchangeResponse) {
+}
+
+func (c CreateExchangeResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateExchangeResponse.
@@ -744,19 +797,28 @@ func (o CreateExchangeResponse) Type(ctx context.Context) attr.Type {
 }
 
 type CreateFileRequest struct {
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 
-	FileParent types.List `tfsdk:"file_parent" tf:"object"`
+	FileParent types.Object `tfsdk:"file_parent"`
 
-	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:""`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
 
-	MimeType types.String `tfsdk:"mime_type" tf:""`
+	MimeType types.String `tfsdk:"mime_type"`
 }
 
 func (newState *CreateFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileRequest) {
 }
 
 func (newState *CreateFileRequest) SyncEffectiveFieldsDuringRead(existingState CreateFileRequest) {
+}
+
+func (c CreateFileRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["file_parent"] = attrs["file_parent"].SetRequired()
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetRequired()
+	attrs["mime_type"] = attrs["mime_type"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFileRequest.
@@ -790,10 +852,8 @@ func (o CreateFileRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o CreateFileRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"display_name": types.StringType,
-			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
-			},
+			"display_name":          types.StringType,
+			"file_parent":           FileParent{}.Type(ctx),
 			"marketplace_file_type": types.StringType,
 			"mime_type":             types.StringType,
 		},
@@ -809,7 +869,10 @@ func (o *CreateFileRequest) GetFileParent(ctx context.Context) (FileParent, bool
 		return e, false
 	}
 	var v []FileParent
-	d := o.FileParent.ElementsAs(ctx, &v, true)
+	d := o.FileParent.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -821,21 +884,27 @@ func (o *CreateFileRequest) GetFileParent(ctx context.Context) (FileParent, bool
 
 // SetFileParent sets the value of the FileParent field in CreateFileRequest.
 func (o *CreateFileRequest) SetFileParent(ctx context.Context, v FileParent) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
-	o.FileParent = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FileParent = vs
 }
 
 type CreateFileResponse struct {
-	FileInfo types.List `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.Object `tfsdk:"file_info"`
 	// Pre-signed POST URL to blob storage
-	UploadUrl types.String `tfsdk:"upload_url" tf:"optional"`
+	UploadUrl types.String `tfsdk:"upload_url"`
 }
 
 func (newState *CreateFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateFileResponse) {
 }
 
 func (newState *CreateFileResponse) SyncEffectiveFieldsDuringRead(existingState CreateFileResponse) {
+}
+
+func (c CreateFileResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_info"] = attrs["file_info"].SetOptional()
+	attrs["upload_url"] = attrs["upload_url"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFileResponse.
@@ -867,9 +936,7 @@ func (o CreateFileResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateFileResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_info": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
-			},
+			"file_info":  FileInfo{}.Type(ctx),
 			"upload_url": types.StringType,
 		},
 	}
@@ -884,7 +951,10 @@ func (o *CreateFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
 		return e, false
 	}
 	var v []FileInfo
-	d := o.FileInfo.ElementsAs(ctx, &v, true)
+	d := o.FileInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -896,29 +966,39 @@ func (o *CreateFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
 
 // SetFileInfo sets the value of the FileInfo field in CreateFileResponse.
 func (o *CreateFileResponse) SetFileInfo(ctx context.Context, v FileInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_info"]
-	o.FileInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FileInfo = vs
 }
 
 type CreateInstallationRequest struct {
-	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms" tf:"optional,object"`
+	AcceptedConsumerTerms types.Object `tfsdk:"accepted_consumer_terms"`
 
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 	// for git repo installations
-	RepoDetail types.List `tfsdk:"repo_detail" tf:"optional,object"`
+	RepoDetail types.Object `tfsdk:"repo_detail"`
 
-	ShareName types.String `tfsdk:"share_name" tf:"optional"`
+	ShareName types.String `tfsdk:"share_name"`
 }
 
 func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstallationRequest) {
 }
 
 func (newState *CreateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState CreateInstallationRequest) {
+}
+
+func (c CreateInstallationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].SetOptional()
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_detail"] = attrs["repo_detail"].SetOptional()
+	attrs["share_name"] = attrs["share_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstallationRequest.
@@ -955,16 +1035,12 @@ func (o CreateInstallationRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o CreateInstallationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accepted_consumer_terms": basetypes.ListType{
-				ElemType: ConsumerTerms{}.Type(ctx),
-			},
-			"catalog_name":   types.StringType,
-			"listing_id":     types.StringType,
-			"recipient_type": types.StringType,
-			"repo_detail": basetypes.ListType{
-				ElemType: RepoInstallation{}.Type(ctx),
-			},
-			"share_name": types.StringType,
+			"accepted_consumer_terms": ConsumerTerms{}.Type(ctx),
+			"catalog_name":            types.StringType,
+			"listing_id":              types.StringType,
+			"recipient_type":          types.StringType,
+			"repo_detail":             RepoInstallation{}.Type(ctx),
+			"share_name":              types.StringType,
 		},
 	}
 }
@@ -978,7 +1054,10 @@ func (o *CreateInstallationRequest) GetAcceptedConsumerTerms(ctx context.Context
 		return e, false
 	}
 	var v []ConsumerTerms
-	d := o.AcceptedConsumerTerms.ElementsAs(ctx, &v, true)
+	d := o.AcceptedConsumerTerms.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -990,9 +1069,8 @@ func (o *CreateInstallationRequest) GetAcceptedConsumerTerms(ctx context.Context
 
 // SetAcceptedConsumerTerms sets the value of the AcceptedConsumerTerms field in CreateInstallationRequest.
 func (o *CreateInstallationRequest) SetAcceptedConsumerTerms(ctx context.Context, v ConsumerTerms) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["accepted_consumer_terms"]
-	o.AcceptedConsumerTerms = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AcceptedConsumerTerms = vs
 }
 
 // GetRepoDetail returns the value of the RepoDetail field in CreateInstallationRequest as
@@ -1004,7 +1082,10 @@ func (o *CreateInstallationRequest) GetRepoDetail(ctx context.Context) (RepoInst
 		return e, false
 	}
 	var v []RepoInstallation
-	d := o.RepoDetail.ElementsAs(ctx, &v, true)
+	d := o.RepoDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1016,19 +1097,24 @@ func (o *CreateInstallationRequest) GetRepoDetail(ctx context.Context) (RepoInst
 
 // SetRepoDetail sets the value of the RepoDetail field in CreateInstallationRequest.
 func (o *CreateInstallationRequest) SetRepoDetail(ctx context.Context, v RepoInstallation) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repo_detail"]
-	o.RepoDetail = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.RepoDetail = vs
 }
 
 type CreateListingRequest struct {
-	Listing types.List `tfsdk:"listing" tf:"object"`
+	Listing types.Object `tfsdk:"listing"`
 }
 
 func (newState *CreateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingRequest) {
 }
 
 func (newState *CreateListingRequest) SyncEffectiveFieldsDuringRead(existingState CreateListingRequest) {
+}
+
+func (c CreateListingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateListingRequest.
@@ -1059,9 +1145,7 @@ func (o CreateListingRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o CreateListingRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
-			},
+			"listing": Listing{}.Type(ctx),
 		},
 	}
 }
@@ -1075,7 +1159,10 @@ func (o *CreateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
 		return e, false
 	}
 	var v []Listing
-	d := o.Listing.ElementsAs(ctx, &v, true)
+	d := o.Listing.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1087,19 +1174,24 @@ func (o *CreateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
 
 // SetListing sets the value of the Listing field in CreateListingRequest.
 func (o *CreateListingRequest) SetListing(ctx context.Context, v Listing) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
-	o.Listing = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Listing = vs
 }
 
 type CreateListingResponse struct {
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 }
 
 func (newState *CreateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateListingResponse) {
 }
 
 func (newState *CreateListingResponse) SyncEffectiveFieldsDuringRead(existingState CreateListingResponse) {
+}
+
+func (c CreateListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateListingResponse.
@@ -1135,29 +1227,43 @@ func (o CreateListingResponse) Type(ctx context.Context) attr.Type {
 
 // Data request messages also creates a lead (maybe)
 type CreatePersonalizationRequest struct {
-	AcceptedConsumerTerms types.List `tfsdk:"accepted_consumer_terms" tf:"object"`
+	AcceptedConsumerTerms types.Object `tfsdk:"accepted_consumer_terms"`
 
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	Company types.String `tfsdk:"company" tf:"optional"`
+	Company types.String `tfsdk:"company"`
 
-	FirstName types.String `tfsdk:"first_name" tf:"optional"`
+	FirstName types.String `tfsdk:"first_name"`
 
-	IntendedUse types.String `tfsdk:"intended_use" tf:""`
+	IntendedUse types.String `tfsdk:"intended_use"`
 
-	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse" tf:"optional"`
+	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse"`
 
-	LastName types.String `tfsdk:"last_name" tf:"optional"`
+	LastName types.String `tfsdk:"last_name"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 }
 
 func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequest) {
 }
 
 func (newState *CreatePersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequest) {
+}
+
+func (c CreatePersonalizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["accepted_consumer_terms"] = attrs["accepted_consumer_terms"].SetRequired()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["company"] = attrs["company"].SetOptional()
+	attrs["first_name"] = attrs["first_name"].SetOptional()
+	attrs["intended_use"] = attrs["intended_use"].SetRequired()
+	attrs["is_from_lighthouse"] = attrs["is_from_lighthouse"].SetOptional()
+	attrs["last_name"] = attrs["last_name"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePersonalizationRequest.
@@ -1196,17 +1302,15 @@ func (o CreatePersonalizationRequest) ToObjectValue(ctx context.Context) basetyp
 func (o CreatePersonalizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"accepted_consumer_terms": basetypes.ListType{
-				ElemType: ConsumerTerms{}.Type(ctx),
-			},
-			"comment":            types.StringType,
-			"company":            types.StringType,
-			"first_name":         types.StringType,
-			"intended_use":       types.StringType,
-			"is_from_lighthouse": types.BoolType,
-			"last_name":          types.StringType,
-			"listing_id":         types.StringType,
-			"recipient_type":     types.StringType,
+			"accepted_consumer_terms": ConsumerTerms{}.Type(ctx),
+			"comment":                 types.StringType,
+			"company":                 types.StringType,
+			"first_name":              types.StringType,
+			"intended_use":            types.StringType,
+			"is_from_lighthouse":      types.BoolType,
+			"last_name":               types.StringType,
+			"listing_id":              types.StringType,
+			"recipient_type":          types.StringType,
 		},
 	}
 }
@@ -1220,7 +1324,10 @@ func (o *CreatePersonalizationRequest) GetAcceptedConsumerTerms(ctx context.Cont
 		return e, false
 	}
 	var v []ConsumerTerms
-	d := o.AcceptedConsumerTerms.ElementsAs(ctx, &v, true)
+	d := o.AcceptedConsumerTerms.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1232,19 +1339,24 @@ func (o *CreatePersonalizationRequest) GetAcceptedConsumerTerms(ctx context.Cont
 
 // SetAcceptedConsumerTerms sets the value of the AcceptedConsumerTerms field in CreatePersonalizationRequest.
 func (o *CreatePersonalizationRequest) SetAcceptedConsumerTerms(ctx context.Context, v ConsumerTerms) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["accepted_consumer_terms"]
-	o.AcceptedConsumerTerms = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AcceptedConsumerTerms = vs
 }
 
 type CreatePersonalizationRequestResponse struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePersonalizationRequestResponse) {
 }
 
 func (newState *CreatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState CreatePersonalizationRequestResponse) {
+}
+
+func (c CreatePersonalizationRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePersonalizationRequestResponse.
@@ -1279,13 +1391,19 @@ func (o CreatePersonalizationRequestResponse) Type(ctx context.Context) attr.Typ
 }
 
 type CreateProviderRequest struct {
-	Provider types.List `tfsdk:"provider" tf:"object"`
+	Provider types.Object `tfsdk:"provider"`
 }
 
 func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderRequest) {
 }
 
 func (newState *CreateProviderRequest) SyncEffectiveFieldsDuringRead(existingState CreateProviderRequest) {
+}
+
+func (c CreateProviderRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProviderRequest.
@@ -1316,9 +1434,7 @@ func (o CreateProviderRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CreateProviderRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
-			},
+			"provider": ProviderInfo{}.Type(ctx),
 		},
 	}
 }
@@ -1332,7 +1448,10 @@ func (o *CreateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, 
 		return e, false
 	}
 	var v []ProviderInfo
-	d := o.Provider.ElementsAs(ctx, &v, true)
+	d := o.Provider.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1344,19 +1463,24 @@ func (o *CreateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, 
 
 // SetProvider sets the value of the Provider field in CreateProviderRequest.
 func (o *CreateProviderRequest) SetProvider(ctx context.Context, v ProviderInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
-	o.Provider = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Provider = vs
 }
 
 type CreateProviderResponse struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateProviderResponse) {
 }
 
 func (newState *CreateProviderResponse) SyncEffectiveFieldsDuringRead(existingState CreateProviderResponse) {
+}
+
+func (c CreateProviderResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateProviderResponse.
@@ -1391,15 +1515,22 @@ func (o CreateProviderResponse) Type(ctx context.Context) attr.Type {
 }
 
 type DataRefreshInfo struct {
-	Interval types.Int64 `tfsdk:"interval" tf:""`
+	Interval types.Int64 `tfsdk:"interval"`
 
-	Unit types.String `tfsdk:"unit" tf:""`
+	Unit types.String `tfsdk:"unit"`
 }
 
 func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataRefreshInfo) {
 }
 
 func (newState *DataRefreshInfo) SyncEffectiveFieldsDuringRead(existingState DataRefreshInfo) {
+}
+
+func (c DataRefreshInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["interval"] = attrs["interval"].SetRequired()
+	attrs["unit"] = attrs["unit"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataRefreshInfo.
@@ -1438,12 +1569,6 @@ func (o DataRefreshInfo) Type(ctx context.Context) attr.Type {
 // Delete an exchange filter
 type DeleteExchangeFilterRequest struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeFilterRequest) {
-}
-
-func (newState *DeleteExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeFilterRequest.
@@ -1486,6 +1611,11 @@ func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterResponse) {
 }
 
+func (c DeleteExchangeFilterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeFilterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1516,12 +1646,6 @@ func (o DeleteExchangeFilterResponse) Type(ctx context.Context) attr.Type {
 // Delete an exchange
 type DeleteExchangeRequest struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeRequest) {
-}
-
-func (newState *DeleteExchangeRequest) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeRequest.
@@ -1564,6 +1688,11 @@ func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteExchangeResponse) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeResponse) {
 }
 
+func (c DeleteExchangeResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1594,12 +1723,6 @@ func (o DeleteExchangeResponse) Type(ctx context.Context) attr.Type {
 // Delete a file
 type DeleteFileRequest struct {
 	FileId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileRequest) {
-}
-
-func (newState *DeleteFileRequest) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileRequest.
@@ -1642,6 +1765,11 @@ func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *DeleteFileResponse) SyncEffectiveFieldsDuringRead(existingState DeleteFileResponse) {
 }
 
+func (c DeleteFileResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1674,12 +1802,6 @@ type DeleteInstallationRequest struct {
 	InstallationId types.String `tfsdk:"-"`
 
 	ListingId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstallationRequest) {
-}
-
-func (newState *DeleteInstallationRequest) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstallationRequest.
@@ -1724,6 +1846,11 @@ func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteInstallationResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationResponse) {
 }
 
+func (c DeleteInstallationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstallationResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1754,12 +1881,6 @@ func (o DeleteInstallationResponse) Type(ctx context.Context) attr.Type {
 // Delete a listing
 type DeleteListingRequest struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteListingRequest) {
-}
-
-func (newState *DeleteListingRequest) SyncEffectiveFieldsDuringRead(existingState DeleteListingRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteListingRequest.
@@ -1802,6 +1923,11 @@ func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteListingResponse) SyncEffectiveFieldsDuringRead(existingState DeleteListingResponse) {
 }
 
+func (c DeleteListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteListingResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1832,12 +1958,6 @@ func (o DeleteListingResponse) Type(ctx context.Context) attr.Type {
 // Delete provider
 type DeleteProviderRequest struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest) {
-}
-
-func (newState *DeleteProviderRequest) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderRequest.
@@ -1880,6 +2000,11 @@ func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *DeleteProviderResponse) SyncEffectiveFieldsDuringRead(existingState DeleteProviderResponse) {
 }
 
+func (c DeleteProviderResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1908,29 +2033,43 @@ func (o DeleteProviderResponse) Type(ctx context.Context) attr.Type {
 }
 
 type Exchange struct {
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	Filters types.List `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	LinkedListings types.List `tfsdk:"linked_listings" tf:"optional"`
+	LinkedListings types.List `tfsdk:"linked_listings"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *Exchange) SyncEffectiveFieldsDuringCreateOrUpdate(plan Exchange) {
 }
 
 func (newState *Exchange) SyncEffectiveFieldsDuringRead(existingState Exchange) {
+}
+
+func (c Exchange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["linked_listings"] = attrs["linked_listings"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Exchange.
@@ -2040,29 +2179,43 @@ func (o *Exchange) SetLinkedListings(ctx context.Context, v []ExchangeListing) {
 }
 
 type ExchangeFilter struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	ExchangeId types.String `tfsdk:"exchange_id" tf:""`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	FilterType types.String `tfsdk:"filter_type" tf:""`
+	FilterType types.String `tfsdk:"filter_type"`
 
-	FilterValue types.String `tfsdk:"filter_value" tf:""`
+	FilterValue types.String `tfsdk:"filter_value"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *ExchangeFilter) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeFilter) {
 }
 
 func (newState *ExchangeFilter) SyncEffectiveFieldsDuringRead(existingState ExchangeFilter) {
+}
+
+func (c ExchangeFilter) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["filter_type"] = attrs["filter_type"].SetRequired()
+	attrs["filter_value"] = attrs["filter_value"].SetRequired()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeFilter.
@@ -2113,25 +2266,37 @@ func (o ExchangeFilter) Type(ctx context.Context) attr.Type {
 }
 
 type ExchangeListing struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	ExchangeId types.String `tfsdk:"exchange_id" tf:"optional"`
+	ExchangeId types.String `tfsdk:"exchange_id"`
 
-	ExchangeName types.String `tfsdk:"exchange_name" tf:"optional"`
+	ExchangeName types.String `tfsdk:"exchange_name"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 }
 
 func (newState *ExchangeListing) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExchangeListing) {
 }
 
 func (newState *ExchangeListing) SyncEffectiveFieldsDuringRead(existingState ExchangeListing) {
+}
+
+func (c ExchangeListing) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["exchange_id"] = attrs["exchange_id"].SetOptional()
+	attrs["exchange_name"] = attrs["exchange_name"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExchangeListing.
@@ -2178,32 +2343,47 @@ func (o ExchangeListing) Type(ctx context.Context) attr.Type {
 }
 
 type FileInfo struct {
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Name displayed to users for applicable files, e.g. embedded notebooks
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 
-	DownloadLink types.String `tfsdk:"download_link" tf:"optional"`
+	DownloadLink types.String `tfsdk:"download_link"`
 
-	FileParent types.List `tfsdk:"file_parent" tf:"optional,object"`
+	FileParent types.Object `tfsdk:"file_parent"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	MarketplaceFileType types.String `tfsdk:"marketplace_file_type" tf:"optional"`
+	MarketplaceFileType types.String `tfsdk:"marketplace_file_type"`
 
-	MimeType types.String `tfsdk:"mime_type" tf:"optional"`
+	MimeType types.String `tfsdk:"mime_type"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// Populated if status is in a failed state with more information on reason
 	// for the failure.
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
 func (newState *FileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileInfo) {
 }
 
 func (newState *FileInfo) SyncEffectiveFieldsDuringRead(existingState FileInfo) {
+}
+
+func (c FileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["download_link"] = attrs["download_link"].SetOptional()
+	attrs["file_parent"] = attrs["file_parent"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetOptional()
+	attrs["mime_type"] = attrs["mime_type"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileInfo.
@@ -2243,12 +2423,10 @@ func (o FileInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o FileInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"created_at":    types.Int64Type,
-			"display_name":  types.StringType,
-			"download_link": types.StringType,
-			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
-			},
+			"created_at":            types.Int64Type,
+			"display_name":          types.StringType,
+			"download_link":         types.StringType,
+			"file_parent":           FileParent{}.Type(ctx),
 			"id":                    types.StringType,
 			"marketplace_file_type": types.StringType,
 			"mime_type":             types.StringType,
@@ -2268,7 +2446,10 @@ func (o *FileInfo) GetFileParent(ctx context.Context) (FileParent, bool) {
 		return e, false
 	}
 	var v []FileParent
-	d := o.FileParent.ElementsAs(ctx, &v, true)
+	d := o.FileParent.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2280,21 +2461,27 @@ func (o *FileInfo) GetFileParent(ctx context.Context) (FileParent, bool) {
 
 // SetFileParent sets the value of the FileParent field in FileInfo.
 func (o *FileInfo) SetFileParent(ctx context.Context, v FileParent) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
-	o.FileParent = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FileParent = vs
 }
 
 type FileParent struct {
-	FileParentType types.String `tfsdk:"file_parent_type" tf:"optional"`
+	FileParentType types.String `tfsdk:"file_parent_type"`
 	// TODO make the following fields required
-	ParentId types.String `tfsdk:"parent_id" tf:"optional"`
+	ParentId types.String `tfsdk:"parent_id"`
 }
 
 func (newState *FileParent) SyncEffectiveFieldsDuringCreateOrUpdate(plan FileParent) {
 }
 
 func (newState *FileParent) SyncEffectiveFieldsDuringRead(existingState FileParent) {
+}
+
+func (c FileParent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_parent_type"] = attrs["file_parent_type"].SetOptional()
+	attrs["parent_id"] = attrs["parent_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in FileParent.
@@ -2335,12 +2522,6 @@ type GetExchangeRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeRequest) {
-}
-
-func (newState *GetExchangeRequest) SyncEffectiveFieldsDuringRead(existingState GetExchangeRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExchangeRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2373,13 +2554,19 @@ func (o GetExchangeRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetExchangeResponse struct {
-	Exchange types.List `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.Object `tfsdk:"exchange"`
 }
 
 func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeResponse) {
 }
 
 func (newState *GetExchangeResponse) SyncEffectiveFieldsDuringRead(existingState GetExchangeResponse) {
+}
+
+func (c GetExchangeResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExchangeResponse.
@@ -2410,9 +2597,7 @@ func (o GetExchangeResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetExchangeResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
-			},
+			"exchange": Exchange{}.Type(ctx),
 		},
 	}
 }
@@ -2426,7 +2611,10 @@ func (o *GetExchangeResponse) GetExchange(ctx context.Context) (Exchange, bool) 
 		return e, false
 	}
 	var v []Exchange
-	d := o.Exchange.ElementsAs(ctx, &v, true)
+	d := o.Exchange.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2438,20 +2626,13 @@ func (o *GetExchangeResponse) GetExchange(ctx context.Context) (Exchange, bool) 
 
 // SetExchange sets the value of the Exchange field in GetExchangeResponse.
 func (o *GetExchangeResponse) SetExchange(ctx context.Context, v Exchange) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
-	o.Exchange = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Exchange = vs
 }
 
 // Get a file
 type GetFileRequest struct {
 	FileId types.String `tfsdk:"-"`
-}
-
-func (newState *GetFileRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileRequest) {
-}
-
-func (newState *GetFileRequest) SyncEffectiveFieldsDuringRead(existingState GetFileRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFileRequest.
@@ -2486,13 +2667,19 @@ func (o GetFileRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetFileResponse struct {
-	FileInfo types.List `tfsdk:"file_info" tf:"optional,object"`
+	FileInfo types.Object `tfsdk:"file_info"`
 }
 
 func (newState *GetFileResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileResponse) {
 }
 
 func (newState *GetFileResponse) SyncEffectiveFieldsDuringRead(existingState GetFileResponse) {
+}
+
+func (c GetFileResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_info"] = attrs["file_info"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFileResponse.
@@ -2523,9 +2710,7 @@ func (o GetFileResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetFileResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_info": basetypes.ListType{
-				ElemType: FileInfo{}.Type(ctx),
-			},
+			"file_info": FileInfo{}.Type(ctx),
 		},
 	}
 }
@@ -2539,7 +2724,10 @@ func (o *GetFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
 		return e, false
 	}
 	var v []FileInfo
-	d := o.FileInfo.ElementsAs(ctx, &v, true)
+	d := o.FileInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2551,20 +2739,25 @@ func (o *GetFileResponse) GetFileInfo(ctx context.Context) (FileInfo, bool) {
 
 // SetFileInfo sets the value of the FileInfo field in GetFileResponse.
 func (o *GetFileResponse) SetFileInfo(ctx context.Context, v FileInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_info"]
-	o.FileInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FileInfo = vs
 }
 
 type GetLatestVersionProviderAnalyticsDashboardResponse struct {
 	// version here is latest logical version of the dashboard template
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLatestVersionProviderAnalyticsDashboardResponse) {
 }
 
 func (newState *GetLatestVersionProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState GetLatestVersionProviderAnalyticsDashboardResponse) {
+}
+
+func (c GetLatestVersionProviderAnalyticsDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLatestVersionProviderAnalyticsDashboardResponse.
@@ -2607,12 +2800,6 @@ type GetListingContentMetadataRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataRequest) {
-}
-
-func (newState *GetListingContentMetadataRequest) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingContentMetadataRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2649,15 +2836,22 @@ func (o GetListingContentMetadataRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingContentMetadataResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	SharedDataObjects types.List `tfsdk:"shared_data_objects" tf:"optional"`
+	SharedDataObjects types.List `tfsdk:"shared_data_objects"`
 }
 
 func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataResponse) {
 }
 
 func (newState *GetListingContentMetadataResponse) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataResponse) {
+}
+
+func (c GetListingContentMetadataResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["shared_data_objects"] = attrs["shared_data_objects"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingContentMetadataResponse.
@@ -2728,12 +2922,6 @@ type GetListingRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *GetListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingRequest) {
-}
-
-func (newState *GetListingRequest) SyncEffectiveFieldsDuringRead(existingState GetListingRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2766,13 +2954,19 @@ func (o GetListingRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingResponse struct {
-	Listing types.List `tfsdk:"listing" tf:"optional,object"`
+	Listing types.Object `tfsdk:"listing"`
 }
 
 func (newState *GetListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingResponse) {
 }
 
 func (newState *GetListingResponse) SyncEffectiveFieldsDuringRead(existingState GetListingResponse) {
+}
+
+func (c GetListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingResponse.
@@ -2803,9 +2997,7 @@ func (o GetListingResponse) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o GetListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
-			},
+			"listing": Listing{}.Type(ctx),
 		},
 	}
 }
@@ -2819,7 +3011,10 @@ func (o *GetListingResponse) GetListing(ctx context.Context) (Listing, bool) {
 		return e, false
 	}
 	var v []Listing
-	d := o.Listing.ElementsAs(ctx, &v, true)
+	d := o.Listing.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2831,9 +3026,8 @@ func (o *GetListingResponse) GetListing(ctx context.Context) (Listing, bool) {
 
 // SetListing sets the value of the Listing field in GetListingResponse.
 func (o *GetListingResponse) SetListing(ctx context.Context, v Listing) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
-	o.Listing = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Listing = vs
 }
 
 // List listings
@@ -2841,12 +3035,6 @@ type GetListingsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *GetListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsRequest) {
-}
-
-func (newState *GetListingsRequest) SyncEffectiveFieldsDuringRead(existingState GetListingsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingsRequest.
@@ -2883,15 +3071,22 @@ func (o GetListingsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetListingsResponse struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *GetListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsResponse) {
 }
 
 func (newState *GetListingsResponse) SyncEffectiveFieldsDuringRead(existingState GetListingsResponse) {
+}
+
+func (c GetListingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingsResponse.
@@ -2962,12 +3157,6 @@ type GetPersonalizationRequestRequest struct {
 	ListingId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestRequest) {
-}
-
-func (newState *GetPersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPersonalizationRequestRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3000,13 +3189,19 @@ func (o GetPersonalizationRequestRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetPersonalizationRequestResponse struct {
-	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
 }
 
 func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestResponse) {
 }
 
 func (newState *GetPersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestResponse) {
+}
+
+func (c GetPersonalizationRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["personalization_requests"] = attrs["personalization_requests"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPersonalizationRequestResponse.
@@ -3075,12 +3270,6 @@ type GetProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *GetProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest) {
-}
-
-func (newState *GetProviderRequest) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3113,13 +3302,19 @@ func (o GetProviderRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetProviderResponse struct {
-	Provider types.List `tfsdk:"provider" tf:"optional,object"`
+	Provider types.Object `tfsdk:"provider"`
 }
 
 func (newState *GetProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderResponse) {
 }
 
 func (newState *GetProviderResponse) SyncEffectiveFieldsDuringRead(existingState GetProviderResponse) {
+}
+
+func (c GetProviderResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderResponse.
@@ -3150,9 +3345,7 @@ func (o GetProviderResponse) ToObjectValue(ctx context.Context) basetypes.Object
 func (o GetProviderResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
-			},
+			"provider": ProviderInfo{}.Type(ctx),
 		},
 	}
 }
@@ -3166,7 +3359,10 @@ func (o *GetProviderResponse) GetProvider(ctx context.Context) (ProviderInfo, bo
 		return e, false
 	}
 	var v []ProviderInfo
-	d := o.Provider.ElementsAs(ctx, &v, true)
+	d := o.Provider.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3178,19 +3374,24 @@ func (o *GetProviderResponse) GetProvider(ctx context.Context) (ProviderInfo, bo
 
 // SetProvider sets the value of the Provider field in GetProviderResponse.
 func (o *GetProviderResponse) SetProvider(ctx context.Context, v ProviderInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
-	o.Provider = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Provider = vs
 }
 
 type Installation struct {
-	Installation types.List `tfsdk:"installation" tf:"optional,object"`
+	Installation types.Object `tfsdk:"installation"`
 }
 
 func (newState *Installation) SyncEffectiveFieldsDuringCreateOrUpdate(plan Installation) {
 }
 
 func (newState *Installation) SyncEffectiveFieldsDuringRead(existingState Installation) {
+}
+
+func (c Installation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Installation.
@@ -3221,9 +3422,7 @@ func (o Installation) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Installation) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
-			},
+			"installation": InstallationDetail{}.Type(ctx),
 		},
 	}
 }
@@ -3237,7 +3436,10 @@ func (o *Installation) GetInstallation(ctx context.Context) (InstallationDetail,
 		return e, false
 	}
 	var v []InstallationDetail
-	d := o.Installation.ElementsAs(ctx, &v, true)
+	d := o.Installation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3249,43 +3451,60 @@ func (o *Installation) GetInstallation(ctx context.Context) (InstallationDetail,
 
 // SetInstallation sets the value of the Installation field in Installation.
 func (o *Installation) SetInstallation(ctx context.Context, v InstallationDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
-	o.Installation = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Installation = vs
 }
 
 type InstallationDetail struct {
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 
-	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
+	ErrorMessage types.String `tfsdk:"error_message"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	InstalledOn types.Int64 `tfsdk:"installed_on" tf:"optional"`
+	InstalledOn types.Int64 `tfsdk:"installed_on"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	RepoName types.String `tfsdk:"repo_name" tf:"optional"`
+	RepoName types.String `tfsdk:"repo_name"`
 
-	RepoPath types.String `tfsdk:"repo_path" tf:"optional"`
+	RepoPath types.String `tfsdk:"repo_path"`
 
-	ShareName types.String `tfsdk:"share_name" tf:"optional"`
+	ShareName types.String `tfsdk:"share_name"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	TokenDetail types.List `tfsdk:"token_detail" tf:"optional,object"`
+	TokenDetail types.Object `tfsdk:"token_detail"`
 
-	Tokens types.List `tfsdk:"tokens" tf:"optional"`
+	Tokens types.List `tfsdk:"tokens"`
 }
 
 func (newState *InstallationDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallationDetail) {
 }
 
 func (newState *InstallationDetail) SyncEffectiveFieldsDuringRead(existingState InstallationDetail) {
+}
+
+func (c InstallationDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["installed_on"] = attrs["installed_on"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_name"] = attrs["repo_name"].SetOptional()
+	attrs["repo_path"] = attrs["repo_path"].SetOptional()
+	attrs["share_name"] = attrs["share_name"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["token_detail"] = attrs["token_detail"].SetOptional()
+	attrs["tokens"] = attrs["tokens"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallationDetail.
@@ -3340,9 +3559,7 @@ func (o InstallationDetail) Type(ctx context.Context) attr.Type {
 			"repo_path":      types.StringType,
 			"share_name":     types.StringType,
 			"status":         types.StringType,
-			"token_detail": basetypes.ListType{
-				ElemType: TokenDetail{}.Type(ctx),
-			},
+			"token_detail":   TokenDetail{}.Type(ctx),
 			"tokens": basetypes.ListType{
 				ElemType: TokenInfo{}.Type(ctx),
 			},
@@ -3359,7 +3576,10 @@ func (o *InstallationDetail) GetTokenDetail(ctx context.Context) (TokenDetail, b
 		return e, false
 	}
 	var v []TokenDetail
-	d := o.TokenDetail.ElementsAs(ctx, &v, true)
+	d := o.TokenDetail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3371,9 +3591,8 @@ func (o *InstallationDetail) GetTokenDetail(ctx context.Context) (TokenDetail, b
 
 // SetTokenDetail sets the value of the TokenDetail field in InstallationDetail.
 func (o *InstallationDetail) SetTokenDetail(ctx context.Context, v TokenDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_detail"]
-	o.TokenDetail = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.TokenDetail = vs
 }
 
 // GetTokens returns the value of the Tokens field in InstallationDetail as
@@ -3407,12 +3626,6 @@ type ListAllInstallationsRequest struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsRequest) {
-}
-
-func (newState *ListAllInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllInstallationsRequest.
@@ -3449,15 +3662,22 @@ func (o ListAllInstallationsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListAllInstallationsResponse struct {
-	Installations types.List `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsResponse) {
 }
 
 func (newState *ListAllInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsResponse) {
+}
+
+func (c ListAllInstallationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installations"] = attrs["installations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllInstallationsResponse.
@@ -3530,12 +3750,6 @@ type ListAllPersonalizationRequestsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsRequest) {
-}
-
-func (newState *ListAllPersonalizationRequestsRequest) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllPersonalizationRequestsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3570,15 +3784,22 @@ func (o ListAllPersonalizationRequestsRequest) Type(ctx context.Context) attr.Ty
 }
 
 type ListAllPersonalizationRequestsResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	PersonalizationRequests types.List `tfsdk:"personalization_requests" tf:"optional"`
+	PersonalizationRequests types.List `tfsdk:"personalization_requests"`
 }
 
 func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsResponse) {
 }
 
 func (newState *ListAllPersonalizationRequestsResponse) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsResponse) {
+}
+
+func (c ListAllPersonalizationRequestsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["personalization_requests"] = attrs["personalization_requests"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllPersonalizationRequestsResponse.
@@ -3653,12 +3874,6 @@ type ListExchangeFiltersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersRequest) {
-}
-
-func (newState *ListExchangeFiltersRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangeFiltersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3695,15 +3910,22 @@ func (o ListExchangeFiltersRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListExchangeFiltersResponse struct {
-	Filters types.List `tfsdk:"filters" tf:"optional"`
+	Filters types.List `tfsdk:"filters"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersResponse) {
 }
 
 func (newState *ListExchangeFiltersResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersResponse) {
+}
+
+func (c ListExchangeFiltersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filters"] = attrs["filters"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangeFiltersResponse.
@@ -3778,12 +4000,6 @@ type ListExchangesForListingRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingRequest) {
-}
-
-func (newState *ListExchangesForListingRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesForListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3820,15 +4036,22 @@ func (o ListExchangesForListingRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListExchangesForListingResponse struct {
-	ExchangeListing types.List `tfsdk:"exchange_listing" tf:"optional"`
+	ExchangeListing types.List `tfsdk:"exchange_listing"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingResponse) {
 }
 
 func (newState *ListExchangesForListingResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingResponse) {
+}
+
+func (c ListExchangesForListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_listing"] = attrs["exchange_listing"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesForListingResponse.
@@ -3901,12 +4124,6 @@ type ListExchangesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesRequest) {
-}
-
-func (newState *ListExchangesRequest) SyncEffectiveFieldsDuringRead(existingState ListExchangesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3941,15 +4158,22 @@ func (o ListExchangesRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListExchangesResponse struct {
-	Exchanges types.List `tfsdk:"exchanges" tf:"optional"`
+	Exchanges types.List `tfsdk:"exchanges"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesResponse) {
 }
 
 func (newState *ListExchangesResponse) SyncEffectiveFieldsDuringRead(existingState ListExchangesResponse) {
+}
+
+func (c ListExchangesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchanges"] = attrs["exchanges"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesResponse.
@@ -4017,17 +4241,11 @@ func (o *ListExchangesResponse) SetExchanges(ctx context.Context, v []Exchange) 
 
 // List files
 type ListFilesRequest struct {
-	FileParent types.List `tfsdk:"-"`
+	FileParent types.Object `tfsdk:"-"`
 
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListFilesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesRequest) {
-}
-
-func (newState *ListFilesRequest) SyncEffectiveFieldsDuringRead(existingState ListFilesRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFilesRequest.
@@ -4060,11 +4278,9 @@ func (o ListFilesRequest) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o ListFilesRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"file_parent": basetypes.ListType{
-				ElemType: FileParent{}.Type(ctx),
-			},
-			"page_size":  types.Int64Type,
-			"page_token": types.StringType,
+			"file_parent": FileParent{}.Type(ctx),
+			"page_size":   types.Int64Type,
+			"page_token":  types.StringType,
 		},
 	}
 }
@@ -4078,7 +4294,10 @@ func (o *ListFilesRequest) GetFileParent(ctx context.Context) (FileParent, bool)
 		return e, false
 	}
 	var v []FileParent
-	d := o.FileParent.ElementsAs(ctx, &v, true)
+	d := o.FileParent.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4090,21 +4309,27 @@ func (o *ListFilesRequest) GetFileParent(ctx context.Context) (FileParent, bool)
 
 // SetFileParent sets the value of the FileParent field in ListFilesRequest.
 func (o *ListFilesRequest) SetFileParent(ctx context.Context, v FileParent) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file_parent"]
-	o.FileParent = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FileParent = vs
 }
 
 type ListFilesResponse struct {
-	FileInfos types.List `tfsdk:"file_infos" tf:"optional"`
+	FileInfos types.List `tfsdk:"file_infos"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListFilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesResponse) {
 }
 
 func (newState *ListFilesResponse) SyncEffectiveFieldsDuringRead(existingState ListFilesResponse) {
+}
+
+func (c ListFilesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_infos"] = attrs["file_infos"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFilesResponse.
@@ -4179,12 +4404,6 @@ type ListFulfillmentsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsRequest) {
-}
-
-func (newState *ListFulfillmentsRequest) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFulfillmentsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4221,15 +4440,22 @@ func (o ListFulfillmentsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListFulfillmentsResponse struct {
-	Fulfillments types.List `tfsdk:"fulfillments" tf:"optional"`
+	Fulfillments types.List `tfsdk:"fulfillments"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsResponse) {
 }
 
 func (newState *ListFulfillmentsResponse) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsResponse) {
+}
+
+func (c ListFulfillmentsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fulfillments"] = attrs["fulfillments"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFulfillmentsResponse.
@@ -4304,12 +4530,6 @@ type ListInstallationsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsRequest) {
-}
-
-func (newState *ListInstallationsRequest) SyncEffectiveFieldsDuringRead(existingState ListInstallationsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstallationsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4346,15 +4566,22 @@ func (o ListInstallationsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListInstallationsResponse struct {
-	Installations types.List `tfsdk:"installations" tf:"optional"`
+	Installations types.List `tfsdk:"installations"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsResponse) {
 }
 
 func (newState *ListInstallationsResponse) SyncEffectiveFieldsDuringRead(existingState ListInstallationsResponse) {
+}
+
+func (c ListInstallationsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installations"] = attrs["installations"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstallationsResponse.
@@ -4429,12 +4656,6 @@ type ListListingsForExchangeRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeRequest) {
-}
-
-func (newState *ListListingsForExchangeRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsForExchangeRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4471,15 +4692,22 @@ func (o ListListingsForExchangeRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListListingsForExchangeResponse struct {
-	ExchangeListings types.List `tfsdk:"exchange_listings" tf:"optional"`
+	ExchangeListings types.List `tfsdk:"exchange_listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeResponse) {
 }
 
 func (newState *ListListingsForExchangeResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeResponse) {
+}
+
+func (c ListListingsForExchangeResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_listings"] = attrs["exchange_listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsForExchangeResponse.
@@ -4565,12 +4793,6 @@ type ListListingsRequest struct {
 	ProviderIds types.List `tfsdk:"-"`
 	// Matches any of the following tags
 	Tags types.List `tfsdk:"-"`
-}
-
-func (newState *ListListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsRequest) {
-}
-
-func (newState *ListListingsRequest) SyncEffectiveFieldsDuringRead(existingState ListListingsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsRequest.
@@ -4738,15 +4960,22 @@ func (o *ListListingsRequest) SetTags(ctx context.Context, v []ListingTag) {
 }
 
 type ListListingsResponse struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsResponse) {
 }
 
 func (newState *ListListingsResponse) SyncEffectiveFieldsDuringRead(existingState ListListingsResponse) {
+}
+
+func (c ListListingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsResponse.
@@ -4814,17 +5043,25 @@ func (o *ListListingsResponse) SetListings(ctx context.Context, v []Listing) {
 
 type ListProviderAnalyticsDashboardResponse struct {
 	// dashboard_id will be used to open Lakeview dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderAnalyticsDashboardResponse) {
 }
 
 func (newState *ListProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState ListProviderAnalyticsDashboardResponse) {
+}
+
+func (c ListProviderAnalyticsDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProviderAnalyticsDashboardResponse.
@@ -4871,12 +5108,6 @@ type ListProvidersRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest) {
-}
-
-func (newState *ListProvidersRequest) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4913,15 +5144,22 @@ func (o ListProvidersRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListProvidersResponse struct {
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Providers types.List `tfsdk:"providers" tf:"optional"`
+	Providers types.List `tfsdk:"providers"`
 }
 
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersResponse) {
 }
 
 func (newState *ListProvidersResponse) SyncEffectiveFieldsDuringRead(existingState ListProvidersResponse) {
+}
+
+func (c ListProvidersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["providers"] = attrs["providers"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersResponse.
@@ -4988,17 +5226,25 @@ func (o *ListProvidersResponse) SetProviders(ctx context.Context, v []ProviderIn
 }
 
 type Listing struct {
-	Detail types.List `tfsdk:"detail" tf:"optional,object"`
+	Detail types.Object `tfsdk:"detail"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Next Number: 26
-	Summary types.List `tfsdk:"summary" tf:"object"`
+	Summary types.Object `tfsdk:"summary"`
 }
 
 func (newState *Listing) SyncEffectiveFieldsDuringCreateOrUpdate(plan Listing) {
 }
 
 func (newState *Listing) SyncEffectiveFieldsDuringRead(existingState Listing) {
+}
+
+func (c Listing) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["detail"] = attrs["detail"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["summary"] = attrs["summary"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Listing.
@@ -5032,13 +5278,9 @@ func (o Listing) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Listing) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"detail": basetypes.ListType{
-				ElemType: ListingDetail{}.Type(ctx),
-			},
-			"id": types.StringType,
-			"summary": basetypes.ListType{
-				ElemType: ListingSummary{}.Type(ctx),
-			},
+			"detail":  ListingDetail{}.Type(ctx),
+			"id":      types.StringType,
+			"summary": ListingSummary{}.Type(ctx),
 		},
 	}
 }
@@ -5052,7 +5294,10 @@ func (o *Listing) GetDetail(ctx context.Context) (ListingDetail, bool) {
 		return e, false
 	}
 	var v []ListingDetail
-	d := o.Detail.ElementsAs(ctx, &v, true)
+	d := o.Detail.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5064,9 +5309,8 @@ func (o *Listing) GetDetail(ctx context.Context) (ListingDetail, bool) {
 
 // SetDetail sets the value of the Detail field in Listing.
 func (o *Listing) SetDetail(ctx context.Context, v ListingDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["detail"]
-	o.Detail = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Detail = vs
 }
 
 // GetSummary returns the value of the Summary field in Listing as
@@ -5078,7 +5322,10 @@ func (o *Listing) GetSummary(ctx context.Context) (ListingSummary, bool) {
 		return e, false
 	}
 	var v []ListingSummary
-	d := o.Summary.ElementsAs(ctx, &v, true)
+	d := o.Summary.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5090,48 +5337,47 @@ func (o *Listing) GetSummary(ctx context.Context) (ListingSummary, bool) {
 
 // SetSummary sets the value of the Summary field in Listing.
 func (o *Listing) SetSummary(ctx context.Context, v ListingSummary) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["summary"]
-	o.Summary = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Summary = vs
 }
 
 type ListingDetail struct {
 	// Type of assets included in the listing. eg. GIT_REPO, DATA_TABLE, MODEL,
 	// NOTEBOOK
-	Assets types.List `tfsdk:"assets" tf:"optional"`
+	Assets types.List `tfsdk:"assets"`
 	// The ending date timestamp for when the data spans
-	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end" tf:"optional"`
+	CollectionDateEnd types.Int64 `tfsdk:"collection_date_end"`
 	// The starting date timestamp for when the data spans
-	CollectionDateStart types.Int64 `tfsdk:"collection_date_start" tf:"optional"`
+	CollectionDateStart types.Int64 `tfsdk:"collection_date_start"`
 	// Smallest unit of time in the dataset
-	CollectionGranularity types.List `tfsdk:"collection_granularity" tf:"optional,object"`
+	CollectionGranularity types.Object `tfsdk:"collection_granularity"`
 	// Whether the dataset is free or paid
-	Cost types.String `tfsdk:"cost" tf:"optional"`
+	Cost types.String `tfsdk:"cost"`
 	// Where/how the data is sourced
-	DataSource types.String `tfsdk:"data_source" tf:"optional"`
+	DataSource types.String `tfsdk:"data_source"`
 
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	DocumentationLink types.String `tfsdk:"documentation_link" tf:"optional"`
+	DocumentationLink types.String `tfsdk:"documentation_link"`
 
-	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos" tf:"optional"`
+	EmbeddedNotebookFileInfos types.List `tfsdk:"embedded_notebook_file_infos"`
 
-	FileIds types.List `tfsdk:"file_ids" tf:"optional"`
+	FileIds types.List `tfsdk:"file_ids"`
 	// Which geo region the listing data is collected from
-	GeographicalCoverage types.String `tfsdk:"geographical_coverage" tf:"optional"`
+	GeographicalCoverage types.String `tfsdk:"geographical_coverage"`
 	// ID 20, 21 removed don't use License of the data asset - Required for
 	// listings with model based assets
-	License types.String `tfsdk:"license" tf:"optional"`
+	License types.String `tfsdk:"license"`
 	// What the pricing model is (e.g. paid, subscription, paid upfront); should
 	// only be present if cost is paid TODO: Not used yet, should deprecate if
 	// we will never use it
-	PricingModel types.String `tfsdk:"pricing_model" tf:"optional"`
+	PricingModel types.String `tfsdk:"pricing_model"`
 
-	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link" tf:"optional"`
+	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// size of the dataset in GB
-	Size types.Float64 `tfsdk:"size" tf:"optional"`
+	Size types.Float64 `tfsdk:"size"`
 
-	SupportLink types.String `tfsdk:"support_link" tf:"optional"`
+	SupportLink types.String `tfsdk:"support_link"`
 	// Listing tags - Simple key value pair to annotate listings. When should I
 	// use tags vs dedicated fields? Using tags avoids the need to add new
 	// columns in the database for new annotations. However, this should be used
@@ -5139,17 +5385,41 @@ type ListingDetail struct {
 	// the field is optional and won't need to have NOT NULL integrity check 2.
 	// The value is fairly fixed, static and low cardinality (eg. enums). 3. The
 	// value won't be used in filters or joins with other tables.
-	Tags types.List `tfsdk:"tags" tf:"optional"`
+	Tags types.List `tfsdk:"tags"`
 
-	TermsOfService types.String `tfsdk:"terms_of_service" tf:"optional"`
+	TermsOfService types.String `tfsdk:"terms_of_service"`
 	// How often data is updated
-	UpdateFrequency types.List `tfsdk:"update_frequency" tf:"optional,object"`
+	UpdateFrequency types.Object `tfsdk:"update_frequency"`
 }
 
 func (newState *ListingDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingDetail) {
 }
 
 func (newState *ListingDetail) SyncEffectiveFieldsDuringRead(existingState ListingDetail) {
+}
+
+func (c ListingDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assets"] = attrs["assets"].SetOptional()
+	attrs["collection_date_end"] = attrs["collection_date_end"].SetOptional()
+	attrs["collection_date_start"] = attrs["collection_date_start"].SetOptional()
+	attrs["collection_granularity"] = attrs["collection_granularity"].SetOptional()
+	attrs["cost"] = attrs["cost"].SetOptional()
+	attrs["data_source"] = attrs["data_source"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["documentation_link"] = attrs["documentation_link"].SetOptional()
+	attrs["embedded_notebook_file_infos"] = attrs["embedded_notebook_file_infos"].SetOptional()
+	attrs["file_ids"] = attrs["file_ids"].SetOptional()
+	attrs["geographical_coverage"] = attrs["geographical_coverage"].SetOptional()
+	attrs["license"] = attrs["license"].SetOptional()
+	attrs["pricing_model"] = attrs["pricing_model"].SetOptional()
+	attrs["privacy_policy_link"] = attrs["privacy_policy_link"].SetOptional()
+	attrs["size"] = attrs["size"].SetOptional()
+	attrs["support_link"] = attrs["support_link"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+	attrs["terms_of_service"] = attrs["terms_of_service"].SetOptional()
+	attrs["update_frequency"] = attrs["update_frequency"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingDetail.
@@ -5206,15 +5476,13 @@ func (o ListingDetail) Type(ctx context.Context) attr.Type {
 			"assets": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"collection_date_end":   types.Int64Type,
-			"collection_date_start": types.Int64Type,
-			"collection_granularity": basetypes.ListType{
-				ElemType: DataRefreshInfo{}.Type(ctx),
-			},
-			"cost":               types.StringType,
-			"data_source":        types.StringType,
-			"description":        types.StringType,
-			"documentation_link": types.StringType,
+			"collection_date_end":    types.Int64Type,
+			"collection_date_start":  types.Int64Type,
+			"collection_granularity": DataRefreshInfo{}.Type(ctx),
+			"cost":                   types.StringType,
+			"data_source":            types.StringType,
+			"description":            types.StringType,
+			"documentation_link":     types.StringType,
 			"embedded_notebook_file_infos": basetypes.ListType{
 				ElemType: FileInfo{}.Type(ctx),
 			},
@@ -5231,9 +5499,7 @@ func (o ListingDetail) Type(ctx context.Context) attr.Type {
 				ElemType: ListingTag{}.Type(ctx),
 			},
 			"terms_of_service": types.StringType,
-			"update_frequency": basetypes.ListType{
-				ElemType: DataRefreshInfo{}.Type(ctx),
-			},
+			"update_frequency": DataRefreshInfo{}.Type(ctx),
 		},
 	}
 }
@@ -5273,7 +5539,10 @@ func (o *ListingDetail) GetCollectionGranularity(ctx context.Context) (DataRefre
 		return e, false
 	}
 	var v []DataRefreshInfo
-	d := o.CollectionGranularity.ElementsAs(ctx, &v, true)
+	d := o.CollectionGranularity.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5285,9 +5554,8 @@ func (o *ListingDetail) GetCollectionGranularity(ctx context.Context) (DataRefre
 
 // SetCollectionGranularity sets the value of the CollectionGranularity field in ListingDetail.
 func (o *ListingDetail) SetCollectionGranularity(ctx context.Context, v DataRefreshInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["collection_granularity"]
-	o.CollectionGranularity = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CollectionGranularity = vs
 }
 
 // GetEmbeddedNotebookFileInfos returns the value of the EmbeddedNotebookFileInfos field in ListingDetail as
@@ -5377,7 +5645,10 @@ func (o *ListingDetail) GetUpdateFrequency(ctx context.Context) (DataRefreshInfo
 		return e, false
 	}
 	var v []DataRefreshInfo
-	d := o.UpdateFrequency.ElementsAs(ctx, &v, true)
+	d := o.UpdateFrequency.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5389,27 +5660,36 @@ func (o *ListingDetail) GetUpdateFrequency(ctx context.Context) (DataRefreshInfo
 
 // SetUpdateFrequency sets the value of the UpdateFrequency field in ListingDetail.
 func (o *ListingDetail) SetUpdateFrequency(ctx context.Context, v DataRefreshInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["update_frequency"]
-	o.UpdateFrequency = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.UpdateFrequency = vs
 }
 
 type ListingFulfillment struct {
-	FulfillmentType types.String `tfsdk:"fulfillment_type" tf:"optional"`
+	FulfillmentType types.String `tfsdk:"fulfillment_type"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:""`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	RepoInfo types.List `tfsdk:"repo_info" tf:"optional,object"`
+	RepoInfo types.Object `tfsdk:"repo_info"`
 
-	ShareInfo types.List `tfsdk:"share_info" tf:"optional,object"`
+	ShareInfo types.Object `tfsdk:"share_info"`
 }
 
 func (newState *ListingFulfillment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingFulfillment) {
 }
 
 func (newState *ListingFulfillment) SyncEffectiveFieldsDuringRead(existingState ListingFulfillment) {
+}
+
+func (c ListingFulfillment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fulfillment_type"] = attrs["fulfillment_type"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["repo_info"] = attrs["repo_info"].SetOptional()
+	attrs["share_info"] = attrs["share_info"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingFulfillment.
@@ -5448,12 +5728,8 @@ func (o ListingFulfillment) Type(ctx context.Context) attr.Type {
 			"fulfillment_type": types.StringType,
 			"listing_id":       types.StringType,
 			"recipient_type":   types.StringType,
-			"repo_info": basetypes.ListType{
-				ElemType: RepoInfo{}.Type(ctx),
-			},
-			"share_info": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
-			},
+			"repo_info":        RepoInfo{}.Type(ctx),
+			"share_info":       ShareInfo{}.Type(ctx),
 		},
 	}
 }
@@ -5467,7 +5743,10 @@ func (o *ListingFulfillment) GetRepoInfo(ctx context.Context) (RepoInfo, bool) {
 		return e, false
 	}
 	var v []RepoInfo
-	d := o.RepoInfo.ElementsAs(ctx, &v, true)
+	d := o.RepoInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5479,9 +5758,8 @@ func (o *ListingFulfillment) GetRepoInfo(ctx context.Context) (RepoInfo, bool) {
 
 // SetRepoInfo sets the value of the RepoInfo field in ListingFulfillment.
 func (o *ListingFulfillment) SetRepoInfo(ctx context.Context, v RepoInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["repo_info"]
-	o.RepoInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.RepoInfo = vs
 }
 
 // GetShareInfo returns the value of the ShareInfo field in ListingFulfillment as
@@ -5493,7 +5771,10 @@ func (o *ListingFulfillment) GetShareInfo(ctx context.Context) (ShareInfo, bool)
 		return e, false
 	}
 	var v []ShareInfo
-	d := o.ShareInfo.ElementsAs(ctx, &v, true)
+	d := o.ShareInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5505,19 +5786,24 @@ func (o *ListingFulfillment) GetShareInfo(ctx context.Context) (ShareInfo, bool)
 
 // SetShareInfo sets the value of the ShareInfo field in ListingFulfillment.
 func (o *ListingFulfillment) SetShareInfo(ctx context.Context, v ShareInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share_info"]
-	o.ShareInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ShareInfo = vs
 }
 
 type ListingSetting struct {
-	Visibility types.String `tfsdk:"visibility" tf:"optional"`
+	Visibility types.String `tfsdk:"visibility"`
 }
 
 func (newState *ListingSetting) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSetting) {
 }
 
 func (newState *ListingSetting) SyncEffectiveFieldsDuringRead(existingState ListingSetting) {
+}
+
+func (c ListingSetting) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["visibility"] = attrs["visibility"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingSetting.
@@ -5553,50 +5839,74 @@ func (o ListingSetting) Type(ctx context.Context) attr.Type {
 
 // Next Number: 26
 type ListingSummary struct {
-	Categories types.List `tfsdk:"categories" tf:"optional"`
+	Categories types.List `tfsdk:"categories"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 
-	CreatedById types.Int64 `tfsdk:"created_by_id" tf:"optional"`
+	CreatedById types.Int64 `tfsdk:"created_by_id"`
 
-	ExchangeIds types.List `tfsdk:"exchange_ids" tf:"optional"`
+	ExchangeIds types.List `tfsdk:"exchange_ids"`
 	// if a git repo is being created, a listing will be initialized with this
 	// field as opposed to a share
-	GitRepo types.List `tfsdk:"git_repo" tf:"optional,object"`
+	GitRepo types.Object `tfsdk:"git_repo"`
 
-	ListingType types.String `tfsdk:"listingType" tf:""`
+	ListingType types.String `tfsdk:"listingType"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
+	ProviderId types.String `tfsdk:"provider_id"`
 
-	ProviderRegion types.List `tfsdk:"provider_region" tf:"optional,object"`
+	ProviderRegion types.Object `tfsdk:"provider_region"`
 
-	PublishedAt types.Int64 `tfsdk:"published_at" tf:"optional"`
+	PublishedAt types.Int64 `tfsdk:"published_at"`
 
-	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
+	PublishedBy types.String `tfsdk:"published_by"`
 
-	Setting types.List `tfsdk:"setting" tf:"optional,object"`
+	Setting types.Object `tfsdk:"setting"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share"`
 	// Enums
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	Subtitle types.String `tfsdk:"subtitle" tf:"optional"`
+	Subtitle types.String `tfsdk:"subtitle"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 
-	UpdatedById types.Int64 `tfsdk:"updated_by_id" tf:"optional"`
+	UpdatedById types.Int64 `tfsdk:"updated_by_id"`
 }
 
 func (newState *ListingSummary) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingSummary) {
 }
 
 func (newState *ListingSummary) SyncEffectiveFieldsDuringRead(existingState ListingSummary) {
+}
+
+func (c ListingSummary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["created_by_id"] = attrs["created_by_id"].SetOptional()
+	attrs["exchange_ids"] = attrs["exchange_ids"].SetOptional()
+	attrs["git_repo"] = attrs["git_repo"].SetOptional()
+	attrs["listingType"] = attrs["listingType"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["provider_id"] = attrs["provider_id"].SetOptional()
+	attrs["provider_region"] = attrs["provider_region"].SetOptional()
+	attrs["published_at"] = attrs["published_at"].SetOptional()
+	attrs["published_by"] = attrs["published_by"].SetOptional()
+	attrs["setting"] = attrs["setting"].SetOptional()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["subtitle"] = attrs["subtitle"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+	attrs["updated_by_id"] = attrs["updated_by_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingSummary.
@@ -5659,28 +5969,20 @@ func (o ListingSummary) Type(ctx context.Context) attr.Type {
 			"exchange_ids": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"git_repo": basetypes.ListType{
-				ElemType: RepoInfo{}.Type(ctx),
-			},
-			"listingType": types.StringType,
-			"name":        types.StringType,
-			"provider_id": types.StringType,
-			"provider_region": basetypes.ListType{
-				ElemType: RegionInfo{}.Type(ctx),
-			},
-			"published_at": types.Int64Type,
-			"published_by": types.StringType,
-			"setting": basetypes.ListType{
-				ElemType: ListingSetting{}.Type(ctx),
-			},
-			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
-			},
-			"status":        types.StringType,
-			"subtitle":      types.StringType,
-			"updated_at":    types.Int64Type,
-			"updated_by":    types.StringType,
-			"updated_by_id": types.Int64Type,
+			"git_repo":        RepoInfo{}.Type(ctx),
+			"listingType":     types.StringType,
+			"name":            types.StringType,
+			"provider_id":     types.StringType,
+			"provider_region": RegionInfo{}.Type(ctx),
+			"published_at":    types.Int64Type,
+			"published_by":    types.StringType,
+			"setting":         ListingSetting{}.Type(ctx),
+			"share":           ShareInfo{}.Type(ctx),
+			"status":          types.StringType,
+			"subtitle":        types.StringType,
+			"updated_at":      types.Int64Type,
+			"updated_by":      types.StringType,
+			"updated_by_id":   types.Int64Type,
 		},
 	}
 }
@@ -5746,7 +6048,10 @@ func (o *ListingSummary) GetGitRepo(ctx context.Context) (RepoInfo, bool) {
 		return e, false
 	}
 	var v []RepoInfo
-	d := o.GitRepo.ElementsAs(ctx, &v, true)
+	d := o.GitRepo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5758,9 +6063,8 @@ func (o *ListingSummary) GetGitRepo(ctx context.Context) (RepoInfo, bool) {
 
 // SetGitRepo sets the value of the GitRepo field in ListingSummary.
 func (o *ListingSummary) SetGitRepo(ctx context.Context, v RepoInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["git_repo"]
-	o.GitRepo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GitRepo = vs
 }
 
 // GetProviderRegion returns the value of the ProviderRegion field in ListingSummary as
@@ -5772,7 +6076,10 @@ func (o *ListingSummary) GetProviderRegion(ctx context.Context) (RegionInfo, boo
 		return e, false
 	}
 	var v []RegionInfo
-	d := o.ProviderRegion.ElementsAs(ctx, &v, true)
+	d := o.ProviderRegion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5784,9 +6091,8 @@ func (o *ListingSummary) GetProviderRegion(ctx context.Context) (RegionInfo, boo
 
 // SetProviderRegion sets the value of the ProviderRegion field in ListingSummary.
 func (o *ListingSummary) SetProviderRegion(ctx context.Context, v RegionInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider_region"]
-	o.ProviderRegion = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ProviderRegion = vs
 }
 
 // GetSetting returns the value of the Setting field in ListingSummary as
@@ -5798,7 +6104,10 @@ func (o *ListingSummary) GetSetting(ctx context.Context) (ListingSetting, bool) 
 		return e, false
 	}
 	var v []ListingSetting
-	d := o.Setting.ElementsAs(ctx, &v, true)
+	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5810,9 +6119,8 @@ func (o *ListingSummary) GetSetting(ctx context.Context) (ListingSetting, bool) 
 
 // SetSetting sets the value of the Setting field in ListingSummary.
 func (o *ListingSummary) SetSetting(ctx context.Context, v ListingSetting) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
-	o.Setting = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Setting = vs
 }
 
 // GetShare returns the value of the Share field in ListingSummary as
@@ -5824,7 +6132,10 @@ func (o *ListingSummary) GetShare(ctx context.Context) (ShareInfo, bool) {
 		return e, false
 	}
 	var v []ShareInfo
-	d := o.Share.ElementsAs(ctx, &v, true)
+	d := o.Share.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5836,23 +6147,29 @@ func (o *ListingSummary) GetShare(ctx context.Context) (ShareInfo, bool) {
 
 // SetShare sets the value of the Share field in ListingSummary.
 func (o *ListingSummary) SetShare(ctx context.Context, v ShareInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
-	o.Share = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Share = vs
 }
 
 type ListingTag struct {
 	// Tag name (enum)
-	TagName types.String `tfsdk:"tag_name" tf:"optional"`
+	TagName types.String `tfsdk:"tag_name"`
 	// String representation of the tag value. Values should be string literals
 	// (no complex types)
-	TagValues types.List `tfsdk:"tag_values" tf:"optional"`
+	TagValues types.List `tfsdk:"tag_values"`
 }
 
 func (newState *ListingTag) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListingTag) {
 }
 
 func (newState *ListingTag) SyncEffectiveFieldsDuringRead(existingState ListingTag) {
+}
+
+func (c ListingTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tag_name"] = attrs["tag_name"].SetOptional()
+	attrs["tag_values"] = attrs["tag_values"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListingTag.
@@ -5919,44 +6236,65 @@ func (o *ListingTag) SetTagValues(ctx context.Context, v []types.String) {
 }
 
 type PersonalizationRequest struct {
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 
-	ConsumerRegion types.List `tfsdk:"consumer_region" tf:"object"`
+	ConsumerRegion types.Object `tfsdk:"consumer_region"`
 	// contact info for the consumer requesting data or performing a listing
 	// installation
-	ContactInfo types.List `tfsdk:"contact_info" tf:"optional,object"`
+	ContactInfo types.Object `tfsdk:"contact_info"`
 
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	IntendedUse types.String `tfsdk:"intended_use" tf:"optional"`
+	IntendedUse types.String `tfsdk:"intended_use"`
 
-	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse" tf:"optional"`
+	IsFromLighthouse types.Bool `tfsdk:"is_from_lighthouse"`
 
-	ListingId types.String `tfsdk:"listing_id" tf:"optional"`
+	ListingId types.String `tfsdk:"listing_id"`
 
-	ListingName types.String `tfsdk:"listing_name" tf:"optional"`
+	ListingName types.String `tfsdk:"listing_name"`
 
-	MetastoreId types.String `tfsdk:"metastore_id" tf:"optional"`
+	MetastoreId types.String `tfsdk:"metastore_id"`
 
-	ProviderId types.String `tfsdk:"provider_id" tf:"optional"`
+	ProviderId types.String `tfsdk:"provider_id"`
 
-	RecipientType types.String `tfsdk:"recipient_type" tf:"optional"`
+	RecipientType types.String `tfsdk:"recipient_type"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 
-	StatusMessage types.String `tfsdk:"status_message" tf:"optional"`
+	StatusMessage types.String `tfsdk:"status_message"`
 
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
 func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PersonalizationRequest) {
 }
 
 func (newState *PersonalizationRequest) SyncEffectiveFieldsDuringRead(existingState PersonalizationRequest) {
+}
+
+func (c PersonalizationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["consumer_region"] = attrs["consumer_region"].SetRequired()
+	attrs["contact_info"] = attrs["contact_info"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["intended_use"] = attrs["intended_use"].SetOptional()
+	attrs["is_from_lighthouse"] = attrs["is_from_lighthouse"].SetOptional()
+	attrs["listing_id"] = attrs["listing_id"].SetOptional()
+	attrs["listing_name"] = attrs["listing_name"].SetOptional()
+	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["provider_id"] = attrs["provider_id"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status_message"] = attrs["status_message"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PersonalizationRequest.
@@ -6004,13 +6342,9 @@ func (o PersonalizationRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o PersonalizationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"comment": types.StringType,
-			"consumer_region": basetypes.ListType{
-				ElemType: RegionInfo{}.Type(ctx),
-			},
-			"contact_info": basetypes.ListType{
-				ElemType: ContactInfo{}.Type(ctx),
-			},
+			"comment":            types.StringType,
+			"consumer_region":    RegionInfo{}.Type(ctx),
+			"contact_info":       ContactInfo{}.Type(ctx),
 			"created_at":         types.Int64Type,
 			"id":                 types.StringType,
 			"intended_use":       types.StringType,
@@ -6020,12 +6354,10 @@ func (o PersonalizationRequest) Type(ctx context.Context) attr.Type {
 			"metastore_id":       types.StringType,
 			"provider_id":        types.StringType,
 			"recipient_type":     types.StringType,
-			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
-			},
-			"status":         types.StringType,
-			"status_message": types.StringType,
-			"updated_at":     types.Int64Type,
+			"share":              ShareInfo{}.Type(ctx),
+			"status":             types.StringType,
+			"status_message":     types.StringType,
+			"updated_at":         types.Int64Type,
 		},
 	}
 }
@@ -6039,7 +6371,10 @@ func (o *PersonalizationRequest) GetConsumerRegion(ctx context.Context) (RegionI
 		return e, false
 	}
 	var v []RegionInfo
-	d := o.ConsumerRegion.ElementsAs(ctx, &v, true)
+	d := o.ConsumerRegion.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6051,9 +6386,8 @@ func (o *PersonalizationRequest) GetConsumerRegion(ctx context.Context) (RegionI
 
 // SetConsumerRegion sets the value of the ConsumerRegion field in PersonalizationRequest.
 func (o *PersonalizationRequest) SetConsumerRegion(ctx context.Context, v RegionInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["consumer_region"]
-	o.ConsumerRegion = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ConsumerRegion = vs
 }
 
 // GetContactInfo returns the value of the ContactInfo field in PersonalizationRequest as
@@ -6065,7 +6399,10 @@ func (o *PersonalizationRequest) GetContactInfo(ctx context.Context) (ContactInf
 		return e, false
 	}
 	var v []ContactInfo
-	d := o.ContactInfo.ElementsAs(ctx, &v, true)
+	d := o.ContactInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6077,9 +6414,8 @@ func (o *PersonalizationRequest) GetContactInfo(ctx context.Context) (ContactInf
 
 // SetContactInfo sets the value of the ContactInfo field in PersonalizationRequest.
 func (o *PersonalizationRequest) SetContactInfo(ctx context.Context, v ContactInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["contact_info"]
-	o.ContactInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ContactInfo = vs
 }
 
 // GetShare returns the value of the Share field in PersonalizationRequest as
@@ -6091,7 +6427,10 @@ func (o *PersonalizationRequest) GetShare(ctx context.Context) (ShareInfo, bool)
 		return e, false
 	}
 	var v []ShareInfo
-	d := o.Share.ElementsAs(ctx, &v, true)
+	d := o.Share.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6103,19 +6442,24 @@ func (o *PersonalizationRequest) GetShare(ctx context.Context) (ShareInfo, bool)
 
 // SetShare sets the value of the Share field in PersonalizationRequest.
 func (o *PersonalizationRequest) SetShare(ctx context.Context, v ShareInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
-	o.Share = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Share = vs
 }
 
 type ProviderAnalyticsDashboard struct {
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderAnalyticsDashboard) {
 }
 
 func (newState *ProviderAnalyticsDashboard) SyncEffectiveFieldsDuringRead(existingState ProviderAnalyticsDashboard) {
+}
+
+func (c ProviderAnalyticsDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderAnalyticsDashboard.
@@ -6150,39 +6494,58 @@ func (o ProviderAnalyticsDashboard) Type(ctx context.Context) attr.Type {
 }
 
 type ProviderInfo struct {
-	BusinessContactEmail types.String `tfsdk:"business_contact_email" tf:""`
+	BusinessContactEmail types.String `tfsdk:"business_contact_email"`
 
-	CompanyWebsiteLink types.String `tfsdk:"company_website_link" tf:"optional"`
+	CompanyWebsiteLink types.String `tfsdk:"company_website_link"`
 
-	DarkModeIconFileId types.String `tfsdk:"dark_mode_icon_file_id" tf:"optional"`
+	DarkModeIconFileId types.String `tfsdk:"dark_mode_icon_file_id"`
 
-	DarkModeIconFilePath types.String `tfsdk:"dark_mode_icon_file_path" tf:"optional"`
+	DarkModeIconFilePath types.String `tfsdk:"dark_mode_icon_file_path"`
 
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	IconFileId types.String `tfsdk:"icon_file_id" tf:"optional"`
+	IconFileId types.String `tfsdk:"icon_file_id"`
 
-	IconFilePath types.String `tfsdk:"icon_file_path" tf:"optional"`
+	IconFilePath types.String `tfsdk:"icon_file_path"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// is_featured is accessible by consumers only
-	IsFeatured types.Bool `tfsdk:"is_featured" tf:"optional"`
+	IsFeatured types.Bool `tfsdk:"is_featured"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link" tf:""`
+	PrivacyPolicyLink types.String `tfsdk:"privacy_policy_link"`
 	// published_by is only applicable to data aggregators (e.g. Crux)
-	PublishedBy types.String `tfsdk:"published_by" tf:"optional"`
+	PublishedBy types.String `tfsdk:"published_by"`
 
-	SupportContactEmail types.String `tfsdk:"support_contact_email" tf:"optional"`
+	SupportContactEmail types.String `tfsdk:"support_contact_email"`
 
-	TermOfServiceLink types.String `tfsdk:"term_of_service_link" tf:""`
+	TermOfServiceLink types.String `tfsdk:"term_of_service_link"`
 }
 
 func (newState *ProviderInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ProviderInfo) {
 }
 
 func (newState *ProviderInfo) SyncEffectiveFieldsDuringRead(existingState ProviderInfo) {
+}
+
+func (c ProviderInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["business_contact_email"] = attrs["business_contact_email"].SetRequired()
+	attrs["company_website_link"] = attrs["company_website_link"].SetOptional()
+	attrs["dark_mode_icon_file_id"] = attrs["dark_mode_icon_file_id"].SetOptional()
+	attrs["dark_mode_icon_file_path"] = attrs["dark_mode_icon_file_path"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["icon_file_id"] = attrs["icon_file_id"].SetOptional()
+	attrs["icon_file_path"] = attrs["icon_file_path"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["is_featured"] = attrs["is_featured"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["privacy_policy_link"] = attrs["privacy_policy_link"].SetRequired()
+	attrs["published_by"] = attrs["published_by"].SetOptional()
+	attrs["support_contact_email"] = attrs["support_contact_email"].SetOptional()
+	attrs["term_of_service_link"] = attrs["term_of_service_link"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ProviderInfo.
@@ -6243,15 +6606,22 @@ func (o ProviderInfo) Type(ctx context.Context) attr.Type {
 }
 
 type RegionInfo struct {
-	Cloud types.String `tfsdk:"cloud" tf:"optional"`
+	Cloud types.String `tfsdk:"cloud"`
 
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *RegionInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RegionInfo) {
 }
 
 func (newState *RegionInfo) SyncEffectiveFieldsDuringRead(existingState RegionInfo) {
+}
+
+func (c RegionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RegionInfo.
@@ -6290,12 +6660,6 @@ func (o RegionInfo) Type(ctx context.Context) attr.Type {
 // Remove an exchange for listing
 type RemoveExchangeForListingRequest struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveExchangeForListingRequest) {
-}
-
-func (newState *RemoveExchangeForListingRequest) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveExchangeForListingRequest.
@@ -6338,6 +6702,11 @@ func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringCreat
 func (newState *RemoveExchangeForListingResponse) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingResponse) {
 }
 
+func (c RemoveExchangeForListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveExchangeForListingResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6367,13 +6736,19 @@ func (o RemoveExchangeForListingResponse) Type(ctx context.Context) attr.Type {
 
 type RepoInfo struct {
 	// the git repo url e.g. https://github.com/databrickslabs/dolly.git
-	GitRepoUrl types.String `tfsdk:"git_repo_url" tf:""`
+	GitRepoUrl types.String `tfsdk:"git_repo_url"`
 }
 
 func (newState *RepoInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInfo) {
 }
 
 func (newState *RepoInfo) SyncEffectiveFieldsDuringRead(existingState RepoInfo) {
+}
+
+func (c RepoInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["git_repo_url"] = attrs["git_repo_url"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoInfo.
@@ -6409,17 +6784,24 @@ func (o RepoInfo) Type(ctx context.Context) attr.Type {
 
 type RepoInstallation struct {
 	// the user-specified repo name for their installed git repo listing
-	RepoName types.String `tfsdk:"repo_name" tf:""`
+	RepoName types.String `tfsdk:"repo_name"`
 	// refers to the full url file path that navigates the user to the repo's
 	// entrypoint (e.g. a README.md file, or the repo file view in the unified
 	// UI) should just be a relative path
-	RepoPath types.String `tfsdk:"repo_path" tf:""`
+	RepoPath types.String `tfsdk:"repo_path"`
 }
 
 func (newState *RepoInstallation) SyncEffectiveFieldsDuringCreateOrUpdate(plan RepoInstallation) {
 }
 
 func (newState *RepoInstallation) SyncEffectiveFieldsDuringRead(existingState RepoInstallation) {
+}
+
+func (c RepoInstallation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["repo_name"] = attrs["repo_name"].SetRequired()
+	attrs["repo_path"] = attrs["repo_path"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RepoInstallation.
@@ -6473,12 +6855,6 @@ type SearchListingsRequest struct {
 	ProviderIds types.List `tfsdk:"-"`
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-"`
-}
-
-func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsRequest) {
-}
-
-func (newState *SearchListingsRequest) SyncEffectiveFieldsDuringRead(existingState SearchListingsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchListingsRequest.
@@ -6615,15 +6991,22 @@ func (o *SearchListingsRequest) SetProviderIds(ctx context.Context, v []types.St
 }
 
 type SearchListingsResponse struct {
-	Listings types.List `tfsdk:"listings" tf:"optional"`
+	Listings types.List `tfsdk:"listings"`
 
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsResponse) {
 }
 
 func (newState *SearchListingsResponse) SyncEffectiveFieldsDuringRead(existingState SearchListingsResponse) {
+}
+
+func (c SearchListingsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listings"] = attrs["listings"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchListingsResponse.
@@ -6690,15 +7073,22 @@ func (o *SearchListingsResponse) SetListings(ctx context.Context, v []Listing) {
 }
 
 type ShareInfo struct {
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 
-	Type_ types.String `tfsdk:"type" tf:""`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan ShareInfo) {
 }
 
 func (newState *ShareInfo) SyncEffectiveFieldsDuringRead(existingState ShareInfo) {
+}
+
+func (c ShareInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["type"] = attrs["type"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ShareInfo.
@@ -6737,15 +7127,22 @@ func (o ShareInfo) Type(ctx context.Context) attr.Type {
 type SharedDataObject struct {
 	// The type of the data object. Could be one of: TABLE, SCHEMA,
 	// NOTEBOOK_FILE, MODEL, VOLUME
-	DataObjectType types.String `tfsdk:"data_object_type" tf:"optional"`
+	DataObjectType types.String `tfsdk:"data_object_type"`
 	// Name of the shared object
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
 }
 
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState SharedDataObject) {
+}
+
+func (c SharedDataObject) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_object_type"] = attrs["data_object_type"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharedDataObject.
@@ -6782,21 +7179,30 @@ func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 }
 
 type TokenDetail struct {
-	BearerToken types.String `tfsdk:"bearerToken" tf:"optional"`
+	BearerToken types.String `tfsdk:"bearerToken"`
 
-	Endpoint types.String `tfsdk:"endpoint" tf:"optional"`
+	Endpoint types.String `tfsdk:"endpoint"`
 
-	ExpirationTime types.String `tfsdk:"expirationTime" tf:"optional"`
+	ExpirationTime types.String `tfsdk:"expirationTime"`
 	// These field names must follow the delta sharing protocol. Original
 	// message: RetrieveToken.Response in
 	// managed-catalog/api/messages/recipient.proto
-	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion" tf:"optional"`
+	ShareCredentialsVersion types.Int64 `tfsdk:"shareCredentialsVersion"`
 }
 
 func (newState *TokenDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenDetail) {
 }
 
 func (newState *TokenDetail) SyncEffectiveFieldsDuringRead(existingState TokenDetail) {
+}
+
+func (c TokenDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bearerToken"] = attrs["bearerToken"].SetOptional()
+	attrs["endpoint"] = attrs["endpoint"].SetOptional()
+	attrs["expirationTime"] = attrs["expirationTime"].SetOptional()
+	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenDetail.
@@ -6839,25 +7245,37 @@ func (o TokenDetail) Type(ctx context.Context) attr.Type {
 type TokenInfo struct {
 	// Full activation url to retrieve the access token. It will be empty if the
 	// token is already retrieved.
-	ActivationUrl types.String `tfsdk:"activation_url" tf:"optional"`
+	ActivationUrl types.String `tfsdk:"activation_url"`
 	// Time at which this Recipient Token was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of Recipient Token creator.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 	// Expiration timestamp of the token in epoch milliseconds.
-	ExpirationTime types.Int64 `tfsdk:"expiration_time" tf:"optional"`
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 	// Unique id of the Recipient Token.
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// Time at which this Recipient Token was updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// Username of Recipient Token updater.
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *TokenInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan TokenInfo) {
 }
 
 func (newState *TokenInfo) SyncEffectiveFieldsDuringRead(existingState TokenInfo) {
+}
+
+func (c TokenInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activation_url"] = attrs["activation_url"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TokenInfo.
@@ -6904,7 +7322,7 @@ func (o TokenInfo) Type(ctx context.Context) attr.Type {
 }
 
 type UpdateExchangeFilterRequest struct {
-	Filter types.List `tfsdk:"filter" tf:"object"`
+	Filter types.Object `tfsdk:"filter"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -6913,6 +7331,13 @@ func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringCreateOrUp
 }
 
 func (newState *UpdateExchangeFilterRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterRequest) {
+}
+
+func (c UpdateExchangeFilterRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeFilterRequest.
@@ -6944,10 +7369,8 @@ func (o UpdateExchangeFilterRequest) ToObjectValue(ctx context.Context) basetype
 func (o UpdateExchangeFilterRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
-			},
-			"id": types.StringType,
+			"filter": ExchangeFilter{}.Type(ctx),
+			"id":     types.StringType,
 		},
 	}
 }
@@ -6961,7 +7384,10 @@ func (o *UpdateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFi
 		return e, false
 	}
 	var v []ExchangeFilter
-	d := o.Filter.ElementsAs(ctx, &v, true)
+	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6973,19 +7399,24 @@ func (o *UpdateExchangeFilterRequest) GetFilter(ctx context.Context) (ExchangeFi
 
 // SetFilter sets the value of the Filter field in UpdateExchangeFilterRequest.
 func (o *UpdateExchangeFilterRequest) SetFilter(ctx context.Context, v ExchangeFilter) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
-	o.Filter = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Filter = vs
 }
 
 type UpdateExchangeFilterResponse struct {
-	Filter types.List `tfsdk:"filter" tf:"optional,object"`
+	Filter types.Object `tfsdk:"filter"`
 }
 
 func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeFilterResponse) {
 }
 
 func (newState *UpdateExchangeFilterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeFilterResponse) {
+}
+
+func (c UpdateExchangeFilterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeFilterResponse.
@@ -7016,9 +7447,7 @@ func (o UpdateExchangeFilterResponse) ToObjectValue(ctx context.Context) basetyp
 func (o UpdateExchangeFilterResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter": basetypes.ListType{
-				ElemType: ExchangeFilter{}.Type(ctx),
-			},
+			"filter": ExchangeFilter{}.Type(ctx),
 		},
 	}
 }
@@ -7032,7 +7461,10 @@ func (o *UpdateExchangeFilterResponse) GetFilter(ctx context.Context) (ExchangeF
 		return e, false
 	}
 	var v []ExchangeFilter
-	d := o.Filter.ElementsAs(ctx, &v, true)
+	d := o.Filter.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7044,13 +7476,12 @@ func (o *UpdateExchangeFilterResponse) GetFilter(ctx context.Context) (ExchangeF
 
 // SetFilter sets the value of the Filter field in UpdateExchangeFilterResponse.
 func (o *UpdateExchangeFilterResponse) SetFilter(ctx context.Context, v ExchangeFilter) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter"]
-	o.Filter = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Filter = vs
 }
 
 type UpdateExchangeRequest struct {
-	Exchange types.List `tfsdk:"exchange" tf:"object"`
+	Exchange types.Object `tfsdk:"exchange"`
 
 	Id types.String `tfsdk:"-"`
 }
@@ -7059,6 +7490,13 @@ func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateExchangeRequest) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeRequest) {
+}
+
+func (c UpdateExchangeRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeRequest.
@@ -7090,10 +7528,8 @@ func (o UpdateExchangeRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateExchangeRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
-			},
-			"id": types.StringType,
+			"exchange": Exchange{}.Type(ctx),
+			"id":       types.StringType,
 		},
 	}
 }
@@ -7107,7 +7543,10 @@ func (o *UpdateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool
 		return e, false
 	}
 	var v []Exchange
-	d := o.Exchange.ElementsAs(ctx, &v, true)
+	d := o.Exchange.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7119,19 +7558,24 @@ func (o *UpdateExchangeRequest) GetExchange(ctx context.Context) (Exchange, bool
 
 // SetExchange sets the value of the Exchange field in UpdateExchangeRequest.
 func (o *UpdateExchangeRequest) SetExchange(ctx context.Context, v Exchange) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
-	o.Exchange = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Exchange = vs
 }
 
 type UpdateExchangeResponse struct {
-	Exchange types.List `tfsdk:"exchange" tf:"optional,object"`
+	Exchange types.Object `tfsdk:"exchange"`
 }
 
 func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateExchangeResponse) {
 }
 
 func (newState *UpdateExchangeResponse) SyncEffectiveFieldsDuringRead(existingState UpdateExchangeResponse) {
+}
+
+func (c UpdateExchangeResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange"] = attrs["exchange"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateExchangeResponse.
@@ -7162,9 +7606,7 @@ func (o UpdateExchangeResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateExchangeResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"exchange": basetypes.ListType{
-				ElemType: Exchange{}.Type(ctx),
-			},
+			"exchange": Exchange{}.Type(ctx),
 		},
 	}
 }
@@ -7178,7 +7620,10 @@ func (o *UpdateExchangeResponse) GetExchange(ctx context.Context) (Exchange, boo
 		return e, false
 	}
 	var v []Exchange
-	d := o.Exchange.ElementsAs(ctx, &v, true)
+	d := o.Exchange.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7190,25 +7635,33 @@ func (o *UpdateExchangeResponse) GetExchange(ctx context.Context) (Exchange, boo
 
 // SetExchange sets the value of the Exchange field in UpdateExchangeResponse.
 func (o *UpdateExchangeResponse) SetExchange(ctx context.Context, v Exchange) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exchange"]
-	o.Exchange = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Exchange = vs
 }
 
 type UpdateInstallationRequest struct {
-	Installation types.List `tfsdk:"installation" tf:"object"`
+	Installation types.Object `tfsdk:"installation"`
 
 	InstallationId types.String `tfsdk:"-"`
 
 	ListingId types.String `tfsdk:"-"`
 
-	RotateToken types.Bool `tfsdk:"rotate_token" tf:"optional"`
+	RotateToken types.Bool `tfsdk:"rotate_token"`
 }
 
 func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationRequest) {
 }
 
 func (newState *UpdateInstallationRequest) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationRequest) {
+}
+
+func (c UpdateInstallationRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetRequired()
+	attrs["installation_id"] = attrs["installation_id"].SetRequired()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["rotate_token"] = attrs["rotate_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInstallationRequest.
@@ -7242,9 +7695,7 @@ func (o UpdateInstallationRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o UpdateInstallationRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
-			},
+			"installation":    InstallationDetail{}.Type(ctx),
 			"installation_id": types.StringType,
 			"listing_id":      types.StringType,
 			"rotate_token":    types.BoolType,
@@ -7261,7 +7712,10 @@ func (o *UpdateInstallationRequest) GetInstallation(ctx context.Context) (Instal
 		return e, false
 	}
 	var v []InstallationDetail
-	d := o.Installation.ElementsAs(ctx, &v, true)
+	d := o.Installation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7273,19 +7727,24 @@ func (o *UpdateInstallationRequest) GetInstallation(ctx context.Context) (Instal
 
 // SetInstallation sets the value of the Installation field in UpdateInstallationRequest.
 func (o *UpdateInstallationRequest) SetInstallation(ctx context.Context, v InstallationDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
-	o.Installation = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Installation = vs
 }
 
 type UpdateInstallationResponse struct {
-	Installation types.List `tfsdk:"installation" tf:"optional,object"`
+	Installation types.Object `tfsdk:"installation"`
 }
 
 func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateInstallationResponse) {
 }
 
 func (newState *UpdateInstallationResponse) SyncEffectiveFieldsDuringRead(existingState UpdateInstallationResponse) {
+}
+
+func (c UpdateInstallationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation"] = attrs["installation"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateInstallationResponse.
@@ -7316,9 +7775,7 @@ func (o UpdateInstallationResponse) ToObjectValue(ctx context.Context) basetypes
 func (o UpdateInstallationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"installation": basetypes.ListType{
-				ElemType: InstallationDetail{}.Type(ctx),
-			},
+			"installation": InstallationDetail{}.Type(ctx),
 		},
 	}
 }
@@ -7332,7 +7789,10 @@ func (o *UpdateInstallationResponse) GetInstallation(ctx context.Context) (Insta
 		return e, false
 	}
 	var v []InstallationDetail
-	d := o.Installation.ElementsAs(ctx, &v, true)
+	d := o.Installation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7344,21 +7804,27 @@ func (o *UpdateInstallationResponse) GetInstallation(ctx context.Context) (Insta
 
 // SetInstallation sets the value of the Installation field in UpdateInstallationResponse.
 func (o *UpdateInstallationResponse) SetInstallation(ctx context.Context, v InstallationDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["installation"]
-	o.Installation = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Installation = vs
 }
 
 type UpdateListingRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Listing types.List `tfsdk:"listing" tf:"object"`
+	Listing types.Object `tfsdk:"listing"`
 }
 
 func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingRequest) {
 }
 
 func (newState *UpdateListingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateListingRequest) {
+}
+
+func (c UpdateListingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["listing"] = attrs["listing"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateListingRequest.
@@ -7390,10 +7856,8 @@ func (o UpdateListingRequest) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o UpdateListingRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
-			},
+			"id":      types.StringType,
+			"listing": Listing{}.Type(ctx),
 		},
 	}
 }
@@ -7407,7 +7871,10 @@ func (o *UpdateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
 		return e, false
 	}
 	var v []Listing
-	d := o.Listing.ElementsAs(ctx, &v, true)
+	d := o.Listing.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7419,19 +7886,24 @@ func (o *UpdateListingRequest) GetListing(ctx context.Context) (Listing, bool) {
 
 // SetListing sets the value of the Listing field in UpdateListingRequest.
 func (o *UpdateListingRequest) SetListing(ctx context.Context, v Listing) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
-	o.Listing = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Listing = vs
 }
 
 type UpdateListingResponse struct {
-	Listing types.List `tfsdk:"listing" tf:"optional,object"`
+	Listing types.Object `tfsdk:"listing"`
 }
 
 func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateListingResponse) {
 }
 
 func (newState *UpdateListingResponse) SyncEffectiveFieldsDuringRead(existingState UpdateListingResponse) {
+}
+
+func (c UpdateListingResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing"] = attrs["listing"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateListingResponse.
@@ -7462,9 +7934,7 @@ func (o UpdateListingResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateListingResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"listing": basetypes.ListType{
-				ElemType: Listing{}.Type(ctx),
-			},
+			"listing": Listing{}.Type(ctx),
 		},
 	}
 }
@@ -7478,7 +7948,10 @@ func (o *UpdateListingResponse) GetListing(ctx context.Context) (Listing, bool) 
 		return e, false
 	}
 	var v []Listing
-	d := o.Listing.ElementsAs(ctx, &v, true)
+	d := o.Listing.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7490,27 +7963,36 @@ func (o *UpdateListingResponse) GetListing(ctx context.Context) (Listing, bool) 
 
 // SetListing sets the value of the Listing field in UpdateListingResponse.
 func (o *UpdateListingResponse) SetListing(ctx context.Context, v Listing) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["listing"]
-	o.Listing = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Listing = vs
 }
 
 type UpdatePersonalizationRequestRequest struct {
 	ListingId types.String `tfsdk:"-"`
 
-	Reason types.String `tfsdk:"reason" tf:"optional"`
+	Reason types.String `tfsdk:"reason"`
 
 	RequestId types.String `tfsdk:"-"`
 
-	Share types.List `tfsdk:"share" tf:"optional,object"`
+	Share types.Object `tfsdk:"share"`
 
-	Status types.String `tfsdk:"status" tf:""`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestRequest) {
 }
 
 func (newState *UpdatePersonalizationRequestRequest) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestRequest) {
+}
+
+func (c UpdatePersonalizationRequestRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["reason"] = attrs["reason"].SetOptional()
+	attrs["request_id"] = attrs["request_id"].SetRequired()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["status"] = attrs["status"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalizationRequestRequest.
@@ -7548,10 +8030,8 @@ func (o UpdatePersonalizationRequestRequest) Type(ctx context.Context) attr.Type
 			"listing_id": types.StringType,
 			"reason":     types.StringType,
 			"request_id": types.StringType,
-			"share": basetypes.ListType{
-				ElemType: ShareInfo{}.Type(ctx),
-			},
-			"status": types.StringType,
+			"share":      ShareInfo{}.Type(ctx),
+			"status":     types.StringType,
 		},
 	}
 }
@@ -7565,7 +8045,10 @@ func (o *UpdatePersonalizationRequestRequest) GetShare(ctx context.Context) (Sha
 		return e, false
 	}
 	var v []ShareInfo
-	d := o.Share.ElementsAs(ctx, &v, true)
+	d := o.Share.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7577,19 +8060,24 @@ func (o *UpdatePersonalizationRequestRequest) GetShare(ctx context.Context) (Sha
 
 // SetShare sets the value of the Share field in UpdatePersonalizationRequestRequest.
 func (o *UpdatePersonalizationRequestRequest) SetShare(ctx context.Context, v ShareInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["share"]
-	o.Share = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Share = vs
 }
 
 type UpdatePersonalizationRequestResponse struct {
-	Request types.List `tfsdk:"request" tf:"optional,object"`
+	Request types.Object `tfsdk:"request"`
 }
 
 func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdatePersonalizationRequestResponse) {
 }
 
 func (newState *UpdatePersonalizationRequestResponse) SyncEffectiveFieldsDuringRead(existingState UpdatePersonalizationRequestResponse) {
+}
+
+func (c UpdatePersonalizationRequestResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request"] = attrs["request"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdatePersonalizationRequestResponse.
@@ -7620,9 +8108,7 @@ func (o UpdatePersonalizationRequestResponse) ToObjectValue(ctx context.Context)
 func (o UpdatePersonalizationRequestResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"request": basetypes.ListType{
-				ElemType: PersonalizationRequest{}.Type(ctx),
-			},
+			"request": PersonalizationRequest{}.Type(ctx),
 		},
 	}
 }
@@ -7636,7 +8122,10 @@ func (o *UpdatePersonalizationRequestResponse) GetRequest(ctx context.Context) (
 		return e, false
 	}
 	var v []PersonalizationRequest
-	d := o.Request.ElementsAs(ctx, &v, true)
+	d := o.Request.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7648,9 +8137,8 @@ func (o *UpdatePersonalizationRequestResponse) GetRequest(ctx context.Context) (
 
 // SetRequest sets the value of the Request field in UpdatePersonalizationRequestResponse.
 func (o *UpdatePersonalizationRequestResponse) SetRequest(ctx context.Context, v PersonalizationRequest) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["request"]
-	o.Request = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Request = vs
 }
 
 type UpdateProviderAnalyticsDashboardRequest struct {
@@ -7659,13 +8147,20 @@ type UpdateProviderAnalyticsDashboardRequest struct {
 	// this is the version of the dashboard template we want to update our user
 	// to current expectation is that it should be equal to latest version of
 	// the dashboard template
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardRequest) {
 }
 
 func (newState *UpdateProviderAnalyticsDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardRequest) {
+}
+
+func (c UpdateProviderAnalyticsDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderAnalyticsDashboardRequest.
@@ -7703,17 +8198,25 @@ func (o UpdateProviderAnalyticsDashboardRequest) Type(ctx context.Context) attr.
 
 type UpdateProviderAnalyticsDashboardResponse struct {
 	// this is newly created Lakeview dashboard for the user
-	DashboardId types.String `tfsdk:"dashboard_id" tf:""`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// id & version should be the same as the request
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 
-	Version types.Int64 `tfsdk:"version" tf:"optional"`
+	Version types.Int64 `tfsdk:"version"`
 }
 
 func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderAnalyticsDashboardResponse) {
 }
 
 func (newState *UpdateProviderAnalyticsDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderAnalyticsDashboardResponse) {
+}
+
+func (c UpdateProviderAnalyticsDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderAnalyticsDashboardResponse.
@@ -7754,13 +8257,20 @@ func (o UpdateProviderAnalyticsDashboardResponse) Type(ctx context.Context) attr
 type UpdateProviderRequest struct {
 	Id types.String `tfsdk:"-"`
 
-	Provider types.List `tfsdk:"provider" tf:"object"`
+	Provider types.Object `tfsdk:"provider"`
 }
 
 func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderRequest) {
 }
 
 func (newState *UpdateProviderRequest) SyncEffectiveFieldsDuringRead(existingState UpdateProviderRequest) {
+}
+
+func (c UpdateProviderRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["provider"] = attrs["provider"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderRequest.
@@ -7792,10 +8302,8 @@ func (o UpdateProviderRequest) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateProviderRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
-			},
+			"id":       types.StringType,
+			"provider": ProviderInfo{}.Type(ctx),
 		},
 	}
 }
@@ -7809,7 +8317,10 @@ func (o *UpdateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, 
 		return e, false
 	}
 	var v []ProviderInfo
-	d := o.Provider.ElementsAs(ctx, &v, true)
+	d := o.Provider.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7821,19 +8332,24 @@ func (o *UpdateProviderRequest) GetProvider(ctx context.Context) (ProviderInfo, 
 
 // SetProvider sets the value of the Provider field in UpdateProviderRequest.
 func (o *UpdateProviderRequest) SetProvider(ctx context.Context, v ProviderInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
-	o.Provider = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Provider = vs
 }
 
 type UpdateProviderResponse struct {
-	Provider types.List `tfsdk:"provider" tf:"optional,object"`
+	Provider types.Object `tfsdk:"provider"`
 }
 
 func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProviderResponse) {
 }
 
 func (newState *UpdateProviderResponse) SyncEffectiveFieldsDuringRead(existingState UpdateProviderResponse) {
+}
+
+func (c UpdateProviderResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["provider"] = attrs["provider"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProviderResponse.
@@ -7864,9 +8380,7 @@ func (o UpdateProviderResponse) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateProviderResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"provider": basetypes.ListType{
-				ElemType: ProviderInfo{}.Type(ctx),
-			},
+			"provider": ProviderInfo{}.Type(ctx),
 		},
 	}
 }
@@ -7880,7 +8394,10 @@ func (o *UpdateProviderResponse) GetProvider(ctx context.Context) (ProviderInfo,
 		return e, false
 	}
 	var v []ProviderInfo
-	d := o.Provider.ElementsAs(ctx, &v, true)
+	d := o.Provider.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7892,7 +8409,6 @@ func (o *UpdateProviderResponse) GetProvider(ctx context.Context) (ProviderInfo,
 
 // SetProvider sets the value of the Provider field in UpdateProviderResponse.
 func (o *UpdateProviderResponse) SetProvider(ctx context.Context, v ProviderInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["provider"]
-	o.Provider = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Provider = vs
 }

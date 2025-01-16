@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 
 	"golang.org/x/exp/slices"
@@ -52,8 +51,8 @@ func hasWorkspacePrefix(path string) bool {
 }
 
 func maybeStripWorkspacePrefix(path string) string {
-	if hasWorkspacePrefix(path) {
-		return path[10:]
+	if strings.HasPrefix(path, "/Workspace/") {
+		return strings.TrimPrefix(path, "/Workspace")
 	}
 	return path
 }
@@ -246,14 +245,7 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj
 				data = workspace.ResourceDirectory().ToResource().TestResourceData()
 			}
 			if data != nil {
-				scm := ic.Resources[resourceType].Schema
-				data.MarkNewResource()
-				data.SetId(path)
-				err := common.StructToData(obj, scm, data)
-				if err != nil {
-					log.Printf("[ERROR] can't convert %s object to data: %v. obj=%v", resourceType, err, obj)
-					data = nil
-				}
+				data = ic.generateNewData(data, resourceType, path, obj)
 			}
 		}
 		ic.Emit(&resource{
@@ -409,7 +401,7 @@ const (
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
 	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
 	defaultWorkersPoolSize      = 10
-	defaultDirectoryChannelSize = 100000
+	defaultDirectoryChannelSize = 300000
 )
 
 func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo, dirChannel chan directoryInfo,

@@ -6,10 +6,8 @@ import (
 	"regexp"
 
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
-	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -30,41 +28,6 @@ func (ic *importContext) emitInitScripts(initScripts []compute.InitScriptInfo) {
 			ic.emitIfVolumeFile(is.Volumes.Destination)
 		}
 	}
-}
-
-func (ic *importContext) importCluster(c *compute.ClusterSpec) {
-	if c == nil {
-		return
-	}
-	if c.AwsAttributes != nil && c.AwsAttributes.InstanceProfileArn != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_profile",
-			ID:       c.AwsAttributes.InstanceProfileArn,
-		})
-	}
-	if c.InstancePoolId != "" {
-		// set enable_elastic_disk to false, and remove aws/gcp/azure_attributes
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.InstancePoolId,
-		})
-	}
-	if c.DriverInstancePoolId != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_instance_pool",
-			ID:       c.DriverInstancePoolId,
-		})
-	}
-	if c.PolicyId != "" {
-		ic.Emit(&resource{
-			Resource: "databricks_cluster_policy",
-			ID:       c.PolicyId,
-		})
-	}
-	ic.emitInitScripts(c.InitScripts)
-	ic.emitSecretsFromSecretsPathMap(c.SparkConf)
-	ic.emitSecretsFromSecretsPathMap(c.SparkEnvVars)
-	ic.emitUserOrServicePrincipal(c.SingleUserName)
 }
 
 func (ic *importContext) emitSecretsFromSecretPathString(v string) {
@@ -154,28 +117,6 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func (ic *importContext) importJobs(l []jobs.Job) {
-	i := 0
-	for offset, job := range l {
-		if !ic.MatchesName(job.Settings.Name) {
-			log.Printf("[INFO] Job name %s doesn't match selection %s", job.Settings.Name, ic.match)
-			continue
-		}
-		if job.Settings.Deployment != nil && job.Settings.Deployment.Kind == "BUNDLE" &&
-			job.Settings.EditMode == "UI_LOCKED" {
-			log.Printf("[INFO] Skipping job '%s' because it's deployed by DABs", job.Settings.Name)
-			continue
-		}
-		ic.Emit(&resource{
-			Resource: "databricks_job",
-			ID:       job.ID(),
-		})
-		i++
-		log.Printf("[INFO] Scanned %d of total %d jobs", offset+1, len(l))
-	}
-	log.Printf("[INFO] %d of total %d jobs are going to be imported", i, len(l))
-}
-
 func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
 		prefix := ""
@@ -208,14 +149,5 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 		}
 
 		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-	}
-}
-
-func (ic *importContext) emitJobsDestinationNotifications(notifications []sdk_jobs.Webhook) {
-	for _, notification := range notifications {
-		ic.Emit(&resource{
-			Resource: "databricks_notification_destination",
-			ID:       notification.Id,
-		})
 	}
 }

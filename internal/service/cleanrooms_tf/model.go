@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
@@ -29,39 +30,54 @@ type CleanRoom struct {
 	// Whether clean room access is restricted due to [CSP]
 	//
 	// [CSP]: https://docs.databricks.com/en/security/privacy/security-profile.html
-	AccessRestricted types.String `tfsdk:"access_restricted" tf:"computed"`
+	AccessRestricted types.String `tfsdk:"access_restricted"`
 
-	Comment types.String `tfsdk:"comment" tf:"optional"`
+	Comment types.String `tfsdk:"comment"`
 	// When the clean room was created, in epoch milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"computed"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The alias of the collaborator tied to the local clean room.
-	LocalCollaboratorAlias types.String `tfsdk:"local_collaborator_alias" tf:"computed"`
+	LocalCollaboratorAlias types.String `tfsdk:"local_collaborator_alias"`
 	// The name of the clean room. It should follow [UC securable naming
 	// requirements].
 	//
 	// [UC securable naming requirements]: https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Output catalog of the clean room. It is an output only field. Output
 	// catalog is manipulated using the separate CreateCleanRoomOutputCatalog
 	// API.
-	OutputCatalog types.List `tfsdk:"output_catalog" tf:"computed,object"`
+	OutputCatalog types.Object `tfsdk:"output_catalog"`
 	// This is Databricks username of the owner of the local clean room
 	// securable for permission management.
-	Owner types.String `tfsdk:"owner" tf:"optional"`
+	Owner types.String `tfsdk:"owner"`
 	// Central clean room details. During creation, users need to specify
 	// cloud_vendor, region, and collaborators.global_metastore_id. This field
 	// will not be filled in the ListCleanRooms call.
-	RemoteDetailedInfo types.List `tfsdk:"remote_detailed_info" tf:"optional,object"`
+	RemoteDetailedInfo types.Object `tfsdk:"remote_detailed_info"`
 	// Clean room status.
-	Status types.String `tfsdk:"status" tf:"computed"`
+	Status types.String `tfsdk:"status"`
 	// When the clean room was last updated, in epoch milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"computed"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 }
 
 func (newState *CleanRoom) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoom) {
 }
 
 func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom) {
+}
+
+func (c CleanRoom) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_restricted"] = attrs["access_restricted"].SetComputed()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["output_catalog"] = attrs["output_catalog"].SetComputed()
+	attrs["owner"] = attrs["owner"].SetOptional()
+	attrs["remote_detailed_info"] = attrs["remote_detailed_info"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoom.
@@ -107,15 +123,11 @@ func (o CleanRoom) Type(ctx context.Context) attr.Type {
 			"created_at":               types.Int64Type,
 			"local_collaborator_alias": types.StringType,
 			"name":                     types.StringType,
-			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
-			},
-			"owner": types.StringType,
-			"remote_detailed_info": basetypes.ListType{
-				ElemType: CleanRoomRemoteDetail{}.Type(ctx),
-			},
-			"status":     types.StringType,
-			"updated_at": types.Int64Type,
+			"output_catalog":           CleanRoomOutputCatalog{}.Type(ctx),
+			"owner":                    types.StringType,
+			"remote_detailed_info":     CleanRoomRemoteDetail{}.Type(ctx),
+			"status":                   types.StringType,
+			"updated_at":               types.Int64Type,
 		},
 	}
 }
@@ -129,7 +141,10 @@ func (o *CleanRoom) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalo
 		return e, false
 	}
 	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
+	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -141,9 +156,8 @@ func (o *CleanRoom) GetOutputCatalog(ctx context.Context) (CleanRoomOutputCatalo
 
 // SetOutputCatalog sets the value of the OutputCatalog field in CleanRoom.
 func (o *CleanRoom) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
-	o.OutputCatalog = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.OutputCatalog = vs
 }
 
 // GetRemoteDetailedInfo returns the value of the RemoteDetailedInfo field in CleanRoom as
@@ -155,7 +169,10 @@ func (o *CleanRoom) GetRemoteDetailedInfo(ctx context.Context) (CleanRoomRemoteD
 		return e, false
 	}
 	var v []CleanRoomRemoteDetail
-	d := o.RemoteDetailedInfo.ElementsAs(ctx, &v, true)
+	d := o.RemoteDetailedInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -167,23 +184,22 @@ func (o *CleanRoom) GetRemoteDetailedInfo(ctx context.Context) (CleanRoomRemoteD
 
 // SetRemoteDetailedInfo sets the value of the RemoteDetailedInfo field in CleanRoom.
 func (o *CleanRoom) SetRemoteDetailedInfo(ctx context.Context, v CleanRoomRemoteDetail) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["remote_detailed_info"]
-	o.RemoteDetailedInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.RemoteDetailedInfo = vs
 }
 
 // Metadata of the clean room asset
 type CleanRoomAsset struct {
 	// When the asset is added to the clean room, in epoch milliseconds.
-	AddedAt types.Int64 `tfsdk:"added_at" tf:"computed"`
+	AddedAt types.Int64 `tfsdk:"added_at"`
 	// The type of the asset.
-	AssetType types.String `tfsdk:"asset_type" tf:"optional"`
+	AssetType types.String `tfsdk:"asset_type"`
 	// Foreign table details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **FOREIGN_TABLE**
-	ForeignTable types.List `tfsdk:"foreign_table" tf:"optional,object"`
+	ForeignTable types.Object `tfsdk:"foreign_table"`
 	// Local details for a foreign that are only available to its owner. Present
 	// if and only if **asset_type** is **FOREIGN_TABLE**
-	ForeignTableLocalDetails types.List `tfsdk:"foreign_table_local_details" tf:"optional,object"`
+	ForeignTableLocalDetails types.Object `tfsdk:"foreign_table_local_details"`
 	// A fully qualified name that uniquely identifies the asset within the
 	// clean room. This is also the name displayed in the clean room UI.
 	//
@@ -191,35 +207,53 @@ type CleanRoomAsset struct {
 	// *shared_catalog*.*shared_schema*.*asset_name*
 	//
 	// For notebooks, the name is the notebook file name.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Notebook details available to all collaborators of the clean room.
 	// Present if and only if **asset_type** is **NOTEBOOK_FILE**
-	Notebook types.List `tfsdk:"notebook" tf:"optional,object"`
+	Notebook types.Object `tfsdk:"notebook"`
 	// The alias of the collaborator who owns this asset
-	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias" tf:"computed"`
+	OwnerCollaboratorAlias types.String `tfsdk:"owner_collaborator_alias"`
 	// Status of the asset
-	Status types.String `tfsdk:"status" tf:"computed"`
+	Status types.String `tfsdk:"status"`
 	// Table details available to all collaborators of the clean room. Present
 	// if and only if **asset_type** is **TABLE**
-	Table types.List `tfsdk:"table" tf:"optional,object"`
+	Table types.Object `tfsdk:"table"`
 	// Local details for a table that are only available to its owner. Present
 	// if and only if **asset_type** is **TABLE**
-	TableLocalDetails types.List `tfsdk:"table_local_details" tf:"optional,object"`
+	TableLocalDetails types.Object `tfsdk:"table_local_details"`
 	// View details available to all collaborators of the clean room. Present if
 	// and only if **asset_type** is **VIEW**
-	View types.List `tfsdk:"view" tf:"optional,object"`
+	View types.Object `tfsdk:"view"`
 	// Local details for a view that are only available to its owner. Present if
 	// and only if **asset_type** is **VIEW**
-	ViewLocalDetails types.List `tfsdk:"view_local_details" tf:"optional,object"`
+	ViewLocalDetails types.Object `tfsdk:"view_local_details"`
 	// Local details for a volume that are only available to its owner. Present
 	// if and only if **asset_type** is **VOLUME**
-	VolumeLocalDetails types.List `tfsdk:"volume_local_details" tf:"optional,object"`
+	VolumeLocalDetails types.Object `tfsdk:"volume_local_details"`
 }
 
 func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAsset) {
 }
 
 func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState CleanRoomAsset) {
+}
+
+func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["added_at"] = attrs["added_at"].SetComputed()
+	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
+	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["notebook"] = attrs["notebook"].SetOptional()
+	attrs["owner_collaborator_alias"] = attrs["owner_collaborator_alias"].SetComputed()
+	attrs["status"] = attrs["status"].SetComputed()
+	attrs["table"] = attrs["table"].SetOptional()
+	attrs["table_local_details"] = attrs["table_local_details"].SetOptional()
+	attrs["view"] = attrs["view"].SetOptional()
+	attrs["view_local_details"] = attrs["view_local_details"].SetOptional()
+	attrs["volume_local_details"] = attrs["volume_local_details"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAsset.
@@ -269,35 +303,19 @@ func (o CleanRoomAsset) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o CleanRoomAsset) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":   types.Int64Type,
-			"asset_type": types.StringType,
-			"foreign_table": basetypes.ListType{
-				ElemType: CleanRoomAssetForeignTable{}.Type(ctx),
-			},
-			"foreign_table_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
-			},
-			"name": types.StringType,
-			"notebook": basetypes.ListType{
-				ElemType: CleanRoomAssetNotebook{}.Type(ctx),
-			},
-			"owner_collaborator_alias": types.StringType,
-			"status":                   types.StringType,
-			"table": basetypes.ListType{
-				ElemType: CleanRoomAssetTable{}.Type(ctx),
-			},
-			"table_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetTableLocalDetails{}.Type(ctx),
-			},
-			"view": basetypes.ListType{
-				ElemType: CleanRoomAssetView{}.Type(ctx),
-			},
-			"view_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetViewLocalDetails{}.Type(ctx),
-			},
-			"volume_local_details": basetypes.ListType{
-				ElemType: CleanRoomAssetVolumeLocalDetails{}.Type(ctx),
-			},
+			"added_at":                    types.Int64Type,
+			"asset_type":                  types.StringType,
+			"foreign_table":               CleanRoomAssetForeignTable{}.Type(ctx),
+			"foreign_table_local_details": CleanRoomAssetForeignTableLocalDetails{}.Type(ctx),
+			"name":                        types.StringType,
+			"notebook":                    CleanRoomAssetNotebook{}.Type(ctx),
+			"owner_collaborator_alias":    types.StringType,
+			"status":                      types.StringType,
+			"table":                       CleanRoomAssetTable{}.Type(ctx),
+			"table_local_details":         CleanRoomAssetTableLocalDetails{}.Type(ctx),
+			"view":                        CleanRoomAssetView{}.Type(ctx),
+			"view_local_details":          CleanRoomAssetViewLocalDetails{}.Type(ctx),
+			"volume_local_details":        CleanRoomAssetVolumeLocalDetails{}.Type(ctx),
 		},
 	}
 }
@@ -311,7 +329,10 @@ func (o *CleanRoomAsset) GetForeignTable(ctx context.Context) (CleanRoomAssetFor
 		return e, false
 	}
 	var v []CleanRoomAssetForeignTable
-	d := o.ForeignTable.ElementsAs(ctx, &v, true)
+	d := o.ForeignTable.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -323,9 +344,8 @@ func (o *CleanRoomAsset) GetForeignTable(ctx context.Context) (CleanRoomAssetFor
 
 // SetForeignTable sets the value of the ForeignTable field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetForeignTable(ctx context.Context, v CleanRoomAssetForeignTable) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foreign_table"]
-	o.ForeignTable = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ForeignTable = vs
 }
 
 // GetForeignTableLocalDetails returns the value of the ForeignTableLocalDetails field in CleanRoomAsset as
@@ -337,7 +357,10 @@ func (o *CleanRoomAsset) GetForeignTableLocalDetails(ctx context.Context) (Clean
 		return e, false
 	}
 	var v []CleanRoomAssetForeignTableLocalDetails
-	d := o.ForeignTableLocalDetails.ElementsAs(ctx, &v, true)
+	d := o.ForeignTableLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -349,9 +372,8 @@ func (o *CleanRoomAsset) GetForeignTableLocalDetails(ctx context.Context) (Clean
 
 // SetForeignTableLocalDetails sets the value of the ForeignTableLocalDetails field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetForeignTableLocalDetails(ctx context.Context, v CleanRoomAssetForeignTableLocalDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["foreign_table_local_details"]
-	o.ForeignTableLocalDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ForeignTableLocalDetails = vs
 }
 
 // GetNotebook returns the value of the Notebook field in CleanRoomAsset as
@@ -363,7 +385,10 @@ func (o *CleanRoomAsset) GetNotebook(ctx context.Context) (CleanRoomAssetNoteboo
 		return e, false
 	}
 	var v []CleanRoomAssetNotebook
-	d := o.Notebook.ElementsAs(ctx, &v, true)
+	d := o.Notebook.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -375,9 +400,8 @@ func (o *CleanRoomAsset) GetNotebook(ctx context.Context) (CleanRoomAssetNoteboo
 
 // SetNotebook sets the value of the Notebook field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetNotebook(ctx context.Context, v CleanRoomAssetNotebook) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook"]
-	o.Notebook = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Notebook = vs
 }
 
 // GetTable returns the value of the Table field in CleanRoomAsset as
@@ -389,7 +413,10 @@ func (o *CleanRoomAsset) GetTable(ctx context.Context) (CleanRoomAssetTable, boo
 		return e, false
 	}
 	var v []CleanRoomAssetTable
-	d := o.Table.ElementsAs(ctx, &v, true)
+	d := o.Table.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -401,9 +428,8 @@ func (o *CleanRoomAsset) GetTable(ctx context.Context) (CleanRoomAssetTable, boo
 
 // SetTable sets the value of the Table field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetTable(ctx context.Context, v CleanRoomAssetTable) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table"]
-	o.Table = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Table = vs
 }
 
 // GetTableLocalDetails returns the value of the TableLocalDetails field in CleanRoomAsset as
@@ -415,7 +441,10 @@ func (o *CleanRoomAsset) GetTableLocalDetails(ctx context.Context) (CleanRoomAss
 		return e, false
 	}
 	var v []CleanRoomAssetTableLocalDetails
-	d := o.TableLocalDetails.ElementsAs(ctx, &v, true)
+	d := o.TableLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -427,9 +456,8 @@ func (o *CleanRoomAsset) GetTableLocalDetails(ctx context.Context) (CleanRoomAss
 
 // SetTableLocalDetails sets the value of the TableLocalDetails field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetTableLocalDetails(ctx context.Context, v CleanRoomAssetTableLocalDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["table_local_details"]
-	o.TableLocalDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.TableLocalDetails = vs
 }
 
 // GetView returns the value of the View field in CleanRoomAsset as
@@ -441,7 +469,10 @@ func (o *CleanRoomAsset) GetView(ctx context.Context) (CleanRoomAssetView, bool)
 		return e, false
 	}
 	var v []CleanRoomAssetView
-	d := o.View.ElementsAs(ctx, &v, true)
+	d := o.View.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -453,9 +484,8 @@ func (o *CleanRoomAsset) GetView(ctx context.Context) (CleanRoomAssetView, bool)
 
 // SetView sets the value of the View field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetView(ctx context.Context, v CleanRoomAssetView) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["view"]
-	o.View = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.View = vs
 }
 
 // GetViewLocalDetails returns the value of the ViewLocalDetails field in CleanRoomAsset as
@@ -467,7 +497,10 @@ func (o *CleanRoomAsset) GetViewLocalDetails(ctx context.Context) (CleanRoomAsse
 		return e, false
 	}
 	var v []CleanRoomAssetViewLocalDetails
-	d := o.ViewLocalDetails.ElementsAs(ctx, &v, true)
+	d := o.ViewLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -479,9 +512,8 @@ func (o *CleanRoomAsset) GetViewLocalDetails(ctx context.Context) (CleanRoomAsse
 
 // SetViewLocalDetails sets the value of the ViewLocalDetails field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetViewLocalDetails(ctx context.Context, v CleanRoomAssetViewLocalDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["view_local_details"]
-	o.ViewLocalDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ViewLocalDetails = vs
 }
 
 // GetVolumeLocalDetails returns the value of the VolumeLocalDetails field in CleanRoomAsset as
@@ -493,7 +525,10 @@ func (o *CleanRoomAsset) GetVolumeLocalDetails(ctx context.Context) (CleanRoomAs
 		return e, false
 	}
 	var v []CleanRoomAssetVolumeLocalDetails
-	d := o.VolumeLocalDetails.ElementsAs(ctx, &v, true)
+	d := o.VolumeLocalDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -505,20 +540,25 @@ func (o *CleanRoomAsset) GetVolumeLocalDetails(ctx context.Context) (CleanRoomAs
 
 // SetVolumeLocalDetails sets the value of the VolumeLocalDetails field in CleanRoomAsset.
 func (o *CleanRoomAsset) SetVolumeLocalDetails(ctx context.Context, v CleanRoomAssetVolumeLocalDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volume_local_details"]
-	o.VolumeLocalDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.VolumeLocalDetails = vs
 }
 
 type CleanRoomAssetForeignTable struct {
 	// The metadata information of the columns in the foreign table
-	Columns types.List `tfsdk:"columns" tf:"computed"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTable) {
 }
 
 func (newState *CleanRoomAssetForeignTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTable) {
+}
+
+func (c CleanRoomAssetForeignTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTable.
@@ -585,13 +625,19 @@ func (o *CleanRoomAssetForeignTable) SetColumns(ctx context.Context, v []catalog
 type CleanRoomAssetForeignTableLocalDetails struct {
 	// The fully qualified name of the foreign table in its owner's local
 	// metastore, in the format of *catalog*.*schema*.*foreign_table_name*
-	LocalName types.String `tfsdk:"local_name" tf:"optional"`
+	LocalName types.String `tfsdk:"local_name"`
 }
 
 func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetForeignTableLocalDetails) {
 }
 
 func (newState *CleanRoomAssetForeignTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetForeignTableLocalDetails) {
+}
+
+func (c CleanRoomAssetForeignTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["local_name"] = attrs["local_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetForeignTableLocalDetails.
@@ -627,16 +673,23 @@ func (o CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.T
 
 type CleanRoomAssetNotebook struct {
 	// Server generated checksum that represents the notebook version.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
-	NotebookContent types.String `tfsdk:"notebook_content" tf:"optional"`
+	NotebookContent types.String `tfsdk:"notebook_content"`
 }
 
 func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook) {
 }
 
 func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetNotebook) {
+}
+
+func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetNotebook.
@@ -674,13 +727,19 @@ func (o CleanRoomAssetNotebook) Type(ctx context.Context) attr.Type {
 
 type CleanRoomAssetTable struct {
 	// The metadata information of the columns in the table
-	Columns types.List `tfsdk:"columns" tf:"computed"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTable) {
 }
 
 func (newState *CleanRoomAssetTable) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTable) {
+}
+
+func (c CleanRoomAssetTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTable.
@@ -747,15 +806,22 @@ func (o *CleanRoomAssetTable) SetColumns(ctx context.Context, v []catalog_tf.Col
 type CleanRoomAssetTableLocalDetails struct {
 	// The fully qualified name of the table in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*table_name*
-	LocalName types.String `tfsdk:"local_name" tf:"optional"`
+	LocalName types.String `tfsdk:"local_name"`
 	// Partition filtering specification for a shared table.
-	Partitions types.List `tfsdk:"partitions" tf:"optional"`
+	Partitions types.List `tfsdk:"partitions"`
 }
 
 func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetTableLocalDetails) {
 }
 
 func (newState *CleanRoomAssetTableLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetTableLocalDetails) {
+}
+
+func (c CleanRoomAssetTableLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["local_name"] = attrs["local_name"].SetOptional()
+	attrs["partitions"] = attrs["partitions"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetTableLocalDetails.
@@ -823,13 +889,19 @@ func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v [
 
 type CleanRoomAssetView struct {
 	// The metadata information of the columns in the view
-	Columns types.List `tfsdk:"columns" tf:"computed"`
+	Columns types.List `tfsdk:"columns"`
 }
 
 func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetView) {
 }
 
 func (newState *CleanRoomAssetView) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetView) {
+}
+
+func (c CleanRoomAssetView) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetView.
@@ -896,13 +968,19 @@ func (o *CleanRoomAssetView) SetColumns(ctx context.Context, v []catalog_tf.Colu
 type CleanRoomAssetViewLocalDetails struct {
 	// The fully qualified name of the view in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*view_name*
-	LocalName types.String `tfsdk:"local_name" tf:"optional"`
+	LocalName types.String `tfsdk:"local_name"`
 }
 
 func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetViewLocalDetails) {
 }
 
 func (newState *CleanRoomAssetViewLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetViewLocalDetails) {
+}
+
+func (c CleanRoomAssetViewLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["local_name"] = attrs["local_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetViewLocalDetails.
@@ -939,13 +1017,19 @@ func (o CleanRoomAssetViewLocalDetails) Type(ctx context.Context) attr.Type {
 type CleanRoomAssetVolumeLocalDetails struct {
 	// The fully qualified name of the volume in its owner's local metastore, in
 	// the format of *catalog*.*schema*.*volume_name*
-	LocalName types.String `tfsdk:"local_name" tf:"optional"`
+	LocalName types.String `tfsdk:"local_name"`
 }
 
 func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetVolumeLocalDetails) {
 }
 
 func (newState *CleanRoomAssetVolumeLocalDetails) SyncEffectiveFieldsDuringRead(existingState CleanRoomAssetVolumeLocalDetails) {
+}
+
+func (c CleanRoomAssetVolumeLocalDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["local_name"] = attrs["local_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomAssetVolumeLocalDetails.
@@ -988,34 +1072,45 @@ type CleanRoomCollaborator struct {
 	// requirements].
 	//
 	// [UC securable naming requirements]: https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements
-	CollaboratorAlias types.String `tfsdk:"collaborator_alias" tf:"optional"`
+	CollaboratorAlias types.String `tfsdk:"collaborator_alias"`
 	// Generated display name for the collaborator. In the case of a single
 	// metastore clean room, it is the clean room name. For x-metastore clean
 	// rooms, it is the organization name of the metastore. It is not restricted
 	// to these values and could change in the future
-	DisplayName types.String `tfsdk:"display_name" tf:"computed"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The global Unity Catalog metastore id of the collaborator. The identifier
 	// is of format cloud:region:metastore-uuid.
-	GlobalMetastoreId types.String `tfsdk:"global_metastore_id" tf:"optional"`
+	GlobalMetastoreId types.String `tfsdk:"global_metastore_id"`
 	// Email of the user who is receiving the clean room "invitation". It should
 	// be empty for the creator of the clean room, and non-empty for the
 	// invitees of the clean room. It is only returned in the output when clean
 	// room creator calls GET
-	InviteRecipientEmail types.String `tfsdk:"invite_recipient_email" tf:"optional"`
+	InviteRecipientEmail types.String `tfsdk:"invite_recipient_email"`
 	// Workspace ID of the user who is receiving the clean room "invitation".
 	// Must be specified if invite_recipient_email is specified. It should be
 	// empty when the collaborator is the creator of the clean room.
-	InviteRecipientWorkspaceId types.Int64 `tfsdk:"invite_recipient_workspace_id" tf:"optional"`
+	InviteRecipientWorkspaceId types.Int64 `tfsdk:"invite_recipient_workspace_id"`
 	// [Organization
 	// name](:method:metastores/list#metastores-delta_sharing_organization_name)
 	// configured in the metastore
-	OrganizationName types.String `tfsdk:"organization_name" tf:"computed"`
+	OrganizationName types.String `tfsdk:"organization_name"`
 }
 
 func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomCollaborator) {
 }
 
 func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingState CleanRoomCollaborator) {
+}
+
+func (c CleanRoomCollaborator) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
+	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
+	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetOptional()
+	attrs["organization_name"] = attrs["organization_name"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomCollaborator.
@@ -1065,27 +1160,39 @@ type CleanRoomNotebookTaskRun struct {
 	// only included in the LIST API. if the task was run within the same
 	// workspace the API is being called. If the task run was in a different
 	// workspace under the same metastore, only the workspace_id is included.
-	CollaboratorJobRunInfo types.List `tfsdk:"collaborator_job_run_info" tf:"optional,object"`
+	CollaboratorJobRunInfo types.Object `tfsdk:"collaborator_job_run_info"`
 	// State of the task run.
-	NotebookJobRunState types.List `tfsdk:"notebook_job_run_state" tf:"optional,object"`
+	NotebookJobRunState types.Object `tfsdk:"notebook_job_run_state"`
 	// Asset name of the notebook executed in this task run.
-	NotebookName types.String `tfsdk:"notebook_name" tf:"optional"`
+	NotebookName types.String `tfsdk:"notebook_name"`
 	// Expiration time of the output schema of the task run (if any), in epoch
 	// milliseconds.
-	OutputSchemaExpirationTime types.Int64 `tfsdk:"output_schema_expiration_time" tf:"optional"`
+	OutputSchemaExpirationTime types.Int64 `tfsdk:"output_schema_expiration_time"`
 	// Name of the output schema associated with the clean rooms notebook task
 	// run.
-	OutputSchemaName types.String `tfsdk:"output_schema_name" tf:"optional"`
+	OutputSchemaName types.String `tfsdk:"output_schema_name"`
 	// Duration of the task run, in milliseconds.
-	RunDuration types.Int64 `tfsdk:"run_duration" tf:"optional"`
+	RunDuration types.Int64 `tfsdk:"run_duration"`
 	// When the task run started, in epoch milliseconds.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
 func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookTaskRun) {
 }
 
 func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookTaskRun) {
+}
+
+func (c CleanRoomNotebookTaskRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["collaborator_job_run_info"] = attrs["collaborator_job_run_info"].SetOptional()
+	attrs["notebook_job_run_state"] = attrs["notebook_job_run_state"].SetOptional()
+	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
+	attrs["output_schema_expiration_time"] = attrs["output_schema_expiration_time"].SetOptional()
+	attrs["output_schema_name"] = attrs["output_schema_name"].SetOptional()
+	attrs["run_duration"] = attrs["run_duration"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomNotebookTaskRun.
@@ -1123,12 +1230,8 @@ func (o CleanRoomNotebookTaskRun) ToObjectValue(ctx context.Context) basetypes.O
 func (o CleanRoomNotebookTaskRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"collaborator_job_run_info": basetypes.ListType{
-				ElemType: CollaboratorJobRunInfo{}.Type(ctx),
-			},
-			"notebook_job_run_state": basetypes.ListType{
-				ElemType: jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
-			},
+			"collaborator_job_run_info":     CollaboratorJobRunInfo{}.Type(ctx),
+			"notebook_job_run_state":        jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
 			"notebook_name":                 types.StringType,
 			"output_schema_expiration_time": types.Int64Type,
 			"output_schema_name":            types.StringType,
@@ -1147,7 +1250,10 @@ func (o *CleanRoomNotebookTaskRun) GetCollaboratorJobRunInfo(ctx context.Context
 		return e, false
 	}
 	var v []CollaboratorJobRunInfo
-	d := o.CollaboratorJobRunInfo.ElementsAs(ctx, &v, true)
+	d := o.CollaboratorJobRunInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1159,9 +1265,8 @@ func (o *CleanRoomNotebookTaskRun) GetCollaboratorJobRunInfo(ctx context.Context
 
 // SetCollaboratorJobRunInfo sets the value of the CollaboratorJobRunInfo field in CleanRoomNotebookTaskRun.
 func (o *CleanRoomNotebookTaskRun) SetCollaboratorJobRunInfo(ctx context.Context, v CollaboratorJobRunInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["collaborator_job_run_info"]
-	o.CollaboratorJobRunInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CollaboratorJobRunInfo = vs
 }
 
 // GetNotebookJobRunState returns the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun as
@@ -1173,7 +1278,10 @@ func (o *CleanRoomNotebookTaskRun) GetNotebookJobRunState(ctx context.Context) (
 		return e, false
 	}
 	var v []jobs_tf.CleanRoomTaskRunState
-	d := o.NotebookJobRunState.ElementsAs(ctx, &v, true)
+	d := o.NotebookJobRunState.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1185,9 +1293,8 @@ func (o *CleanRoomNotebookTaskRun) GetNotebookJobRunState(ctx context.Context) (
 
 // SetNotebookJobRunState sets the value of the NotebookJobRunState field in CleanRoomNotebookTaskRun.
 func (o *CleanRoomNotebookTaskRun) SetNotebookJobRunState(ctx context.Context, v jobs_tf.CleanRoomTaskRunState) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_job_run_state"]
-	o.NotebookJobRunState = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.NotebookJobRunState = vs
 }
 
 type CleanRoomOutputCatalog struct {
@@ -1195,15 +1302,22 @@ type CleanRoomOutputCatalog struct {
 	// naming requirements]. The field will always exist if status is CREATED.
 	//
 	// [UC securable naming requirements]: https://docs.databricks.com/en/data-governance/unity-catalog/index.html#securable-object-naming-requirements
-	CatalogName types.String `tfsdk:"catalog_name" tf:"optional"`
+	CatalogName types.String `tfsdk:"catalog_name"`
 
-	Status types.String `tfsdk:"status" tf:"computed"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomOutputCatalog) {
 }
 
 func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingState CleanRoomOutputCatalog) {
+}
+
+func (c CleanRoomOutputCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomOutputCatalog.
@@ -1242,9 +1356,9 @@ func (o CleanRoomOutputCatalog) Type(ctx context.Context) attr.Type {
 // Publicly visible central clean room details.
 type CleanRoomRemoteDetail struct {
 	// Central clean room ID.
-	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id" tf:"computed"`
+	CentralCleanRoomId types.String `tfsdk:"central_clean_room_id"`
 	// Cloud vendor (aws,azure,gcp) of the central clean room.
-	CloudVendor types.String `tfsdk:"cloud_vendor" tf:"optional"`
+	CloudVendor types.String `tfsdk:"cloud_vendor"`
 	// Collaborators in the central clean room. There should one and only one
 	// collaborator in the list that satisfies the owner condition:
 	//
@@ -1252,22 +1366,34 @@ type CleanRoomRemoteDetail struct {
 	// CreateCleanRoom).
 	//
 	// 2. Its invite_recipient_email is empty.
-	Collaborators types.List `tfsdk:"collaborators" tf:"optional"`
+	Collaborators types.List `tfsdk:"collaborators"`
 	// The compliance security profile used to process regulated data following
 	// compliance standards.
-	ComplianceSecurityProfile types.List `tfsdk:"compliance_security_profile" tf:"optional,object"`
+	ComplianceSecurityProfile types.Object `tfsdk:"compliance_security_profile"`
 	// Collaborator who creates the clean room.
-	Creator types.List `tfsdk:"creator" tf:"computed,object"`
+	Creator types.Object `tfsdk:"creator"`
 	// Egress network policy to apply to the central clean room workspace.
-	EgressNetworkPolicy types.List `tfsdk:"egress_network_policy" tf:"optional,object"`
+	EgressNetworkPolicy types.Object `tfsdk:"egress_network_policy"`
 	// Region of the central clean room.
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomRemoteDetail) {
 }
 
 func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingState CleanRoomRemoteDetail) {
+}
+
+func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
+	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
+	attrs["collaborators"] = attrs["collaborators"].SetOptional()
+	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetOptional()
+	attrs["creator"] = attrs["creator"].SetComputed()
+	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomRemoteDetail.
@@ -1312,16 +1438,10 @@ func (o CleanRoomRemoteDetail) Type(ctx context.Context) attr.Type {
 			"collaborators": basetypes.ListType{
 				ElemType: CleanRoomCollaborator{}.Type(ctx),
 			},
-			"compliance_security_profile": basetypes.ListType{
-				ElemType: ComplianceSecurityProfile{}.Type(ctx),
-			},
-			"creator": basetypes.ListType{
-				ElemType: CleanRoomCollaborator{}.Type(ctx),
-			},
-			"egress_network_policy": basetypes.ListType{
-				ElemType: settings_tf.EgressNetworkPolicy{}.Type(ctx),
-			},
-			"region": types.StringType,
+			"compliance_security_profile": ComplianceSecurityProfile{}.Type(ctx),
+			"creator":                     CleanRoomCollaborator{}.Type(ctx),
+			"egress_network_policy":       settings_tf.EgressNetworkPolicy{}.Type(ctx),
+			"region":                      types.StringType,
 		},
 	}
 }
@@ -1361,7 +1481,10 @@ func (o *CleanRoomRemoteDetail) GetComplianceSecurityProfile(ctx context.Context
 		return e, false
 	}
 	var v []ComplianceSecurityProfile
-	d := o.ComplianceSecurityProfile.ElementsAs(ctx, &v, true)
+	d := o.ComplianceSecurityProfile.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1373,9 +1496,8 @@ func (o *CleanRoomRemoteDetail) GetComplianceSecurityProfile(ctx context.Context
 
 // SetComplianceSecurityProfile sets the value of the ComplianceSecurityProfile field in CleanRoomRemoteDetail.
 func (o *CleanRoomRemoteDetail) SetComplianceSecurityProfile(ctx context.Context, v ComplianceSecurityProfile) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compliance_security_profile"]
-	o.ComplianceSecurityProfile = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ComplianceSecurityProfile = vs
 }
 
 // GetCreator returns the value of the Creator field in CleanRoomRemoteDetail as
@@ -1387,7 +1509,10 @@ func (o *CleanRoomRemoteDetail) GetCreator(ctx context.Context) (CleanRoomCollab
 		return e, false
 	}
 	var v []CleanRoomCollaborator
-	d := o.Creator.ElementsAs(ctx, &v, true)
+	d := o.Creator.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1399,9 +1524,8 @@ func (o *CleanRoomRemoteDetail) GetCreator(ctx context.Context) (CleanRoomCollab
 
 // SetCreator sets the value of the Creator field in CleanRoomRemoteDetail.
 func (o *CleanRoomRemoteDetail) SetCreator(ctx context.Context, v CleanRoomCollaborator) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["creator"]
-	o.Creator = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Creator = vs
 }
 
 // GetEgressNetworkPolicy returns the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail as
@@ -1413,7 +1537,10 @@ func (o *CleanRoomRemoteDetail) GetEgressNetworkPolicy(ctx context.Context) (set
 		return e, false
 	}
 	var v []settings_tf.EgressNetworkPolicy
-	d := o.EgressNetworkPolicy.ElementsAs(ctx, &v, true)
+	d := o.EgressNetworkPolicy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1425,28 +1552,37 @@ func (o *CleanRoomRemoteDetail) GetEgressNetworkPolicy(ctx context.Context) (set
 
 // SetEgressNetworkPolicy sets the value of the EgressNetworkPolicy field in CleanRoomRemoteDetail.
 func (o *CleanRoomRemoteDetail) SetEgressNetworkPolicy(ctx context.Context, v settings_tf.EgressNetworkPolicy) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["egress_network_policy"]
-	o.EgressNetworkPolicy = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.EgressNetworkPolicy = vs
 }
 
 type CollaboratorJobRunInfo struct {
 	// Alias of the collaborator that triggered the task run.
-	CollaboratorAlias types.String `tfsdk:"collaborator_alias" tf:"optional"`
+	CollaboratorAlias types.String `tfsdk:"collaborator_alias"`
 	// Job ID of the task run in the collaborator's workspace.
-	CollaboratorJobId types.Int64 `tfsdk:"collaborator_job_id" tf:"optional"`
+	CollaboratorJobId types.Int64 `tfsdk:"collaborator_job_id"`
 	// Job run ID of the task run in the collaborator's workspace.
-	CollaboratorJobRunId types.Int64 `tfsdk:"collaborator_job_run_id" tf:"optional"`
+	CollaboratorJobRunId types.Int64 `tfsdk:"collaborator_job_run_id"`
 	// Task run ID of the task run in the collaborator's workspace.
-	CollaboratorTaskRunId types.Int64 `tfsdk:"collaborator_task_run_id" tf:"optional"`
+	CollaboratorTaskRunId types.Int64 `tfsdk:"collaborator_task_run_id"`
 	// ID of the collaborator's workspace that triggered the task run.
-	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id" tf:"optional"`
+	CollaboratorWorkspaceId types.Int64 `tfsdk:"collaborator_workspace_id"`
 }
 
 func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CollaboratorJobRunInfo) {
 }
 
 func (newState *CollaboratorJobRunInfo) SyncEffectiveFieldsDuringRead(existingState CollaboratorJobRunInfo) {
+}
+
+func (c CollaboratorJobRunInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetOptional()
+	attrs["collaborator_job_id"] = attrs["collaborator_job_id"].SetOptional()
+	attrs["collaborator_job_run_id"] = attrs["collaborator_job_run_id"].SetOptional()
+	attrs["collaborator_task_run_id"] = attrs["collaborator_task_run_id"].SetOptional()
+	attrs["collaborator_workspace_id"] = attrs["collaborator_workspace_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CollaboratorJobRunInfo.
@@ -1493,15 +1629,22 @@ func (o CollaboratorJobRunInfo) Type(ctx context.Context) attr.Type {
 type ComplianceSecurityProfile struct {
 	// The list of compliance standards that the compliance security profile is
 	// configured to enforce.
-	ComplianceStandards types.List `tfsdk:"compliance_standards" tf:"optional"`
+	ComplianceStandards types.List `tfsdk:"compliance_standards"`
 	// Whether the compliance security profile is enabled.
-	IsEnabled types.Bool `tfsdk:"is_enabled" tf:"optional"`
+	IsEnabled types.Bool `tfsdk:"is_enabled"`
 }
 
 func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComplianceSecurityProfile) {
 }
 
 func (newState *ComplianceSecurityProfile) SyncEffectiveFieldsDuringRead(existingState ComplianceSecurityProfile) {
+}
+
+func (c ComplianceSecurityProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["compliance_standards"] = attrs["compliance_standards"].SetOptional()
+	attrs["is_enabled"] = attrs["is_enabled"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ComplianceSecurityProfile.
@@ -1570,15 +1713,9 @@ func (o *ComplianceSecurityProfile) SetComplianceStandards(ctx context.Context, 
 // Create an asset
 type CreateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
-	Asset types.List `tfsdk:"asset" tf:"optional,object"`
+	Asset types.Object `tfsdk:"asset"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetRequest) {
-}
-
-func (newState *CreateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomAssetRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
@@ -1610,9 +1747,7 @@ func (o CreateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o CreateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
-			},
+			"asset":           CleanRoomAsset{}.Type(ctx),
 			"clean_room_name": types.StringType,
 		},
 	}
@@ -1627,7 +1762,10 @@ func (o *CreateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 		return e, false
 	}
 	var v []CleanRoomAsset
-	d := o.Asset.ElementsAs(ctx, &v, true)
+	d := o.Asset.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1639,9 +1777,8 @@ func (o *CreateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 
 // SetAsset sets the value of the Asset field in CreateCleanRoomAssetRequest.
 func (o *CreateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["asset"]
-	o.Asset = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Asset = vs
 }
 
 // Create an output catalog
@@ -1649,13 +1786,7 @@ type CreateCleanRoomOutputCatalogRequest struct {
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
 
-	OutputCatalog types.List `tfsdk:"output_catalog" tf:"optional,object"`
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogRequest) {
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogRequest) {
+	OutputCatalog types.Object `tfsdk:"output_catalog"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
@@ -1688,9 +1819,7 @@ func (o CreateCleanRoomOutputCatalogRequest) Type(ctx context.Context) attr.Type
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_room_name": types.StringType,
-			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
-			},
+			"output_catalog":  CleanRoomOutputCatalog{}.Type(ctx),
 		},
 	}
 }
@@ -1704,7 +1833,10 @@ func (o *CreateCleanRoomOutputCatalogRequest) GetOutputCatalog(ctx context.Conte
 		return e, false
 	}
 	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
+	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1716,19 +1848,24 @@ func (o *CreateCleanRoomOutputCatalogRequest) GetOutputCatalog(ctx context.Conte
 
 // SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogRequest.
 func (o *CreateCleanRoomOutputCatalogRequest) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
-	o.OutputCatalog = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.OutputCatalog = vs
 }
 
 type CreateCleanRoomOutputCatalogResponse struct {
-	OutputCatalog types.List `tfsdk:"output_catalog" tf:"optional,object"`
+	OutputCatalog types.Object `tfsdk:"output_catalog"`
 }
 
 func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogResponse) {
 }
 
 func (newState *CreateCleanRoomOutputCatalogResponse) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogResponse) {
+}
+
+func (c CreateCleanRoomOutputCatalogResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["output_catalog"] = attrs["output_catalog"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogResponse.
@@ -1759,9 +1896,7 @@ func (o CreateCleanRoomOutputCatalogResponse) ToObjectValue(ctx context.Context)
 func (o CreateCleanRoomOutputCatalogResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"output_catalog": basetypes.ListType{
-				ElemType: CleanRoomOutputCatalog{}.Type(ctx),
-			},
+			"output_catalog": CleanRoomOutputCatalog{}.Type(ctx),
 		},
 	}
 }
@@ -1775,7 +1910,10 @@ func (o *CreateCleanRoomOutputCatalogResponse) GetOutputCatalog(ctx context.Cont
 		return e, false
 	}
 	var v []CleanRoomOutputCatalog
-	d := o.OutputCatalog.ElementsAs(ctx, &v, true)
+	d := o.OutputCatalog.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1787,20 +1925,13 @@ func (o *CreateCleanRoomOutputCatalogResponse) GetOutputCatalog(ctx context.Cont
 
 // SetOutputCatalog sets the value of the OutputCatalog field in CreateCleanRoomOutputCatalogResponse.
 func (o *CreateCleanRoomOutputCatalogResponse) SetOutputCatalog(ctx context.Context, v CleanRoomOutputCatalog) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_catalog"]
-	o.OutputCatalog = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.OutputCatalog = vs
 }
 
 // Create a clean room
 type CreateCleanRoomRequest struct {
-	CleanRoom types.List `tfsdk:"clean_room" tf:"optional,object"`
-}
-
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomRequest) {
-}
-
-func (newState *CreateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomRequest) {
+	CleanRoom types.Object `tfsdk:"clean_room"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
@@ -1831,9 +1962,7 @@ func (o CreateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
-			},
+			"clean_room": CleanRoom{}.Type(ctx),
 		},
 	}
 }
@@ -1847,7 +1976,10 @@ func (o *CreateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 		return e, false
 	}
 	var v []CleanRoom
-	d := o.CleanRoom.ElementsAs(ctx, &v, true)
+	d := o.CleanRoom.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1859,9 +1991,8 @@ func (o *CreateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 
 // SetCleanRoom sets the value of the CleanRoom field in CreateCleanRoomRequest.
 func (o *CreateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room"]
-	o.CleanRoom = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoom = vs
 }
 
 // Delete an asset
@@ -1873,12 +2004,6 @@ type DeleteCleanRoomAssetRequest struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetRequest) {
-}
-
-func (newState *DeleteCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -1927,6 +2052,11 @@ func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringCreateOrU
 func (newState *DeleteCleanRoomAssetResponse) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetResponse) {
 }
 
+func (c DeleteCleanRoomAssetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1958,12 +2088,6 @@ func (o DeleteCleanRoomAssetResponse) Type(ctx context.Context) attr.Type {
 type DeleteCleanRoomRequest struct {
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest) {
-}
-
-func (newState *DeleteCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
@@ -1998,12 +2122,6 @@ func (o DeleteCleanRoomRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteResponse struct {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -2042,12 +2160,6 @@ type GetCleanRoomAssetRequest struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomAssetRequest) {
-}
-
-func (newState *GetCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomAssetRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2090,12 +2202,6 @@ type GetCleanRoomRequest struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest) {
-}
-
-func (newState *GetCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2135,12 +2241,6 @@ type ListCleanRoomAssetsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsRequest) {
-}
-
-func (newState *ListCleanRoomAssetsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2176,17 +2276,24 @@ func (o ListCleanRoomAssetsRequest) Type(ctx context.Context) attr.Type {
 
 type ListCleanRoomAssetsResponse struct {
 	// Assets in the clean room.
-	Assets types.List `tfsdk:"assets" tf:"optional"`
+	Assets types.List `tfsdk:"assets"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. page_token should be set to this value for the next request
 	// (for the next page of results).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsResponse) {
 }
 
 func (newState *ListCleanRoomAssetsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsResponse) {
+}
+
+func (c ListCleanRoomAssetsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assets"] = attrs["assets"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsResponse.
@@ -2264,12 +2371,6 @@ type ListCleanRoomNotebookTaskRunsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsRequest) {
-}
-
-func (newState *ListCleanRoomNotebookTaskRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2311,15 +2412,22 @@ type ListCleanRoomNotebookTaskRunsResponse struct {
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. page_token should be set to this value for the next request
 	// (for the next page of results).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Name of the clean room.
-	Runs types.List `tfsdk:"runs" tf:"optional"`
+	Runs types.List `tfsdk:"runs"`
 }
 
 func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsResponse) {
 }
 
 func (newState *ListCleanRoomNotebookTaskRunsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsResponse) {
+}
+
+func (c ListCleanRoomNotebookTaskRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["runs"] = attrs["runs"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsResponse.
@@ -2394,12 +2502,6 @@ type ListCleanRoomsRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest) {
-}
-
-func (newState *ListCleanRoomsRequest) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2434,17 +2536,24 @@ func (o ListCleanRoomsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListCleanRoomsResponse struct {
-	CleanRooms types.List `tfsdk:"clean_rooms" tf:"optional"`
+	CleanRooms types.List `tfsdk:"clean_rooms"`
 	// Opaque token to retrieve the next page of results. Absent if there are no
 	// more pages. page_token should be set to this value for the next request
 	// (for the next page of results).
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsResponse) {
 }
 
 func (newState *ListCleanRoomsResponse) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsResponse) {
+}
+
+func (c ListCleanRoomsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms"] = attrs["clean_rooms"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsResponse.
@@ -2513,7 +2622,7 @@ func (o *ListCleanRoomsResponse) SetCleanRooms(ctx context.Context, v []CleanRoo
 // Update an asset
 type UpdateCleanRoomAssetRequest struct {
 	// Metadata of the clean room asset
-	Asset types.List `tfsdk:"asset" tf:"optional,object"`
+	Asset types.Object `tfsdk:"asset"`
 	// The type of the asset.
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
@@ -2526,12 +2635,6 @@ type UpdateCleanRoomAssetRequest struct {
 	//
 	// For notebooks, the name is the notebook file name.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomAssetRequest) {
-}
-
-func (newState *UpdateCleanRoomAssetRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomAssetRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.
@@ -2565,9 +2668,7 @@ func (o UpdateCleanRoomAssetRequest) ToObjectValue(ctx context.Context) basetype
 func (o UpdateCleanRoomAssetRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"asset": basetypes.ListType{
-				ElemType: CleanRoomAsset{}.Type(ctx),
-			},
+			"asset":           CleanRoomAsset{}.Type(ctx),
 			"asset_type":      types.StringType,
 			"clean_room_name": types.StringType,
 			"name":            types.StringType,
@@ -2584,7 +2685,10 @@ func (o *UpdateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 		return e, false
 	}
 	var v []CleanRoomAsset
-	d := o.Asset.ElementsAs(ctx, &v, true)
+	d := o.Asset.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2596,13 +2700,12 @@ func (o *UpdateCleanRoomAssetRequest) GetAsset(ctx context.Context) (CleanRoomAs
 
 // SetAsset sets the value of the Asset field in UpdateCleanRoomAssetRequest.
 func (o *UpdateCleanRoomAssetRequest) SetAsset(ctx context.Context, v CleanRoomAsset) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["asset"]
-	o.Asset = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Asset = vs
 }
 
 type UpdateCleanRoomRequest struct {
-	CleanRoom types.List `tfsdk:"clean_room" tf:"optional,object"`
+	CleanRoom types.Object `tfsdk:"clean_room"`
 	// Name of the clean room.
 	Name types.String `tfsdk:"-"`
 }
@@ -2611,6 +2714,13 @@ func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringCreateOrUpdate(
 }
 
 func (newState *UpdateCleanRoomRequest) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomRequest) {
+}
+
+func (c UpdateCleanRoomRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room"] = attrs["clean_room"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomRequest.
@@ -2642,10 +2752,8 @@ func (o UpdateCleanRoomRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateCleanRoomRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clean_room": basetypes.ListType{
-				ElemType: CleanRoom{}.Type(ctx),
-			},
-			"name": types.StringType,
+			"clean_room": CleanRoom{}.Type(ctx),
+			"name":       types.StringType,
 		},
 	}
 }
@@ -2659,7 +2767,10 @@ func (o *UpdateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 		return e, false
 	}
 	var v []CleanRoom
-	d := o.CleanRoom.ElementsAs(ctx, &v, true)
+	d := o.CleanRoom.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2671,7 +2782,6 @@ func (o *UpdateCleanRoomRequest) GetCleanRoom(ctx context.Context) (CleanRoom, b
 
 // SetCleanRoom sets the value of the CleanRoom field in UpdateCleanRoomRequest.
 func (o *UpdateCleanRoomRequest) SetCleanRoom(ctx context.Context, v CleanRoom) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room"]
-	o.CleanRoom = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoom = vs
 }

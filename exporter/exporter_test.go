@@ -10,11 +10,10 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
-	"github.com/databricks/databricks-sdk-go/service/compute"
+	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/iam"
 	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
@@ -31,11 +30,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/service/workspace_tf"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
-	tfsql "github.com/databricks/terraform-provider-databricks/sql"
+	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
 	"github.com/databricks/terraform-provider-databricks/workspace"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
@@ -169,8 +167,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.1/clusters/spark-versions",
-				Response: compute.GetSparkVersionsResponse{
-					Versions: []compute.SparkVersion{
+				Response: sdk_compute.GetSparkVersionsResponse{
+					Versions: []sdk_compute.SparkVersion{
 						{
 							Key: "Foo LTS",
 						},
@@ -181,8 +179,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.1/clusters/list-node-types",
-				Response: compute.ListNodeTypesResponse{
-					NodeTypes: []compute.NodeType{
+				Response: sdk_compute.ListNodeTypesResponse{
+					NodeTypes: []sdk_compute.NodeType{
 						{
 							NodeTypeId: "m5d.large",
 						},
@@ -192,7 +190,7 @@ func TestImportingMounts(t *testing.T) {
 			{
 				Method:       "POST",
 				ReuseRequest: true,
-				Resource:     "/api/2.0/clusters/events",
+				Resource:     "/api/2.1/clusters/events",
 				Response: clusters.EventsResponse{
 					Events: []clusters.ClusterEvent{},
 				},
@@ -201,8 +199,8 @@ func TestImportingMounts(t *testing.T) {
 				Method:       "GET",
 				ReuseRequest: true,
 				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=mount",
-				Response: compute.InstallLibraries{
-					Libraries: []compute.Library{},
+				Response: sdk_compute.InstallLibraries{
+					Libraries: []sdk_compute.Library{},
 				},
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
@@ -247,14 +245,14 @@ var emptyClusterPolicies = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
 	Resource:     "/api/2.0/policies/clusters/list?",
-	Response:     compute.ListPoliciesResponse{},
+	Response:     sdk_compute.ListPoliciesResponse{},
 }
 
 var emptyPolicyFamilies = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.0/policy-families?",
-	Response: compute.ListPolicyFamiliesResponse{
-		PolicyFamilies: []compute.PolicyFamily{},
+	Response: sdk_compute.ListPolicyFamiliesResponse{
+		PolicyFamilies: []sdk_compute.PolicyFamily{},
 	},
 	ReuseRequest: true,
 }
@@ -381,7 +379,7 @@ var emptySqlQueries = qa.HTTPFixture{
 var emptySqlAlerts = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/alerts?page_size=100",
-	Response:     []tfsql.AlertEntity{},
+	Response:     []tf_sql.AlertEntity{},
 	ReuseRequest: true,
 }
 
@@ -408,7 +406,7 @@ var allKnownWorkspaceConfs = qa.HTTPFixture{
 var emptyGlobalSQLConfig = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/config/warehouses",
-	Response:     tfsql.GlobalConfigForRead{},
+	Response:     tf_sql.GlobalConfigForRead{},
 	ReuseRequest: true,
 }
 
@@ -669,12 +667,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{},
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -746,6 +744,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
 			ic.exportSecrets = true
+			ic.noFormat = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
@@ -803,12 +802,12 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{},
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -826,6 +825,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			_, listing := ic.allServicesAndListing()
 			ic.enableListing(listing)
 
@@ -857,12 +857,12 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{},
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
 				Method:       "GET",
-				Resource:     "/api/2.0/clusters/list",
+				Resource:     "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response:     getJSONObject("test-data/clusters-list-response.json"),
 				ReuseRequest: true,
 			},
@@ -875,8 +875,8 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/clusters/list?filter_by.is_pinned=true&page_size=100",
-				Response: compute.ListClustersResponse{
-					Clusters: []compute.ClusterDetails{},
+				Response: sdk_compute.ListClustersResponse{
+					Clusters: []sdk_compute.ClusterDetails{},
 				},
 				ReuseRequest: true,
 			},
@@ -934,9 +934,10 @@ func TestImportingClusters(t *testing.T) {
 				Response: getJSONObject("test-data/get-cluster-awscluster-response.json"),
 			},
 			{
-				Method:   "GET",
-				Resource: "/api/2.0/libraries/cluster-status?cluster_id=awscluster",
-				Response: getJSONObject("test-data/libraries-cluster-status-test2.json"),
+				Method:       "GET",
+				Resource:     "/api/2.0/libraries/cluster-status?cluster_id=awscluster",
+				Response:     getJSONObject("test-data/libraries-cluster-status-test2.json"),
+				ReuseRequest: true,
 			},
 			{
 				Method:   "GET",
@@ -993,12 +994,12 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/libraries/cluster-status?cluster_id=test2",
-				Response: compute.ClusterLibraryStatuses{
+				Response: sdk_compute.ClusterLibraryStatuses{
 					ClusterId: "test2",
-					LibraryStatuses: []compute.LibraryFullStatus{
+					LibraryStatuses: []sdk_compute.LibraryFullStatus{
 						{
-							Library: &compute.Library{
-								Pypi: &compute.PythonPyPiLibrary{
+							Library: &sdk_compute.Library{
+								Pypi: &sdk_compute.PythonPyPiLibrary{
 									Package: "chispa",
 								},
 							},
@@ -1024,6 +1025,7 @@ func TestImportingClusters(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			ic.enableListing("compute")
 			ic.enableServices("access,users,policies,compute,secrets,groups,storage")
 
@@ -1050,38 +1052,30 @@ func TestImportingClusters(t *testing.T) {
 }
 
 func TestImportingJobs_JobList(t *testing.T) {
-	nowSeconds := time.Now().Unix()
-	jobRuns := jobs.JobRunsList{
-		Runs: []jobs.JobRun{
-			{
-				StartTime: nowSeconds * 1000,
-			},
-		},
-	}
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{
-					Jobs: []jobs.Job{
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{
+					Jobs: []sdk_jobs.BaseJob{
 						{
-							JobID: 14,
-							Settings: &jobs.JobSettings{
+							JobId: 14,
+							Settings: &sdk_jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
 						{
-							JobID: 15,
-							Settings: &jobs.JobSettings{
+							JobId: 15,
+							Settings: &sdk_jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
 						{
-							JobID: 16,
-							Settings: &jobs.JobSettings{
+							JobId: 16,
+							Settings: &sdk_jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
@@ -1120,11 +1114,10 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=14",
-				Response: jobs.Job{
-					JobID: 14,
-					Settings: &jobs.JobSettings{
-						RetryOnTimeout: true,
-						RunAs: &jobs.JobRunAs{
+				Response: sdk_jobs.Job{
+					JobId: 14,
+					Settings: &sdk_jobs.JobSettings{
+						RunAs: &sdk_jobs.JobRunAs{
 							UserName:             "user@domain.com",
 							ServicePrincipalName: "0000-1111-2222-3333-4444-5555",
 						},
@@ -1136,35 +1129,40 @@ func TestImportingJobs_JobList(t *testing.T) {
 								{Id: "123"},
 							},
 						},
-						Libraries: []compute.Library{
-							{Jar: "dbfs:/FileStore/jars/test.jar"},
-							{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
-							{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
-						},
 						Name: "Dummy",
-						NewCluster: &clusters.Cluster{
-							InstancePoolID: "pool1",
-							NumWorkers:     2,
-							SparkVersion:   "6.4.x-scala2.11",
-							PolicyID:       "123",
-						},
-						SparkJarTask: &jobs.SparkJarTask{
-							JarURI:        "dbfs:/FileStore/jars/test.jar",
-							MainClassName: "com.databricks.examples.ProjectDriver",
-						},
-						SparkPythonTask: &jobs.SparkPythonTask{
-							// this makes no sense for prod, but does for tests ;-)
-							PythonFile: "/foo/bar.py",
-							Parameters: []string{
-								"dbfs:/FileStore/jars/test.jar",
-								"etc",
+						Tasks: []sdk_jobs.Task{
+							{
+								TaskKey: "test",
+								Libraries: []sdk_compute.Library{
+									{Jar: "dbfs:/FileStore/jars/test.jar"},
+									{Whl: "/Workspace/Repos/user@domain.com/repo/test.whl"},
+									{Whl: "/Workspace/Users/user@domain.com/libs/test.whl"},
+								},
+								NewCluster: &sdk_compute.ClusterSpec{
+									InstancePoolId: "pool1",
+									NumWorkers:     2,
+									SparkVersion:   "6.4.x-scala2.11",
+									PolicyId:       "123",
+								},
+								SparkJarTask: &sdk_jobs.SparkJarTask{
+									JarUri:        "dbfs:/FileStore/jars/test.jar",
+									MainClassName: "com.databricks.examples.ProjectDriver",
+								},
+								SparkPythonTask: &sdk_jobs.SparkPythonTask{
+									// this makes no sense for prod, but does for tests ;-)
+									PythonFile: "/foo/bar.py",
+									Parameters: []string{
+										"dbfs:/FileStore/jars/test.jar",
+										"etc",
+									},
+								},
+								NotebookTask: &sdk_jobs.NotebookTask{
+									NotebookPath: "/Workspace/Test",
+								},
+								PipelineTask: &sdk_jobs.PipelineTask{
+									PipelineId: "123",
+								},
 							},
-						},
-						NotebookTask: &jobs.NotebookTask{
-							NotebookPath: "/Workspace/Test",
-						},
-						PipelineTask: &jobs.PipelineTask{
-							PipelineID: "123",
 						},
 					},
 				},
@@ -1172,7 +1170,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: compute.Policy{
+				Response: sdk_compute.Policy{
 					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{
@@ -1223,35 +1221,13 @@ func TestImportingJobs_JobList(t *testing.T) {
 				ReuseRequest: true,
 				Response:     getJSONObject("test-data/get-job-permissions-14.json"),
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
-				Response: jobs.JobRunsList{
-					Runs: []jobs.JobRun{},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=16&limit=1",
-				Response: jobs.JobRunsList{
-					Runs: []jobs.JobRun{
-						{
-							StartTime: 0,
-						},
-					},
-				},
-			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
-			ic := newImportContext(client)
+			ic := importContextForTestWithClient(ctx, client)
 			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.enableListing("jobs")
 			ic.mounts = true
+			ic.noFormat = true
 			ic.meAdmin = true
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1279,14 +1255,6 @@ func TestImportingJobs_JobList(t *testing.T) {
 }
 
 func TestImportingJobs_JobListMultiTask(t *testing.T) {
-	nowSeconds := time.Now().Unix()
-	jobRuns := jobs.JobRunsList{
-		Runs: []jobs.JobRun{
-			{
-				StartTime: nowSeconds * 1000,
-			},
-		},
-	}
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
@@ -1294,12 +1262,12 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{
-					Jobs: []jobs.Job{
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{
+					Jobs: []sdk_jobs.BaseJob{
 						{
-							JobID: 14,
-							Settings: &jobs.JobSettings{
+							JobId: 14,
+							Settings: &sdk_jobs.JobSettings{
 								Name: "Demo job",
 							},
 						},
@@ -1339,28 +1307,27 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.1/jobs/get?job_id=14",
-				Response: jobs.Job{
-					JobID: 14,
-					Settings: &jobs.JobSettings{
-						RetryOnTimeout: true,
-						Tasks: []jobs.JobTaskSettings{
+				Response: sdk_jobs.Job{
+					JobId: 14,
+					Settings: &sdk_jobs.JobSettings{
+						Tasks: []sdk_jobs.Task{
 							{
 								TaskKey: "dummy",
-								Libraries: []compute.Library{
+								Libraries: []sdk_compute.Library{
 									{Jar: "dbfs:/FileStore/jars/test.jar"},
 								},
-								NewCluster: &clusters.Cluster{
-									InstancePoolID:       "pool1",
-									DriverInstancePoolID: "pool1",
+								NewCluster: &sdk_compute.ClusterSpec{
+									InstancePoolId:       "pool1",
+									DriverInstancePoolId: "pool1",
 									NumWorkers:           2,
 									SparkVersion:         "6.4.x-scala2.11",
-									PolicyID:             "123",
+									PolicyId:             "123",
 								},
-								SparkJarTask: &jobs.SparkJarTask{
-									JarURI:        "dbfs:/FileStore/jars/test.jar",
+								SparkJarTask: &sdk_jobs.SparkJarTask{
+									JarUri:        "dbfs:/FileStore/jars/test.jar",
 									MainClassName: "com.databricks.examples.ProjectDriver",
 								},
-								SparkPythonTask: &jobs.SparkPythonTask{
+								SparkPythonTask: &sdk_jobs.SparkPythonTask{
 									// this makes no sense for prod, but does for tests ;-)
 									PythonFile: "/foo/bar.py",
 									Parameters: []string{
@@ -1368,24 +1335,24 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 										"etc",
 									},
 								},
-								NotebookTask: &jobs.NotebookTask{
+								NotebookTask: &sdk_jobs.NotebookTask{
 									NotebookPath: "/Test",
 								},
-								PipelineTask: &jobs.PipelineTask{
-									PipelineID: "123",
+								PipelineTask: &sdk_jobs.PipelineTask{
+									PipelineId: "123",
 								},
-								SqlTask: &jobs.SqlTask{
-									Dashboard: &jobs.SqlDashboardTask{
-										DashboardID: "123",
+								SqlTask: &sdk_jobs.SqlTask{
+									Dashboard: &sdk_jobs.SqlTaskDashboard{
+										DashboardId: "123",
 									},
-									WarehouseID: "123",
+									WarehouseId: "123",
 								},
-								DbtTask: &jobs.DbtTask{
+								DbtTask: &sdk_jobs.DbtTask{
 									WarehouseId: "123",
 									Commands:    []string{"dbt init"},
 								},
-								RunJobTask: &jobs.RunJobTask{
-									JobID: 14,
+								RunJobTask: &sdk_jobs.RunJobTask{
+									JobId: 14,
 								},
 								WebhookNotifications: &sdk_jobs.WebhookNotifications{
 									OnSuccess: []sdk_jobs.Webhook{
@@ -1398,17 +1365,17 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 							},
 							{
 								TaskKey: "dummy2",
-								SqlTask: &jobs.SqlTask{
-									Query: &jobs.SqlQueryTask{
-										QueryID: "123",
+								SqlTask: &sdk_jobs.SqlTask{
+									Query: &sdk_jobs.SqlTaskQuery{
+										QueryId: "123",
 									},
 								},
 							},
 							{
 								TaskKey: "dummy3",
-								SqlTask: &jobs.SqlTask{
-									Alert: &jobs.SqlAlertTask{
-										AlertID: "123",
+								SqlTask: &sdk_jobs.SqlTask{
+									Alert: &sdk_jobs.SqlTaskAlert{
+										AlertId: "123",
 									},
 								},
 							},
@@ -1423,14 +1390,14 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 						EmailNotifications: &sdk_jobs.JobEmailNotifications{
 							OnFailure: []string{"user@domain.com"},
 						},
-						JobClusters: []jobs.JobCluster{
+						JobClusters: []sdk_jobs.JobCluster{
 							{
 								JobClusterKey: "shared",
-								NewCluster: &clusters.Cluster{
-									InstancePoolID: "pool1",
+								NewCluster: sdk_compute.ClusterSpec{
+									InstancePoolId: "pool1",
 									NumWorkers:     2,
 									SparkVersion:   "6.4.x-scala2.11",
-									PolicyID:       "123",
+									PolicyId:       "123",
 								},
 							},
 						},
@@ -1440,7 +1407,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/policies/clusters/get?policy_id=123",
-				Response: compute.Policy{
+				Response: sdk_compute.Policy{
 					PolicyId: "123",
 					Name:     "dummy",
 					Definition: `{
@@ -1493,29 +1460,6 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=14&limit=1",
-				Response: jobRuns,
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=15&limit=1",
-				Response: jobs.JobRunsList{
-					Runs: []jobs.JobRun{},
-				},
-			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/jobs/runs/list?completed_only=true&job_id=16&limit=1",
-				Response: jobs.JobRunsList{
-					Runs: []jobs.JobRun{
-						{
-							StartTime: 0,
-						},
-					},
-				},
-			},
-			{
-				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fbar.py&return_git_info=true",
 				Response: workspace.ObjectStatus{},
 			},
@@ -1525,6 +1469,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			ic.enableServices("jobs,access,storage,clusters,pools")
 			ic.enableListing("jobs")
 			ic.mounts = true
+			ic.noFormat = true
 			ic.meAdmin = true
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1583,12 +1528,12 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
-				Response: jobs.JobListResponse{},
+				Resource: "/api/2.1/jobs/list?limit=100",
+				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/clusters/list",
+				Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 				Response: clusters.ClusterList{},
 			},
 			{
@@ -1621,6 +1566,7 @@ func TestImportingSecrets(t *testing.T) {
 
 			ic := newImportContext(client)
 			ic.Directory = tmpDir
+			ic.noFormat = true
 			ic.enableListing("secrets")
 			services, _ := ic.allServicesAndListing()
 			ic.enableServices(services)
@@ -1686,6 +1632,7 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("workspace")
 			services, _ := ic.allServicesAndListing()
@@ -1725,6 +1672,7 @@ func TestImportingUser(t *testing.T) {
 			},
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.setClientsForTests()
 			err := resourcesMap["databricks_user"].Search(ic, &resource{
 				Resource: "databricks_user",
@@ -1792,6 +1740,7 @@ func TestImportingRepos(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("repos")
 
@@ -1862,6 +1811,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			services := "workspace,access"
 			ic.enableListing(services)
@@ -2003,6 +1953,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("sql-dashboards,queries,sql-endpoints,alerts")
 			ic.enableServices("sql-dashboards,queries,alerts,sql-endpoints,access")
@@ -2225,6 +2176,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("dlt")
 			ic.enableServices("dlt,access,notebooks,users,repos,secrets,wsfiles")
@@ -2328,6 +2280,7 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.match = "test"
 			ic.enableListing("dlt")
@@ -2371,6 +2324,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("sql-endpoints")
 
@@ -2466,6 +2420,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("notebooks,wsfiles")
 			ic.excludeRegexStr = "databricks_automl"
@@ -2567,6 +2522,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("notebooks,wsfiles")
 			ic.excludeRegexStr = "databricks_automl"
@@ -2660,6 +2616,7 @@ func TestImportingModelServing(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("model-serving")
 			ic.enableServices("model-serving")
@@ -2727,6 +2684,7 @@ func TestImportingMlfloweWebhooks(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("mlflow-webhooks")
 
@@ -2741,6 +2699,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.enableServices("model-serving")
 			ic.incremental = true
 
@@ -2752,6 +2711,7 @@ func TestIncrementalErrors(t *testing.T) {
 		[]qa.HTTPFixture{},
 		func(ctx context.Context, client *common.DatabricksClient) {
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.enableServices("model-serving")
 			ic.incremental = true
 			ic.updatedSinceStr = "aaa"
@@ -2873,6 +2833,7 @@ resource "databricks_pipeline" "def" {
 `), 0700)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			services := "dlt,mlflow-webhooks"
 			ic.enableListing(services)
@@ -2933,7 +2894,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			emptyWorkspace,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?expand_tasks=false&limit=25",
+				Resource: "/api/2.1/jobs/list?limit=100",
 				Response: map[string]any{
 					"jobs": []any{
 						getJSONObject("test-data/run-job-main.json"),
@@ -2956,6 +2917,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("jobs")
 			ic.match = "runjobtask"
@@ -3031,6 +2993,7 @@ func TestImportingLakeviewDashboards(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			ic := newImportContext(client)
+			ic.noFormat = true
 			ic.Directory = tmpDir
 			ic.enableListing("dashboards")
 			ic.enableServices("dashboards")
@@ -3163,6 +3126,7 @@ func TestNotificationDestinationExport(t *testing.T) {
 		defer os.RemoveAll(tmpDir)
 
 		ic := newImportContext(client)
+		ic.noFormat = true
 		ic.Directory = tmpDir
 		ic.enableListing("settings")
 		ic.enableServices("settings")

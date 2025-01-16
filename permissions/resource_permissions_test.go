@@ -484,6 +484,36 @@ func TestResourcePermissionsRead_EmptyListResultsInRemoval(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestResourcePermissionsRead_EmptyListResultsInRemovalWith504Errors(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {
+			mwc.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "admin"}, nil)
+
+			req := iam.GetPermissionRequest{
+				RequestObjectId:   "abc",
+				RequestObjectType: "clusters",
+			}
+
+			// Fail 3 times with a 504 error. These should be retried
+			// transparently.
+			call := mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, req).Return(nil, apierr.ErrDeadlineExceeded)
+			call.Repeatability = 3
+
+			mwc.GetMockPermissionsAPI().EXPECT().Get(mock.Anything, req).Return(&iam.ObjectPermissions{
+				ObjectId:   "/clusters/abc",
+				ObjectType: "cluster",
+			}, nil)
+		},
+		Resource: ResourcePermissions(),
+		Read:     true,
+		Removed:  true,
+		InstanceState: map[string]string{
+			"cluster_id": "abc",
+		},
+		ID: "/clusters/abc",
+	}.ApplyNoError(t)
+}
+
 func TestResourcePermissionsDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

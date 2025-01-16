@@ -11,13 +11,13 @@ This resource allows you to enable [custom OAuth applications](https://docs.data
 
 ```hcl
 resource "databricks_custom_app_integration" "this" {
-    name = "custom_integration_name"
-    redirect_urls = ["https://example.com"]
-    scopes = ["all-apis"]
-    token_access_policy {
-        access_token_ttl_in_minutes = 15
-        refresh_token_ttl_in_minutes = 30
-    }
+  name          = "custom_integration_name"
+  redirect_urls = ["https://example.com"]
+  scopes        = ["all-apis"]
+  token_access_policy {
+    access_token_ttl_in_minutes  = 15
+    refresh_token_ttl_in_minutes = 30
+  }
 }
 ```
 

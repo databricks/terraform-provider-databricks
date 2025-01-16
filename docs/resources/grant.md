@@ -50,8 +50,8 @@ See [databricks_grants Catalog grants](grants.md#catalog-grants) for the list of
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }

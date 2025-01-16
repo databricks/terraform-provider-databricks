@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -24,13 +25,7 @@ import (
 
 // Create dashboard
 type CreateDashboardRequest struct {
-	Dashboard types.List `tfsdk:"dashboard" tf:"optional,object"`
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateDashboardRequest) {
-}
-
-func (newState *CreateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState CreateDashboardRequest) {
+	Dashboard types.Object `tfsdk:"dashboard"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateDashboardRequest.
@@ -61,9 +56,7 @@ func (o CreateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o CreateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
-			},
+			"dashboard": Dashboard{}.Type(ctx),
 		},
 	}
 }
@@ -77,7 +70,10 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 		return e, false
 	}
 	var v []Dashboard
-	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -89,9 +85,8 @@ func (o *CreateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 
 // SetDashboard sets the value of the Dashboard field in CreateDashboardRequest.
 func (o *CreateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
-	o.Dashboard = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Dashboard = vs
 }
 
 // Create dashboard schedule
@@ -99,13 +94,7 @@ type CreateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule types.List `tfsdk:"schedule" tf:"optional,object"`
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateScheduleRequest) {
-}
-
-func (newState *CreateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState CreateScheduleRequest) {
+	Schedule types.Object `tfsdk:"schedule"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateScheduleRequest.
@@ -138,9 +127,7 @@ func (o CreateScheduleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
-			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
-			},
+			"schedule":     Schedule{}.Type(ctx),
 		},
 	}
 }
@@ -154,7 +141,10 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 		return e, false
 	}
 	var v []Schedule
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -166,9 +156,8 @@ func (o *CreateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 
 // SetSchedule sets the value of the Schedule field in CreateScheduleRequest.
 func (o *CreateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Schedule = vs
 }
 
 // Create schedule subscription
@@ -178,13 +167,7 @@ type CreateSubscriptionRequest struct {
 	// UUID identifying the schedule to which the subscription belongs.
 	ScheduleId types.String `tfsdk:"-"`
 
-	Subscription types.List `tfsdk:"subscription" tf:"optional,object"`
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateSubscriptionRequest) {
-}
-
-func (newState *CreateSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState CreateSubscriptionRequest) {
+	Subscription types.Object `tfsdk:"subscription"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateSubscriptionRequest.
@@ -219,9 +202,7 @@ func (o CreateSubscriptionRequest) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
 			"schedule_id":  types.StringType,
-			"subscription": basetypes.ListType{
-				ElemType: Subscription{}.Type(ctx),
-			},
+			"subscription": Subscription{}.Type(ctx),
 		},
 	}
 }
@@ -235,7 +216,10 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 		return e, false
 	}
 	var v []Subscription
-	d := o.Subscription.ElementsAs(ctx, &v, true)
+	d := o.Subscription.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -247,9 +231,8 @@ func (o *CreateSubscriptionRequest) GetSubscription(ctx context.Context) (Subscr
 
 // SetSubscription sets the value of the Subscription field in CreateSubscriptionRequest.
 func (o *CreateSubscriptionRequest) SetSubscription(ctx context.Context, v Subscription) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscription"]
-	o.Subscription = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Subscription = vs
 }
 
 type CronSchedule struct {
@@ -257,18 +240,25 @@ type CronSchedule struct {
 	// everyday at 8am. See [Cron Trigger] for details.
 	//
 	// [Cron Trigger]: http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html
-	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression" tf:""`
+	QuartzCronExpression types.String `tfsdk:"quartz_cron_expression"`
 	// A Java timezone id. The schedule will be resolved with respect to this
 	// timezone. See [Java TimeZone] for details.
 	//
 	// [Java TimeZone]: https://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html
-	TimezoneId types.String `tfsdk:"timezone_id" tf:""`
+	TimezoneId types.String `tfsdk:"timezone_id"`
 }
 
 func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
 }
 
 func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+}
+
+func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
+	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
@@ -306,25 +296,25 @@ func (o CronSchedule) Type(ctx context.Context) attr.Type {
 
 type Dashboard struct {
 	// The timestamp of when the dashboard was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// UUID identifying the dashboard.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The display name of the dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the dashboard. Can be optionally provided on updates to
 	// ensure that the dashboard has not been modified since the last read. This
 	// field is excluded in List Dashboards responses.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// The state of the dashboard resource. Used for tracking trashed status.
-	LifecycleState types.String `tfsdk:"lifecycle_state" tf:"computed"`
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
 	// The workspace path of the folder containing the dashboard. Includes
 	// leading slash and no trailing slash. This field is excluded in List
 	// Dashboards responses.
-	ParentPath types.String `tfsdk:"parent_path" tf:"computed"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// The workspace path of the dashboard asset, including the file name.
 	// Exported dashboards always have the file extension `.lvdash.json`. This
 	// field is excluded in List Dashboards responses.
-	Path types.String `tfsdk:"path" tf:"computed"`
+	Path types.String `tfsdk:"path"`
 	// The contents of the dashboard in serialized string form. This field is
 	// excluded in List Dashboards responses. Use the [get dashboard API] to
 	// retrieve an example response, which includes the `serialized_dashboard`
@@ -332,18 +322,33 @@ type Dashboard struct {
 	// represents the dashboard's layout and components.
 	//
 	// [get dashboard API]: https://docs.databricks.com/api/workspace/lakeview/get
-	SerializedDashboard types.String `tfsdk:"serialized_dashboard" tf:"optional"`
+	SerializedDashboard types.String `tfsdk:"serialized_dashboard"`
 	// The timestamp of when the dashboard was last updated by the user. This
 	// field is excluded in List Dashboards responses.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// The warehouse ID used to run the dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan Dashboard) {
 }
 
 func (newState *Dashboard) SyncEffectiveFieldsDuringRead(existingState Dashboard) {
+}
+
+func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].SetComputed()
+	attrs["path"] = attrs["path"].SetComputed()
+	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Dashboard.
@@ -406,12 +411,6 @@ type DeleteScheduleRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScheduleRequest) {
-}
-
-func (newState *DeleteScheduleRequest) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -448,12 +447,6 @@ func (o DeleteScheduleRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteScheduleResponse struct {
-}
-
-func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteScheduleResponse) {
-}
-
-func (newState *DeleteScheduleResponse) SyncEffectiveFieldsDuringRead(existingState DeleteScheduleResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteScheduleResponse.
@@ -496,12 +489,6 @@ type DeleteSubscriptionRequest struct {
 	SubscriptionId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSubscriptionRequest) {
-}
-
-func (newState *DeleteSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -542,12 +529,6 @@ func (o DeleteSubscriptionRequest) Type(ctx context.Context) attr.Type {
 type DeleteSubscriptionResponse struct {
 }
 
-func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteSubscriptionResponse) {
-}
-
-func (newState *DeleteSubscriptionResponse) SyncEffectiveFieldsDuringRead(existingState DeleteSubscriptionResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteSubscriptionResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -577,15 +558,22 @@ func (o DeleteSubscriptionResponse) Type(ctx context.Context) attr.Type {
 
 // Genie AI Response
 type GenieAttachment struct {
-	Query types.List `tfsdk:"query" tf:"optional,object"`
+	Query types.Object `tfsdk:"query"`
 
-	Text types.List `tfsdk:"text" tf:"optional,object"`
+	Text types.Object `tfsdk:"text"`
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieAttachment) {
 }
 
 func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState GenieAttachment) {
+}
+
+func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["text"] = attrs["text"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieAttachment.
@@ -618,12 +606,8 @@ func (o GenieAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GenieAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query": basetypes.ListType{
-				ElemType: QueryAttachment{}.Type(ctx),
-			},
-			"text": basetypes.ListType{
-				ElemType: TextAttachment{}.Type(ctx),
-			},
+			"query": QueryAttachment{}.Type(ctx),
+			"text":  TextAttachment{}.Type(ctx),
 		},
 	}
 }
@@ -637,7 +621,10 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (QueryAttachment, bool) 
 		return e, false
 	}
 	var v []QueryAttachment
-	d := o.Query.ElementsAs(ctx, &v, true)
+	d := o.Query.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -649,9 +636,8 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (QueryAttachment, bool) 
 
 // SetQuery sets the value of the Query field in GenieAttachment.
 func (o *GenieAttachment) SetQuery(ctx context.Context, v QueryAttachment) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query"]
-	o.Query = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Query = vs
 }
 
 // GetText returns the value of the Text field in GenieAttachment as
@@ -663,7 +649,10 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 		return e, false
 	}
 	var v []TextAttachment
-	d := o.Text.ElementsAs(ctx, &v, true)
+	d := o.Text.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -675,30 +664,40 @@ func (o *GenieAttachment) GetText(ctx context.Context) (TextAttachment, bool) {
 
 // SetText sets the value of the Text field in GenieAttachment.
 func (o *GenieAttachment) SetText(ctx context.Context, v TextAttachment) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["text"]
-	o.Text = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Text = vs
 }
 
 type GenieConversation struct {
 	// Timestamp when the message was created
-	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Conversation ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// Genie space ID
-	SpaceId types.String `tfsdk:"space_id" tf:""`
+	SpaceId types.String `tfsdk:"space_id"`
 	// Conversation title
-	Title types.String `tfsdk:"title" tf:""`
+	Title types.String `tfsdk:"title"`
 	// ID of the user who created the conversation
-	UserId types.Int64 `tfsdk:"user_id" tf:""`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieConversation) {
 }
 
 func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState GenieConversation) {
+}
+
+func (c GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["title"] = attrs["title"].SetRequired()
+	attrs["user_id"] = attrs["user_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieConversation.
@@ -744,7 +743,7 @@ func (o GenieConversation) Type(ctx context.Context) attr.Type {
 
 type GenieCreateConversationMessageRequest struct {
 	// User message content.
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// The ID associated with the conversation.
 	ConversationId types.String `tfsdk:"-"`
 	// The ID associated with the Genie space where the conversation is started.
@@ -755,6 +754,14 @@ func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuring
 }
 
 func (newState *GenieCreateConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieCreateConversationMessageRequest) {
+}
+
+func (c GenieCreateConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieCreateConversationMessageRequest.
@@ -800,12 +807,6 @@ type GenieExecuteMessageQueryRequest struct {
 	MessageId types.String `tfsdk:"-"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
-}
-
-func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieExecuteMessageQueryRequest) {
-}
-
-func (newState *GenieExecuteMessageQueryRequest) SyncEffectiveFieldsDuringRead(existingState GenieExecuteMessageQueryRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieExecuteMessageQueryRequest.
@@ -855,12 +856,6 @@ type GenieGetConversationMessageRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetConversationMessageRequest) {
-}
-
-func (newState *GenieGetConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetConversationMessageRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetConversationMessageRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -906,12 +901,6 @@ type GenieGetMessageQueryResultRequest struct {
 	SpaceId types.String `tfsdk:"-"`
 }
 
-func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultRequest) {
-}
-
-func (newState *GenieGetMessageQueryResultRequest) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -950,13 +939,19 @@ func (o GenieGetMessageQueryResultRequest) Type(ctx context.Context) attr.Type {
 type GenieGetMessageQueryResultResponse struct {
 	// SQL Statement Execution response. See [Get status, manifest, and result
 	// first chunk](:method:statementexecution/getstatement) for more details.
-	StatementResponse types.List `tfsdk:"statement_response" tf:"optional,object"`
+	StatementResponse types.Object `tfsdk:"statement_response"`
 }
 
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetMessageQueryResultResponse) {
 }
 
 func (newState *GenieGetMessageQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetMessageQueryResultResponse) {
+}
+
+func (c GenieGetMessageQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_response"] = attrs["statement_response"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetMessageQueryResultResponse.
@@ -987,9 +982,7 @@ func (o GenieGetMessageQueryResultResponse) ToObjectValue(ctx context.Context) b
 func (o GenieGetMessageQueryResultResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"statement_response": basetypes.ListType{
-				ElemType: sql_tf.StatementResponse{}.Type(ctx),
-			},
+			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
 		},
 	}
 }
@@ -1003,7 +996,10 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 		return e, false
 	}
 	var v []sql_tf.StatementResponse
-	d := o.StatementResponse.ElementsAs(ctx, &v, true)
+	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1015,30 +1011,29 @@ func (o *GenieGetMessageQueryResultResponse) GetStatementResponse(ctx context.Co
 
 // SetStatementResponse sets the value of the StatementResponse field in GenieGetMessageQueryResultResponse.
 func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["statement_response"]
-	o.StatementResponse = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.StatementResponse = vs
 }
 
 type GenieMessage struct {
 	// AI produced response to the message
-	Attachments types.List `tfsdk:"attachments" tf:"optional"`
+	Attachments types.List `tfsdk:"attachments"`
 	// User message content
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// Conversation ID
-	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+	ConversationId types.String `tfsdk:"conversation_id"`
 	// Timestamp when the message was created
-	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp" tf:"optional"`
+	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
 	// Error message if AI failed to respond to the message
-	Error types.List `tfsdk:"error" tf:"optional,object"`
+	Error types.Object `tfsdk:"error"`
 	// Message ID
-	Id types.String `tfsdk:"id" tf:""`
+	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// The result of SQL query if the message has a query attachment
-	QueryResult types.List `tfsdk:"query_result" tf:"optional,object"`
+	QueryResult types.Object `tfsdk:"query_result"`
 	// Genie space ID
-	SpaceId types.String `tfsdk:"space_id" tf:""`
+	SpaceId types.String `tfsdk:"space_id"`
 	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
 	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
 	// context step to determine relevant context. * `ASKING_AI`: Waiting for
@@ -1055,15 +1050,31 @@ type GenieMessage struct {
 	// * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL
 	// result is not available anymore. The user needs to execute the query
 	// again. * `CANCELLED`: Message has been cancelled.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 	// ID of the user who created the message
-	UserId types.Int64 `tfsdk:"user_id" tf:"optional"`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *GenieMessage) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieMessage) {
 }
 
 func (newState *GenieMessage) SyncEffectiveFieldsDuringRead(existingState GenieMessage) {
+}
+
+func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachments"] = attrs["attachments"].SetOptional()
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["id"] = attrs["id"].SetRequired()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["query_result"] = attrs["query_result"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["user_id"] = attrs["user_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieMessage.
@@ -1109,20 +1120,16 @@ func (o GenieMessage) Type(ctx context.Context) attr.Type {
 			"attachments": basetypes.ListType{
 				ElemType: GenieAttachment{}.Type(ctx),
 			},
-			"content":           types.StringType,
-			"conversation_id":   types.StringType,
-			"created_timestamp": types.Int64Type,
-			"error": basetypes.ListType{
-				ElemType: MessageError{}.Type(ctx),
-			},
+			"content":                types.StringType,
+			"conversation_id":        types.StringType,
+			"created_timestamp":      types.Int64Type,
+			"error":                  MessageError{}.Type(ctx),
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
-			"query_result": basetypes.ListType{
-				ElemType: Result{}.Type(ctx),
-			},
-			"space_id": types.StringType,
-			"status":   types.StringType,
-			"user_id":  types.Int64Type,
+			"query_result":           Result{}.Type(ctx),
+			"space_id":               types.StringType,
+			"status":                 types.StringType,
+			"user_id":                types.Int64Type,
 		},
 	}
 }
@@ -1162,7 +1169,10 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 		return e, false
 	}
 	var v []MessageError
-	d := o.Error.ElementsAs(ctx, &v, true)
+	d := o.Error.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1174,9 +1184,8 @@ func (o *GenieMessage) GetError(ctx context.Context) (MessageError, bool) {
 
 // SetError sets the value of the Error field in GenieMessage.
 func (o *GenieMessage) SetError(ctx context.Context, v MessageError) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["error"]
-	o.Error = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Error = vs
 }
 
 // GetQueryResult returns the value of the QueryResult field in GenieMessage as
@@ -1188,7 +1197,10 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 		return e, false
 	}
 	var v []Result
-	d := o.QueryResult.ElementsAs(ctx, &v, true)
+	d := o.QueryResult.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1200,14 +1212,13 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 
 // SetQueryResult sets the value of the QueryResult field in GenieMessage.
 func (o *GenieMessage) SetQueryResult(ctx context.Context, v Result) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_result"]
-	o.QueryResult = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.QueryResult = vs
 }
 
 type GenieStartConversationMessageRequest struct {
 	// The text of the message that starts the conversation.
-	Content types.String `tfsdk:"content" tf:""`
+	Content types.String `tfsdk:"content"`
 	// The ID associated with the Genie space where you want to start a
 	// conversation.
 	SpaceId types.String `tfsdk:"-"`
@@ -1217,6 +1228,13 @@ func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringC
 }
 
 func (newState *GenieStartConversationMessageRequest) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationMessageRequest) {
+}
+
+func (c GenieStartConversationMessageRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetRequired()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationMessageRequest.
@@ -1253,19 +1271,28 @@ func (o GenieStartConversationMessageRequest) Type(ctx context.Context) attr.Typ
 }
 
 type GenieStartConversationResponse struct {
-	Conversation types.List `tfsdk:"conversation" tf:"optional,object"`
+	Conversation types.Object `tfsdk:"conversation"`
 	// Conversation ID
-	ConversationId types.String `tfsdk:"conversation_id" tf:""`
+	ConversationId types.String `tfsdk:"conversation_id"`
 
-	Message types.List `tfsdk:"message" tf:"optional,object"`
+	Message types.Object `tfsdk:"message"`
 	// Message ID
-	MessageId types.String `tfsdk:"message_id" tf:""`
+	MessageId types.String `tfsdk:"message_id"`
 }
 
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieStartConversationResponse) {
 }
 
 func (newState *GenieStartConversationResponse) SyncEffectiveFieldsDuringRead(existingState GenieStartConversationResponse) {
+}
+
+func (c GenieStartConversationResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversation"] = attrs["conversation"].SetOptional()
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
+	attrs["message"] = attrs["message"].SetOptional()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieStartConversationResponse.
@@ -1300,14 +1327,10 @@ func (o GenieStartConversationResponse) ToObjectValue(ctx context.Context) baset
 func (o GenieStartConversationResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"conversation": basetypes.ListType{
-				ElemType: GenieConversation{}.Type(ctx),
-			},
+			"conversation":    GenieConversation{}.Type(ctx),
 			"conversation_id": types.StringType,
-			"message": basetypes.ListType{
-				ElemType: GenieMessage{}.Type(ctx),
-			},
-			"message_id": types.StringType,
+			"message":         GenieMessage{}.Type(ctx),
+			"message_id":      types.StringType,
 		},
 	}
 }
@@ -1321,7 +1344,10 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 		return e, false
 	}
 	var v []GenieConversation
-	d := o.Conversation.ElementsAs(ctx, &v, true)
+	d := o.Conversation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1333,9 +1359,8 @@ func (o *GenieStartConversationResponse) GetConversation(ctx context.Context) (G
 
 // SetConversation sets the value of the Conversation field in GenieStartConversationResponse.
 func (o *GenieStartConversationResponse) SetConversation(ctx context.Context, v GenieConversation) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["conversation"]
-	o.Conversation = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Conversation = vs
 }
 
 // GetMessage returns the value of the Message field in GenieStartConversationResponse as
@@ -1347,7 +1372,10 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 		return e, false
 	}
 	var v []GenieMessage
-	d := o.Message.ElementsAs(ctx, &v, true)
+	d := o.Message.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1359,21 +1387,14 @@ func (o *GenieStartConversationResponse) GetMessage(ctx context.Context) (GenieM
 
 // SetMessage sets the value of the Message field in GenieStartConversationResponse.
 func (o *GenieStartConversationResponse) SetMessage(ctx context.Context, v GenieMessage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["message"]
-	o.Message = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Message = vs
 }
 
 // Get dashboard
 type GetDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDashboardRequest) {
-}
-
-func (newState *GetDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardRequest.
@@ -1413,12 +1434,6 @@ type GetPublishedDashboardRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
-func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardRequest) {
-}
-
-func (newState *GetPublishedDashboardRequest) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1456,12 +1471,6 @@ type GetScheduleRequest struct {
 	DashboardId types.String `tfsdk:"-"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
-}
-
-func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetScheduleRequest) {
-}
-
-func (newState *GetScheduleRequest) SyncEffectiveFieldsDuringRead(existingState GetScheduleRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetScheduleRequest.
@@ -1505,12 +1514,6 @@ type GetSubscriptionRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 	// UUID identifying the subscription.
 	SubscriptionId types.String `tfsdk:"-"`
-}
-
-func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSubscriptionRequest) {
-}
-
-func (newState *GetSubscriptionRequest) SyncEffectiveFieldsDuringRead(existingState GetSubscriptionRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSubscriptionRequest.
@@ -1562,12 +1565,6 @@ type ListDashboardsRequest struct {
 	View types.String `tfsdk:"-"`
 }
 
-func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsRequest) {
-}
-
-func (newState *ListDashboardsRequest) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1606,16 +1603,23 @@ func (o ListDashboardsRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ListDashboardsResponse struct {
-	Dashboards types.List `tfsdk:"dashboards" tf:"optional"`
+	Dashboards types.List `tfsdk:"dashboards"`
 	// A token, which can be sent as `page_token` to retrieve the next page. If
 	// this field is omitted, there are no subsequent dashboards.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsResponse) {
 }
 
 func (newState *ListDashboardsResponse) SyncEffectiveFieldsDuringRead(existingState ListDashboardsResponse) {
+}
+
+func (c ListDashboardsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboards"] = attrs["dashboards"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsResponse.
@@ -1692,12 +1696,6 @@ type ListSchedulesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesRequest) {
-}
-
-func (newState *ListSchedulesRequest) SyncEffectiveFieldsDuringRead(existingState ListSchedulesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1737,15 +1735,22 @@ type ListSchedulesResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent schedules.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Schedules types.List `tfsdk:"schedules" tf:"optional"`
+	Schedules types.List `tfsdk:"schedules"`
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSchedulesResponse) {
 }
 
 func (newState *ListSchedulesResponse) SyncEffectiveFieldsDuringRead(existingState ListSchedulesResponse) {
+}
+
+func (c ListSchedulesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["schedules"] = attrs["schedules"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSchedulesResponse.
@@ -1824,12 +1829,6 @@ type ListSubscriptionsRequest struct {
 	ScheduleId types.String `tfsdk:"-"`
 }
 
-func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsRequest) {
-}
-
-func (newState *ListSubscriptionsRequest) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1871,15 +1870,22 @@ type ListSubscriptionsResponse struct {
 	// A token that can be used as a `page_token` in subsequent requests to
 	// retrieve the next page of results. If this field is omitted, there are no
 	// subsequent subscriptions.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"computed"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 
-	Subscriptions types.List `tfsdk:"subscriptions" tf:"optional"`
+	Subscriptions types.List `tfsdk:"subscriptions"`
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSubscriptionsResponse) {
 }
 
 func (newState *ListSubscriptionsResponse) SyncEffectiveFieldsDuringRead(existingState ListSubscriptionsResponse) {
+}
+
+func (c ListSubscriptionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetComputed()
+	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSubscriptionsResponse.
@@ -1946,15 +1952,22 @@ func (o *ListSubscriptionsResponse) SetSubscriptions(ctx context.Context, v []Su
 }
 
 type MessageError struct {
-	Error types.String `tfsdk:"error" tf:"optional"`
+	Error types.String `tfsdk:"error"`
 
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *MessageError) SyncEffectiveFieldsDuringCreateOrUpdate(plan MessageError) {
 }
 
 func (newState *MessageError) SyncEffectiveFieldsDuringRead(existingState MessageError) {
+}
+
+func (c MessageError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error"] = attrs["error"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MessageError.
@@ -1992,18 +2005,31 @@ func (o MessageError) Type(ctx context.Context) attr.Type {
 
 type MigrateDashboardRequest struct {
 	// Display name for the new Lakeview dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The workspace path of the folder to contain the migrated Lakeview
 	// dashboard.
-	ParentPath types.String `tfsdk:"parent_path" tf:"optional"`
+	ParentPath types.String `tfsdk:"parent_path"`
 	// UUID of the dashboard to be migrated.
-	SourceDashboardId types.String `tfsdk:"source_dashboard_id" tf:""`
+	SourceDashboardId types.String `tfsdk:"source_dashboard_id"`
+	// Flag to indicate if mustache parameter syntax ({{ param }}) should be
+	// auto-updated to named syntax (:param) when converting datasets in the
+	// dashboard.
+	UpdateParameterSyntax types.Bool `tfsdk:"update_parameter_syntax"`
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan MigrateDashboardRequest) {
 }
 
 func (newState *MigrateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState MigrateDashboardRequest) {
+}
+
+func (c MigrateDashboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["source_dashboard_id"] = attrs["source_dashboard_id"].SetRequired()
+	attrs["update_parameter_syntax"] = attrs["update_parameter_syntax"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MigrateDashboardRequest.
@@ -2024,9 +2050,10 @@ func (o MigrateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"display_name":        o.DisplayName,
-			"parent_path":         o.ParentPath,
-			"source_dashboard_id": o.SourceDashboardId,
+			"display_name":            o.DisplayName,
+			"parent_path":             o.ParentPath,
+			"source_dashboard_id":     o.SourceDashboardId,
+			"update_parameter_syntax": o.UpdateParameterSyntax,
 		})
 }
 
@@ -2034,9 +2061,10 @@ func (o MigrateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o MigrateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"display_name":        types.StringType,
-			"parent_path":         types.StringType,
-			"source_dashboard_id": types.StringType,
+			"display_name":            types.StringType,
+			"parent_path":             types.StringType,
+			"source_dashboard_id":     types.StringType,
+			"update_parameter_syntax": types.BoolType,
 		},
 	}
 }
@@ -2047,16 +2075,24 @@ type PublishRequest struct {
 	// Flag to indicate if the publisher's credentials should be embedded in the
 	// published dashboard. These embedded credentials will be used to execute
 	// the published dashboard's queries.
-	EmbedCredentials types.Bool `tfsdk:"embed_credentials" tf:"optional"`
+	EmbedCredentials types.Bool `tfsdk:"embed_credentials"`
 	// The ID of the warehouse that can be used to override the warehouse which
 	// was set in the draft.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *PublishRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishRequest) {
 }
 
 func (newState *PublishRequest) SyncEffectiveFieldsDuringRead(existingState PublishRequest) {
+}
+
+func (c PublishRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
+	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishRequest.
@@ -2096,19 +2132,28 @@ func (o PublishRequest) Type(ctx context.Context) attr.Type {
 
 type PublishedDashboard struct {
 	// The display name of the published dashboard.
-	DisplayName types.String `tfsdk:"display_name" tf:"computed"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// Indicates whether credentials are embedded in the published dashboard.
-	EmbedCredentials types.Bool `tfsdk:"embed_credentials" tf:"optional"`
+	EmbedCredentials types.Bool `tfsdk:"embed_credentials"`
 	// The timestamp of when the published dashboard was last revised.
-	RevisionCreateTime types.String `tfsdk:"revision_create_time" tf:"computed"`
+	RevisionCreateTime types.String `tfsdk:"revision_create_time"`
 	// The warehouse ID used to run the published dashboard.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan PublishedDashboard) {
 }
 
 func (newState *PublishedDashboard) SyncEffectiveFieldsDuringRead(existingState PublishedDashboard) {
+}
+
+func (c PublishedDashboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name"] = attrs["display_name"].SetComputed()
+	attrs["embed_credentials"] = attrs["embed_credentials"].SetOptional()
+	attrs["revision_create_time"] = attrs["revision_create_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PublishedDashboard.
@@ -2149,29 +2194,42 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 }
 
 type QueryAttachment struct {
-	CachedQuerySchema types.List `tfsdk:"cached_query_schema" tf:"optional,object"`
+	CachedQuerySchema types.Object `tfsdk:"cached_query_schema"`
 	// Description of the query
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 	// If the query was created on an instruction (trusted asset) we link to the
 	// id
-	InstructionId types.String `tfsdk:"instruction_id" tf:"optional"`
+	InstructionId types.String `tfsdk:"instruction_id"`
 	// Always store the title next to the id in case the original instruction
 	// title changes or the instruction is deleted.
-	InstructionTitle types.String `tfsdk:"instruction_title" tf:"optional"`
+	InstructionTitle types.String `tfsdk:"instruction_title"`
 	// Time when the user updated the query last
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp" tf:"optional"`
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
 	// AI generated SQL query
-	Query types.String `tfsdk:"query" tf:"optional"`
+	Query types.String `tfsdk:"query"`
 	// Name of the query
-	Title types.String `tfsdk:"title" tf:"optional"`
+	Title types.String `tfsdk:"title"`
 }
 
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryAttachment) {
 }
 
 func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
+}
+
+func (c QueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cached_query_schema"] = attrs["cached_query_schema"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["instruction_id"] = attrs["instruction_id"].SetOptional()
+	attrs["instruction_title"] = attrs["instruction_title"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryAttachment.
@@ -2209,9 +2267,7 @@ func (o QueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o QueryAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cached_query_schema": basetypes.ListType{
-				ElemType: QuerySchema{}.Type(ctx),
-			},
+			"cached_query_schema":    QuerySchema{}.Type(ctx),
 			"description":            types.StringType,
 			"id":                     types.StringType,
 			"instruction_id":         types.StringType,
@@ -2232,7 +2288,10 @@ func (o *QueryAttachment) GetCachedQuerySchema(ctx context.Context) (QuerySchema
 		return e, false
 	}
 	var v []QuerySchema
-	d := o.CachedQuerySchema.ElementsAs(ctx, &v, true)
+	d := o.CachedQuerySchema.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2244,23 +2303,29 @@ func (o *QueryAttachment) GetCachedQuerySchema(ctx context.Context) (QuerySchema
 
 // SetCachedQuerySchema sets the value of the CachedQuerySchema field in QueryAttachment.
 func (o *QueryAttachment) SetCachedQuerySchema(ctx context.Context, v QuerySchema) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cached_query_schema"]
-	o.CachedQuerySchema = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CachedQuerySchema = vs
 }
 
 type QuerySchema struct {
-	Columns types.List `tfsdk:"columns" tf:"optional"`
+	Columns types.List `tfsdk:"columns"`
 	// Used to determine if the stored query schema is compatible with the
 	// latest run. The service should always clear the schema when the query is
 	// re-executed.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	StatementId types.String `tfsdk:"statement_id"`
 }
 
 func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchema) {
 }
 
 func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
+}
+
+func (c QuerySchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["columns"] = attrs["columns"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchema.
@@ -2329,17 +2394,25 @@ func (o *QuerySchema) SetColumns(ctx context.Context, v []QuerySchemaColumn) {
 type QuerySchemaColumn struct {
 	// Populated from
 	// https://docs.databricks.com/sql/language-manual/sql-ref-datatypes.html
-	DataType types.String `tfsdk:"data_type" tf:""`
+	DataType types.String `tfsdk:"data_type"`
 
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// Corresponds to type desc
-	TypeText types.String `tfsdk:"type_text" tf:""`
+	TypeText types.String `tfsdk:"type_text"`
 }
 
 func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchemaColumn) {
 }
 
 func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
+}
+
+func (c QuerySchemaColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["data_type"] = attrs["data_type"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["type_text"] = attrs["type_text"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchemaColumn.
@@ -2379,19 +2452,27 @@ func (o QuerySchemaColumn) Type(ctx context.Context) attr.Type {
 
 type Result struct {
 	// If result is truncated
-	IsTruncated types.Bool `tfsdk:"is_truncated" tf:"optional"`
+	IsTruncated types.Bool `tfsdk:"is_truncated"`
 	// Row count of the result
-	RowCount types.Int64 `tfsdk:"row_count" tf:"optional"`
+	RowCount types.Int64 `tfsdk:"row_count"`
 	// Statement Execution API statement id. Use [Get status, manifest, and
 	// result first chunk](:method:statementexecution/getstatement) to get the
 	// full result data.
-	StatementId types.String `tfsdk:"statement_id" tf:"optional"`
+	StatementId types.String `tfsdk:"statement_id"`
 }
 
 func (newState *Result) SyncEffectiveFieldsDuringCreateOrUpdate(plan Result) {
 }
 
 func (newState *Result) SyncEffectiveFieldsDuringRead(existingState Result) {
+}
+
+func (c Result) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+	attrs["statement_id"] = attrs["statement_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Result.
@@ -2431,32 +2512,46 @@ func (o Result) Type(ctx context.Context) attr.Type {
 
 type Schedule struct {
 	// A timestamp indicating when the schedule was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// The cron expression describing the frequency of the periodic refresh for
 	// this schedule.
-	CronSchedule types.List `tfsdk:"cron_schedule" tf:"object"`
+	CronSchedule types.Object `tfsdk:"cron_schedule"`
 	// UUID identifying the dashboard to which the schedule belongs.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The display name for schedule.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// The etag for the schedule. Must be left empty on create, must be provided
 	// on updates to ensure that the schedule has not been modified since the
 	// last read, and can be optionally provided on delete.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// The status indicates whether this schedule is paused or not.
-	PauseStatus types.String `tfsdk:"pause_status" tf:"optional"`
+	PauseStatus types.String `tfsdk:"pause_status"`
 	// UUID identifying the schedule.
-	ScheduleId types.String `tfsdk:"schedule_id" tf:"computed"`
+	ScheduleId types.String `tfsdk:"schedule_id"`
 	// A timestamp indicating when the schedule was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 	// The warehouse id to run the dashboard with for the schedule.
-	WarehouseId types.String `tfsdk:"warehouse_id" tf:"optional"`
+	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan Schedule) {
 }
 
 func (newState *Schedule) SyncEffectiveFieldsDuringRead(existingState Schedule) {
+}
+
+func (c Schedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["cron_schedule"] = attrs["cron_schedule"].SetRequired()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Schedule.
@@ -2495,17 +2590,15 @@ func (o Schedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Schedule) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"create_time": types.StringType,
-			"cron_schedule": basetypes.ListType{
-				ElemType: CronSchedule{}.Type(ctx),
-			},
-			"dashboard_id": types.StringType,
-			"display_name": types.StringType,
-			"etag":         types.StringType,
-			"pause_status": types.StringType,
-			"schedule_id":  types.StringType,
-			"update_time":  types.StringType,
-			"warehouse_id": types.StringType,
+			"create_time":   types.StringType,
+			"cron_schedule": CronSchedule{}.Type(ctx),
+			"dashboard_id":  types.StringType,
+			"display_name":  types.StringType,
+			"etag":          types.StringType,
+			"pause_status":  types.StringType,
+			"schedule_id":   types.StringType,
+			"update_time":   types.StringType,
+			"warehouse_id":  types.StringType,
 		},
 	}
 }
@@ -2519,7 +2612,10 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 		return e, false
 	}
 	var v []CronSchedule
-	d := o.CronSchedule.ElementsAs(ctx, &v, true)
+	d := o.CronSchedule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2531,24 +2627,30 @@ func (o *Schedule) GetCronSchedule(ctx context.Context) (CronSchedule, bool) {
 
 // SetCronSchedule sets the value of the CronSchedule field in Schedule.
 func (o *Schedule) SetCronSchedule(ctx context.Context, v CronSchedule) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cron_schedule"]
-	o.CronSchedule = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CronSchedule = vs
 }
 
 type Subscriber struct {
 	// The destination to receive the subscription email. This parameter is
 	// mutually exclusive with `user_subscriber`.
-	DestinationSubscriber types.List `tfsdk:"destination_subscriber" tf:"optional,object"`
+	DestinationSubscriber types.Object `tfsdk:"destination_subscriber"`
 	// The user to receive the subscription email. This parameter is mutually
 	// exclusive with `destination_subscriber`.
-	UserSubscriber types.List `tfsdk:"user_subscriber" tf:"optional,object"`
+	UserSubscriber types.Object `tfsdk:"user_subscriber"`
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscriber) {
 }
 
 func (newState *Subscriber) SyncEffectiveFieldsDuringRead(existingState Subscriber) {
+}
+
+func (c Subscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_subscriber"] = attrs["destination_subscriber"].SetOptional()
+	attrs["user_subscriber"] = attrs["user_subscriber"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscriber.
@@ -2581,12 +2683,8 @@ func (o Subscriber) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Subscriber) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"destination_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberDestination{}.Type(ctx),
-			},
-			"user_subscriber": basetypes.ListType{
-				ElemType: SubscriptionSubscriberUser{}.Type(ctx),
-			},
+			"destination_subscriber": SubscriptionSubscriberDestination{}.Type(ctx),
+			"user_subscriber":        SubscriptionSubscriberUser{}.Type(ctx),
 		},
 	}
 }
@@ -2600,7 +2698,10 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 		return e, false
 	}
 	var v []SubscriptionSubscriberDestination
-	d := o.DestinationSubscriber.ElementsAs(ctx, &v, true)
+	d := o.DestinationSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2612,9 +2713,8 @@ func (o *Subscriber) GetDestinationSubscriber(ctx context.Context) (Subscription
 
 // SetDestinationSubscriber sets the value of the DestinationSubscriber field in Subscriber.
 func (o *Subscriber) SetDestinationSubscriber(ctx context.Context, v SubscriptionSubscriberDestination) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["destination_subscriber"]
-	o.DestinationSubscriber = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DestinationSubscriber = vs
 }
 
 // GetUserSubscriber returns the value of the UserSubscriber field in Subscriber as
@@ -2626,7 +2726,10 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 		return e, false
 	}
 	var v []SubscriptionSubscriberUser
-	d := o.UserSubscriber.ElementsAs(ctx, &v, true)
+	d := o.UserSubscriber.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2638,38 +2741,50 @@ func (o *Subscriber) GetUserSubscriber(ctx context.Context) (SubscriptionSubscri
 
 // SetUserSubscriber sets the value of the UserSubscriber field in Subscriber.
 func (o *Subscriber) SetUserSubscriber(ctx context.Context, v SubscriptionSubscriberUser) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_subscriber"]
-	o.UserSubscriber = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.UserSubscriber = vs
 }
 
 type Subscription struct {
 	// A timestamp indicating when the subscription was created.
-	CreateTime types.String `tfsdk:"create_time" tf:"computed"`
+	CreateTime types.String `tfsdk:"create_time"`
 	// UserId of the user who adds subscribers (users or notification
 	// destinations) to the dashboard's schedule.
-	CreatedByUserId types.Int64 `tfsdk:"created_by_user_id" tf:"computed"`
+	CreatedByUserId types.Int64 `tfsdk:"created_by_user_id"`
 	// UUID identifying the dashboard to which the subscription belongs.
-	DashboardId types.String `tfsdk:"dashboard_id" tf:"computed"`
+	DashboardId types.String `tfsdk:"dashboard_id"`
 	// The etag for the subscription. Must be left empty on create, can be
 	// optionally provided on delete to ensure that the subscription has not
 	// been deleted since the last read.
-	Etag types.String `tfsdk:"etag" tf:"computed"`
+	Etag types.String `tfsdk:"etag"`
 	// UUID identifying the schedule to which the subscription belongs.
-	ScheduleId types.String `tfsdk:"schedule_id" tf:"computed"`
+	ScheduleId types.String `tfsdk:"schedule_id"`
 	// Subscriber details for users and destinations to be added as subscribers
 	// to the schedule.
-	Subscriber types.List `tfsdk:"subscriber" tf:"object"`
+	Subscriber types.Object `tfsdk:"subscriber"`
 	// UUID identifying the subscription.
-	SubscriptionId types.String `tfsdk:"subscription_id" tf:"computed"`
+	SubscriptionId types.String `tfsdk:"subscription_id"`
 	// A timestamp indicating when the subscription was last updated.
-	UpdateTime types.String `tfsdk:"update_time" tf:"computed"`
+	UpdateTime types.String `tfsdk:"update_time"`
 }
 
 func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
 }
 
 func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+}
+
+func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["created_by_user_id"] = attrs["created_by_user_id"].SetComputed()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["etag"] = attrs["etag"].SetComputed()
+	attrs["schedule_id"] = attrs["schedule_id"].SetComputed()
+	attrs["subscriber"] = attrs["subscriber"].SetRequired()
+	attrs["subscription_id"] = attrs["subscription_id"].SetComputed()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscription.
@@ -2712,11 +2827,9 @@ func (o Subscription) Type(ctx context.Context) attr.Type {
 			"dashboard_id":       types.StringType,
 			"etag":               types.StringType,
 			"schedule_id":        types.StringType,
-			"subscriber": basetypes.ListType{
-				ElemType: Subscriber{}.Type(ctx),
-			},
-			"subscription_id": types.StringType,
-			"update_time":     types.StringType,
+			"subscriber":         Subscriber{}.Type(ctx),
+			"subscription_id":    types.StringType,
+			"update_time":        types.StringType,
 		},
 	}
 }
@@ -2730,7 +2843,10 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 		return e, false
 	}
 	var v []Subscriber
-	d := o.Subscriber.ElementsAs(ctx, &v, true)
+	d := o.Subscriber.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2742,21 +2858,26 @@ func (o *Subscription) GetSubscriber(ctx context.Context) (Subscriber, bool) {
 
 // SetSubscriber sets the value of the Subscriber field in Subscription.
 func (o *Subscription) SetSubscriber(ctx context.Context, v Subscriber) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriber"]
-	o.Subscriber = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Subscriber = vs
 }
 
 type SubscriptionSubscriberDestination struct {
 	// The canonical identifier of the destination to receive email
 	// notification.
-	DestinationId types.String `tfsdk:"destination_id" tf:"computed"`
+	DestinationId types.String `tfsdk:"destination_id"`
 }
 
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberDestination) {
 }
 
 func (newState *SubscriptionSubscriberDestination) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberDestination) {
+}
+
+func (c SubscriptionSubscriberDestination) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberDestination.
@@ -2792,13 +2913,19 @@ func (o SubscriptionSubscriberDestination) Type(ctx context.Context) attr.Type {
 
 type SubscriptionSubscriberUser struct {
 	// UserId of the subscriber.
-	UserId types.Int64 `tfsdk:"user_id" tf:"computed"`
+	UserId types.Int64 `tfsdk:"user_id"`
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriberUser) {
 }
 
 func (newState *SubscriptionSubscriberUser) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriberUser) {
+}
+
+func (c SubscriptionSubscriberUser) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["user_id"] = attrs["user_id"].SetComputed()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriberUser.
@@ -2834,15 +2961,22 @@ func (o SubscriptionSubscriberUser) Type(ctx context.Context) attr.Type {
 
 type TextAttachment struct {
 	// AI generated message
-	Content types.String `tfsdk:"content" tf:"optional"`
+	Content types.String `tfsdk:"content"`
 
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *TextAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan TextAttachment) {
 }
 
 func (newState *TextAttachment) SyncEffectiveFieldsDuringRead(existingState TextAttachment) {
+}
+
+func (c TextAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["content"] = attrs["content"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TextAttachment.
@@ -2882,12 +3016,6 @@ func (o TextAttachment) Type(ctx context.Context) attr.Type {
 type TrashDashboardRequest struct {
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashDashboardRequest) {
-}
-
-func (newState *TrashDashboardRequest) SyncEffectiveFieldsDuringRead(existingState TrashDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardRequest.
@@ -2930,6 +3058,11 @@ func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *TrashDashboardResponse) SyncEffectiveFieldsDuringRead(existingState TrashDashboardResponse) {
 }
 
+func (c TrashDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashDashboardResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2961,12 +3094,6 @@ func (o TrashDashboardResponse) Type(ctx context.Context) attr.Type {
 type UnpublishDashboardRequest struct {
 	// UUID identifying the published dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpublishDashboardRequest) {
-}
-
-func (newState *UnpublishDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardRequest.
@@ -3009,6 +3136,11 @@ func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UnpublishDashboardResponse) SyncEffectiveFieldsDuringRead(existingState UnpublishDashboardResponse) {
 }
 
+func (c UnpublishDashboardResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpublishDashboardResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3038,15 +3170,9 @@ func (o UnpublishDashboardResponse) Type(ctx context.Context) attr.Type {
 
 // Update dashboard
 type UpdateDashboardRequest struct {
-	Dashboard types.List `tfsdk:"dashboard" tf:"optional,object"`
+	Dashboard types.Object `tfsdk:"dashboard"`
 	// UUID identifying the dashboard.
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateDashboardRequest) {
-}
-
-func (newState *UpdateDashboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateDashboardRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateDashboardRequest.
@@ -3078,9 +3204,7 @@ func (o UpdateDashboardRequest) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o UpdateDashboardRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dashboard": basetypes.ListType{
-				ElemType: Dashboard{}.Type(ctx),
-			},
+			"dashboard":    Dashboard{}.Type(ctx),
 			"dashboard_id": types.StringType,
 		},
 	}
@@ -3095,7 +3219,10 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 		return e, false
 	}
 	var v []Dashboard
-	d := o.Dashboard.ElementsAs(ctx, &v, true)
+	d := o.Dashboard.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3107,9 +3234,8 @@ func (o *UpdateDashboardRequest) GetDashboard(ctx context.Context) (Dashboard, b
 
 // SetDashboard sets the value of the Dashboard field in UpdateDashboardRequest.
 func (o *UpdateDashboardRequest) SetDashboard(ctx context.Context, v Dashboard) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dashboard"]
-	o.Dashboard = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Dashboard = vs
 }
 
 // Update dashboard schedule
@@ -3117,15 +3243,9 @@ type UpdateScheduleRequest struct {
 	// UUID identifying the dashboard to which the schedule belongs.
 	DashboardId types.String `tfsdk:"-"`
 
-	Schedule types.List `tfsdk:"schedule" tf:"optional,object"`
+	Schedule types.Object `tfsdk:"schedule"`
 	// UUID identifying the schedule.
 	ScheduleId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateScheduleRequest) {
-}
-
-func (newState *UpdateScheduleRequest) SyncEffectiveFieldsDuringRead(existingState UpdateScheduleRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateScheduleRequest.
@@ -3159,10 +3279,8 @@ func (o UpdateScheduleRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"dashboard_id": types.StringType,
-			"schedule": basetypes.ListType{
-				ElemType: Schedule{}.Type(ctx),
-			},
-			"schedule_id": types.StringType,
+			"schedule":     Schedule{}.Type(ctx),
+			"schedule_id":  types.StringType,
 		},
 	}
 }
@@ -3176,7 +3294,10 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 		return e, false
 	}
 	var v []Schedule
-	d := o.Schedule.ElementsAs(ctx, &v, true)
+	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3188,7 +3309,6 @@ func (o *UpdateScheduleRequest) GetSchedule(ctx context.Context) (Schedule, bool
 
 // SetSchedule sets the value of the Schedule field in UpdateScheduleRequest.
 func (o *UpdateScheduleRequest) SetSchedule(ctx context.Context, v Schedule) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Schedule = vs
 }

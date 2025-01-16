@@ -15,28 +15,28 @@ import (
 )
 
 type DummyTfSdk struct {
-	Enabled           types.Bool    `tfsdk:"enabled" tf:"optional"`
-	Workers           types.Int64   `tfsdk:"workers" tf:""`
-	Floats            types.Float64 `tfsdk:"floats" tf:""`
-	Description       types.String  `tfsdk:"description" tf:""`
-	Tasks             types.String  `tfsdk:"task" tf:"optional"`
-	NoPointerNested   types.List    `tfsdk:"no_pointer_nested" tf:"optional"`
-	NestedList        types.List    `tfsdk:"nested_list" tf:"optional"`
-	NestedPointerList types.List    `tfsdk:"nested_pointer_list" tf:"optional"`
-	Map               types.Map     `tfsdk:"map" tf:"optional"`
-	NestedMap         types.Map     `tfsdk:"nested_map" tf:"optional"`
-	Repeated          types.List    `tfsdk:"repeated" tf:"optional"`
-	Attributes        types.Map     `tfsdk:"attributes" tf:"optional"`
-	EnumField         types.String  `tfsdk:"enum_field" tf:"optional"`
-	AdditionalField   types.String  `tfsdk:"additional_field" tf:"optional"`
-	DistinctField     types.String  `tfsdk:"distinct_field" tf:"optional"`
-	SliceStructPtr    types.List    `tfsdk:"slice_struct_ptr" tf:"optional"`
+	Enabled           types.Bool    `tfsdk:"enabled"`
+	Workers           types.Int64   `tfsdk:"workers"`
+	Floats            types.Float64 `tfsdk:"floats"`
+	Description       types.String  `tfsdk:"description"`
+	Tasks             types.String  `tfsdk:"task"`
+	NoPointerNested   types.List    `tfsdk:"no_pointer_nested"`
+	NestedList        types.List    `tfsdk:"nested_list"`
+	NestedPointerList types.List    `tfsdk:"nested_pointer_list"`
+	Map               types.Map     `tfsdk:"map"`
+	NestedMap         types.Map     `tfsdk:"nested_map"`
+	Repeated          types.List    `tfsdk:"repeated"`
+	Attributes        types.Map     `tfsdk:"attributes"`
+	EnumField         types.String  `tfsdk:"enum_field"`
+	AdditionalField   types.String  `tfsdk:"additional_field"`
+	DistinctField     types.String  `tfsdk:"distinct_field"`
+	SliceStructPtr    types.List    `tfsdk:"slice_struct_ptr"`
 	Irrelevant        types.String  `tfsdk:"-"`
-	Object            types.Object  `tfsdk:"object" tf:"optional"`
-	ObjectPtr         types.Object  `tfsdk:"object_ptr" tf:"optional"`
-	Type_             types.String  `tfsdk:"type" tf:""` // Test Type_ renaming
-	EmptyStructList   types.List    `tfsdk:"empty_struct_list" tf:"optional"`
-	EmptyStructObject types.Object  `tfsdk:"empty_struct_object" tf:"optional"`
+	Object            types.Object  `tfsdk:"object"`
+	ObjectPtr         types.Object  `tfsdk:"object_ptr"`
+	Type_             types.String  `tfsdk:"type"` // Test Type_ renaming
+	EmptyStructList   types.List    `tfsdk:"empty_struct_list"`
+	EmptyStructObject types.Object  `tfsdk:"empty_struct_object"`
 }
 
 func (DummyTfSdk) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
@@ -84,8 +84,8 @@ func (f *TestEnum) Type() string {
 }
 
 type DummyNestedTfSdk struct {
-	Name    types.String `tfsdk:"name" tf:"optional"`
-	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
+	Name    types.String `tfsdk:"name"`
+	Enabled types.Bool   `tfsdk:"enabled"`
 }
 
 type DummyNestedTfSdkEmpty struct{}

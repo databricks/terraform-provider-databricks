@@ -15,6 +15,7 @@ import (
 	"reflect"
 
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,16 +31,16 @@ type AddInstanceProfile struct {
 	// Otherwise, this field is optional.
 	//
 	// [Databricks SQL Serverless]: https://docs.databricks.com/sql/admin/serverless.html
-	IamRoleArn types.String `tfsdk:"iam_role_arn" tf:"optional"`
+	IamRoleArn types.String `tfsdk:"iam_role_arn"`
 	// The AWS ARN of the instance profile to register with Databricks. This
 	// field is required.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Boolean flag indicating whether the instance profile should only be used
 	// in credential passthrough scenarios. If true, it means the instance
 	// profile contains an meta IAM role which could assume a wide range of
 	// roles. Therefore it should always be used with authorization. This field
 	// is optional, the default value is `false`.
-	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile" tf:"optional"`
+	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
 	// By default, Databricks validates that it has sufficient permissions to
 	// launch instances with the instance profile. This validation uses AWS
 	// dry-run mode for the RunInstances API. If validation fails with an error
@@ -47,13 +48,22 @@ type AddInstanceProfile struct {
 	// “Your requested instance type is not supported in your requested
 	// availability zone”), you can pass this flag to skip the validation and
 	// forcibly add the instance profile.
-	SkipValidation types.Bool `tfsdk:"skip_validation" tf:"optional"`
+	SkipValidation types.Bool `tfsdk:"skip_validation"`
 }
 
 func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddInstanceProfile) {
 }
 
 func (newState *AddInstanceProfile) SyncEffectiveFieldsDuringRead(existingState AddInstanceProfile) {
+}
+
+func (c AddInstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
+	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
+	attrs["skip_validation"] = attrs["skip_validation"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddInstanceProfile.
@@ -96,12 +106,6 @@ func (o AddInstanceProfile) Type(ctx context.Context) attr.Type {
 type AddResponse struct {
 }
 
-func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse) {
-}
-
-func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -132,13 +136,19 @@ func (o AddResponse) Type(ctx context.Context) attr.Type {
 type Adlsgen2Info struct {
 	// abfss destination, e.g.
 	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`.
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringCreateOrUpdate(plan Adlsgen2Info) {
 }
 
 func (newState *Adlsgen2Info) SyncEffectiveFieldsDuringRead(existingState Adlsgen2Info) {
+}
+
+func (c Adlsgen2Info) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Adlsgen2Info.
@@ -176,17 +186,24 @@ type AutoScale struct {
 	// The maximum number of workers to which the cluster can scale up when
 	// overloaded. Note that `max_workers` must be strictly greater than
 	// `min_workers`.
-	MaxWorkers types.Int64 `tfsdk:"max_workers" tf:"optional"`
+	MaxWorkers types.Int64 `tfsdk:"max_workers"`
 	// The minimum number of workers to which the cluster can scale down when
 	// underutilized. It is also the initial number of workers the cluster will
 	// have after creation.
-	MinWorkers types.Int64 `tfsdk:"min_workers" tf:"optional"`
+	MinWorkers types.Int64 `tfsdk:"min_workers"`
 }
 
 func (newState *AutoScale) SyncEffectiveFieldsDuringCreateOrUpdate(plan AutoScale) {
 }
 
 func (newState *AutoScale) SyncEffectiveFieldsDuringRead(existingState AutoScale) {
+}
+
+func (c AutoScale) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_workers"] = attrs["max_workers"].SetOptional()
+	attrs["min_workers"] = attrs["min_workers"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AutoScale.
@@ -228,7 +245,7 @@ type AwsAttributes struct {
 	//
 	// Note: If `first_on_demand` is zero, this availability type will be used
 	// for the entire cluster.
-	Availability types.String `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability"`
 	// The number of volumes launched for each instance. Users can choose up to
 	// 10 volumes. This feature is only enabled for supported node types. Legacy
 	// node types cannot specify custom EBS volumes. For node types with no
@@ -245,21 +262,21 @@ type AwsAttributes struct {
 	//
 	// Please note that if EBS volumes are specified, then the Spark
 	// configuration `spark.local.dir` will be overridden.
-	EbsVolumeCount types.Int64 `tfsdk:"ebs_volume_count" tf:"optional"`
+	EbsVolumeCount types.Int64 `tfsdk:"ebs_volume_count"`
 	// If using gp3 volumes, what IOPS to use for the disk. If this is not set,
 	// the maximum performance of a gp2 volume with the same volume size will be
 	// used.
-	EbsVolumeIops types.Int64 `tfsdk:"ebs_volume_iops" tf:"optional"`
+	EbsVolumeIops types.Int64 `tfsdk:"ebs_volume_iops"`
 	// The size of each EBS volume (in GiB) launched for each instance. For
 	// general purpose SSD, this value must be within the range 100 - 4096. For
 	// throughput optimized HDD, this value must be within the range 500 - 4096.
-	EbsVolumeSize types.Int64 `tfsdk:"ebs_volume_size" tf:"optional"`
+	EbsVolumeSize types.Int64 `tfsdk:"ebs_volume_size"`
 	// If using gp3 volumes, what throughput to use for the disk. If this is not
 	// set, the maximum performance of a gp2 volume with the same volume size
 	// will be used.
-	EbsVolumeThroughput types.Int64 `tfsdk:"ebs_volume_throughput" tf:"optional"`
+	EbsVolumeThroughput types.Int64 `tfsdk:"ebs_volume_throughput"`
 	// The type of EBS volumes that will be launched with this cluster.
-	EbsVolumeType types.String `tfsdk:"ebs_volume_type" tf:"optional"`
+	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. If this value is greater than 0, the cluster driver
 	// node in particular will be placed on an on-demand instance. If this value
@@ -269,7 +286,7 @@ type AwsAttributes struct {
 	// instances and the remainder will be placed on `availability` instances.
 	// Note that this value does not affect cluster size and cannot currently be
 	// mutated over the lifetime of a cluster.
-	FirstOnDemand types.Int64 `tfsdk:"first_on_demand" tf:"optional"`
+	FirstOnDemand types.Int64 `tfsdk:"first_on_demand"`
 	// Nodes for this cluster will only be placed on AWS instances with this
 	// instance profile. If ommitted, nodes will be placed on instances without
 	// an IAM instance profile. The instance profile must have previously been
@@ -279,7 +296,7 @@ type AwsAttributes struct {
 	//
 	// If this field is ommitted, we will pull in the default from the conf if
 	// it exists.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:"optional"`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
 	// is set to 50, and the cluster needs a new `r3.xlarge` spot instance, then
@@ -294,7 +311,7 @@ type AwsAttributes struct {
 	// The default value and documentation here should be kept consistent with
 	// CommonConf.defaultSpotBidPricePercent and
 	// CommonConf.maxSpotBidPricePercent.
-	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent" tf:"optional"`
+	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
 	// availability zone must be in the same region as the Databricks
@@ -305,13 +322,28 @@ type AwsAttributes struct {
 	// in a zone with high availability, and will retry placement in a different
 	// AZ if there is not enough capacity. The list of available zones as well
 	// as the default value can be found by using the `List Zones` method.
-	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
+	ZoneId types.String `tfsdk:"zone_id"`
 }
 
 func (newState *AwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AwsAttributes) {
 }
 
 func (newState *AwsAttributes) SyncEffectiveFieldsDuringRead(existingState AwsAttributes) {
+}
+
+func (c AwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["ebs_volume_count"] = attrs["ebs_volume_count"].SetOptional()
+	attrs["ebs_volume_iops"] = attrs["ebs_volume_iops"].SetOptional()
+	attrs["ebs_volume_size"] = attrs["ebs_volume_size"].SetOptional()
+	attrs["ebs_volume_throughput"] = attrs["ebs_volume_throughput"].SetOptional()
+	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].SetOptional()
+	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
+	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
+	attrs["zone_id"] = attrs["zone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AwsAttributes.
@@ -368,7 +400,7 @@ type AzureAttributes struct {
 	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
 	// happens on pool clusters), this availability type will be used for the
 	// entire cluster.
-	Availability types.String `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
 	// the cluster driver node is placed on an on-demand instance. If this value
@@ -378,21 +410,30 @@ type AzureAttributes struct {
 	// instances and the remainder will be placed on `availability` instances.
 	// Note that this value does not affect cluster size and cannot currently be
 	// mutated over the lifetime of a cluster.
-	FirstOnDemand types.Int64 `tfsdk:"first_on_demand" tf:"optional"`
+	FirstOnDemand types.Int64 `tfsdk:"first_on_demand"`
 	// Defines values necessary to configure and run Azure Log Analytics agent
-	LogAnalyticsInfo types.List `tfsdk:"log_analytics_info" tf:"optional,object"`
+	LogAnalyticsInfo types.Object `tfsdk:"log_analytics_info"`
 	// The max bid price to be used for Azure spot instances. The Max price for
 	// the bid cannot be higher than the on-demand price of the instance. If not
 	// specified, the default value is -1, which specifies that the instance
 	// cannot be evicted on the basis of price, and only on the basis of
 	// availability. Further, the value should > 0 or -1.
-	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price" tf:"optional"`
+	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
 func (newState *AzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan AzureAttributes) {
 }
 
 func (newState *AzureAttributes) SyncEffectiveFieldsDuringRead(existingState AzureAttributes) {
+}
+
+func (c AzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
+	attrs["log_analytics_info"] = attrs["log_analytics_info"].SetOptional()
+	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AzureAttributes.
@@ -426,11 +467,9 @@ func (o AzureAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o AzureAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"availability":    types.StringType,
-			"first_on_demand": types.Int64Type,
-			"log_analytics_info": basetypes.ListType{
-				ElemType: LogAnalyticsInfo{}.Type(ctx),
-			},
+			"availability":       types.StringType,
+			"first_on_demand":    types.Int64Type,
+			"log_analytics_info": LogAnalyticsInfo{}.Type(ctx),
 			"spot_bid_max_price": types.Float64Type,
 		},
 	}
@@ -445,7 +484,10 @@ func (o *AzureAttributes) GetLogAnalyticsInfo(ctx context.Context) (LogAnalytics
 		return e, false
 	}
 	var v []LogAnalyticsInfo
-	d := o.LogAnalyticsInfo.ElementsAs(ctx, &v, true)
+	d := o.LogAnalyticsInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -457,23 +499,30 @@ func (o *AzureAttributes) GetLogAnalyticsInfo(ctx context.Context) (LogAnalytics
 
 // SetLogAnalyticsInfo sets the value of the LogAnalyticsInfo field in AzureAttributes.
 func (o *AzureAttributes) SetLogAnalyticsInfo(ctx context.Context, v LogAnalyticsInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["log_analytics_info"]
-	o.LogAnalyticsInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.LogAnalyticsInfo = vs
 }
 
 type CancelCommand struct {
-	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
+	ClusterId types.String `tfsdk:"clusterId"`
 
-	CommandId types.String `tfsdk:"commandId" tf:"optional"`
+	CommandId types.String `tfsdk:"commandId"`
 
-	ContextId types.String `tfsdk:"contextId" tf:"optional"`
+	ContextId types.String `tfsdk:"contextId"`
 }
 
 func (newState *CancelCommand) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelCommand) {
 }
 
 func (newState *CancelCommand) SyncEffectiveFieldsDuringRead(existingState CancelCommand) {
+}
+
+func (c CancelCommand) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetOptional()
+	attrs["commandId"] = attrs["commandId"].SetOptional()
+	attrs["contextId"] = attrs["contextId"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelCommand.
@@ -514,12 +563,6 @@ func (o CancelCommand) Type(ctx context.Context) attr.Type {
 type CancelResponse struct {
 }
 
-func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse) {
-}
-
-func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -549,15 +592,22 @@ func (o CancelResponse) Type(ctx context.Context) attr.Type {
 
 type ChangeClusterOwner struct {
 	// <needs content added>
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// New owner of the cluster_id after this RPC.
-	OwnerUsername types.String `tfsdk:"owner_username" tf:""`
+	OwnerUsername types.String `tfsdk:"owner_username"`
 }
 
 func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringCreateOrUpdate(plan ChangeClusterOwner) {
 }
 
 func (newState *ChangeClusterOwner) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwner) {
+}
+
+func (c ChangeClusterOwner) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["owner_username"] = attrs["owner_username"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChangeClusterOwner.
@@ -602,6 +652,11 @@ func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *ChangeClusterOwnerResponse) SyncEffectiveFieldsDuringRead(existingState ChangeClusterOwnerResponse) {
 }
 
+func (c ChangeClusterOwnerResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ChangeClusterOwnerResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -631,15 +686,22 @@ func (o ChangeClusterOwnerResponse) Type(ctx context.Context) attr.Type {
 
 type ClientsTypes struct {
 	// With jobs set, the cluster can be used for jobs
-	Jobs types.Bool `tfsdk:"jobs" tf:"optional"`
+	Jobs types.Bool `tfsdk:"jobs"`
 	// With notebooks set, this cluster can be used for notebooks
-	Notebooks types.Bool `tfsdk:"notebooks" tf:"optional"`
+	Notebooks types.Bool `tfsdk:"notebooks"`
 }
 
 func (newState *ClientsTypes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClientsTypes) {
 }
 
 func (newState *ClientsTypes) SyncEffectiveFieldsDuringRead(existingState ClientsTypes) {
+}
+
+func (c ClientsTypes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["jobs"] = attrs["jobs"].SetOptional()
+	attrs["notebooks"] = attrs["notebooks"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClientsTypes.
@@ -677,13 +739,19 @@ func (o ClientsTypes) Type(ctx context.Context) attr.Type {
 
 type CloneCluster struct {
 	// The cluster that is being cloned.
-	SourceClusterId types.String `tfsdk:"source_cluster_id" tf:""`
+	SourceClusterId types.String `tfsdk:"source_cluster_id"`
 }
 
 func (newState *CloneCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloneCluster) {
 }
 
 func (newState *CloneCluster) SyncEffectiveFieldsDuringRead(existingState CloneCluster) {
+}
+
+func (c CloneCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["source_cluster_id"] = attrs["source_cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloneCluster.
@@ -718,13 +786,19 @@ func (o CloneCluster) Type(ctx context.Context) attr.Type {
 }
 
 type CloudProviderNodeInfo struct {
-	Status types.List `tfsdk:"status" tf:"optional"`
+	Status types.List `tfsdk:"status"`
 }
 
 func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan CloudProviderNodeInfo) {
 }
 
 func (newState *CloudProviderNodeInfo) SyncEffectiveFieldsDuringRead(existingState CloudProviderNodeInfo) {
+}
+
+func (c CloudProviderNodeInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CloudProviderNodeInfo.
@@ -790,19 +864,28 @@ func (o *CloudProviderNodeInfo) SetStatus(ctx context.Context, v []types.String)
 
 type ClusterAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlRequest) {
 }
 
 func (newState *ClusterAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlRequest) {
+}
+
+func (c ClusterAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAccessControlRequest.
@@ -844,21 +927,31 @@ func (o ClusterAccessControlRequest) Type(ctx context.Context) attr.Type {
 
 type ClusterAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAccessControlResponse) {
 }
 
 func (newState *ClusterAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterAccessControlResponse) {
+}
+
+func (c ClusterAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAccessControlResponse.
@@ -936,23 +1029,23 @@ type ClusterAttributes struct {
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -961,13 +1054,20 @@ type ClusterAttributes struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -984,42 +1084,55 @@ type ClusterAttributes struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -1028,15 +1141,15 @@ type ClusterAttributes struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1050,23 +1163,61 @@ type ClusterAttributes struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:""`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *ClusterAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterAttributes) {
 }
 
 func (newState *ClusterAttributes) SyncEffectiveFieldsDuringRead(existingState ClusterAttributes) {
+}
+
+func (c ClusterAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetRequired()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterAttributes.
@@ -1114,6 +1265,8 @@ func (o ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"policy_id":                    o.PolicyId,
 			"runtime_engine":               o.RuntimeEngine,
@@ -1122,6 +1275,7 @@ func (o ClusterAttributes) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -1131,34 +1285,26 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_name": types.StringType,
+			"aws_attributes":          AwsAttributes{}.Type(ctx),
+			"azure_attributes":        AzureAttributes{}.Type(ctx),
+			"cluster_log_conf":        ClusterLogConf{}.Type(ctx),
+			"cluster_name":            types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode": types.StringType,
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"policy_id":        types.StringType,
 			"runtime_engine":   types.StringType,
@@ -1173,9 +1319,8 @@ func (o ClusterAttributes) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"use_ml_runtime": types.BoolType,
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -1189,7 +1334,10 @@ func (o *ClusterAttributes) GetAwsAttributes(ctx context.Context) (AwsAttributes
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1201,9 +1349,8 @@ func (o *ClusterAttributes) GetAwsAttributes(ctx context.Context) (AwsAttributes
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterAttributes.
 func (o *ClusterAttributes) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in ClusterAttributes as
@@ -1215,7 +1362,10 @@ func (o *ClusterAttributes) GetAzureAttributes(ctx context.Context) (AzureAttrib
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1227,9 +1377,8 @@ func (o *ClusterAttributes) GetAzureAttributes(ctx context.Context) (AzureAttrib
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterAttributes.
 func (o *ClusterAttributes) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in ClusterAttributes as
@@ -1241,7 +1390,10 @@ func (o *ClusterAttributes) GetClusterLogConf(ctx context.Context) (ClusterLogCo
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1253,9 +1405,8 @@ func (o *ClusterAttributes) GetClusterLogConf(ctx context.Context) (ClusterLogCo
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterAttributes.
 func (o *ClusterAttributes) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in ClusterAttributes as
@@ -1293,7 +1444,10 @@ func (o *ClusterAttributes) GetDockerImage(ctx context.Context) (DockerImage, bo
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1305,9 +1459,8 @@ func (o *ClusterAttributes) GetDockerImage(ctx context.Context) (DockerImage, bo
 
 // SetDockerImage sets the value of the DockerImage field in ClusterAttributes.
 func (o *ClusterAttributes) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in ClusterAttributes as
@@ -1319,7 +1472,10 @@ func (o *ClusterAttributes) GetGcpAttributes(ctx context.Context) (GcpAttributes
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1331,9 +1487,8 @@ func (o *ClusterAttributes) GetGcpAttributes(ctx context.Context) (GcpAttributes
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterAttributes.
 func (o *ClusterAttributes) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in ClusterAttributes as
@@ -1449,7 +1604,10 @@ func (o *ClusterAttributes) GetWorkloadType(ctx context.Context) (WorkloadType, 
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1461,28 +1619,35 @@ func (o *ClusterAttributes) GetWorkloadType(ctx context.Context) (WorkloadType, 
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterAttributes.
 func (o *ClusterAttributes) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 type ClusterCompliance struct {
 	// Canonical unique identifier for a cluster.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// Whether this cluster is in compliance with the latest version of its
 	// policy.
-	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	IsCompliant types.Bool `tfsdk:"is_compliant"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
 	// policy validation error.
-	Violations types.Map `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations"`
 }
 
 func (newState *ClusterCompliance) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterCompliance) {
 }
 
 func (newState *ClusterCompliance) SyncEffectiveFieldsDuringRead(existingState ClusterCompliance) {
+}
+
+func (c ClusterCompliance) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["violations"] = attrs["violations"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterCompliance.
@@ -1554,47 +1719,47 @@ type ClusterDetails struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Number of CPU cores available for this cluster. Note that this can be
 	// fractional, e.g. 7.5 cores, since certain node types are configured to
 	// share cores between Spark nodes on the same instance.
-	ClusterCores types.Float64 `tfsdk:"cluster_cores" tf:"optional"`
+	ClusterCores types.Float64 `tfsdk:"cluster_cores"`
 	// Canonical identifier for the cluster. This id is retained during cluster
 	// restarts and resizes, while each new cluster has a globally unique id.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster log delivery status.
-	ClusterLogStatus types.List `tfsdk:"cluster_log_status" tf:"optional,object"`
+	ClusterLogStatus types.Object `tfsdk:"cluster_log_status"`
 	// Total amount of cluster memory, in megabytes
-	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb" tf:"optional"`
+	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Determines whether the cluster was created by a user through the UI,
 	// created by the Databricks Jobs Scheduler, or through an API request. This
 	// is the same as cluster_creator, but read only.
-	ClusterSource types.String `tfsdk:"cluster_source" tf:"optional"`
+	ClusterSource types.String `tfsdk:"cluster_source"`
 	// Creator user name. The field won't be included in the response if the
 	// user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -1603,13 +1768,20 @@ type ClusterDetails struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -1626,7 +1798,7 @@ type ClusterDetails struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -1639,54 +1811,67 @@ type ClusterDetails struct {
 	// - ClusterId: <id_of_cluster>
 	//
 	// - Name: <Databricks internal use>
-	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
 	// Spark REPLs.
-	Driver types.List `tfsdk:"driver" tf:"optional,object"`
+	Driver types.Object `tfsdk:"driver"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Nodes on which the Spark executors reside.
-	Executors types.List `tfsdk:"executors" tf:"optional"`
+	Executors types.List `tfsdk:"executors"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
 	// Port on which Spark JDBC server is listening, in the driver nod. No
 	// service will be listeningon on this port in executor nodes.
-	JdbcPort types.Int64 `tfsdk:"jdbc_port" tf:"optional"`
+	JdbcPort types.Int64 `tfsdk:"jdbc_port"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// the timestamp that the cluster was started/restarted
-	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time" tf:"optional"`
+	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time"`
 	// Time when the cluster driver last lost its state (due to a restart or
 	// driver failure).
-	LastStateLossTime types.Int64 `tfsdk:"last_state_loss_time" tf:"optional"`
+	LastStateLossTime types.Int64 `tfsdk:"last_state_loss_time"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -1697,9 +1882,9 @@ type ClusterDetails struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -1708,19 +1893,19 @@ type ClusterDetails struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// A canonical SparkContext identifier. This value *does* change when the
 	// Spark driver restarts. The pair `(cluster_id, spark_context_id)` is a
 	// globally unique identifier over all Spark contexts.
-	SparkContextId types.Int64 `tfsdk:"spark_context_id" tf:"optional"`
+	SparkContextId types.Int64 `tfsdk:"spark_context_id"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -1734,42 +1919,101 @@ type ClusterDetails struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:"optional"`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// `spec` contains a snapshot of the field values that were used to create
 	// or edit this cluster. The contents of `spec` can be used in the body of a
 	// create cluster request. This field might not be populated for older
 	// clusters. Note: not included in the response of the ListClusters API.
-	Spec types.List `tfsdk:"spec" tf:"optional,object"`
+	Spec types.Object `tfsdk:"spec"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
 	// Time (in epoch milliseconds) when the cluster creation request was
 	// received (when the cluster entered a `PENDING` state).
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 	// Current state of the cluster.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// A message associated with the most recent state transition (e.g., the
 	// reason why the cluster entered a `TERMINATED` state).
-	StateMessage types.String `tfsdk:"state_message" tf:"optional"`
+	StateMessage types.String `tfsdk:"state_message"`
 	// Time (in epoch milliseconds) when the cluster was terminated, if
 	// applicable.
-	TerminatedTime types.Int64 `tfsdk:"terminated_time" tf:"optional"`
+	TerminatedTime types.Int64 `tfsdk:"terminated_time"`
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
-	TerminationReason types.List `tfsdk:"termination_reason" tf:"optional,object"`
+	TerminationReason types.Object `tfsdk:"termination_reason"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *ClusterDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterDetails) {
 }
 
 func (newState *ClusterDetails) SyncEffectiveFieldsDuringRead(existingState ClusterDetails) {
+}
+
+func (c ClusterDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_cores"] = attrs["cluster_cores"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_log_status"] = attrs["cluster_log_status"].SetOptional()
+	attrs["cluster_memory_mb"] = attrs["cluster_memory_mb"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["cluster_source"] = attrs["cluster_source"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["default_tags"] = attrs["default_tags"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver"] = attrs["driver"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["executors"] = attrs["executors"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["jdbc_port"] = attrs["jdbc_port"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["last_restarted_time"] = attrs["last_restarted_time"].SetOptional()
+	attrs["last_state_loss_time"] = attrs["last_state_loss_time"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_context_id"] = attrs["spark_context_id"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetOptional()
+	attrs["spec"] = attrs["spec"].SetOptional()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state_message"] = attrs["state_message"].SetOptional()
+	attrs["terminated_time"] = attrs["terminated_time"].SetOptional()
+	attrs["termination_reason"] = attrs["termination_reason"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterDetails.
@@ -1834,7 +2078,9 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
 			"jdbc_port":                    o.JdbcPort,
+			"kind":                         o.Kind,
 			"last_restarted_time":          o.LastRestartedTime,
 			"last_state_loss_time":         o.LastStateLossTime,
 			"node_type_id":                 o.NodeTypeId,
@@ -1853,6 +2099,7 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"state_message":                o.StateMessage,
 			"terminated_time":              o.TerminatedTime,
 			"termination_reason":           o.TerminationReason,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -1861,28 +2108,18 @@ func (o ClusterDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
+			"autoscale":               AutoScale{}.Type(ctx),
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"cluster_cores": types.Float64Type,
-			"cluster_id":    types.StringType,
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_log_status": basetypes.ListType{
-				ElemType: LogSyncStatus{}.Type(ctx),
-			},
-			"cluster_memory_mb": types.Int64Type,
-			"cluster_name":      types.StringType,
-			"cluster_source":    types.StringType,
-			"creator_user_name": types.StringType,
+			"aws_attributes":          AwsAttributes{}.Type(ctx),
+			"azure_attributes":        AzureAttributes{}.Type(ctx),
+			"cluster_cores":           types.Float64Type,
+			"cluster_id":              types.StringType,
+			"cluster_log_conf":        ClusterLogConf{}.Type(ctx),
+			"cluster_log_status":      LogSyncStatus{}.Type(ctx),
+			"cluster_memory_mb":       types.Int64Type,
+			"cluster_name":            types.StringType,
+			"cluster_source":          types.StringType,
+			"creator_user_name":       types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -1890,12 +2127,8 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
-			"driver": basetypes.ListType{
-				ElemType: SparkNode{}.Type(ctx),
-			},
+			"docker_image":                 DockerImage{}.Type(ctx),
+			"driver":                       SparkNode{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
@@ -1903,14 +2136,14 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 			"executors": basetypes.ListType{
 				ElemType: SparkNode{}.Type(ctx),
 			},
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes": GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id":     types.StringType,
+			"is_single_node":       types.BoolType,
 			"jdbc_port":            types.Int64Type,
+			"kind":                 types.StringType,
 			"last_restarted_time":  types.Int64Type,
 			"last_state_loss_time": types.Int64Type,
 			"node_type_id":         types.StringType,
@@ -1926,22 +2159,17 @@ func (o ClusterDetails) Type(ctx context.Context) attr.Type {
 				ElemType: types.StringType,
 			},
 			"spark_version": types.StringType,
-			"spec": basetypes.ListType{
-				ElemType: ClusterSpec{}.Type(ctx),
-			},
+			"spec":          ClusterSpec{}.Type(ctx),
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"start_time":      types.Int64Type,
-			"state":           types.StringType,
-			"state_message":   types.StringType,
-			"terminated_time": types.Int64Type,
-			"termination_reason": basetypes.ListType{
-				ElemType: TerminationReason{}.Type(ctx),
-			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"start_time":         types.Int64Type,
+			"state":              types.StringType,
+			"state_message":      types.StringType,
+			"terminated_time":    types.Int64Type,
+			"termination_reason": TerminationReason{}.Type(ctx),
+			"use_ml_runtime":     types.BoolType,
+			"workload_type":      WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -1955,7 +2183,10 @@ func (o *ClusterDetails) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1967,9 +2198,8 @@ func (o *ClusterDetails) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in ClusterDetails.
 func (o *ClusterDetails) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 // GetAwsAttributes returns the value of the AwsAttributes field in ClusterDetails as
@@ -1981,7 +2211,10 @@ func (o *ClusterDetails) GetAwsAttributes(ctx context.Context) (AwsAttributes, b
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -1993,9 +2226,8 @@ func (o *ClusterDetails) GetAwsAttributes(ctx context.Context) (AwsAttributes, b
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterDetails.
 func (o *ClusterDetails) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in ClusterDetails as
@@ -2007,7 +2239,10 @@ func (o *ClusterDetails) GetAzureAttributes(ctx context.Context) (AzureAttribute
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2019,9 +2254,8 @@ func (o *ClusterDetails) GetAzureAttributes(ctx context.Context) (AzureAttribute
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterDetails.
 func (o *ClusterDetails) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in ClusterDetails as
@@ -2033,7 +2267,10 @@ func (o *ClusterDetails) GetClusterLogConf(ctx context.Context) (ClusterLogConf,
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2045,9 +2282,8 @@ func (o *ClusterDetails) GetClusterLogConf(ctx context.Context) (ClusterLogConf,
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterDetails.
 func (o *ClusterDetails) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetClusterLogStatus returns the value of the ClusterLogStatus field in ClusterDetails as
@@ -2059,7 +2295,10 @@ func (o *ClusterDetails) GetClusterLogStatus(ctx context.Context) (LogSyncStatus
 		return e, false
 	}
 	var v []LogSyncStatus
-	d := o.ClusterLogStatus.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogStatus.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2071,9 +2310,8 @@ func (o *ClusterDetails) GetClusterLogStatus(ctx context.Context) (LogSyncStatus
 
 // SetClusterLogStatus sets the value of the ClusterLogStatus field in ClusterDetails.
 func (o *ClusterDetails) SetClusterLogStatus(ctx context.Context, v LogSyncStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_status"]
-	o.ClusterLogStatus = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogStatus = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in ClusterDetails as
@@ -2137,7 +2375,10 @@ func (o *ClusterDetails) GetDockerImage(ctx context.Context) (DockerImage, bool)
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2149,9 +2390,8 @@ func (o *ClusterDetails) GetDockerImage(ctx context.Context) (DockerImage, bool)
 
 // SetDockerImage sets the value of the DockerImage field in ClusterDetails.
 func (o *ClusterDetails) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetDriver returns the value of the Driver field in ClusterDetails as
@@ -2163,7 +2403,10 @@ func (o *ClusterDetails) GetDriver(ctx context.Context) (SparkNode, bool) {
 		return e, false
 	}
 	var v []SparkNode
-	d := o.Driver.ElementsAs(ctx, &v, true)
+	d := o.Driver.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2175,9 +2418,8 @@ func (o *ClusterDetails) GetDriver(ctx context.Context) (SparkNode, bool) {
 
 // SetDriver sets the value of the Driver field in ClusterDetails.
 func (o *ClusterDetails) SetDriver(ctx context.Context, v SparkNode) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["driver"]
-	o.Driver = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Driver = vs
 }
 
 // GetExecutors returns the value of the Executors field in ClusterDetails as
@@ -2215,7 +2457,10 @@ func (o *ClusterDetails) GetGcpAttributes(ctx context.Context) (GcpAttributes, b
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2227,9 +2472,8 @@ func (o *ClusterDetails) GetGcpAttributes(ctx context.Context) (GcpAttributes, b
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterDetails.
 func (o *ClusterDetails) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in ClusterDetails as
@@ -2319,7 +2563,10 @@ func (o *ClusterDetails) GetSpec(ctx context.Context) (ClusterSpec, bool) {
 		return e, false
 	}
 	var v []ClusterSpec
-	d := o.Spec.ElementsAs(ctx, &v, true)
+	d := o.Spec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2331,9 +2578,8 @@ func (o *ClusterDetails) GetSpec(ctx context.Context) (ClusterSpec, bool) {
 
 // SetSpec sets the value of the Spec field in ClusterDetails.
 func (o *ClusterDetails) SetSpec(ctx context.Context, v ClusterSpec) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["spec"]
-	o.Spec = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Spec = vs
 }
 
 // GetSshPublicKeys returns the value of the SshPublicKeys field in ClusterDetails as
@@ -2371,7 +2617,10 @@ func (o *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationR
 		return e, false
 	}
 	var v []TerminationReason
-	d := o.TerminationReason.ElementsAs(ctx, &v, true)
+	d := o.TerminationReason.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2383,9 +2632,8 @@ func (o *ClusterDetails) GetTerminationReason(ctx context.Context) (TerminationR
 
 // SetTerminationReason sets the value of the TerminationReason field in ClusterDetails.
 func (o *ClusterDetails) SetTerminationReason(ctx context.Context, v TerminationReason) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["termination_reason"]
-	o.TerminationReason = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.TerminationReason = vs
 }
 
 // GetWorkloadType returns the value of the WorkloadType field in ClusterDetails as
@@ -2397,7 +2645,10 @@ func (o *ClusterDetails) GetWorkloadType(ctx context.Context) (WorkloadType, boo
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2409,30 +2660,39 @@ func (o *ClusterDetails) GetWorkloadType(ctx context.Context) (WorkloadType, boo
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterDetails.
 func (o *ClusterDetails) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 type ClusterEvent struct {
 	// <needs content added>
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// <needs content added>
-	DataPlaneEventDetails types.List `tfsdk:"data_plane_event_details" tf:"optional,object"`
+	DataPlaneEventDetails types.Object `tfsdk:"data_plane_event_details"`
 	// <needs content added>
-	Details types.List `tfsdk:"details" tf:"optional,object"`
+	Details types.Object `tfsdk:"details"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
 	// by the Timeline service.
-	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
+	Timestamp types.Int64 `tfsdk:"timestamp"`
 
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *ClusterEvent) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterEvent) {
 }
 
 func (newState *ClusterEvent) SyncEffectiveFieldsDuringRead(existingState ClusterEvent) {
+}
+
+func (c ClusterEvent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["data_plane_event_details"] = attrs["data_plane_event_details"].SetOptional()
+	attrs["details"] = attrs["details"].SetOptional()
+	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterEvent.
@@ -2468,15 +2728,11 @@ func (o ClusterEvent) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ClusterEvent) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster_id": types.StringType,
-			"data_plane_event_details": basetypes.ListType{
-				ElemType: DataPlaneEventDetails{}.Type(ctx),
-			},
-			"details": basetypes.ListType{
-				ElemType: EventDetails{}.Type(ctx),
-			},
-			"timestamp": types.Int64Type,
-			"type":      types.StringType,
+			"cluster_id":               types.StringType,
+			"data_plane_event_details": DataPlaneEventDetails{}.Type(ctx),
+			"details":                  EventDetails{}.Type(ctx),
+			"timestamp":                types.Int64Type,
+			"type":                     types.StringType,
 		},
 	}
 }
@@ -2490,7 +2746,10 @@ func (o *ClusterEvent) GetDataPlaneEventDetails(ctx context.Context) (DataPlaneE
 		return e, false
 	}
 	var v []DataPlaneEventDetails
-	d := o.DataPlaneEventDetails.ElementsAs(ctx, &v, true)
+	d := o.DataPlaneEventDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2502,9 +2761,8 @@ func (o *ClusterEvent) GetDataPlaneEventDetails(ctx context.Context) (DataPlaneE
 
 // SetDataPlaneEventDetails sets the value of the DataPlaneEventDetails field in ClusterEvent.
 func (o *ClusterEvent) SetDataPlaneEventDetails(ctx context.Context, v DataPlaneEventDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_plane_event_details"]
-	o.DataPlaneEventDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DataPlaneEventDetails = vs
 }
 
 // GetDetails returns the value of the Details field in ClusterEvent as
@@ -2516,7 +2774,10 @@ func (o *ClusterEvent) GetDetails(ctx context.Context) (EventDetails, bool) {
 		return e, false
 	}
 	var v []EventDetails
-	d := o.Details.ElementsAs(ctx, &v, true)
+	d := o.Details.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2528,22 +2789,28 @@ func (o *ClusterEvent) GetDetails(ctx context.Context) (EventDetails, bool) {
 
 // SetDetails sets the value of the Details field in ClusterEvent.
 func (o *ClusterEvent) SetDetails(ctx context.Context, v EventDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["details"]
-	o.Details = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Details = vs
 }
 
 type ClusterLibraryStatuses struct {
 	// Unique identifier for the cluster.
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// Status of all libraries on the cluster.
-	LibraryStatuses types.List `tfsdk:"library_statuses" tf:"optional"`
+	LibraryStatuses types.List `tfsdk:"library_statuses"`
 }
 
 func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLibraryStatuses) {
 }
 
 func (newState *ClusterLibraryStatuses) SyncEffectiveFieldsDuringRead(existingState ClusterLibraryStatuses) {
+}
+
+func (c ClusterLibraryStatuses) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+	attrs["library_statuses"] = attrs["library_statuses"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterLibraryStatuses.
@@ -2612,19 +2879,26 @@ func (o *ClusterLibraryStatuses) SetLibraryStatuses(ctx context.Context, v []Lib
 type ClusterLogConf struct {
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs types.List `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.Object `tfsdk:"dbfs"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 types.List `tfsdk:"s3" tf:"optional,object"`
+	S3 types.Object `tfsdk:"s3"`
 }
 
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
 }
 
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringRead(existingState ClusterLogConf) {
+}
+
+func (c ClusterLogConf) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dbfs"] = attrs["dbfs"].SetOptional()
+	attrs["s3"] = attrs["s3"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterLogConf.
@@ -2657,12 +2931,8 @@ func (o ClusterLogConf) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ClusterLogConf) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbfs": basetypes.ListType{
-				ElemType: DbfsStorageInfo{}.Type(ctx),
-			},
-			"s3": basetypes.ListType{
-				ElemType: S3StorageInfo{}.Type(ctx),
-			},
+			"dbfs": DbfsStorageInfo{}.Type(ctx),
+			"s3":   S3StorageInfo{}.Type(ctx),
 		},
 	}
 }
@@ -2676,7 +2946,10 @@ func (o *ClusterLogConf) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 		return e, false
 	}
 	var v []DbfsStorageInfo
-	d := o.Dbfs.ElementsAs(ctx, &v, true)
+	d := o.Dbfs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2688,9 +2961,8 @@ func (o *ClusterLogConf) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 
 // SetDbfs sets the value of the Dbfs field in ClusterLogConf.
 func (o *ClusterLogConf) SetDbfs(ctx context.Context, v DbfsStorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbfs"]
-	o.Dbfs = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Dbfs = vs
 }
 
 // GetS3 returns the value of the S3 field in ClusterLogConf as
@@ -2702,7 +2974,10 @@ func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 		return e, false
 	}
 	var v []S3StorageInfo
-	d := o.S3.ElementsAs(ctx, &v, true)
+	d := o.S3.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -2714,23 +2989,30 @@ func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 
 // SetS3 sets the value of the S3 field in ClusterLogConf.
 func (o *ClusterLogConf) SetS3(ctx context.Context, v S3StorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
-	o.S3 = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.S3 = vs
 }
 
 type ClusterPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ClusterPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermission) {
 }
 
 func (newState *ClusterPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPermission) {
+}
+
+func (c ClusterPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermission.
@@ -2799,17 +3081,25 @@ func (o *ClusterPermission) SetInheritedFromObject(ctx context.Context, v []type
 }
 
 type ClusterPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *ClusterPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissions) {
 }
 
 func (newState *ClusterPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPermissions) {
+}
+
+func (c ClusterPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermissions.
@@ -2878,15 +3168,22 @@ func (o *ClusterPermissions) SetAccessControlList(ctx context.Context, v []Clust
 }
 
 type ClusterPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPermissionsDescription) {
 }
 
 func (newState *ClusterPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsDescription) {
+}
+
+func (c ClusterPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermissionsDescription.
@@ -2923,7 +3220,7 @@ func (o ClusterPermissionsDescription) Type(ctx context.Context) attr.Type {
 }
 
 type ClusterPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster for which to get or manage permissions.
 	ClusterId types.String `tfsdk:"-"`
 }
@@ -2932,6 +3229,13 @@ func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpda
 }
 
 func (newState *ClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPermissionsRequest) {
+}
+
+func (c ClusterPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPermissionsRequest.
@@ -2999,19 +3303,28 @@ func (o *ClusterPermissionsRequest) SetAccessControlList(ctx context.Context, v 
 
 type ClusterPolicyAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlRequest) {
 }
 
 func (newState *ClusterPolicyAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlRequest) {
+}
+
+func (c ClusterPolicyAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyAccessControlRequest.
@@ -3053,21 +3366,31 @@ func (o ClusterPolicyAccessControlRequest) Type(ctx context.Context) attr.Type {
 
 type ClusterPolicyAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyAccessControlResponse) {
 }
 
 func (newState *ClusterPolicyAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyAccessControlResponse) {
+}
+
+func (c ClusterPolicyAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyAccessControlResponse.
@@ -3140,17 +3463,25 @@ func (o *ClusterPolicyAccessControlResponse) SetAllPermissions(ctx context.Conte
 }
 
 type ClusterPolicyPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermission) {
 }
 
 func (newState *ClusterPolicyPermission) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermission) {
+}
+
+func (c ClusterPolicyPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermission.
@@ -3219,17 +3550,25 @@ func (o *ClusterPolicyPermission) SetInheritedFromObject(ctx context.Context, v 
 }
 
 type ClusterPolicyPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissions) {
 }
 
 func (newState *ClusterPolicyPermissions) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissions) {
+}
+
+func (c ClusterPolicyPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermissions.
@@ -3298,15 +3637,22 @@ func (o *ClusterPolicyPermissions) SetAccessControlList(ctx context.Context, v [
 }
 
 type ClusterPolicyPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterPolicyPermissionsDescription) {
 }
 
 func (newState *ClusterPolicyPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsDescription) {
+}
+
+func (c ClusterPolicyPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermissionsDescription.
@@ -3343,7 +3689,7 @@ func (o ClusterPolicyPermissionsDescription) Type(ctx context.Context) attr.Type
 }
 
 type ClusterPolicyPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
@@ -3352,6 +3698,13 @@ func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreate
 }
 
 func (newState *ClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState ClusterPolicyPermissionsRequest) {
+}
+
+func (c ClusterPolicyPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["cluster_policy_id"] = attrs["cluster_policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterPolicyPermissionsRequest.
@@ -3421,23 +3774,31 @@ func (o *ClusterPolicyPermissionsRequest) SetAccessControlList(ctx context.Conte
 // become compliant with its policy.
 type ClusterSettingsChange struct {
 	// The field where this change would be made.
-	Field types.String `tfsdk:"field" tf:"optional"`
+	Field types.String `tfsdk:"field"`
 	// The new value of this field after enforcing policy compliance (either a
 	// number, a boolean, or a string) converted to a string. This is intended
 	// to be read by a human. The typed new value of this field can be retrieved
 	// by reading the settings field in the API response.
-	NewValue types.String `tfsdk:"new_value" tf:"optional"`
+	NewValue types.String `tfsdk:"new_value"`
 	// The previous value of this field before enforcing policy compliance
 	// (either a number, a boolean, or a string) converted to a string. This is
 	// intended to be read by a human. The type of the field can be retrieved by
 	// reading the settings field in the API response.
-	PreviousValue types.String `tfsdk:"previous_value" tf:"optional"`
+	PreviousValue types.String `tfsdk:"previous_value"`
 }
 
 func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSettingsChange) {
 }
 
 func (newState *ClusterSettingsChange) SyncEffectiveFieldsDuringRead(existingState ClusterSettingsChange) {
+}
+
+func (c ClusterSettingsChange) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["field"] = attrs["field"].SetOptional()
+	attrs["new_value"] = attrs["new_value"].SetOptional()
+	attrs["previous_value"] = attrs["previous_value"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterSettingsChange.
@@ -3479,7 +3840,7 @@ type ClusterSize struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -3490,13 +3851,20 @@ type ClusterSize struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 }
 
 func (newState *ClusterSize) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSize) {
 }
 
 func (newState *ClusterSize) SyncEffectiveFieldsDuringRead(existingState ClusterSize) {
+}
+
+func (c ClusterSize) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterSize.
@@ -3528,9 +3896,7 @@ func (o ClusterSize) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o ClusterSize) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
+			"autoscale":   AutoScale{}.Type(ctx),
 			"num_workers": types.Int64Type,
 		},
 	}
@@ -3545,7 +3911,10 @@ func (o *ClusterSize) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3557,42 +3926,41 @@ func (o *ClusterSize) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in ClusterSize.
 func (o *ClusterSize) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 type ClusterSpec struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
 	// the policy will be applied.
-	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values" tf:"optional"`
+	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values"`
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -3601,13 +3969,20 @@ type ClusterSpec struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -3624,40 +3999,53 @@ type ClusterSpec struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -3668,9 +4056,9 @@ type ClusterSpec struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -3679,15 +4067,15 @@ type ClusterSpec struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -3701,23 +4089,64 @@ type ClusterSpec struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:"optional"`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterSpec) {
 }
 
 func (newState *ClusterSpec) SyncEffectiveFieldsDuringRead(existingState ClusterSpec) {
+}
+
+func (c ClusterSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetOptional()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterSpec.
@@ -3768,6 +4197,8 @@ func (o ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -3777,6 +4208,7 @@ func (o ClusterSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -3786,38 +4218,28 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
-			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_name": types.StringType,
+			"autoscale":                   AutoScale{}.Type(ctx),
+			"autotermination_minutes":     types.Int64Type,
+			"aws_attributes":              AwsAttributes{}.Type(ctx),
+			"azure_attributes":            AzureAttributes{}.Type(ctx),
+			"cluster_log_conf":            ClusterLogConf{}.Type(ctx),
+			"cluster_name":                types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode": types.StringType,
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -3833,9 +4255,8 @@ func (o ClusterSpec) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"use_ml_runtime": types.BoolType,
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -3849,7 +4270,10 @@ func (o *ClusterSpec) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3861,9 +4285,8 @@ func (o *ClusterSpec) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in ClusterSpec.
 func (o *ClusterSpec) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 // GetAwsAttributes returns the value of the AwsAttributes field in ClusterSpec as
@@ -3875,7 +4298,10 @@ func (o *ClusterSpec) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3887,9 +4313,8 @@ func (o *ClusterSpec) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 
 // SetAwsAttributes sets the value of the AwsAttributes field in ClusterSpec.
 func (o *ClusterSpec) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in ClusterSpec as
@@ -3901,7 +4326,10 @@ func (o *ClusterSpec) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3913,9 +4341,8 @@ func (o *ClusterSpec) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 
 // SetAzureAttributes sets the value of the AzureAttributes field in ClusterSpec.
 func (o *ClusterSpec) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in ClusterSpec as
@@ -3927,7 +4354,10 @@ func (o *ClusterSpec) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3939,9 +4369,8 @@ func (o *ClusterSpec) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in ClusterSpec.
 func (o *ClusterSpec) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in ClusterSpec as
@@ -3979,7 +4408,10 @@ func (o *ClusterSpec) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -3991,9 +4423,8 @@ func (o *ClusterSpec) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 
 // SetDockerImage sets the value of the DockerImage field in ClusterSpec.
 func (o *ClusterSpec) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in ClusterSpec as
@@ -4005,7 +4436,10 @@ func (o *ClusterSpec) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4017,9 +4451,8 @@ func (o *ClusterSpec) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 
 // SetGcpAttributes sets the value of the GcpAttributes field in ClusterSpec.
 func (o *ClusterSpec) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in ClusterSpec as
@@ -4135,7 +4568,10 @@ func (o *ClusterSpec) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4147,21 +4583,14 @@ func (o *ClusterSpec) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 
 // SetWorkloadType sets the value of the WorkloadType field in ClusterSpec.
 func (o *ClusterSpec) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 // Get status
 type ClusterStatus struct {
 	// Unique identifier of the cluster whose status should be retrieved.
 	ClusterId types.String `tfsdk:"-"`
-}
-
-func (newState *ClusterStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterStatus) {
-}
-
-func (newState *ClusterStatus) SyncEffectiveFieldsDuringRead(existingState ClusterStatus) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterStatus.
@@ -4197,19 +4626,28 @@ func (o ClusterStatus) Type(ctx context.Context) attr.Type {
 
 type Command struct {
 	// Running cluster id
-	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
+	ClusterId types.String `tfsdk:"clusterId"`
 	// Executable code
-	Command types.String `tfsdk:"command" tf:"optional"`
+	Command types.String `tfsdk:"command"`
 	// Running context id
-	ContextId types.String `tfsdk:"contextId" tf:"optional"`
+	ContextId types.String `tfsdk:"contextId"`
 
-	Language types.String `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language"`
 }
 
 func (newState *Command) SyncEffectiveFieldsDuringCreateOrUpdate(plan Command) {
 }
 
 func (newState *Command) SyncEffectiveFieldsDuringRead(existingState Command) {
+}
+
+func (c Command) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetOptional()
+	attrs["command"] = attrs["command"].SetOptional()
+	attrs["contextId"] = attrs["contextId"].SetOptional()
+	attrs["language"] = attrs["language"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Command.
@@ -4258,12 +4696,6 @@ type CommandStatusRequest struct {
 	ContextId types.String `tfsdk:"-"`
 }
 
-func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusRequest) {
-}
-
-func (newState *CommandStatusRequest) SyncEffectiveFieldsDuringRead(existingState CommandStatusRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CommandStatusRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4300,17 +4732,25 @@ func (o CommandStatusRequest) Type(ctx context.Context) attr.Type {
 }
 
 type CommandStatusResponse struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	Results types.List `tfsdk:"results" tf:"optional,object"`
+	Results types.Object `tfsdk:"results"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusResponse) {
 }
 
 func (newState *CommandStatusResponse) SyncEffectiveFieldsDuringRead(existingState CommandStatusResponse) {
+}
+
+func (c CommandStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CommandStatusResponse.
@@ -4343,11 +4783,9 @@ func (o CommandStatusResponse) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o CommandStatusResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
-			"results": basetypes.ListType{
-				ElemType: Results{}.Type(ctx),
-			},
-			"status": types.StringType,
+			"id":      types.StringType,
+			"results": Results{}.Type(ctx),
+			"status":  types.StringType,
 		},
 	}
 }
@@ -4361,7 +4799,10 @@ func (o *CommandStatusResponse) GetResults(ctx context.Context) (Results, bool) 
 		return e, false
 	}
 	var v []Results
-	d := o.Results.ElementsAs(ctx, &v, true)
+	d := o.Results.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4373,9 +4814,8 @@ func (o *CommandStatusResponse) GetResults(ctx context.Context) (Results, bool) 
 
 // SetResults sets the value of the Results field in CommandStatusResponse.
 func (o *CommandStatusResponse) SetResults(ctx context.Context, v Results) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
-	o.Results = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Results = vs
 }
 
 // Get status
@@ -4383,12 +4823,6 @@ type ContextStatusRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 
 	ContextId types.String `tfsdk:"-"`
-}
-
-func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusRequest) {
-}
-
-func (newState *ContextStatusRequest) SyncEffectiveFieldsDuringRead(existingState ContextStatusRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ContextStatusRequest.
@@ -4425,15 +4859,22 @@ func (o ContextStatusRequest) Type(ctx context.Context) attr.Type {
 }
 
 type ContextStatusResponse struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusResponse) {
 }
 
 func (newState *ContextStatusResponse) SyncEffectiveFieldsDuringRead(existingState ContextStatusResponse) {
+}
+
+func (c ContextStatusResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ContextStatusResponse.
@@ -4473,36 +4914,36 @@ type CreateCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
 	// the policy will be applied.
-	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values" tf:"optional"`
+	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values"`
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// When specified, this clones libraries from a source cluster during the
 	// creation of a new cluster.
-	CloneFrom types.List `tfsdk:"clone_from" tf:"optional,object"`
+	CloneFrom types.Object `tfsdk:"clone_from"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -4511,13 +4952,20 @@ type CreateCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -4534,40 +4982,53 @@ type CreateCluster struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -4578,9 +5039,9 @@ type CreateCluster struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -4589,15 +5050,15 @@ type CreateCluster struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -4611,23 +5072,65 @@ type CreateCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:""`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *CreateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCluster) {
 }
 
 func (newState *CreateCluster) SyncEffectiveFieldsDuringRead(existingState CreateCluster) {
+}
+
+func (c CreateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["clone_from"] = attrs["clone_from"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetRequired()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCluster.
@@ -4680,6 +5183,8 @@ func (o CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -4689,6 +5194,7 @@ func (o CreateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -4698,41 +5204,29 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
-			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"clone_from": basetypes.ListType{
-				ElemType: CloneCluster{}.Type(ctx),
-			},
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_name": types.StringType,
+			"autoscale":                   AutoScale{}.Type(ctx),
+			"autotermination_minutes":     types.Int64Type,
+			"aws_attributes":              AwsAttributes{}.Type(ctx),
+			"azure_attributes":            AzureAttributes{}.Type(ctx),
+			"clone_from":                  CloneCluster{}.Type(ctx),
+			"cluster_log_conf":            ClusterLogConf{}.Type(ctx),
+			"cluster_name":                types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode": types.StringType,
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -4748,9 +5242,8 @@ func (o CreateCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"use_ml_runtime": types.BoolType,
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -4764,7 +5257,10 @@ func (o *CreateCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4776,9 +5272,8 @@ func (o *CreateCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in CreateCluster.
 func (o *CreateCluster) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 // GetAwsAttributes returns the value of the AwsAttributes field in CreateCluster as
@@ -4790,7 +5285,10 @@ func (o *CreateCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bo
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4802,9 +5300,8 @@ func (o *CreateCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bo
 
 // SetAwsAttributes sets the value of the AwsAttributes field in CreateCluster.
 func (o *CreateCluster) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in CreateCluster as
@@ -4816,7 +5313,10 @@ func (o *CreateCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4828,9 +5328,8 @@ func (o *CreateCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes
 
 // SetAzureAttributes sets the value of the AzureAttributes field in CreateCluster.
 func (o *CreateCluster) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetCloneFrom returns the value of the CloneFrom field in CreateCluster as
@@ -4842,7 +5341,10 @@ func (o *CreateCluster) GetCloneFrom(ctx context.Context) (CloneCluster, bool) {
 		return e, false
 	}
 	var v []CloneCluster
-	d := o.CloneFrom.ElementsAs(ctx, &v, true)
+	d := o.CloneFrom.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4854,9 +5356,8 @@ func (o *CreateCluster) GetCloneFrom(ctx context.Context) (CloneCluster, bool) {
 
 // SetCloneFrom sets the value of the CloneFrom field in CreateCluster.
 func (o *CreateCluster) SetCloneFrom(ctx context.Context, v CloneCluster) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clone_from"]
-	o.CloneFrom = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.CloneFrom = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in CreateCluster as
@@ -4868,7 +5369,10 @@ func (o *CreateCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, 
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4880,9 +5384,8 @@ func (o *CreateCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, 
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in CreateCluster.
 func (o *CreateCluster) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in CreateCluster as
@@ -4920,7 +5423,10 @@ func (o *CreateCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) 
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4932,9 +5438,8 @@ func (o *CreateCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) 
 
 // SetDockerImage sets the value of the DockerImage field in CreateCluster.
 func (o *CreateCluster) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in CreateCluster as
@@ -4946,7 +5451,10 @@ func (o *CreateCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bo
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -4958,9 +5466,8 @@ func (o *CreateCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bo
 
 // SetGcpAttributes sets the value of the GcpAttributes field in CreateCluster.
 func (o *CreateCluster) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in CreateCluster as
@@ -5076,7 +5583,10 @@ func (o *CreateCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5088,19 +5598,24 @@ func (o *CreateCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool
 
 // SetWorkloadType sets the value of the WorkloadType field in CreateCluster.
 func (o *CreateCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 type CreateClusterResponse struct {
-	ClusterId types.String `tfsdk:"cluster_id" tf:"optional"`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateClusterResponse) {
 }
 
 func (newState *CreateClusterResponse) SyncEffectiveFieldsDuringRead(existingState CreateClusterResponse) {
+}
+
+func (c CreateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateClusterResponse.
@@ -5136,15 +5651,22 @@ func (o CreateClusterResponse) Type(ctx context.Context) attr.Type {
 
 type CreateContext struct {
 	// Running cluster id
-	ClusterId types.String `tfsdk:"clusterId" tf:"optional"`
+	ClusterId types.String `tfsdk:"clusterId"`
 
-	Language types.String `tfsdk:"language" tf:"optional"`
+	Language types.String `tfsdk:"language"`
 }
 
 func (newState *CreateContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateContext) {
 }
 
 func (newState *CreateContext) SyncEffectiveFieldsDuringRead(existingState CreateContext) {
+}
+
+func (c CreateContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetOptional()
+	attrs["language"] = attrs["language"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateContext.
@@ -5183,28 +5705,28 @@ func (o CreateContext) Type(ctx context.Context) attr.Type {
 type CreateInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
 	// permissions to function correctly - refer to the User Guide for more
 	// details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -5212,35 +5734,53 @@ type CreateInstancePool struct {
 	// threshold must be between 0 and 10000 minutes. Users can also set this
 	// value to 0 to instantly remove idle instances from the cache if min cache
 	// size could still hold.
-	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes" tf:"optional"`
+	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes"`
 	// Pool name requested by the user. Pool name must be unique. Length must be
 	// between 1 and 100 characters.
-	InstancePoolName types.String `tfsdk:"instance_pool_name" tf:""`
+	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
 	// further instance provisioning will fail during upsize requests.
-	MaxCapacity types.Int64 `tfsdk:"max_capacity" tf:"optional"`
+	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
-	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances" tf:"optional"`
+	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 }
 
 func (newState *CreateInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePool) {
 }
 
 func (newState *CreateInstancePool) SyncEffectiveFieldsDuringRead(existingState CreateInstancePool) {
+}
+
+func (c CreateInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
+	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
+	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
+	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
+	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
+	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstancePool.
@@ -5289,22 +5829,14 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes": basetypes.ListType{
-				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
-			},
+			"aws_attributes":   InstancePoolAwsAttributes{}.Type(ctx),
+			"azure_attributes": InstancePoolAzureAttributes{}.Type(ctx),
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec": basetypes.ListType{
-				ElemType: DiskSpec{}.Type(ctx),
-			},
-			"enable_elastic_disk": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
-			},
+			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_elastic_disk":                   types.BoolType,
+			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
@@ -5329,7 +5861,10 @@ func (o *CreateInstancePool) GetAwsAttributes(ctx context.Context) (InstancePool
 		return e, false
 	}
 	var v []InstancePoolAwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5341,9 +5876,8 @@ func (o *CreateInstancePool) GetAwsAttributes(ctx context.Context) (InstancePool
 
 // SetAwsAttributes sets the value of the AwsAttributes field in CreateInstancePool.
 func (o *CreateInstancePool) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in CreateInstancePool as
@@ -5355,7 +5889,10 @@ func (o *CreateInstancePool) GetAzureAttributes(ctx context.Context) (InstancePo
 		return e, false
 	}
 	var v []InstancePoolAzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5367,9 +5904,8 @@ func (o *CreateInstancePool) GetAzureAttributes(ctx context.Context) (InstancePo
 
 // SetAzureAttributes sets the value of the AzureAttributes field in CreateInstancePool.
 func (o *CreateInstancePool) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in CreateInstancePool as
@@ -5407,7 +5943,10 @@ func (o *CreateInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 		return e, false
 	}
 	var v []DiskSpec
-	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5419,9 +5958,8 @@ func (o *CreateInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 
 // SetDiskSpec sets the value of the DiskSpec field in CreateInstancePool.
 func (o *CreateInstancePool) SetDiskSpec(ctx context.Context, v DiskSpec) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
-	o.DiskSpec = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DiskSpec = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in CreateInstancePool as
@@ -5433,7 +5971,10 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 		return e, false
 	}
 	var v []InstancePoolGcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -5445,9 +5986,8 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 
 // SetGcpAttributes sets the value of the GcpAttributes field in CreateInstancePool.
 func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
@@ -5504,13 +6044,19 @@ func (o *CreateInstancePool) SetPreloadedSparkVersions(ctx context.Context, v []
 
 type CreateInstancePoolResponse struct {
 	// The ID of the created instance pool.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
 func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateInstancePoolResponse) {
 }
 
 func (newState *CreateInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState CreateInstancePoolResponse) {
+}
+
+func (c CreateInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateInstancePoolResponse.
@@ -5549,18 +6095,18 @@ type CreatePolicy struct {
 	// Definition Language].
 	//
 	// [Databricks Cluster Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	Definition types.String `tfsdk:"definition" tf:"optional"`
+	Definition types.String `tfsdk:"definition"`
 	// Additional human-readable description of the cluster policy.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
-	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
+	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
 	// Cluster Policy name requested by the user. This has to be unique. Length
 	// must be between 1 and 100 characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Policy definition JSON document expressed in [Databricks Policy
 	// Definition Language]. The JSON document must be passed as a string and
 	// cannot be embedded in the requests.
@@ -5570,20 +6116,32 @@ type CreatePolicy struct {
 	// policy definition.
 	//
 	// [Databricks Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides" tf:"optional"`
+	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides"`
 	// ID of the policy family. The cluster policy's policy definition inherits
 	// the policy family's policy definition.
 	//
 	// Cannot be used with `definition`. Use
 	// `policy_family_definition_overrides` instead to customize the policy
 	// definition.
-	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
+	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 }
 
 func (newState *CreatePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicy) {
 }
 
 func (newState *CreatePolicy) SyncEffectiveFieldsDuringRead(existingState CreatePolicy) {
+}
+
+func (c CreatePolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["definition"] = attrs["definition"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
+	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePolicy.
@@ -5661,13 +6219,19 @@ func (o *CreatePolicy) SetLibraries(ctx context.Context, v []Library) {
 
 type CreatePolicyResponse struct {
 	// Canonical unique identifier for the cluster policy.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 }
 
 func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePolicyResponse) {
 }
 
 func (newState *CreatePolicyResponse) SyncEffectiveFieldsDuringRead(existingState CreatePolicyResponse) {
+}
+
+func (c CreatePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePolicyResponse.
@@ -5703,13 +6267,7 @@ func (o CreatePolicyResponse) Type(ctx context.Context) attr.Type {
 
 type CreateResponse struct {
 	// The global init script ID.
-	ScriptId types.String `tfsdk:"script_id" tf:"optional"`
-}
-
-func (newState *CreateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse) {
-}
-
-func (newState *CreateResponse) SyncEffectiveFieldsDuringRead(existingState CreateResponse) {
+	ScriptId types.String `tfsdk:"script_id"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
@@ -5744,13 +6302,19 @@ func (o CreateResponse) Type(ctx context.Context) attr.Type {
 }
 
 type Created struct {
-	Id types.String `tfsdk:"id" tf:"optional"`
+	Id types.String `tfsdk:"id"`
 }
 
 func (newState *Created) SyncEffectiveFieldsDuringCreateOrUpdate(plan Created) {
 }
 
 func (newState *Created) SyncEffectiveFieldsDuringRead(existingState Created) {
+}
+
+func (c Created) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Created.
@@ -5786,19 +6350,28 @@ func (o Created) Type(ctx context.Context) attr.Type {
 
 type DataPlaneEventDetails struct {
 	// <needs content added>
-	EventType types.String `tfsdk:"event_type" tf:"optional"`
+	EventType types.String `tfsdk:"event_type"`
 	// <needs content added>
-	ExecutorFailures types.Int64 `tfsdk:"executor_failures" tf:"optional"`
+	ExecutorFailures types.Int64 `tfsdk:"executor_failures"`
 	// <needs content added>
-	HostId types.String `tfsdk:"host_id" tf:"optional"`
+	HostId types.String `tfsdk:"host_id"`
 	// <needs content added>
-	Timestamp types.Int64 `tfsdk:"timestamp" tf:"optional"`
+	Timestamp types.Int64 `tfsdk:"timestamp"`
 }
 
 func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan DataPlaneEventDetails) {
 }
 
 func (newState *DataPlaneEventDetails) SyncEffectiveFieldsDuringRead(existingState DataPlaneEventDetails) {
+}
+
+func (c DataPlaneEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["event_type"] = attrs["event_type"].SetOptional()
+	attrs["executor_failures"] = attrs["executor_failures"].SetOptional()
+	attrs["host_id"] = attrs["host_id"].SetOptional()
+	attrs["timestamp"] = attrs["timestamp"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DataPlaneEventDetails.
@@ -5840,13 +6413,19 @@ func (o DataPlaneEventDetails) Type(ctx context.Context) attr.Type {
 
 type DbfsStorageInfo struct {
 	// dbfs destination, e.g. `dbfs:/my/path`
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan DbfsStorageInfo) {
 }
 
 func (newState *DbfsStorageInfo) SyncEffectiveFieldsDuringRead(existingState DbfsStorageInfo) {
+}
+
+func (c DbfsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DbfsStorageInfo.
@@ -5882,13 +6461,19 @@ func (o DbfsStorageInfo) Type(ctx context.Context) attr.Type {
 
 type DeleteCluster struct {
 	// The cluster to be terminated.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *DeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCluster) {
 }
 
 func (newState *DeleteCluster) SyncEffectiveFieldsDuringRead(existingState DeleteCluster) {
+}
+
+func (c DeleteCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCluster.
@@ -5931,6 +6516,11 @@ func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 func (newState *DeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState DeleteClusterResponse) {
 }
 
+func (c DeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -5962,12 +6552,6 @@ func (o DeleteClusterResponse) Type(ctx context.Context) attr.Type {
 type DeleteGlobalInitScriptRequest struct {
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteGlobalInitScriptRequest) {
-}
-
-func (newState *DeleteGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState DeleteGlobalInitScriptRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteGlobalInitScriptRequest.
@@ -6003,13 +6587,19 @@ func (o DeleteGlobalInitScriptRequest) Type(ctx context.Context) attr.Type {
 
 type DeleteInstancePool struct {
 	// The instance pool to be terminated.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 }
 
 func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstancePool) {
 }
 
 func (newState *DeleteInstancePool) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePool) {
+}
+
+func (c DeleteInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstancePool.
@@ -6052,6 +6642,11 @@ func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *DeleteInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState DeleteInstancePoolResponse) {
 }
 
+func (c DeleteInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstancePoolResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6081,13 +6676,19 @@ func (o DeleteInstancePoolResponse) Type(ctx context.Context) attr.Type {
 
 type DeletePolicy struct {
 	// The ID of the policy to delete.
-	PolicyId types.String `tfsdk:"policy_id" tf:""`
+	PolicyId types.String `tfsdk:"policy_id"`
 }
 
 func (newState *DeletePolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePolicy) {
 }
 
 func (newState *DeletePolicy) SyncEffectiveFieldsDuringRead(existingState DeletePolicy) {
+}
+
+func (c DeletePolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicy.
@@ -6130,6 +6731,11 @@ func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *DeletePolicyResponse) SyncEffectiveFieldsDuringRead(existingState DeletePolicyResponse) {
 }
 
+func (c DeletePolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePolicyResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6160,12 +6766,6 @@ func (o DeletePolicyResponse) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
-}
-
-func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6194,15 +6794,22 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 }
 
 type DestroyContext struct {
-	ClusterId types.String `tfsdk:"clusterId" tf:""`
+	ClusterId types.String `tfsdk:"clusterId"`
 
-	ContextId types.String `tfsdk:"contextId" tf:""`
+	ContextId types.String `tfsdk:"contextId"`
 }
 
 func (newState *DestroyContext) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyContext) {
 }
 
 func (newState *DestroyContext) SyncEffectiveFieldsDuringRead(existingState DestroyContext) {
+}
+
+func (c DestroyContext) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetRequired()
+	attrs["contextId"] = attrs["contextId"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyContext.
@@ -6239,12 +6846,6 @@ func (o DestroyContext) Type(ctx context.Context) attr.Type {
 }
 
 type DestroyResponse struct {
-}
-
-func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse) {
-}
-
-func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyResponse.
@@ -6291,9 +6892,9 @@ type DiskSpec struct {
 	//
 	// Disks will be mounted at: - For AWS: `/ebs0`, `/ebs1`, and etc. - For
 	// Azure: `/remote_volume0`, `/remote_volume1`, and etc.
-	DiskCount types.Int64 `tfsdk:"disk_count" tf:"optional"`
+	DiskCount types.Int64 `tfsdk:"disk_count"`
 
-	DiskIops types.Int64 `tfsdk:"disk_iops" tf:"optional"`
+	DiskIops types.Int64 `tfsdk:"disk_iops"`
 	// The size of each disk (in GiB) launched for each instance. Values must
 	// fall into the supported range for a particular instance type.
 	//
@@ -6302,17 +6903,27 @@ type DiskSpec struct {
 	//
 	// For Azure: - Premium LRS (SSD): 1 - 1023 GiB - Standard LRS (HDD): 1-
 	// 1023 GiB
-	DiskSize types.Int64 `tfsdk:"disk_size" tf:"optional"`
+	DiskSize types.Int64 `tfsdk:"disk_size"`
 
-	DiskThroughput types.Int64 `tfsdk:"disk_throughput" tf:"optional"`
+	DiskThroughput types.Int64 `tfsdk:"disk_throughput"`
 	// The type of disks that will be launched with this cluster.
-	DiskType types.List `tfsdk:"disk_type" tf:"optional,object"`
+	DiskType types.Object `tfsdk:"disk_type"`
 }
 
 func (newState *DiskSpec) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskSpec) {
 }
 
 func (newState *DiskSpec) SyncEffectiveFieldsDuringRead(existingState DiskSpec) {
+}
+
+func (c DiskSpec) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["disk_count"] = attrs["disk_count"].SetOptional()
+	attrs["disk_iops"] = attrs["disk_iops"].SetOptional()
+	attrs["disk_size"] = attrs["disk_size"].SetOptional()
+	attrs["disk_throughput"] = attrs["disk_throughput"].SetOptional()
+	attrs["disk_type"] = attrs["disk_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DiskSpec.
@@ -6351,9 +6962,7 @@ func (o DiskSpec) Type(ctx context.Context) attr.Type {
 			"disk_iops":       types.Int64Type,
 			"disk_size":       types.Int64Type,
 			"disk_throughput": types.Int64Type,
-			"disk_type": basetypes.ListType{
-				ElemType: DiskType{}.Type(ctx),
-			},
+			"disk_type":       DiskType{}.Type(ctx),
 		},
 	}
 }
@@ -6367,7 +6976,10 @@ func (o *DiskSpec) GetDiskType(ctx context.Context) (DiskType, bool) {
 		return e, false
 	}
 	var v []DiskType
-	d := o.DiskType.ElementsAs(ctx, &v, true)
+	d := o.DiskType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6379,21 +6991,27 @@ func (o *DiskSpec) GetDiskType(ctx context.Context) (DiskType, bool) {
 
 // SetDiskType sets the value of the DiskType field in DiskSpec.
 func (o *DiskSpec) SetDiskType(ctx context.Context, v DiskType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_type"]
-	o.DiskType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DiskType = vs
 }
 
 type DiskType struct {
-	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type" tf:"optional"`
+	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type"`
 
-	EbsVolumeType types.String `tfsdk:"ebs_volume_type" tf:"optional"`
+	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 }
 
 func (newState *DiskType) SyncEffectiveFieldsDuringCreateOrUpdate(plan DiskType) {
 }
 
 func (newState *DiskType) SyncEffectiveFieldsDuringRead(existingState DiskType) {
+}
+
+func (c DiskType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["azure_disk_volume_type"] = attrs["azure_disk_volume_type"].SetOptional()
+	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DiskType.
@@ -6431,15 +7049,22 @@ func (o DiskType) Type(ctx context.Context) attr.Type {
 
 type DockerBasicAuth struct {
 	// Password of the user
-	Password types.String `tfsdk:"password" tf:"optional"`
+	Password types.String `tfsdk:"password"`
 	// Name of the user
-	Username types.String `tfsdk:"username" tf:"optional"`
+	Username types.String `tfsdk:"username"`
 }
 
 func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerBasicAuth) {
 }
 
 func (newState *DockerBasicAuth) SyncEffectiveFieldsDuringRead(existingState DockerBasicAuth) {
+}
+
+func (c DockerBasicAuth) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["password"] = attrs["password"].SetOptional()
+	attrs["username"] = attrs["username"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DockerBasicAuth.
@@ -6476,15 +7101,22 @@ func (o DockerBasicAuth) Type(ctx context.Context) attr.Type {
 }
 
 type DockerImage struct {
-	BasicAuth types.List `tfsdk:"basic_auth" tf:"optional,object"`
+	BasicAuth types.Object `tfsdk:"basic_auth"`
 	// URL of the docker image.
-	Url types.String `tfsdk:"url" tf:"optional"`
+	Url types.String `tfsdk:"url"`
 }
 
 func (newState *DockerImage) SyncEffectiveFieldsDuringCreateOrUpdate(plan DockerImage) {
 }
 
 func (newState *DockerImage) SyncEffectiveFieldsDuringRead(existingState DockerImage) {
+}
+
+func (c DockerImage) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["basic_auth"] = attrs["basic_auth"].SetOptional()
+	attrs["url"] = attrs["url"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DockerImage.
@@ -6516,10 +7148,8 @@ func (o DockerImage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o DockerImage) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"basic_auth": basetypes.ListType{
-				ElemType: DockerBasicAuth{}.Type(ctx),
-			},
-			"url": types.StringType,
+			"basic_auth": DockerBasicAuth{}.Type(ctx),
+			"url":        types.StringType,
 		},
 	}
 }
@@ -6533,7 +7163,10 @@ func (o *DockerImage) GetBasicAuth(ctx context.Context) (DockerBasicAuth, bool) 
 		return e, false
 	}
 	var v []DockerBasicAuth
-	d := o.BasicAuth.ElementsAs(ctx, &v, true)
+	d := o.BasicAuth.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6545,44 +7178,43 @@ func (o *DockerImage) GetBasicAuth(ctx context.Context) (DockerBasicAuth, bool) 
 
 // SetBasicAuth sets the value of the BasicAuth field in DockerImage.
 func (o *DockerImage) SetBasicAuth(ctx context.Context, v DockerBasicAuth) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["basic_auth"]
-	o.BasicAuth = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.BasicAuth = vs
 }
 
 type EditCluster struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
 	// the policy will be applied.
-	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values" tf:"optional"`
+	ApplyPolicyDefaultValues types.Bool `tfsdk:"apply_policy_default_values"`
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// ID of the cluster
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -6591,13 +7223,20 @@ type EditCluster struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -6614,40 +7253,53 @@ type EditCluster struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -6658,9 +7310,9 @@ type EditCluster struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -6669,15 +7321,15 @@ type EditCluster struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -6691,23 +7343,65 @@ type EditCluster struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:""`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *EditCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditCluster) {
 }
 
 func (newState *EditCluster) SyncEffectiveFieldsDuringRead(existingState EditCluster) {
+}
+
+func (c EditCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["apply_policy_default_values"] = attrs["apply_policy_default_values"].SetOptional()
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetRequired()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditCluster.
@@ -6759,6 +7453,8 @@ func (o EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -6768,6 +7464,7 @@ func (o EditCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -6777,39 +7474,29 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"apply_policy_default_values": types.BoolType,
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
-			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"cluster_id": types.StringType,
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_name": types.StringType,
+			"autoscale":                   AutoScale{}.Type(ctx),
+			"autotermination_minutes":     types.Int64Type,
+			"aws_attributes":              AwsAttributes{}.Type(ctx),
+			"azure_attributes":            AzureAttributes{}.Type(ctx),
+			"cluster_id":                  types.StringType,
+			"cluster_log_conf":            ClusterLogConf{}.Type(ctx),
+			"cluster_name":                types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode": types.StringType,
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -6825,9 +7512,8 @@ func (o EditCluster) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"use_ml_runtime": types.BoolType,
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -6841,7 +7527,10 @@ func (o *EditCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6853,9 +7542,8 @@ func (o *EditCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in EditCluster.
 func (o *EditCluster) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 // GetAwsAttributes returns the value of the AwsAttributes field in EditCluster as
@@ -6867,7 +7555,10 @@ func (o *EditCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6879,9 +7570,8 @@ func (o *EditCluster) GetAwsAttributes(ctx context.Context) (AwsAttributes, bool
 
 // SetAwsAttributes sets the value of the AwsAttributes field in EditCluster.
 func (o *EditCluster) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in EditCluster as
@@ -6893,7 +7583,10 @@ func (o *EditCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6905,9 +7598,8 @@ func (o *EditCluster) GetAzureAttributes(ctx context.Context) (AzureAttributes, 
 
 // SetAzureAttributes sets the value of the AzureAttributes field in EditCluster.
 func (o *EditCluster) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in EditCluster as
@@ -6919,7 +7611,10 @@ func (o *EditCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6931,9 +7626,8 @@ func (o *EditCluster) GetClusterLogConf(ctx context.Context) (ClusterLogConf, bo
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in EditCluster.
 func (o *EditCluster) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in EditCluster as
@@ -6971,7 +7665,10 @@ func (o *EditCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -6983,9 +7680,8 @@ func (o *EditCluster) GetDockerImage(ctx context.Context) (DockerImage, bool) {
 
 // SetDockerImage sets the value of the DockerImage field in EditCluster.
 func (o *EditCluster) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in EditCluster as
@@ -6997,7 +7693,10 @@ func (o *EditCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7009,9 +7708,8 @@ func (o *EditCluster) GetGcpAttributes(ctx context.Context) (GcpAttributes, bool
 
 // SetGcpAttributes sets the value of the GcpAttributes field in EditCluster.
 func (o *EditCluster) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in EditCluster as
@@ -7127,7 +7825,10 @@ func (o *EditCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7139,9 +7840,8 @@ func (o *EditCluster) GetWorkloadType(ctx context.Context) (WorkloadType, bool) 
 
 // SetWorkloadType sets the value of the WorkloadType field in EditCluster.
 func (o *EditCluster) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 type EditClusterResponse struct {
@@ -7151,6 +7851,11 @@ func (newState *EditClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pla
 }
 
 func (newState *EditClusterResponse) SyncEffectiveFieldsDuringRead(existingState EditClusterResponse) {
+}
+
+func (c EditClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditClusterResponse.
@@ -7186,7 +7891,7 @@ type EditInstancePool struct {
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -7194,30 +7899,42 @@ type EditInstancePool struct {
 	// threshold must be between 0 and 10000 minutes. Users can also set this
 	// value to 0 to instantly remove idle instances from the cache if min cache
 	// size could still hold.
-	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes" tf:"optional"`
+	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes"`
 	// Instance pool ID
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// Pool name requested by the user. Pool name must be unique. Length must be
 	// between 1 and 100 characters.
-	InstancePoolName types.String `tfsdk:"instance_pool_name" tf:""`
+	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
 	// further instance provisioning will fail during upsize requests.
-	MaxCapacity types.Int64 `tfsdk:"max_capacity" tf:"optional"`
+	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
-	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances" tf:"optional"`
+	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 }
 
 func (newState *EditInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditInstancePool) {
 }
 
 func (newState *EditInstancePool) SyncEffectiveFieldsDuringRead(existingState EditInstancePool) {
+}
+
+func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
+	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
+	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditInstancePool.
@@ -7302,6 +8019,11 @@ func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *EditInstancePoolResponse) SyncEffectiveFieldsDuringRead(existingState EditInstancePoolResponse) {
 }
 
+func (c EditInstancePoolResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditInstancePoolResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7334,18 +8056,18 @@ type EditPolicy struct {
 	// Definition Language].
 	//
 	// [Databricks Cluster Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	Definition types.String `tfsdk:"definition" tf:"optional"`
+	Definition types.String `tfsdk:"definition"`
 	// Additional human-readable description of the cluster policy.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
-	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
+	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
 	// Cluster Policy name requested by the user. This has to be unique. Length
 	// must be between 1 and 100 characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Policy definition JSON document expressed in [Databricks Policy
 	// Definition Language]. The JSON document must be passed as a string and
 	// cannot be embedded in the requests.
@@ -7355,22 +8077,35 @@ type EditPolicy struct {
 	// policy definition.
 	//
 	// [Databricks Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides" tf:"optional"`
+	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides"`
 	// ID of the policy family. The cluster policy's policy definition inherits
 	// the policy family's policy definition.
 	//
 	// Cannot be used with `definition`. Use
 	// `policy_family_definition_overrides` instead to customize the policy
 	// definition.
-	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
+	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 	// The ID of the policy to update.
-	PolicyId types.String `tfsdk:"policy_id" tf:""`
+	PolicyId types.String `tfsdk:"policy_id"`
 }
 
 func (newState *EditPolicy) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditPolicy) {
 }
 
 func (newState *EditPolicy) SyncEffectiveFieldsDuringRead(existingState EditPolicy) {
+}
+
+func (c EditPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["definition"] = attrs["definition"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
+	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPolicy.
@@ -7457,6 +8192,11 @@ func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *EditPolicyResponse) SyncEffectiveFieldsDuringRead(existingState EditPolicyResponse) {
 }
 
+func (c EditPolicyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditPolicyResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7485,12 +8225,6 @@ func (o EditPolicyResponse) Type(ctx context.Context) attr.Type {
 }
 
 type EditResponse struct {
-}
-
-func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse) {
-}
-
-func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditResponse.
@@ -7522,16 +8256,23 @@ func (o EditResponse) Type(ctx context.Context) attr.Type {
 
 type EnforceClusterComplianceRequest struct {
 	// The ID of the cluster you want to enforce policy compliance on.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// If set, previews the changes that would be made to a cluster to enforce
 	// compliance but does not update the cluster.
-	ValidateOnly types.Bool `tfsdk:"validate_only" tf:"optional"`
+	ValidateOnly types.Bool `tfsdk:"validate_only"`
 }
 
 func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceRequest) {
 }
 
 func (newState *EnforceClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceRequest) {
+}
+
+func (c EnforceClusterComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["validate_only"] = attrs["validate_only"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforceClusterComplianceRequest.
@@ -7570,16 +8311,23 @@ func (o EnforceClusterComplianceRequest) Type(ctx context.Context) attr.Type {
 type EnforceClusterComplianceResponse struct {
 	// A list of changes that have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
-	Changes types.List `tfsdk:"changes" tf:"optional"`
+	Changes types.List `tfsdk:"changes"`
 	// Whether any changes have been made to the cluster settings for the
 	// cluster to become compliant with its policy.
-	HasChanges types.Bool `tfsdk:"has_changes" tf:"optional"`
+	HasChanges types.Bool `tfsdk:"has_changes"`
 }
 
 func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnforceClusterComplianceResponse) {
 }
 
 func (newState *EnforceClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState EnforceClusterComplianceResponse) {
+}
+
+func (c EnforceClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["changes"] = attrs["changes"].SetOptional()
+	attrs["has_changes"] = attrs["has_changes"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EnforceClusterComplianceResponse.
@@ -7653,20 +8401,27 @@ type Environment struct {
 	// environment of the runtime. Each client comes with a specific set of
 	// pre-installed libraries. The version is a string, consisting of the major
 	// client version.
-	Client types.String `tfsdk:"client" tf:""`
+	Client types.String `tfsdk:"client"`
 	// List of pip dependencies, as supported by the version of pip in this
 	// environment. Each dependency is a pip requirement file line
 	// https://pip.pypa.io/en/stable/reference/requirements-file-format/ Allowed
 	// dependency could be <requirement specifier>, <archive url/path>, <local
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
-	Dependencies types.List `tfsdk:"dependencies" tf:"optional"`
+	Dependencies types.List `tfsdk:"dependencies"`
 }
 
 func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
 }
 
 func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environment) {
+}
+
+func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["client"] = attrs["client"].SetRequired()
+	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Environment.
@@ -7735,58 +8490,83 @@ func (o *Environment) SetDependencies(ctx context.Context, v []types.String) {
 type EventDetails struct {
 	// * For created clusters, the attributes of the cluster. * For edited
 	// clusters, the new attributes of the cluster.
-	Attributes types.List `tfsdk:"attributes" tf:"optional,object"`
+	Attributes types.Object `tfsdk:"attributes"`
 	// The cause of a change in target size.
-	Cause types.String `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause"`
 	// The actual cluster size that was set in the cluster creation or edit.
-	ClusterSize types.List `tfsdk:"cluster_size" tf:"optional,object"`
+	ClusterSize types.Object `tfsdk:"cluster_size"`
 	// The current number of vCPUs in the cluster.
-	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus" tf:"optional"`
+	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus"`
 	// The current number of nodes in the cluster.
-	CurrentNumWorkers types.Int64 `tfsdk:"current_num_workers" tf:"optional"`
+	CurrentNumWorkers types.Int64 `tfsdk:"current_num_workers"`
 	// <needs content added>
-	DidNotExpandReason types.String `tfsdk:"did_not_expand_reason" tf:"optional"`
+	DidNotExpandReason types.String `tfsdk:"did_not_expand_reason"`
 	// Current disk size in bytes
-	DiskSize types.Int64 `tfsdk:"disk_size" tf:"optional"`
+	DiskSize types.Int64 `tfsdk:"disk_size"`
 	// More details about the change in driver's state
-	DriverStateMessage types.String `tfsdk:"driver_state_message" tf:"optional"`
+	DriverStateMessage types.String `tfsdk:"driver_state_message"`
 	// Whether or not a blocklisted node should be terminated. For
 	// ClusterEventType NODE_BLACKLISTED.
-	EnableTerminationForNodeBlocklisted types.Bool `tfsdk:"enable_termination_for_node_blocklisted" tf:"optional"`
+	EnableTerminationForNodeBlocklisted types.Bool `tfsdk:"enable_termination_for_node_blocklisted"`
 	// <needs content added>
-	FreeSpace types.Int64 `tfsdk:"free_space" tf:"optional"`
+	FreeSpace types.Int64 `tfsdk:"free_space"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional,object"`
+	InitScripts types.Object `tfsdk:"init_scripts"`
 	// Instance Id where the event originated from
-	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
+	InstanceId types.String `tfsdk:"instance_id"`
 	// Unique identifier of the specific job run associated with this cluster
 	// event * For clusters created for jobs, this will be the same as the
 	// cluster name
-	JobRunName types.String `tfsdk:"job_run_name" tf:"optional"`
+	JobRunName types.String `tfsdk:"job_run_name"`
 	// The cluster attributes before a cluster was edited.
-	PreviousAttributes types.List `tfsdk:"previous_attributes" tf:"optional,object"`
+	PreviousAttributes types.Object `tfsdk:"previous_attributes"`
 	// The size of the cluster before an edit or resize.
-	PreviousClusterSize types.List `tfsdk:"previous_cluster_size" tf:"optional,object"`
+	PreviousClusterSize types.Object `tfsdk:"previous_cluster_size"`
 	// Previous disk size in bytes
-	PreviousDiskSize types.Int64 `tfsdk:"previous_disk_size" tf:"optional"`
+	PreviousDiskSize types.Int64 `tfsdk:"previous_disk_size"`
 	// A termination reason: * On a TERMINATED event, this is the reason of the
 	// termination. * On a RESIZE_COMPLETE event, this indicates the reason that
 	// we failed to acquire some nodes.
-	Reason types.List `tfsdk:"reason" tf:"optional,object"`
+	Reason types.Object `tfsdk:"reason"`
 	// The targeted number of vCPUs in the cluster.
-	TargetNumVcpus types.Int64 `tfsdk:"target_num_vcpus" tf:"optional"`
+	TargetNumVcpus types.Int64 `tfsdk:"target_num_vcpus"`
 	// The targeted number of nodes in the cluster.
-	TargetNumWorkers types.Int64 `tfsdk:"target_num_workers" tf:"optional"`
+	TargetNumWorkers types.Int64 `tfsdk:"target_num_workers"`
 	// The user that caused the event to occur. (Empty if it was done by the
 	// control plane.)
-	User types.String `tfsdk:"user" tf:"optional"`
+	User types.String `tfsdk:"user"`
 }
 
 func (newState *EventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventDetails) {
 }
 
 func (newState *EventDetails) SyncEffectiveFieldsDuringRead(existingState EventDetails) {
+}
+
+func (c EventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attributes"] = attrs["attributes"].SetOptional()
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
+	attrs["current_num_vcpus"] = attrs["current_num_vcpus"].SetOptional()
+	attrs["current_num_workers"] = attrs["current_num_workers"].SetOptional()
+	attrs["did_not_expand_reason"] = attrs["did_not_expand_reason"].SetOptional()
+	attrs["disk_size"] = attrs["disk_size"].SetOptional()
+	attrs["driver_state_message"] = attrs["driver_state_message"].SetOptional()
+	attrs["enable_termination_for_node_blocklisted"] = attrs["enable_termination_for_node_blocklisted"].SetOptional()
+	attrs["free_space"] = attrs["free_space"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_id"] = attrs["instance_id"].SetOptional()
+	attrs["job_run_name"] = attrs["job_run_name"].SetOptional()
+	attrs["previous_attributes"] = attrs["previous_attributes"].SetOptional()
+	attrs["previous_cluster_size"] = attrs["previous_cluster_size"].SetOptional()
+	attrs["previous_disk_size"] = attrs["previous_disk_size"].SetOptional()
+	attrs["reason"] = attrs["reason"].SetOptional()
+	attrs["target_num_vcpus"] = attrs["target_num_vcpus"].SetOptional()
+	attrs["target_num_workers"] = attrs["target_num_workers"].SetOptional()
+	attrs["user"] = attrs["user"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EventDetails.
@@ -7841,38 +8621,26 @@ func (o EventDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o EventDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"attributes": basetypes.ListType{
-				ElemType: ClusterAttributes{}.Type(ctx),
-			},
-			"cause": types.StringType,
-			"cluster_size": basetypes.ListType{
-				ElemType: ClusterSize{}.Type(ctx),
-			},
-			"current_num_vcpus":                       types.Int64Type,
-			"current_num_workers":                     types.Int64Type,
-			"did_not_expand_reason":                   types.StringType,
-			"disk_size":                               types.Int64Type,
-			"driver_state_message":                    types.StringType,
+			"attributes":            ClusterAttributes{}.Type(ctx),
+			"cause":                 types.StringType,
+			"cluster_size":          ClusterSize{}.Type(ctx),
+			"current_num_vcpus":     types.Int64Type,
+			"current_num_workers":   types.Int64Type,
+			"did_not_expand_reason": types.StringType,
+			"disk_size":             types.Int64Type,
+			"driver_state_message":  types.StringType,
 			"enable_termination_for_node_blocklisted": types.BoolType,
-			"free_space":                              types.Int64Type,
-			"init_scripts": basetypes.ListType{
-				ElemType: InitScriptEventDetails{}.Type(ctx),
-			},
-			"instance_id":  types.StringType,
-			"job_run_name": types.StringType,
-			"previous_attributes": basetypes.ListType{
-				ElemType: ClusterAttributes{}.Type(ctx),
-			},
-			"previous_cluster_size": basetypes.ListType{
-				ElemType: ClusterSize{}.Type(ctx),
-			},
-			"previous_disk_size": types.Int64Type,
-			"reason": basetypes.ListType{
-				ElemType: TerminationReason{}.Type(ctx),
-			},
-			"target_num_vcpus":   types.Int64Type,
-			"target_num_workers": types.Int64Type,
-			"user":               types.StringType,
+			"free_space":            types.Int64Type,
+			"init_scripts":          InitScriptEventDetails{}.Type(ctx),
+			"instance_id":           types.StringType,
+			"job_run_name":          types.StringType,
+			"previous_attributes":   ClusterAttributes{}.Type(ctx),
+			"previous_cluster_size": ClusterSize{}.Type(ctx),
+			"previous_disk_size":    types.Int64Type,
+			"reason":                TerminationReason{}.Type(ctx),
+			"target_num_vcpus":      types.Int64Type,
+			"target_num_workers":    types.Int64Type,
+			"user":                  types.StringType,
 		},
 	}
 }
@@ -7886,7 +8654,10 @@ func (o *EventDetails) GetAttributes(ctx context.Context) (ClusterAttributes, bo
 		return e, false
 	}
 	var v []ClusterAttributes
-	d := o.Attributes.ElementsAs(ctx, &v, true)
+	d := o.Attributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7898,9 +8669,8 @@ func (o *EventDetails) GetAttributes(ctx context.Context) (ClusterAttributes, bo
 
 // SetAttributes sets the value of the Attributes field in EventDetails.
 func (o *EventDetails) SetAttributes(ctx context.Context, v ClusterAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["attributes"]
-	o.Attributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Attributes = vs
 }
 
 // GetClusterSize returns the value of the ClusterSize field in EventDetails as
@@ -7912,7 +8682,10 @@ func (o *EventDetails) GetClusterSize(ctx context.Context) (ClusterSize, bool) {
 		return e, false
 	}
 	var v []ClusterSize
-	d := o.ClusterSize.ElementsAs(ctx, &v, true)
+	d := o.ClusterSize.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7924,9 +8697,8 @@ func (o *EventDetails) GetClusterSize(ctx context.Context) (ClusterSize, bool) {
 
 // SetClusterSize sets the value of the ClusterSize field in EventDetails.
 func (o *EventDetails) SetClusterSize(ctx context.Context, v ClusterSize) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_size"]
-	o.ClusterSize = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterSize = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in EventDetails as
@@ -7938,7 +8710,10 @@ func (o *EventDetails) GetInitScripts(ctx context.Context) (InitScriptEventDetai
 		return e, false
 	}
 	var v []InitScriptEventDetails
-	d := o.InitScripts.ElementsAs(ctx, &v, true)
+	d := o.InitScripts.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7950,9 +8725,8 @@ func (o *EventDetails) GetInitScripts(ctx context.Context) (InitScriptEventDetai
 
 // SetInitScripts sets the value of the InitScripts field in EventDetails.
 func (o *EventDetails) SetInitScripts(ctx context.Context, v InitScriptEventDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["init_scripts"]
-	o.InitScripts = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.InitScripts = vs
 }
 
 // GetPreviousAttributes returns the value of the PreviousAttributes field in EventDetails as
@@ -7964,7 +8738,10 @@ func (o *EventDetails) GetPreviousAttributes(ctx context.Context) (ClusterAttrib
 		return e, false
 	}
 	var v []ClusterAttributes
-	d := o.PreviousAttributes.ElementsAs(ctx, &v, true)
+	d := o.PreviousAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -7976,9 +8753,8 @@ func (o *EventDetails) GetPreviousAttributes(ctx context.Context) (ClusterAttrib
 
 // SetPreviousAttributes sets the value of the PreviousAttributes field in EventDetails.
 func (o *EventDetails) SetPreviousAttributes(ctx context.Context, v ClusterAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["previous_attributes"]
-	o.PreviousAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.PreviousAttributes = vs
 }
 
 // GetPreviousClusterSize returns the value of the PreviousClusterSize field in EventDetails as
@@ -7990,7 +8766,10 @@ func (o *EventDetails) GetPreviousClusterSize(ctx context.Context) (ClusterSize,
 		return e, false
 	}
 	var v []ClusterSize
-	d := o.PreviousClusterSize.ElementsAs(ctx, &v, true)
+	d := o.PreviousClusterSize.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8002,9 +8781,8 @@ func (o *EventDetails) GetPreviousClusterSize(ctx context.Context) (ClusterSize,
 
 // SetPreviousClusterSize sets the value of the PreviousClusterSize field in EventDetails.
 func (o *EventDetails) SetPreviousClusterSize(ctx context.Context, v ClusterSize) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["previous_cluster_size"]
-	o.PreviousClusterSize = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.PreviousClusterSize = vs
 }
 
 // GetReason returns the value of the Reason field in EventDetails as
@@ -8016,7 +8794,10 @@ func (o *EventDetails) GetReason(ctx context.Context) (TerminationReason, bool) 
 		return e, false
 	}
 	var v []TerminationReason
-	d := o.Reason.ElementsAs(ctx, &v, true)
+	d := o.Reason.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8028,35 +8809,34 @@ func (o *EventDetails) GetReason(ctx context.Context) (TerminationReason, bool) 
 
 // SetReason sets the value of the Reason field in EventDetails.
 func (o *EventDetails) SetReason(ctx context.Context, v TerminationReason) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reason"]
-	o.Reason = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Reason = vs
 }
 
 type GcpAttributes struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
 	// if the former is unavailable.
-	Availability types.String `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability"`
 	// boot disk size in GB
-	BootDiskSize types.Int64 `tfsdk:"boot_disk_size" tf:"optional"`
+	BootDiskSize types.Int64 `tfsdk:"boot_disk_size"`
 	// If provided, the cluster will impersonate the google service account when
 	// accessing gcloud services (like GCS). The google service account must
 	// have previously been added to the Databricks environment by an account
 	// administrator.
-	GoogleServiceAccount types.String `tfsdk:"google_service_account" tf:"optional"`
+	GoogleServiceAccount types.String `tfsdk:"google_service_account"`
 	// If provided, each node (workers and driver) in the cluster will have this
 	// number of local SSDs attached. Each local SSD is 375GB in size. Refer to
 	// [GCP documentation] for the supported number of local SSDs for each
 	// instance type.
 	//
 	// [GCP documentation]: https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds
-	LocalSsdCount types.Int64 `tfsdk:"local_ssd_count" tf:"optional"`
+	LocalSsdCount types.Int64 `tfsdk:"local_ssd_count"`
 	// This field determines whether the spark executors will be scheduled to
 	// run on preemptible VMs (when set to true) versus standard compute engine
 	// VMs (when set to false; default). Note: Soon to be deprecated, use the
 	// availability field instead.
-	UsePreemptibleExecutors types.Bool `tfsdk:"use_preemptible_executors" tf:"optional"`
+	UsePreemptibleExecutors types.Bool `tfsdk:"use_preemptible_executors"`
 	// Identifier for the availability zone in which the cluster resides. This
 	// can be one of the following: - "HA" => High availability, spread nodes
 	// across availability zones for a Databricks deployment region [default] -
@@ -8064,13 +8844,24 @@ type GcpAttributes struct {
 	// on. - A GCP availability zone => Pick One of the available zones for
 	// (machine type + region) from
 	// https://cloud.google.com/compute/docs/regions-zones.
-	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
+	ZoneId types.String `tfsdk:"zone_id"`
 }
 
 func (newState *GcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcpAttributes) {
 }
 
 func (newState *GcpAttributes) SyncEffectiveFieldsDuringRead(existingState GcpAttributes) {
+}
+
+func (c GcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["boot_disk_size"] = attrs["boot_disk_size"].SetOptional()
+	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
+	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
+	attrs["use_preemptible_executors"] = attrs["use_preemptible_executors"].SetOptional()
+	attrs["zone_id"] = attrs["zone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcpAttributes.
@@ -8116,13 +8907,19 @@ func (o GcpAttributes) Type(ctx context.Context) attr.Type {
 
 type GcsStorageInfo struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan GcsStorageInfo) {
 }
 
 func (newState *GcsStorageInfo) SyncEffectiveFieldsDuringRead(existingState GcsStorageInfo) {
+}
+
+func (c GcsStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GcsStorageInfo.
@@ -8162,12 +8959,6 @@ type GetClusterComplianceRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceRequest) {
-}
-
-func (newState *GetClusterComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8203,18 +8994,25 @@ type GetClusterComplianceResponse struct {
 	// Whether the cluster is compliant with its policy or not. Clusters could
 	// be out of compliance if the policy was updated after the cluster was last
 	// edited.
-	IsCompliant types.Bool `tfsdk:"is_compliant" tf:"optional"`
+	IsCompliant types.Bool `tfsdk:"is_compliant"`
 	// An object containing key-value mappings representing the first 200 policy
 	// validation errors. The keys indicate the path where the policy validation
 	// error is occurring. The values indicate an error message describing the
 	// policy validation error.
-	Violations types.Map `tfsdk:"violations" tf:"optional"`
+	Violations types.Map `tfsdk:"violations"`
 }
 
 func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceResponse) {
 }
 
 func (newState *GetClusterComplianceResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceResponse) {
+}
+
+func (c GetClusterComplianceResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_compliant"] = attrs["is_compliant"].SetOptional()
+	attrs["violations"] = attrs["violations"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterComplianceResponse.
@@ -8286,12 +9084,6 @@ type GetClusterPermissionLevelsRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsRequest) {
-}
-
-func (newState *GetClusterPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8325,13 +9117,19 @@ func (o GetClusterPermissionLevelsRequest) Type(ctx context.Context) attr.Type {
 
 type GetClusterPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsResponse) {
 }
 
 func (newState *GetClusterPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsResponse) {
+}
+
+func (c GetClusterPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPermissionLevelsResponse.
@@ -8401,12 +9199,6 @@ type GetClusterPermissionsRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionsRequest) {
-}
-
-func (newState *GetClusterPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8444,12 +9236,6 @@ type GetClusterPolicyPermissionLevelsRequest struct {
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsRequest) {
-}
-
-func (newState *GetClusterPolicyPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8483,13 +9269,19 @@ func (o GetClusterPolicyPermissionLevelsRequest) Type(ctx context.Context) attr.
 
 type GetClusterPolicyPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsResponse) {
 }
 
 func (newState *GetClusterPolicyPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsResponse) {
+}
+
+func (c GetClusterPolicyPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyPermissionLevelsResponse.
@@ -8559,12 +9351,6 @@ type GetClusterPolicyPermissionsRequest struct {
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionsRequest) {
-}
-
-func (newState *GetClusterPolicyPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8600,12 +9386,6 @@ func (o GetClusterPolicyPermissionsRequest) Type(ctx context.Context) attr.Type 
 type GetClusterPolicyRequest struct {
 	// Canonical unique identifier for the Cluster Policy.
 	PolicyId types.String `tfsdk:"-"`
-}
-
-func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyRequest) {
-}
-
-func (newState *GetClusterPolicyRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyRequest.
@@ -8645,12 +9425,6 @@ type GetClusterRequest struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
-func (newState *GetClusterRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterRequest) {
-}
-
-func (newState *GetClusterRequest) SyncEffectiveFieldsDuringRead(existingState GetClusterRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8684,31 +9458,43 @@ func (o GetClusterRequest) Type(ctx context.Context) attr.Type {
 
 type GetEvents struct {
 	// The ID of the cluster to retrieve events about.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The end time in epoch milliseconds. If empty, returns events up to the
 	// current time.
-	EndTime types.Int64 `tfsdk:"end_time" tf:"optional"`
+	EndTime types.Int64 `tfsdk:"end_time"`
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
-	EventTypes types.List `tfsdk:"event_types" tf:"optional"`
+	EventTypes types.List `tfsdk:"event_types"`
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
-	Limit types.Int64 `tfsdk:"limit" tf:"optional"`
+	Limit types.Int64 `tfsdk:"limit"`
 	// The offset in the result set. Defaults to 0 (no offset). When an offset
 	// is specified and the results are requested in descending order, the
 	// end_time field is required.
-	Offset types.Int64 `tfsdk:"offset" tf:"optional"`
+	Offset types.Int64 `tfsdk:"offset"`
 	// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
-	Order types.String `tfsdk:"order" tf:"optional"`
+	Order types.String `tfsdk:"order"`
 	// The start time in epoch milliseconds. If empty, returns events starting
 	// from the beginning of time.
-	StartTime types.Int64 `tfsdk:"start_time" tf:"optional"`
+	StartTime types.Int64 `tfsdk:"start_time"`
 }
 
 func (newState *GetEvents) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEvents) {
 }
 
 func (newState *GetEvents) SyncEffectiveFieldsDuringRead(existingState GetEvents) {
+}
+
+func (c GetEvents) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["end_time"] = attrs["end_time"].SetOptional()
+	attrs["event_types"] = attrs["event_types"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["order"] = attrs["order"].SetOptional()
+	attrs["start_time"] = attrs["start_time"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEvents.
@@ -8786,19 +9572,27 @@ func (o *GetEvents) SetEventTypes(ctx context.Context, v []types.String) {
 
 type GetEventsResponse struct {
 	// <content needs to be added>
-	Events types.List `tfsdk:"events" tf:"optional"`
+	Events types.List `tfsdk:"events"`
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
-	NextPage types.List `tfsdk:"next_page" tf:"optional,object"`
+	NextPage types.Object `tfsdk:"next_page"`
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
-	TotalCount types.Int64 `tfsdk:"total_count" tf:"optional"`
+	TotalCount types.Int64 `tfsdk:"total_count"`
 }
 
 func (newState *GetEventsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEventsResponse) {
 }
 
 func (newState *GetEventsResponse) SyncEffectiveFieldsDuringRead(existingState GetEventsResponse) {
+}
+
+func (c GetEventsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["events"] = attrs["events"].SetOptional()
+	attrs["next_page"] = attrs["next_page"].SetOptional()
+	attrs["total_count"] = attrs["total_count"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEventsResponse.
@@ -8835,9 +9629,7 @@ func (o GetEventsResponse) Type(ctx context.Context) attr.Type {
 			"events": basetypes.ListType{
 				ElemType: ClusterEvent{}.Type(ctx),
 			},
-			"next_page": basetypes.ListType{
-				ElemType: GetEvents{}.Type(ctx),
-			},
+			"next_page":   GetEvents{}.Type(ctx),
 			"total_count": types.Int64Type,
 		},
 	}
@@ -8878,7 +9670,10 @@ func (o *GetEventsResponse) GetNextPage(ctx context.Context) (GetEvents, bool) {
 		return e, false
 	}
 	var v []GetEvents
-	d := o.NextPage.ElementsAs(ctx, &v, true)
+	d := o.NextPage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -8890,21 +9685,14 @@ func (o *GetEventsResponse) GetNextPage(ctx context.Context) (GetEvents, bool) {
 
 // SetNextPage sets the value of the NextPage field in GetEventsResponse.
 func (o *GetEventsResponse) SetNextPage(ctx context.Context, v GetEvents) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["next_page"]
-	o.NextPage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.NextPage = vs
 }
 
 // Get an init script
 type GetGlobalInitScriptRequest struct {
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
-}
-
-func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetGlobalInitScriptRequest) {
-}
-
-func (newState *GetGlobalInitScriptRequest) SyncEffectiveFieldsDuringRead(existingState GetGlobalInitScriptRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetGlobalInitScriptRequest.
@@ -8941,16 +9729,16 @@ func (o GetGlobalInitScriptRequest) Type(ctx context.Context) attr.Type {
 type GetInstancePool struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -8961,19 +9749,19 @@ type GetInstancePool struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
 	// permissions to function correctly - refer to the User Guide for more
 	// details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -8981,43 +9769,66 @@ type GetInstancePool struct {
 	// threshold must be between 0 and 10000 minutes. Users can also set this
 	// value to 0 to instantly remove idle instances from the cache if min cache
 	// size could still hold.
-	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes" tf:"optional"`
+	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes"`
 	// Canonical unique identifier for the pool.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:""`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// Pool name requested by the user. Pool name must be unique. Length must be
 	// between 1 and 100 characters.
-	InstancePoolName types.String `tfsdk:"instance_pool_name" tf:"optional"`
+	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
 	// further instance provisioning will fail during upsize requests.
-	MaxCapacity types.Int64 `tfsdk:"max_capacity" tf:"optional"`
+	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
-	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances" tf:"optional"`
+	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// Current state of the instance pool.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// Usage statistics about the instance pool.
-	Stats types.List `tfsdk:"stats" tf:"optional,object"`
+	Stats types.Object `tfsdk:"stats"`
 	// Status of failed pending instances in the pool.
-	Status types.List `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 }
 
 func (newState *GetInstancePool) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePool) {
 }
 
 func (newState *GetInstancePool) SyncEffectiveFieldsDuringRead(existingState GetInstancePool) {
+}
+
+func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["default_tags"] = attrs["default_tags"].SetOptional()
+	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
+	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
+	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
+	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["stats"] = attrs["stats"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePool.
@@ -9074,25 +9885,17 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes": basetypes.ListType{
-				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
-			},
+			"aws_attributes":   InstancePoolAwsAttributes{}.Type(ctx),
+			"azure_attributes": InstancePoolAzureAttributes{}.Type(ctx),
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec": basetypes.ListType{
-				ElemType: DiskSpec{}.Type(ctx),
-			},
-			"enable_elastic_disk": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
-			},
+			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_elastic_disk":                   types.BoolType,
+			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
@@ -9105,13 +9908,9 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state": types.StringType,
-			"stats": basetypes.ListType{
-				ElemType: InstancePoolStats{}.Type(ctx),
-			},
-			"status": basetypes.ListType{
-				ElemType: InstancePoolStatus{}.Type(ctx),
-			},
+			"state":  types.StringType,
+			"stats":  InstancePoolStats{}.Type(ctx),
+			"status": InstancePoolStatus{}.Type(ctx),
 		},
 	}
 }
@@ -9125,7 +9924,10 @@ func (o *GetInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAws
 		return e, false
 	}
 	var v []InstancePoolAwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9137,9 +9939,8 @@ func (o *GetInstancePool) GetAwsAttributes(ctx context.Context) (InstancePoolAws
 
 // SetAwsAttributes sets the value of the AwsAttributes field in GetInstancePool.
 func (o *GetInstancePool) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in GetInstancePool as
@@ -9151,7 +9952,10 @@ func (o *GetInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolA
 		return e, false
 	}
 	var v []InstancePoolAzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9163,9 +9967,8 @@ func (o *GetInstancePool) GetAzureAttributes(ctx context.Context) (InstancePoolA
 
 // SetAzureAttributes sets the value of the AzureAttributes field in GetInstancePool.
 func (o *GetInstancePool) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in GetInstancePool as
@@ -9229,7 +10032,10 @@ func (o *GetInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 		return e, false
 	}
 	var v []DiskSpec
-	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9241,9 +10047,8 @@ func (o *GetInstancePool) GetDiskSpec(ctx context.Context) (DiskSpec, bool) {
 
 // SetDiskSpec sets the value of the DiskSpec field in GetInstancePool.
 func (o *GetInstancePool) SetDiskSpec(ctx context.Context, v DiskSpec) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
-	o.DiskSpec = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DiskSpec = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in GetInstancePool as
@@ -9255,7 +10060,10 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 		return e, false
 	}
 	var v []InstancePoolGcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9267,9 +10075,8 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 
 // SetGcpAttributes sets the value of the GcpAttributes field in GetInstancePool.
 func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -9333,7 +10140,10 @@ func (o *GetInstancePool) GetStats(ctx context.Context) (InstancePoolStats, bool
 		return e, false
 	}
 	var v []InstancePoolStats
-	d := o.Stats.ElementsAs(ctx, &v, true)
+	d := o.Stats.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9345,9 +10155,8 @@ func (o *GetInstancePool) GetStats(ctx context.Context) (InstancePoolStats, bool
 
 // SetStats sets the value of the Stats field in GetInstancePool.
 func (o *GetInstancePool) SetStats(ctx context.Context, v InstancePoolStats) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
-	o.Stats = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Stats = vs
 }
 
 // GetStatus returns the value of the Status field in GetInstancePool as
@@ -9359,7 +10168,10 @@ func (o *GetInstancePool) GetStatus(ctx context.Context) (InstancePoolStatus, bo
 		return e, false
 	}
 	var v []InstancePoolStatus
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -9371,21 +10183,14 @@ func (o *GetInstancePool) GetStatus(ctx context.Context) (InstancePoolStatus, bo
 
 // SetStatus sets the value of the Status field in GetInstancePool.
 func (o *GetInstancePool) SetStatus(ctx context.Context, v InstancePoolStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Status = vs
 }
 
 // Get instance pool permission levels
 type GetInstancePoolPermissionLevelsRequest struct {
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
-}
-
-func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsRequest) {
-}
-
-func (newState *GetInstancePoolPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolPermissionLevelsRequest.
@@ -9421,13 +10226,19 @@ func (o GetInstancePoolPermissionLevelsRequest) Type(ctx context.Context) attr.T
 
 type GetInstancePoolPermissionLevelsResponse struct {
 	// Specific permission levels
-	PermissionLevels types.List `tfsdk:"permission_levels" tf:"optional"`
+	PermissionLevels types.List `tfsdk:"permission_levels"`
 }
 
 func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsResponse) {
 }
 
 func (newState *GetInstancePoolPermissionLevelsResponse) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsResponse) {
+}
+
+func (c GetInstancePoolPermissionLevelsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_levels"] = attrs["permission_levels"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolPermissionLevelsResponse.
@@ -9497,12 +10308,6 @@ type GetInstancePoolPermissionsRequest struct {
 	InstancePoolId types.String `tfsdk:"-"`
 }
 
-func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionsRequest) {
-}
-
-func (newState *GetInstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionsRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9538,12 +10343,6 @@ func (o GetInstancePoolPermissionsRequest) Type(ctx context.Context) attr.Type {
 type GetInstancePoolRequest struct {
 	// The canonical unique identifier for the instance pool.
 	InstancePoolId types.String `tfsdk:"-"`
-}
-
-func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolRequest) {
-}
-
-func (newState *GetInstancePoolRequest) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolRequest) {
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolRequest.
@@ -9586,12 +10385,6 @@ type GetPolicyFamilyRequest struct {
 	Version types.Int64 `tfsdk:"-"`
 }
 
-func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyFamilyRequest) {
-}
-
-func (newState *GetPolicyFamilyRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyFamilyRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyFamilyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9627,13 +10420,19 @@ func (o GetPolicyFamilyRequest) Type(ctx context.Context) attr.Type {
 
 type GetSparkVersionsResponse struct {
 	// All the available Spark versions.
-	Versions types.List `tfsdk:"versions" tf:"optional"`
+	Versions types.List `tfsdk:"versions"`
 }
 
 func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetSparkVersionsResponse) {
 }
 
 func (newState *GetSparkVersionsResponse) SyncEffectiveFieldsDuringRead(existingState GetSparkVersionsResponse) {
+}
+
+func (c GetSparkVersionsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["versions"] = attrs["versions"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetSparkVersionsResponse.
@@ -9699,9 +10498,9 @@ func (o *GetSparkVersionsResponse) SetVersions(ctx context.Context, v []SparkVer
 
 type GlobalInitScriptCreateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the script
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The position of a global init script, where 0 represents the first script
 	// to run, 1 is the second script to run, in ascending order.
 	//
@@ -9713,15 +10512,24 @@ type GlobalInitScriptCreateRequest struct {
 	// position. If an explicit position value conflicts with an existing script
 	// value, your request succeeds, but the original script at that position
 	// and all later scripts have their positions incremented by 1.
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
+	Position types.Int64 `tfsdk:"position"`
 	// The Base64-encoded content of the script.
-	Script types.String `tfsdk:"script" tf:""`
+	Script types.String `tfsdk:"script"`
 }
 
 func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptCreateRequest) {
 }
 
 func (newState *GlobalInitScriptCreateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptCreateRequest) {
+}
+
+func (c GlobalInitScriptCreateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["script"] = attrs["script"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptCreateRequest.
@@ -9764,29 +10572,42 @@ func (o GlobalInitScriptCreateRequest) Type(ctx context.Context) attr.Type {
 type GlobalInitScriptDetails struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The username of the user who created the script.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 	// Specifies whether the script is enabled. The script runs only if enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the script
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order.
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
+	Position types.Int64 `tfsdk:"position"`
 	// The global init script ID.
-	ScriptId types.String `tfsdk:"script_id" tf:"optional"`
+	ScriptId types.String `tfsdk:"script_id"`
 	// Time when the script was updated, represented as a Unix timestamp in
 	// milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The username of the user who last updated the script
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetails) {
 }
 
 func (newState *GlobalInitScriptDetails) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetails) {
+}
+
+func (c GlobalInitScriptDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["script_id"] = attrs["script_id"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptDetails.
@@ -9837,31 +10658,45 @@ func (o GlobalInitScriptDetails) Type(ctx context.Context) attr.Type {
 type GlobalInitScriptDetailsWithContent struct {
 	// Time when the script was created, represented as a Unix timestamp in
 	// milliseconds.
-	CreatedAt types.Int64 `tfsdk:"created_at" tf:"optional"`
+	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The username of the user who created the script.
-	CreatedBy types.String `tfsdk:"created_by" tf:"optional"`
+	CreatedBy types.String `tfsdk:"created_by"`
 	// Specifies whether the script is enabled. The script runs only if enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the script
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order.
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
+	Position types.Int64 `tfsdk:"position"`
 	// The Base64-encoded content of the script.
-	Script types.String `tfsdk:"script" tf:"optional"`
+	Script types.String `tfsdk:"script"`
 	// The global init script ID.
-	ScriptId types.String `tfsdk:"script_id" tf:"optional"`
+	ScriptId types.String `tfsdk:"script_id"`
 	// Time when the script was updated, represented as a Unix timestamp in
 	// milliseconds.
-	UpdatedAt types.Int64 `tfsdk:"updated_at" tf:"optional"`
+	UpdatedAt types.Int64 `tfsdk:"updated_at"`
 	// The username of the user who last updated the script
-	UpdatedBy types.String `tfsdk:"updated_by" tf:"optional"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringCreateOrUpdate(plan GlobalInitScriptDetailsWithContent) {
 }
 
 func (newState *GlobalInitScriptDetailsWithContent) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptDetailsWithContent) {
+}
+
+func (c GlobalInitScriptDetailsWithContent) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at"] = attrs["created_at"].SetOptional()
+	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["script"] = attrs["script"].SetOptional()
+	attrs["script_id"] = attrs["script_id"].SetOptional()
+	attrs["updated_at"] = attrs["updated_at"].SetOptional()
+	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptDetailsWithContent.
@@ -9913,9 +10748,9 @@ func (o GlobalInitScriptDetailsWithContent) Type(ctx context.Context) attr.Type 
 
 type GlobalInitScriptUpdateRequest struct {
 	// Specifies whether the script is enabled. The script runs only if enabled.
-	Enabled types.Bool `tfsdk:"enabled" tf:"optional"`
+	Enabled types.Bool `tfsdk:"enabled"`
 	// The name of the script
-	Name types.String `tfsdk:"name" tf:""`
+	Name types.String `tfsdk:"name"`
 	// The position of a script, where 0 represents the first script to run, 1
 	// is the second script to run, in ascending order. To move the script to
 	// run first, set its position to 0.
@@ -9928,9 +10763,9 @@ type GlobalInitScriptUpdateRequest struct {
 	// If an explicit position value conflicts with an existing script, your
 	// request succeeds, but the original script at that position and all later
 	// scripts have their positions incremented by 1.
-	Position types.Int64 `tfsdk:"position" tf:"optional"`
+	Position types.Int64 `tfsdk:"position"`
 	// The Base64-encoded content of the script.
-	Script types.String `tfsdk:"script" tf:""`
+	Script types.String `tfsdk:"script"`
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
 }
@@ -9939,6 +10774,16 @@ func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringCreateOr
 }
 
 func (newState *GlobalInitScriptUpdateRequest) SyncEffectiveFieldsDuringRead(existingState GlobalInitScriptUpdateRequest) {
+}
+
+func (c GlobalInitScriptUpdateRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["position"] = attrs["position"].SetOptional()
+	attrs["script"] = attrs["script"].SetRequired()
+	attrs["script_id"] = attrs["script_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GlobalInitScriptUpdateRequest.
@@ -9982,17 +10827,25 @@ func (o GlobalInitScriptUpdateRequest) Type(ctx context.Context) attr.Type {
 
 type InitScriptEventDetails struct {
 	// The cluster scoped init scripts associated with this cluster event
-	Cluster types.List `tfsdk:"cluster" tf:"optional"`
+	Cluster types.List `tfsdk:"cluster"`
 	// The global init scripts associated with this cluster event
-	Global types.List `tfsdk:"global" tf:"optional"`
+	Global types.List `tfsdk:"global"`
 	// The private ip address of the node where the init scripts were run.
-	ReportedForNode types.String `tfsdk:"reported_for_node" tf:"optional"`
+	ReportedForNode types.String `tfsdk:"reported_for_node"`
 }
 
 func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptEventDetails) {
 }
 
 func (newState *InitScriptEventDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptEventDetails) {
+}
+
+func (c InitScriptEventDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster"] = attrs["cluster"].SetOptional()
+	attrs["global"] = attrs["global"].SetOptional()
+	attrs["reported_for_node"] = attrs["reported_for_node"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InitScriptEventDetails.
@@ -10091,17 +10944,25 @@ func (o *InitScriptEventDetails) SetGlobal(ctx context.Context, v []InitScriptIn
 
 type InitScriptExecutionDetails struct {
 	// Addition details regarding errors.
-	ErrorMessage types.String `tfsdk:"error_message" tf:"optional"`
+	ErrorMessage types.String `tfsdk:"error_message"`
 	// The duration of the script execution in seconds.
-	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds" tf:"optional"`
+	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds"`
 	// The current status of the script
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptExecutionDetails) {
 }
 
 func (newState *InitScriptExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptExecutionDetails) {
+}
+
+func (c InitScriptExecutionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["execution_duration_seconds"] = attrs["execution_duration_seconds"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InitScriptExecutionDetails.
@@ -10143,34 +11004,46 @@ type InitScriptInfo struct {
 	// destination needs to be provided. e.g. `{ "abfss" : { "destination" :
 	// "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>"
 	// } }
-	Abfss types.List `tfsdk:"abfss" tf:"optional,object"`
+	Abfss types.Object `tfsdk:"abfss"`
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
-	Dbfs types.List `tfsdk:"dbfs" tf:"optional,object"`
+	Dbfs types.Object `tfsdk:"dbfs"`
 	// destination needs to be provided. e.g. `{ "file" : { "destination" :
 	// "file:/my/local/file.sh" } }`
-	File types.List `tfsdk:"file" tf:"optional,object"`
+	File types.Object `tfsdk:"file"`
 	// destination needs to be provided. e.g. `{ "gcs": { "destination":
 	// "gs://my-bucket/file.sh" } }`
-	Gcs types.List `tfsdk:"gcs" tf:"optional,object"`
+	Gcs types.Object `tfsdk:"gcs"`
 	// destination and either the region or endpoint need to be provided. e.g.
 	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
 	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
-	S3 types.List `tfsdk:"s3" tf:"optional,object"`
+	S3 types.Object `tfsdk:"s3"`
 	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
 	// "/Volumes/my-init.sh" } }`
-	Volumes types.List `tfsdk:"volumes" tf:"optional,object"`
+	Volumes types.Object `tfsdk:"volumes"`
 	// destination needs to be provided. e.g. `{ "workspace" : { "destination" :
 	// "/Users/user1@databricks.com/my-init.sh" } }`
-	Workspace types.List `tfsdk:"workspace" tf:"optional,object"`
+	Workspace types.Object `tfsdk:"workspace"`
 }
 
 func (newState *InitScriptInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfo) {
 }
 
 func (newState *InitScriptInfo) SyncEffectiveFieldsDuringRead(existingState InitScriptInfo) {
+}
+
+func (c InitScriptInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["abfss"] = attrs["abfss"].SetOptional()
+	attrs["dbfs"] = attrs["dbfs"].SetOptional()
+	attrs["file"] = attrs["file"].SetOptional()
+	attrs["gcs"] = attrs["gcs"].SetOptional()
+	attrs["s3"] = attrs["s3"].SetOptional()
+	attrs["volumes"] = attrs["volumes"].SetOptional()
+	attrs["workspace"] = attrs["workspace"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InitScriptInfo.
@@ -10213,27 +11086,13 @@ func (o InitScriptInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o InitScriptInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"abfss": basetypes.ListType{
-				ElemType: Adlsgen2Info{}.Type(ctx),
-			},
-			"dbfs": basetypes.ListType{
-				ElemType: DbfsStorageInfo{}.Type(ctx),
-			},
-			"file": basetypes.ListType{
-				ElemType: LocalFileInfo{}.Type(ctx),
-			},
-			"gcs": basetypes.ListType{
-				ElemType: GcsStorageInfo{}.Type(ctx),
-			},
-			"s3": basetypes.ListType{
-				ElemType: S3StorageInfo{}.Type(ctx),
-			},
-			"volumes": basetypes.ListType{
-				ElemType: VolumesStorageInfo{}.Type(ctx),
-			},
-			"workspace": basetypes.ListType{
-				ElemType: WorkspaceStorageInfo{}.Type(ctx),
-			},
+			"abfss":     Adlsgen2Info{}.Type(ctx),
+			"dbfs":      DbfsStorageInfo{}.Type(ctx),
+			"file":      LocalFileInfo{}.Type(ctx),
+			"gcs":       GcsStorageInfo{}.Type(ctx),
+			"s3":        S3StorageInfo{}.Type(ctx),
+			"volumes":   VolumesStorageInfo{}.Type(ctx),
+			"workspace": WorkspaceStorageInfo{}.Type(ctx),
 		},
 	}
 }
@@ -10247,7 +11106,10 @@ func (o *InitScriptInfo) GetAbfss(ctx context.Context) (Adlsgen2Info, bool) {
 		return e, false
 	}
 	var v []Adlsgen2Info
-	d := o.Abfss.ElementsAs(ctx, &v, true)
+	d := o.Abfss.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10259,9 +11121,8 @@ func (o *InitScriptInfo) GetAbfss(ctx context.Context) (Adlsgen2Info, bool) {
 
 // SetAbfss sets the value of the Abfss field in InitScriptInfo.
 func (o *InitScriptInfo) SetAbfss(ctx context.Context, v Adlsgen2Info) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["abfss"]
-	o.Abfss = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Abfss = vs
 }
 
 // GetDbfs returns the value of the Dbfs field in InitScriptInfo as
@@ -10273,7 +11134,10 @@ func (o *InitScriptInfo) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 		return e, false
 	}
 	var v []DbfsStorageInfo
-	d := o.Dbfs.ElementsAs(ctx, &v, true)
+	d := o.Dbfs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10285,9 +11149,8 @@ func (o *InitScriptInfo) GetDbfs(ctx context.Context) (DbfsStorageInfo, bool) {
 
 // SetDbfs sets the value of the Dbfs field in InitScriptInfo.
 func (o *InitScriptInfo) SetDbfs(ctx context.Context, v DbfsStorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbfs"]
-	o.Dbfs = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Dbfs = vs
 }
 
 // GetFile returns the value of the File field in InitScriptInfo as
@@ -10299,7 +11162,10 @@ func (o *InitScriptInfo) GetFile(ctx context.Context) (LocalFileInfo, bool) {
 		return e, false
 	}
 	var v []LocalFileInfo
-	d := o.File.ElementsAs(ctx, &v, true)
+	d := o.File.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10311,9 +11177,8 @@ func (o *InitScriptInfo) GetFile(ctx context.Context) (LocalFileInfo, bool) {
 
 // SetFile sets the value of the File field in InitScriptInfo.
 func (o *InitScriptInfo) SetFile(ctx context.Context, v LocalFileInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
-	o.File = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.File = vs
 }
 
 // GetGcs returns the value of the Gcs field in InitScriptInfo as
@@ -10325,7 +11190,10 @@ func (o *InitScriptInfo) GetGcs(ctx context.Context) (GcsStorageInfo, bool) {
 		return e, false
 	}
 	var v []GcsStorageInfo
-	d := o.Gcs.ElementsAs(ctx, &v, true)
+	d := o.Gcs.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10337,9 +11205,8 @@ func (o *InitScriptInfo) GetGcs(ctx context.Context) (GcsStorageInfo, bool) {
 
 // SetGcs sets the value of the Gcs field in InitScriptInfo.
 func (o *InitScriptInfo) SetGcs(ctx context.Context, v GcsStorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcs"]
-	o.Gcs = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Gcs = vs
 }
 
 // GetS3 returns the value of the S3 field in InitScriptInfo as
@@ -10351,7 +11218,10 @@ func (o *InitScriptInfo) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 		return e, false
 	}
 	var v []S3StorageInfo
-	d := o.S3.ElementsAs(ctx, &v, true)
+	d := o.S3.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10363,9 +11233,8 @@ func (o *InitScriptInfo) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 
 // SetS3 sets the value of the S3 field in InitScriptInfo.
 func (o *InitScriptInfo) SetS3(ctx context.Context, v S3StorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
-	o.S3 = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.S3 = vs
 }
 
 // GetVolumes returns the value of the Volumes field in InitScriptInfo as
@@ -10377,7 +11246,10 @@ func (o *InitScriptInfo) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 		return e, false
 	}
 	var v []VolumesStorageInfo
-	d := o.Volumes.ElementsAs(ctx, &v, true)
+	d := o.Volumes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10389,9 +11261,8 @@ func (o *InitScriptInfo) GetVolumes(ctx context.Context) (VolumesStorageInfo, bo
 
 // SetVolumes sets the value of the Volumes field in InitScriptInfo.
 func (o *InitScriptInfo) SetVolumes(ctx context.Context, v VolumesStorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
-	o.Volumes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Volumes = vs
 }
 
 // GetWorkspace returns the value of the Workspace field in InitScriptInfo as
@@ -10403,7 +11274,10 @@ func (o *InitScriptInfo) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo
 		return e, false
 	}
 	var v []WorkspaceStorageInfo
-	d := o.Workspace.ElementsAs(ctx, &v, true)
+	d := o.Workspace.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10415,22 +11289,28 @@ func (o *InitScriptInfo) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo
 
 // SetWorkspace sets the value of the Workspace field in InitScriptInfo.
 func (o *InitScriptInfo) SetWorkspace(ctx context.Context, v WorkspaceStorageInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace"]
-	o.Workspace = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Workspace = vs
 }
 
 type InitScriptInfoAndExecutionDetails struct {
 	// Details about the script
-	ExecutionDetails types.List `tfsdk:"execution_details" tf:"optional,object"`
+	ExecutionDetails types.Object `tfsdk:"execution_details"`
 	// The script
-	Script types.List `tfsdk:"script" tf:"optional,object"`
+	Script types.Object `tfsdk:"script"`
 }
 
 func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails) {
 }
 
 func (newState *InitScriptInfoAndExecutionDetails) SyncEffectiveFieldsDuringRead(existingState InitScriptInfoAndExecutionDetails) {
+}
+
+func (c InitScriptInfoAndExecutionDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["execution_details"] = attrs["execution_details"].SetOptional()
+	attrs["script"] = attrs["script"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InitScriptInfoAndExecutionDetails.
@@ -10463,12 +11343,8 @@ func (o InitScriptInfoAndExecutionDetails) ToObjectValue(ctx context.Context) ba
 func (o InitScriptInfoAndExecutionDetails) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"execution_details": basetypes.ListType{
-				ElemType: InitScriptExecutionDetails{}.Type(ctx),
-			},
-			"script": basetypes.ListType{
-				ElemType: InitScriptInfo{}.Type(ctx),
-			},
+			"execution_details": InitScriptExecutionDetails{}.Type(ctx),
+			"script":            InitScriptInfo{}.Type(ctx),
 		},
 	}
 }
@@ -10482,7 +11358,10 @@ func (o *InitScriptInfoAndExecutionDetails) GetExecutionDetails(ctx context.Cont
 		return e, false
 	}
 	var v []InitScriptExecutionDetails
-	d := o.ExecutionDetails.ElementsAs(ctx, &v, true)
+	d := o.ExecutionDetails.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10494,9 +11373,8 @@ func (o *InitScriptInfoAndExecutionDetails) GetExecutionDetails(ctx context.Cont
 
 // SetExecutionDetails sets the value of the ExecutionDetails field in InitScriptInfoAndExecutionDetails.
 func (o *InitScriptInfoAndExecutionDetails) SetExecutionDetails(ctx context.Context, v InitScriptExecutionDetails) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["execution_details"]
-	o.ExecutionDetails = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ExecutionDetails = vs
 }
 
 // GetScript returns the value of the Script field in InitScriptInfoAndExecutionDetails as
@@ -10508,7 +11386,10 @@ func (o *InitScriptInfoAndExecutionDetails) GetScript(ctx context.Context) (Init
 		return e, false
 	}
 	var v []InitScriptInfo
-	d := o.Script.ElementsAs(ctx, &v, true)
+	d := o.Script.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10520,22 +11401,28 @@ func (o *InitScriptInfoAndExecutionDetails) GetScript(ctx context.Context) (Init
 
 // SetScript sets the value of the Script field in InitScriptInfoAndExecutionDetails.
 func (o *InitScriptInfoAndExecutionDetails) SetScript(ctx context.Context, v InitScriptInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["script"]
-	o.Script = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Script = vs
 }
 
 type InstallLibraries struct {
 	// Unique identifier for the cluster on which to install these libraries.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The libraries to install.
-	Libraries types.List `tfsdk:"libraries" tf:""`
+	Libraries types.List `tfsdk:"libraries"`
 }
 
 func (newState *InstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstallLibraries) {
 }
 
 func (newState *InstallLibraries) SyncEffectiveFieldsDuringRead(existingState InstallLibraries) {
+}
+
+func (c InstallLibraries) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["libraries"] = attrs["libraries"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallLibraries.
@@ -10610,6 +11497,11 @@ func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpdat
 func (newState *InstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState InstallLibrariesResponse) {
 }
 
+func (c InstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstallLibrariesResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10639,19 +11531,28 @@ func (o InstallLibrariesResponse) Type(ctx context.Context) attr.Type {
 
 type InstancePoolAccessControlRequest struct {
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 	// application ID of a service principal
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlRequest) {
 }
 
 func (newState *InstancePoolAccessControlRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlRequest) {
+}
+
+func (c InstancePoolAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolAccessControlRequest.
@@ -10693,21 +11594,31 @@ func (o InstancePoolAccessControlRequest) Type(ctx context.Context) attr.Type {
 
 type InstancePoolAccessControlResponse struct {
 	// All permissions.
-	AllPermissions types.List `tfsdk:"all_permissions" tf:"optional"`
+	AllPermissions types.List `tfsdk:"all_permissions"`
 	// Display name of the user or service principal.
-	DisplayName types.String `tfsdk:"display_name" tf:"optional"`
+	DisplayName types.String `tfsdk:"display_name"`
 	// name of the group
-	GroupName types.String `tfsdk:"group_name" tf:"optional"`
+	GroupName types.String `tfsdk:"group_name"`
 	// Name of the service principal.
-	ServicePrincipalName types.String `tfsdk:"service_principal_name" tf:"optional"`
+	ServicePrincipalName types.String `tfsdk:"service_principal_name"`
 	// name of the user
-	UserName types.String `tfsdk:"user_name" tf:"optional"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAccessControlResponse) {
 }
 
 func (newState *InstancePoolAccessControlResponse) SyncEffectiveFieldsDuringRead(existingState InstancePoolAccessControlResponse) {
+}
+
+func (c InstancePoolAccessControlResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["all_permissions"] = attrs["all_permissions"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["group_name"] = attrs["group_name"].SetOptional()
+	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolAccessControlResponse.
@@ -10782,16 +11693,16 @@ func (o *InstancePoolAccessControlResponse) SetAllPermissions(ctx context.Contex
 type InstancePoolAndStats struct {
 	// Attributes related to instance pools running on Amazon Web Services. If
 	// not specified at pool creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to instance pools running on Azure. If not specified
 	// at pool creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// Additional tags for pool resources. Databricks will tag all pool
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
 	//
 	// - Currently, Databricks allows at most 45 custom tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Tags that are added by Databricks regardless of any `custom_tags`,
 	// including:
 	//
@@ -10802,19 +11713,19 @@ type InstancePoolAndStats struct {
 	// - InstancePoolName: <name_of_pool>
 	//
 	// - InstancePoolId: <id_of_pool>
-	DefaultTags types.Map `tfsdk:"default_tags" tf:"optional"`
+	DefaultTags types.Map `tfsdk:"default_tags"`
 	// Defines the specification of the disks that will be attached to all spark
 	// containers.
-	DiskSpec types.List `tfsdk:"disk_spec" tf:"optional,object"`
+	DiskSpec types.Object `tfsdk:"disk_spec"`
 	// Autoscaling Local Storage: when enabled, this instances in this pool will
 	// dynamically acquire additional disk space when its Spark workers are
 	// running low on disk space. In AWS, this feature requires specific AWS
 	// permissions to function correctly - refer to the User Guide for more
 	// details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Attributes related to instance pools running on Google Cloud Platform. If
 	// not specified at pool creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// Automatically terminates the extra instances in the pool cache after they
 	// are inactive for this time in minutes if min_idle_instances requirement
 	// is already met. If not set, the extra pool instances will be
@@ -10822,43 +11733,66 @@ type InstancePoolAndStats struct {
 	// threshold must be between 0 and 10000 minutes. Users can also set this
 	// value to 0 to instantly remove idle instances from the cache if min cache
 	// size could still hold.
-	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes" tf:"optional"`
+	IdleInstanceAutoterminationMinutes types.Int64 `tfsdk:"idle_instance_autotermination_minutes"`
 	// Canonical unique identifier for the pool.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
 	// Pool name requested by the user. Pool name must be unique. Length must be
 	// between 1 and 100 characters.
-	InstancePoolName types.String `tfsdk:"instance_pool_name" tf:"optional"`
+	InstancePoolName types.String `tfsdk:"instance_pool_name"`
 	// Maximum number of outstanding instances to keep in the pool, including
 	// both instances used by clusters and idle instances. Clusters that require
 	// further instance provisioning will fail during upsize requests.
-	MaxCapacity types.Int64 `tfsdk:"max_capacity" tf:"optional"`
+	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
-	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances" tf:"optional"`
+	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Custom Docker Image BYOC
-	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images" tf:"optional"`
+	PreloadedDockerImages types.List `tfsdk:"preloaded_docker_images"`
 	// A list containing at most one preloaded Spark image version for the pool.
 	// Pool-backed clusters started with the preloaded Spark version will start
 	// faster. A list of available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions" tf:"optional"`
+	PreloadedSparkVersions types.List `tfsdk:"preloaded_spark_versions"`
 	// Current state of the instance pool.
-	State types.String `tfsdk:"state" tf:"optional"`
+	State types.String `tfsdk:"state"`
 	// Usage statistics about the instance pool.
-	Stats types.List `tfsdk:"stats" tf:"optional,object"`
+	Stats types.Object `tfsdk:"stats"`
 	// Status of failed pending instances in the pool.
-	Status types.List `tfsdk:"status" tf:"optional,object"`
+	Status types.Object `tfsdk:"status"`
 }
 
 func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAndStats) {
 }
 
 func (newState *InstancePoolAndStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolAndStats) {
+}
+
+func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["default_tags"] = attrs["default_tags"].SetOptional()
+	attrs["disk_spec"] = attrs["disk_spec"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["idle_instance_autotermination_minutes"] = attrs["idle_instance_autotermination_minutes"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
+	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
+	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
+	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+	attrs["stats"] = attrs["stats"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolAndStats.
@@ -10915,25 +11849,17 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"aws_attributes": basetypes.ListType{
-				ElemType: InstancePoolAwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: InstancePoolAzureAttributes{}.Type(ctx),
-			},
+			"aws_attributes":   InstancePoolAwsAttributes{}.Type(ctx),
+			"azure_attributes": InstancePoolAzureAttributes{}.Type(ctx),
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 			"default_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"disk_spec": basetypes.ListType{
-				ElemType: DiskSpec{}.Type(ctx),
-			},
-			"enable_elastic_disk": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: InstancePoolGcpAttributes{}.Type(ctx),
-			},
+			"disk_spec":                             DiskSpec{}.Type(ctx),
+			"enable_elastic_disk":                   types.BoolType,
+			"gcp_attributes":                        InstancePoolGcpAttributes{}.Type(ctx),
 			"idle_instance_autotermination_minutes": types.Int64Type,
 			"instance_pool_id":                      types.StringType,
 			"instance_pool_name":                    types.StringType,
@@ -10946,13 +11872,9 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"preloaded_spark_versions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"state": types.StringType,
-			"stats": basetypes.ListType{
-				ElemType: InstancePoolStats{}.Type(ctx),
-			},
-			"status": basetypes.ListType{
-				ElemType: InstancePoolStatus{}.Type(ctx),
-			},
+			"state":  types.StringType,
+			"stats":  InstancePoolStats{}.Type(ctx),
+			"status": InstancePoolStatus{}.Type(ctx),
 		},
 	}
 }
@@ -10966,7 +11888,10 @@ func (o *InstancePoolAndStats) GetAwsAttributes(ctx context.Context) (InstancePo
 		return e, false
 	}
 	var v []InstancePoolAwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -10978,9 +11903,8 @@ func (o *InstancePoolAndStats) GetAwsAttributes(ctx context.Context) (InstancePo
 
 // SetAwsAttributes sets the value of the AwsAttributes field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetAwsAttributes(ctx context.Context, v InstancePoolAwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in InstancePoolAndStats as
@@ -10992,7 +11916,10 @@ func (o *InstancePoolAndStats) GetAzureAttributes(ctx context.Context) (Instance
 		return e, false
 	}
 	var v []InstancePoolAzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11004,9 +11931,8 @@ func (o *InstancePoolAndStats) GetAzureAttributes(ctx context.Context) (Instance
 
 // SetAzureAttributes sets the value of the AzureAttributes field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetAzureAttributes(ctx context.Context, v InstancePoolAzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in InstancePoolAndStats as
@@ -11070,7 +11996,10 @@ func (o *InstancePoolAndStats) GetDiskSpec(ctx context.Context) (DiskSpec, bool)
 		return e, false
 	}
 	var v []DiskSpec
-	d := o.DiskSpec.ElementsAs(ctx, &v, true)
+	d := o.DiskSpec.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11082,9 +12011,8 @@ func (o *InstancePoolAndStats) GetDiskSpec(ctx context.Context) (DiskSpec, bool)
 
 // SetDiskSpec sets the value of the DiskSpec field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetDiskSpec(ctx context.Context, v DiskSpec) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["disk_spec"]
-	o.DiskSpec = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DiskSpec = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in InstancePoolAndStats as
@@ -11096,7 +12024,10 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 		return e, false
 	}
 	var v []InstancePoolGcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11108,9 +12039,8 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 
 // SetGcpAttributes sets the value of the GcpAttributes field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -11174,7 +12104,10 @@ func (o *InstancePoolAndStats) GetStats(ctx context.Context) (InstancePoolStats,
 		return e, false
 	}
 	var v []InstancePoolStats
-	d := o.Stats.ElementsAs(ctx, &v, true)
+	d := o.Stats.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11186,9 +12119,8 @@ func (o *InstancePoolAndStats) GetStats(ctx context.Context) (InstancePoolStats,
 
 // SetStats sets the value of the Stats field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetStats(ctx context.Context, v InstancePoolStats) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["stats"]
-	o.Stats = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Stats = vs
 }
 
 // GetStatus returns the value of the Status field in InstancePoolAndStats as
@@ -11200,7 +12132,10 @@ func (o *InstancePoolAndStats) GetStatus(ctx context.Context) (InstancePoolStatu
 		return e, false
 	}
 	var v []InstancePoolStatus
-	d := o.Status.ElementsAs(ctx, &v, true)
+	d := o.Status.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11212,9 +12147,8 @@ func (o *InstancePoolAndStats) GetStatus(ctx context.Context) (InstancePoolStatu
 
 // SetStatus sets the value of the Status field in InstancePoolAndStats.
 func (o *InstancePoolAndStats) SetStatus(ctx context.Context, v InstancePoolStatus) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["status"]
-	o.Status = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Status = vs
 }
 
 type InstancePoolAwsAttributes struct {
@@ -11222,7 +12156,7 @@ type InstancePoolAwsAttributes struct {
 	//
 	// The default value is defined by
 	// InstancePoolConf.instancePoolDefaultAwsAvailability
-	Availability types.String `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability"`
 	// Calculates the bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
 	// is set to 50, and the cluster needs a new `r3.xlarge` spot instance, then
@@ -11237,7 +12171,7 @@ type InstancePoolAwsAttributes struct {
 	// The default value and documentation here should be kept consistent with
 	// CommonConf.defaultSpotBidPricePercent and
 	// CommonConf.maxSpotBidPricePercent.
-	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent" tf:"optional"`
+	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
 	// availability zone must be in the same region as the Databricks
@@ -11246,13 +12180,21 @@ type InstancePoolAwsAttributes struct {
 	// optional field at cluster creation, and if not specified, a default zone
 	// will be used. The list of available zones as well as the default value
 	// can be found by using the `List Zones` method.
-	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
+	ZoneId types.String `tfsdk:"zone_id"`
 }
 
 func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAwsAttributes) {
 }
 
 func (newState *InstancePoolAwsAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAwsAttributes) {
+}
+
+func (c InstancePoolAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
+	attrs["zone_id"] = attrs["zone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolAwsAttributes.
@@ -11295,16 +12237,23 @@ type InstancePoolAzureAttributes struct {
 	//
 	// The default value is defined by
 	// InstancePoolConf.instancePoolDefaultAzureAvailability
-	Availability types.String `tfsdk:"availability" tf:"optional"`
+	Availability types.String `tfsdk:"availability"`
 	// The default value and documentation here should be kept consistent with
 	// CommonConf.defaultSpotBidMaxPrice.
-	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price" tf:"optional"`
+	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
 func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolAzureAttributes) {
 }
 
 func (newState *InstancePoolAzureAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolAzureAttributes) {
+}
+
+func (c InstancePoolAzureAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolAzureAttributes.
@@ -11344,14 +12293,14 @@ type InstancePoolGcpAttributes struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
 	// if the former is unavailable.
-	GcpAvailability types.String `tfsdk:"gcp_availability" tf:"optional"`
+	GcpAvailability types.String `tfsdk:"gcp_availability"`
 	// If provided, each node in the instance pool will have this number of
 	// local SSDs attached. Each local SSD is 375GB in size. Refer to [GCP
 	// documentation] for the supported number of local SSDs for each instance
 	// type.
 	//
 	// [GCP documentation]: https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds
-	LocalSsdCount types.Int64 `tfsdk:"local_ssd_count" tf:"optional"`
+	LocalSsdCount types.Int64 `tfsdk:"local_ssd_count"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west1-a". The provided
 	// availability zone must be in the same region as the Databricks workspace.
@@ -11368,13 +12317,21 @@ type InstancePoolGcpAttributes struct {
 	//
 	// If empty, Databricks picks an availability zone to schedule the cluster
 	// on.
-	ZoneId types.String `tfsdk:"zone_id" tf:"optional"`
+	ZoneId types.String `tfsdk:"zone_id"`
 }
 
 func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolGcpAttributes) {
 }
 
 func (newState *InstancePoolGcpAttributes) SyncEffectiveFieldsDuringRead(existingState InstancePoolGcpAttributes) {
+}
+
+func (c InstancePoolGcpAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gcp_availability"] = attrs["gcp_availability"].SetOptional()
+	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
+	attrs["zone_id"] = attrs["zone_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolGcpAttributes.
@@ -11413,17 +12370,25 @@ func (o InstancePoolGcpAttributes) Type(ctx context.Context) attr.Type {
 }
 
 type InstancePoolPermission struct {
-	Inherited types.Bool `tfsdk:"inherited" tf:"optional"`
+	Inherited types.Bool `tfsdk:"inherited"`
 
-	InheritedFromObject types.List `tfsdk:"inherited_from_object" tf:"optional"`
+	InheritedFromObject types.List `tfsdk:"inherited_from_object"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermission) {
 }
 
 func (newState *InstancePoolPermission) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermission) {
+}
+
+func (c InstancePoolPermission) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["inherited"] = attrs["inherited"].SetOptional()
+	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermission.
@@ -11492,17 +12457,25 @@ func (o *InstancePoolPermission) SetInheritedFromObject(ctx context.Context, v [
 }
 
 type InstancePoolPermissions struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 
-	ObjectId types.String `tfsdk:"object_id" tf:"optional"`
+	ObjectId types.String `tfsdk:"object_id"`
 
-	ObjectType types.String `tfsdk:"object_type" tf:"optional"`
+	ObjectType types.String `tfsdk:"object_type"`
 }
 
 func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissions) {
 }
 
 func (newState *InstancePoolPermissions) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissions) {
+}
+
+func (c InstancePoolPermissions) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermissions.
@@ -11571,15 +12544,22 @@ func (o *InstancePoolPermissions) SetAccessControlList(ctx context.Context, v []
 }
 
 type InstancePoolPermissionsDescription struct {
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Permission level
-	PermissionLevel types.String `tfsdk:"permission_level" tf:"optional"`
+	PermissionLevel types.String `tfsdk:"permission_level"`
 }
 
 func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolPermissionsDescription) {
 }
 
 func (newState *InstancePoolPermissionsDescription) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsDescription) {
+}
+
+func (c InstancePoolPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermissionsDescription.
@@ -11616,7 +12596,7 @@ func (o InstancePoolPermissionsDescription) Type(ctx context.Context) attr.Type 
 }
 
 type InstancePoolPermissionsRequest struct {
-	AccessControlList types.List `tfsdk:"access_control_list" tf:"optional"`
+	AccessControlList types.List `tfsdk:"access_control_list"`
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
 }
@@ -11625,6 +12605,13 @@ func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringCreateO
 }
 
 func (newState *InstancePoolPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState InstancePoolPermissionsRequest) {
+}
+
+func (c InstancePoolPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolPermissionsRequest.
@@ -11692,19 +12679,28 @@ func (o *InstancePoolPermissionsRequest) SetAccessControlList(ctx context.Contex
 
 type InstancePoolStats struct {
 	// Number of active instances in the pool that are NOT part of a cluster.
-	IdleCount types.Int64 `tfsdk:"idle_count" tf:"optional"`
+	IdleCount types.Int64 `tfsdk:"idle_count"`
 	// Number of pending instances in the pool that are NOT part of a cluster.
-	PendingIdleCount types.Int64 `tfsdk:"pending_idle_count" tf:"optional"`
+	PendingIdleCount types.Int64 `tfsdk:"pending_idle_count"`
 	// Number of pending instances in the pool that are part of a cluster.
-	PendingUsedCount types.Int64 `tfsdk:"pending_used_count" tf:"optional"`
+	PendingUsedCount types.Int64 `tfsdk:"pending_used_count"`
 	// Number of active instances in the pool that are part of a cluster.
-	UsedCount types.Int64 `tfsdk:"used_count" tf:"optional"`
+	UsedCount types.Int64 `tfsdk:"used_count"`
 }
 
 func (newState *InstancePoolStats) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStats) {
 }
 
 func (newState *InstancePoolStats) SyncEffectiveFieldsDuringRead(existingState InstancePoolStats) {
+}
+
+func (c InstancePoolStats) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["idle_count"] = attrs["idle_count"].SetOptional()
+	attrs["pending_idle_count"] = attrs["pending_idle_count"].SetOptional()
+	attrs["pending_used_count"] = attrs["pending_used_count"].SetOptional()
+	attrs["used_count"] = attrs["used_count"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolStats.
@@ -11749,13 +12745,19 @@ type InstancePoolStatus struct {
 	// pending_instance_errors follows FIFO with maximum length of the min_idle
 	// of the pool. The pending_instance_errors is emptied once the number of
 	// exiting available instances reaches the min_idle of the pool.
-	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors" tf:"optional"`
+	PendingInstanceErrors types.List `tfsdk:"pending_instance_errors"`
 }
 
 func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstancePoolStatus) {
 }
 
 func (newState *InstancePoolStatus) SyncEffectiveFieldsDuringRead(existingState InstancePoolStatus) {
+}
+
+func (c InstancePoolStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pending_instance_errors"] = attrs["pending_instance_errors"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstancePoolStatus.
@@ -11828,22 +12830,30 @@ type InstanceProfile struct {
 	// Otherwise, this field is optional.
 	//
 	// [Databricks SQL Serverless]: https://docs.databricks.com/sql/admin/serverless.html
-	IamRoleArn types.String `tfsdk:"iam_role_arn" tf:"optional"`
+	IamRoleArn types.String `tfsdk:"iam_role_arn"`
 	// The AWS ARN of the instance profile to register with Databricks. This
 	// field is required.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// Boolean flag indicating whether the instance profile should only be used
 	// in credential passthrough scenarios. If true, it means the instance
 	// profile contains an meta IAM role which could assume a wide range of
 	// roles. Therefore it should always be used with authorization. This field
 	// is optional, the default value is `false`.
-	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile" tf:"optional"`
+	IsMetaInstanceProfile types.Bool `tfsdk:"is_meta_instance_profile"`
 }
 
 func (newState *InstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan InstanceProfile) {
 }
 
 func (newState *InstanceProfile) SyncEffectiveFieldsDuringRead(existingState InstanceProfile) {
+}
+
+func (c InstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["iam_role_arn"] = attrs["iam_role_arn"].SetOptional()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
+	attrs["is_meta_instance_profile"] = attrs["is_meta_instance_profile"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in InstanceProfile.
@@ -11883,11 +12893,11 @@ func (o InstanceProfile) Type(ctx context.Context) attr.Type {
 
 type Library struct {
 	// Specification of a CRAN library to be installed as part of the library
-	Cran types.List `tfsdk:"cran" tf:"optional,object"`
+	Cran types.Object `tfsdk:"cran"`
 	// Deprecated. URI of the egg library to install. Installing Python egg
 	// files is deprecated and is not supported in Databricks Runtime 14.0 and
 	// above.
-	Egg types.String `tfsdk:"egg" tf:"optional"`
+	Egg types.String `tfsdk:"egg"`
 	// URI of the JAR library to install. Supported URIs include Workspace
 	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "jar":
 	// "/Workspace/path/to/library.jar" }`, `{ "jar" :
@@ -11895,18 +12905,18 @@ type Library struct {
 	// "s3://my-bucket/library.jar" }`. If S3 is used, please make sure the
 	// cluster has read access on the library. You may need to launch the
 	// cluster with an IAM role to access the S3 URI.
-	Jar types.String `tfsdk:"jar" tf:"optional"`
+	Jar types.String `tfsdk:"jar"`
 	// Specification of a maven library to be installed. For example: `{
 	// "coordinates": "org.jsoup:jsoup:1.7.2" }`
-	Maven types.List `tfsdk:"maven" tf:"optional,object"`
+	Maven types.Object `tfsdk:"maven"`
 	// Specification of a PyPi library to be installed. For example: `{
 	// "package": "simplejson" }`
-	Pypi types.List `tfsdk:"pypi" tf:"optional,object"`
+	Pypi types.Object `tfsdk:"pypi"`
 	// URI of the requirements.txt file to install. Only Workspace paths and
 	// Unity Catalog Volumes paths are supported. For example: `{
 	// "requirements": "/Workspace/path/to/requirements.txt" }` or `{
 	// "requirements" : "/Volumes/path/to/requirements.txt" }`
-	Requirements types.String `tfsdk:"requirements" tf:"optional"`
+	Requirements types.String `tfsdk:"requirements"`
 	// URI of the wheel library to install. Supported URIs include Workspace
 	// paths, Unity Catalog Volumes paths, and S3 URIs. For example: `{ "whl":
 	// "/Workspace/path/to/library.whl" }`, `{ "whl" :
@@ -11914,13 +12924,25 @@ type Library struct {
 	// "s3://my-bucket/library.whl" }`. If S3 is used, please make sure the
 	// cluster has read access on the library. You may need to launch the
 	// cluster with an IAM role to access the S3 URI.
-	Whl types.String `tfsdk:"whl" tf:"optional"`
+	Whl types.String `tfsdk:"whl"`
 }
 
 func (newState *Library) SyncEffectiveFieldsDuringCreateOrUpdate(plan Library) {
 }
 
 func (newState *Library) SyncEffectiveFieldsDuringRead(existingState Library) {
+}
+
+func (c Library) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cran"] = attrs["cran"].SetOptional()
+	attrs["egg"] = attrs["egg"].SetOptional()
+	attrs["jar"] = attrs["jar"].SetOptional()
+	attrs["maven"] = attrs["maven"].SetOptional()
+	attrs["pypi"] = attrs["pypi"].SetOptional()
+	attrs["requirements"] = attrs["requirements"].SetOptional()
+	attrs["whl"] = attrs["whl"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Library.
@@ -11959,17 +12981,11 @@ func (o Library) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Library) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cran": basetypes.ListType{
-				ElemType: RCranLibrary{}.Type(ctx),
-			},
-			"egg": types.StringType,
-			"jar": types.StringType,
-			"maven": basetypes.ListType{
-				ElemType: MavenLibrary{}.Type(ctx),
-			},
-			"pypi": basetypes.ListType{
-				ElemType: PythonPyPiLibrary{}.Type(ctx),
-			},
+			"cran":         RCranLibrary{}.Type(ctx),
+			"egg":          types.StringType,
+			"jar":          types.StringType,
+			"maven":        MavenLibrary{}.Type(ctx),
+			"pypi":         PythonPyPiLibrary{}.Type(ctx),
 			"requirements": types.StringType,
 			"whl":          types.StringType,
 		},
@@ -11985,7 +13001,10 @@ func (o *Library) GetCran(ctx context.Context) (RCranLibrary, bool) {
 		return e, false
 	}
 	var v []RCranLibrary
-	d := o.Cran.ElementsAs(ctx, &v, true)
+	d := o.Cran.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11997,9 +13016,8 @@ func (o *Library) GetCran(ctx context.Context) (RCranLibrary, bool) {
 
 // SetCran sets the value of the Cran field in Library.
 func (o *Library) SetCran(ctx context.Context, v RCranLibrary) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cran"]
-	o.Cran = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Cran = vs
 }
 
 // GetMaven returns the value of the Maven field in Library as
@@ -12011,7 +13029,10 @@ func (o *Library) GetMaven(ctx context.Context) (MavenLibrary, bool) {
 		return e, false
 	}
 	var v []MavenLibrary
-	d := o.Maven.ElementsAs(ctx, &v, true)
+	d := o.Maven.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12023,9 +13044,8 @@ func (o *Library) GetMaven(ctx context.Context) (MavenLibrary, bool) {
 
 // SetMaven sets the value of the Maven field in Library.
 func (o *Library) SetMaven(ctx context.Context, v MavenLibrary) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["maven"]
-	o.Maven = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Maven = vs
 }
 
 // GetPypi returns the value of the Pypi field in Library as
@@ -12037,7 +13057,10 @@ func (o *Library) GetPypi(ctx context.Context) (PythonPyPiLibrary, bool) {
 		return e, false
 	}
 	var v []PythonPyPiLibrary
-	d := o.Pypi.ElementsAs(ctx, &v, true)
+	d := o.Pypi.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12049,29 +13072,37 @@ func (o *Library) GetPypi(ctx context.Context) (PythonPyPiLibrary, bool) {
 
 // SetPypi sets the value of the Pypi field in Library.
 func (o *Library) SetPypi(ctx context.Context, v PythonPyPiLibrary) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["pypi"]
-	o.Pypi = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Pypi = vs
 }
 
 // The status of the library on a specific cluster.
 type LibraryFullStatus struct {
 	// Whether the library was set to be installed on all clusters via the
 	// libraries UI.
-	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters" tf:"optional"`
+	IsLibraryForAllClusters types.Bool `tfsdk:"is_library_for_all_clusters"`
 	// Unique identifier for the library.
-	Library types.List `tfsdk:"library" tf:"optional,object"`
+	Library types.Object `tfsdk:"library"`
 	// All the info and warning messages that have occurred so far for this
 	// library.
-	Messages types.List `tfsdk:"messages" tf:"optional"`
+	Messages types.List `tfsdk:"messages"`
 	// Status of installing the library on the cluster.
-	Status types.String `tfsdk:"status" tf:"optional"`
+	Status types.String `tfsdk:"status"`
 }
 
 func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LibraryFullStatus) {
 }
 
 func (newState *LibraryFullStatus) SyncEffectiveFieldsDuringRead(existingState LibraryFullStatus) {
+}
+
+func (c LibraryFullStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_library_for_all_clusters"] = attrs["is_library_for_all_clusters"].SetOptional()
+	attrs["library"] = attrs["library"].SetOptional()
+	attrs["messages"] = attrs["messages"].SetOptional()
+	attrs["status"] = attrs["status"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LibraryFullStatus.
@@ -12107,9 +13138,7 @@ func (o LibraryFullStatus) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"is_library_for_all_clusters": types.BoolType,
-			"library": basetypes.ListType{
-				ElemType: Library{}.Type(ctx),
-			},
+			"library":                     Library{}.Type(ctx),
 			"messages": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -12127,7 +13156,10 @@ func (o *LibraryFullStatus) GetLibrary(ctx context.Context) (Library, bool) {
 		return e, false
 	}
 	var v []Library
-	d := o.Library.ElementsAs(ctx, &v, true)
+	d := o.Library.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12139,9 +13171,8 @@ func (o *LibraryFullStatus) GetLibrary(ctx context.Context) (Library, bool) {
 
 // SetLibrary sets the value of the Library field in LibraryFullStatus.
 func (o *LibraryFullStatus) SetLibrary(ctx context.Context, v Library) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["library"]
-	o.Library = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Library = vs
 }
 
 // GetMessages returns the value of the Messages field in LibraryFullStatus as
@@ -12172,13 +13203,19 @@ func (o *LibraryFullStatus) SetMessages(ctx context.Context, v []types.String) {
 
 type ListAllClusterLibraryStatusesResponse struct {
 	// A list of cluster statuses.
-	Statuses types.List `tfsdk:"statuses" tf:"optional"`
+	Statuses types.List `tfsdk:"statuses"`
 }
 
 func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllClusterLibraryStatusesResponse) {
 }
 
 func (newState *ListAllClusterLibraryStatusesResponse) SyncEffectiveFieldsDuringRead(existingState ListAllClusterLibraryStatusesResponse) {
+}
+
+func (c ListAllClusterLibraryStatusesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statuses"] = attrs["statuses"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllClusterLibraryStatusesResponse.
@@ -12245,15 +13282,22 @@ func (o *ListAllClusterLibraryStatusesResponse) SetStatuses(ctx context.Context,
 type ListAvailableZonesResponse struct {
 	// The availability zone if no `zone_id` is provided in the cluster creation
 	// request.
-	DefaultZone types.String `tfsdk:"default_zone" tf:"optional"`
+	DefaultZone types.String `tfsdk:"default_zone"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
-	Zones types.List `tfsdk:"zones" tf:"optional"`
+	Zones types.List `tfsdk:"zones"`
 }
 
 func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAvailableZonesResponse) {
 }
 
 func (newState *ListAvailableZonesResponse) SyncEffectiveFieldsDuringRead(existingState ListAvailableZonesResponse) {
+}
+
+func (c ListAvailableZonesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["default_zone"] = attrs["default_zone"].SetOptional()
+	attrs["zones"] = attrs["zones"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAvailableZonesResponse.
@@ -12332,12 +13376,6 @@ type ListClusterCompliancesRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
-func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesRequest) {
-}
-
-func (newState *ListClusterCompliancesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClusterCompliancesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12375,20 +13413,28 @@ func (o ListClusterCompliancesRequest) Type(ctx context.Context) attr.Type {
 
 type ListClusterCompliancesResponse struct {
 	// A list of clusters and their policy compliance statuses.
-	Clusters types.List `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If the value is "", it means no further results for the request.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// This field represents the pagination token to retrieve the previous page
 	// of results. If the value is "", it means no further results for the
 	// request.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
 func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesResponse) {
 }
 
 func (newState *ListClusterCompliancesResponse) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesResponse) {
+}
+
+func (c ListClusterCompliancesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClusterCompliancesResponse.
@@ -12467,12 +13513,6 @@ type ListClusterPoliciesRequest struct {
 	SortOrder types.String `tfsdk:"-"`
 }
 
-func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterPoliciesRequest) {
-}
-
-func (newState *ListClusterPoliciesRequest) SyncEffectiveFieldsDuringRead(existingState ListClusterPoliciesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClusterPoliciesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12508,19 +13548,28 @@ func (o ListClusterPoliciesRequest) Type(ctx context.Context) attr.Type {
 
 type ListClustersFilterBy struct {
 	// The source of cluster creation.
-	ClusterSources types.List `tfsdk:"cluster_sources" tf:"optional"`
+	ClusterSources types.List `tfsdk:"cluster_sources"`
 	// The current state of the clusters.
-	ClusterStates types.List `tfsdk:"cluster_states" tf:"optional"`
+	ClusterStates types.List `tfsdk:"cluster_states"`
 	// Whether the clusters are pinned or not.
-	IsPinned types.Bool `tfsdk:"is_pinned" tf:"optional"`
+	IsPinned types.Bool `tfsdk:"is_pinned"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 }
 
 func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersFilterBy) {
 }
 
 func (newState *ListClustersFilterBy) SyncEffectiveFieldsDuringRead(existingState ListClustersFilterBy) {
+}
+
+func (c ListClustersFilterBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_sources"] = attrs["cluster_sources"].SetOptional()
+	attrs["cluster_states"] = attrs["cluster_states"].SetOptional()
+	attrs["is_pinned"] = attrs["is_pinned"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClustersFilterBy.
@@ -12622,7 +13671,7 @@ func (o *ListClustersFilterBy) SetClusterStates(ctx context.Context, v []types.S
 // List clusters
 type ListClustersRequest struct {
 	// Filters to apply to the list of clusters.
-	FilterBy types.List `tfsdk:"-"`
+	FilterBy types.Object `tfsdk:"-"`
 	// Use this field to specify the maximum number of results to be returned by
 	// the server. The server may further constrain the maximum number of
 	// results returned in a single page.
@@ -12631,13 +13680,7 @@ type ListClustersRequest struct {
 	// to list the next or previous page of clusters respectively.
 	PageToken types.String `tfsdk:"-"`
 	// Sort the list of clusters by a specific criteria.
-	SortBy types.List `tfsdk:"-"`
-}
-
-func (newState *ListClustersRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersRequest) {
-}
-
-func (newState *ListClustersRequest) SyncEffectiveFieldsDuringRead(existingState ListClustersRequest) {
+	SortBy types.Object `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClustersRequest.
@@ -12672,14 +13715,10 @@ func (o ListClustersRequest) ToObjectValue(ctx context.Context) basetypes.Object
 func (o ListClustersRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"filter_by": basetypes.ListType{
-				ElemType: ListClustersFilterBy{}.Type(ctx),
-			},
+			"filter_by":  ListClustersFilterBy{}.Type(ctx),
 			"page_size":  types.Int64Type,
 			"page_token": types.StringType,
-			"sort_by": basetypes.ListType{
-				ElemType: ListClustersSortBy{}.Type(ctx),
-			},
+			"sort_by":    ListClustersSortBy{}.Type(ctx),
 		},
 	}
 }
@@ -12693,7 +13732,10 @@ func (o *ListClustersRequest) GetFilterBy(ctx context.Context) (ListClustersFilt
 		return e, false
 	}
 	var v []ListClustersFilterBy
-	d := o.FilterBy.ElementsAs(ctx, &v, true)
+	d := o.FilterBy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12705,9 +13747,8 @@ func (o *ListClustersRequest) GetFilterBy(ctx context.Context) (ListClustersFilt
 
 // SetFilterBy sets the value of the FilterBy field in ListClustersRequest.
 func (o *ListClustersRequest) SetFilterBy(ctx context.Context, v ListClustersFilterBy) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["filter_by"]
-	o.FilterBy = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.FilterBy = vs
 }
 
 // GetSortBy returns the value of the SortBy field in ListClustersRequest as
@@ -12719,7 +13760,10 @@ func (o *ListClustersRequest) GetSortBy(ctx context.Context) (ListClustersSortBy
 		return e, false
 	}
 	var v []ListClustersSortBy
-	d := o.SortBy.ElementsAs(ctx, &v, true)
+	d := o.SortBy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -12731,27 +13775,34 @@ func (o *ListClustersRequest) GetSortBy(ctx context.Context) (ListClustersSortBy
 
 // SetSortBy sets the value of the SortBy field in ListClustersRequest.
 func (o *ListClustersRequest) SetSortBy(ctx context.Context, v ListClustersSortBy) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["sort_by"]
-	o.SortBy = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.SortBy = vs
 }
 
 type ListClustersResponse struct {
 	// <needs content added>
-	Clusters types.List `tfsdk:"clusters" tf:"optional"`
+	Clusters types.List `tfsdk:"clusters"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If the value is "", it means no further results for the request.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// This field represents the pagination token to retrieve the previous page
 	// of results. If the value is "", it means no further results for the
 	// request.
-	PrevPageToken types.String `tfsdk:"prev_page_token" tf:"optional"`
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
 }
 
 func (newState *ListClustersResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersResponse) {
 }
 
 func (newState *ListClustersResponse) SyncEffectiveFieldsDuringRead(existingState ListClustersResponse) {
+}
+
+func (c ListClustersResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusters"] = attrs["clusters"].SetOptional()
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClustersResponse.
@@ -12821,17 +13872,24 @@ func (o *ListClustersResponse) SetClusters(ctx context.Context, v []ClusterDetai
 
 type ListClustersSortBy struct {
 	// The direction to sort by.
-	Direction types.String `tfsdk:"direction" tf:"optional"`
+	Direction types.String `tfsdk:"direction"`
 	// The sorting criteria. By default, clusters are sorted by 3 columns from
 	// highest to lowest precedence: cluster state, pinned or unpinned, then
 	// cluster name.
-	Field types.String `tfsdk:"field" tf:"optional"`
+	Field types.String `tfsdk:"field"`
 }
 
 func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersSortBy) {
 }
 
 func (newState *ListClustersSortBy) SyncEffectiveFieldsDuringRead(existingState ListClustersSortBy) {
+}
+
+func (c ListClustersSortBy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["direction"] = attrs["direction"].SetOptional()
+	attrs["field"] = attrs["field"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClustersSortBy.
@@ -12868,13 +13926,19 @@ func (o ListClustersSortBy) Type(ctx context.Context) attr.Type {
 }
 
 type ListGlobalInitScriptsResponse struct {
-	Scripts types.List `tfsdk:"scripts" tf:"optional"`
+	Scripts types.List `tfsdk:"scripts"`
 }
 
 func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListGlobalInitScriptsResponse) {
 }
 
 func (newState *ListGlobalInitScriptsResponse) SyncEffectiveFieldsDuringRead(existingState ListGlobalInitScriptsResponse) {
+}
+
+func (c ListGlobalInitScriptsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["scripts"] = attrs["scripts"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListGlobalInitScriptsResponse.
@@ -12939,13 +14003,19 @@ func (o *ListGlobalInitScriptsResponse) SetScripts(ctx context.Context, v []Glob
 }
 
 type ListInstancePools struct {
-	InstancePools types.List `tfsdk:"instance_pools" tf:"optional"`
+	InstancePools types.List `tfsdk:"instance_pools"`
 }
 
 func (newState *ListInstancePools) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstancePools) {
 }
 
 func (newState *ListInstancePools) SyncEffectiveFieldsDuringRead(existingState ListInstancePools) {
+}
+
+func (c ListInstancePools) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pools"] = attrs["instance_pools"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstancePools.
@@ -13011,13 +14081,19 @@ func (o *ListInstancePools) SetInstancePools(ctx context.Context, v []InstancePo
 
 type ListInstanceProfilesResponse struct {
 	// A list of instance profiles that the user can access.
-	InstanceProfiles types.List `tfsdk:"instance_profiles" tf:"optional"`
+	InstanceProfiles types.List `tfsdk:"instance_profiles"`
 }
 
 func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstanceProfilesResponse) {
 }
 
 func (newState *ListInstanceProfilesResponse) SyncEffectiveFieldsDuringRead(existingState ListInstanceProfilesResponse) {
+}
+
+func (c ListInstanceProfilesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_profiles"] = attrs["instance_profiles"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstanceProfilesResponse.
@@ -13083,13 +14159,19 @@ func (o *ListInstanceProfilesResponse) SetInstanceProfiles(ctx context.Context, 
 
 type ListNodeTypesResponse struct {
 	// The list of available Spark node types.
-	NodeTypes types.List `tfsdk:"node_types" tf:"optional"`
+	NodeTypes types.List `tfsdk:"node_types"`
 }
 
 func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListNodeTypesResponse) {
 }
 
 func (newState *ListNodeTypesResponse) SyncEffectiveFieldsDuringRead(existingState ListNodeTypesResponse) {
+}
+
+func (c ListNodeTypesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["node_types"] = attrs["node_types"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListNodeTypesResponse.
@@ -13155,13 +14237,19 @@ func (o *ListNodeTypesResponse) SetNodeTypes(ctx context.Context, v []NodeType) 
 
 type ListPoliciesResponse struct {
 	// List of policies.
-	Policies types.List `tfsdk:"policies" tf:"optional"`
+	Policies types.List `tfsdk:"policies"`
 }
 
 func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPoliciesResponse) {
 }
 
 func (newState *ListPoliciesResponse) SyncEffectiveFieldsDuringRead(existingState ListPoliciesResponse) {
+}
+
+func (c ListPoliciesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policies"] = attrs["policies"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPoliciesResponse.
@@ -13233,12 +14321,6 @@ type ListPolicyFamiliesRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesRequest) {
-}
-
-func (newState *ListPolicyFamiliesRequest) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesRequest) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPolicyFamiliesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13275,15 +14357,22 @@ func (o ListPolicyFamiliesRequest) Type(ctx context.Context) attr.Type {
 type ListPolicyFamiliesResponse struct {
 	// A token that can be used to get the next page of results. If not present,
 	// there are no more results to show.
-	NextPageToken types.String `tfsdk:"next_page_token" tf:"optional"`
+	NextPageToken types.String `tfsdk:"next_page_token"`
 	// List of policy families.
-	PolicyFamilies types.List `tfsdk:"policy_families" tf:"optional"`
+	PolicyFamilies types.List `tfsdk:"policy_families"`
 }
 
 func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesResponse) {
 }
 
 func (newState *ListPolicyFamiliesResponse) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesResponse) {
+}
+
+func (c ListPolicyFamiliesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["policy_families"] = attrs["policy_families"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPolicyFamiliesResponse.
@@ -13351,13 +14440,19 @@ func (o *ListPolicyFamiliesResponse) SetPolicyFamilies(ctx context.Context, v []
 
 type LocalFileInfo struct {
 	// local file destination, e.g. `file:/my/local/file.sh`
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *LocalFileInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LocalFileInfo) {
 }
 
 func (newState *LocalFileInfo) SyncEffectiveFieldsDuringRead(existingState LocalFileInfo) {
+}
+
+func (c LocalFileInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LocalFileInfo.
@@ -13393,15 +14488,22 @@ func (o LocalFileInfo) Type(ctx context.Context) attr.Type {
 
 type LogAnalyticsInfo struct {
 	// <needs content added>
-	LogAnalyticsPrimaryKey types.String `tfsdk:"log_analytics_primary_key" tf:"optional"`
+	LogAnalyticsPrimaryKey types.String `tfsdk:"log_analytics_primary_key"`
 	// <needs content added>
-	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id" tf:"optional"`
+	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id"`
 }
 
 func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogAnalyticsInfo) {
 }
 
 func (newState *LogAnalyticsInfo) SyncEffectiveFieldsDuringRead(existingState LogAnalyticsInfo) {
+}
+
+func (c LogAnalyticsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["log_analytics_primary_key"] = attrs["log_analytics_primary_key"].SetOptional()
+	attrs["log_analytics_workspace_id"] = attrs["log_analytics_workspace_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogAnalyticsInfo.
@@ -13440,16 +14542,23 @@ func (o LogAnalyticsInfo) Type(ctx context.Context) attr.Type {
 type LogSyncStatus struct {
 	// The timestamp of last attempt. If the last attempt fails,
 	// `last_exception` will contain the exception in the last attempt.
-	LastAttempted types.Int64 `tfsdk:"last_attempted" tf:"optional"`
+	LastAttempted types.Int64 `tfsdk:"last_attempted"`
 	// The exception thrown in the last attempt, it would be null (omitted in
 	// the response) if there is no exception in last attempted.
-	LastException types.String `tfsdk:"last_exception" tf:"optional"`
+	LastException types.String `tfsdk:"last_exception"`
 }
 
 func (newState *LogSyncStatus) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogSyncStatus) {
 }
 
 func (newState *LogSyncStatus) SyncEffectiveFieldsDuringRead(existingState LogSyncStatus) {
+}
+
+func (c LogSyncStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["last_attempted"] = attrs["last_attempted"].SetOptional()
+	attrs["last_exception"] = attrs["last_exception"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogSyncStatus.
@@ -13487,22 +14596,30 @@ func (o LogSyncStatus) Type(ctx context.Context) attr.Type {
 
 type MavenLibrary struct {
 	// Gradle-style maven coordinates. For example: "org.jsoup:jsoup:1.7.2".
-	Coordinates types.String `tfsdk:"coordinates" tf:""`
+	Coordinates types.String `tfsdk:"coordinates"`
 	// List of dependences to exclude. For example: `["slf4j:slf4j",
 	// "*:hadoop-client"]`.
 	//
 	// Maven dependency exclusions:
 	// https://maven.apache.org/guides/introduction/introduction-to-optional-and-excludes-dependencies.html.
-	Exclusions types.List `tfsdk:"exclusions" tf:"optional"`
+	Exclusions types.List `tfsdk:"exclusions"`
 	// Maven repo to install the Maven package from. If omitted, both Maven
 	// Central Repository and Spark Packages are searched.
-	Repo types.String `tfsdk:"repo" tf:"optional"`
+	Repo types.String `tfsdk:"repo"`
 }
 
 func (newState *MavenLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan MavenLibrary) {
 }
 
 func (newState *MavenLibrary) SyncEffectiveFieldsDuringRead(existingState MavenLibrary) {
+}
+
+func (c MavenLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["coordinates"] = attrs["coordinates"].SetRequired()
+	attrs["exclusions"] = attrs["exclusions"].SetOptional()
+	attrs["repo"] = attrs["repo"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in MavenLibrary.
@@ -13571,21 +14688,31 @@ func (o *MavenLibrary) SetExclusions(ctx context.Context, v []types.String) {
 }
 
 type NodeInstanceType struct {
-	InstanceTypeId types.String `tfsdk:"instance_type_id" tf:"optional"`
+	InstanceTypeId types.String `tfsdk:"instance_type_id"`
 
-	LocalDiskSizeGb types.Int64 `tfsdk:"local_disk_size_gb" tf:"optional"`
+	LocalDiskSizeGb types.Int64 `tfsdk:"local_disk_size_gb"`
 
-	LocalDisks types.Int64 `tfsdk:"local_disks" tf:"optional"`
+	LocalDisks types.Int64 `tfsdk:"local_disks"`
 
-	LocalNvmeDiskSizeGb types.Int64 `tfsdk:"local_nvme_disk_size_gb" tf:"optional"`
+	LocalNvmeDiskSizeGb types.Int64 `tfsdk:"local_nvme_disk_size_gb"`
 
-	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks" tf:"optional"`
+	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks"`
 }
 
 func (newState *NodeInstanceType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeInstanceType) {
 }
 
 func (newState *NodeInstanceType) SyncEffectiveFieldsDuringRead(existingState NodeInstanceType) {
+}
+
+func (c NodeInstanceType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_type_id"] = attrs["instance_type_id"].SetOptional()
+	attrs["local_disk_size_gb"] = attrs["local_disk_size_gb"].SetOptional()
+	attrs["local_disks"] = attrs["local_disks"].SetOptional()
+	attrs["local_nvme_disk_size_gb"] = attrs["local_nvme_disk_size_gb"].SetOptional()
+	attrs["local_nvme_disks"] = attrs["local_nvme_disks"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeInstanceType.
@@ -13628,59 +14755,85 @@ func (o NodeInstanceType) Type(ctx context.Context) attr.Type {
 }
 
 type NodeType struct {
-	Category types.String `tfsdk:"category" tf:"optional"`
+	Category types.String `tfsdk:"category"`
 	// A string description associated with this node type, e.g., "r3.xlarge".
-	Description types.String `tfsdk:"description" tf:""`
+	Description types.String `tfsdk:"description"`
 
-	DisplayOrder types.Int64 `tfsdk:"display_order" tf:"optional"`
+	DisplayOrder types.Int64 `tfsdk:"display_order"`
 	// An identifier for the type of hardware that this node runs on, e.g.,
 	// "r3.2xlarge" in AWS.
-	InstanceTypeId types.String `tfsdk:"instance_type_id" tf:""`
+	InstanceTypeId types.String `tfsdk:"instance_type_id"`
 	// Whether the node type is deprecated. Non-deprecated node types offer
 	// greater performance.
-	IsDeprecated types.Bool `tfsdk:"is_deprecated" tf:"optional"`
+	IsDeprecated types.Bool `tfsdk:"is_deprecated"`
 	// AWS specific, whether this instance supports encryption in transit, used
 	// for hipaa and pci workloads.
-	IsEncryptedInTransit types.Bool `tfsdk:"is_encrypted_in_transit" tf:"optional"`
+	IsEncryptedInTransit types.Bool `tfsdk:"is_encrypted_in_transit"`
 
-	IsGraviton types.Bool `tfsdk:"is_graviton" tf:"optional"`
+	IsGraviton types.Bool `tfsdk:"is_graviton"`
 
-	IsHidden types.Bool `tfsdk:"is_hidden" tf:"optional"`
+	IsHidden types.Bool `tfsdk:"is_hidden"`
 
-	IsIoCacheEnabled types.Bool `tfsdk:"is_io_cache_enabled" tf:"optional"`
+	IsIoCacheEnabled types.Bool `tfsdk:"is_io_cache_enabled"`
 	// Memory (in MB) available for this node type.
-	MemoryMb types.Int64 `tfsdk:"memory_mb" tf:""`
+	MemoryMb types.Int64 `tfsdk:"memory_mb"`
 
-	NodeInfo types.List `tfsdk:"node_info" tf:"optional,object"`
+	NodeInfo types.Object `tfsdk:"node_info"`
 
-	NodeInstanceType types.List `tfsdk:"node_instance_type" tf:"optional,object"`
+	NodeInstanceType types.Object `tfsdk:"node_instance_type"`
 	// Unique identifier for this node type.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:""`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of CPU cores available for this node type. Note that this can be
 	// fractional, e.g., 2.5 cores, if the the number of cores on a machine
 	// instance is not divisible by the number of Spark nodes on that machine.
-	NumCores types.Float64 `tfsdk:"num_cores" tf:""`
+	NumCores types.Float64 `tfsdk:"num_cores"`
 
-	NumGpus types.Int64 `tfsdk:"num_gpus" tf:"optional"`
+	NumGpus types.Int64 `tfsdk:"num_gpus"`
 
-	PhotonDriverCapable types.Bool `tfsdk:"photon_driver_capable" tf:"optional"`
+	PhotonDriverCapable types.Bool `tfsdk:"photon_driver_capable"`
 
-	PhotonWorkerCapable types.Bool `tfsdk:"photon_worker_capable" tf:"optional"`
+	PhotonWorkerCapable types.Bool `tfsdk:"photon_worker_capable"`
 
-	SupportClusterTags types.Bool `tfsdk:"support_cluster_tags" tf:"optional"`
+	SupportClusterTags types.Bool `tfsdk:"support_cluster_tags"`
 
-	SupportEbsVolumes types.Bool `tfsdk:"support_ebs_volumes" tf:"optional"`
+	SupportEbsVolumes types.Bool `tfsdk:"support_ebs_volumes"`
 
-	SupportPortForwarding types.Bool `tfsdk:"support_port_forwarding" tf:"optional"`
+	SupportPortForwarding types.Bool `tfsdk:"support_port_forwarding"`
 	// Indicates if this node type can be used for an instance pool or cluster
 	// with elastic disk enabled. This is true for most node types.
-	SupportsElasticDisk types.Bool `tfsdk:"supports_elastic_disk" tf:"optional"`
+	SupportsElasticDisk types.Bool `tfsdk:"supports_elastic_disk"`
 }
 
 func (newState *NodeType) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeType) {
 }
 
 func (newState *NodeType) SyncEffectiveFieldsDuringRead(existingState NodeType) {
+}
+
+func (c NodeType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["category"] = attrs["category"].SetOptional()
+	attrs["description"] = attrs["description"].SetRequired()
+	attrs["display_order"] = attrs["display_order"].SetOptional()
+	attrs["instance_type_id"] = attrs["instance_type_id"].SetRequired()
+	attrs["is_deprecated"] = attrs["is_deprecated"].SetOptional()
+	attrs["is_encrypted_in_transit"] = attrs["is_encrypted_in_transit"].SetOptional()
+	attrs["is_graviton"] = attrs["is_graviton"].SetOptional()
+	attrs["is_hidden"] = attrs["is_hidden"].SetOptional()
+	attrs["is_io_cache_enabled"] = attrs["is_io_cache_enabled"].SetOptional()
+	attrs["memory_mb"] = attrs["memory_mb"].SetRequired()
+	attrs["node_info"] = attrs["node_info"].SetOptional()
+	attrs["node_instance_type"] = attrs["node_instance_type"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
+	attrs["num_cores"] = attrs["num_cores"].SetRequired()
+	attrs["num_gpus"] = attrs["num_gpus"].SetOptional()
+	attrs["photon_driver_capable"] = attrs["photon_driver_capable"].SetOptional()
+	attrs["photon_worker_capable"] = attrs["photon_worker_capable"].SetOptional()
+	attrs["support_cluster_tags"] = attrs["support_cluster_tags"].SetOptional()
+	attrs["support_ebs_volumes"] = attrs["support_ebs_volumes"].SetOptional()
+	attrs["support_port_forwarding"] = attrs["support_port_forwarding"].SetOptional()
+	attrs["supports_elastic_disk"] = attrs["supports_elastic_disk"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeType.
@@ -13742,12 +14895,8 @@ func (o NodeType) Type(ctx context.Context) attr.Type {
 			"is_hidden":               types.BoolType,
 			"is_io_cache_enabled":     types.BoolType,
 			"memory_mb":               types.Int64Type,
-			"node_info": basetypes.ListType{
-				ElemType: CloudProviderNodeInfo{}.Type(ctx),
-			},
-			"node_instance_type": basetypes.ListType{
-				ElemType: NodeInstanceType{}.Type(ctx),
-			},
+			"node_info":               CloudProviderNodeInfo{}.Type(ctx),
+			"node_instance_type":      NodeInstanceType{}.Type(ctx),
 			"node_type_id":            types.StringType,
 			"num_cores":               types.Float64Type,
 			"num_gpus":                types.Int64Type,
@@ -13770,7 +14919,10 @@ func (o *NodeType) GetNodeInfo(ctx context.Context) (CloudProviderNodeInfo, bool
 		return e, false
 	}
 	var v []CloudProviderNodeInfo
-	d := o.NodeInfo.ElementsAs(ctx, &v, true)
+	d := o.NodeInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13782,9 +14934,8 @@ func (o *NodeType) GetNodeInfo(ctx context.Context) (CloudProviderNodeInfo, bool
 
 // SetNodeInfo sets the value of the NodeInfo field in NodeType.
 func (o *NodeType) SetNodeInfo(ctx context.Context, v CloudProviderNodeInfo) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_info"]
-	o.NodeInfo = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.NodeInfo = vs
 }
 
 // GetNodeInstanceType returns the value of the NodeInstanceType field in NodeType as
@@ -13796,7 +14947,10 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 		return e, false
 	}
 	var v []NodeInstanceType
-	d := o.NodeInstanceType.ElementsAs(ctx, &v, true)
+	d := o.NodeInstanceType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -13808,21 +14962,27 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 
 // SetNodeInstanceType sets the value of the NodeInstanceType field in NodeType.
 func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_instance_type"]
-	o.NodeInstanceType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.NodeInstanceType = vs
 }
 
 type PendingInstanceError struct {
-	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
+	InstanceId types.String `tfsdk:"instance_id"`
 
-	Message types.String `tfsdk:"message" tf:"optional"`
+	Message types.String `tfsdk:"message"`
 }
 
 func (newState *PendingInstanceError) SyncEffectiveFieldsDuringCreateOrUpdate(plan PendingInstanceError) {
 }
 
 func (newState *PendingInstanceError) SyncEffectiveFieldsDuringRead(existingState PendingInstanceError) {
+}
+
+func (c PendingInstanceError) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_id"] = attrs["instance_id"].SetOptional()
+	attrs["message"] = attrs["message"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PendingInstanceError.
@@ -13860,13 +15020,19 @@ func (o PendingInstanceError) Type(ctx context.Context) attr.Type {
 
 type PermanentDeleteCluster struct {
 	// The cluster to be deleted.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PermanentDeleteCluster) {
 }
 
 func (newState *PermanentDeleteCluster) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteCluster) {
+}
+
+func (c PermanentDeleteCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermanentDeleteCluster.
@@ -13909,6 +15075,11 @@ func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringCreateO
 func (newState *PermanentDeleteClusterResponse) SyncEffectiveFieldsDuringRead(existingState PermanentDeleteClusterResponse) {
 }
 
+func (c PermanentDeleteClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PermanentDeleteClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13938,13 +15109,19 @@ func (o PermanentDeleteClusterResponse) Type(ctx context.Context) attr.Type {
 
 type PinCluster struct {
 	// <needs content added>
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *PinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan PinCluster) {
 }
 
 func (newState *PinCluster) SyncEffectiveFieldsDuringRead(existingState PinCluster) {
+}
+
+func (c PinCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PinCluster.
@@ -13987,6 +15164,11 @@ func (newState *PinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan
 func (newState *PinClusterResponse) SyncEffectiveFieldsDuringRead(existingState PinClusterResponse) {
 }
 
+func (c PinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PinClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14018,30 +15200,30 @@ func (o PinClusterResponse) Type(ctx context.Context) attr.Type {
 type Policy struct {
 	// Creation time. The timestamp (in millisecond) when this Cluster Policy
 	// was created.
-	CreatedAtTimestamp types.Int64 `tfsdk:"created_at_timestamp" tf:"optional"`
+	CreatedAtTimestamp types.Int64 `tfsdk:"created_at_timestamp"`
 	// Creator user name. The field won't be included in the response if the
 	// user has already been deleted.
-	CreatorUserName types.String `tfsdk:"creator_user_name" tf:"optional"`
+	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Policy definition document expressed in [Databricks Cluster Policy
 	// Definition Language].
 	//
 	// [Databricks Cluster Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	Definition types.String `tfsdk:"definition" tf:"optional"`
+	Definition types.String `tfsdk:"definition"`
 	// Additional human-readable description of the cluster policy.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// If true, policy is a default policy created and managed by Databricks.
 	// Default policies cannot be deleted, and their policy families cannot be
 	// changed.
-	IsDefault types.Bool `tfsdk:"is_default" tf:"optional"`
+	IsDefault types.Bool `tfsdk:"is_default"`
 	// A list of libraries to be installed on the next cluster restart that uses
 	// this policy. The maximum number of libraries is 500.
-	Libraries types.List `tfsdk:"libraries" tf:"optional"`
+	Libraries types.List `tfsdk:"libraries"`
 	// Max number of clusters per user that can be active using this policy. If
 	// not present, there is no max limit.
-	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user" tf:"optional"`
+	MaxClustersPerUser types.Int64 `tfsdk:"max_clusters_per_user"`
 	// Cluster Policy name requested by the user. This has to be unique. Length
 	// must be between 1 and 100 characters.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Policy definition JSON document expressed in [Databricks Policy
 	// Definition Language]. The JSON document must be passed as a string and
 	// cannot be embedded in the requests.
@@ -14051,22 +15233,38 @@ type Policy struct {
 	// policy definition.
 	//
 	// [Databricks Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides" tf:"optional"`
+	PolicyFamilyDefinitionOverrides types.String `tfsdk:"policy_family_definition_overrides"`
 	// ID of the policy family. The cluster policy's policy definition inherits
 	// the policy family's policy definition.
 	//
 	// Cannot be used with `definition`. Use
 	// `policy_family_definition_overrides` instead to customize the policy
 	// definition.
-	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
+	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 	// Canonical unique identifier for the Cluster Policy.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 }
 
 func (newState *Policy) SyncEffectiveFieldsDuringCreateOrUpdate(plan Policy) {
 }
 
 func (newState *Policy) SyncEffectiveFieldsDuringRead(existingState Policy) {
+}
+
+func (c Policy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["created_at_timestamp"] = attrs["created_at_timestamp"].SetOptional()
+	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
+	attrs["definition"] = attrs["definition"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["is_default"] = attrs["is_default"].SetOptional()
+	attrs["libraries"] = attrs["libraries"].SetOptional()
+	attrs["max_clusters_per_user"] = attrs["max_clusters_per_user"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["policy_family_definition_overrides"] = attrs["policy_family_definition_overrides"].SetOptional()
+	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Policy.
@@ -14155,19 +15353,28 @@ type PolicyFamily struct {
 	// Definition Language].
 	//
 	// [Databricks Cluster Policy Definition Language]: https://docs.databricks.com/administration-guide/clusters/policy-definition.html
-	Definition types.String `tfsdk:"definition" tf:"optional"`
+	Definition types.String `tfsdk:"definition"`
 	// Human-readable description of the purpose of the policy family.
-	Description types.String `tfsdk:"description" tf:"optional"`
+	Description types.String `tfsdk:"description"`
 	// Name of the policy family.
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 	// Unique identifier for the policy family.
-	PolicyFamilyId types.String `tfsdk:"policy_family_id" tf:"optional"`
+	PolicyFamilyId types.String `tfsdk:"policy_family_id"`
 }
 
 func (newState *PolicyFamily) SyncEffectiveFieldsDuringCreateOrUpdate(plan PolicyFamily) {
 }
 
 func (newState *PolicyFamily) SyncEffectiveFieldsDuringRead(existingState PolicyFamily) {
+}
+
+func (c PolicyFamily) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["definition"] = attrs["definition"].SetOptional()
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["policy_family_id"] = attrs["policy_family_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PolicyFamily.
@@ -14211,16 +15418,23 @@ type PythonPyPiLibrary struct {
 	// The name of the pypi package to install. An optional exact version
 	// specification is also supported. Examples: "simplejson" and
 	// "simplejson==3.8.0".
-	Package types.String `tfsdk:"package" tf:""`
+	Package types.String `tfsdk:"package"`
 	// The repository where the package can be found. If not specified, the
 	// default pip index is used.
-	Repo types.String `tfsdk:"repo" tf:"optional"`
+	Repo types.String `tfsdk:"repo"`
 }
 
 func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan PythonPyPiLibrary) {
 }
 
 func (newState *PythonPyPiLibrary) SyncEffectiveFieldsDuringRead(existingState PythonPyPiLibrary) {
+}
+
+func (c PythonPyPiLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["package"] = attrs["package"].SetRequired()
+	attrs["repo"] = attrs["repo"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PythonPyPiLibrary.
@@ -14258,16 +15472,23 @@ func (o PythonPyPiLibrary) Type(ctx context.Context) attr.Type {
 
 type RCranLibrary struct {
 	// The name of the CRAN package to install.
-	Package types.String `tfsdk:"package" tf:""`
+	Package types.String `tfsdk:"package"`
 	// The repository where the package can be found. If not specified, the
 	// default CRAN repo is used.
-	Repo types.String `tfsdk:"repo" tf:"optional"`
+	Repo types.String `tfsdk:"repo"`
 }
 
 func (newState *RCranLibrary) SyncEffectiveFieldsDuringCreateOrUpdate(plan RCranLibrary) {
 }
 
 func (newState *RCranLibrary) SyncEffectiveFieldsDuringRead(existingState RCranLibrary) {
+}
+
+func (c RCranLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["package"] = attrs["package"].SetRequired()
+	attrs["repo"] = attrs["repo"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RCranLibrary.
@@ -14305,13 +15526,19 @@ func (o RCranLibrary) Type(ctx context.Context) attr.Type {
 
 type RemoveInstanceProfile struct {
 	// The ARN of the instance profile to remove. This field is required.
-	InstanceProfileArn types.String `tfsdk:"instance_profile_arn" tf:""`
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
 func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveInstanceProfile) {
 }
 
 func (newState *RemoveInstanceProfile) SyncEffectiveFieldsDuringRead(existingState RemoveInstanceProfile) {
+}
+
+func (c RemoveInstanceProfile) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveInstanceProfile.
@@ -14348,12 +15575,6 @@ func (o RemoveInstanceProfile) Type(ctx context.Context) attr.Type {
 type RemoveResponse struct {
 }
 
-func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse) {
-}
-
-func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14385,9 +15606,9 @@ type ResizeCluster struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// The cluster to be resized.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -14398,13 +15619,21 @@ type ResizeCluster struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 }
 
 func (newState *ResizeCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResizeCluster) {
 }
 
 func (newState *ResizeCluster) SyncEffectiveFieldsDuringRead(existingState ResizeCluster) {
+}
+
+func (c ResizeCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResizeCluster.
@@ -14437,9 +15666,7 @@ func (o ResizeCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o ResizeCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
+			"autoscale":   AutoScale{}.Type(ctx),
 			"cluster_id":  types.StringType,
 			"num_workers": types.Int64Type,
 		},
@@ -14455,7 +15682,10 @@ func (o *ResizeCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14467,9 +15697,8 @@ func (o *ResizeCluster) GetAutoscale(ctx context.Context) (AutoScale, bool) {
 
 // SetAutoscale sets the value of the Autoscale field in ResizeCluster.
 func (o *ResizeCluster) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 type ResizeClusterResponse struct {
@@ -14479,6 +15708,11 @@ func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *ResizeClusterResponse) SyncEffectiveFieldsDuringRead(existingState ResizeClusterResponse) {
+}
+
+func (c ResizeClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResizeClusterResponse.
@@ -14510,15 +15744,22 @@ func (o ResizeClusterResponse) Type(ctx context.Context) attr.Type {
 
 type RestartCluster struct {
 	// The cluster to be started.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// <needs content added>
-	RestartUser types.String `tfsdk:"restart_user" tf:"optional"`
+	RestartUser types.String `tfsdk:"restart_user"`
 }
 
 func (newState *RestartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestartCluster) {
 }
 
 func (newState *RestartCluster) SyncEffectiveFieldsDuringRead(existingState RestartCluster) {
+}
+
+func (c RestartCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["restart_user"] = attrs["restart_user"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartCluster.
@@ -14563,6 +15804,11 @@ func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(
 func (newState *RestartClusterResponse) SyncEffectiveFieldsDuringRead(existingState RestartClusterResponse) {
 }
 
+func (c RestartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestartClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14592,32 +15838,47 @@ func (o RestartClusterResponse) Type(ctx context.Context) attr.Type {
 
 type Results struct {
 	// The cause of the error
-	Cause types.String `tfsdk:"cause" tf:"optional"`
+	Cause types.String `tfsdk:"cause"`
 
-	Data types.Object `tfsdk:"data" tf:"optional"`
+	Data types.Object `tfsdk:"data"`
 	// The image filename
-	FileName types.String `tfsdk:"fileName" tf:"optional"`
+	FileName types.String `tfsdk:"fileName"`
 
-	FileNames types.List `tfsdk:"fileNames" tf:"optional"`
+	FileNames types.List `tfsdk:"fileNames"`
 	// true if a JSON schema is returned instead of a string representation of
 	// the Hive type.
-	IsJsonSchema types.Bool `tfsdk:"isJsonSchema" tf:"optional"`
+	IsJsonSchema types.Bool `tfsdk:"isJsonSchema"`
 	// internal field used by SDK
-	Pos types.Int64 `tfsdk:"pos" tf:"optional"`
+	Pos types.Int64 `tfsdk:"pos"`
 
-	ResultType types.String `tfsdk:"resultType" tf:"optional"`
+	ResultType types.String `tfsdk:"resultType"`
 	// The table schema
-	Schema types.List `tfsdk:"schema" tf:"optional"`
+	Schema types.List `tfsdk:"schema"`
 	// The summary of the error
-	Summary types.String `tfsdk:"summary" tf:"optional"`
+	Summary types.String `tfsdk:"summary"`
 	// true if partial results are returned.
-	Truncated types.Bool `tfsdk:"truncated" tf:"optional"`
+	Truncated types.Bool `tfsdk:"truncated"`
 }
 
 func (newState *Results) SyncEffectiveFieldsDuringCreateOrUpdate(plan Results) {
 }
 
 func (newState *Results) SyncEffectiveFieldsDuringRead(existingState Results) {
+}
+
+func (c Results) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["data"] = attrs["data"].SetOptional()
+	attrs["fileName"] = attrs["fileName"].SetOptional()
+	attrs["fileNames"] = attrs["fileNames"].SetOptional()
+	attrs["isJsonSchema"] = attrs["isJsonSchema"].SetOptional()
+	attrs["pos"] = attrs["pos"].SetOptional()
+	attrs["resultType"] = attrs["resultType"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["summary"] = attrs["summary"].SetOptional()
+	attrs["truncated"] = attrs["truncated"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in Results.
@@ -14740,33 +16001,45 @@ type S3StorageInfo struct {
 	// controls. If you are using cross account role for writing data, you may
 	// want to set `bucket-owner-full-control` to make bucket owner able to read
 	// the logs.
-	CannedAcl types.String `tfsdk:"canned_acl" tf:"optional"`
+	CannedAcl types.String `tfsdk:"canned_acl"`
 	// S3 destination, e.g. `s3://my-bucket/some-prefix` Note that logs will be
 	// delivered using cluster iam role, please make sure you set cluster iam
 	// role and the role has write access to the destination. Please also note
 	// that you cannot use AWS keys to deliver logs.
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 	// (Optional) Flag to enable server side encryption, `false` by default.
-	EnableEncryption types.Bool `tfsdk:"enable_encryption" tf:"optional"`
+	EnableEncryption types.Bool `tfsdk:"enable_encryption"`
 	// (Optional) The encryption type, it could be `sse-s3` or `sse-kms`. It
 	// will be used only when encryption is enabled and the default type is
 	// `sse-s3`.
-	EncryptionType types.String `tfsdk:"encryption_type" tf:"optional"`
+	EncryptionType types.String `tfsdk:"encryption_type"`
 	// S3 endpoint, e.g. `https://s3-us-west-2.amazonaws.com`. Either region or
 	// endpoint needs to be set. If both are set, endpoint will be used.
-	Endpoint types.String `tfsdk:"endpoint" tf:"optional"`
+	Endpoint types.String `tfsdk:"endpoint"`
 	// (Optional) Kms key which will be used if encryption is enabled and
 	// encryption type is set to `sse-kms`.
-	KmsKey types.String `tfsdk:"kms_key" tf:"optional"`
+	KmsKey types.String `tfsdk:"kms_key"`
 	// S3 region, e.g. `us-west-2`. Either region or endpoint needs to be set.
 	// If both are set, endpoint will be used.
-	Region types.String `tfsdk:"region" tf:"optional"`
+	Region types.String `tfsdk:"region"`
 }
 
 func (newState *S3StorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan S3StorageInfo) {
 }
 
 func (newState *S3StorageInfo) SyncEffectiveFieldsDuringRead(existingState S3StorageInfo) {
+}
+
+func (c S3StorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["canned_acl"] = attrs["canned_acl"].SetOptional()
+	attrs["destination"] = attrs["destination"].SetRequired()
+	attrs["enable_encryption"] = attrs["enable_encryption"].SetOptional()
+	attrs["encryption_type"] = attrs["encryption_type"].SetOptional()
+	attrs["endpoint"] = attrs["endpoint"].SetOptional()
+	attrs["kms_key"] = attrs["kms_key"].SetOptional()
+	attrs["region"] = attrs["region"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in S3StorageInfo.
@@ -14814,36 +16087,48 @@ func (o S3StorageInfo) Type(ctx context.Context) attr.Type {
 
 type SparkNode struct {
 	// The private IP address of the host instance.
-	HostPrivateIp types.String `tfsdk:"host_private_ip" tf:"optional"`
+	HostPrivateIp types.String `tfsdk:"host_private_ip"`
 	// Globally unique identifier for the host instance from the cloud provider.
-	InstanceId types.String `tfsdk:"instance_id" tf:"optional"`
+	InstanceId types.String `tfsdk:"instance_id"`
 	// Attributes specific to AWS for a Spark node.
-	NodeAwsAttributes types.List `tfsdk:"node_aws_attributes" tf:"optional,object"`
+	NodeAwsAttributes types.Object `tfsdk:"node_aws_attributes"`
 	// Globally unique identifier for this node.
-	NodeId types.String `tfsdk:"node_id" tf:"optional"`
+	NodeId types.String `tfsdk:"node_id"`
 	// Private IP address (typically a 10.x.x.x address) of the Spark node. Note
 	// that this is different from the private IP address of the host instance.
-	PrivateIp types.String `tfsdk:"private_ip" tf:"optional"`
+	PrivateIp types.String `tfsdk:"private_ip"`
 	// Public DNS address of this node. This address can be used to access the
 	// Spark JDBC server on the driver node. To communicate with the JDBC
 	// server, traffic must be manually authorized by adding security group
 	// rules to the "worker-unmanaged" security group via the AWS console.
 	//
 	// Actually it's the public DNS address of the host instance.
-	PublicDns types.String `tfsdk:"public_dns" tf:"optional"`
+	PublicDns types.String `tfsdk:"public_dns"`
 	// The timestamp (in millisecond) when the Spark node is launched.
 	//
 	// The start_timestamp is set right before the container is being launched.
 	// The timestamp when the container is placed on the ResourceManager, before
 	// its launch and setup by the NodeDaemon. This timestamp is the same as the
 	// creation timestamp in the database.
-	StartTimestamp types.Int64 `tfsdk:"start_timestamp" tf:"optional"`
+	StartTimestamp types.Int64 `tfsdk:"start_timestamp"`
 }
 
 func (newState *SparkNode) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNode) {
 }
 
 func (newState *SparkNode) SyncEffectiveFieldsDuringRead(existingState SparkNode) {
+}
+
+func (c SparkNode) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["host_private_ip"] = attrs["host_private_ip"].SetOptional()
+	attrs["instance_id"] = attrs["instance_id"].SetOptional()
+	attrs["node_aws_attributes"] = attrs["node_aws_attributes"].SetOptional()
+	attrs["node_id"] = attrs["node_id"].SetOptional()
+	attrs["private_ip"] = attrs["private_ip"].SetOptional()
+	attrs["public_dns"] = attrs["public_dns"].SetOptional()
+	attrs["start_timestamp"] = attrs["start_timestamp"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkNode.
@@ -14880,15 +16165,13 @@ func (o SparkNode) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o SparkNode) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"host_private_ip": types.StringType,
-			"instance_id":     types.StringType,
-			"node_aws_attributes": basetypes.ListType{
-				ElemType: SparkNodeAwsAttributes{}.Type(ctx),
-			},
-			"node_id":         types.StringType,
-			"private_ip":      types.StringType,
-			"public_dns":      types.StringType,
-			"start_timestamp": types.Int64Type,
+			"host_private_ip":     types.StringType,
+			"instance_id":         types.StringType,
+			"node_aws_attributes": SparkNodeAwsAttributes{}.Type(ctx),
+			"node_id":             types.StringType,
+			"private_ip":          types.StringType,
+			"public_dns":          types.StringType,
+			"start_timestamp":     types.Int64Type,
 		},
 	}
 }
@@ -14902,7 +16185,10 @@ func (o *SparkNode) GetNodeAwsAttributes(ctx context.Context) (SparkNodeAwsAttri
 		return e, false
 	}
 	var v []SparkNodeAwsAttributes
-	d := o.NodeAwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.NodeAwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -14914,20 +16200,25 @@ func (o *SparkNode) GetNodeAwsAttributes(ctx context.Context) (SparkNodeAwsAttri
 
 // SetNodeAwsAttributes sets the value of the NodeAwsAttributes field in SparkNode.
 func (o *SparkNode) SetNodeAwsAttributes(ctx context.Context, v SparkNodeAwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_aws_attributes"]
-	o.NodeAwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.NodeAwsAttributes = vs
 }
 
 type SparkNodeAwsAttributes struct {
 	// Whether this node is on an Amazon spot instance.
-	IsSpot types.Bool `tfsdk:"is_spot" tf:"optional"`
+	IsSpot types.Bool `tfsdk:"is_spot"`
 }
 
 func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkNodeAwsAttributes) {
 }
 
 func (newState *SparkNodeAwsAttributes) SyncEffectiveFieldsDuringRead(existingState SparkNodeAwsAttributes) {
+}
+
+func (c SparkNodeAwsAttributes) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_spot"] = attrs["is_spot"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkNodeAwsAttributes.
@@ -14967,15 +16258,22 @@ type SparkVersion struct {
 	// Note that the exact Spark version may change over time for a "wildcard"
 	// version (i.e., "2.1.x-scala2.11" is a "wildcard" version) with minor bug
 	// fixes.
-	Key types.String `tfsdk:"key" tf:"optional"`
+	Key types.String `tfsdk:"key"`
 	// A descriptive name for this Spark version, for example "Spark 2.1".
-	Name types.String `tfsdk:"name" tf:"optional"`
+	Name types.String `tfsdk:"name"`
 }
 
 func (newState *SparkVersion) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkVersion) {
 }
 
 func (newState *SparkVersion) SyncEffectiveFieldsDuringRead(existingState SparkVersion) {
+}
+
+func (c SparkVersion) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SparkVersion.
@@ -15013,13 +16311,19 @@ func (o SparkVersion) Type(ctx context.Context) attr.Type {
 
 type StartCluster struct {
 	// The cluster to be started.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *StartCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartCluster) {
 }
 
 func (newState *StartCluster) SyncEffectiveFieldsDuringRead(existingState StartCluster) {
+}
+
+func (c StartCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartCluster.
@@ -15062,6 +16366,11 @@ func (newState *StartClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *StartClusterResponse) SyncEffectiveFieldsDuringRead(existingState StartClusterResponse) {
 }
 
+func (c StartClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -15091,18 +16400,26 @@ func (o StartClusterResponse) Type(ctx context.Context) attr.Type {
 
 type TerminationReason struct {
 	// status code indicating why the cluster was terminated
-	Code types.String `tfsdk:"code" tf:"optional"`
+	Code types.String `tfsdk:"code"`
 	// list of parameters that provide additional information about why the
 	// cluster was terminated
-	Parameters types.Map `tfsdk:"parameters" tf:"optional"`
+	Parameters types.Map `tfsdk:"parameters"`
 	// type of the termination
-	Type_ types.String `tfsdk:"type" tf:"optional"`
+	Type_ types.String `tfsdk:"type"`
 }
 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringCreateOrUpdate(plan TerminationReason) {
 }
 
 func (newState *TerminationReason) SyncEffectiveFieldsDuringRead(existingState TerminationReason) {
+}
+
+func (c TerminationReason) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["code"] = attrs["code"].SetOptional()
+	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TerminationReason.
@@ -15172,15 +16489,22 @@ func (o *TerminationReason) SetParameters(ctx context.Context, v map[string]type
 
 type UninstallLibraries struct {
 	// Unique identifier for the cluster on which to uninstall these libraries.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// The libraries to uninstall.
-	Libraries types.List `tfsdk:"libraries" tf:""`
+	Libraries types.List `tfsdk:"libraries"`
 }
 
 func (newState *UninstallLibraries) SyncEffectiveFieldsDuringCreateOrUpdate(plan UninstallLibraries) {
 }
 
 func (newState *UninstallLibraries) SyncEffectiveFieldsDuringRead(existingState UninstallLibraries) {
+}
+
+func (c UninstallLibraries) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["libraries"] = attrs["libraries"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UninstallLibraries.
@@ -15255,6 +16579,11 @@ func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringCreateOrUpd
 func (newState *UninstallLibrariesResponse) SyncEffectiveFieldsDuringRead(existingState UninstallLibrariesResponse) {
 }
 
+func (c UninstallLibrariesResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UninstallLibrariesResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -15284,13 +16613,19 @@ func (o UninstallLibrariesResponse) Type(ctx context.Context) attr.Type {
 
 type UnpinCluster struct {
 	// <needs content added>
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
 func (newState *UnpinCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UnpinCluster) {
 }
 
 func (newState *UnpinCluster) SyncEffectiveFieldsDuringRead(existingState UnpinCluster) {
+}
+
+func (c UnpinCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpinCluster.
@@ -15333,6 +16668,11 @@ func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(pl
 func (newState *UnpinClusterResponse) SyncEffectiveFieldsDuringRead(existingState UnpinClusterResponse) {
 }
 
+func (c UnpinClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UnpinClusterResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -15362,21 +16702,29 @@ func (o UnpinClusterResponse) Type(ctx context.Context) attr.Type {
 
 type UpdateCluster struct {
 	// The cluster to be updated.
-	Cluster types.List `tfsdk:"cluster" tf:"optional,object"`
+	Cluster types.Object `tfsdk:"cluster"`
 	// ID of the cluster.
-	ClusterId types.String `tfsdk:"cluster_id" tf:""`
+	ClusterId types.String `tfsdk:"cluster_id"`
 	// Specifies which fields of the cluster will be updated. This is required
 	// in the POST request. The update mask should be supplied as a single
 	// string. To specify multiple fields, separate them with commas (no
 	// spaces). To delete a field from a cluster configuration, add it to the
 	// `update_mask` string but omit it from the `cluster` object.
-	UpdateMask types.String `tfsdk:"update_mask" tf:""`
+	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
 func (newState *UpdateCluster) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCluster) {
 }
 
 func (newState *UpdateCluster) SyncEffectiveFieldsDuringRead(existingState UpdateCluster) {
+}
+
+func (c UpdateCluster) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster"] = attrs["cluster"].SetOptional()
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCluster.
@@ -15409,9 +16757,7 @@ func (o UpdateCluster) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 func (o UpdateCluster) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"cluster": basetypes.ListType{
-				ElemType: UpdateClusterResource{}.Type(ctx),
-			},
+			"cluster":     UpdateClusterResource{}.Type(ctx),
 			"cluster_id":  types.StringType,
 			"update_mask": types.StringType,
 		},
@@ -15427,7 +16773,10 @@ func (o *UpdateCluster) GetCluster(ctx context.Context) (UpdateClusterResource, 
 		return e, false
 	}
 	var v []UpdateClusterResource
-	d := o.Cluster.ElementsAs(ctx, &v, true)
+	d := o.Cluster.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15439,38 +16788,37 @@ func (o *UpdateCluster) GetCluster(ctx context.Context) (UpdateClusterResource, 
 
 // SetCluster sets the value of the Cluster field in UpdateCluster.
 func (o *UpdateCluster) SetCluster(ctx context.Context, v UpdateClusterResource) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster"]
-	o.Cluster = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Cluster = vs
 }
 
 type UpdateClusterResource struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
 	// or later.
-	Autoscale types.List `tfsdk:"autoscale" tf:"optional,object"`
+	Autoscale types.Object `tfsdk:"autoscale"`
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
 	// terminated. If specified, the threshold must be between 10 and 10000
 	// minutes. Users can also set this value to 0 to explicitly disable
 	// automatic termination.
-	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes" tf:"optional"`
+	AutoterminationMinutes types.Int64 `tfsdk:"autotermination_minutes"`
 	// Attributes related to clusters running on Amazon Web Services. If not
 	// specified at cluster creation, a set of default values will be used.
-	AwsAttributes types.List `tfsdk:"aws_attributes" tf:"optional,object"`
+	AwsAttributes types.Object `tfsdk:"aws_attributes"`
 	// Attributes related to clusters running on Microsoft Azure. If not
 	// specified at cluster creation, a set of default values will be used.
-	AzureAttributes types.List `tfsdk:"azure_attributes" tf:"optional,object"`
+	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
 	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
 	// one destination can be specified for one cluster. If the conf is given,
 	// the logs will be delivered to the destination every `5 mins`. The
 	// destination of driver logs is `$destination/$clusterId/driver`, while the
 	// destination of executor logs is `$destination/$clusterId/executor`.
-	ClusterLogConf types.List `tfsdk:"cluster_log_conf" tf:"optional,object"`
+	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
-	ClusterName types.String `tfsdk:"cluster_name" tf:"optional"`
+	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
 	// addition to `default_tags`. Notes:
@@ -15479,13 +16827,20 @@ type UpdateClusterResource struct {
 	//
 	// - Clusters can only reuse cloud resources if the resources' tags are a
 	// subset of the cluster tags
-	CustomTags types.Map `tfsdk:"custom_tags" tf:"optional"`
+	CustomTags types.Map `tfsdk:"custom_tags"`
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// * `NONE`: No security isolation for multiple users sharing the cluster.
-	// Data governance features are not available in this mode. * `SINGLE_USER`:
-	// A secure cluster that can only be exclusively used by a single user
+	// The following modes can only be used with `kind`. *
+	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
+	// access mode depending on your compute configuration. *
+	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
+	// `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+	//
+	// The following modes can be used regardless of `kind`. * `NONE`: No
+	// security isolation for multiple users sharing the cluster. Data
+	// governance features are not available in this mode. * `SINGLE_USER`: A
+	// secure cluster that can only be exclusively used by a single user
 	// specified in `single_user_name`. Most programming languages, cluster
 	// features and data governance features are available in this mode. *
 	// `USER_ISOLATION`: A secure cluster that can be shared by multiple users.
@@ -15502,40 +16857,53 @@ type UpdateClusterResource struct {
 	// `LEGACY_SINGLE_USER`: This mode is for users migrating from legacy
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
-	DataSecurityMode types.String `tfsdk:"data_security_mode" tf:"optional"`
+	DataSecurityMode types.String `tfsdk:"data_security_mode"`
 
-	DockerImage types.List `tfsdk:"docker_image" tf:"optional,object"`
+	DockerImage types.Object `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
 	// (instance_pool_id) if the driver pool is not assigned.
-	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id" tf:"optional"`
+	DriverInstancePoolId types.String `tfsdk:"driver_instance_pool_id"`
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
-	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id" tf:"optional"`
+	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
 	// disk space. This feature requires specific AWS permissions to function
 	// correctly - refer to the User Guide for more details.
-	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk" tf:"optional"`
+	EnableElasticDisk types.Bool `tfsdk:"enable_elastic_disk"`
 	// Whether to enable LUKS on cluster VMs' local disks
-	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption" tf:"optional"`
+	EnableLocalDiskEncryption types.Bool `tfsdk:"enable_local_disk_encryption"`
 	// Attributes related to clusters running on Google Cloud Platform. If not
 	// specified at cluster creation, a set of default values will be used.
-	GcpAttributes types.List `tfsdk:"gcp_attributes" tf:"optional,object"`
+	GcpAttributes types.Object `tfsdk:"gcp_attributes"`
 	// The configuration for storing init scripts. Any number of destinations
 	// can be specified. The scripts are executed sequentially in the order
 	// provided. If `cluster_log_conf` is specified, init script logs are sent
 	// to `<destination>/<cluster-ID>/init_scripts`.
-	InitScripts types.List `tfsdk:"init_scripts" tf:"optional"`
+	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
-	InstancePoolId types.String `tfsdk:"instance_pool_id" tf:"optional"`
+	InstancePoolId types.String `tfsdk:"instance_pool_id"`
+	// This field can only be used with `kind`.
+	//
+	// When set to true, Databricks will automatically set single node related
+	// `custom_tags`, `spark_conf`, and `num_workers`
+	IsSingleNode types.Bool `tfsdk:"is_single_node"`
+	// The kind of compute described by this compute specification.
+	//
+	// Depending on `kind`, different validations and default values will be
+	// applied.
+	//
+	// The first usage of this value is for the simple cluster form where it
+	// sets `kind = CLASSIC_PREVIEW`.
+	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
 	// list of available node types can be retrieved by using the
 	// :method:clusters/listNodeTypes API call.
-	NodeTypeId types.String `tfsdk:"node_type_id" tf:"optional"`
+	NodeTypeId types.String `tfsdk:"node_type_id"`
 	// Number of worker nodes that this cluster should have. A cluster has one
 	// Spark Driver and `num_workers` Executors for a total of `num_workers` + 1
 	// Spark nodes.
@@ -15546,9 +16914,9 @@ type UpdateClusterResource struct {
 	// field will immediately be updated to reflect the target size of 10
 	// workers, whereas the workers listed in `spark_info` will gradually
 	// increase from 5 to 10 as the new nodes are provisioned.
-	NumWorkers types.Int64 `tfsdk:"num_workers" tf:"optional"`
+	NumWorkers types.Int64 `tfsdk:"num_workers"`
 	// The ID of the cluster policy used to create the cluster if applicable.
-	PolicyId types.String `tfsdk:"policy_id" tf:"optional"`
+	PolicyId types.String `tfsdk:"policy_id"`
 	// Determines the cluster's runtime engine, either standard or Photon.
 	//
 	// This field is not compatible with legacy `spark_version` values that
@@ -15557,15 +16925,15 @@ type UpdateClusterResource struct {
 	//
 	// If left unspecified, the runtime engine defaults to standard unless the
 	// spark_version contains -photon-, in which case Photon will be used.
-	RuntimeEngine types.String `tfsdk:"runtime_engine" tf:"optional"`
+	RuntimeEngine types.String `tfsdk:"runtime_engine"`
 	// Single user name if data_security_mode is `SINGLE_USER`
-	SingleUserName types.String `tfsdk:"single_user_name" tf:"optional"`
+	SingleUserName types.String `tfsdk:"single_user_name"`
 	// An object containing a set of optional, user-specified Spark
 	// configuration key-value pairs. Users can also pass in a string of extra
 	// JVM options to the driver and the executors via
 	// `spark.driver.extraJavaOptions` and `spark.executor.extraJavaOptions`
 	// respectively.
-	SparkConf types.Map `tfsdk:"spark_conf" tf:"optional"`
+	SparkConf types.Map `tfsdk:"spark_conf"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs. Please note that key-value pair of the form
 	// (X,Y) will be exported as is (i.e., `export X='Y'`) while launching the
@@ -15579,23 +16947,63 @@ type UpdateClusterResource struct {
 	// Example Spark environment variables: `{"SPARK_WORKER_MEMORY": "28000m",
 	// "SPARK_LOCAL_DIRS": "/local_disk0"}` or `{"SPARK_DAEMON_JAVA_OPTS":
 	// "$SPARK_DAEMON_JAVA_OPTS -Dspark.shuffle.service.enabled=true"}`
-	SparkEnvVars types.Map `tfsdk:"spark_env_vars" tf:"optional"`
+	SparkEnvVars types.Map `tfsdk:"spark_env_vars"`
 	// The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
-	SparkVersion types.String `tfsdk:"spark_version" tf:"optional"`
+	SparkVersion types.String `tfsdk:"spark_version"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
-	SshPublicKeys types.List `tfsdk:"ssh_public_keys" tf:"optional"`
+	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
+	// This field can only be used with `kind`.
+	//
+	// `effective_spark_version` is determined by `spark_version` (DBR release),
+	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
+	// not.
+	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
 
-	WorkloadType types.List `tfsdk:"workload_type" tf:"optional,object"`
+	WorkloadType types.Object `tfsdk:"workload_type"`
 }
 
 func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateClusterResource) {
 }
 
 func (newState *UpdateClusterResource) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResource) {
+}
+
+func (c UpdateClusterResource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["autoscale"] = attrs["autoscale"].SetOptional()
+	attrs["autotermination_minutes"] = attrs["autotermination_minutes"].SetOptional()
+	attrs["aws_attributes"] = attrs["aws_attributes"].SetOptional()
+	attrs["azure_attributes"] = attrs["azure_attributes"].SetOptional()
+	attrs["cluster_log_conf"] = attrs["cluster_log_conf"].SetOptional()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
+	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["docker_image"] = attrs["docker_image"].SetOptional()
+	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
+	attrs["driver_node_type_id"] = attrs["driver_node_type_id"].SetOptional()
+	attrs["enable_elastic_disk"] = attrs["enable_elastic_disk"].SetOptional()
+	attrs["enable_local_disk_encryption"] = attrs["enable_local_disk_encryption"].SetOptional()
+	attrs["gcp_attributes"] = attrs["gcp_attributes"].SetOptional()
+	attrs["init_scripts"] = attrs["init_scripts"].SetOptional()
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
+	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
+	attrs["num_workers"] = attrs["num_workers"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
+	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
+	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
+	attrs["spark_version"] = attrs["spark_version"].SetOptional()
+	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
+	attrs["use_ml_runtime"] = attrs["use_ml_runtime"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateClusterResource.
@@ -15645,6 +17053,8 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"gcp_attributes":               o.GcpAttributes,
 			"init_scripts":                 o.InitScripts,
 			"instance_pool_id":             o.InstancePoolId,
+			"is_single_node":               o.IsSingleNode,
+			"kind":                         o.Kind,
 			"node_type_id":                 o.NodeTypeId,
 			"num_workers":                  o.NumWorkers,
 			"policy_id":                    o.PolicyId,
@@ -15654,6 +17064,7 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 			"spark_env_vars":               o.SparkEnvVars,
 			"spark_version":                o.SparkVersion,
 			"ssh_public_keys":              o.SshPublicKeys,
+			"use_ml_runtime":               o.UseMlRuntime,
 			"workload_type":                o.WorkloadType,
 		})
 }
@@ -15662,38 +17073,28 @@ func (o UpdateClusterResource) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"autoscale": basetypes.ListType{
-				ElemType: AutoScale{}.Type(ctx),
-			},
+			"autoscale":               AutoScale{}.Type(ctx),
 			"autotermination_minutes": types.Int64Type,
-			"aws_attributes": basetypes.ListType{
-				ElemType: AwsAttributes{}.Type(ctx),
-			},
-			"azure_attributes": basetypes.ListType{
-				ElemType: AzureAttributes{}.Type(ctx),
-			},
-			"cluster_log_conf": basetypes.ListType{
-				ElemType: ClusterLogConf{}.Type(ctx),
-			},
-			"cluster_name": types.StringType,
+			"aws_attributes":          AwsAttributes{}.Type(ctx),
+			"azure_attributes":        AzureAttributes{}.Type(ctx),
+			"cluster_log_conf":        ClusterLogConf{}.Type(ctx),
+			"cluster_name":            types.StringType,
 			"custom_tags": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"data_security_mode": types.StringType,
-			"docker_image": basetypes.ListType{
-				ElemType: DockerImage{}.Type(ctx),
-			},
+			"data_security_mode":           types.StringType,
+			"docker_image":                 DockerImage{}.Type(ctx),
 			"driver_instance_pool_id":      types.StringType,
 			"driver_node_type_id":          types.StringType,
 			"enable_elastic_disk":          types.BoolType,
 			"enable_local_disk_encryption": types.BoolType,
-			"gcp_attributes": basetypes.ListType{
-				ElemType: GcpAttributes{}.Type(ctx),
-			},
+			"gcp_attributes":               GcpAttributes{}.Type(ctx),
 			"init_scripts": basetypes.ListType{
 				ElemType: InitScriptInfo{}.Type(ctx),
 			},
 			"instance_pool_id": types.StringType,
+			"is_single_node":   types.BoolType,
+			"kind":             types.StringType,
 			"node_type_id":     types.StringType,
 			"num_workers":      types.Int64Type,
 			"policy_id":        types.StringType,
@@ -15709,9 +17110,8 @@ func (o UpdateClusterResource) Type(ctx context.Context) attr.Type {
 			"ssh_public_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
-			"workload_type": basetypes.ListType{
-				ElemType: WorkloadType{}.Type(ctx),
-			},
+			"use_ml_runtime": types.BoolType,
+			"workload_type":  WorkloadType{}.Type(ctx),
 		},
 	}
 }
@@ -15725,7 +17125,10 @@ func (o *UpdateClusterResource) GetAutoscale(ctx context.Context) (AutoScale, bo
 		return e, false
 	}
 	var v []AutoScale
-	d := o.Autoscale.ElementsAs(ctx, &v, true)
+	d := o.Autoscale.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15737,9 +17140,8 @@ func (o *UpdateClusterResource) GetAutoscale(ctx context.Context) (AutoScale, bo
 
 // SetAutoscale sets the value of the Autoscale field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetAutoscale(ctx context.Context, v AutoScale) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["autoscale"]
-	o.Autoscale = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Autoscale = vs
 }
 
 // GetAwsAttributes returns the value of the AwsAttributes field in UpdateClusterResource as
@@ -15751,7 +17153,10 @@ func (o *UpdateClusterResource) GetAwsAttributes(ctx context.Context) (AwsAttrib
 		return e, false
 	}
 	var v []AwsAttributes
-	d := o.AwsAttributes.ElementsAs(ctx, &v, true)
+	d := o.AwsAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15763,9 +17168,8 @@ func (o *UpdateClusterResource) GetAwsAttributes(ctx context.Context) (AwsAttrib
 
 // SetAwsAttributes sets the value of the AwsAttributes field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetAwsAttributes(ctx context.Context, v AwsAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aws_attributes"]
-	o.AwsAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AwsAttributes = vs
 }
 
 // GetAzureAttributes returns the value of the AzureAttributes field in UpdateClusterResource as
@@ -15777,7 +17181,10 @@ func (o *UpdateClusterResource) GetAzureAttributes(ctx context.Context) (AzureAt
 		return e, false
 	}
 	var v []AzureAttributes
-	d := o.AzureAttributes.ElementsAs(ctx, &v, true)
+	d := o.AzureAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15789,9 +17196,8 @@ func (o *UpdateClusterResource) GetAzureAttributes(ctx context.Context) (AzureAt
 
 // SetAzureAttributes sets the value of the AzureAttributes field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetAzureAttributes(ctx context.Context, v AzureAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["azure_attributes"]
-	o.AzureAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.AzureAttributes = vs
 }
 
 // GetClusterLogConf returns the value of the ClusterLogConf field in UpdateClusterResource as
@@ -15803,7 +17209,10 @@ func (o *UpdateClusterResource) GetClusterLogConf(ctx context.Context) (ClusterL
 		return e, false
 	}
 	var v []ClusterLogConf
-	d := o.ClusterLogConf.ElementsAs(ctx, &v, true)
+	d := o.ClusterLogConf.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15815,9 +17224,8 @@ func (o *UpdateClusterResource) GetClusterLogConf(ctx context.Context) (ClusterL
 
 // SetClusterLogConf sets the value of the ClusterLogConf field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetClusterLogConf(ctx context.Context, v ClusterLogConf) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cluster_log_conf"]
-	o.ClusterLogConf = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.ClusterLogConf = vs
 }
 
 // GetCustomTags returns the value of the CustomTags field in UpdateClusterResource as
@@ -15855,7 +17263,10 @@ func (o *UpdateClusterResource) GetDockerImage(ctx context.Context) (DockerImage
 		return e, false
 	}
 	var v []DockerImage
-	d := o.DockerImage.ElementsAs(ctx, &v, true)
+	d := o.DockerImage.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15867,9 +17278,8 @@ func (o *UpdateClusterResource) GetDockerImage(ctx context.Context) (DockerImage
 
 // SetDockerImage sets the value of the DockerImage field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetDockerImage(ctx context.Context, v DockerImage) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["docker_image"]
-	o.DockerImage = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.DockerImage = vs
 }
 
 // GetGcpAttributes returns the value of the GcpAttributes field in UpdateClusterResource as
@@ -15881,7 +17291,10 @@ func (o *UpdateClusterResource) GetGcpAttributes(ctx context.Context) (GcpAttrib
 		return e, false
 	}
 	var v []GcpAttributes
-	d := o.GcpAttributes.ElementsAs(ctx, &v, true)
+	d := o.GcpAttributes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -15893,9 +17306,8 @@ func (o *UpdateClusterResource) GetGcpAttributes(ctx context.Context) (GcpAttrib
 
 // SetGcpAttributes sets the value of the GcpAttributes field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetGcpAttributes(ctx context.Context, v GcpAttributes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
-	o.GcpAttributes = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.GcpAttributes = vs
 }
 
 // GetInitScripts returns the value of the InitScripts field in UpdateClusterResource as
@@ -16011,7 +17423,10 @@ func (o *UpdateClusterResource) GetWorkloadType(ctx context.Context) (WorkloadTy
 		return e, false
 	}
 	var v []WorkloadType
-	d := o.WorkloadType.ElementsAs(ctx, &v, true)
+	d := o.WorkloadType.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16023,9 +17438,8 @@ func (o *UpdateClusterResource) GetWorkloadType(ctx context.Context) (WorkloadTy
 
 // SetWorkloadType sets the value of the WorkloadType field in UpdateClusterResource.
 func (o *UpdateClusterResource) SetWorkloadType(ctx context.Context, v WorkloadType) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workload_type"]
-	o.WorkloadType = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.WorkloadType = vs
 }
 
 type UpdateClusterResponse struct {
@@ -16035,6 +17449,11 @@ func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringCreateOrUpdate(p
 }
 
 func (newState *UpdateClusterResponse) SyncEffectiveFieldsDuringRead(existingState UpdateClusterResponse) {
+}
+
+func (c UpdateClusterResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateClusterResponse.
@@ -16067,12 +17486,6 @@ func (o UpdateClusterResponse) Type(ctx context.Context) attr.Type {
 type UpdateResponse struct {
 }
 
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
-}
-
-func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -16102,13 +17515,19 @@ func (o UpdateResponse) Type(ctx context.Context) attr.Type {
 
 type VolumesStorageInfo struct {
 	// Unity Catalog Volumes file destination, e.g. `/Volumes/my-init.sh`
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan VolumesStorageInfo) {
 }
 
 func (newState *VolumesStorageInfo) SyncEffectiveFieldsDuringRead(existingState VolumesStorageInfo) {
+}
+
+func (c VolumesStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in VolumesStorageInfo.
@@ -16144,13 +17563,19 @@ func (o VolumesStorageInfo) Type(ctx context.Context) attr.Type {
 
 type WorkloadType struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
-	Clients types.List `tfsdk:"clients" tf:"object"`
+	Clients types.Object `tfsdk:"clients"`
 }
 
 func (newState *WorkloadType) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkloadType) {
 }
 
 func (newState *WorkloadType) SyncEffectiveFieldsDuringRead(existingState WorkloadType) {
+}
+
+func (c WorkloadType) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clients"] = attrs["clients"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkloadType.
@@ -16181,9 +17606,7 @@ func (o WorkloadType) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o WorkloadType) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"clients": basetypes.ListType{
-				ElemType: ClientsTypes{}.Type(ctx),
-			},
+			"clients": ClientsTypes{}.Type(ctx),
 		},
 	}
 }
@@ -16197,7 +17620,10 @@ func (o *WorkloadType) GetClients(ctx context.Context) (ClientsTypes, bool) {
 		return e, false
 	}
 	var v []ClientsTypes
-	d := o.Clients.ElementsAs(ctx, &v, true)
+	d := o.Clients.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -16209,21 +17635,26 @@ func (o *WorkloadType) GetClients(ctx context.Context) (ClientsTypes, bool) {
 
 // SetClients sets the value of the Clients field in WorkloadType.
 func (o *WorkloadType) SetClients(ctx context.Context, v ClientsTypes) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clients"]
-	o.Clients = types.ListValueMust(t, vs)
+	vs := v.ToObjectValue(ctx)
+	o.Clients = vs
 }
 
 type WorkspaceStorageInfo struct {
 	// workspace files destination, e.g.
 	// `/Users/user1@databricks.com/my-init.sh`
-	Destination types.String `tfsdk:"destination" tf:""`
+	Destination types.String `tfsdk:"destination"`
 }
 
 func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan WorkspaceStorageInfo) {
 }
 
 func (newState *WorkspaceStorageInfo) SyncEffectiveFieldsDuringRead(existingState WorkspaceStorageInfo) {
+}
+
+func (c WorkspaceStorageInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination"] = attrs["destination"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in WorkspaceStorageInfo.

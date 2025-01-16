@@ -34,14 +34,22 @@ type ClusterDataSource struct {
 }
 
 type ClusterInfo struct {
-	ClusterId   types.String `tfsdk:"cluster_id" tf:"optional,computed"`
-	Name        types.String `tfsdk:"cluster_name" tf:"optional,computed"`
-	ClusterInfo types.List   `tfsdk:"cluster_info" tf:"optional,computed"`
+	ClusterId   types.String `tfsdk:"cluster_id"`
+	Name        types.String `tfsdk:"cluster_name"`
+	ClusterInfo types.List   `tfsdk:"cluster_info"`
+}
+
+func (ClusterInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetOptional().SetComputed()
+	attrs["cluster_name"] = attrs["cluster_name"].SetOptional().SetComputed()
+	attrs["cluster_info"] = attrs["cluster_info"].SetOptional().SetComputed()
+
+	return attrs
 }
 
 func (ClusterInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails{}),
+		"cluster_info": reflect.TypeOf(compute_tf.ClusterDetails_SdkV2{}),
 	}
 }
 
@@ -85,7 +93,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	var tfCluster compute_tf.ClusterDetails
+	var tfCluster compute_tf.ClusterDetails_SdkV2
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, cluster, &tfCluster)...)
 	if resp.Diagnostics.HasError() {
 		return

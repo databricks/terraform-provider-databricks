@@ -35,14 +35,22 @@ type RegisteredModelDataSource struct {
 
 type RegisteredModelData struct {
 	FullName       types.String `tfsdk:"full_name"`
-	IncludeAliases types.Bool   `tfsdk:"include_aliases" tf:"optional"`
-	IncludeBrowse  types.Bool   `tfsdk:"include_browse" tf:"optional"`
-	ModelInfo      types.List   `tfsdk:"model_info" tf:"optional,computed"`
+	IncludeAliases types.Bool   `tfsdk:"include_aliases"`
+	IncludeBrowse  types.Bool   `tfsdk:"include_browse"`
+	ModelInfo      types.List   `tfsdk:"model_info"`
+}
+
+func (RegisteredModelData) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["full_name"] = attrs["full_name"].SetRequired()
+	attrs["include_aliases"] = attrs["include_aliases"].SetOptional()
+	attrs["include_browse"] = attrs["include_browse"].SetOptional()
+	attrs["model_info"] = attrs["model_info"].SetOptional().SetComputed()
+	return attrs
 }
 
 func (RegisteredModelData) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"model_info": reflect.TypeOf(catalog_tf.RegisteredModelInfo{}),
+		"model_info": reflect.TypeOf(catalog_tf.RegisteredModelInfo_SdkV2{}),
 	}
 }
 

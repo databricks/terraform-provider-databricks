@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 const resourceName = "function"
@@ -48,6 +49,21 @@ func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaReques
 		c.SetRequired("security_type")
 		c.SetRequired("sql_data_access")
 		c.SetRequired("parameter_style")
+
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "catalog_name")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "schema_name")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "input_params")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "data_type")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "full_data_type")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "routine_definition")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_deterministic")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_null_call")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "specific_name")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "routine_body")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "security_type")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "sql_data_access")
+		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "parameter_style")
 
 		c.SetReadOnly("full_name")
 		c.SetReadOnly("created_at")

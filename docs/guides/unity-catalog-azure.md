@@ -152,6 +152,12 @@ resource "azurerm_role_assignment" "ext_storage" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "ext_storage" {
+  scope                = azurerm_storage_account.ext_storage.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
+}
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.

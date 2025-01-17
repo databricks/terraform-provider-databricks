@@ -86,8 +86,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 		},
 		Resources: []string{
 			fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
-			"arn:aws:sqs:*:*:*",
-			"arn:aws:sns:*:*:*",
+			fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
+			fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
 		},
 	},
 		&awsIamPolicyStatement{
@@ -109,8 +109,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sqs:DeleteQueue",
 			},
 			Resources: []string{
-				"arn:aws:sqs:*:*:*",
-				"arn:aws:sns:*:*:*",
+				fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
+				fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
 			},
 		})
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")

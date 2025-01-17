@@ -101,6 +101,27 @@ resource "databricks_metastore" "this" {
   force_destroy = true
 }
 
+resource "google_project_iam_custom_role" "uc_file_events" {
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  description = ""
+  permissions = [
+    "pubsub.subscriptions.consume",
+    "pubsub.subscriptions.create",
+    "pubsub.subscriptions.delete",
+    "pubsub.subscriptions.get",
+    "pubsub.subscriptions.list",
+    "pubsub.subscriptions.update",
+    "pubsub.topics.attachSubscription",
+    "pubsub.topics.create",
+    "pubsub.topics.delete",
+    "pubsub.topics.get",
+    "pubsub.topics.list",
+    "pubsub.topics.update",
+    "storage.buckets.update"
+  ]
+}
+
 resource "google_storage_bucket_iam_member" "unity_sa_admin" {
   bucket = google_storage_bucket.unity_metastore.name
   role   = "roles/storage.objectAdmin"
@@ -111,6 +132,18 @@ resource "google_storage_bucket_iam_member" "unity_sa_reader" {
   bucket = google_storage_bucket.unity_metastore.name
   role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_storage_bucket_iam_member" "unity_bucket_file_events_admin" {
+  bucket = google_storage_bucket.unity_metastore.name
+  role   = google_project_iam_custom_role.uc_file_events.id
+  member = "serviceAccount:${databricks_metastore_data_access.first.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_project_iam_member" "unity_project_file_events_admin" {
+  project = var.project
+  role    = google_project_iam_custom_role.uc_file_events.id
+  member  = "serviceAccount:${google_service_account.sa2.email}"
 }
 
 resource "databricks_metastore_assignment" "this" {

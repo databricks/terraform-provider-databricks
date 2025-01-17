@@ -9,6 +9,7 @@
 * Added output attribute `endpoint_url` in `databricks_model_serving`([#4877](https://github.com/databricks/terraform-provider-databricks/pull/4877)).
 
 ### Bug Fixes
+ * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
 * Corrected accidentally removed `SpID` field from `databricks_service_principal` ([#4868](https://github.com/databricks/terraform-provider-databricks/pull/4868)).
 * Corrected optional fields in `databricks_mws_ncc_private_endpoint_rule`([#4856](https://github.com/databricks/terraform-provider-databricks/pull/4856)).

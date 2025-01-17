@@ -98,7 +98,10 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "sqs:ListQueueTags",
                 "sns:ListTopics"
               ],
-              "Resource": "*"
+              "Resource": [
+                "arn:aws:sqs:*:*:csms-*",
+                "arn:aws:sns:*:*:csms-*"
+              ]
             },
             {
               "Sid": "ManagedFileEventsTeardownStatement",
@@ -208,7 +211,10 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
                 "sqs:ListQueueTags",
                 "sns:ListTopics"
               ],
-              "Resource": "*"
+              "Resource": [
+                "arn:aws:sqs:*:*:csms-*",
+                "arn:aws:sns:*:*:csms-*"
+              ]
             },
             {
               "Sid": "ManagedFileEventsTeardownStatement",
@@ -306,7 +312,10 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
                 "sqs:ListQueueTags",
                 "sns:ListTopics"
               ],
-              "Resource": "*"
+              "Resource": [
+                "arn:aws:sqs:*:*:csms-*",
+                "arn:aws:sns:*:*:csms-*"
+              ]
             },
             {
               "Sid": "ManagedFileEventsTeardownStatement",
@@ -417,7 +426,10 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
                 "sqs:ListQueueTags",
                 "sns:ListTopics"
               ],
-              "Resource": "*"
+              "Resource": [
+                "arn:aws-us-gov:sqs:*:*:csms-*",
+                "arn:aws-us-gov:sns:*:*:csms-*"
+              ]
             },
             {
               "Sid": "ManagedFileEventsTeardownStatement",

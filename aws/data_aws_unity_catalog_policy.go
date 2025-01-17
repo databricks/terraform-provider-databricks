@@ -98,7 +98,10 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sqs:ListQueueTags",
 				"sns:ListTopics",
 			},
-			Resources: "*",
+			Resources: []string{
+				fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
+				fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
+			},
 		},
 		&awsIamPolicyStatement{
 			Sid:    "ManagedFileEventsTeardownStatement",

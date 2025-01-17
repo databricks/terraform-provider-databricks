@@ -31,11 +31,17 @@ const (
 
 func ResourceCluster() common.Resource {
 	return common.Resource{
-		Create:        resourceClusterCreate,
-		Read:          resourceClusterRead,
-		Update:        resourceClusterUpdate,
-		Delete:        resourceClusterDelete,
-		Schema:        clusterSchema,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
+		Schema: clusterSchema,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			if isSingleNode, ok := d.GetOk("is_single_node"); ok && isSingleNode.(bool) {
+				return singleNodeClusterChangesCustomizeDiff(d)
+			}
+			return nil
+		},
 		SchemaVersion: clusterSchemaVersion,
 		Timeouts:      resourceClusterTimeouts(),
 		StateUpgraders: []schema.StateUpgrader{
@@ -46,6 +52,48 @@ func ResourceCluster() common.Resource {
 			},
 		},
 	}
+}
+
+// the API automatically sets the `ResourceClass` key in `custom_tags` and two other keys in the `spark_conf`.
+// If the user hasn't set these explicitly in their config, the plan marks these keys for removal.
+// This method copies the values for these keys from state to the plan.
+// This needs to be done in addition to setting these attributes as computed; otherwise, this customization
+// won't take effect for users who have set additional `spark_conf` or `custom_tags`.
+func singleNodeClusterChangesCustomizeDiff(d *schema.ResourceDiff) error {
+	autoConfigAttributes := map[string][]string{
+		"custom_tags": {"ResourceClass"},
+		"spark_conf":  {"spark.databricks.cluster.profile", "spark.master"},
+	}
+
+	for key, attributes := range autoConfigAttributes {
+		if !d.HasChange(key) {
+			continue
+		}
+
+		o, n := d.GetChange(key)
+		old, okOld := o.(map[string]interface{})
+		new, okNew := n.(map[string]interface{})
+
+		if !okNew || !okOld {
+			return fmt.Errorf("internal type casting error n: %T, o: %T", n, o)
+		}
+
+		log.Printf("[DEBUG] values for key %s, old: %v, new: %v", key, old, new)
+
+		for _, attribute := range attributes {
+			if _, exists := new[attribute]; exists && new[attribute] != nil {
+				continue
+			}
+
+			new[attribute] = old[attribute]
+		}
+
+		if err := d.SetNew(key, new); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func clusterSchemaV0() cty.Type {
@@ -346,7 +394,8 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("docker_image", "url").SetRequired()
 	s.SchemaPath("docker_image", "basic_auth", "password").SetRequired().SetSensitive()
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
-	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
+	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc).SetComputed().SetOptional()
+	s.SchemaPath("custom_tags").SetComputed().SetOptional()
 	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
 	s.SchemaPath("aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})

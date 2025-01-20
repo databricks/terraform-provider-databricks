@@ -158,7 +158,7 @@ func TestResourceSqlTableCreateStatement_Tags(t *testing.T) {
 	assert.Contains(t, stmt, "USING DELTA")
 	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
 	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
-	assert.Contains(t, stmt, ";ALTER TABLE `main`.`foo`.`bar` SET TAGS (")
+	assert.Contains(t, stmt, ";\nALTER TABLE `main`.`foo`.`bar` SET TAGS (")
 	assert.Contains(t, stmt, "'foo'='bar'")
 	assert.Contains(t, stmt, "'fizz'='buzz'")
 }

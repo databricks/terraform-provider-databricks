@@ -295,7 +295,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	statements = append(statements, fmt.Sprintf("CREATE %s%s %s", externalFragment, createType, ti.SQLFullName()))
 
 	if len(ti.Tags) > 0 {
-		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
+		statements = append(statements, fmt.Sprintf("\nALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
 	}
 
 	if len(ti.ColumnInfos) > 0 {
@@ -339,7 +339,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	statements = append(statements, ";")
 
 	if len(ti.Tags) > 0 {
-		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
+		statements = append(statements, fmt.Sprintf("\nALTER %s %s SET TAGS (%s);", createType, ti.SQLFullName(), ti.serializeTags()))
 	}
 
 	return strings.Join(statements, "")
@@ -477,10 +477,10 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		}
 
 		if len(removeTags) > 0 {
-			statements = append(statements, fmt.Sprintf("ALTER %s %s UNSET TAGS (%s)", typestring, ti.SQLFullName(), strings.Join(removeTags, ",")))
+			statements = append(statements, fmt.Sprintf("\nALTER %s %s UNSET TAGS (%s)", typestring, ti.SQLFullName(), strings.Join(removeTags, ",")))
 		}
 		// Next handle property changes and additions
-		statements = append(statements, fmt.Sprintf("ALTER %s %s SET TAGS (%s)", typestring, ti.SQLFullName(), ti.serializeTags()))
+		statements = append(statements, fmt.Sprintf("\nALTER %s %s SET TAGS (%s)", typestring, ti.SQLFullName(), ti.serializeTags()))
 	}
 
 	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)

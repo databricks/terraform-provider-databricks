@@ -1,5 +1,66 @@
 # Version changelog
 
+## Release v1.63.1
+
+### Exporter
+
+ * Refactor jobs implementation to use only Go SDK
+
+### Internal Changes
+
+ * Introduced new automated tagging workflow. At the time of this commit,
+   the workflow must be run manually.
+
+
+## [Release] Release v1.63.0
+
+### New Features and Improvements
+
+ * Add `fallback` to `databricks_external_location` ([#4372](https://github.com/databricks/terraform-provider-databricks/pull/4372)).
+
+
+### Bug Fixes
+
+ * Send only what is required in Update of `databricks_credential` ([#4349](https://github.com/databricks/terraform-provider-databricks/pull/4349)).
+
+
+### Documentation
+
+ * Add `MANAGE` privilege to the relevant UC resources ([#4371](https://github.com/databricks/terraform-provider-databricks/pull/4371)).
+ * Add a note about schema evolution and `databricks_sql_table` ([#4352](https://github.com/databricks/terraform-provider-databricks/pull/4352)).
+ * Add description of `clean_rooms_notebook_task` in `databricks_job` ([#4368](https://github.com/databricks/terraform-provider-databricks/pull/4368)).
+ * Add docs for cluster attributes for clusters assigned to groups ([#4359](https://github.com/databricks/terraform-provider-databricks/pull/4359)).
+ * Add note about use of `azurerm_databricks` for enhanced security settings ([#4393](https://github.com/databricks/terraform-provider-databricks/pull/4393)).
+ * Clarify views sharing in `databricks_share` ([#4378](https://github.com/databricks/terraform-provider-databricks/pull/4378)).
+ * Document job edit_mode ([#4354](https://github.com/databricks/terraform-provider-databricks/pull/4354)).
+
+
+### Internal Changes
+
+ * Auto generated customizable schemas ([#4356](https://github.com/databricks/terraform-provider-databricks/pull/4356)).
+ * Disable `terraform fmt` in exporter to workaround build issues ([#4394](https://github.com/databricks/terraform-provider-databricks/pull/4394)).
+ * Fixed redundant optional owners in share resource and bumped Go SDK ([#4396](https://github.com/databricks/terraform-provider-databricks/pull/4396)).
+ * Load auto-generated resources and data sources ([#4367](https://github.com/databricks/terraform-provider-databricks/pull/4367)).
+ * Migrate workflows that need write access to use hosted runners ([#4377](https://github.com/databricks/terraform-provider-databricks/pull/4377)).
+ * Remove TF annotations on TFSDK models ([#4383](https://github.com/databricks/terraform-provider-databricks/pull/4383)).
+ * Restart Cluster before Library Installation ([#4384](https://github.com/databricks/terraform-provider-databricks/pull/4384)).
+
+
+### Dependency Updates
+
+ * Bump github.com/zclconf/go-cty from 1.15.1 to 1.16.0 ([#4374](https://github.com/databricks/terraform-provider-databricks/pull/4374)).
+ * Bump github.com/zclconf/go-cty from 1.16.0 to 1.16.1 ([#4397](https://github.com/databricks/terraform-provider-databricks/pull/4397)).
+
+
+### Exporter
+
+ * Add exporting of `for_each_task` in jobs ([#4347](https://github.com/databricks/terraform-provider-databricks/pull/4347)).
+ * Add references for missing permissions/grants types ([#4390](https://github.com/databricks/terraform-provider-databricks/pull/4390)).
+ * Support for group assigned clusters ([#4361](https://github.com/databricks/terraform-provider-databricks/pull/4361)).
+ * Use Go SDK to list clusters ([#4385](https://github.com/databricks/terraform-provider-databricks/pull/4385)).
+ * Use `Workspace.Export` from Go SDK for notebooks/files ([#4391](https://github.com/databricks/terraform-provider-databricks/pull/4391)).
+
+
 ## [Release] Release v1.62.1
 
 ### Bug Fixes

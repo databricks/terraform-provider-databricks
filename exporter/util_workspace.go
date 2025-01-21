@@ -401,7 +401,7 @@ const (
 	envVarListParallelism       = "EXPORTER_WS_LIST_PARALLELISM"
 	envVarDirectoryChannelSize  = "EXPORTER_DIRECTORIES_CHANNEL_SIZE"
 	defaultWorkersPoolSize      = 10
-	defaultDirectoryChannelSize = 100000
+	defaultDirectoryChannelSize = 300000
 )
 
 func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo, dirChannel chan directoryInfo,

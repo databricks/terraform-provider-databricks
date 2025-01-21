@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -18,7 +17,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	sdk_jobs "github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/databricks-sdk-go/service/ml"
 	"github.com/databricks/databricks-sdk-go/service/pipelines"
 	"github.com/databricks/databricks-sdk-go/service/serving"
@@ -27,17 +25,16 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
-	tfcatalog "github.com/databricks/terraform-provider-databricks/catalog"
+	tf_uc "github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
-	"github.com/databricks/terraform-provider-databricks/jobs"
 	"github.com/databricks/terraform-provider-databricks/mws"
 	"github.com/databricks/terraform-provider-databricks/permissions/entity"
-	tfpipelines "github.com/databricks/terraform-provider-databricks/pipelines"
+	tf_dlt "github.com/databricks/terraform-provider-databricks/pipelines"
 	"github.com/databricks/terraform-provider-databricks/repos"
 	tfsettings "github.com/databricks/terraform-provider-databricks/settings"
-	tfsharing "github.com/databricks/terraform-provider-databricks/sharing"
-	tfsql "github.com/databricks/terraform-provider-databricks/sql"
-	sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
+	tf_sharing "github.com/databricks/terraform-provider-databricks/sharing"
+	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
+	tf_sql_api "github.com/databricks/terraform-provider-databricks/sql/api"
 	"github.com/databricks/terraform-provider-databricks/storage"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -586,89 +583,10 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parameter.default", Resource: "databricks_repo", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
-		Import: importJob,
-		List: func(ic *importContext) error {
-			if l, err := jobs.NewJobsAPI(ic.Context, ic.Client).List(); err == nil {
-				ic.importJobs(l)
-			}
-			return nil
-		},
-		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-			switch pathString {
-			case "url", "format":
-				return true
-			}
-			var js jobs.JobSettingsResource
-			common.DataToStructPointer(d, ic.Resources["databricks_job"].Schema, &js)
-			switch pathString {
-			case "email_notifications":
-				if js.EmailNotifications != nil {
-					return reflect.DeepEqual(*js.EmailNotifications, sdk_jobs.JobEmailNotifications{})
-				}
-			case "webhook_notifications":
-				if js.WebhookNotifications != nil {
-					return reflect.DeepEqual(*js.WebhookNotifications, sdk_jobs.WebhookNotifications{})
-				}
-			case "notification_settings":
-				if js.NotificationSettings != nil {
-					return reflect.DeepEqual(*js.NotificationSettings, sdk_jobs.JobNotificationSettings{})
-				}
-			case "run_as":
-				if js.RunAs != nil && (js.RunAs.UserName != "" || js.RunAs.ServicePrincipalName != "") {
-					var user string
-					if js.RunAs.UserName != "" {
-						user = js.RunAs.UserName
-					} else {
-						user = js.RunAs.ServicePrincipalName
-					}
-					return user == ic.meUserName
-				}
-				return true
-			}
-			if strings.HasPrefix(pathString, "task.") {
-				parts := strings.Split(pathString, ".")
-				if len(parts) > 2 {
-					taskIndex, err := strconv.Atoi(parts[1])
-					if err == nil && taskIndex >= 0 && taskIndex < len(js.Tasks) {
-						blockName := parts[len(parts)-1]
-						switch blockName {
-						case "notification_settings":
-							if js.Tasks[taskIndex].NotificationSettings != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].NotificationSettings,
-									sdk_jobs.TaskNotificationSettings{})
-							}
-						case "email_notifications":
-							if js.Tasks[taskIndex].EmailNotifications != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].EmailNotifications,
-									sdk_jobs.TaskEmailNotifications{})
-							}
-						case "webhook_notifications":
-							if js.Tasks[taskIndex].WebhookNotifications != nil {
-								return reflect.DeepEqual(*js.Tasks[taskIndex].WebhookNotifications,
-									sdk_jobs.WebhookNotifications{})
-							}
-						}
-					}
-				}
-				if strings.HasSuffix(pathString, ".notebook_task.0.source") && js.GitSource == nil && d.Get(pathString).(string) == "WORKSPACE" {
-					return true
-				}
-				// TODO: add should omit for new cluster in the task?
-				// TODO: double check it
-			}
-			if res := jobClustersRegex.FindStringSubmatch(pathString); res != nil { // analyze job clusters
-				return makeShouldOmitFieldForCluster(jobClustersRegex)(ic, pathString, as, d)
-			}
-			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-		},
-		Ignore: func(ic *importContext, r *resource) bool {
-			numTasks := r.Data.Get("task.#").(int)
-			if numTasks == 0 {
-				log.Printf("[WARN] Ignoring job with ID %s", r.ID)
-				ic.addIgnoredResource(fmt.Sprintf("databricks_job. id=%s", r.ID))
-			}
-			return numTasks == 0
-		},
+		Import:          importJob,
+		List:            listJobs,
+		ShouldOmitField: shouldOmitFieldInJob,
+		Ignore:          shouldIgnoreJob,
 	},
 	"databricks_cluster_policy": {
 		WorkspaceLevel: true,
@@ -1669,7 +1587,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var query tfsql.QueryStruct
+			var query tf_sql.QueryStruct
 			s := ic.Resources["databricks_query"].Schema
 			common.DataToStructPointer(r.Data, s, &query)
 			if query.WarehouseId != "" {
@@ -1753,7 +1671,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
-					ID:       tfsql.GlobalSqlConfigResourceID,
+					ID:       tf_sql.GlobalSqlConfigResourceID,
 				})
 			}
 			return nil
@@ -1789,7 +1707,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_sql_global_config",
-					ID:       tfsql.GlobalSqlConfigResourceID,
+					ID:       tf_sql.GlobalSqlConfigResourceID,
 				})
 			}
 			return nil
@@ -1843,7 +1761,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/sql/dashboards/%s", r.ID),
 				"sql_dashboard_"+ic.Importables["databricks_sql_dashboard"].Name(ic, r.Data))
 			dashboardID := r.ID
-			dashboardAPI := tfsql.NewDashboardAPI(ic.Context, ic.Client)
+			dashboardAPI := tf_sql.NewDashboardAPI(ic.Context, ic.Client)
 			dashboard, err := dashboardAPI.Read(dashboardID)
 			if err != nil {
 				return err
@@ -1851,7 +1769,7 @@ var resourcesMap map[string]importable = map[string]importable{
 
 			ic.emitSqlParentDirectory(dashboard.Parent)
 			for _, rv := range dashboard.Widgets {
-				var widget sql_api.Widget
+				var widget tf_sql_api.Widget
 				err = json.Unmarshal(rv, &widget)
 				if err != nil {
 					log.Printf("[WARN] Problems decoding widget for dashboard with ID: %s", dashboardID)
@@ -1864,14 +1782,14 @@ var resourcesMap map[string]importable = map[string]importable{
 				})
 
 				if widget.VisualizationID != nil {
-					var visualization sql_api.Visualization
+					var visualization tf_sql_api.Visualization
 					err = json.Unmarshal(widget.Visualization, &visualization)
 					if err != nil {
 						log.Printf("[WARN] Problems decoding visualization for widget with ID: %s", widget.ID.String())
 						continue
 					}
 					if len(visualization.Query) > 0 {
-						var query sql_api.Query
+						var query tf_sql_api.Query
 						err = json.Unmarshal(visualization.Query, &query)
 						if err != nil {
 							log.Printf("[WARN] Problems decoding query for visualization with ID: %s", visualization.ID.String())
@@ -2031,7 +1949,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var pipeline tfpipelines.Pipeline
+			var pipeline tf_dlt.Pipeline
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
 			if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
@@ -2121,7 +2039,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return defaultShouldOmitFieldFunc(ic, pathString, as, d)
 		},
 		Ignore: func(ic *importContext, r *resource) bool {
-			var pipeline tfpipelines.Pipeline
+			var pipeline tf_dlt.Pipeline
 			s := ic.Resources["databricks_pipeline"].Schema
 			common.DataToStructPointer(r.Data, s, &pipeline)
 			if pipeline.Deployment != nil && pipeline.Deployment.Kind == "BUNDLE" {
@@ -2591,7 +2509,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			var cat tfcatalog.CatalogInfo
+			var cat tf_uc.CatalogInfo
 			s := ic.Resources["databricks_catalog"].Schema
 			common.DataToStructPointer(r.Data, s, &cat)
 
@@ -2856,7 +2774,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				return nil
 			}
 
-			var pList tfcatalog.PermissionsList
+			var pList tf_uc.PermissionsList
 			s := ic.Resources["databricks_grants"].Schema
 			common.DataToStructPointer(r.Data, s, &pList)
 			foundExisting := false
@@ -2870,7 +2788,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 			}
 			if !foundExisting {
-				pList.Assignments = append(pList.Assignments, tfcatalog.PrivilegeAssignment{
+				pList.Assignments = append(pList.Assignments, tf_uc.PrivilegeAssignment{
 					Principal:  ic.meUserName,
 					Privileges: newPrivileges,
 				})
@@ -2903,8 +2821,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				// it's created by default and can't be imported
 				// TODO: add check for "securable_kind":"STORAGE_CREDENTIAL_DB_AWS_IAM" when we get it in the credential
 				r.Mode = "data"
-				data := tfcatalog.ResourceStorageCredential().ToResource().TestResourceData()
-				obj := tfcatalog.StorageCredentialInfo{Name: r.ID}
+				data := tf_uc.ResourceStorageCredential().ToResource().TestResourceData()
+				obj := tf_uc.StorageCredentialInfo{Name: r.ID}
 				r.Data = ic.generateNewData(data, "databricks_storage_credential", r.ID, obj)
 			}
 			ic.emitUCGrantsWithOwner("storage_credential/"+r.ID, r)
@@ -2983,8 +2901,8 @@ var resourcesMap map[string]importable = map[string]importable{
 				// it's created by default and can't be imported
 				// TODO: add check for "securable_kind":"EXTERNAL_LOCATION_DB_STORAGE" when we get it in the credential
 				r.Mode = "data"
-				data := tfcatalog.ResourceExternalLocation().ToResource().TestResourceData()
-				obj := tfcatalog.ExternalLocationInfo{ExternalLocationInfo: catalog.ExternalLocationInfo{Name: r.ID}}
+				data := tf_uc.ResourceExternalLocation().ToResource().TestResourceData()
+				obj := tf_uc.ExternalLocationInfo{ExternalLocationInfo: catalog.ExternalLocationInfo{Name: r.ID}}
 				r.Data = ic.generateNewData(data, "databricks_external_location", r.ID, obj)
 			}
 			ic.emitUCGrantsWithOwner("external_location/"+r.ID, r)
@@ -3088,7 +3006,7 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Import: func(ic *importContext, r *resource) error {
 			// TODO: do we need to emit the owner See comment for the owner...
-			var share tfsharing.ShareInfo
+			var share tf_sharing.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
 			// TODO: how to link recipients to share?

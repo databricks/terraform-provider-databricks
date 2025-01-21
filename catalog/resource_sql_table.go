@@ -540,10 +540,11 @@ var columnTypeAliases = map[string]string{
 
 func getColumnType(columnType string) string {
 	caseInsensitiveColumnType := strings.ToLower(columnType)
-	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
+	normalizedColumnType := strings.Split(caseInsensitiveColumnType, " ")[0]
+	if alias, ok := columnTypeAliases[normalizedColumnType]; ok {
 		return alias
 	}
-	return caseInsensitiveColumnType
+	return normalizedColumnType
 }
 
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {

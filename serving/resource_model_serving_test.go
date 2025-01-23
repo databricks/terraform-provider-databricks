@@ -21,7 +21,7 @@ func TestModelServingCreate(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -148,7 +148,7 @@ func TestModelServingCreateGPU(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -297,7 +297,7 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",

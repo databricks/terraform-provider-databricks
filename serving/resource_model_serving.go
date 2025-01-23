@@ -108,7 +108,7 @@ func ResourceModelServing() common.Resource {
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 			e.Config.Name = e.Name
-			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
+			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, *e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

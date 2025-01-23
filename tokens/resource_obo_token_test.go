@@ -2,15 +2,14 @@ package tokens
 
 import (
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/qa"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestResourceOboTokenRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -18,7 +17,8 @@ func TestResourceOboTokenRead(t *testing.T) {
 
 				Response: TokenResponse{
 					TokenInfo: &TokenInfo{
-						Comment: "Hello, world!",
+						Comment:    "Hello, world!",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
 					},
 				},
 			},
@@ -27,10 +27,34 @@ func TestResourceOboTokenRead(t *testing.T) {
 		Read:     true,
 		New:      true,
 		ID:       "abc",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Hello, world!", d.Get("comment"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment": "Hello, world!",
+		"id":      "abc",
+	})
+}
+
+func TestResourceOboTokenRead_Expired(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/abc",
+
+				Response: TokenResponse{
+					TokenInfo: &TokenInfo{
+						Comment:    "Hello, world!",
+						ExpiryTime: time.Now().UnixMilli() - 1000,
+					},
+				},
+			},
+		},
+		Resource: ResourceOboToken(),
+		Read:     true,
+		Removed:  true,
+		ID:       "abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "",
+	})
 }
 
 func TestResourceOboTokenRead_Error(t *testing.T) {
@@ -52,6 +76,28 @@ func TestResourceOboTokenRead_Error(t *testing.T) {
 	}.ExpectError(t, "nope")
 }
 
+func TestResourceOboTokenRead_NotFound(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/abc",
+				Response: apierr.APIError{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Token does not exist",
+				},
+				Status: 404,
+			},
+		},
+		Resource: ResourceOboToken(),
+		Read:     true,
+		Removed:  true,
+		ID:       "abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "",
+	})
+}
+
 func TestResourceOboTokenCreate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -71,7 +117,7 @@ func TestResourceOboTokenCreate_Error(t *testing.T) {
 }
 
 func TestResourceOboTokenCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -84,7 +130,8 @@ func TestResourceOboTokenCreate(t *testing.T) {
 				Response: TokenResponse{
 					TokenValue: "s#Cr3t!11",
 					TokenInfo: &TokenInfo{
-						TokenID: "bcd",
+						TokenID:    "bcd",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
 					},
 				},
 			},
@@ -93,7 +140,8 @@ func TestResourceOboTokenCreate(t *testing.T) {
 				Resource: "/api/2.0/token-management/tokens/bcd",
 				Response: TokenResponse{
 					TokenInfo: &TokenInfo{
-						Comment: "Hello, world!",
+						Comment:    "Hello, world!",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
 					},
 				},
 			},
@@ -106,10 +154,10 @@ func TestResourceOboTokenCreate(t *testing.T) {
 		lifetime_seconds = 60
 		`,
 		New: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
-	assert.Equal(t, "Hello, world!", d.Get("comment"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment": "Hello, world!",
+		"id":      "bcd",
+	})
 }
 
 func TestResourceOboTokenDelete(t *testing.T) {
@@ -128,7 +176,7 @@ func TestResourceOboTokenDelete(t *testing.T) {
 }
 
 func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -139,7 +187,8 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 				Response: TokenResponse{
 					TokenValue: "s#Cr3t!11",
 					TokenInfo: &TokenInfo{
-						TokenID: "bcd",
+						TokenID:    "bcd",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
 					},
 				},
 			},
@@ -148,7 +197,8 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 				Resource: "/api/2.0/token-management/tokens/bcd",
 				Response: TokenResponse{
 					TokenInfo: &TokenInfo{
-						TokenID: "bcd",
+						TokenID:    "bcd",
+						ExpiryTime: time.Now().UnixMilli() + 1000,
 					},
 				},
 			},
@@ -159,7 +209,7 @@ func TestResourceOboTokenCreateNoLifetimeOrComment(t *testing.T) {
 		application_id = "abc"
 		`,
 		New: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "bcd", d.Id(), "Id should not be empty")
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "bcd",
+	})
 }

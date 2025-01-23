@@ -1077,6 +1077,152 @@ func (o *CleanRoomsNotebookTask) SetNotebookBaseParameters(ctx context.Context, 
 	o.NotebookBaseParameters = types.MapValueMust(t, vs)
 }
 
+type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput struct {
+	// The run state of the clean rooms notebook task.
+	CleanRoomJobRunState types.Object `tfsdk:"clean_room_job_run_state"`
+	// The notebook output for the clean room run
+	NotebookOutput types.Object `tfsdk:"notebook_output"`
+	// Information on how to access the output schema for the clean room run
+	OutputSchemaInfo types.Object `tfsdk:"output_schema_info"`
+}
+
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+}
+
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+}
+
+func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_job_run_state"] = attrs["clean_room_job_run_state"].SetOptional()
+	attrs["notebook_output"] = attrs["notebook_output"].SetOptional()
+	attrs["output_schema_info"] = attrs["output_schema_info"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"clean_room_job_run_state": reflect.TypeOf(CleanRoomTaskRunState{}),
+		"notebook_output":          reflect.TypeOf(NotebookOutput{}),
+		"output_schema_info":       reflect.TypeOf(OutputSchemaInfo{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput
+// only implements ToObjectValue() and Type().
+func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_job_run_state": o.CleanRoomJobRunState,
+			"notebook_output":          o.NotebookOutput,
+			"output_schema_info":       o.OutputSchemaInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_job_run_state": CleanRoomTaskRunState{}.Type(ctx),
+			"notebook_output":          NotebookOutput{}.Type(ctx),
+			"output_schema_info":       OutputSchemaInfo{}.Type(ctx),
+		},
+	}
+}
+
+// GetCleanRoomJobRunState returns the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput as
+// a CleanRoomTaskRunState value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetCleanRoomJobRunState(ctx context.Context) (CleanRoomTaskRunState, bool) {
+	var e CleanRoomTaskRunState
+	if o.CleanRoomJobRunState.IsNull() || o.CleanRoomJobRunState.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomTaskRunState
+	d := o.CleanRoomJobRunState.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomJobRunState sets the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SetCleanRoomJobRunState(ctx context.Context, v CleanRoomTaskRunState) {
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoomJobRunState = vs
+}
+
+// GetNotebookOutput returns the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput as
+// a NotebookOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetNotebookOutput(ctx context.Context) (NotebookOutput, bool) {
+	var e NotebookOutput
+	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookOutput
+	d := o.NotebookOutput.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookOutput sets the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SetNotebookOutput(ctx context.Context, v NotebookOutput) {
+	vs := v.ToObjectValue(ctx)
+	o.NotebookOutput = vs
+}
+
+// GetOutputSchemaInfo returns the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput as
+// a OutputSchemaInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) GetOutputSchemaInfo(ctx context.Context) (OutputSchemaInfo, bool) {
+	var e OutputSchemaInfo
+	if o.OutputSchemaInfo.IsNull() || o.OutputSchemaInfo.IsUnknown() {
+		return e, false
+	}
+	var v []OutputSchemaInfo
+	d := o.OutputSchemaInfo.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOutputSchemaInfo sets the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) SetOutputSchemaInfo(ctx context.Context, v OutputSchemaInfo) {
+	vs := v.ToObjectValue(ctx)
+	o.OutputSchemaInfo = vs
+}
+
 type ClusterInstance struct {
 	// The canonical identifier for the cluster used by a run. This field is
 	// always available for runs on existing clusters. For runs on new clusters,
@@ -6922,6 +7068,66 @@ func (o *NotebookTask) SetBaseParameters(ctx context.Context, v map[string]types
 	o.BaseParameters = types.MapValueMust(t, vs)
 }
 
+// Stores the catalog name, schema name, and the output schema expiration time
+// for the clean room run.
+type OutputSchemaInfo struct {
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// The expiration time for the output schema as a Unix timestamp in
+	// milliseconds.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+
+	SchemaName types.String `tfsdk:"schema_name"`
+}
+
+func (newState *OutputSchemaInfo) SyncEffectiveFieldsDuringCreateOrUpdate(plan OutputSchemaInfo) {
+}
+
+func (newState *OutputSchemaInfo) SyncEffectiveFieldsDuringRead(existingState OutputSchemaInfo) {
+}
+
+func (c OutputSchemaInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OutputSchemaInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OutputSchemaInfo) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OutputSchemaInfo
+// only implements ToObjectValue() and Type().
+func (o OutputSchemaInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name":    o.CatalogName,
+			"expiration_time": o.ExpirationTime,
+			"schema_name":     o.SchemaName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o OutputSchemaInfo) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name":    types.StringType,
+			"expiration_time": types.Int64Type,
+			"schema_name":     types.StringType,
+		},
+	}
+}
+
 type PeriodicTriggerConfiguration struct {
 	// The interval at which the trigger should run.
 	Interval types.Int64 `tfsdk:"interval"`
@@ -10991,6 +11197,8 @@ func (o RunNowResponse) Type(ctx context.Context) attr.Type {
 
 // Run output was retrieved successfully.
 type RunOutput struct {
+	// The output of a clean rooms notebook task, if available
+	CleanRoomsNotebookOutput types.Object `tfsdk:"clean_rooms_notebook_output"`
 	// The output of a dbt task, if available.
 	DbtOutput types.Object `tfsdk:"dbt_output"`
 	// An error message indicating why a task failed or why output is not
@@ -11036,6 +11244,7 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput
 }
 
 func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
 	attrs["dbt_output"] = attrs["dbt_output"].SetOptional()
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["error_trace"] = attrs["error_trace"].SetOptional()
@@ -11059,11 +11268,12 @@ func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (a RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dbt_output":      reflect.TypeOf(DbtOutput{}),
-		"metadata":        reflect.TypeOf(Run{}),
-		"notebook_output": reflect.TypeOf(NotebookOutput{}),
-		"run_job_output":  reflect.TypeOf(RunJobOutput{}),
-		"sql_output":      reflect.TypeOf(SqlOutput{}),
+		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}),
+		"dbt_output":                  reflect.TypeOf(DbtOutput{}),
+		"metadata":                    reflect.TypeOf(Run{}),
+		"notebook_output":             reflect.TypeOf(NotebookOutput{}),
+		"run_job_output":              reflect.TypeOf(RunJobOutput{}),
+		"sql_output":                  reflect.TypeOf(SqlOutput{}),
 	}
 }
 
@@ -11074,16 +11284,17 @@ func (o RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_output":      o.DbtOutput,
-			"error":           o.Error,
-			"error_trace":     o.ErrorTrace,
-			"info":            o.Info,
-			"logs":            o.Logs,
-			"logs_truncated":  o.LogsTruncated,
-			"metadata":        o.Metadata,
-			"notebook_output": o.NotebookOutput,
-			"run_job_output":  o.RunJobOutput,
-			"sql_output":      o.SqlOutput,
+			"clean_rooms_notebook_output": o.CleanRoomsNotebookOutput,
+			"dbt_output":                  o.DbtOutput,
+			"error":                       o.Error,
+			"error_trace":                 o.ErrorTrace,
+			"info":                        o.Info,
+			"logs":                        o.Logs,
+			"logs_truncated":              o.LogsTruncated,
+			"metadata":                    o.Metadata,
+			"notebook_output":             o.NotebookOutput,
+			"run_job_output":              o.RunJobOutput,
+			"sql_output":                  o.SqlOutput,
 		})
 }
 
@@ -11091,18 +11302,47 @@ func (o RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o RunOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbt_output":      DbtOutput{}.Type(ctx),
-			"error":           types.StringType,
-			"error_trace":     types.StringType,
-			"info":            types.StringType,
-			"logs":            types.StringType,
-			"logs_truncated":  types.BoolType,
-			"metadata":        Run{}.Type(ctx),
-			"notebook_output": NotebookOutput{}.Type(ctx),
-			"run_job_output":  RunJobOutput{}.Type(ctx),
-			"sql_output":      SqlOutput{}.Type(ctx),
+			"clean_rooms_notebook_output": CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}.Type(ctx),
+			"dbt_output":                  DbtOutput{}.Type(ctx),
+			"error":                       types.StringType,
+			"error_trace":                 types.StringType,
+			"info":                        types.StringType,
+			"logs":                        types.StringType,
+			"logs_truncated":              types.BoolType,
+			"metadata":                    Run{}.Type(ctx),
+			"notebook_output":             NotebookOutput{}.Type(ctx),
+			"run_job_output":              RunJobOutput{}.Type(ctx),
+			"sql_output":                  SqlOutput{}.Type(ctx),
 		},
 	}
+}
+
+// GetCleanRoomsNotebookOutput returns the value of the CleanRoomsNotebookOutput field in RunOutput as
+// a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput, bool) {
+	var e CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput
+	if o.CleanRoomsNotebookOutput.IsNull() || o.CleanRoomsNotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput
+	d := o.CleanRoomsNotebookOutput.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomsNotebookOutput sets the value of the CleanRoomsNotebookOutput field in RunOutput.
+func (o *RunOutput) SetCleanRoomsNotebookOutput(ctx context.Context, v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
+	vs := v.ToObjectValue(ctx)
+	o.CleanRoomsNotebookOutput = vs
 }
 
 // GetDbtOutput returns the value of the DbtOutput field in RunOutput as
@@ -12837,6 +13077,8 @@ type SparkJarTask struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters types.List `tfsdk:"parameters"`
+	// Deprecated. A value of `false` is no longer supported.
+	RunAsRepl types.Bool `tfsdk:"run_as_repl"`
 }
 
 func (newState *SparkJarTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask) {
@@ -12849,6 +13091,7 @@ func (c SparkJarTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["jar_uri"] = attrs["jar_uri"].SetOptional()
 	attrs["main_class_name"] = attrs["main_class_name"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["run_as_repl"] = attrs["run_as_repl"].SetOptional()
 
 	return attrs
 }
@@ -12876,6 +13119,7 @@ func (o SparkJarTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"jar_uri":         o.JarUri,
 			"main_class_name": o.MainClassName,
 			"parameters":      o.Parameters,
+			"run_as_repl":     o.RunAsRepl,
 		})
 }
 
@@ -12888,6 +13132,7 @@ func (o SparkJarTask) Type(ctx context.Context) attr.Type {
 			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"run_as_repl": types.BoolType,
 		},
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -87,7 +88,7 @@ func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.Cus
 	s.SchemaPath("partitions").SetConflictsWith([]string{"cluster_keys"})
 	s.SchemaPath("cluster_keys").SetConflictsWith([]string{"partitions"})
 	s.SchemaPath("column", "type").SetCustomSuppressDiff(func(k, old, new string, d *schema.ResourceData) bool {
-		return getColumnType(old) == getColumnType(new)
+		return GetColumnType(old) == GetColumnType(new)
 	})
 	return s
 }
@@ -538,9 +539,10 @@ var columnTypeAliases = map[string]string{
 	"numeric": "decimal(10,0)",
 }
 
-func getColumnType(columnType string) string {
+func GetColumnType(columnType string) string {
 	caseInsensitiveColumnType := strings.ToLower(columnType)
-	normalizedColumnType := strings.Split(caseInsensitiveColumnType, " ")[0]
+	pattern := regexp.MustCompile(`^\w+(\s*\(.*?\))?`)
+	normalizedColumnType := pattern.FindString(caseInsensitiveColumnType)
 	if alias, ok := columnTypeAliases[normalizedColumnType]; ok {
 		return alias
 	}
@@ -550,7 +552,7 @@ func getColumnType(columnType string) string {
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {
 	for i, oldCol := range oldCols {
 		oldColMap := oldCol.(map[string]interface{})
-		if getColumnType(oldColMap["type"].(string)) != getColumnType(newColumnInfos[i].Type) {
+		if GetColumnType(oldColMap["type"].(string)) != GetColumnType(newColumnInfos[i].Type) {
 			return fmt.Errorf("changing the 'type' of an existing column is not supported")
 		}
 		if oldColMap["identity"].(string) != string(newColumnInfos[i].Identity) {
@@ -573,7 +575,7 @@ func assertNoColumnMembershipAndFieldValueUpdate(oldCols []interface{}, newColum
 	}
 	for name, oldColMap := range oldColsNameToMap {
 		if newCol, exists := newColsNameToMap[name]; exists {
-			if getColumnType(oldColMap["type"].(string)) != getColumnType(newCol.Type) || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
+			if GetColumnType(oldColMap["type"].(string)) != GetColumnType(newCol.Type) || oldColMap["nullable"] != newCol.Nullable || oldColMap["comment"] != newCol.Comment {
 				return fmt.Errorf("detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time")
 			}
 		}

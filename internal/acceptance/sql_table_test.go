@@ -509,6 +509,28 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeWithMultipleWords(t *testing.T) {
     })
 }
 
+func TestGetColumnType(t *testing.T) {
+    tests := []struct {
+        input    string
+        expected string
+    }{
+        {"TIMESTAMP DEFAULT current_timestamp()", "timestamp"},
+        {"timestamp", "timestamp"},
+        {"string", "string"},
+        {"int", "int"},
+		{"decimal", "decimal(10,0)"},
+		{"decimal(12, 0)", "decimal(12, 0)"},
+    }
+    for _, test := range tests {
+        t.Run(test.input, func(t *testing.T) {
+            result := catalog.GetColumnType(test.input)
+            if result != test.expected {
+                t.Errorf("getColumnType(%q) = %q; want %q", test.input, result, test.expected)
+            }
+        })
+    }
+}
+
 func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		Skipf(t)("databricks_sql_table resource not available on GCP")

@@ -544,7 +544,7 @@ func getColumnType(columnType string) string {
 	pattern := regexp.MustCompile(`^\w+(\s*\(.*?\))?`)
 	patternMatched := pattern.FindString(caseInsensitiveColumnType)
 	normalizedColumnType := strings.ReplaceAll(patternMatched, " ", "")
-	
+
 	if alias, ok := columnTypeAliases[normalizedColumnType]; ok {
 		return alias
 	}

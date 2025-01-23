@@ -1112,7 +1112,6 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeMultipleWordsThrowsError(t *test
 					Comment:  "old comment",
 					Nullable: true,
 				},
-
 			},
 			allowedCommands: []string{
 				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",

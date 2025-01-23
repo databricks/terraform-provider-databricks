@@ -21,7 +21,7 @@ func ResourceCustomAppIntegration() common.Resource {
 		for _, p := range []string{"client_id", "create_time", "created_by", "creator_username", "integration_id"} {
 			common.CustomizeSchemaPath(m, p).SetComputed()
 		}
-		for _, p := range []string{"confidential", "name", "scopes"} {
+		for _, p := range []string{"confidential", "name"} {
 			common.CustomizeSchemaPath(m, p).SetForceNew()
 		}
 		common.CustomizeSchemaPath(m, "client_secret").SetSensitive().SetComputed()

@@ -2,8 +2,11 @@ package app
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/apps"
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
@@ -111,23 +114,59 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	// Wait for the app to be created if no_compute is unspecified or false.
-	if !app.NoCompute.ValueBool() {
-		finalApp, err := waiter.Get()
-		if err != nil {
-			resp.Diagnostics.AddError("error waiting for app to be ready", err.Error())
-			return
-		}
-		// Store the final version of the app in state
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, finalApp, &newApp)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	// Wait for the app to be created. If no_compute is specified, the terminal state is
+	// STOPPED, otherwise it is ACTIVE.
+	finalApp, err := a.waitForApp(ctx, w, appGoSdk.Name)
+	if err != nil {
+		resp.Diagnostics.AddError("error waiting for app to be active or stopped", err.Error())
+		return
 	}
+	// Store the final version of the app in state
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, finalApp, &newApp)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+// This is copied from the retries package of the databricks-sdk-go. It should be made public,
+// but for now, I'm copying it here.
+func shouldRetry(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := err.(*retries.Err)
+	if e == nil {
+		return false
+	}
+	return !e.Halt
+}
+
+// waitForApp waits for the app to reach the target state. The target state is either ACTIVE or STOPPED.
+// Apps with no_compute set to true will reach the STOPPED state, otherwise they will reach the ACTIVE state.
+func (a *resourceApp) waitForApp(ctx context.Context, w *databricks.WorkspaceClient, name string) (*apps.App, error) {
+	retrier := retries.New[apps.App](retries.WithTimeout(-1), retries.WithRetryFunc(shouldRetry))
+	return retrier.Run(ctx, func(ctx context.Context) (*apps.App, error) {
+		app, err := w.Apps.GetByName(ctx, name)
+		if err != nil {
+			return nil, retries.Halt(err)
+		}
+		status := app.ComputeStatus.State
+		statusMessage := app.ComputeStatus.Message
+		switch status {
+		case apps.ComputeStateActive, apps.ComputeStateStopped:
+			return app, nil
+		case apps.ComputeStateError:
+			err := fmt.Errorf("failed to reach %s or %s, got %s: %s",
+				apps.ComputeStateActive, apps.ComputeStateStopped, status, statusMessage)
+			return nil, retries.Halt(err)
+		default:
+			return nil, retries.Continues(statusMessage)
+		}
+	})
 }
 
 func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -138,7 +177,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	var app apps_tf.App
+	var app appResource
 	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,7 +189,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	var newApp apps_tf.App
+	var newApp appResource
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, appGoSdk, &newApp)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -209,7 +248,7 @@ func (a *resourceApp) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
-	var app apps_tf.App
+	var app appResource
 	resp.Diagnostics.Append(req.State.Get(ctx, &app)...)
 	if resp.Diagnostics.HasError() {
 		return

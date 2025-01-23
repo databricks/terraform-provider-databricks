@@ -1082,6 +1082,68 @@ func TestResourceSqlTableUpdateTable_ColumnsTypeUpperLowerCaseThrowsError(t *tes
 	)
 }
 
+func TestResourceSqlTableUpdateTable_ColumnsTypeMultipleWordsThrowsError(t *testing.T) {
+	resourceSqlTableUpdateColumnHelper(t,
+		resourceSqlTableUpdateColumnTestMetaData{
+			oldColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "timestamp",
+					Comment:  "old comment",
+					Nullable: false,
+				},
+				{
+					Name:     "two",
+					Type:     "decimal(12,2)",
+					Comment:  "old comment",
+					Nullable: false,
+				},
+			},
+			newColumns: []SqlColumnInfo{
+				{
+					Name:     "one",
+					Type:     "TIMESTAMP DEFAULT current_timestamp()",
+					Comment:  "old comment",
+					Nullable: true,
+				},
+				{
+					Name:     "two",
+					Type:     "DECIMAL(12, 2)",
+					Comment:  "old comment",
+					Nullable: true,
+				},
+
+			},
+			allowedCommands: []string{
+				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `one` DROP NOT NULL",
+				"ALTER TABLE `main`.`foo`.`bar` ALTER COLUMN `two` DROP NOT NULL",
+			},
+			expectedErrorMsg: "",
+		},
+	)
+}
+func TestResourceSqlTableUpdateTable_ColumnsTypeStringHandling(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"TIMESTAMP DEFAULT current_timestamp()", "timestamp"},
+		{"timestamp", "timestamp"},
+		{"string", "string"},
+		{"int", "int"},
+		{"decimal", "decimal(10,0)"},
+		{"decimal(12, 0)", "decimal(12,0)"},
+	}
+	for _, test := range tests {
+		t.Run(test.input, func(t *testing.T) {
+			result := getColumnType(test.input)
+			if result != test.expected {
+				t.Errorf("getColumnType(%q) = %q; want %q", test.input, result, test.expected)
+			}
+		})
+	}
+}
+
 func TestResourceSqlTableUpdateTable_ColumnsAdditionAndUpdateThrowsError(t *testing.T) {
 	resourceSqlTableUpdateColumnHelper(t,
 		resourceSqlTableUpdateColumnTestMetaData{

@@ -19,6 +19,7 @@ func ResourceModelServing() common.Resource {
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
+			common.MustSchemaPath(m, "config").Computed = true
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
 

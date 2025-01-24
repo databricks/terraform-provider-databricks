@@ -1240,7 +1240,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_global_init_script": {
 		WorkspaceLevel: true,
-		Service:        "workspace",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1379,21 +1379,12 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_workspace_conf": {
 		WorkspaceLevel: true,
-		Service:        "workspace",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return globalWorkspaceConfName
 		},
 		List: func(ic *importContext) error {
-			_, err := ic.workspaceClient.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
-				Keys: "zDummyKey",
-			})
-			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
-			Commonly, some of the keys in a workspace conf are Nil
-			In the simulated server all are returned with a value.
-			We have a zDummyKey - which will always return an error in a real workspace but a value in the simulated workspace
-			if no keys have nil values, we should not emit this object
-			*/
-			if err != nil {
+			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_workspace_conf",
 					ID:       globalWorkspaceConfName,
@@ -1408,6 +1399,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				Keys: strings.Join(keyNames, ","),
 			})
 			if err != nil {
+				log.Printf("[WARN] Error getting workspace conf: %s", err)
 				return err
 			}
 			loaded := map[string]any{}
@@ -1493,7 +1485,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitWorkspaceObjectParentDirectory(r)
 			return r.Data.Set("source", fileName)
 		},
-		ShouldOmitField: shouldOmitMd5Field,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "language":
+				return d.Get("language") == ""
+			case "format":
+				return d.Get("format") == "SOURCE"
+			}
+			return shouldOmitMd5Field(ic, pathString, as, d)
+		},
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
@@ -1699,7 +1699,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
-		Service:        "sql-endpoints",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return "sql_global_config"
 		},

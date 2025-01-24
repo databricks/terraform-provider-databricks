@@ -110,6 +110,9 @@ func TestResourceCustomAppIntegrationUpdate(t *testing.T) {
 				RedirectUrls: []string{
 					"https://example.com",
 				},
+				Scopes: []string{
+					"all",
+				},
 				TokenAccessPolicy: &oauth2.TokenAccessPolicy{
 					AccessTokenTtlInMinutes:  30,
 					RefreshTokenTtlInMinutes: 30,

@@ -55,7 +55,7 @@ const baseResources = `
 func makeTemplate(description string) string {
 	appTemplate := baseResources + `
 	resource "databricks_app" "this" {
-		name = "{var.STICKY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "%s"
 		resources = [{
 			name = "secret"
@@ -93,7 +93,7 @@ func makeTemplate(description string) string {
 
 var templateWithInvalidResource = `
 	resource "databricks_app" "this" {
-		name = "{var.STICKY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "My app"
 		resources = [{
 			name = "invalid resource"
@@ -166,7 +166,7 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	}
 	resource "databricks_app" "this" {
 		no_compute = true
-		name = "{var.STICKY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "%s"
 		resources = [{
 			name = "secret"

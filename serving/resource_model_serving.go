@@ -19,10 +19,6 @@ func ResourceModelServing() common.Resource {
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
-			// "config" is computed & optional. A user does not need to specify it, in which case it will not be
-			// set. Once added, config cannot be removed. Setting Computed = true ensures that no diff appears in
-			// this case.
-			common.MustSchemaPath(m, "config").Computed = true
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
 
@@ -131,6 +127,22 @@ func ResourceModelServing() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// Removal of config triggers resource recreation.
+			o, n := d.GetChange("config")
+			o1, ok := o.([]any)
+			if !ok {
+				return nil
+			}
+			n1, ok := n.([]any)
+			if !ok {
+				return nil
+			}
+			if len(o1) != 0 && len(n1) == 0 {
+				d.ForceNew("config")
+			}
+			return nil
 		},
 	}
 }

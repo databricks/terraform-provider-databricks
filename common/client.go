@@ -179,37 +179,37 @@ func (c *DatabricksClient) AccountOrWorkspaceRequest(accCallback func(*databrick
 
 // Get on path
 func (c *DatabricksClient) Get(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodGet, path, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodGet, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Post on path
 func (c *DatabricksClient) Post(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPost, path, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPost, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Delete on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Delete(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
 // Delete on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) DeleteWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodDelete, path, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodDelete, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Patch on path. Ignores succesfull responses from the server.
 func (c *DatabricksClient) Patch(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
 // Patch on path. Deserializes the response into the response parameter.
 func (c *DatabricksClient) PatchWithResponse(ctx context.Context, path string, request any, response any) error {
-	return c.Do(ctx, http.MethodPatch, path, nil, request, response, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPatch, path, nil, nil, request, response, c.addApiPrefix)
 }
 
 // Put on path
 func (c *DatabricksClient) Put(ctx context.Context, path string, request any) error {
-	return c.Do(ctx, http.MethodPut, path, nil, request, nil, c.addApiPrefix)
+	return c.Do(ctx, http.MethodPut, path, nil, nil, request, nil, c.addApiPrefix)
 }
 
 type ApiVersion string
@@ -248,7 +248,7 @@ func (c *DatabricksClient) scimVisitor(r *http.Request) error {
 func (c *DatabricksClient) Scim(ctx context.Context, method, path string, request any, response any) error {
 	return c.Do(ctx, method, path, map[string]string{
 		"Content-Type": "application/scim+json; charset=utf-8",
-	}, request, response, c.addApiPrefix, c.scimVisitor)
+	}, nil, request, response, c.addApiPrefix, c.scimVisitor)
 }
 
 // IsAzure returns true if client is configured for Azure Databricks - either by using AAD auth or with host+token combination

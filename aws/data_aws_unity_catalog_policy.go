@@ -86,8 +86,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 		},
 		Resources: []string{
 			fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
-			fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
-			fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
+			fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
+			fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
 		},
 	},
 		&awsIamPolicyStatement{
@@ -99,8 +99,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sns:ListTopics",
 			},
 			Resources: []string{
-				fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
-				fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
+				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
+				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
 			},
 		},
 		&awsIamPolicyStatement{
@@ -112,8 +112,8 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 				"sqs:DeleteQueue",
 			},
 			Resources: []string{
-				fmt.Sprintf("arn:%s:sqs:*:*:csms-*", awsPartition),
-				fmt.Sprintf("arn:%s:sns:*:*:csms-*", awsPartition),
+				fmt.Sprintf("arn:%s:sqs:*:%s:csms-*", awsPartition, awsAccountId),
+				fmt.Sprintf("arn:%s:sns:*:%s:csms-*", awsPartition, awsAccountId),
 			},
 		})
 	policyJSON, err := json.MarshalIndent(policy, "", "  ")

@@ -86,8 +86,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket",
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -99,8 +99,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "sns:ListTopics"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -112,8 +112,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "sqs:DeleteQueue"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             }
           ]
@@ -199,8 +199,8 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket",
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -212,8 +212,8 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
                 "sns:ListTopics"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -225,8 +225,8 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
                 "sqs:DeleteQueue"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             }
           ]
@@ -300,8 +300,8 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket",
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -313,8 +313,8 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
                 "sns:ListTopics"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -326,8 +326,8 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
                 "sqs:DeleteQueue"
               ],
               "Resource": [
-                "arn:aws:sqs:*:*:csms-*",
-                "arn:aws:sns:*:*:csms-*"
+                "arn:aws:sqs:*:123456789098:csms-*",
+                "arn:aws:sns:*:123456789098:csms-*"
               ]
             }
           ]
@@ -414,8 +414,8 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
               ],
               "Resource": [
                 "arn:aws-us-gov:s3:::databricks-bucket",
-                "arn:aws-us-gov:sqs:*:*:csms-*",
-                "arn:aws-us-gov:sns:*:*:csms-*"
+                "arn:aws-us-gov:sqs:*:123456789098:csms-*",
+                "arn:aws-us-gov:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -427,8 +427,8 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
                 "sns:ListTopics"
               ],
               "Resource": [
-                "arn:aws-us-gov:sqs:*:*:csms-*",
-                "arn:aws-us-gov:sns:*:*:csms-*"
+                "arn:aws-us-gov:sqs:*:123456789098:csms-*",
+                "arn:aws-us-gov:sns:*:123456789098:csms-*"
               ]
             },
             {
@@ -440,8 +440,8 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
                 "sqs:DeleteQueue"
               ],
               "Resource": [
-                "arn:aws-us-gov:sqs:*:*:csms-*",
-                "arn:aws-us-gov:sns:*:*:csms-*"
+                "arn:aws-us-gov:sqs:*:123456789098:csms-*",
+                "arn:aws-us-gov:sns:*:123456789098:csms-*"
               ]
             }
           ]

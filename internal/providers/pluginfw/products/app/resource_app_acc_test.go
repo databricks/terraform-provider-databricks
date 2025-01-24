@@ -180,8 +180,8 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	}
 		`,
 		Check: func(s *terraform.State) error {
-			compute_status := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["compute_status"]
-			fmt.Println(compute_status)
+			computeStatus := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["compute_status.state"]
+			assert.Equal(t, "STOPPED", computeStatus)
 			return nil
 		},
 	})

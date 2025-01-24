@@ -128,5 +128,21 @@ func ResourceModelServing() common.Resource {
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// Removal of config triggers resource recreation.
+			o, n := d.GetChange("config")
+			o1, ok := o.([]any)
+			if !ok {
+				return nil
+			}
+			n1, ok := n.([]any)
+			if !ok {
+				return nil
+			}
+			if len(o1) != 0 && len(n1) == 0 {
+				d.ForceNew("config")
+			}
+			return nil
+		},
 	}
 }

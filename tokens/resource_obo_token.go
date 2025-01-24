@@ -31,7 +31,8 @@ func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboTok
 }
 
 func (a TokenManagementAPI) Delete(tokenID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 
 func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {

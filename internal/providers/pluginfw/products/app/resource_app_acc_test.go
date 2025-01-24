@@ -167,7 +167,7 @@ func TestAccAppResource_NoCompute(t *testing.T) {
 	resource "databricks_app" "this" {
 		no_compute = true
 		name = "tf-{var.STICKY_RANDOM}"
-		description = "%s"
+		description = "no_compute app"
 		resources = [{
 			name = "secret"
 			description = "secret for app"

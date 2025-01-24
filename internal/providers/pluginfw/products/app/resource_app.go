@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -58,6 +59,16 @@ func (a resourceApp) Schema(ctx context.Context, req resource.SchemaRequest, res
 			paths = append(paths, path.MatchRelative().AtParent().AtName(field))
 		}
 		cs.AddValidator(objectvalidator.ExactlyOneOf(paths...), "resources", exclusiveFields[0])
+		for _, field := range []string{
+			"create_time",
+			"creator",
+			"service_principal_client_id",
+			"service_principal_name",
+			"url",
+		} {
+			cs.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), field)
+		}
+		cs.AddPlanModifier(int64planmodifier.UseStateForUnknown(), "service_principal_id")
 		return cs
 	})
 }
@@ -194,6 +205,7 @@ func (a *resourceApp) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	newApp.NoCompute = app.NoCompute
 	resp.Diagnostics.Append(resp.State.Set(ctx, newApp)...)
 	if resp.Diagnostics.HasError() {
 		return

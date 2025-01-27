@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.64.1
+## Release v1.65.0
 
 ### New Features and Improvements
 
@@ -8,10 +8,9 @@
 
 ### Documentation
 
- * Fix attribute name in `databricks_instance_profile` examples ([#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
+#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
 
 ### Exporter
 
 ### Internal Changes
 
- * Started to use the new release framework for releases of the Terraform provider.

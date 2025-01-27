@@ -304,7 +304,7 @@ def push_changes() -> None:
 
     # Create the release metadata file
     file_name = os.path.join(os.getcwd(), ".release_metadata.json")
-    metadata = {"timestamp": datetime.now(tz=timezone.UTC).strftime("%Y-%m-%d %H:%M:%S%Z")}
+    metadata = {"timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%Z")}
     with open(file_name, "w") as f:
         json.dump(metadata, f, indent=4)
 

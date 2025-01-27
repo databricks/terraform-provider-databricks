@@ -167,7 +167,7 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
         return None
 
     latest_release = match.group(0)
-    version_match = re.search(r'## Release v(\d+\.\d+\.\d+)', latest_release)
+    version_match = re.search(r'## \[Release\] Release v(\d+\.\d+\.\d+)', latest_release)
 
     if not version_match:
         raise Exception("Version not found in the changelog")

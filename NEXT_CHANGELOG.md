@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.64.0
+## Release v1.64.1
 
 ### New Features and Improvements
 
@@ -12,3 +12,4 @@
 
 ### Internal Changes
 
+ * Started to use the new release framework for releases of the Terraform provider.

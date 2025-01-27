@@ -6,6 +6,7 @@
 
  * Add `no_compute` attribute to `databricks_app` ([#4364](https://github.com/databricks/terraform-provider-databricks/pull/4364)).
  * Skip calling Read after Create/Update operations for `databricks_notebook` ([#4173](https://github.com/databricks/terraform-provider-databricks/pull/4173)).
+ * Updated AWS UC storage credential to include permissions for file events ([#4406](https://github.com/databricks/terraform-provider-databricks/pull/4406)).
 
 
 ### Bug Fixes

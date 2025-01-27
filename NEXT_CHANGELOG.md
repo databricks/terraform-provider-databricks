@@ -1,14 +1,12 @@
 # NEXT CHANGELOG
 
-## Release v1.65.0
+## Release v1.64.1
 
 ### New Features and Improvements
 
 ### Bug Fixes
 
 ### Documentation
-
-#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
 
 ### Exporter
 

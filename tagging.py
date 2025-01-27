@@ -160,7 +160,7 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
         changelog = f.read()
 
     # Extract the latest release section using regex
-    match = re.search(r"## Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
+    match = re.search(r"## \[Release\] Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
 
     # E.g., for new packages.
     if not match:

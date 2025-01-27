@@ -36,16 +36,8 @@ var aibiDashboardEmbeddingAccessPolicySetting = workspaceSetting[settings.AibiDa
 		return res.Etag, err
 	},
 	deleteFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (string, error) {
-		res, err := w.Settings.AibiDashboardEmbeddingAccessPolicy().Update(ctx, settings.UpdateAibiDashboardEmbeddingAccessPolicySettingRequest{
-			AllowMissing: true,
-			Setting: settings.AibiDashboardEmbeddingAccessPolicySetting{
-				Etag:        etag,
-				SettingName: "default",
-				AibiDashboardEmbeddingAccessPolicy: settings.AibiDashboardEmbeddingAccessPolicy{
-					AccessPolicyType: settings.AibiDashboardEmbeddingAccessPolicyAccessPolicyTypeAllowApprovedDomains,
-				},
-			},
-			FieldMask: aibiDashboardEmbeddingAccessPolicySettingFieldMask,
+		res, err := w.Settings.AibiDashboardEmbeddingAccessPolicy().Delete(ctx, settings.DeleteAibiDashboardEmbeddingAccessPolicySettingRequest{
+			Etag: etag,
 		})
 		if err != nil {
 			return "", err

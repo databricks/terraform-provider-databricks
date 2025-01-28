@@ -32,33 +32,33 @@ Code contributions—bug fixes, new development, test improvement — all follow
 
 1. Clone down the repo to your local system.
 
-   ```bash
-   git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
-   ```
+    ```bash
+    git clone git@github.com:YOUR_USER_NAME/terraform-provider-databricks.git
+    ```
 
 1. Create a new branch to hold your work.
 
-   ```bash
-   git checkout -b new-branch-name
-   ```
+    ```bash
+    git checkout -b new-branch-name
+    ```
 
 1. Work on your new code. Write and run tests.
 
 1. Commit your changes.
 
-   ```bash
-   git add -A
+    ```bash
+    git add -A
 
-   git commit -m "commit message here"
-   ```
+    git commit -m "commit message here"
+    ```
 
 1. Document your changes in the `NEXT_CHANGELOG.md` under the appropriate heading. See the [Changelog](#changelog) section for more details.
 
 1. Push your changes to your GitHub repo.
 
-   ```bash
-   git push origin branch-name
-   ```
+    ```bash
+    git push origin branch-name
+    ```
 
 1. Open a Pull Request (PR). Go to the original project repo on GitHub. There will be a message about your recently pushed branch, asking if you would like to open a pull request. Follow the prompts, compare across repositories, and submit the PR. This will send an email to the committers. You may want to consider sending an email to the mailing list for more visibility. (For more details, see the [GitHub guide on PRs](https://help.github.com/articles/creating-a-pull-request-from-a-fork).)
 
@@ -132,49 +132,40 @@ provider_installation {
 
 After installing the necessary software for building provider from sources, you should be able to run `make coverage` to run the tests and see the coverage.
 
-## Developing Resources or Data Sources using Plugin Framework
+## Developing Resources or Data Sources using Plugin Framework 
 
 ### Package organization for Providers
-
-We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows:
-
+We are migrating the resource from SDKv2 to Plugin Framework provider and hence both of them exist in the codebase. For uniform code convention, readability and development, they are organized in the `internal/providers` directory under root as follows: 
 - `providers`: Contains the changes that `depends` on both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `GetProviderServer`.
 - `common`: Contains the changes `used by` both internal/providers/sdkv2 and internal/providers/pluginfw packages, eg: `ProviderName`.
 - `pluginfw`: Contains the changes specific to Plugin Framework. This package shouldn't depend on sdkv2 or common.
 - `sdkv2`: Contains the changes specific to SDKv2. This package shouldn't depend on pluginfw or common.
 
 ### Adding a new resource
-
 1. Check if the directory for this particular resource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
 2. Create a file with resource_resource-name.go and write the CRUD methods, schema for that resource. For reference, please take a look at existing resources eg: `resource_app.go`.
-
-- Make sure to set the user agent in all the CRUD methods.
-- In the `Metadata()`, use the method `GetDatabricksProductionName()`.
-- In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix. The schema for the struct is automatically generated and maintained within the `ApplySchemaCustomizations` method of that struct. If you need to customize the schema further, pass in a `CustomizableSchema` to `ResourceStructToSchema` and customize the schema there. If you need to use a manually crafted struct in place of the auto-generated one, you must implement the `ApplySchemaCustomizations` method in a similar way.
-
+  - Make sure to set the user agent in all the CRUD methods.
+  - In the `Metadata()`, use the method `GetDatabricksProductionName()`.
+  - In the `Schema()` method, import the appropriate struct from the `internal/service/{package}_tf` package and use the `ResourceStructToSchema` method to convert the struct to schema. Use the struct that does not have the `_SdkV2` suffix. The schema for the struct is automatically generated and maintained within the `ApplySchemaCustomizations` method of that struct. If you need to customize the schema further, pass in a `CustomizableSchema` to `ResourceStructToSchema` and customize the schema there. If you need to use a manually crafted struct in place of the auto-generated one, you must implement the `ApplySchemaCustomizations` method in a similar way.
 3. Create a file with `resource_resource-name_acc_test.go` and add integration tests here.
-4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
+4. Create a file with `resource_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `Resources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review.
+6. Create a PR and send it for review. 
 
 ### Adding a new data source
-
 1. Check if the directory for this particular datasource exists under `internal/providers/pluginfw/products`, if not create the directory eg: `cluster`, `volume` etc... Please note: Resources and Data sources are organized under the same package for that service.
-2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`.
+2. Create a file with `data_resource-name.go` and write the CRUD methods, schema for that data source. For reference, please take a look at existing data sources eg: `data_cluster.go`. Make sure to set the user agent in the READ method. In the `Metadata()`, if the resource is to be used as default, use the method `GetDatabricksProductionName()` else use `GetDatabricksStagingName()` which suffixes the name with `_pluginframework`. 
 3. Create a file with `data_resource-name_acc_test.go` and add integration tests here.
-4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go`
+4. Create a file with `data_resource-name_test.go` and add unit tests here. Note: Please make sure to abstract specific method of the resource so they are unit test friendly and not testing internal part of terraform plugin framework library. You can compare the diagnostics, for example: please take a look at: `data_cluster_test.go` 
 5. Add the resource under `internal/providers/pluginfw/pluginfw.go` in `DataSources()` method. Please update the list so that it stays in alphabetically sorted order.
-6. Create a PR and send it for review.
+6. Create a PR and send it for review. 
 
 ### Migrating resource to plugin framework
-
 There must not be any behaviour change or schema change when migrating a resource or data source to either Go SDK or Plugin Framework.
-
-- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`.
-- Integration tests shouldn't require any major changes.
+- Please make sure there are no breaking differences due to changes in schema by running: `make diff-schema`. 
+- Integration tests shouldn't require any major changes.   
 
 By default, `ResourceStructToSchema` will convert a `types.List` field to a `ListAttribute` or `ListNestedAttribute`. For resources or data sources migrated from the SDKv2, `ListNestedBlock` must be used for such fields. To do this, use the `_SdkV2` variant from the `internal/service/{package}_tf` package when defining the resource schema and when interacting with the plan, config and state. Additionally, in the `Schema()` method, call `cs.ConfigureAsSdkV2Compatible()` in the `ResourceStructToSchema` callback:
-
 ```go
 resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
     cs.ConfigureAsSdkV2Compatible()
@@ -184,43 +175,43 @@ resp.Schema = tfschema.ResourceStructToSchema(ctx, Resource_SdkV2{}, func(c tfsc
 ```
 
 ### Code Organization
-
-Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package.
+Each resource and data source should be defined in package `internal/providers/plugnifw/products/<resource>`, e.g.: `internal/providers/plugnifw/products/volume` package will contain both resource, data sources and other utils specific to volumes. Tests (both unit and integration tests) will also remain in this package. 
 
 Note: Only Docs will stay under root docs/ directory.
 
-### Code Conventions
 
+### Code Conventions
 1. Make sure the resource or data source implemented is of the right type:
-   ```golang
-   var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
-   var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
-   ```
-2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.
+    ```golang
+    var _ resource.ResourceWithConfigure = &QualityMonitorResource{}
+    var _ datasource.DataSourceWithConfigure = &VolumesDataSource{}
+    ```
+2. To get the databricks client, `func (*common.DatabricksClient).GetWorkspaceClient()` or `func (*common.DatabricksClient).GetAccountClient()` will be used instead of directly using the underlying `WorkspaceClient()`, `AccountClient()` functions respectively.  
 3. Any method that returns only diagnostics should be called inline while appending diagnostics in response. Example:
-   ```golang
-   resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
-   if resp.Diagnostics.HasError() {
-       return
-   }
-   ```
-   is preferred over the following:
-   ```golang
-   diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
-   if diags.HasError() {
-       resp.Diagnostics.Append(diags...)
-       return
-   }
-   ```
-4. Any method returning an error should directly be followed by appending that to the diagnostics.
-   ```golang
-   err := method()
-   if err != nil {
-       resp.Diagnostics.AddError("message", err.Error())
-       return
-   }
-   ```
+    ```golang
+    resp.Diagnostics.Append(req.Plan.Get(ctx, &monitorInfoTfSDK)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
+    ```
+    is preferred over the following:
+    ```golang
+    diags := req.Plan.Get(ctx, &monitorInfoTfSDK)
+    if diags.HasError() {
+        resp.Diagnostics.Append(diags...)
+        return
+    }
+    ```
+4. Any method returning an error should directly be followed by appending that to the diagnostics. 
+    ```golang
+    err := method()
+    if err != nil { 
+        resp.Diagnostics.AddError("message", err.Error())
+        return 
+    }
+    ```
 5. Any method returning a value alongside Diagnostics should also directly be followed by appending that to the diagnostics.
+
 
 ## Debugging
 
@@ -234,7 +225,7 @@ Boilerplate for data sources could be generated via `go run provider/gen/main.go
 
 The general process for adding a new resource is:
 
-_Define the resource models._ The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
+*Define the resource models.* The models for a resource are `struct`s defining the schemas of the objects in the Databricks REST API. Define structures used for multiple resources in a common `models.go` file; otherwise, you can define these directly in your resource file. An example model:
 
 ```go
 type Field struct {
@@ -264,15 +255,15 @@ Some interesting points to note here:
   - `force_new` to indicate a change in this value requires the replacement (destroy and create) of the resource
   - `suppress_diff` to allow comparison based on something other than primitive, list or map equality, either via a `CustomizeDiffFunc`, or the default diff for the type of the schema
 - Do not use bare references to structs in the model; rather, use pointers to structs. Maps and slices are permitted, as well as the following primitive types: int, int32, int64, float64, bool, string.
-  See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
+See `typeToSchema` in `common/reflect_resource.go` for the up-to-date list of all supported field types and values for the `tf` tag.
 
-_Define the Terraform schema._ This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
+*Define the Terraform schema.* This is made easy for you by the `StructToSchema` method in the `common` package, which converts your struct automatically to a Terraform schema, accepting also a function allowing the user to post-process the automatically generated schema, if needed.
 
 ```go
 var exampleSchema = common.StructToSchema(Example{}, func(m map[string]*schema.Schema) map[string]*schema.Schema { return m })
 ```
 
-_Define the API client for the resource._ You will need to implement create, read, update, and delete functions.
+*Define the API client for the resource.* You will need to implement create, read, update, and delete functions.
 
 ```go
 type ExampleApi struct {
@@ -304,7 +295,7 @@ func (a ExampleApi) Delete(id string) error {
 }
 ```
 
-_Define the Resource object itself._ This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
+*Define the Resource object itself.* This is made quite simple by using the `toResource` function defined on the `Resource` type in the `common` package. A simple example:
 
 ```go
 func ResourceExample() *schema.Resource {
@@ -339,9 +330,9 @@ func ResourceExample() *schema.Resource {
 }
 ```
 
-_Add the resource to the top-level provider._ Simply add the resource to the provider definition in `provider/provider.go`.
+*Add the resource to the top-level provider.* Simply add the resource to the provider definition in `provider/provider.go`.
 
-_Write unit tests for your resource._ To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provider generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
+*Write unit tests for your resource.* To write your unit tests, you can make use of `ResourceFixture` and `HTTPFixture` structs defined in the `qa` package. This starts a fake HTTP server, asserting that your resource provider generates the correct request for a given HCL template body for your resource. Update tests should have `InstanceState` field in order to test various corner-cases, like `ForceNew` schemas. It's possible to expect fixture to require new resource by specifying `RequiresNew` field. With the help of `qa.ResourceCornerCases` and `qa.ResourceFixture` one can achieve 100% code coverage for all of the new code.
 
 A simple example:
 
@@ -388,7 +379,7 @@ func TestExampleResourceCreate(t *testing.T) {
 }
 ```
 
-_Write acceptance tests._ These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
+*Write acceptance tests.* These are E2E tests which run terraform against the live cloud and Databricks APIs. For these, you can use the `Step` helpers defined in the `internal/acceptance` package. An example:
 
 ```go
 func TestAccSecretAclResource(t *testing.T) {

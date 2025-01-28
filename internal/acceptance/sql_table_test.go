@@ -361,7 +361,7 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 			properties         = {
 				"this"                        = "that"
 				"something"                   = "else"
-				"delta.feature.allowColumnDefaults = "supported"
+				"delta.feature.allowColumnDefaults" = "supported"
 				"delta.feature.columnMapping" = "supported"
 				"delta.feature.invariants"    = "supported"
 				"delta.minReaderVersion"      = 3

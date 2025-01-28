@@ -2608,6 +2608,10 @@ type UpdateCustomAppIntegration struct {
 	// List of OAuth redirect urls to be updated in the custom OAuth app
 	// integration
 	RedirectUrls types.List `tfsdk:"redirect_urls"`
+	// List of OAuth scopes to be updated in the custom OAuth app integration,
+	// similar to redirect URIs this will fully replace the existing values
+	// instead of appending
+	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy to be updated in the custom OAuth app integration
 	TokenAccessPolicy types.Object `tfsdk:"token_access_policy"`
 }
@@ -2621,6 +2625,7 @@ func (newState *UpdateCustomAppIntegration) SyncEffectiveFieldsDuringRead(existi
 func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 
 	return attrs
@@ -2636,6 +2641,7 @@ func (c UpdateCustomAppIntegration) ApplySchemaCustomizations(attrs map[string]t
 func (a UpdateCustomAppIntegration) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"redirect_urls":       reflect.TypeOf(types.String{}),
+		"scopes":              reflect.TypeOf(types.String{}),
 		"token_access_policy": reflect.TypeOf(TokenAccessPolicy{}),
 	}
 }
@@ -2649,6 +2655,7 @@ func (o UpdateCustomAppIntegration) ToObjectValue(ctx context.Context) basetypes
 		map[string]attr.Value{
 			"integration_id":      o.IntegrationId,
 			"redirect_urls":       o.RedirectUrls,
+			"scopes":              o.Scopes,
 			"token_access_policy": o.TokenAccessPolicy,
 		})
 }
@@ -2659,6 +2666,9 @@ func (o UpdateCustomAppIntegration) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"integration_id": types.StringType,
 			"redirect_urls": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"scopes": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"token_access_policy": TokenAccessPolicy{}.Type(ctx),
@@ -2690,6 +2700,32 @@ func (o *UpdateCustomAppIntegration) SetRedirectUrls(ctx context.Context, v []ty
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["redirect_urls"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.RedirectUrls = types.ListValueMust(t, vs)
+}
+
+// GetScopes returns the value of the Scopes field in UpdateCustomAppIntegration as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in UpdateCustomAppIntegration.
+func (o *UpdateCustomAppIntegration) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Scopes = types.ListValueMust(t, vs)
 }
 
 // GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in UpdateCustomAppIntegration as

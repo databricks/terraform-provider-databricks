@@ -50,7 +50,7 @@ resource "databricks_token" "pat" {
 
 The following arguments are available:
 
-* `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, the token remains valid indefinitely.
+* `lifetime_seconds` - (Optional) (Integer) The lifetime of the token, in seconds. If no lifetime is specified, then expire time will be set to maximum allowed by the workspace configuration or platform.
 * `comment` - (Optional) (String) Comment that will appear on the user’s settings page for this token.
 
 ## Attribute Reference

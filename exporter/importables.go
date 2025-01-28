@@ -400,12 +400,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_file"},
 			{Path: "task.spark_submit_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "path"},
+			{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
+			{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "workspace_path"},
 			{Path: "task.sql_task.alert.alert_id", Resource: "databricks_alert"},
+			{Path: "task.sql_task.alert.subscriptions.destination_id", Resource: "databricks_notification_destination"},
 			{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.sql_task.query.query_id", Resource: "databricks_query"},
 			{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
@@ -443,7 +447,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.for_each_task.task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
 			{Path: "task.for_each_task.task.python_wheel_task.named_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.for_each_task.task.python_wheel_task.named_parameters", Resource: "databricks_file"},
-			{Path: "task.for_each_task.task.python_wheel_task.named_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+			{Path: "task.for_each_task.task.python_wheel_task.named_parameters", Resource: "databricks_workspace_file",
+				Match: "workspace_path"},
 			{Path: "task.for_each_task.task.python_wheel_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "task.for_each_task.task.python_wheel_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "task.for_each_task.task.run_job_task.job_id", Resource: "databricks_job"},
@@ -462,6 +467,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "task.for_each_task.task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "path"},
 			{Path: "task.for_each_task.task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
 			{Path: "task.for_each_task.task.sql_task.alert.alert_id", Resource: "databricks_alert"},
+			{Path: "task.for_each_task.task.sql_task.alert.subscriptions.destination_id",
+				Resource: "databricks_notification_destination"},
 			{Path: "task.for_each_task.task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
 			{Path: "task.for_each_task.task.sql_task.query.query_id", Resource: "databricks_query"},
 			{Path: "task.for_each_task.task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
@@ -474,6 +481,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
 			{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
+			{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id",
+				Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+			{Path: "webhook_notifications.on_streaming_backlog_exceeded.id",
+				Resource: "databricks_notification_destination"},
+			{Path: "trigger.file_arrival.url", Resource: "databricks_external_location",
+				Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "task.sql_task.alert.subscriptions.user_name",
+				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+			{Path: "task.for_each_task.task.sql_task.alert.subscriptions.user_name",
+				Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "task.email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name",
@@ -495,13 +515,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				MatchType: MatchCaseInsensitive},
 			{Path: "task.for_each_task.task.email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id",
-				Resource: "databricks_notification_destination"},
-			{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
-			{Path: "webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
-			{Path: "webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
-			{Path: "webhook_notifications.on_streaming_backlog_exceeded.id",
-				Resource: "databricks_notification_destination"},
 			{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
 				Match: "user_name", MatchType: MatchCaseInsensitive},
 			{Path: "email_notifications.on_failure", Resource: "databricks_user",
@@ -1024,6 +1037,16 @@ var resourcesMap map[string]importable = map[string]importable{
 			s := strings.Split(d.Id(), "/")
 			return s[len(s)-1]
 		},
+		List: func(ic *importContext) error {
+			if ic.meAdmin {
+				ic.Emit(&resource{
+					Resource: "databricks_permissions",
+					ID:       "/authorization/tokens",
+					Name:     "tokens_usage",
+				})
+			}
+			return nil
+		},
 		Depends: []reference{
 			{Path: "job_id", Resource: "databricks_job"},
 			{Path: "pipeline_id", Resource: "databricks_pipeline"},
@@ -1240,7 +1263,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_global_init_script": {
 		WorkspaceLevel: true,
-		Service:        "workspace",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			name := d.Get("name").(string)
 			if name == "" {
@@ -1379,21 +1402,12 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_workspace_conf": {
 		WorkspaceLevel: true,
-		Service:        "workspace",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return globalWorkspaceConfName
 		},
 		List: func(ic *importContext) error {
-			_, err := ic.workspaceClient.WorkspaceConf.GetStatus(ic.Context, settings.GetStatusRequest{
-				Keys: "zDummyKey",
-			})
-			/* this is done to pass the TestImportingNoResourcesError test in exporter_test.go
-			Commonly, some of the keys in a workspace conf are Nil
-			In the simulated server all are returned with a value.
-			We have a zDummyKey - which will always return an error in a real workspace but a value in the simulated workspace
-			if no keys have nil values, we should not emit this object
-			*/
-			if err != nil {
+			if ic.meAdmin {
 				ic.Emit(&resource{
 					Resource: "databricks_workspace_conf",
 					ID:       globalWorkspaceConfName,
@@ -1408,6 +1422,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				Keys: strings.Join(keyNames, ","),
 			})
 			if err != nil {
+				log.Printf("[WARN] Error getting workspace conf: %s", err)
 				return err
 			}
 			loaded := map[string]any{}
@@ -1493,7 +1508,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.emitWorkspaceObjectParentDirectory(r)
 			return r.Data.Set("source", fileName)
 		},
-		ShouldOmitField: shouldOmitMd5Field,
+		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			switch pathString {
+			case "language":
+				return d.Get("language") == ""
+			case "format":
+				return d.Get("format") == "SOURCE"
+			}
+			return shouldOmitMd5Field(ic, pathString, as, d)
+		},
 		Depends: []reference{
 			{Path: "source", File: true},
 			{Path: "path", Resource: "databricks_directory", MatchType: MatchLongestPrefix,
@@ -1699,7 +1722,7 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_sql_global_config": {
 		WorkspaceLevel: true,
-		Service:        "sql-endpoints",
+		Service:        "wsconf",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
 			return "sql_global_config"
 		},

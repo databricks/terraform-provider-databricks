@@ -113,7 +113,7 @@ Services are just logical groups of resources used for filtering and organizatio
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
@@ -132,7 +132,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
-* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
+* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
@@ -151,7 +151,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
 * `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `vector-search` - **listing** exports [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) and [databricks_vector_search_index](../resources/vector_search_index.md)
-* `workspace` - **listing** [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
+* `wsconf` - **listing** exports Workspace-level configuration: [databricks_workspace_conf](../resources/workspace_conf.md), [databricks_sql_global_config](../resources/sql_global_config.md) and [databricks_global_init_script](../resources/global_init_script.md).
 * `wsfiles` - **listing** [databricks_workspace_file](../resources/workspace_file.md).
 
 ## Secrets

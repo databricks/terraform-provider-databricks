@@ -152,6 +152,12 @@ resource "azurerm_role_assignment" "ext_storage" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "ext_storage" {
+  scope                = azurerm_storage_account.ext_storage.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_databricks_access_connector.ext_access_connector.identity[0].principal_id
+}
 ```
 
 Then create the [databricks_storage_credential](../resources/storage_credential.md) and [databricks_external_location](../resources/external_location.md) in Unity Catalog.
@@ -247,9 +253,9 @@ resource "databricks_grants" "things" {
 
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has the access mode set to either **Shared** or **Single User**.
 
-- **User Isolation** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
+- **Shared** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
 ```hcl
 data "databricks_spark_version" "latest" {

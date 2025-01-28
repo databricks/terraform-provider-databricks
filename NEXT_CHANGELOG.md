@@ -1,6 +1,6 @@
 # NEXT CHANGELOG
 
-## Release v1.63.1
+## Release v1.65.0
 
 ### New Features and Improvements
 
@@ -8,11 +8,12 @@
 
 ### Documentation
 
+ * Fix attribute name in `databricks_instance_profile` examples ([#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
+
 ### Exporter
 
- * Refactor jobs implementation to use only Go SDK
+ * Additional tuning of references in databricks_job ([#4434](https://github.com/databricks/terraform-provider-databricks/pull/4434))
 
 ### Internal Changes
 
- * Introduced new automated tagging workflow. At the time of this commit,
-   the workflow must be run manually.
+ * Started to use the new release framework for releases of the Terraform provider.

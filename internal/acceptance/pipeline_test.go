@@ -94,6 +94,93 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 	})
 }
 
+func TestAccAwsPipelineResource_CreatePipeline_RunAs(t *testing.T) {
+	WorkspaceLevel(t, Step{
+		Template: `
+		locals {
+			name = "pipeline-acceptance-aws-{var.STICKY_RANDOM}"
+		}
+		resource "databricks_pipeline" "this" {
+			name = local.name
+			storage = "/test/${local.name}"
+			configuration = {
+				key1 = "value1"
+				key2 = "value2"
+			}
+			library {
+				notebook {
+					path = databricks_notebook.this.path
+				}
+			}
+			run_as {
+			    service_principal_name = "77d728f0-b0ff-4276-91df-23907b374ac7"
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "default"
+				num_workers = 2
+				custom_tags = {
+					cluster_type = "default"
+				}
+				aws_attributes {
+					first_on_demand = 1
+				}
+			}
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "maintenance"
+				num_workers = 1
+				custom_tags = {
+					cluster_type = "maintenance"
+				}
+			}
+			continuous = false
+		}
+		` + dltNotebookResource,
+	}, Step{
+		Template: `
+		locals {
+			name = "pipeline-acceptance-aws-{var.STICKY_RANDOM}"
+		}
+		resource "databricks_pipeline" "this" {
+			name = local.name
+			storage = "/test/${local.name}"
+			configuration = {
+				key1 = "value1"
+				key2 = "value2"
+			}
+			library {
+				notebook {
+					path = databricks_notebook.this.path
+				}
+			}
+
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "default"
+				num_workers = 3
+				custom_tags = {
+					cluster_type = "default"
+				}
+				aws_attributes {
+					first_on_demand = 2
+				}
+			}
+			cluster {
+				instance_pool_id = "{env.TEST_INSTANCE_POOL_ID}"
+				label = "maintenance"
+				num_workers = 1
+				custom_tags = {
+					cluster_type = "maintenance"
+				}
+			}
+			continuous = false
+		}
+		` + dltNotebookResource,
+	})
+}
+
 func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
 	WorkspaceLevel(t, Step{
 		Template: `

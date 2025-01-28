@@ -33,7 +33,10 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "s3:PutObject",
                 "s3:DeleteObject",
                 "s3:ListBucket",
-                "s3:GetBucketLocation"
+                "s3:GetBucketLocation",
+                "s3:ListBucketMultipartUploads",
+					      "s3:ListMultipartUploadParts",
+					      "s3:AbortMultipartUpload"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",

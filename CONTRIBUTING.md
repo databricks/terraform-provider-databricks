@@ -74,6 +74,8 @@ Additional git and GitHub resources:
 
 All PRs that introduce a new feature, fix a bug, improve documentation, or change the behavior of the exporter must include a description of the change in the `NEXT_CHANGELOG.md` file. This file is prepended to the `CHANGELOG.md` file when a new release is created, then cleared out for the next release. Add your changelog entry to the appropriate section of the `NEXT_CHANGELOG.md` file.
 
+If the proposed change has no user-facing impact or does not require an additional changelog entry (e.g. correcting a typo in the documentation), do not add an entry to the `NEXT_CHANGELOG.md` file, and add the text `NO_CHANGELOG=true` to your PR description.
+
 The entries of the changelog must have the following format:
 
 ```

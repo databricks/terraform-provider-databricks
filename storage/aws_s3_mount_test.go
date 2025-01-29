@@ -16,8 +16,10 @@ import (
 // Test interface compliance via compile time error
 var _ Mount = (*AWSIamMount)(nil)
 
-const testS3BucketName = "test-s3-bucket"
-const testS3BucketPath = "s3a://" + testS3BucketName
+const (
+	testS3BucketName = "test-s3-bucket"
+	testS3BucketPath = "s3a://" + testS3BucketName
+)
 
 func TestResourceAwsS3MountCreate(t *testing.T) {
 	d, err := qa.ResourceFixture{

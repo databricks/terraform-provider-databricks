@@ -142,8 +142,10 @@ func ResourceQuery() common.Resource {
 			var q queryUpdateStruct
 			common.DataToStructPointer(d, s, &q)
 			updateMask := "display_name,query_text,warehouse_id,parameters"
-			for _, f := range []string{"run_as_mode", "owner_user_name", "description", "tags",
-				"apply_auto_limit", "catalog", "schema"} {
+			for _, f := range []string{
+				"run_as_mode", "owner_user_name", "description", "tags",
+				"apply_auto_limit", "catalog", "schema",
+			} {
 				if d.HasChange(f) {
 					updateMask += "," + f
 				}

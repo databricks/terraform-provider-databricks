@@ -18,11 +18,13 @@ type GcpServiceAccountKey struct {
 	PrivateKey   string `json:"private_key" tf:"sensitive"`
 }
 
-var alofCred = []string{"aws_iam_role", "azure_service_principal", "azure_managed_identity",
-	"gcp_service_account_key", "databricks_gcp_service_account", "cloudflare_api_token"}
+var alofCred = []string{
+	"aws_iam_role", "azure_service_principal", "azure_managed_identity",
+	"gcp_service_account_key", "databricks_gcp_service_account", "cloudflare_api_token",
+}
 
 func SuppressGcpSAKeyDiff(k, old, new string, d *schema.ResourceData) bool {
-	//ignore changes in private_key
+	// ignore changes in private_key
 	return !d.HasChanges("gcp_service_account_key.0.email", "gcp_service_account_key.0.private_key_id")
 }
 
@@ -197,7 +199,8 @@ func ResourceMetastoreDataAccess() common.Resource {
 // migrate to v1 state, as the id is now changed
 func dacMigrateV0(ctx context.Context,
 	rawState map[string]any,
-	meta any) (map[string]any, error) {
+	meta any,
+) (map[string]any, error) {
 	newState := map[string]any{}
 	for k, v := range rawState {
 		switch k {
@@ -214,5 +217,6 @@ func dacMigrateV0(ctx context.Context,
 
 func dacSchemaV0() cty.Type {
 	return (&schema.Resource{
-		Schema: dacSchema}).CoreConfigSchema().ImpliedType()
+		Schema: dacSchema,
+	}).CoreConfigSchema().ImpliedType()
 }

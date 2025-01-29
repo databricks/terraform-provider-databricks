@@ -88,7 +88,6 @@ func TestQueryCreateComplianceSecurityProfileSettingWithNoneStandard(t *testing.
 	res := d.Get("compliance_security_profile_workspace").([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, true, res["is_enabled"])
 	assert.Equal(t, "NONE", res["compliance_standards"].([]interface{})[0])
-
 }
 
 func TestQueryReadComplianceSecurityProfileSetting(t *testing.T) {

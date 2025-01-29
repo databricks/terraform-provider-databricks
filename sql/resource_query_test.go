@@ -32,7 +32,8 @@ var (
 			QueryText:   "select 42 as value",
 			DisplayName: "TF new query",
 			ParentPath:  "/Shared/Querys",
-		}}
+		},
+	}
 )
 
 func TestQueryCreate(t *testing.T) {
@@ -132,7 +133,8 @@ func TestQueryUpdate(t *testing.T) {
 					DisplayName:   "TF new query",
 					OwnerUserName: "user@domain.com",
 					QueryText:     "select 42 as value",
-				}}).Return(&queryResponse, nil)
+				},
+			}).Return(&queryResponse, nil)
 			e.GetById(mock.Anything, "7890").Return(&queryResponse, nil)
 		},
 		Resource: ResourceQuery(),

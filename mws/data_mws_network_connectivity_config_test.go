@@ -12,7 +12,7 @@ import (
 )
 
 func TestDataSourceMwsNetworkConnectivityConfig(t *testing.T) {
-	var ncc = settings.NetworkConnectivityConfiguration{
+	ncc := settings.NetworkConnectivityConfiguration{
 		AccountId:    "abc",
 		CreationTime: 0,
 		EgressConfig: &settings.NccEgressConfig{

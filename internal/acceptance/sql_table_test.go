@@ -275,6 +275,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 		}`,
 	})
 }
+
 func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
 		Skipf(t)("databricks_sql_table resource not available on GCP")
@@ -373,11 +374,15 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 		}`, tableName, columnsTemplate)
 }
 
-var typeUpdateErrorPattern = "changing the 'type' of an existing column is not supported"
-var typeUpdateErrorRegex = regexp.MustCompile(typeUpdateErrorPattern)
+var (
+	typeUpdateErrorPattern = "changing the 'type' of an existing column is not supported"
+	typeUpdateErrorRegex   = regexp.MustCompile(typeUpdateErrorPattern)
+)
 
-var inlineAndMembershipChangeErrorPattern = "detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time"
-var inlineAndMembershipChangeErrorRegex = regexp.MustCompile(inlineAndMembershipChangeErrorPattern)
+var (
+	inlineAndMembershipChangeErrorPattern = "detected changes in both number of columns and existing column field values, please do not change number of columns and update column values at the same time"
+	inlineAndMembershipChangeErrorRegex   = regexp.MustCompile(inlineAndMembershipChangeErrorPattern)
+)
 
 func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
 	if os.Getenv("GOOGLE_CREDENTIALS") != "" {

@@ -176,8 +176,8 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 	}`, fileName)
 	UnityWorkspaceLevel(t, Step{
 		PreConfig: func() {
-			os.Mkdir(tmpDir, 0755)
-			os.WriteFile(fileName, []byte("abc\n"), 0644)
+			os.Mkdir(tmpDir, 0o755)
+			os.WriteFile(fileName, []byte("abc\n"), 0o644)
 		},
 		Template: template,
 		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -195,7 +195,7 @@ func TestUcAccFileUpdateOnLocalFileChange(t *testing.T) {
 		}),
 	}, Step{
 		PreConfig: func() {
-			os.WriteFile(fileName, []byte("def\n"), 0644)
+			os.WriteFile(fileName, []byte("def\n"), 0o644)
 		},
 		Template: template,
 		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -237,8 +237,8 @@ func TestUcAccFileNoUpdateIfFileDoesNotChange(t *testing.T) {
 	}`, fileName)
 	UnityWorkspaceLevel(t, Step{
 		PreConfig: func() {
-			os.Mkdir(tmpDir, 0755)
-			os.WriteFile(fileName, []byte("abc\n"), 0644)
+			os.Mkdir(tmpDir, 0o755)
+			os.WriteFile(fileName, []byte("abc\n"), 0o644)
 		},
 		Template: template,
 		Check: resourceCheck("databricks_file.this", func(ctx context.Context, client *common.DatabricksClient, id string) error {

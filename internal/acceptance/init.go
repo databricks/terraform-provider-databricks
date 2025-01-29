@@ -250,7 +250,8 @@ func run(t *testing.T, steps []Step) {
 
 // resourceCheck calls back a function with client and resource id
 func resourceCheck(name string,
-	cb func(ctx context.Context, client *common.DatabricksClient, id string) error) resource.TestCheckFunc {
+	cb func(ctx context.Context, client *common.DatabricksClient, id string) error,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -268,7 +269,8 @@ func resourceCheck(name string,
 
 // resourceCheckWithState calls back a function with client and resource instance state
 func resourceCheckWithState(name string,
-	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
+	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error,
+) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -284,8 +286,10 @@ func resourceCheckWithState(name string,
 	}
 }
 
-const fullCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-const hexCharset = "0123456789abcdef"
+const (
+	fullCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	hexCharset  = "0123456789abcdef"
+)
 
 // GetEnvOrSkipTest proceeds with test only with that env variable
 func GetEnvOrSkipTest(t *testing.T, name string) string {

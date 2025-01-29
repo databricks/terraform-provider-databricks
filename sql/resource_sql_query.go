@@ -150,8 +150,10 @@ func newQueryParameterAllowMultiple(aq *api.QueryParameterMultipleValuesOptions)
 	}
 }
 
-const secondsInDay = 24 * 60 * 60
-const secondsInWeek = 7 * secondsInDay
+const (
+	secondsInDay  = 24 * 60 * 60
+	secondsInWeek = 7 * secondsInDay
+)
 
 func (q *QueryEntity) toAPIObject(schema map[string]*schema.Schema, data *schema.ResourceData) (*api.Query, error) {
 	// Extract from ResourceData.

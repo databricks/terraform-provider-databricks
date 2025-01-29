@@ -501,6 +501,7 @@ func TestResourceUserforce_delete_reposError(t *testing.T) {
 	}.Apply(t)
 	require.Error(t, err, err)
 }
+
 func TestResourceUserDelete_NonExistingRepo(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -559,6 +560,7 @@ func TestResourceUserDelete_DirError(t *testing.T) {
 	}.Apply(t)
 	require.Error(t, err, err)
 }
+
 func TestResourceUserDelete_NonExistingDir(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

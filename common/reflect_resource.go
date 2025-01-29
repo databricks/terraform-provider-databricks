@@ -567,7 +567,8 @@ func isGoSdk(v reflect.Value) bool {
 // Iterate through each field of the given reflect.Value object and execute a callback function with the corresponding
 // terraform schema object as the input.
 func iterFields(rv reflect.Value, path []string, s map[string]*schema.Schema, aliases map[string]map[string]string,
-	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error) error {
+	cb func(fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error,
+) error {
 	rk := rv.Kind()
 	if rk != reflect.Struct {
 		return fmt.Errorf("value of Struct is expected, but got %s: %#v", reflectKind(rk), rv)
@@ -638,7 +639,8 @@ func collectionToMaps(v any, s *schema.Schema, aliases map[string]map[string]str
 			v = v.Elem()
 		}
 		err := iterFields(v, []string{}, r.Schema, aliases, func(fieldSchema *schema.Schema,
-			path []string, valueField *reflect.Value) error {
+			path []string, valueField *reflect.Value,
+		) error {
 			fieldName := path[len(path)-1]
 			fieldValue := valueField.Interface()
 			fieldPath := strings.Join(path, ".")
@@ -695,7 +697,8 @@ func StructToData(result any, s map[string]*schema.Schema, d *schema.ResourceDat
 		v = v.Elem()
 	}
 	return iterFields(v, []string{}, s, aliases, func(
-		fieldSchema *schema.Schema, path []string, valueField *reflect.Value) error {
+		fieldSchema *schema.Schema, path []string, valueField *reflect.Value,
+	) error {
 		fieldValue := valueField.Interface()
 		if fieldValue == nil {
 			return nil
@@ -791,9 +794,11 @@ func getAliasesMapFromStruct(s any) map[string]map[string]string {
 }
 
 func readReflectValueFromData(path []string, d attributeGetter,
-	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string) error {
+	rv reflect.Value, s map[string]*schema.Schema, aliases map[string]map[string]string,
+) error {
 	return iterFields(rv, path, s, aliases, func(fieldSchema *schema.Schema,
-		path []string, valueField *reflect.Value) error {
+		path []string, valueField *reflect.Value,
+	) error {
 		fieldPath := strings.Join(path, ".")
 		raw, ok := d.GetOk(fieldPath)
 		if !ok {
@@ -846,7 +851,8 @@ func readReflectValueFromData(path []string, d attributeGetter,
 }
 
 func primitiveReflectValueFromInterface(rk reflect.Kind,
-	ivalue any, fieldPath, key string) (rv reflect.Value, err error) {
+	ivalue any, fieldPath, key string,
+) (rv reflect.Value, err error) {
 	switch rk {
 	case reflect.String:
 		return reflect.ValueOf(fmt.Sprintf("%v", ivalue)), nil
@@ -891,7 +897,8 @@ func primitiveReflectValueFromInterface(rk reflect.Kind,
 
 func readListFromData(path []string, d attributeGetter,
 	rawList []any, valueField *reflect.Value, fieldSchema *schema.Schema, aliases map[string]map[string]string,
-	offsetConverter func(i int) string) error {
+	offsetConverter func(i int) string,
+) error {
 	if len(rawList) == 0 {
 		return nil
 	}
@@ -951,7 +958,8 @@ func readListFromData(path []string, d attributeGetter,
 }
 
 func setPrimitiveValueOfKind(
-	fieldPath string, k reflect.Kind, item reflect.Value, elem any) error {
+	fieldPath string, k reflect.Kind, item reflect.Value, elem any,
+) error {
 	switch k {
 	case reflect.String:
 		v, ok := elem.(string)

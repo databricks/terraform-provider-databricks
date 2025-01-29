@@ -70,7 +70,8 @@ var (
 					},
 				},
 			},
-		}}
+		},
+	}
 )
 
 func TestAlertCreate(t *testing.T) {
@@ -212,7 +213,8 @@ func TestAlertUpdate(t *testing.T) {
 						},
 					},
 					ForceSendFields: []string{"NotifyOnOk"},
-				}}).Return(&alertResponse, nil)
+				},
+			}).Return(&alertResponse, nil)
 			e.GetById(mock.Anything, "7890").Return(&alertResponse, nil)
 		},
 		Resource: ResourceAlert(),

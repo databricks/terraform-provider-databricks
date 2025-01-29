@@ -13,7 +13,8 @@ func DataSourceTable() common.Resource {
 		Id    string             `json:"id,omitempty" tf:"computed"`
 		Name  string             `json:"name"`
 		Table *catalog.TableInfo `json:"table_info,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		table, err := w.Tables.GetByFullName(ctx, data.Name)
 		if err != nil {
 			return err

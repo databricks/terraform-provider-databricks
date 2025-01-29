@@ -18,7 +18,8 @@ func (cb mountCallback) preProcess(r common.Resource) func(
 	m *common.DatabricksClient) error {
 	tpl := GenericMount{}
 	return func(ctx context.Context, d *schema.ResourceData,
-		m *common.DatabricksClient) error {
+		m *common.DatabricksClient,
+	) error {
 		var gm GenericMount
 		scm := r.Schema
 		common.DataToStructPointer(d, scm, &gm)

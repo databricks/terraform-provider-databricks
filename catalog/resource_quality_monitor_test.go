@@ -155,7 +155,8 @@ func TestQualityMonitorGet(t *testing.T) {
 					PredictionCol: "prediction",
 					ModelIdCol:    "model_id",
 				},
-				DriftMetricsTableName: "test_table_drift"}, nil)
+				DriftMetricsTableName: "test_table_drift",
+			}, nil)
 		},
 		Resource: ResourceQualityMonitor(),
 		Read:     true,

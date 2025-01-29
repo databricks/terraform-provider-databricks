@@ -17,7 +17,8 @@ func DataSourceModel() common.Resource {
 		Id              string             `json:"id" tf:"computed"`
 		PermissionLevel ml.PermissionLevel `json:"permission_level,omitempty" tf:"computed"`
 		Tags            []ml.ModelTag      `json:"tags,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		getModel, err := w.ModelRegistry.GetModel(ctx, ml.GetModelRequest{Name: data.Name})
 		if err != nil {
 			return err

@@ -37,7 +37,6 @@ func ResourceGitCredential() common.Resource {
 			var req workspace.CreateCredentialsRequest
 			common.DataToStructPointer(d, s, &req)
 			resp, err := w.GitCredentials.Create(ctx, req)
-
 			if err != nil {
 				if !d.Get("force").(bool) || !strings.HasPrefix(err.Error(), "Only one Git credential is supported at this time") {
 					return err

@@ -19,6 +19,7 @@ func checkSchemasDataSourcePopulated(t *testing.T) func(s *terraform.State) erro
 		return nil
 	}
 }
+
 func TestUcAccDataSourceSchemas(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: `

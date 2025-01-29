@@ -194,8 +194,10 @@ func ResourceRepo() common.Resource {
 			var repo ReposInformation
 			common.DataToStructPointer(d, s, &repo)
 
-			req := reposCreateRequest{Path: repo.Path, Provider: repo.Provider,
-				Url: repo.Url, SparseCheckout: repo.SparseCheckout}
+			req := reposCreateRequest{
+				Path: repo.Path, Provider: repo.Provider,
+				Url: repo.Url, SparseCheckout: repo.SparseCheckout,
+			}
 			resp, err := reposAPI.Create(req)
 			if err != nil {
 				return err

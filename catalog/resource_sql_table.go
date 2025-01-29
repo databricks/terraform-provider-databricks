@@ -20,8 +20,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var MaxSqlExecWaitTimeout = 50
-var optionPrefixes = []string{"option.", "spark.sql.dataSourceOptions."}
+var (
+	MaxSqlExecWaitTimeout = 50
+	optionPrefixes        = []string{"option.", "spark.sql.dataSourceOptions."}
+)
 
 type SqlColumnInfo struct {
 	Name     string         `json:"name"`
@@ -38,9 +40,11 @@ type TypeJson struct {
 
 type IdentityColumn string
 
-const IdentityColumnNone IdentityColumn = ""
-const IdentityColumnAlways IdentityColumn = "always"
-const IdentityColumnDefault IdentityColumn = "default"
+const (
+	IdentityColumnNone    IdentityColumn = ""
+	IdentityColumnAlways  IdentityColumn = "always"
+	IdentityColumnDefault IdentityColumn = "default"
+)
 
 type SqlTableInfo struct {
 	Name                  string            `json:"name"`
@@ -220,7 +224,7 @@ func (ci *SqlColumnInfo) getColumnType() string {
 }
 
 func (ti *SqlTableInfo) serializeColumnInfo(col SqlColumnInfo) string {
-	var colType = col.getColumnType()
+	colType := col.getColumnType()
 
 	notNull := ""
 	if !col.Nullable {
@@ -487,7 +491,7 @@ func (ti *SqlTableInfo) applySql(sqlQuery string) error {
 		defer cancel()
 		sqlRes, err := ti.sqlExec.ExecuteStatement(execCtx, sql.ExecuteStatementRequest{
 			Statement:     sqlQuery,
-			WaitTimeout:   fmt.Sprintf("%ds", MaxSqlExecWaitTimeout), //max allowed by sql exec
+			WaitTimeout:   fmt.Sprintf("%ds", MaxSqlExecWaitTimeout), // max allowed by sql exec
 			WarehouseId:   ti.WarehouseID,
 			OnWaitTimeout: sql.ExecuteStatementRequestOnWaitTimeoutCancel,
 		})
@@ -639,7 +643,7 @@ func ResourceSqlTable() common.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ti = new(SqlTableInfo)
+			ti := new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err
@@ -682,7 +686,7 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			var newti = new(SqlTableInfo)
+			newti := new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, newti)
 			if err := newti.initCluster(ctx, d, c); err != nil {
 				return err
@@ -712,7 +716,7 @@ func ResourceSqlTable() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var ti = new(SqlTableInfo)
+			ti := new(SqlTableInfo)
 			common.DataToStructPointer(d, tableSchema, ti)
 			if err := ti.initCluster(ctx, d, c); err != nil {
 				return err

@@ -74,8 +74,8 @@ func TestResourceOboTokenRead_Error(t *testing.T) {
 		New:      true,
 		ID:       "abc",
 	}.ExpectError(t, "nope")
-
 }
+
 func TestResourceOboTokenRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

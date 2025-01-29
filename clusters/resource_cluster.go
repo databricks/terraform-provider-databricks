@@ -19,11 +19,15 @@ import (
 	"github.com/databricks/terraform-provider-databricks/libraries"
 )
 
-const DefaultProvisionTimeout = 30 * time.Minute
-const DbfsDeprecationWarning = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
+const (
+	DefaultProvisionTimeout = 30 * time.Minute
+	DbfsDeprecationWarning  = "For init scripts use 'volumes', 'workspace' or cloud storage location instead of 'dbfs'."
+)
 
-var clusterSchema = resourceClusterSchema()
-var clusterSchemaVersion = 4
+var (
+	clusterSchema        = resourceClusterSchema()
+	clusterSchemaVersion = 4
+)
 
 const (
 	unsupportedExceptCreateEditClusterSpecErr = "unsupported type %T, must be one of %scompute.CreateCluster, %scompute.ClusterSpec or %scompute.EditCluster. Please report this issue to the GitHub repo"
@@ -50,7 +54,8 @@ func ResourceCluster() common.Resource {
 
 func clusterSchemaV0() cty.Type {
 	return (&schema.Resource{
-		Schema: clusterSchema}).CoreConfigSchema().ImpliedType()
+		Schema: clusterSchema,
+	}).CoreConfigSchema().ImpliedType()
 }
 
 func removeZeroAwsEbsVolumeAttributes(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {

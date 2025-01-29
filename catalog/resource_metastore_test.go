@@ -675,7 +675,6 @@ func TestUpdateAccountMetastore_DeltaSharingScopeOnly(t *testing.T) {
 					DeltaSharingRecipientTokenLifetimeInSeconds: 1002,
 				},
 			}, nil)
-
 		},
 		Resource:    ResourceMetastore(),
 		AccountID:   "100",

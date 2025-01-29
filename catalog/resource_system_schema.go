@@ -44,16 +44,16 @@ func ResourceSystemSchema() common.Resource {
 		if err != nil {
 			return err
 		}
-		//enable new schema
+		// enable new schema
 		err = w.SystemSchemas.Enable(ctx, catalog.EnableRequest{
 			MetastoreId: metastoreSummary.MetastoreId,
 			SchemaName:  new,
 		})
-		//ignore "schema <schema-name> already exists" error
+		// ignore "schema <schema-name> already exists" error
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
 			return err
 		}
-		//disable old schemas if needed
+		// disable old schemas if needed
 		if old != "" {
 			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,

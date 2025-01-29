@@ -178,7 +178,6 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
 		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
 	})
-
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -577,7 +576,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("trigger", "periodic").SetExactlyOneOf(trigger_eoo)
 
 	// Deprecated Job API 2.0 attributes
-	var topLevelDeprecatedAttr = []string{
+	topLevelDeprecatedAttr := []string{
 		"max_retries",
 		"min_retry_interval_millis",
 		"retry_on_timeout",
@@ -940,6 +939,7 @@ type noopLifecycleManager struct{}
 func (n noopLifecycleManager) OnCreate(ctx context.Context) error {
 	return nil
 }
+
 func (n noopLifecycleManager) OnUpdate(ctx context.Context) error {
 	return nil
 }

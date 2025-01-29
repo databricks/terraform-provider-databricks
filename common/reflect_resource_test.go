@@ -109,12 +109,16 @@ func (testRecursiveStruct) MaxDepthForTypes() map[string]int {
 
 var scm = StructToSchema(testStruct{}, nil)
 
-var testStructFields = []string{"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
+var testStructFields = []string{
+	"integer", "float", "non_optional", "string", "computed_field", "force_new_field", "map_field",
 	"slice_set_struct", "slice_set_string", "ptr_item", "string_slice", "bool", "int_slice", "float_slice",
-	"bool_slice", "tf_optional"}
+	"bool_slice", "tf_optional",
+}
 
-var testStructOptionalFields = []string{"integer", "float", "string", "computed_field", "force_new_field", "map_field", "slice_set_struct",
-	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice", "tf_optional"}
+var testStructOptionalFields = []string{
+	"integer", "float", "string", "computed_field", "force_new_field", "map_field", "slice_set_struct",
+	"ptr_item", "slice_set_string", "bool", "int_slice", "float_slice", "bool_slice", "tf_optional",
+}
 
 var testStructRequiredFields = []string{"non_optional"}
 
@@ -126,8 +130,10 @@ var testStructPtrFields = []string{"ptr_item"}
 
 var testStructSliceStructFields = []string{"slice_set_struct"}
 
-var testStructSliceNonStructFields = []string{"slice_set_string", "string_slice", "int_slice", "float_slice",
-	"bool_slice"}
+var testStructSliceNonStructFields = []string{
+	"slice_set_string", "string_slice", "int_slice", "float_slice",
+	"bool_slice",
+}
 
 func TestStructToSchema_type(t *testing.T) {
 	expectedMap := map[string]schema.ValueType{
@@ -272,8 +278,10 @@ type DummyResourceProvider struct {
 }
 
 func (DummyResourceProvider) Aliases() map[string]map[string]string {
-	return map[string]map[string]string{"common.DummyResourceProvider": {"enabled": "enabled_alias"},
-		"common.AddressNoTfTag": {"primary": "primary_alias"}}
+	return map[string]map[string]string{
+		"common.DummyResourceProvider": {"enabled": "enabled_alias"},
+		"common.AddressNoTfTag":        {"primary": "primary_alias"},
+	}
 }
 
 func (DummyResourceProvider) CustomizeSchema(s *CustomizableSchema) *CustomizableSchema {

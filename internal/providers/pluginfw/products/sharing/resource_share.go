@@ -53,7 +53,7 @@ func matchOrder[T any, K comparable](target, reference []T, keyFunc func(T) K) {
 }
 
 func suppressCDFEnabledDiff(si *sharing.ShareInfo) {
-	//suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
+	// suppress diff for CDF Enabled if HistoryDataSharingStatus is enabled , as API does not accept both fields to be set
 	for i := range si.Objects {
 		if si.Objects[i].HistoryDataSharingStatus == "ENABLED" {
 			si.Objects[i].CdfEnabled = false
@@ -73,7 +73,7 @@ func equal(this sharing.SharedDataObject, other sharing.SharedDataObject) bool {
 	if other.SharedAs == "" {
 		other.SharedAs = this.SharedAs
 	}
-	//don't compare computed fields
+	// don't compare computed fields
 	other.AddedAt = this.AddedAt
 	other.AddedBy = this.AddedBy
 	other.Status = this.Status
@@ -352,7 +352,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		})
-
 		if err != nil {
 			resp.Diagnostics.AddError("failed to update share", err.Error())
 

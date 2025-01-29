@@ -10,8 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	dltNotebookResource = `
+var dltNotebookResource = `
 	resource "databricks_notebook" "this" {
 		content_base64 = base64encode(<<-EOT
 			CREATE LIVE TABLE clickstream_raw AS
@@ -47,7 +46,6 @@ var (
 		language = "SQL"
 	}
 `
-)
 
 func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 	WorkspaceLevel(t, Step{
@@ -338,5 +336,4 @@ func TestAccPipelineResourcLastModified(t *testing.T) {
 			return nil
 		}),
 	})
-
 }

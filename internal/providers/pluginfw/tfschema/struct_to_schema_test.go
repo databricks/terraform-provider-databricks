@@ -193,31 +193,33 @@ var tests = []struct {
 	},
 	{
 		"nested list conversion",
-		TestNestedListTfSdk{NestedList: types.ListValueMust(dummyType,
-			[]attr.Value{
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("abc"),
-					"enabled": types.BoolValue(true),
+		TestNestedListTfSdk{
+			NestedList: types.ListValueMust(dummyType,
+				[]attr.Value{
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("abc"),
+						"enabled": types.BoolValue(true),
+					}),
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("def"),
+						"enabled": types.BoolValue(false),
+					}),
 				}),
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("def"),
-					"enabled": types.BoolValue(false),
-				}),
-			}),
 		},
 	},
 	{
 		"nested map conversion",
-		TestNestedMapTfSdk{NestedMap: types.MapValueMust(dummyType, map[string]attr.Value{
-			"key1": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-				"name":    types.StringValue("abc"),
-				"enabled": types.BoolValue(true),
+		TestNestedMapTfSdk{
+			NestedMap: types.MapValueMust(dummyType, map[string]attr.Value{
+				"key1": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("abc"),
+					"enabled": types.BoolValue(true),
+				}),
+				"key2": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+					"name":    types.StringValue("def"),
+					"enabled": types.BoolValue(false),
+				}),
 			}),
-			"key2": types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-				"name":    types.StringValue("def"),
-				"enabled": types.BoolValue(false),
-			}),
-		}),
 		},
 	},
 }

@@ -23,7 +23,6 @@ func DataSourcePipelines() common.Resource {
 		}
 
 		pipelines, err := w.Pipelines.ListPipelinesAll(ctx, pipelineSearch)
-
 		if err != nil {
 			return err
 		}
@@ -35,6 +34,5 @@ func DataSourcePipelines() common.Resource {
 		sort.Strings(data.Ids)
 
 		return nil
-
 	})
 }

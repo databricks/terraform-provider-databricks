@@ -1051,7 +1051,7 @@ func testGenerate(t *testing.T, fixtures []qa.HTTPFixture, services string, asAd
 	qa.HTTPFixturesApply(t, fixtures, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
 		ic.Directory = fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-		os.MkdirAll(ic.Directory, 0755)
+		os.MkdirAll(ic.Directory, 0o755)
 		defer os.RemoveAll(ic.Directory)
 		ic.testEmits = nil
 		ic.meAdmin = asAdmin
@@ -1368,14 +1368,18 @@ func TestSqlListObjects(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries?page_size=100",
-			Response: dbsqlListResponse{PageSize: 1, Page: 1, TotalCount: 2,
-				Results: []map[string]any{{"key1": "value1"}}},
+			Response: dbsqlListResponse{
+				PageSize: 1, Page: 1, TotalCount: 2,
+				Results: []map[string]any{{"key1": "value1"}},
+			},
 		},
 		{
 			Method:   "GET",
 			Resource: "/api/2.0/preview/sql/queries?page=2&page_size=100",
-			Response: dbsqlListResponse{PageSize: 1, Page: 2, TotalCount: 2,
-				Results: []map[string]any{{"key2": "value2"}}},
+			Response: dbsqlListResponse{
+				PageSize: 1, Page: 2, TotalCount: 2,
+				Results: []map[string]any{{"key2": "value2"}},
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -2309,7 +2313,7 @@ func TestImportUcVolumeFile(t *testing.T) {
 		ic := importContextForTestWithClient(ctx, client)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
-		os.Mkdir(tmpDir, 0700)
+		os.Mkdir(tmpDir, 0o700)
 		ic.Directory = tmpDir
 		ic.enableServices("storage")
 		ic.currentMetastore = currentMetastoreResponse
@@ -2402,7 +2406,7 @@ func TestImportUcOnlineTable(t *testing.T) {
 		ic := importContextForTestWithClient(ctx, client)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
-		os.Mkdir(tmpDir, 0700)
+		os.Mkdir(tmpDir, 0o700)
 		ic.Directory = tmpDir
 		ic.enableServices("uc-tables,uc-grants")
 		ic.currentMetastore = currentMetastoreResponse
@@ -2455,7 +2459,7 @@ func TestImportVectorSearchEndpointList(t *testing.T) {
 		ic := importContextForTestWithClient(ctx, client)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
-		os.Mkdir(tmpDir, 0700)
+		os.Mkdir(tmpDir, 0o700)
 		ic.Directory = tmpDir
 		ic.enableServices("vector-search")
 		ic.currentMetastore = currentMetastoreResponse
@@ -2489,7 +2493,7 @@ func TestImportVectorSearchEndpoint(t *testing.T) {
 		ic := importContextForTestWithClient(ctx, client)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
-		os.Mkdir(tmpDir, 0700)
+		os.Mkdir(tmpDir, 0o700)
 		ic.Directory = tmpDir
 		ic.enableServices("vector-search")
 		ic.currentMetastore = currentMetastoreResponse
@@ -2520,7 +2524,7 @@ func TestImportVectorSearchIndex(t *testing.T) {
 		ic := importContextForTestWithClient(ctx, client)
 		tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 		defer os.RemoveAll(tmpDir)
-		os.Mkdir(tmpDir, 0700)
+		os.Mkdir(tmpDir, 0o700)
 		ic.Directory = tmpDir
 		ic.enableServices("vector-search,uc-tables,uc-grants,model-serving")
 		ic.currentMetastore = currentMetastoreResponse

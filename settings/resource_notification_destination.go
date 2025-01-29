@@ -135,7 +135,6 @@ func ResourceNotificationDestination() common.Resource {
 	return common.Resource{
 		Schema: ndSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-
 			w, err := c.WorkspaceClient()
 			if err != nil {
 				return err

@@ -11,8 +11,10 @@ import (
 
 var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 	func(m map[string]*schema.Schema) map[string]*schema.Schema {
-		var alofServiceCreds = []string{"aws_iam_role", "azure_managed_identity", "azure_service_principal",
-			"databricks_gcp_service_account"}
+		alofServiceCreds := []string{
+			"aws_iam_role", "azure_managed_identity", "azure_service_principal",
+			"databricks_gcp_service_account",
+		}
 		for _, cred := range alofServiceCreds {
 			common.CustomizeSchemaPath(m, cred).SetExactlyOneOf(alofServiceCreds)
 		}
@@ -21,8 +23,10 @@ var credentialSchema = common.StructToSchema(catalog.CredentialInfo{},
 			common.CustomizeSchemaPath(m, required).SetRequired()
 		}
 
-		for _, computed := range []string{"id", "created_at", "created_by", "full_name", "isolation_mode",
-			"metastore_id", "owner", "updated_at", "updated_by", "used_for_managed_storage"} {
+		for _, computed := range []string{
+			"id", "created_at", "created_by", "full_name", "isolation_mode",
+			"metastore_id", "owner", "updated_at", "updated_by", "used_for_managed_storage",
+		} {
 			common.CustomizeSchemaPath(m, computed).SetComputed()
 		}
 

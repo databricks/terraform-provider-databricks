@@ -72,7 +72,8 @@ func ResourceMwsLogDelivery() common.Resource {
 			// nolint
 			s["config_name"].ValidateFunc = validation.StringLenBetween(0, 255)
 			s["delivery_start_time"].DiffSuppressFunc = func(
-				k, old, new string, d *schema.ResourceData) bool {
+				k, old, new string, d *schema.ResourceData,
+			) bool {
 				return false
 			}
 			return s

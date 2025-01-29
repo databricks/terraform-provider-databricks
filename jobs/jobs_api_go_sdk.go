@@ -100,7 +100,6 @@ func (a alwaysRunningLifecycleManagerGoSdk) OnUpdate(ctx context.Context) error 
 	}
 
 	err = StopActiveRun(jobID, a.d.Timeout(schema.TimeoutUpdate), w, ctx)
-
 	if err != nil {
 		return err
 	}

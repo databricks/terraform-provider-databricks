@@ -38,7 +38,8 @@ func ReadContent(d *schema.ResourceData) (content []byte, err error) {
 // MigrateV0 migrates from version 0.2.x state
 func MigrateV0(ctx context.Context,
 	rawState map[string]any,
-	meta any) (map[string]any, error) {
+	meta any,
+) (map[string]any, error) {
 	newState := map[string]any{}
 	for k, v := range rawState {
 		switch k {

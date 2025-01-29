@@ -42,8 +42,10 @@ func (ic *importContext) allServicesAndListing() (string, string) {
 		}
 	}
 	// We need this to specify default listings of UC & Workspace objects...
-	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
-		"notebooks", "directories", "wsfiles"} {
+	for _, ir := range []string{
+		"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles",
+	} {
 		listing[ir] = struct{}{}
 	}
 	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")

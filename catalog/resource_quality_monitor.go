@@ -88,7 +88,6 @@ func ResourceQualityMonitor() common.Resource {
 			endpoint, err := w.QualityMonitors.GetByTableName(ctx, d.Id())
 			if err != nil {
 				return err
-
 			}
 			return common.StructToData(endpoint, monitorSchema, d)
 		},

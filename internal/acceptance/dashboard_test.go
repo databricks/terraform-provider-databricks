@@ -176,8 +176,8 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	WorkspaceLevel(t, Step{
 		PreConfig: func() {
-			os.Mkdir(tmpDir, 0755)
-			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"), 0644)
+			os.Mkdir(tmpDir, 0o755)
+			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"), 0o644)
 		},
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name": displayName,
@@ -202,7 +202,7 @@ func TestAccDashboardWithFilePath(t *testing.T) {
 		}),
 	}, Step{
 		PreConfig: func() {
-			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
+			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0o644)
 		},
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -360,9 +360,8 @@ func TestAccDashboardTestAll(t *testing.T) {
 	displayName := fmt.Sprintf("Test Dashboard - %s", qa.RandomName())
 	WorkspaceLevel(t, Step{
 		PreConfig: func() {
-			os.Mkdir(tmpDir, 0755)
-			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page in file\"}]}"), 0644)
-
+			os.Mkdir(tmpDir, 0o755)
+			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page in file\"}]}"), 0o644)
 		},
 		Template: makeTemplate(template.SetAttributes(map[string]string{
 			"display_name":      displayName,
@@ -393,7 +392,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 		}),
 	}, Step{
 		PreConfig: func() {
-			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0644)
+			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified\"}]}"), 0o644)
 		},
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {
@@ -474,7 +473,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 		}),
 	}, Step{
 		PreConfig: func() {
-			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0644)
+			os.WriteFile(fileName, []byte("{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page Modified again\"}]}"), 0o644)
 		},
 		Template: makeTemplate(template),
 		Check: resourceCheck("databricks_dashboard.d1", func(ctx context.Context, client *common.DatabricksClient, id string) error {

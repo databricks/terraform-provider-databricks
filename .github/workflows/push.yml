@@ -44,13 +44,16 @@ jobs:
           # No need to download cached dependencies when running gofmt.
           cache: false
 
-      - name: Run gofmt
+      - name: Run gofumpt
         run: |
           # -l: list files that were reformatted
-          # -w: write back formatted files to disk
-          gofmt -l -w ./
+          go run mvdan.cc/gofumpt@v0.7.0 -l . > gofumpt.out
 
       - name: Fail on differences
         run: |
-          # Exit with status code 1 if there are differences (i.e. unformatted files)
-          git diff --exit-code
+          if [ -s gofumpt.out ]; then
+            echo "The following files are not formatted with gofumpt:"
+            cat gofumpt.out
+            echo "Please run 'make fmt' and commit the changes."
+            exit 1
+          fi

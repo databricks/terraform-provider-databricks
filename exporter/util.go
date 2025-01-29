@@ -259,7 +259,8 @@ mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 println(mapper.writeValueAsString(readableMounts))`
 
 func (ic *importContext) getMountsThroughCluster(
-	commandAPI common.CommandExecutor, clusterID string) (mm map[string]string, err error) {
+	commandAPI common.CommandExecutor, clusterID string,
+) (mm map[string]string, err error) {
 	// Scala has actually working timeout handling, compared to Python
 	result := commandAPI.Execute(clusterID, "scala", getReadableMountsCommand)
 	if result.Failed() {
@@ -284,7 +285,7 @@ func eitherString(a any, b any) string {
 func (ic *importContext) createFileIn(dir, name string) (*os.File, string, error) {
 	fileName := ic.prefix + name
 	localFileName := fmt.Sprintf("%s/%s/%s", ic.Directory, dir, fileName)
-	err := os.MkdirAll(path.Dir(localFileName), 0755)
+	err := os.MkdirAll(path.Dir(localFileName), 0o755)
 	if err != nil && !os.IsExist(err) {
 		return nil, "", err
 	}
@@ -470,7 +471,6 @@ func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string
 		}
 		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
 		return result
-
 	}
 }
 

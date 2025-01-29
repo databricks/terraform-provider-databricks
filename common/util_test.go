@@ -43,8 +43,8 @@ func TestMustInt64(t *testing.T) {
 func TestReadFileContent(t *testing.T) {
 	tmpDir := fmt.Sprintf("/tmp/Dashboard-%f", rand.Float64())
 	fileName := tmpDir + "/Dashboard.json"
-	os.Mkdir(tmpDir, 0755)
-	os.WriteFile(fileName, []byte("hello"), 0644)
+	os.Mkdir(tmpDir, 0o755)
+	os.WriteFile(fileName, []byte("hello"), 0o644)
 	content, err := ReadFileContent(fileName)
 	assert.Equal(t, []byte("hello"), content)
 	assert.NoError(t, err)
@@ -62,8 +62,8 @@ func TestReadSerializedJsonContent(t *testing.T) {
 
 	tmpDir := fmt.Sprintf("/tmp/Dashboard-%f", rand.Float64())
 	fileName := tmpDir + "/Dashboard.json"
-	os.Mkdir(tmpDir, 0755)
-	os.WriteFile(fileName, []byte("hello"), 0644)
+	os.Mkdir(tmpDir, 0o755)
+	os.WriteFile(fileName, []byte("hello"), 0o644)
 	_, md5Hash, err = ReadSerializedJsonContent("", fileName)
 	assert.Equal(t, fmt.Sprintf("%x", md5.Sum([]byte("hello"))), md5Hash)
 	assert.NoError(t, err)

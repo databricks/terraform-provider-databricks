@@ -31,7 +31,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	secondShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -47,7 +48,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	thirdShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -63,7 +65,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "d",
 				},
-			}},
+			},
+		},
 	}
 	fourthShare := ShareInfo{
 		ShareInfo: sharing.ShareInfo{
@@ -79,7 +82,8 @@ func TestDiffShareInfo(t *testing.T) {
 					DataObjectType: "TABLE",
 					Comment:        "c",
 				},
-			}},
+			},
+		},
 	}
 	diffAdd := []sharing.SharedDataObjectUpdate{
 		{
@@ -197,7 +201,8 @@ func TestCreateShare(t *testing.T) {
 				Response: ShareInfo{
 					ShareInfo: sharing.ShareInfo{
 						Name: "a",
-					}},
+					},
+				},
 			},
 			{
 				Method:   "PATCH",
@@ -247,7 +252,8 @@ func TestCreateShare(t *testing.T) {
 								DataObjectType: "TABLE",
 								Comment:        "c",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -288,7 +294,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -354,7 +361,8 @@ func TestUpdateShare(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -400,7 +408,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -478,7 +487,8 @@ func TestUpdateShareRollback(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},
@@ -528,7 +538,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								ForceSendFields: []string{"Name", "Comment", "DataObjectType"},
 							},
 						},
-					}},
+					},
+				},
 			},
 			{
 				Method:   "GET",
@@ -546,7 +557,8 @@ func TestUpdateShare_NoChanges(t *testing.T) {
 								AddedBy:        "",
 							},
 						},
-					}},
+					},
+				},
 			},
 		},
 		ID:          "abc",
@@ -695,7 +707,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 			{
@@ -737,7 +750,8 @@ func TestUpdateShareComplexDiff(t *testing.T) {
 								AddedAt:        0,
 								AddedBy:        "",
 							},
-						}},
+						},
+					},
 				},
 			},
 		},

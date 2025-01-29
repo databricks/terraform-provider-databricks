@@ -609,6 +609,7 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
+
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
@@ -1970,7 +1971,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 }
 
 func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []string, gitSource string) {
-	var hclTemplate = `existing_cluster_id = "abc"
+	hclTemplate := `existing_cluster_id = "abc"
 		max_concurrent_runs = 1
 		name = "GitSourceJob"
 		
@@ -1984,14 +1985,14 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 			}
 		}
 	`
-	var hcl = fmt.Sprintf(hclTemplate, gitSource)
+	hcl := fmt.Sprintf(hclTemplate, gitSource)
 	_, err := qa.ResourceFixture{
 		Create:   true,
 		Resource: ResourceJob(),
 		HCL:      hcl,
 	}.Apply(t)
 	assert.Error(t, err)
-	var found = false
+	found := false
 	for _, fieldName := range conflictingArgs {
 		require.Equal(t, true, strings.Contains(err.Error(), fieldName))
 		found = true
@@ -2000,15 +2001,16 @@ func resourceJobCreateFromGitSourceConflict(t *testing.T, conflictingArgs []stri
 }
 
 func TestResourceJobCreateFromGitSourceTagAndBranchConflict(t *testing.T) {
-	var gitSource = `git_source {
+	gitSource := `git_source {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		branch = "main"
 	}`
 	resourceJobCreateFromGitSourceConflict(t, []string{"branch", "tag"}, gitSource)
 }
+
 func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
-	var gitSource = `git_source {
+	gitSource := `git_source {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		tag = "0.4.8"
 		commit = "a26bf6"
@@ -2017,7 +2019,7 @@ func TestResourceJobCreateFromGitSourceTagAndCommitConflict(t *testing.T) {
 }
 
 func TestResourceJobCreateFromGitSourceBranchAndCommitConflict(t *testing.T) {
-	var gitSource = `git_source {
+	gitSource := `git_source {
 		url = "https://github.com/databricks/terraform-provider-databricks"
 		branch = "main"
 		commit = "a26bf6"

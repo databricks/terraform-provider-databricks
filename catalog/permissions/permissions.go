@@ -98,6 +98,7 @@ func (sm SecurableMapping) KeyValue(d attributeGetter) (string, string) {
 	log.Printf("[WARN] Unexpected resource or permissions. Please proceed at your own risk.")
 	return "unknown", "unknown"
 }
+
 func (sm SecurableMapping) Id(d *schema.ResourceData) string {
 	securable, name := sm.KeyValue(d)
 	return fmt.Sprintf("%s/%s", securable, name)

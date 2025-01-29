@@ -12,7 +12,7 @@ import (
 func TestDataSourceModel(t *testing.T) {
 	modelName := "databricks-model"
 
-	var model = ml.ModelDatabricks{
+	model := ml.ModelDatabricks{
 		CreationTimestamp:    0,
 		Description:          "Staging model",
 		Id:                   "1",

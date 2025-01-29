@@ -366,7 +366,6 @@ func TestConfig_OAuthFetchesToken(t *testing.T) {
 
 	client = testFixture.applyWithPluginFramework(t)
 	testOAuthFetchesToken(t, client)
-
 }
 
 func testOAuthFetchesToken(t *testing.T, c *common.DatabricksClient) {

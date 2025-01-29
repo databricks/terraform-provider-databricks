@@ -405,7 +405,8 @@ const (
 )
 
 func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo, dirChannel chan directoryInfo,
-	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(workspace.ObjectStatus) bool, visitor func([]workspace.ObjectStatus)) {
+	answer *syncAnswer, wg *sync.WaitGroup, shouldIncludeDir func(workspace.ObjectStatus) bool, visitor func([]workspace.ObjectStatus),
+) {
 	defer wg.Done()
 	notebookInfoList, err := a.ListInternalImpl(directory.Path)
 	if err != nil {
@@ -444,7 +445,8 @@ func recursiveAddPathsParallel(a workspace.NotebooksAPI, directory directoryInfo
 }
 
 func ListParallel(a workspace.NotebooksAPI, path string, shouldIncludeDir func(workspace.ObjectStatus) bool,
-	visitor func([]workspace.ObjectStatus)) ([]workspace.ObjectStatus, error) {
+	visitor func([]workspace.ObjectStatus),
+) ([]workspace.ObjectStatus, error) {
 	var answer syncAnswer
 	wg := &sync.WaitGroup{}
 

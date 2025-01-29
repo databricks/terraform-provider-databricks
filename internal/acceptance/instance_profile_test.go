@@ -20,7 +20,8 @@ func TestAccInstanceProfileIntegrationSuite(t *testing.T) {
 		resource "databricks_group_instance_profile" "this" {
 			group_id = databricks_group.this.id
 			instance_profile_id = databricks_instance_profile.this.id
-		}`},
+		}`,
+		},
 		// Assign instance profile to mount
 		Step{
 			Template: `

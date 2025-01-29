@@ -180,7 +180,6 @@ func (Pipeline) Aliases() map[string]map[string]string {
 		"pipelines.Pipeline":     aliasMap,
 		"pipelines.PipelineSpec": aliasMap,
 	}
-
 }
 
 func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
@@ -195,7 +194,6 @@ func suppressStorageDiff(k, old, new string, d *schema.ResourceData) bool {
 }
 
 func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
-
 	// ForceNew fields
 	s.SchemaPath("storage").SetForceNew()
 	s.SchemaPath("catalog").SetForceNew()
@@ -292,7 +290,6 @@ func ResourcePipeline() common.Resource {
 				return err
 			}
 			readPipeline, err := Read(w, ctx, d.Id())
-
 			if err != nil {
 				return err
 			}
@@ -320,7 +317,6 @@ func ResourcePipeline() common.Resource {
 				return err
 			}
 			return Update(w, ctx, d, d.Timeout(schema.TimeoutUpdate))
-
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
@@ -328,7 +324,6 @@ func ResourcePipeline() common.Resource {
 				return err
 			}
 			return Delete(w, ctx, d.Id(), d.Timeout(schema.TimeoutDelete))
-
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Default: schema.DefaultTimeout(DefaultTimeout),

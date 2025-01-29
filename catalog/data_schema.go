@@ -13,7 +13,8 @@ func DataSourceSchema() common.Resource {
 		Id     string              `json:"id,omitempty" tf:"computed"`
 		Name   string              `json:"name"`
 		Schema *catalog.SchemaInfo `json:"schema_info,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		schema, err := w.Schemas.GetByFullName(ctx, data.Name)
 		if err != nil {
 			return err

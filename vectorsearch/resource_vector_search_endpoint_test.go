@@ -103,5 +103,4 @@ func TestVectorSearchEndpointCreateTimeoutError(t *testing.T) {
 		`,
 		Create: true,
 	}.ExpectError(t, "timeout")
-
 }

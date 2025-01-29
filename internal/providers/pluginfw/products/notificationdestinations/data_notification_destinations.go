@@ -132,5 +132,4 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 
 	notificationInfo.NotificationDestinations = types.ListValueMust(settings_tf.ListNotificationDestinationsResult{}.Type(ctx), notificationsTfSdk)
 	resp.Diagnostics.Append(resp.State.Set(ctx, notificationInfo)...)
-
 }

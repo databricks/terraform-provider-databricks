@@ -118,7 +118,6 @@ func TestModelCreateWithTags(t *testing.T) {
 	assert.Equal(t, "xyz", d.Id(), "Resource ID should not be empty")
 	assert.Equal(t, "xyz", d.Get("name"), "Name should be set")
 	assert.Equal(t, d.Get("name"), d.Id(), "Name and Id should match")
-
 }
 
 func TestModelCreatePostError(t *testing.T) {
@@ -276,6 +275,7 @@ func TestModelUpdatePatchError(t *testing.T) {
 
 	assert.Error(t, err)
 }
+
 func TestModelDelete(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

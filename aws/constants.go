@@ -13,5 +13,7 @@ var AwsConfig = map[string]map[string]string{
 	},
 }
 
-var AwsPartitions = []string{"aws", "aws-us-gov"}
-var AwsPartitionsValidationError = "aws_partition must be either 'aws' or 'aws-us-gov'"
+var (
+	AwsPartitions                = []string{"aws", "aws-us-gov"}
+	AwsPartitionsValidationError = "aws_partition must be either 'aws' or 'aws-us-gov'"
+)

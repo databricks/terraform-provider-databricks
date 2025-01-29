@@ -79,7 +79,7 @@ func ResourceAzureAdlsGen1Mount() common.Resource {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-			//Default:  "/",
+			// Default:  "/",
 			ForceNew:     true,
 			ValidateFunc: ValidateMountDirectory,
 		},

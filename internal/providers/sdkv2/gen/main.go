@@ -95,7 +95,7 @@ func (c *Context) File(contentTRef, nameT string) error {
 		println(contents.String())
 		return nil
 	}
-	file, err := os.OpenFile(filename.String(), os.O_CREATE|os.O_WRONLY, 0755)
+	file, err := os.OpenFile(filename.String(), os.O_CREATE|os.O_WRONLY, 0o755)
 	if err != nil {
 		return fmt.Errorf("open %s: %w", &filename, err)
 	}

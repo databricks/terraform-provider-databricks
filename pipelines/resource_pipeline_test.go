@@ -126,7 +126,6 @@ func TestResourcePipelineCreate(t *testing.T) {
 				LastModified: 123456,
 				Spec:         &basicPipelineSpec,
 			}, nil).Once()
-
 		},
 		Resource: ResourcePipeline(),
 		Create:   true,
@@ -564,7 +563,7 @@ func TestStorageSuppressDiff(t *testing.T) {
 }
 
 func TestResourcePipelineCreateServerless(t *testing.T) {
-	var serverlessPipelineSpec = pipelines.PipelineSpec{
+	serverlessPipelineSpec := pipelines.PipelineSpec{
 		Name:    "test-pipeline-serverless",
 		Storage: "/test/storage",
 		Configuration: map[string]string{

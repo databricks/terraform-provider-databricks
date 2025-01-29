@@ -201,6 +201,7 @@ func TestResourceInstancePoolUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "abc", d.Id(), "Id should be the same as in reading")
 }
+
 func TestResourceInstancePoolUpdate_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -208,6 +208,7 @@ func TestCustomizableSchemaSetRequiredWith(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetRequiredWith([]string{"abc"})
 	assert.Truef(t, len(testCustomizableSchemaScm["non_optional"].RequiredWith) == 1, "RequiredWith should be set in field: non_optional")
 }
+
 func TestCustomizableSchemaSetDeprecated(t *testing.T) {
 	CustomizeSchemaPath(testCustomizableSchemaScm, "non_optional").SetDeprecated("test reason")
 	assert.Truef(t, testCustomizableSchemaScm["non_optional"].Deprecated == "test reason", "deprecated should be overriden in field: non_optional")
@@ -224,7 +225,6 @@ func TestCustomizableSchemaSetValidateDiagFunc(t *testing.T) {
 }
 
 func TestCustomizableSchemaAddNewField(t *testing.T) {
-
 	CustomizeSchemaPath(testCustomizableSchemaScm).AddNewField("test", &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,

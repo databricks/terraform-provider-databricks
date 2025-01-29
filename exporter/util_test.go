@@ -323,15 +323,23 @@ func TestGetEnvAsInt(t *testing.T) {
 func TestExcludeAuxiliaryDirectories(t *testing.T) {
 	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "", ObjectType: workspace.Directory}))
 	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{ObjectType: workspace.File}))
-	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc",
-		ObjectType: workspace.Directory}))
+	assert.False(t, isAuxiliaryDirectory(workspace.ObjectStatus{
+		Path:       "/Users/user@domain.com/abc",
+		ObjectType: workspace.Directory,
+	}))
 	// should be ignored
-	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/.ide",
-		ObjectType: workspace.Directory}))
-	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Shared/.bundle",
-		ObjectType: workspace.Directory}))
-	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{Path: "/Users/user@domain.com/abc/__pycache__",
-		ObjectType: workspace.Directory}))
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{
+		Path:       "/Users/user@domain.com/.ide",
+		ObjectType: workspace.Directory,
+	}))
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{
+		Path:       "/Shared/.bundle",
+		ObjectType: workspace.Directory,
+	}))
+	assert.True(t, isAuxiliaryDirectory(workspace.ObjectStatus{
+		Path:       "/Users/user@domain.com/abc/__pycache__",
+		ObjectType: workspace.Directory,
+	}))
 }
 
 func TestParallelListing(t *testing.T) {
@@ -394,7 +402,6 @@ func TestParallelListing(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, 4, len(objects))
-
 }
 
 func TestIgnoreObjectWithEmptyName(t *testing.T) {

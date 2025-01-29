@@ -122,7 +122,8 @@ func preprocessS3Mount(ctx context.Context, d *schema.ResourceData, m any) error
 
 // GetOrCreateMountingClusterWithInstanceProfile ...
 func GetOrCreateMountingClusterWithInstanceProfile(
-	clustersAPI clusters.ClustersAPI, instanceProfile string) (i clusters.ClusterInfo, err error) {
+	clustersAPI clusters.ClustersAPI, instanceProfile string,
+) (i clusters.ClusterInfo, err error) {
 	arnSections := strings.SplitN(instanceProfile, ":", 6)
 	if len(arnSections) != 6 {
 		err = fmt.Errorf("invalid arn: %s", instanceProfile)

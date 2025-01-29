@@ -35,7 +35,8 @@ func TestImportContextFindSkips(t *testing.T) {
 					"b": nil,
 				},
 			},
-		}})
+		},
+	})
 	_, traversal, _ := (&importContext{
 		State: state,
 	}).Find("v", "x", reference{Resource: "a"}, &resource{}, "a")
@@ -71,7 +72,8 @@ func TestImportContextFindNoDirectLookup(t *testing.T) {
 					"b": "42",
 				},
 			},
-		}})
+		},
+	})
 	_, traversal, _ := (&importContext{
 		State: state,
 	}).Find("42", "b", reference{Resource: "a", SkipDirectLookup: true}, &resource{}, "a")
@@ -93,7 +95,8 @@ func TestImportContextFindMatchLongestPrefix(t *testing.T) {
 					"b": "/a/b/c",
 				},
 			},
-		}})
+		},
+	})
 	val, traversal, _ := (&importContext{
 		State: state,
 	}).Find("/a/b/c/d", "b", reference{Resource: "a", MatchType: MatchLongestPrefix}, &resource{}, "a")
@@ -111,7 +114,8 @@ func TestImportContextHas(t *testing.T) {
 					"b": "d",
 				},
 			},
-		}})
+		},
+	})
 	assert.True(t, (&importContext{State: state}).HasInState(&resource{
 		Resource:  "a",
 		Attribute: "b",
@@ -358,16 +362,16 @@ func TestLoadingLastRun(t *testing.T) {
 	s := getLastRunString(fname)
 	assert.Equal(t, "", s)
 
-	_ = os.WriteFile(fname, []byte("{"), 0755)
+	_ = os.WriteFile(fname, []byte("{"), 0o755)
 	s = getLastRunString(fname)
 	assert.Equal(t, "", s)
 
 	// no required field
-	_ = os.WriteFile(fname, []byte("{}"), 0755)
+	_ = os.WriteFile(fname, []byte("{}"), 0o755)
 	s = getLastRunString(fname)
 	assert.Equal(t, "", s)
 
-	_ = os.WriteFile(fname, []byte(`{"startTime": "2023-07-24T00:00:00Z"}`), 0755)
+	_ = os.WriteFile(fname, []byte(`{"startTime": "2023-07-24T00:00:00Z"}`), 0o755)
 	s = getLastRunString(fname)
 	assert.Equal(t, "2023-07-24T00:00:00Z", s)
 }
@@ -416,7 +420,7 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 	ic.incremental = true
 
 	tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
-	os.MkdirAll(tmpDir, 0755)
+	os.MkdirAll(tmpDir, 0o755)
 	defer os.RemoveAll(tmpDir)
 
 	objects := []workspace.ObjectStatus{
@@ -430,7 +434,7 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 
 	bytes, _ := json.Marshal(objects)
 	fname := tmpDir + "/1.json"
-	os.WriteFile(fname, bytes, 0755)
+	os.WriteFile(fname, bytes, 0o755)
 
 	ic.loadOldWorkspaceObjects(fname)
 	ic.allWorkspaceObjects = objects[0:2]
@@ -444,13 +448,13 @@ func TestDeletedWsObjectsDetection(t *testing.T) {
 	assert.Contains(t, ic.deletedResources, "databricks_permissions.ws_file_test_tdir_12")
 
 	// errors/edge case handling
-	_ = os.WriteFile(fname, []byte("[]"), 0755)
+	_ = os.WriteFile(fname, []byte("[]"), 0o755)
 	ic.loadOldWorkspaceObjects(fname)
 	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
 	ic.findDeletedResources()
 
 	// Incorrect data type
-	_ = os.WriteFile(fname, []byte("{}"), 0755)
+	_ = os.WriteFile(fname, []byte("{}"), 0o755)
 	ic.loadOldWorkspaceObjects(fname)
 	require.Equal(t, 0, len(ic.oldWorkspaceObjects))
 }
@@ -503,7 +507,8 @@ func TestGenerateDependsOn(t *testing.T) {
 					"name":         "schema",
 				},
 			}),
-		DependsOn: []*resource{dr,
+		DependsOn: []*resource{
+			dr,
 			{Resource: dr.Resource, ID: dr.ID},
 			{Resource: dr.Resource, ID: "unknown"},
 		},

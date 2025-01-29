@@ -34,8 +34,10 @@ func ResourceRecipient() common.Resource {
 		common.CustomizeSchemaPath(s, "ip_access_list").SetConflictsWith([]string{"data_recipient_global_metastore_id"})
 
 		// ReadOnly fields
-		for _, path := range []string{"created_at", "created_by", "updated_at", "updated_by", "metastore_id", "region",
-			"cloud", "activated", "activation_url"} {
+		for _, path := range []string{
+			"created_at", "created_by", "updated_at", "updated_by", "metastore_id", "region",
+			"cloud", "activated", "activation_url",
+		} {
 			common.CustomizeSchemaPath(s, path).SetReadOnly()
 		}
 		common.CustomizeSchemaPath(s, "tokens").SetReadOnly().SetOptional()

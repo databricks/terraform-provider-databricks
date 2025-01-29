@@ -53,7 +53,8 @@ func (a CustomerManagedKeysAPI) Create(cmk CustomerManagedKey) (k CustomerManage
 
 // Read returns the customer managed key object along with metadata
 func (a CustomerManagedKeysAPI) Read(
-	accountID, customerManagedKeyID string) (k CustomerManagedKey, err error) {
+	accountID, customerManagedKeyID string,
+) (k CustomerManagedKey, err error) {
 	err = a.client.Get(a.context, fmt.Sprintf("/accounts/%s/customer-managed-keys/%s",
 		accountID, customerManagedKeyID), nil, &k)
 	return
@@ -118,7 +119,8 @@ func ResourceMwsCustomerManagedKeys() common.Resource {
 
 func migrateResourceCustomerManagedKeyV0(ctx context.Context,
 	rawState map[string]any,
-	meta any) (map[string]any, error) {
+	meta any,
+) (map[string]any, error) {
 	rawState["use_cases"] = []string{"MANAGED_SERVICES"}
 	return rawState, nil
 }

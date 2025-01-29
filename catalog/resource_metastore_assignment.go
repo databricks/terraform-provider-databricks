@@ -69,8 +69,8 @@ func ResourceMetastoreAssignment() common.Resource {
 				}
 				return common.StructToData(ma, s, d)
 			}, func(w *databricks.WorkspaceClient) error {
-				//this only works when managing the metastore assigned to the current workspace.
-				//plus we don't know the workspace we're logged into.
+				// this only works when managing the metastore assigned to the current workspace.
+				// plus we don't know the workspace we're logged into.
 				ma, err := w.Metastores.Current(ctx)
 				if err != nil {
 					return err

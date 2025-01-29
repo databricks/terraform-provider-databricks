@@ -271,7 +271,8 @@ func newImportContext(c *common.DatabricksClient) *importContext {
 	ctx = context.WithValue(ctx, common.ResourceName, "exporter")
 	c.WithCommandExecutor(func(
 		ctx context.Context,
-		c *common.DatabricksClient) common.CommandExecutor {
+		c *common.DatabricksClient,
+	) common.CommandExecutor {
 		return commands.NewCommandsAPI(ctx, c)
 	})
 
@@ -389,7 +390,7 @@ func (ic *importContext) Run() error {
 
 	info, err := os.Stat(ic.Directory)
 	if os.IsNotExist(err) {
-		err = os.MkdirAll(ic.Directory, 0755)
+		err = os.MkdirAll(ic.Directory, 0o755)
 		if err != nil {
 			return fmt.Errorf("can't create directory %s", ic.Directory)
 		}
@@ -507,7 +508,7 @@ func (ic *importContext) Run() error {
 			log.Printf("[ERROR] opening %s: %v", shFileName, err)
 		}
 	}
-	sh, err := os.OpenFile(shFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
+	sh, err := os.OpenFile(shFileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o755)
 	if err != nil {
 		return err
 	}

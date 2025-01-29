@@ -61,7 +61,6 @@ func init() {
 
 	userAgentExtraEnv := os.Getenv("DATABRICKS_USER_AGENT_EXTRA")
 	out, err := ParseUserAgentExtra(userAgentExtraEnv)
-
 	if err != nil {
 		panic(fmt.Errorf("failed to parse DATABRICKS_USER_AGENT_EXTRA: %s", err))
 	}

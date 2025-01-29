@@ -54,7 +54,8 @@ func resolveDataSourceID(ctx context.Context, w *databricks.WorkspaceClient, war
 
 func ResourceSqlEndpoint() common.Resource {
 	s := common.StructToSchema(SqlWarehouse{}, func(
-		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m map[string]*schema.Schema,
+	) map[string]*schema.Schema {
 		m["id"].Computed = true
 		common.SetDefault(m["auto_stop_mins"], 120)
 		common.CustomizeSchemaPath(m, "channel").SetSuppressDiff()

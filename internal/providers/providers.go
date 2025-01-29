@@ -97,7 +97,6 @@ func GetProviderServer(ctx context.Context, options ...ServerOption) (tfprotov6.
 	}
 
 	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
-
 	if err != nil {
 		return nil, err
 	}

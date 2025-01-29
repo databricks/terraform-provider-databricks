@@ -161,10 +161,11 @@ func TestSecurableWorkspaceBindings_CreateExtLocation(t *testing.T) {
 		MockWorkspaceClientFunc: func(m *mocks.MockWorkspaceClient) {
 			e := m.GetMockWorkspaceBindingsAPI().EXPECT()
 			e.UpdateBindings(mock.Anything, catalog.UpdateWorkspaceBindingsParameters{
-				Add: []catalog.WorkspaceBinding{{
-					BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
-					WorkspaceId: int64(1234567890101112),
-				},
+				Add: []catalog.WorkspaceBinding{
+					{
+						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
+						WorkspaceId: int64(1234567890101112),
+					},
 				},
 				SecurableName: "external_location",
 				SecurableType: catalog.UpdateBindingsSecurableTypeExternalLocation,

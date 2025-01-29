@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+ * Make removing the `config` attribute of `databricks_model_serving` a no-op ([]()).
+
 ### Documentation
 
  * Fix attribute name in `databricks_instance_profile` examples ([#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).

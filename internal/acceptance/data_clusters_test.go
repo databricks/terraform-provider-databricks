@@ -72,7 +72,7 @@ func TestAccDataSourceClusters_FilterBy(t *testing.T) {
 	}, Step{
 		Template: `
 		resource "databricks_cluster_policy" "this" {
-			name = "test"
+			name = "test {var.RANDOM}"
 			definition = jsonencode({
 				"spark_conf.spark.hadoop.javax.jdo.option.ConnectionURL": {
 					"type": "fixed",

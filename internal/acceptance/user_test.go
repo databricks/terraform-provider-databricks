@@ -101,7 +101,7 @@ func provisionHomeFolder(ctx context.Context, s *terraform.State, tfAttribute, u
 		return err
 	}
 	userId := s.Modules[0].Resources[tfAttribute].Primary.ID
-	return client.Do(ctx, "PUT", fmt.Sprintf("/api/2.0/workspace/user/%s/homefolder", userId), nil, map[string]any{
+	return client.Do(ctx, "PUT", fmt.Sprintf("/api/2.0/workspace/user/%s/homefolder", userId), nil, nil, map[string]any{
 		"user": map[string]any{
 			"user_id":  userId,
 			"username": username,

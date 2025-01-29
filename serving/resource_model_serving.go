@@ -107,8 +107,11 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
+			if e.Config == nil {
+				e.Config = &serving.EndpointCoreConfigInput{}
+			}
 			e.Config.Name = e.Name
-			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
+			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, *e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
 			return err
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -124,6 +127,22 @@ func ResourceModelServing() common.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(DefaultProvisionTimeout),
 			Update: schema.DefaultTimeout(DefaultProvisionTimeout),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// Removal of config triggers resource recreation.
+			o, n := d.GetChange("config")
+			o1, ok := o.([]any)
+			if !ok {
+				return nil
+			}
+			n1, ok := n.([]any)
+			if !ok {
+				return nil
+			}
+			if len(o1) != 0 && len(n1) == 0 {
+				d.ForceNew("config")
+			}
+			return nil
 		},
 	}
 }

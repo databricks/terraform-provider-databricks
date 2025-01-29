@@ -18,11 +18,6 @@ jobs:
       group: databricks-deco-testing-runner-group
       labels: ubuntu-latest-deco
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Generate GitHub App Token
         id: generate-token
         uses: actions/create-github-app-token@v1
@@ -30,12 +25,17 @@ jobs:
           app-id: ${{ secrets.DECO_SDK_TAGGING_APP_ID }}
           private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token }}
+
       # NOTE: actions/create-github-app-token automatically masks the output token,
       # so the token is not exposed in the logs even as part of the remote.
       - name: Set up Git configuration
         run: |
           git config user.name "Databricks SDK Release Bot"
-          git remote set-url origin https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}.git
 
       - name: Run Deco Taggging script
         run: |

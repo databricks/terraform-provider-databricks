@@ -33,6 +33,31 @@ func TestResourceOboTokenRead(t *testing.T) {
 	})
 }
 
+func TestResourceOboTokenRead_NoExpire(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/token-management/tokens/abc",
+
+				Response: TokenResponse{
+					TokenInfo: &TokenInfo{
+						Comment:    "Hello, world!",
+						ExpiryTime: -1,
+					},
+				},
+			},
+		},
+		Resource: ResourceOboToken(),
+		Read:     true,
+		New:      true,
+		ID:       "abc",
+	}.ApplyAndExpectData(t, map[string]any{
+		"comment": "Hello, world!",
+		"id":      "abc",
+	})
+}
+
 func TestResourceOboTokenRead_Expired(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

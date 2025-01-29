@@ -72,7 +72,7 @@ func ResourceOboToken() common.Resource {
 				log.Printf("[INFO] OBO token with id %s not found, recreating it", d.Id())
 				d.SetId("")
 			} else { // check if token is expired
-				if time.Now().UnixMilli() > ot.TokenInfo.ExpiryTime {
+				if ot.TokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > ot.TokenInfo.ExpiryTime {
 					log.Printf("[INFO] OBO token with id %s is expired, recreating it", d.Id())
 					d.SetId("")
 				}

@@ -155,7 +155,7 @@ func ResourceToken() common.Resource {
 			if err != nil {
 				return err
 			}
-			if time.Now().UnixMilli() > tokenInfo.ExpiryTime {
+			if tokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > tokenInfo.ExpiryTime {
 				log.Printf("[INFO] token with id %s is expired, recreating it", d.Id())
 				d.SetId("")
 			}

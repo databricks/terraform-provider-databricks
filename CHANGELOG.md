@@ -1,5 +1,66 @@
 # Version changelog
 
+## Release v1.64.1
+
+### Documentation
+
+ * Fix attribute name in `databricks_instance_profile` examples ([#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
+
+### Exporter
+
+ * Additional tuning of references in databricks_job ([#4434](https://github.com/databricks/terraform-provider-databricks/pull/4434))
+
+### Internal Changes
+
+ * Started to use the new release framework for releases of the Terraform provider.
+
+
+## [Release] Release v1.64.0
+
+### New Features and Improvements
+
+ * Add `no_compute` attribute to `databricks_app` ([#4364](https://github.com/databricks/terraform-provider-databricks/pull/4364)).
+ * Skip calling Read after Create/Update operations for `databricks_notebook` ([#4173](https://github.com/databricks/terraform-provider-databricks/pull/4173)).
+ * Updated AWS UC storage credential to include permissions for file events ([#4406](https://github.com/databricks/terraform-provider-databricks/pull/4406)).
+
+
+### Bug Fixes
+
+ * Recreate `databricks_token` if it's not found or expired ([#4431](https://github.com/databricks/terraform-provider-databricks/pull/4431)).
+ * Handle empty response properly in `databricks_mws_workspaces` data source ([#4414](https://github.com/databricks/terraform-provider-databricks/pull/4414)).
+ * Recreate `databricks_obo_token` if it's removed or expired ([#4428](https://github.com/databricks/terraform-provider-databricks/pull/4428)).
+
+
+### Documentation
+
+ * Added Queue Data Contributor role to Azure terraform docs ([#4412](https://github.com/databricks/terraform-provider-databricks/pull/4412)).
+ * Replaced references to data security mode with access mode ([#4408](https://github.com/databricks/terraform-provider-databricks/pull/4408)).
+
+
+### Internal Changes
+
+ * Account for historical release headers when filtering on past changelog sections ([#4409](https://github.com/databricks/terraform-provider-databricks/pull/4409)).
+ * Introduce automated tagging ([#4366](https://github.com/databricks/terraform-provider-databricks/pull/4366)).
+ * Remove .extraheader config ([#4405](https://github.com/databricks/terraform-provider-databricks/pull/4405)).
+ * Remove tag signing in tagging.py script ([#4407](https://github.com/databricks/terraform-provider-databricks/pull/4407)).
+ * Set runs-on to use our internal runners ([#4403](https://github.com/databricks/terraform-provider-databricks/pull/4403)).
+
+
+### Dependency Updates
+
+ * Bump Databricks Go SDK to v0.56.1 ([#4430](https://github.com/databricks/terraform-provider-databricks/pull/4430)).
+ * Bump github.com/hashicorp/terraform-plugin-go from 0.25.0 to 0.26.0 ([#4429](https://github.com/databricks/terraform-provider-databricks/pull/4429)).
+ * Bump github.com/hashicorp/terraform-plugin-mux from 0.17.0 to 0.18.0 ([#4432](https://github.com/databricks/terraform-provider-databricks/pull/4432)).
+ * Bump github.com/zclconf/go-cty from 1.16.1 to 1.16.2 ([#4423](https://github.com/databricks/terraform-provider-databricks/pull/4423)).
+
+
+### Exporter
+
+ * **Breaking**: rename `workspace` service into `wsconf` ([#4425](https://github.com/databricks/terraform-provider-databricks/pull/4425)).
+ * Add listing for `databricks_permissions` so we can emit permissions for tokens ([#4402](https://github.com/databricks/terraform-provider-databricks/pull/4402)).
+ * Refactor jobs implementation to use only Go SDK ([#4380](https://github.com/databricks/terraform-provider-databricks/pull/4380)).
+ * improve handling of Emit/Add operations under the heavy load ([#4401](https://github.com/databricks/terraform-provider-databricks/pull/4401)).
+
 ## Release v1.63.1
 
 ### Exporter

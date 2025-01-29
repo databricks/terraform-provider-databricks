@@ -75,6 +75,21 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 				Resource: "databricks_alert",
 				ID:       task.SqlTask.Alert.AlertId,
 			})
+			for _, subscription := range task.SqlTask.Alert.Subscriptions {
+				if subscription.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     subscription.UserName,
+					})
+				}
+				if subscription.DestinationId != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_notification_destination",
+						ID:       subscription.DestinationId,
+					})
+				}
+			}
 		}
 		if task.SqlTask.WarehouseId != "" {
 			ic.Emit(&resource{

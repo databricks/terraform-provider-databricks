@@ -234,6 +234,13 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
+var getTokensPermissionsFixture = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/permissions/authorization/tokens?",
+	Response:     getJSONObject("test-data/get-tokens-permissions.json"),
+	ReuseRequest: true,
+}
+
 var emptyPipelines = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -730,6 +737,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Key:   "b",
 				},
 			},
+			getTokensPermissionsFixture,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -1782,6 +1790,7 @@ func TestImportingIPAccessLists(t *testing.T) {
 			emptyRepos,
 			emptyWorkspaceConf,
 			allKnownWorkspaceConfsNoData,
+			getTokensPermissionsFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",

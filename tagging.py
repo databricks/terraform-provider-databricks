@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import subprocess
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
 CHANGELOG_FILE_NAME = "CHANGELOG.md"
@@ -127,7 +127,7 @@ def clean_next_changelog(package_path: str) -> None:
         content = file.read()
 
     # Remove content between ### sections
-    cleaned_content = re.sub(r'(### [^\n]+\n)\n*([^#]+)', r'\1\n', content)
+    cleaned_content = re.sub(r'(### [^\n]+\n).*?(?=(###|$))', r'\1\n', content)
     # Ensure there is exactly one empty line before each section
     cleaned_content = re.sub(r'(\n*)(###[^\n]+)', r'\n\n\2', cleaned_content)
     # Find the version number
@@ -160,19 +160,19 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
         changelog = f.read()
 
     # Extract the latest release section using regex
-    match = re.search(r"## Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
+    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
 
     # E.g., for new packages.
     if not match:
         return None
 
     latest_release = match.group(0)
-    version_match = re.search(r'## Release v(\d+\.\d+\.\d+)', latest_release)
+    version_match = re.search(r'## (\[Release\] )?Release v(\d+\.\d+\.\d+)', latest_release)
 
     if not version_match:
         raise Exception("Version not found in the changelog")
 
-    return TagInfo(package=package, version=version_match.group(1), content=latest_release)
+    return TagInfo(package=package, version=version_match.group(2), content=latest_release)
 
 
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
@@ -304,13 +304,13 @@ def push_changes() -> None:
 
     # Create the release metadata file
     file_name = os.path.join(os.getcwd(), ".release_metadata.json")
-    metadata = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    metadata = {"timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%Z")}
     with open(file_name, "w") as f:
         json.dump(metadata, f, indent=4)
 
     # Commit the changes
     subprocess.check_output(['git', 'add', '--all'])  # Stage all changes
-    subprocess.check_output(['git', 'commit', '-m', '"Release"'])  # Commit with message "Release"
+    subprocess.check_output(['git', 'commit', '-m', 'Release'])  # Commit with message "Release"
 
     # Push the changes
     subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote

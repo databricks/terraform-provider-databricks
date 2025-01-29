@@ -113,7 +113,7 @@ Services are just logical groups of resources used for filtering and organizatio
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).

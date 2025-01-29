@@ -560,7 +560,7 @@ func TestModelServingUpdate(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
-func TestModelServingUpdate_RemoveConfigTriggersResourceRecreation(t *testing.T) {
+func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
 	qa.ResourceFixture{
 		Resource: ResourceModelServing(),
 		ID:       "test-endpoint",
@@ -569,20 +569,12 @@ func TestModelServingUpdate_RemoveConfigTriggersResourceRecreation(t *testing.T)
 			"config.#":                      "1",
 			"config.0.served_models.#":      "1",
 			"config.0.served_models.0.name": "prod_model",
+			"serving_endpoint_id":           "id",
 		},
 		HCL: `
 			name = "test-endpoint"
 			`,
-		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{
-			"name": {Old: "test-endpoint", New: "test-endpoint"},
-			// Removing config requires recreation of the resource.
-			"config.#":                 {Old: "1", New: "0", RequiresNew: true},
-			"config.0.served_models.#": {Old: "1", New: "0"},
-			"config.0.served_models.0.scale_to_zero_enabled": {Old: "", New: "true"},
-			"config.0.served_models.0.workload_type":         {Old: "", New: "", NewComputed: true},
-			"config.0.traffic_config.#":                      {Old: "0", New: "", NewComputed: true},
-			"serving_endpoint_id":                            {Old: "", New: "", NewComputed: true},
-		},
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
 	}.ApplyNoError(t)
 }
 

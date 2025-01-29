@@ -1,3 +1,4 @@
+# Generated file. DO NOT EDIT.
 name: tagging
 
 on:
@@ -7,7 +8,7 @@ on:
   #  - cron: '0 0 * * TUE'
 
 # Ensure that only a single instance of the workflow is running at a time.
-concurrency: 
+concurrency:
   group: "tagging"
 
 
@@ -31,8 +32,6 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
-      # NOTE: actions/create-github-app-token automatically masks the output token,
-      # so the token is not exposed in the logs even as part of the remote.
       - name: Set up Git configuration
         run: |
           git config user.name "Databricks SDK Release Bot"

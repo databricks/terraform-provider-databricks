@@ -8,7 +8,7 @@ func TestUcAccCreateProviderDb2Open(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: `
 		resource "databricks_provider" "this" {
-			name = "terraform-test-provider"
+			name = "terraform-test-provider-{var.RANDOM}"
 			comment = "made by terraform"
 			authentication_type = "TOKEN"
 			recipient_profile_str = jsonencode({

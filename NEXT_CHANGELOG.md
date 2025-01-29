@@ -6,7 +6,9 @@
 
 ### Bug Fixes
 
- * Make removing the `config` attribute of `databricks_model_serving` a no-op ([]()).
+ * Make removing the `config` attribute of `databricks_model_serving` a no-op ([#4446](https://github.com/databricks/terraform-provider-databricks/pull/4446)).
+   
+   This change allows integrations, such as DABs, to manage & update the configuration of a model serving endpoint independently of the lifecycle of the endpoint itself.
 
 ### Documentation
 

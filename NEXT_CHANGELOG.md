@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+ * Add multipart permissions to `databricks_aws_unity_catalog_policy` data source ([#4440](https://github.com/databricks/terraform-provider-databricks/pull/4440)).
+
 ### Bug Fixes
 
  * Correctly handle PAT and OBO tokens without expiration ([#4444](https://github.com/databricks/terraform-provider-databricks/pull/4444)).

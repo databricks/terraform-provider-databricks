@@ -54,7 +54,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-{var.RANDOM}"
+			name = "pipeline-acceptance-{var.STICKY_RANDOM}"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name
@@ -100,7 +100,7 @@ func pipelineRunAsTemplate(runAs string) string {
 	data "databricks_current_user" "me" {}
 
 	locals {
-		name = "pipeline-acceptance-{var.RANDOM}"
+		name = "pipeline-acceptance-{var.STICKY_RANDOM}"
 	}
 	resource "databricks_pipeline" "this" {
 		name = local.name
@@ -265,7 +265,7 @@ func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-{var.RANDOM}"
+			name = "pipeline-acceptance-{var.STICKY_RANDOM}"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name

@@ -20,3 +20,4 @@
 ### Internal Changes
 
  * Started to use the new release framework for releases of the Terraform provider.
+ * Refactored existing integration tests from the `internal/acceptance` package to the package corresponding to the resource under test. See CONTRIBUTING.md for more information on how to run the tests.

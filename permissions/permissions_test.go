@@ -380,7 +380,7 @@ func TestAccPermissions_Notebook_Path(t *testing.T) {
 			path = "/permissions_test/{var.STICKY_RANDOM}"
 		}
 		resource "databricks_notebook" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "${databricks_directory.this.path}/test_notebook"
 		}`
 	acceptance.WorkspaceLevel(t, acceptance.Step{
@@ -403,7 +403,7 @@ func TestAccPermissions_Notebook_Id(t *testing.T) {
 			path = "/permissions_test/{var.STICKY_RANDOM}"
 		}
 		resource "databricks_notebook" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "${databricks_directory.this.path}/test_notebook"
 		}`
 	acceptance.WorkspaceLevel(t, acceptance.Step{
@@ -505,7 +505,7 @@ func TestAccPermissions_WorkspaceFile_Path(t *testing.T) {
 			path = "/permissions_test/{var.STICKY_RANDOM}"
 		}
 		resource "databricks_workspace_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	acceptance.WorkspaceLevel(t, acceptance.Step{
@@ -533,7 +533,7 @@ func TestAccPermissions_WorkspaceFile_Id(t *testing.T) {
 			path = "/permissions_test/{var.STICKY_RANDOM}"
 		}
 		resource "databricks_workspace_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "${databricks_directory.this.path}/test_ws_file"
 		}`
 	acceptance.WorkspaceLevel(t, acceptance.Step{

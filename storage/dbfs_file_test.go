@@ -23,7 +23,7 @@ func TestAccDatabricksDBFSFile_CreateViaContent(t *testing.T) {
 func TestAccDatabricksDBFSFile_CreateViaSource(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `resource "databricks_dbfs_file" "file_1" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/testdata/tf-test-python.py"
 			path = "/tmp/tf-test/file-source-{var.RANDOM}"
 		}`,
 	})

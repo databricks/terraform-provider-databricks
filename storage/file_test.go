@@ -373,7 +373,7 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 		}
 		
 		resource "databricks_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/testdata/tf-test-python.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
 	}, acceptance.Step{
@@ -392,7 +392,7 @@ func TestUcAccFileFullLifeCycle(t *testing.T) {
 		}
 		
 		resource "databricks_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python2.py"
+			source = "{var.CWD}/testdata/tf-test-python2.py"
 			path = "/Volumes/${databricks_volume.this.catalog_name}/${databricks_volume.this.schema_name}/${databricks_volume.this.name}/abcde"
 		}`,
 	})

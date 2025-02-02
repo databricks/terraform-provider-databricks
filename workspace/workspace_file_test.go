@@ -9,12 +9,12 @@ import (
 func TestAccWorkspaceFile(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `resource "databricks_workspace_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "/Shared/provider-test/xx_{var.RANDOM}"
 		}`,
 	}, acceptance.Step{
 		Template: `resource "databricks_workspace_file" "this" {
-			source = "{var.CWD}/../../storage/testdata/tf-test-python.py"
+			source = "{var.CWD}/../storage/testdata/tf-test-python.py"
 			path = "/Shared/provider-test/xx_{var.RANDOM}_renamed"
 		}`,
 	})
@@ -23,7 +23,7 @@ func TestAccWorkspaceFile(t *testing.T) {
 func TestAccWorkspaceFileEmptyFile(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `resource "databricks_workspace_file" "empty" {
-			source = "{var.CWD}/../../workspace/acceptance/testdata/empty_file"
+			source = "{var.CWD}/acceptance/testdata/empty_file"
 			path = "/Shared/provider-test/empty_{var.RANDOM}"
 		}`,
 	})
@@ -32,7 +32,7 @@ func TestAccWorkspaceFileEmptyFile(t *testing.T) {
 func TestAccWorkspaceFileZipFile(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `resource "databricks_workspace_file" "zipfile" {
-			source = "{var.CWD}/../../workspace/acceptance/testdata/zipfile.zip"
+			source = "{var.CWD}/acceptance/testdata/zipfile.zip"
 			path = "/Shared/provider-test/zipfile_{var.RANDOM}.zip"
 		}`,
 	})

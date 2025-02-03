@@ -567,6 +567,7 @@ func allResourcePermissions() []resourcePermissions {
 				"CAN_USE":     {isManagementPermission: false},
 				"CAN_MANAGE":  {isManagementPermission: true},
 				"CAN_MONITOR": {isManagementPermission: false},
+                                "CAN_MONITOR_ONLY":	{isManagementPermission: false},
 				"IS_OWNER":    {isManagementPermission: true},
 			},
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},

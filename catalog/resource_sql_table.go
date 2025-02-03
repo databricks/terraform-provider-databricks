@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -540,10 +541,14 @@ var columnTypeAliases = map[string]string{
 
 func getColumnType(columnType string) string {
 	caseInsensitiveColumnType := strings.ToLower(columnType)
-	if alias, ok := columnTypeAliases[caseInsensitiveColumnType]; ok {
+	pattern := regexp.MustCompile(`^\w+(\s*\(.*?\))?`)
+	patternMatched := pattern.FindString(caseInsensitiveColumnType)
+	normalizedColumnType := strings.ReplaceAll(patternMatched, " ", "")
+
+	if alias, ok := columnTypeAliases[normalizedColumnType]; ok {
 		return alias
 	}
-	return caseInsensitiveColumnType
+	return normalizedColumnType
 }
 
 func assertNoColumnTypeDiff(oldCols []interface{}, newColumnInfos []SqlColumnInfo) error {

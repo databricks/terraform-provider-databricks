@@ -361,6 +361,7 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 			properties         = {
 				"this"                        = "that"
 				"something"                   = "else"
+				"delta.feature.allowColumnDefaults" = "supported"
 				"delta.feature.columnMapping" = "supported"
 				"delta.feature.invariants"    = "supported"
 				"delta.minReaderVersion"      = 3
@@ -493,6 +494,19 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 	}, Step{
 		Template:    constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "int", Nullable: true, Comment: "comment"}}),
 		ExpectError: typeUpdateErrorRegex,
+	})
+}
+
+func TestUcAccResourceSqlTable_ChangeColumnTypeWithMultipleWords(t *testing.T) {
+	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
+		Skipf(t)("databricks_sql_table resource not available on GCP")
+	}
+	tableName := RandomName()
+
+	UnityWorkspaceLevel(t, Step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "TIMESTAMP DEFAULT current_timestamp()", Nullable: true, Comment: "comment"}}),
+	}, Step{
+		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "timestamp", Nullable: true, Comment: "comment"}}),
 	})
 }
 

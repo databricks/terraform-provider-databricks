@@ -171,6 +171,7 @@ The following arguments are supported:
 * `options` - (Optional) Map of user defined table options. Change forces creation of a new resource.
 * `properties` - (Optional) A map of table properties.
 * `partitions` - (Optional) a subset of columns to partition the table by. Change forces the creation of a new resource. Conflicts with `cluster_keys`. Change forces creation of a new resource.
+* `tags` - (Optional) Map of table tags.
 
 ### `column` configuration block
 

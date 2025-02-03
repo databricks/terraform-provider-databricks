@@ -680,7 +680,7 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
 	}, acceptance.Step{
-		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_USE", "CAN_MANAGE", "CAN_MONITOR")),
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_USE", "CAN_MANAGE", "CAN_MONITOR", "CAN_MONITOR_ONLY")),
 		// Note: ideally we could test making a new user/SP the owner of the warehouse, but the new user
 		// needs cluster creation permissions, and the SCIM API doesn't provide get-after-put consistency,
 		// so this would introduce flakiness.

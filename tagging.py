@@ -313,7 +313,7 @@ def push_changes() -> None:
     subprocess.check_output(['git', 'commit', '-m', 'Release'])  # Commit with message "Release"
 
     # Push the changes
-    subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote
+    # subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote
 
 
 def reset_repository(hash: Optional[str] = None) -> None:
@@ -389,7 +389,7 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
         # Push the tag to the remote repository
         command_push = ['git', 'push', 'origin', tag_info.tag_name()]
         print(f'Running command: {" ".join(command_push)}')
-        subprocess.run(command_push, check=True)
+        # subprocess.run(command_push, check=True)
 
 
 def run_command(command: List[str]) -> str:

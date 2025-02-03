@@ -1,8 +1,8 @@
 name: build
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  # pull_request:
+  #   types: [opened, synchronize]
   merge_group:
     types: [checks_requested]
 

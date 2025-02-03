@@ -1,4 +1,4 @@
-name: tagging
+name: test-push
 
 on:
   
@@ -38,13 +38,3 @@ jobs:
           git config user.name "Databricks SDK Release Bot"
           git config user.email "DECO-SDK-Tagging[bot]@users.noreply.github.com"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyGithub
-      
-      - name: Run script
-        env:
-            GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |
-            python sha.py

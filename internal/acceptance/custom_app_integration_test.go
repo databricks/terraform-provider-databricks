@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-var (
-	customAppIntegrationTemplate = `resource "databricks_custom_app_integration" "this" {
+var customAppIntegrationTemplate = `resource "databricks_custom_app_integration" "this" {
 			name = "custom_integration_name"
 			redirect_urls = ["https://example.com"]
 			scopes = ["all-apis"]
@@ -15,7 +14,6 @@ var (
 				refresh_token_ttl_in_minutes = 30
 			}
 		}`
-)
 
 func TestMwsAccCustomAppIntegrationCreate(t *testing.T) {
 	LoadAccountEnv(t)

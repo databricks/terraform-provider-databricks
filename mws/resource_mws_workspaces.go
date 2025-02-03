@@ -372,7 +372,8 @@ type WorkspaceToken struct {
 }
 
 func CreateTokenIfNeeded(workspacesAPI WorkspacesAPI,
-	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData,
+) error {
 	var wsToken WorkspaceToken
 	common.DataToStructPointer(d, workspaceSchema, &wsToken)
 	if wsToken.Token == nil {
@@ -410,7 +411,8 @@ func isInvalidClient(err error) bool {
 }
 
 func EnsureTokenExistsIfNeeded(a WorkspacesAPI,
-	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData,
+) error {
 	var wsToken WorkspaceToken
 	common.DataToStructPointer(d, workspaceSchema, &wsToken)
 	if wsToken.Token == nil {
@@ -456,7 +458,8 @@ func removeTokenIfNeeded(a WorkspacesAPI, tokenID string, d *schema.ResourceData
 }
 
 func UpdateTokenIfNeeded(workspacesAPI WorkspacesAPI,
-	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData) error {
+	workspaceSchema map[string]*schema.Schema, d *schema.ResourceData,
+) error {
 	o, n := d.GetChange("token")
 	old, new := o.([]any), n.([]any)
 	if d.HasChange("token") {

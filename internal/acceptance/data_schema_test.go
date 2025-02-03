@@ -14,6 +14,7 @@ func checkDataSourceSchema(t *testing.T) func(s *terraform.State) error {
 		return nil
 	}
 }
+
 func TestUcAccDataSourceSchema(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: `

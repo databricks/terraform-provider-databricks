@@ -44,7 +44,8 @@ func ResourceWorkspaceBinding() common.Resource {
 				Default:  "catalog",
 			}
 			common.CustomizeSchemaPath(m, "securable_type").SetValidateFunc(validation.StringInSlice([]string{
-				"catalog", "external_location", "storage_credential", "credential"}, false))
+				"catalog", "external_location", "storage_credential", "credential",
+			}, false))
 			common.CustomizeSchemaPath(m, "binding_type").SetDefault(
 				catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite).SetValidateFunc(
 				validation.StringInSlice([]string{
@@ -150,5 +151,6 @@ func bindingSchemaV0() cty.Type {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-		}}).CoreConfigSchema().ImpliedType()
+		},
+	}).CoreConfigSchema().ImpliedType()
 }

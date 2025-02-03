@@ -159,7 +159,7 @@ func ResourceGrant() common.Resource {
 			}
 			principal := d.Get("principal").(string)
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			grants := catalog.PermissionsList{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
@@ -209,7 +209,7 @@ func ResourceGrant() common.Resource {
 				return err
 			}
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			grants := catalog.PermissionsList{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,

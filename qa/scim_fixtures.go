@@ -89,5 +89,4 @@ func genListFixtures[R scimResponse](resp R, path string) []HTTPFixture {
 		Response: resp.Empty(),
 	})
 	return res
-
 }

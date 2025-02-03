@@ -578,17 +578,20 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/ServicePrincipals/spn?attributes=userName,displayName,active,externalId,entitlements",
-				Response: scim.User{ID: "321", DisplayName: "spn", ApplicationID: "spn",
+				Response: scim.User{
+					ID: "321", DisplayName: "spn", ApplicationID: "spn",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
-					}},
+					},
+				},
 				ReuseRequest: true,
 			},
 			emptyGlobalInitScripts,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=members",
-				Response: scim.Group{ID: "a", DisplayName: "admins",
+				Response: scim.Group{
+					ID: "a", DisplayName: "admins",
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
@@ -602,7 +605,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
-				Response: scim.Group{ID: "a", DisplayName: "admins",
+				Response: scim.Group{
+					ID: "a", DisplayName: "admins",
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
@@ -619,7 +623,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
-				Response: scim.Group{ID: "c", DisplayName: "test",
+				Response: scim.Group{
+					ID: "c", DisplayName: "test",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
@@ -628,7 +633,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "a", DisplayName: "admins",
+				Response: scim.Group{
+					ID: "a", DisplayName: "admins",
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
 						{Display: "Test group", Value: "f", Ref: "Groups/f"},
@@ -645,7 +651,8 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=displayName,externalId,entitlements",
-				Response: scim.Group{ID: "c", DisplayName: "test",
+				Response: scim.Group{
+					ID: "c", DisplayName: "test",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},
 					},
@@ -1593,7 +1600,8 @@ func TestResourceName(t *testing.T) {
 	assert.Equal(t, "r56cde0f5eda", norm)
 
 	assert.NotEqual(t, ic.ResourceName(&resource{
-		Name: "0A"}), ic.ResourceName(&resource{
+		Name: "0A",
+	}), ic.ResourceName(&resource{
 		Name: "0a",
 	}))
 
@@ -2379,7 +2387,8 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
 				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+					Objects: []workspace.ObjectStatus{
+						notebookStatus, fileStatus,
 						{
 							ObjectID:   4567,
 							ObjectType: workspace.Notebook,
@@ -2491,7 +2500,8 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
 				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+					Objects: []workspace.ObjectStatus{
+						notebookStatus, fileStatus,
 						{
 							ObjectID:   4567,
 							ObjectType: workspace.Notebook,
@@ -2828,11 +2838,11 @@ func TestIncrementalDLTAndMLflowWebhooks(t *testing.T) {
 		func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
-			os.Mkdir(tmpDir, 0700)
+			os.Mkdir(tmpDir, 0o700)
 			os.WriteFile(tmpDir+"/import.sh", []byte(
 				`terraform import databricks_pipeline.abc "abc"
 terraform import databricks_pipeline.def "def"
-`), 0700)
+`), 0o700)
 
 			os.WriteFile(tmpDir+"/import.tf", []byte(
 				`import {
@@ -2843,18 +2853,18 @@ import {
   id = "def"
   to = databricks_pipeline.def
 }
-`), 0700)
+`), 0o700)
 
 			os.WriteFile(tmpDir+"/dlt.tf", []byte(`resource "databricks_pipeline" "abc" {
 }
 			
 resource "databricks_pipeline" "def" {
 }
-`), 0700)
+`), 0o700)
 			os.WriteFile(tmpDir+"/vars.tf", []byte(`variable "var1" {
 	description = ""
 }
-`), 0700)
+`), 0o700)
 
 			ic := newImportContext(client)
 			ic.noFormat = true

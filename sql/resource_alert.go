@@ -18,7 +18,8 @@ func ResourceAlert() common.Resource {
 		common.CustomizeSchemaPath(m, "condition").SetRequired()
 		// TODO: can we automatically generate it from SDK? Or should we avoid validation at all?
 		common.CustomizeSchemaPath(m, "condition", "op").SetRequired().SetValidateFunc(validation.StringInSlice([]string{
-			"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL"}, true))
+			"GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "EQUAL", "NOT_EQUAL", "IS_NULL",
+		}, true))
 		common.CustomizeSchemaPath(m, "parent_path").SetCustomSuppressDiff(common.WorkspaceOrEmptyPathPrefixDiffSuppress).SetForceNew()
 		common.CustomizeSchemaPath(m, "condition", "operand").SetRequired()
 		common.CustomizeSchemaPath(m, "condition", "operand", "column").SetRequired()

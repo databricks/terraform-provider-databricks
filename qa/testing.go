@@ -430,19 +430,21 @@ func CornerCaseAccountID(id string) CornerCase {
 	return CornerCase{"account_id", id}
 }
 
-var ErrImATeapot = errors.New("i'm a teapot")
-var HTTPFailures = []HTTPFixture{
-	{
-		MatchAny:     true,
-		ReuseRequest: true,
-		Status:       418,
-		Response: apierr.APIError{
-			ErrorCode:  "NONSENSE",
-			StatusCode: 418,
-			Message:    "i'm a teapot",
+var (
+	ErrImATeapot = errors.New("i'm a teapot")
+	HTTPFailures = []HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: apierr.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    "i'm a teapot",
+			},
 		},
-	},
-}
+	}
+)
 
 // ResourceCornerCases checks for corner cases of error handling. Optional field name used to create error
 func ResourceCornerCases(t *testing.T, resource common.Resource, cc ...CornerCase) {

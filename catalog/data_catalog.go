@@ -13,7 +13,8 @@ func DataSourceCatalog() common.Resource {
 		Id      string               `json:"id,omitempty" tf:"computed"`
 		Name    string               `json:"name"`
 		Catalog *catalog.CatalogInfo `json:"catalog_info,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		catalog, err := w.Catalogs.GetByName(ctx, data.Name)
 		if err != nil {
 			return err

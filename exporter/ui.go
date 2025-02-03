@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
-var cliInput io.Reader = os.Stdin
-var cliOutput io.Writer = os.Stdout
+var (
+	cliInput  io.Reader = os.Stdin
+	cliOutput io.Writer = os.Stdout
+)
 
 func askFor(prompt string) string {
 	var s string

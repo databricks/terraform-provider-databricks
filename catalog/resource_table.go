@@ -74,7 +74,8 @@ func ResourceTable() common.Resource {
 		})
 	update := updateFunctionFactory("/unity-catalog/tables", []string{
 		"owner", "name", "data_source_format", "columns", "storage_location",
-		"view_definition", "comment", "properties"})
+		"view_definition", "comment", "properties",
+	})
 	return common.Resource{
 		Schema: tableSchema,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {

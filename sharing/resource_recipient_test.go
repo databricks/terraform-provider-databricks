@@ -87,7 +87,6 @@ func TestCreateRecipient_InvalidAuthType(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. "+
 		"[authentication_type] expected authentication_type "+
 		"to be one of [TOKEN DATABRICKS], got temp")
-
 }
 
 func TestReadRecipient(t *testing.T) {

@@ -278,5 +278,7 @@ func (a *resourceApp) ImportState(ctx context.Context, req resource.ImportStateR
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
-var _ resource.ResourceWithConfigure = &resourceApp{}
-var _ resource.ResourceWithImportState = &resourceApp{}
+var (
+	_ resource.ResourceWithConfigure   = &resourceApp{}
+	_ resource.ResourceWithImportState = &resourceApp{}
+)

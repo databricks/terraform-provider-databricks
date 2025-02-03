@@ -28,8 +28,10 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 )
 
-const resourceName = "library"
-const libraryDefaultInstallationTimeout = 15 * time.Minute
+const (
+	resourceName                      = "library"
+	libraryDefaultInstallationTimeout = 15 * time.Minute
+)
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
 

@@ -78,7 +78,6 @@ func applyWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.D
 	}
 	d.SetId("_")
 	return nil
-
 }
 
 func updateWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

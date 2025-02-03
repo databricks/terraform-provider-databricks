@@ -180,8 +180,10 @@ const (
 	MatchRegexp = "regexp"
 )
 
-type valueTransformFunc func(string) string
-type isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
+type (
+	valueTransformFunc      func(string) string
+	isValidAproximationFunc func(ic *importContext, res *resource, sr *resourceApproximation, origPath string) bool
+)
 
 type reference struct {
 	// path to a given field, like, `cluster_id`, `access_control.user_name``, ... For references blocks/arrays, the `.N` component isn't required
@@ -402,6 +404,7 @@ func (a resourcesList) Len() int {
 func (a resourcesList) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
+
 func (a resourcesList) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
 }

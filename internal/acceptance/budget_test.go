@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-var (
-	budgetTemplate = `resource "databricks_budget" "this" {
+var budgetTemplate = `resource "databricks_budget" "this" {
 			display_name = "tf-{var.RANDOM}"
 		
 			alert_configurations {
@@ -38,7 +37,6 @@ var (
 				}
 			}
 		}`
-)
 
 func TestMwsAccBudgetCreate(t *testing.T) {
 	LoadAccountEnv(t)

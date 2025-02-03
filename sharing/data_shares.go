@@ -11,8 +11,8 @@ import (
 func DataSourceShares() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Shares []string `json:"shares,omitempty" tf:"computed,slice_set"`
-	}, w *databricks.WorkspaceClient) error {
-
+	}, w *databricks.WorkspaceClient,
+	) error {
 		shares, err := w.Shares.ListAll(ctx, sharing.ListSharesRequest{})
 		if err != nil {
 			return err

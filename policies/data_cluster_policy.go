@@ -20,7 +20,8 @@ func DataSourceClusterPolicy() common.Resource {
 		PolicyFamilyDefinitionOverrides string `json:"policy_family_definition_overrides,omitempty" tf:"computed"`
 		IsDefault                       bool   `json:"is_default,omitempty" tf:"computed"`
 		MaxClustersPerUser              int    `json:"max_clusters_per_user,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		policy, err := w.ClusterPolicies.GetByName(ctx, data.Name)
 		if err != nil {
 			return err

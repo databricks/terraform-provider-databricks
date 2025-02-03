@@ -52,7 +52,6 @@ func entitlementsStepBuilder(t *testing.T, r entitlementResource) func(entitleme
 				return nil
 			},
 		}
-
 	}
 }
 

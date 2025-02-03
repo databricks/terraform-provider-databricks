@@ -3,10 +3,9 @@ package clusters
 import (
 	"context"
 	"fmt"
+	"testing"
 
 	// "reflect"
-
-	"testing"
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
@@ -227,8 +226,10 @@ func TestWaitForClusterStatus_NotReachable(t *testing.T) {
 			Response: ClusterInfo{
 				State:        ClusterStateUnknown,
 				StateMessage: "Something strange is going on",
-				TerminationReason: &TerminationReason{Code: "unknown", Type: "broken",
-					Parameters: map[string]string{"abc": "def"}},
+				TerminationReason: &TerminationReason{
+					Code: "unknown", Type: "broken",
+					Parameters: map[string]string{"abc": "def"},
+				},
 			},
 		},
 	})
@@ -317,7 +318,8 @@ func TestEditCluster_Pending(t *testing.T) {
 }
 
 func TestResizeCluster_FailsForNonRunningCluster(t *testing.T) {
-	clusterStates := []ClusterState{ClusterStateUnknown,
+	clusterStates := []ClusterState{
+		ClusterStateUnknown,
 		ClusterStateError,
 		ClusterStatePending,
 		ClusterStateRestarting,

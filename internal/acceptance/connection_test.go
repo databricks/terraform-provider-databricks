@@ -48,6 +48,7 @@ func connectionTemplateWithoutOwner() string {
 	}
 	`
 }
+
 func TestUcAccConnectionsResourceFullLifecycle(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: connectionTemplateWithOwner("test.mysql.database.azure.com", "account users"),

@@ -19,6 +19,7 @@ func checkStorageCredentialDataSourcePopulated(t *testing.T) func(s *terraform.S
 		return nil
 	}
 }
+
 func TestUcAccDataSourceStorageCredential(t *testing.T) {
 	UnityWorkspaceLevel(t, Step{
 		Template: `

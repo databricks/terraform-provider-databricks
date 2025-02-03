@@ -80,7 +80,7 @@ func TestDataSourcePipelines_Search(t *testing.T) {
 		HCL:         `pipeline_name = "Pipeline1"`,
 		Read:        true,
 		NonWritable: true,
-		//Create:      true,
+		// Create:      true,
 		ID: "_",
 	}.ApplyAndExpectData(t, map[string]any{
 		"ids": []string{
@@ -103,7 +103,7 @@ func TestDataSourcePipelines_SearchError(t *testing.T) {
 		HCL:         `pipeline_name = "Pipeline2"`,
 		Read:        true,
 		NonWritable: true,
-		//Create:      true,
+		// Create:      true,
 		ID: "_",
 	}.ApplyNoError(t)
 }
@@ -122,7 +122,7 @@ func TestDataSourcePipelines_NoneFound(t *testing.T) {
 		HCL:         `pipeline_name = ""`,
 		Read:        true,
 		NonWritable: true,
-		//Create:      true,
+		// Create:      true,
 		ID: "_",
 	}.ApplyNoError(t)
 }

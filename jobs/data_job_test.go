@@ -55,8 +55,8 @@ func commonFixtures(name string) []qa.HTTPFixture {
 			},
 		},
 	}
-
 }
+
 func TestDataSourceQueryableJobMatchesId(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

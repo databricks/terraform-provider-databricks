@@ -1630,6 +1630,7 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
+
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,

@@ -127,12 +127,15 @@ type workspaceSetting[T any] struct {
 func (w workspaceSetting[T]) SettingStruct() T {
 	return w.settingStruct
 }
+
 func (w workspaceSetting[T]) Read(ctx context.Context, c *databricks.WorkspaceClient, etag string) (*T, error) {
 	return w.readFunc(ctx, c, etag)
 }
+
 func (w workspaceSetting[T]) Update(ctx context.Context, c *databricks.WorkspaceClient, t T) (string, error) {
 	return w.updateFunc(ctx, c, t)
 }
+
 func (w workspaceSetting[T]) Delete(ctx context.Context, c *databricks.WorkspaceClient, etag string) (string, error) {
 	if w.deleteFunc == nil {
 		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
@@ -140,6 +143,7 @@ func (w workspaceSetting[T]) Delete(ctx context.Context, c *databricks.Workspace
 	}
 	return w.deleteFunc(ctx, c, etag)
 }
+
 func (w workspaceSetting[T]) GetETag(t *T) string {
 	return getEtag(t)
 }
@@ -201,12 +205,15 @@ type accountSetting[T any] struct {
 func (w accountSetting[T]) SettingStruct() T {
 	return w.settingStruct
 }
+
 func (w accountSetting[T]) Read(ctx context.Context, c *databricks.AccountClient, etag string) (*T, error) {
 	return w.readFunc(ctx, c, etag)
 }
+
 func (w accountSetting[T]) Update(ctx context.Context, c *databricks.AccountClient, t T) (string, error) {
 	return w.updateFunc(ctx, c, t)
 }
+
 func (w accountSetting[T]) Delete(ctx context.Context, c *databricks.AccountClient, etag string) (string, error) {
 	if w.deleteFunc == nil {
 		tflog.Warn(ctx, "The `delete` function isn't defined for this resource. Most probably it's not supported.")
@@ -214,9 +221,11 @@ func (w accountSetting[T]) Delete(ctx context.Context, c *databricks.AccountClie
 	}
 	return w.deleteFunc(ctx, c, etag)
 }
+
 func (w accountSetting[T]) GetETag(t *T) string {
 	return getEtag(t)
 }
+
 func (w accountSetting[T]) SetETag(t *T, newEtag string) {
 	setEtag(t, newEtag)
 }
@@ -280,6 +289,7 @@ type accountWorkspaceSetting[T any] struct {
 func (aw accountWorkspaceSetting[T]) SettingStruct() T {
 	return aw.settingStruct
 }
+
 func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.DatabricksClient, etag string) (*T, error) {
 	if c.Config.IsAccountClient() {
 		a, err := c.AccountClient()
@@ -295,6 +305,7 @@ func (aw accountWorkspaceSetting[T]) Read(ctx context.Context, c *common.Databri
 		return aw.readWsFunc(ctx, ws, etag)
 	}
 }
+
 func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.DatabricksClient, t T) (string, error) {
 	if c.Config.IsAccountClient() {
 		a, err := c.AccountClient()
@@ -310,6 +321,7 @@ func (aw accountWorkspaceSetting[T]) Update(ctx context.Context, c *common.Datab
 		return aw.updateWsFunc(ctx, ws, t)
 	}
 }
+
 func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.DatabricksClient, etag string) (string, error) {
 	if c.Config.IsAccountClient() {
 		a, err := c.AccountClient()
@@ -325,9 +337,11 @@ func (aw accountWorkspaceSetting[T]) Delete(ctx context.Context, c *common.Datab
 		return aw.deleteWsFunc(ctx, ws, etag)
 	}
 }
+
 func (aw accountWorkspaceSetting[T]) GetETag(t *T) string {
 	return getEtag(t)
 }
+
 func (aw accountWorkspaceSetting[T]) SetETag(t *T, newEtag string) {
 	setEtag(t, newEtag)
 }

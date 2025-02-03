@@ -27,7 +27,7 @@ func (s *CustomizableSchema) ToNestedBlockObject() NestedBlockObject {
 
 // attributeToMap converts AttributeBuilder into a map from string to AttributeBuilder.
 func attributeToNestedBlockObject(attr *BaseSchemaBuilder) NestedBlockObject {
-	var res = NestedBlockObject{}
+	res := NestedBlockObject{}
 	switch attr := (*attr).(type) {
 	case SingleNestedAttributeBuilder:
 		res.Attributes = attr.Attributes

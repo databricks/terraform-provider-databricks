@@ -39,7 +39,8 @@ func TestValidateMountDirectory(t *testing.T) {
 const expectedCommandResp = "done"
 
 func testMountFuncHelper(t *testing.T, mountFunc func(mp MountPoint, mount Mount) (string, error), mount Mount,
-	mountName, expectedCommand string) {
+	mountName, expectedCommand string,
+) {
 	c := common.DatabricksClient{
 		DatabricksClient: &client.DatabricksClient{
 			Config: &config.Config{
@@ -79,6 +80,7 @@ func (t mockMount) Name() string                             { return "fake-moun
 func (t mockMount) Config(client *common.DatabricksClient) map[string]string {
 	return map[string]string{"fake-key": "fake-value"}
 }
+
 func (m mockMount) ValidateAndApplyDefaults(d *schema.ResourceData, client *common.DatabricksClient) error {
 	return nil
 }
@@ -264,7 +266,6 @@ func TestOldMountImplementations(t *testing.T) {
 	m4 := AWSIamMount{S3BucketName: n}
 	assert.Equal(t, m4.Name(), n)
 	assert.Nil(t, m4.ValidateAndApplyDefaults(nil, nil))
-
 }
 
 type sampleCommand string

@@ -49,9 +49,11 @@ func TestResourceRepoRead(t *testing.T) {
 		New:      true,
 		ID:       repoIDStr,
 	}.ApplyAndExpectData(t,
-		map[string]any{"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
+		map[string]any{
+			"id": repoIDStr, "path": path, "branch": branch, "git_provider": provider,
 			"url": url, "commit_hash": "7e0847ede61f07adede22e2bcce6050216489171",
-			"workspace_path": "/Workspace" + path})
+			"workspace_path": "/Workspace" + path,
+		})
 }
 
 func TestResourceRepoRead_NotFound(t *testing.T) {
@@ -124,8 +126,10 @@ func TestResourceRepoCreateNoBranch(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
-			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
+		map[string]any{
+			"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+		})
 }
 
 func TestResourceRepoCreateCustomDirectory(t *testing.T) {
@@ -169,8 +173,10 @@ func TestResourceRepoCreateCustomDirectory(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
-			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
+		map[string]any{
+			"id": resp.RepoID(), "path": resp.Path, "branch": resp.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+		})
 }
 
 func TestResourceRepoCreateCustomDirectoryError(t *testing.T) {
@@ -261,8 +267,10 @@ func TestResourceRepoCreateWithBranch(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]any{"id": resp.RepoID(), "path": resp.Path, "branch": respPatch.Branch,
-			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
+		map[string]any{
+			"id": resp.RepoID(), "path": resp.Path, "branch": respPatch.Branch,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+		})
 }
 
 func TestResourceRepoCreateWithTag(t *testing.T) {
@@ -306,8 +314,10 @@ func TestResourceRepoCreateWithTag(t *testing.T) {
 		},
 		Create: true,
 	}.ApplyAndExpectData(t,
-		map[string]any{"id": resp.RepoID(), "path": resp.Path,
-			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID})
+		map[string]any{
+			"id": resp.RepoID(), "path": resp.Path,
+			"git_provider": resp.Provider, "url": resp.Url, "commit_hash": resp.HeadCommitID,
+		})
 }
 
 func TestResourceRepoCreateError(t *testing.T) {
@@ -416,7 +426,8 @@ func TestResourceReposUpdateSparseCheckout(t *testing.T) {
 			{
 				Method:   "PATCH",
 				Resource: "/api/2.0/repos/121232342",
-				ExpectedRequest: map[string]any{"branch": "main",
+				ExpectedRequest: map[string]any{
+					"branch":          "main",
 					"sparse_checkout": map[string]any{"patterns": []string{"abc", "def"}},
 				},
 				Response: resp,

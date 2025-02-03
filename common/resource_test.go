@@ -16,7 +16,8 @@ func TestImportingCallsRead(t *testing.T) {
 	r := Resource{
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			d.SetId("abc")
 			return d.Set("foo", 1)
 		},
@@ -43,20 +44,23 @@ func createTestResourceForSkipRead(skipRead bool) Resource {
 	res := Resource{
 		Create: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			log.Println("[DEBUG] Create called")
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			log.Println("[DEBUG] Read called")
 			d.Set("foo", 2)
 			return nil
 		},
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			log.Println("[DEBUG] Update called")
 			return d.Set("foo", 3)
 		},
@@ -130,7 +134,8 @@ func TestUpdateDontSkipRead(t *testing.T) {
 func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	nope := func(ctx context.Context,
 		d *schema.ResourceData,
-		c *DatabricksClient) error {
+		c *DatabricksClient,
+	) error {
 		return apierr.NotFound("nope")
 	}
 	r := Resource{
@@ -180,17 +185,20 @@ func TestUpdate(t *testing.T) {
 	r := Resource{
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			return apierr.NotFound("nope")
 		},
 		Delete: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			return apierr.NotFound("nope")
 		},
 		Schema: map[string]*schema.Schema{
@@ -219,12 +227,14 @@ func TestRecoverableFromPanic(t *testing.T) {
 	r := Resource{
 		Update: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			return d.Set("foo", 1)
 		},
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
-			c *DatabricksClient) error {
+			c *DatabricksClient,
+		) error {
 			panic(fmt.Errorf("what to do?..."))
 		},
 		Schema: map[string]*schema.Schema{

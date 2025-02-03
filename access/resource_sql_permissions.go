@@ -298,7 +298,8 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 }
 
 func tableAclForUpdate(ctx context.Context, d *schema.ResourceData,
-	s map[string]*schema.Schema, c *common.DatabricksClient) (ta SqlPermissions, err error) {
+	s map[string]*schema.Schema, c *common.DatabricksClient,
+) (ta SqlPermissions, err error) {
 	common.DataToStructPointer(d, s, &ta)
 	err = ta.initCluster(ctx, d, c)
 	return

@@ -15,7 +15,8 @@ func DataSourceJobs() common.Resource {
 	return common.WorkspaceData(func(ctx context.Context, data *struct {
 		Ids        map[string]string `json:"ids,omitempty" tf:"computed"`
 		NameFilter string            `json:"job_name_contains,omitempty"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		iter := w.Jobs.List(ctx, jobs.ListJobsRequest{ExpandTasks: false, Limit: 100})
 		data.Ids = map[string]string{}
 		nameFilter := strings.ToLower(data.NameFilter)

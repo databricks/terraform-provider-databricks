@@ -82,7 +82,8 @@ func preprocessS3MountGeneric(ctx context.Context, s map[string]*schema.Schema, 
 }
 
 func mountS3ViaProfileAndSetClusterID(clustersAPI clusters.ClustersAPI,
-	instanceProfile string, d *schema.ResourceData) error {
+	instanceProfile string, d *schema.ResourceData,
+) error {
 	cluster, err := GetOrCreateMountingClusterWithInstanceProfile(clustersAPI, instanceProfile)
 	if err != nil {
 		return fmt.Errorf("mount via profile: %w", err)

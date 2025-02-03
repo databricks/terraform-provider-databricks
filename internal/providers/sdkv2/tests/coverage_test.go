@@ -165,7 +165,7 @@ func TestCoverageReport(t *testing.T) {
 	sort.Slice(cr.Resources, func(i, j int) bool {
 		return cr.Resources[i].Name < cr.Resources[j].Name
 	})
-	report, err := os.OpenFile("completeness.md", os.O_CREATE|os.O_WRONLY, 0755)
+	report, err := os.OpenFile("completeness.md", os.O_CREATE|os.O_WRONLY, 0o755)
 	assert.NoError(t, err)
 	defer report.Close()
 

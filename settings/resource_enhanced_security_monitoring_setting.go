@@ -14,6 +14,7 @@ import (
 var enhancedSecurityMonitoringFieldMask = strings.Join([]string{
 	"enhanced_security_monitoring_workspace.is_enabled",
 }, ",")
+
 var enhancedSecurityMonitoringSetting = workspaceSetting[settings.EnhancedSecurityMonitoringSetting]{
 	settingStruct: settings.EnhancedSecurityMonitoringSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {

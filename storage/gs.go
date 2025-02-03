@@ -60,7 +60,8 @@ func preprocessGsMount(ctx context.Context, s map[string]*schema.Schema, d *sche
 }
 
 func createOrValidateClusterForGoogleStorage(ctx context.Context, m any,
-	d *schema.ResourceData, clusterID, serviceAccount string) error {
+	d *schema.ResourceData, clusterID, serviceAccount string,
+) error {
 	clustersAPI := clusters.NewClustersAPI(ctx, m)
 	if clusterID != "" {
 		clusterInfo, err := clustersAPI.Get(clusterID)
@@ -90,7 +91,8 @@ func createOrValidateClusterForGoogleStorage(ctx context.Context, m any,
 
 // GetOrCreateMountingClusterWithGcpServiceAccount ...
 func GetOrCreateMountingClusterWithGcpServiceAccount(
-	clustersAPI clusters.ClustersAPI, serviceAccount string) (i clusters.ClusterInfo, err error) {
+	clustersAPI clusters.ClustersAPI, serviceAccount string,
+) (i clusters.ClusterInfo, err error) {
 	clusterName := fmt.Sprintf("terraform-mount-gcs-%x", md5.Sum([]byte(serviceAccount)))
 	cluster := getCommonClusterObject(clustersAPI, clusterName)
 	cluster.GcpAttributes = &clusters.GcpAttributes{GoogleServiceAccount: serviceAccount}

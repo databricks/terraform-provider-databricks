@@ -89,7 +89,8 @@ func (r Resource) ToResource() *schema.Resource {
 		m any) diag.Diagnostics
 	if r.Update != nil {
 		update = func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+			m any,
+		) diag.Diagnostics {
 			c := m.(*DatabricksClient)
 			if err := recoverable(r.Update)(ctx, d, c); err != nil {
 				err = nicerError(ctx, err, "update")
@@ -131,7 +132,8 @@ func (r Resource) ToResource() *schema.Resource {
 	generateReadFunc := func(ignoreMissing bool) func(ctx context.Context, d *schema.ResourceData,
 		m any) diag.Diagnostics {
 		return func(ctx context.Context, d *schema.ResourceData,
-			m any) diag.Diagnostics {
+			m any,
+		) diag.Diagnostics {
 			err := recoverable(r.Read)(ctx, d, m.(*DatabricksClient))
 			// TODO: https://github.com/databricks/terraform-provider-databricks/issues/2021
 			if ignoreMissing && apierr.IsMissing(err) {
@@ -195,7 +197,8 @@ func (r Resource) ToResource() *schema.Resource {
 	if resource.Importer == nil {
 		resource.Importer = &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData,
-				m any) (data []*schema.ResourceData, e error) {
+				m any,
+			) (data []*schema.ResourceData, e error) {
 				d.MarkNewResource()
 				diags := generateReadFunc(false)(ctx, d, m)
 				var err error
@@ -310,7 +313,8 @@ func WorkspaceDataWithParams[T, P any](read func(context.Context, P, *databricks
 
 func WorkspaceDataWithCustomizeFunc[T any](
 	read func(context.Context, *T, *databricks.WorkspaceClient) error,
-	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema,
+) Resource {
 	return genericDatabricksData((*DatabricksClient).WorkspaceClient, func(ctx context.Context, s struct{}, t *T, wc *databricks.WorkspaceClient) error {
 		return read(ctx, t, wc)
 	}, false, customizeSchemaFunc)
@@ -384,7 +388,8 @@ func genericDatabricksData[T, P, C any](
 	getClient func(*DatabricksClient) (C, error),
 	read func(context.Context, P, *T, C) error,
 	hasOther bool,
-	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema) Resource {
+	customizeSchemaFunc func(map[string]*schema.Schema) map[string]*schema.Schema,
+) Resource {
 	var dummy T
 	var other P
 	otherFields := StructToSchema(other, nil)

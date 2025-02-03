@@ -134,7 +134,7 @@ func TestAccAppResource(t *testing.T) {
 	}, acceptance.Step{
 		Template: makeTemplate("My new app"),
 		Check: func(s *terraform.State) error {
-			var newUpdateTime = s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
+			newUpdateTime := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["update_time"]
 			assert.NotEqual(t, updateTime, newUpdateTime)
 			return nil
 		},

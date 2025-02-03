@@ -129,7 +129,6 @@ func TestResourceAwsS3MountGenericCreateWithInvalidClusterId(t *testing.T) {
 		Create: true,
 	}.Apply(t)
 	assert.EqualError(t, err, "instance profile is required to re-create mounting cluster")
-
 }
 
 func TestResourceAwsS3MountGenericReadWithInvalidClusterId(t *testing.T) {
@@ -259,8 +258,10 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 								ZoneID:             "auto",
 							},
 							AutoterminationMinutes: 10,
-							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
-								"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+							SparkConf: map[string]string{
+								"spark.databricks.cluster.profile": "singleNode",
+								"spark.master":                     "local[*]", "spark.scheduler.mode": "FIFO",
+							},
 							CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
 							ClusterName:  clusterName,
 							SparkVersion: "7.3.x-scala2.12",
@@ -293,8 +294,10 @@ func TestResourceAwsS3MountGenericCreate_WithInstanceProfile(t *testing.T) {
 						ZoneID:             "auto",
 					},
 					AutoterminationMinutes: 10,
-					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
-						"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+					SparkConf: map[string]string{
+						"spark.databricks.cluster.profile": "singleNode",
+						"spark.master":                     "local[*]", "spark.scheduler.mode": "FIFO",
+					},
 					CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
 					ClusterName:  clusterName,
 					SparkVersion: "7.3.x-scala2.12",
@@ -660,7 +663,8 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 				"client_secret_scope": "c",
 				"client_secret_key":   "d",
 				"spark_conf_prefix":   "fs.adl",
-			}}},
+			}},
+		},
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: token contains an invalid number of segments")
@@ -680,7 +684,8 @@ func TestResourceAdlsGen1MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *tes
 				"client_secret_scope": "c",
 				"client_secret_key":   "d",
 				"spark_conf_prefix":   "fs.adl",
-			}}},
+			}},
+		},
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: tenant_id isn't provided & we can't detect it")
@@ -725,7 +730,8 @@ func TestResourceAdlsGen2MountGeneric_Create(t *testing.T) {
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -769,7 +775,8 @@ func TestResourceAdlsGen2MountGeneric_Create_ResourceID(t *testing.T) {
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Create: true,
 		Azure:  true,
 	}.Apply(t)
@@ -816,7 +823,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_SPN(t *testing.T) {
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Create: true,
 		Azure:  true,
 	}.Apply(t)
@@ -865,7 +873,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_CLI(t *testing.T) {
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Create: true,
 	}.Apply(t)
 	require.NoError(t, err)
@@ -886,7 +895,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error(t *testing.T) {
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: token contains an invalid number of segments")
@@ -906,7 +916,8 @@ func TestResourceAdlsGen2MountGeneric_Create_NoTenantID_Error_EmptyTenant(t *tes
 				"client_secret_scope":    "c",
 				"client_secret_key":      "d",
 				"initialize_file_system": true,
-			}}},
+			}},
+		},
 		Create: true,
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "tenant_id is not defined, and we can't extract it: tenant_id isn't provided & we can't detect it")
@@ -944,15 +955,17 @@ func TestResourceAzureBlobMountCreateGeneric(t *testing.T) {
 		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []any{map[string]any{
-				"auth_type":            "ACCESS_KEY",
-				"storage_account_name": "f",
-				"token_secret_key":     "g",
-				"token_secret_scope":   "h",
-				"container_name":       "c",
-				"directory":            "/d",
+			"wasb": []any{
+				map[string]any{
+					"auth_type":            "ACCESS_KEY",
+					"storage_account_name": "f",
+					"token_secret_key":     "g",
+					"token_secret_scope":   "h",
+					"container_name":       "c",
+					"directory":            "/d",
+				},
 			},
-			}},
+		},
 		Create: true,
 		Azure:  true,
 	}.Apply(t)
@@ -991,15 +1004,17 @@ func TestResourceAzureBlobMountCreateGeneric_SAS(t *testing.T) {
 		State: map[string]any{
 			"cluster_id": "b",
 			"name":       "e",
-			"wasb": []any{map[string]any{
-				"auth_type":            "SAS",
-				"storage_account_name": "f",
-				"token_secret_key":     "g",
-				"token_secret_scope":   "h",
-				"container_name":       "c",
-				"directory":            "/d",
+			"wasb": []any{
+				map[string]any{
+					"auth_type":            "SAS",
+					"storage_account_name": "f",
+					"token_secret_key":     "g",
+					"token_secret_scope":   "h",
+					"container_name":       "c",
+					"directory":            "/d",
+				},
 			},
-			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -1038,13 +1053,15 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID(t *testing.T) {
 		State: map[string]any{
 			"cluster_id":  "b",
 			"resource_id": "/subscriptions/123/resourceGroups/some-rg/providers/Microsoft.Storage/storageAccounts/f/blobServices/default/containers/c",
-			"wasb": []any{map[string]any{
-				"auth_type":          "ACCESS_KEY",
-				"token_secret_key":   "g",
-				"token_secret_scope": "h",
-				"directory":          "/d",
+			"wasb": []any{
+				map[string]any{
+					"auth_type":          "ACCESS_KEY",
+					"token_secret_key":   "g",
+					"token_secret_scope": "h",
+					"directory":          "/d",
+				},
 			},
-			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -1059,13 +1076,15 @@ func TestResourceAzureBlobMountCreateGeneric_Resource_ID_Error(t *testing.T) {
 		State: map[string]any{
 			"cluster_id":  "b",
 			"resource_id": "abc",
-			"wasb": []any{map[string]any{
-				"auth_type":          "ACCESS_KEY",
-				"token_secret_key":   "g",
-				"token_secret_scope": "h",
-				"directory":          "/d",
+			"wasb": []any{
+				map[string]any{
+					"auth_type":          "ACCESS_KEY",
+					"token_secret_key":   "g",
+					"token_secret_scope": "h",
+					"directory":          "/d",
+				},
 			},
-			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -1100,7 +1119,8 @@ func TestResourceAzureBlobMountCreateGeneric_Error(t *testing.T) {
 				"storage_account_name": "f",
 				"token_secret_key":     "g",
 				"token_secret_scope":   "h",
-			}}},
+			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -1135,7 +1155,8 @@ func TestResourceAzureBlobMountCreateGeneric_Error_NoResourceID(t *testing.T) {
 				"directory":          "/d",
 				"token_secret_key":   "g",
 				"token_secret_scope": "h",
-			}}},
+			}},
+		},
 		Azure:  true,
 		Create: true,
 	}.Apply(t)
@@ -1481,8 +1502,10 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 								GoogleServiceAccount: googleAccount,
 							},
 							AutoterminationMinutes: 10,
-							SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
-								"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+							SparkConf: map[string]string{
+								"spark.databricks.cluster.profile": "singleNode",
+								"spark.master":                     "local[*]", "spark.scheduler.mode": "FIFO",
+							},
 							CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
 							ClusterName:  clusterName,
 							SparkVersion: "7.3.x-scala2.12",
@@ -1513,8 +1536,10 @@ func TestResourceGcsMountGenericCreate_WithServiceAccount(t *testing.T) {
 						GoogleServiceAccount: "acc@acc-dbx.iam.gserviceaccount.com",
 					},
 					AutoterminationMinutes: 10,
-					SparkConf: map[string]string{"spark.databricks.cluster.profile": "singleNode",
-						"spark.master": "local[*]", "spark.scheduler.mode": "FIFO"},
+					SparkConf: map[string]string{
+						"spark.databricks.cluster.profile": "singleNode",
+						"spark.master":                     "local[*]", "spark.scheduler.mode": "FIFO",
+					},
 					CustomTags:   map[string]string{"ResourceClass": "SingleNode"},
 					ClusterName:  clusterName,
 					SparkVersion: "7.3.x-scala2.12",

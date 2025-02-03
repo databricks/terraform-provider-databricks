@@ -152,7 +152,6 @@ func ResourceCatalog() common.Resource {
 
 			updateCatalogRequest.Owner = ""
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback

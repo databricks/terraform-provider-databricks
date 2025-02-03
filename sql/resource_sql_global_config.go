@@ -10,9 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var (
-	GlobalSqlConfigResourceID = "global"
-)
+var GlobalSqlConfigResourceID = "global"
 
 type confPair struct {
 	Key   string `json:"key"`
@@ -124,7 +122,8 @@ func (a globalConfigAPI) Get() (GlobalConfig, error) {
 
 func ResourceSqlGlobalConfig() common.Resource {
 	s := common.StructToSchema(GlobalConfig{}, func(
-		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m map[string]*schema.Schema,
+	) map[string]*schema.Schema {
 		m["enable_serverless_compute"].Deprecated = "This field is intended as an internal API " +
 			"and may be removed from the Databricks Terraform provider in the future"
 		return m

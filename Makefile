@@ -13,6 +13,8 @@ fmt-docs:
 lint: vendor
 	@echo "✓ Linting source code with https://staticcheck.io/ ..."
 	@go run honnef.co/go/tools/cmd/staticcheck@v0.5.1 ./...
+	@echo "✓ Linting source code with gofumpt v0.7.0..."
+	@go run mvdan.cc/gofumpt@v0.7.0 -w -l .
 
 test: lint
 	@echo "✓ Running tests ..."

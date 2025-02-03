@@ -268,7 +268,8 @@ type fieldTuple struct {
 }
 
 func (ic *importContext) dataToHcl(i importable, path []string,
-	pr *schema.Resource, res *resource, body *hclwrite.Body) error {
+	pr *schema.Resource, res *resource, body *hclwrite.Body,
+) error {
 	d := res.Data
 	ss := []fieldTuple{}
 	for a, as := range pr.Schema {
@@ -420,7 +421,8 @@ func (ic *importContext) dataToHcl(i importable, path []string,
 }
 
 func (ic *importContext) readListFromData(i importable, path []string, res *resource,
-	rawList []any, body *hclwrite.Body, as *schema.Schema, offsetConverter func(i int) string) error {
+	rawList []any, body *hclwrite.Body, as *schema.Schema, offsetConverter func(i int) string,
+) error {
 	if len(rawList) == 0 {
 		return nil
 	}
@@ -634,7 +636,8 @@ func (ic *importContext) generateAndWriteResources(sh *os.File) {
 }
 
 func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
-	writerChannels map[string]dataWriteChannel, nativeImportChannel importWriteChannel) {
+	writerChannels map[string]dataWriteChannel, nativeImportChannel importWriteChannel,
+) {
 	processed := 0
 	generated := 0
 	ignored := 0
@@ -694,7 +697,7 @@ func (ic *importContext) processSingleResource(resourcesChan resourceChannel,
 					tokens := hclwrite.TokensForTraversal(traversal)
 					imoBlock.Body().SetAttributeRaw("to", tokens)
 					formattedImp := hclwrite.Format(imp.Bytes())
-					//log.Printf("[DEBUG] Import block for %s: %s", r.ID, string(formattedImp))
+					// log.Printf("[DEBUG] Import block for %s: %s", r.ID, string(formattedImp))
 					ic.waitGroup.Add(1)
 					nativeImportChannel <- string(formattedImp)
 				}
@@ -875,8 +878,10 @@ type resourceWriteData struct {
 	ImportCommand string
 }
 
-type dataWriteChannel chan *resourceWriteData
-type importWriteChannel chan string
+type (
+	dataWriteChannel   chan *resourceWriteData
+	importWriteChannel chan string
+)
 
 func (ic *importContext) handleResourceWrite(generatedFile string, ch dataWriteChannel, importChan importWriteChannel) {
 	var existingFile *hclwrite.File

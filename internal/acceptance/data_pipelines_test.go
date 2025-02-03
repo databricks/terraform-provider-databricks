@@ -2,14 +2,12 @@ package acceptance
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"testing"
 )
 
-var (
-	dltNotebook = `
+var dltNotebook = `
 	resource "databricks_notebook" "this" {
 		content_base64 = base64encode(<<-EOT
 			CREATE LIVE TABLE clickstream_raw AS
@@ -45,7 +43,6 @@ var (
 		language = "SQL"
 	}
 `
-)
 
 func TestAccDataSourcePipelines(t *testing.T) {
 	WorkspaceLevel(t, Step{

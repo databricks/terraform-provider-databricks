@@ -207,8 +207,10 @@ func TestGoSdkToTfSdkStructConversionFailure(t *testing.T) {
 	assert.True(t, actualDiagnostics.Equal(expectedDiagnostics))
 }
 
-var dummyType = tfcommon.NewObjectTyper(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
-var emptyType = basetypes.ObjectType{AttrTypes: map[string]attr.Type{}}
+var (
+	dummyType = tfcommon.NewObjectTyper(DummyNestedTfSdk{}).Type(context.Background()).(types.ObjectType)
+	emptyType = basetypes.ObjectType{AttrTypes: map[string]attr.Type{}}
+)
 
 var tests = []struct {
 	name        string
@@ -267,13 +269,14 @@ var tests = []struct {
 	},
 	{
 		"struct conversion",
-		DummyTfSdk{NoPointerNested: types.ListValueMust(
-			dummyType, []attr.Value{
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("def"),
-					"enabled": types.BoolValue(true),
+		DummyTfSdk{
+			NoPointerNested: types.ListValueMust(
+				dummyType, []attr.Value{
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("def"),
+						"enabled": types.BoolValue(true),
+					}),
 				}),
-			}),
 		},
 		DummyGoSdk{NoPointerNested: DummyNestedGoSdk{
 			Name:            "def",
@@ -293,17 +296,18 @@ var tests = []struct {
 	},
 	{
 		"nested list conversion",
-		DummyTfSdk{NestedList: types.ListValueMust(dummyType,
-			[]attr.Value{
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("def"),
-					"enabled": types.BoolValue(true),
+		DummyTfSdk{
+			NestedList: types.ListValueMust(dummyType,
+				[]attr.Value{
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("def"),
+						"enabled": types.BoolValue(true),
+					}),
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("def"),
+						"enabled": types.BoolValue(true),
+					}),
 				}),
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("def"),
-					"enabled": types.BoolValue(true),
-				}),
-			}),
 		},
 		DummyGoSdk{NestedList: []DummyNestedGoSdk{
 			{
@@ -345,13 +349,14 @@ var tests = []struct {
 	},
 	{
 		"list representation of struct pointer conversion", // we use list with one element in the tfsdk to represent struct in gosdk
-		DummyTfSdk{SliceStructPtr: types.ListValueMust(dummyType,
-			[]attr.Value{
-				types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
-					"name":    types.StringValue("def"),
-					"enabled": types.BoolValue(true),
+		DummyTfSdk{
+			SliceStructPtr: types.ListValueMust(dummyType,
+				[]attr.Value{
+					types.ObjectValueMust(dummyType.AttrTypes, map[string]attr.Value{
+						"name":    types.StringValue("def"),
+						"enabled": types.BoolValue(true),
+					}),
 				}),
-			}),
 		},
 		DummyGoSdk{SliceStructPtr: &DummyNestedGoSdk{
 			Name:            "def",

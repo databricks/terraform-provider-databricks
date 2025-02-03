@@ -1318,7 +1318,6 @@ func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
 	}, `
 	network_id = "beta"
 	`)
-
 }
 
 func TestUpdateWorkspace_DeleteToken(t *testing.T) {

@@ -2,10 +2,9 @@ package acceptance
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"testing"
 )
 
 func TestAccDataSourceMwsWorkspaces(t *testing.T) {

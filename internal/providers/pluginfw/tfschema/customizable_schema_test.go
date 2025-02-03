@@ -242,8 +242,10 @@ func (m mockPlanModifier) PlanModifyObject(context.Context, planmodifier.ObjectR
 	panic("unimplemented")
 }
 
-var _ planmodifier.List = mockPlanModifier{}
-var _ planmodifier.Object = mockPlanModifier{}
+var (
+	_ planmodifier.List   = mockPlanModifier{}
+	_ planmodifier.Object = mockPlanModifier{}
+)
 
 type mockValidator struct{}
 
@@ -267,8 +269,10 @@ func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, 
 	panic("unimplemented")
 }
 
-var _ validator.List = mockValidator{}
-var _ validator.Object = mockValidator{}
+var (
+	_ validator.List   = mockValidator{}
+	_ validator.Object = mockValidator{}
+)
 
 func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
 	v := mockValidator{}

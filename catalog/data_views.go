@@ -13,8 +13,8 @@ func DataSourceViews() common.Resource {
 		CatalogName string   `json:"catalog_name"`
 		SchemaName  string   `json:"schema_name"`
 		Ids         []string `json:"ids,omitempty" tf:"computed,slice_set"`
-	}, w *databricks.WorkspaceClient) error {
-
+	}, w *databricks.WorkspaceClient,
+	) error {
 		tables, err := w.Tables.ListAll(ctx, catalog.ListTablesRequest{CatalogName: data.CatalogName, SchemaName: data.SchemaName})
 		if err != nil {
 			return err

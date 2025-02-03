@@ -15,8 +15,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
-const goSdkToTfSdkStructConversionFailureMessage = "gosdk to tfsdk struct conversion failure"
-const goSdkToTfSdkFieldConversionFailureMessage = "gosdk to tfsdk field conversion failure"
+const (
+	goSdkToTfSdkStructConversionFailureMessage = "gosdk to tfsdk struct conversion failure"
+	goSdkToTfSdkFieldConversionFailureMessage  = "gosdk to tfsdk field conversion failure"
+)
 
 // GoSdkToTfSdkStruct converts a gosdk struct into a tfsdk struct, with the folowing rules.
 //
@@ -122,7 +124,8 @@ func goSdkToTfSdkSingleField(
 	destField reflect.Value,
 	forceSendField bool,
 	tfType attr.Type,
-	innerType reflect.Type) (d diag.Diagnostics) {
+	innerType reflect.Type,
+) (d diag.Diagnostics) {
 	if !destField.CanSet() {
 		d.AddError(goSdkToTfSdkStructConversionFailureMessage, fmt.Sprintf("destination field can not be set: %s. %s", destField.Type().Name(), common.TerraformBugErrorMessage))
 		return

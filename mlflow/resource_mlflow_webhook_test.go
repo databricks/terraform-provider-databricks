@@ -273,5 +273,4 @@ func TestWebhookDeleteError(t *testing.T) {
 		HCL:      testWhHCL,
 	}.Apply(t)
 	assert.Error(t, err)
-
 }

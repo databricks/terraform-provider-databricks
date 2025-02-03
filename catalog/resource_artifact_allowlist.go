@@ -42,7 +42,6 @@ func ResourceArtifactAllowlist() common.Resource {
 			ArtifactMatchers: createAllowlist.ArtifactMatchers,
 			ArtifactType:     createAllowlist.ArtifactType,
 		})
-
 		if err != nil {
 			return err
 		}

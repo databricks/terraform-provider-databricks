@@ -248,7 +248,8 @@ func TestNodeTypeCategoryNotAvailable(t *testing.T) {
 							NodeInfo: &compute.CloudProviderNodeInfo{
 								Status: []compute.CloudProviderNodeStatus{
 									compute.CloudProviderNodeStatusNotAvailableInRegion,
-									compute.CloudProviderNodeStatusNotEnabledOnSubscription},
+									compute.CloudProviderNodeStatusNotEnabledOnSubscription,
+								},
 							},
 						},
 						{

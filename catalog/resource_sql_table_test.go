@@ -349,7 +349,6 @@ func TestResourceSqlTableCreateTable_Error(t *testing.T) {
 func TestResourceSqlTableUpdateTable(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,
@@ -447,7 +446,6 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,
@@ -644,7 +642,6 @@ func TestResourceSqlTableUpdateTableClusterKeys(t *testing.T) {
 func TestResourceSqlTableUpdateView(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
-
 			return common.CommandResults{
 				ResultType: "",
 				Data:       nil,

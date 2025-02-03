@@ -16,6 +16,7 @@ var complianceSecurityProfileFieldMask = strings.Join([]string{
 	"compliance_security_profile_workspace.is_enabled",
 	"compliance_security_profile_workspace.compliance_standards",
 }, ",")
+
 var complianceSecurityProfileSetting = workspaceSetting[settings.ComplianceSecurityProfileSetting]{
 	settingStruct: settings.ComplianceSecurityProfileSetting{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {

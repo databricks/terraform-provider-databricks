@@ -191,7 +191,8 @@ func getMountingClusterID(ctx context.Context, client *common.DatabricksClient, 
 }
 
 func mountCluster(ctx context.Context, tpl any, d *schema.ResourceData,
-	client *common.DatabricksClient, r common.Resource) (Mount, MountPoint, error) {
+	client *common.DatabricksClient, r common.Resource,
+) (Mount, MountPoint, error) {
 	var mountPoint MountPoint
 	var mountConfig Mount
 

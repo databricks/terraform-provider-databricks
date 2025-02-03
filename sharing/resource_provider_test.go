@@ -62,5 +62,4 @@ func TestCreateProvider_InvalidAuthType(t *testing.T) {
 	}.ExpectError(t, "invalid config supplied. "+
 		"[authentication_type] expected authentication_type "+
 		"to be one of [TOKEN], got temp")
-
 }

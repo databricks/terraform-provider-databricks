@@ -15,7 +15,8 @@ func DataSourceClusters() common.Resource {
 		Ids                 []string                      `json:"ids,omitempty" tf:"computed,slice_set"`
 		ClusterNameContains string                        `json:"cluster_name_contains,omitempty"`
 		FilterBy            *compute.ListClustersFilterBy `json:"filter_by,omitempty"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		clusters, err := w.Clusters.ListAll(ctx, compute.ListClustersRequest{
 			FilterBy: data.FilterBy,
 		})

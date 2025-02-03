@@ -13,7 +13,8 @@ func DataSourceClusterZones() common.Resource {
 		Id          string   `json:"id,omitempty" tf:"computed"`
 		DefaultZone string   `json:"default_zone,omitempty" tf:"computed"`
 		Zones       []string `json:"zones,omitempty" tf:"computed"`
-	}, w *databricks.WorkspaceClient) error {
+	}, w *databricks.WorkspaceClient,
+	) error {
 		zonesInfo, err := w.Clusters.ListZones(ctx)
 		if err != nil {
 			return err

@@ -187,7 +187,6 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 	}.Apply(t)
 	require.Error(t, err)
 	assert.Equal(t, "cannot remove new catalog default schema: Something", fmt.Sprint(err))
-
 }
 
 func TestUpdateCatalog(t *testing.T) {

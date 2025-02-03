@@ -145,5 +145,6 @@ func ResourceClusterPolicy() common.Resource {
 
 func rcpSchemaV0() cty.Type {
 	return (&schema.Resource{
-		Schema: rcpSchema}).CoreConfigSchema().ImpliedType()
+		Schema: rcpSchema,
+	}).CoreConfigSchema().ImpliedType()
 }

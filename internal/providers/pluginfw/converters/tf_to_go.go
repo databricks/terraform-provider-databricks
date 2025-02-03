@@ -16,8 +16,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/tfreflect"
 )
 
-const tfSdkToGoSdkStructConversionFailureMessage = "tfsdk to gosdk struct conversion failure"
-const tfSdkToGoSdkFieldConversionFailureMessage = "tfsdk to gosdk field conversion failure"
+const (
+	tfSdkToGoSdkStructConversionFailureMessage = "tfsdk to gosdk struct conversion failure"
+	tfSdkToGoSdkFieldConversionFailureMessage  = "tfsdk to gosdk field conversion failure"
+)
 
 // TfSdkToGoSdkStruct converts a tfsdk struct into a gosdk struct, with the folowing rules.
 //
@@ -89,8 +91,8 @@ func tfSdkToGoSdkSingleField(
 	destField reflect.Value,
 	destFieldName string,
 	forceSendFieldsField *reflect.Value,
-	innerType reflect.Type) (d diag.Diagnostics) {
-
+	innerType reflect.Type,
+) (d diag.Diagnostics) {
 	if !destField.IsValid() {
 		// Skip field that destination struct does not have.
 		tflog.Trace(ctx, fmt.Sprintf("field skipped in tfsdk to gosdk conversion: destination struct does not have field %s", destFieldName))
@@ -127,7 +129,8 @@ func tfsdkToGoSdkStructField(
 	destField reflect.Value,
 	destFieldName string,
 	forceSendFieldsField *reflect.Value,
-	innerType reflect.Type) (d diag.Diagnostics) {
+	innerType reflect.Type,
+) (d diag.Diagnostics) {
 	switch v := srcFieldValue.(type) {
 	case types.Bool:
 		destField.SetBool(v.ValueBool())

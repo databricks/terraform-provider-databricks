@@ -14,7 +14,8 @@ import (
 // ResourceGroupInstanceProfile defines group role resource
 func ResourceGroupInstanceProfile() common.Resource {
 	r := common.NewPairID("group_id", "instance_profile_id").Schema(func(
-		m map[string]*schema.Schema) map[string]*schema.Schema {
+		m map[string]*schema.Schema,
+	) map[string]*schema.Schema {
 		m["instance_profile_id"].ValidateDiagFunc = ValidArn
 		return m
 	}).BindResource(common.BindResource{

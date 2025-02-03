@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"context"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 
@@ -10,8 +11,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/scim"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	"testing"
 )
 
 func TestMwsAccGroupsExternalIdAndScimProvisioning(t *testing.T) {
@@ -110,6 +109,7 @@ func TestMwsAccGroupsUpdateDisplayName(t *testing.T) {
 		),
 	})
 }
+
 func TestAccGroupsUpdateDisplayName(t *testing.T) {
 	nameInit := qa.RandomName("tfgroup")
 	nameUpdate := qa.RandomName("tfgroup")

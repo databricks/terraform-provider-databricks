@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const DefaultProvisionTimeout = 45 * time.Minute
-const deleteCallTimeout = 10 * time.Second
+const (
+	DefaultProvisionTimeout = 45 * time.Minute
+	deleteCallTimeout       = 10 * time.Second
+)
 
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(

@@ -1,0 +1,44 @@
+name: test-push
+
+on:
+  pull_request:
+  # Enable for automatic tagging
+  #schedule:
+  #  - cron: '0 0 * * TUE'
+
+# Ensure that only a single instance of the workflow is running at a time.
+
+
+jobs:
+  tag:
+    environment: "release-is"
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+    steps:
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DECO_SDK_TAGGING_APP_ID }}
+          private-key: ${{ secrets.DECO_SDK_TAGGING_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: hectorcast-db/test-commit
+          token: ${{ steps.generate-token.outputs.token }}
+
+      # NOTE: actions/create-github-app-token automatically masks the output token,
+      # so the token is not exposed in the logs even as part of the remote.
+      - name: Set up Git configuration
+        run: |
+          git config user.name "Databricks SDK Release Bot"
+          git config user.email "DECO-SDK-Tagging[bot]@users.noreply.github.com"
+
+      - name: Commit something
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }} 
+          GH_TOKE: ${{ steps.generate-token.outputs.token }} 
+        run: |
+          python tagging.py

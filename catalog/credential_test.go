@@ -21,12 +21,11 @@ func awsCredentialWithComment(comment string) string {
 }
 
 func gcpCredentialWithComment(comment string) string {
-	// TODO: update purpose to SERVICE when it's released
 	return fmt.Sprintf(`
 				resource "databricks_credential" "external" {
-					name = "storage-cred-{var.STICKY_RANDOM}"
+					name = "service-cred-{var.STICKY_RANDOM}"
 					databricks_gcp_service_account {}
-					purpose = "STORAGE"
+					purpose = "SERVICE"
 					skip_validation = true
 					comment = "%s"
 				}`, comment)

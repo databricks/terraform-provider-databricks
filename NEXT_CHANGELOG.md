@@ -5,7 +5,7 @@
 ### New Features and Improvements
 
  * Add resources for AI/BI Dashboards embedding settings: `databricks_aibi_dashboard_embedding_access_policy_setting` and `databricks_aibi_dashboard_embedding_approved_domains_setting` ([#4213](https://github.com/databricks/terraform-provider-databricks/pull/4213)).
- * Added support for `CAN_MONITOR_ONLY` permission level in `databricks_permissions`, which can be assigned to `databricks_sql_endpoint`.
+ * Add support for `CAN_MONITOR_ONLY` permission level in `databricks_permissions`, which can be assigned to `databricks_sql_endpoint` ([#4464](https://github.com/databricks/terraform-provider-databricks/pull/4464)).
 
 ### Bug Fixes
 

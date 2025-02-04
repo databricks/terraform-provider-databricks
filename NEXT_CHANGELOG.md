@@ -5,7 +5,7 @@
 ### New Features and Improvements
 
  * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4531](https://github.com/databricks/terraform-provider-databricks/pull/4531)).
- * Added support for `CAN_MONITOR_ONLY` permission level in `databricks_permissions`, which can be assigned to `databricks_sql_endpoint`.
+ * Add support for `CAN_MONITOR_ONLY` permission level in `databricks_permissions`, which can be assigned to `databricks_sql_endpoint` ([#4464](https://github.com/databricks/terraform-provider-databricks/pull/4464)).
 
 ### Bug Fixes
 

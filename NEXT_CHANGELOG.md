@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
  * Add resources for AI/BI Dashboards embedding settings: `databricks_aibi_dashboard_embedding_access_policy_setting` and `databricks_aibi_dashboard_embedding_approved_domains_setting` ([#4213](https://github.com/databricks/terraform-provider-databricks/pull/4213)).
+ * Update Databricks Go SDK to v0.57.0.
 
 ### Bug Fixes
 

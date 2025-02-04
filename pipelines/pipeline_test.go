@@ -54,7 +54,7 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-{var.RANDOM}"
+			name = "pipeline-acceptance-{var.STICKY_RANDOM}"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name
@@ -93,6 +93,94 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 		}
 		` + dltNotebookResource,
 	})
+}
+
+func pipelineRunAsTemplate(runAs string) string {
+	return `
+	data "databricks_current_user" "me" {}
+
+	locals {
+		name = "pipeline-acceptance-{var.STICKY_RANDOM}"
+	}
+	resource "databricks_pipeline" "this" {
+		name = local.name
+		storage = "/test/${local.name}"
+
+		configuration = {
+			key1 = "value1"
+			key2 = "value2"
+		}
+
+		library {
+			notebook {
+				path = databricks_notebook.this.path
+			}
+		}
+
+		cluster {
+			label = "default"
+			num_workers = 2
+			custom_tags = {
+				cluster_type = "default"
+			}
+		}
+
+		cluster {
+			label = "maintenance"
+			num_workers = 1
+			custom_tags = {
+				cluster_type = "maintenance"
+			}
+		}
+
+		continuous = false
+
+		run_as {
+			` + runAs + `
+		}
+	}
+	` + dltNotebookResource
+}
+
+func TestAccPipelineRunAsUser(t *testing.T) {
+	if !acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("Only GCP service principals are treated as users")
+	}
+
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: pipelineRunAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
+	})
+}
+
+func TestUcAccPipelineRunAsServicePrincipal(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	spId := acceptance.GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
+	})
+}
+
+func TestUcAccPipelineRunAsMutations(t *testing.T) {
+	acceptance.LoadUcwsEnv(t)
+	spId := acceptance.GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
+	// Note: the attribute must match the type of principal that the test is run as.
+	ctx := context.Background()
+	attribute := acceptance.GetRunAsAttribute(t, ctx)
+	acceptance.UnityWorkspaceLevel(
+		t,
+		// Provision job with service principal `run_as`
+		acceptance.Step{
+			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
+		},
+		// Update job to a user `run_as`
+		acceptance.Step{
+			Template: pipelineRunAsTemplate(attribute + ` = data.databricks_current_user.me.user_name`),
+		},
+		// Update job back to a service principal `run_as`
+		acceptance.Step{
+			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
+		},
+	)
 }
 
 func TestAccAwsPipelineResource_CreatePipeline(t *testing.T) {
@@ -183,7 +271,7 @@ func TestAccPipelineResource_CreatePipelineWithoutWorkers(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		locals {
-			name = "pipeline-acceptance-{var.RANDOM}"
+			name = "pipeline-acceptance-{var.STICKY_RANDOM}"
 		}
 		resource "databricks_pipeline" "this" {
 			name = local.name

@@ -1134,6 +1134,98 @@ func (o ChannelInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ClientConfig struct {
+	AllowCustomJsVisualizations types.Bool `tfsdk:"allow_custom_js_visualizations"`
+
+	AllowDownloads types.Bool `tfsdk:"allow_downloads"`
+
+	AllowExternalShares types.Bool `tfsdk:"allow_external_shares"`
+
+	AllowSubscriptions types.Bool `tfsdk:"allow_subscriptions"`
+
+	DateFormat types.String `tfsdk:"date_format"`
+
+	DateTimeFormat types.String `tfsdk:"date_time_format"`
+
+	DisablePublish types.Bool `tfsdk:"disable_publish"`
+
+	EnableLegacyAutodetectTypes types.Bool `tfsdk:"enable_legacy_autodetect_types"`
+
+	FeatureShowPermissionsControl types.Bool `tfsdk:"feature_show_permissions_control"`
+
+	HidePlotlyModeBar types.Bool `tfsdk:"hide_plotly_mode_bar"`
+}
+
+func (newState *ClientConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClientConfig) {
+}
+
+func (newState *ClientConfig) SyncEffectiveFieldsDuringRead(existingState ClientConfig) {
+}
+
+func (c ClientConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_custom_js_visualizations"] = attrs["allow_custom_js_visualizations"].SetOptional()
+	attrs["allow_downloads"] = attrs["allow_downloads"].SetOptional()
+	attrs["allow_external_shares"] = attrs["allow_external_shares"].SetOptional()
+	attrs["allow_subscriptions"] = attrs["allow_subscriptions"].SetOptional()
+	attrs["date_format"] = attrs["date_format"].SetOptional()
+	attrs["date_time_format"] = attrs["date_time_format"].SetOptional()
+	attrs["disable_publish"] = attrs["disable_publish"].SetOptional()
+	attrs["enable_legacy_autodetect_types"] = attrs["enable_legacy_autodetect_types"].SetOptional()
+	attrs["feature_show_permissions_control"] = attrs["feature_show_permissions_control"].SetOptional()
+	attrs["hide_plotly_mode_bar"] = attrs["hide_plotly_mode_bar"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ClientConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ClientConfig) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ClientConfig
+// only implements ToObjectValue() and Type().
+func (o ClientConfig) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_custom_js_visualizations":   o.AllowCustomJsVisualizations,
+			"allow_downloads":                  o.AllowDownloads,
+			"allow_external_shares":            o.AllowExternalShares,
+			"allow_subscriptions":              o.AllowSubscriptions,
+			"date_format":                      o.DateFormat,
+			"date_time_format":                 o.DateTimeFormat,
+			"disable_publish":                  o.DisablePublish,
+			"enable_legacy_autodetect_types":   o.EnableLegacyAutodetectTypes,
+			"feature_show_permissions_control": o.FeatureShowPermissionsControl,
+			"hide_plotly_mode_bar":             o.HidePlotlyModeBar,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ClientConfig) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_custom_js_visualizations":   types.BoolType,
+			"allow_downloads":                  types.BoolType,
+			"allow_external_shares":            types.BoolType,
+			"allow_subscriptions":              types.BoolType,
+			"date_format":                      types.StringType,
+			"date_time_format":                 types.StringType,
+			"disable_publish":                  types.BoolType,
+			"enable_legacy_autodetect_types":   types.BoolType,
+			"feature_show_permissions_control": types.BoolType,
+			"hide_plotly_mode_bar":             types.BoolType,
+		},
+	}
+}
+
 type ColumnInfo struct {
 	// The name of the column.
 	Name types.String `tfsdk:"name"`
@@ -11715,10 +11807,17 @@ type UpdateAlertRequest struct {
 	Alert types.Object `tfsdk:"alert"`
 
 	Id types.String `tfsdk:"-"`
-	// Field mask is required to be passed into the PATCH request. Field mask
-	// specifies which fields of the setting payload will be updated. The field
-	// mask needs to be supplied as single string. To specify multiple fields in
-	// the field mask, use comma as the separator (no space).
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
@@ -11928,10 +12027,17 @@ type UpdateQueryRequest struct {
 	Id types.String `tfsdk:"-"`
 
 	Query types.Object `tfsdk:"query"`
-	// Field mask is required to be passed into the PATCH request. Field mask
-	// specifies which fields of the setting payload will be updated. The field
-	// mask needs to be supplied as single string. To specify multiple fields in
-	// the field mask, use comma as the separator (no space).
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
@@ -12205,10 +12311,17 @@ func (o UpdateResponse) Type(ctx context.Context) attr.Type {
 
 type UpdateVisualizationRequest struct {
 	Id types.String `tfsdk:"-"`
-	// Field mask is required to be passed into the PATCH request. Field mask
-	// specifies which fields of the setting payload will be updated. The field
-	// mask needs to be supplied as single string. To specify multiple fields in
-	// the field mask, use comma as the separator (no space).
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
 
 	Visualization types.Object `tfsdk:"visualization"`

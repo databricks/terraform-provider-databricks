@@ -1640,8 +1640,6 @@ type CatalogInfo struct {
 	ProviderName types.String `tfsdk:"provider_name"`
 	// Status of an asynchronously provisioned resource.
 	ProvisioningInfo types.Object `tfsdk:"provisioning_info"`
-	// Kind of catalog securable.
-	SecurableKind types.String `tfsdk:"securable_kind"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 	// The name of the share under the share provider.
@@ -1680,7 +1678,6 @@ func (c CatalogInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["provider_name"] = attrs["provider_name"].SetOptional()
 	attrs["provisioning_info"] = attrs["provisioning_info"].SetOptional()
-	attrs["securable_kind"] = attrs["securable_kind"].SetOptional()
 	attrs["securable_type"] = attrs["securable_type"].SetOptional()
 	attrs["share_name"] = attrs["share_name"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetOptional()
@@ -1731,7 +1728,6 @@ func (o CatalogInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"properties":                             o.Properties,
 			"provider_name":                          o.ProviderName,
 			"provisioning_info":                      o.ProvisioningInfo,
-			"securable_kind":                         o.SecurableKind,
 			"securable_type":                         o.SecurableType,
 			"share_name":                             o.ShareName,
 			"storage_location":                       o.StorageLocation,
@@ -1766,7 +1762,6 @@ func (o CatalogInfo) Type(ctx context.Context) attr.Type {
 			},
 			"provider_name":     types.StringType,
 			"provisioning_info": ProvisioningInfo{}.Type(ctx),
-			"securable_kind":    types.StringType,
 			"securable_type":    types.StringType,
 			"share_name":        types.StringType,
 			"storage_location":  types.StringType,
@@ -2192,8 +2187,6 @@ type ConnectionInfo struct {
 	ProvisioningInfo types.Object `tfsdk:"provisioning_info"`
 	// If the connection is read only.
 	ReadOnly types.Bool `tfsdk:"read_only"`
-	// Kind of connection securable.
-	SecurableKind types.String `tfsdk:"securable_kind"`
 
 	SecurableType types.String `tfsdk:"securable_type"`
 	// Time at which this connection was updated, in epoch milliseconds.
@@ -2225,7 +2218,6 @@ func (c ConnectionInfo) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["properties"] = attrs["properties"].SetOptional()
 	attrs["provisioning_info"] = attrs["provisioning_info"].SetOptional()
 	attrs["read_only"] = attrs["read_only"].SetOptional()
-	attrs["securable_kind"] = attrs["securable_kind"].SetOptional()
 	attrs["securable_type"] = attrs["securable_type"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["updated_by"] = attrs["updated_by"].SetOptional()
@@ -2270,7 +2262,6 @@ func (o ConnectionInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"properties":        o.Properties,
 			"provisioning_info": o.ProvisioningInfo,
 			"read_only":         o.ReadOnly,
-			"securable_kind":    o.SecurableKind,
 			"securable_type":    o.SecurableType,
 			"updated_at":        o.UpdatedAt,
 			"updated_by":        o.UpdatedBy,
@@ -2300,7 +2291,6 @@ func (o ConnectionInfo) Type(ctx context.Context) attr.Type {
 			},
 			"provisioning_info": ProvisioningInfo{}.Type(ctx),
 			"read_only":         types.BoolType,
-			"securable_kind":    types.StringType,
 			"securable_type":    types.StringType,
 			"updated_at":        types.Int64Type,
 			"updated_by":        types.StringType,
@@ -16702,6 +16692,9 @@ type TemporaryCredentials struct {
 	// Server time when the credential will expire, in epoch milliseconds. The
 	// API client is advised to cache the credential given this expiration time.
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+	// GCP temporary credentials for API authentication. Read more at
+	// https://developers.google.com/identity/protocols/oauth2/service-account
+	GcpOauthToken types.Object `tfsdk:"gcp_oauth_token"`
 }
 
 func (newState *TemporaryCredentials) SyncEffectiveFieldsDuringCreateOrUpdate(plan TemporaryCredentials) {
@@ -16714,6 +16707,7 @@ func (c TemporaryCredentials) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["aws_temp_credentials"] = attrs["aws_temp_credentials"].SetOptional()
 	attrs["azure_aad"] = attrs["azure_aad"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["gcp_oauth_token"] = attrs["gcp_oauth_token"].SetOptional()
 
 	return attrs
 }
@@ -16729,6 +16723,7 @@ func (a TemporaryCredentials) GetComplexFieldTypes(ctx context.Context) map[stri
 	return map[string]reflect.Type{
 		"aws_temp_credentials": reflect.TypeOf(AwsCredentials{}),
 		"azure_aad":            reflect.TypeOf(AzureActiveDirectoryToken{}),
+		"gcp_oauth_token":      reflect.TypeOf(GcpOauthToken{}),
 	}
 }
 
@@ -16742,6 +16737,7 @@ func (o TemporaryCredentials) ToObjectValue(ctx context.Context) basetypes.Objec
 			"aws_temp_credentials": o.AwsTempCredentials,
 			"azure_aad":            o.AzureAad,
 			"expiration_time":      o.ExpirationTime,
+			"gcp_oauth_token":      o.GcpOauthToken,
 		})
 }
 
@@ -16752,6 +16748,7 @@ func (o TemporaryCredentials) Type(ctx context.Context) attr.Type {
 			"aws_temp_credentials": AwsCredentials{}.Type(ctx),
 			"azure_aad":            AzureActiveDirectoryToken{}.Type(ctx),
 			"expiration_time":      types.Int64Type,
+			"gcp_oauth_token":      GcpOauthToken{}.Type(ctx),
 		},
 	}
 }
@@ -16810,6 +16807,34 @@ func (o *TemporaryCredentials) GetAzureAad(ctx context.Context) (AzureActiveDire
 func (o *TemporaryCredentials) SetAzureAad(ctx context.Context, v AzureActiveDirectoryToken) {
 	vs := v.ToObjectValue(ctx)
 	o.AzureAad = vs
+}
+
+// GetGcpOauthToken returns the value of the GcpOauthToken field in TemporaryCredentials as
+// a GcpOauthToken value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TemporaryCredentials) GetGcpOauthToken(ctx context.Context) (GcpOauthToken, bool) {
+	var e GcpOauthToken
+	if o.GcpOauthToken.IsNull() || o.GcpOauthToken.IsUnknown() {
+		return e, false
+	}
+	var v []GcpOauthToken
+	d := o.GcpOauthToken.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcpOauthToken sets the value of the GcpOauthToken field in TemporaryCredentials.
+func (o *TemporaryCredentials) SetGcpOauthToken(ctx context.Context, v GcpOauthToken) {
+	vs := v.ToObjectValue(ctx)
+	o.GcpOauthToken = vs
 }
 
 // Detailed status of an online table. Shown if the online table is in the
@@ -17019,6 +17044,8 @@ type UpdateCatalog struct {
 	Name types.String `tfsdk:"-"`
 	// New name for the catalog.
 	NewName types.String `tfsdk:"new_name"`
+	// A map of key-value properties attached to the securable.
+	Options types.Map `tfsdk:"options"`
 	// Username of current owner of catalog.
 	Owner types.String `tfsdk:"owner"`
 	// A map of key-value properties attached to the securable.
@@ -17037,6 +17064,7 @@ func (c UpdateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["isolation_mode"] = attrs["isolation_mode"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["new_name"] = attrs["new_name"].SetOptional()
+	attrs["options"] = attrs["options"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["properties"] = attrs["properties"].SetOptional()
 
@@ -17052,6 +17080,7 @@ func (c UpdateCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 // SDK values.
 func (a UpdateCatalog) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"options":    reflect.TypeOf(types.String{}),
 		"properties": reflect.TypeOf(types.String{}),
 	}
 }
@@ -17068,6 +17097,7 @@ func (o UpdateCatalog) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"isolation_mode":                 o.IsolationMode,
 			"name":                           o.Name,
 			"new_name":                       o.NewName,
+			"options":                        o.Options,
 			"owner":                          o.Owner,
 			"properties":                     o.Properties,
 		})
@@ -17082,12 +17112,41 @@ func (o UpdateCatalog) Type(ctx context.Context) attr.Type {
 			"isolation_mode":                 types.StringType,
 			"name":                           types.StringType,
 			"new_name":                       types.StringType,
-			"owner":                          types.StringType,
+			"options": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"owner": types.StringType,
 			"properties": basetypes.MapType{
 				ElemType: types.StringType,
 			},
 		},
 	}
+}
+
+// GetOptions returns the value of the Options field in UpdateCatalog as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCatalog) GetOptions(ctx context.Context) (map[string]types.String, bool) {
+	if o.Options.IsNull() || o.Options.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Options.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetOptions sets the value of the Options field in UpdateCatalog.
+func (o *UpdateCatalog) SetOptions(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["options"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Options = types.MapValueMust(t, vs)
 }
 
 // GetProperties returns the value of the Properties field in UpdateCatalog as

@@ -2231,10 +2231,10 @@ func (newState *RetrieveTokenResponse) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c RetrieveTokenResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["bearerToken"] = attrs["bearerToken"].SetOptional()
-	attrs["endpoint"] = attrs["endpoint"].SetOptional()
-	attrs["expirationTime"] = attrs["expirationTime"].SetOptional()
-	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetOptional()
+	attrs["bearerToken"] = attrs["bearerToken"].SetComputed()
+	attrs["endpoint"] = attrs["endpoint"].SetComputed()
+	attrs["expirationTime"] = attrs["expirationTime"].SetComputed()
+	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetComputed()
 
 	return attrs
 }

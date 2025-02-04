@@ -8,6 +8,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1630,6 +1631,111 @@ func TestResourceClusterCreate_SingleNode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, d.Get("num_workers"))
 }
+
+func TestResourceClusterCreate_SingleNodeAutoPropertiesCustomizeDiff(t *testing.T) {
+	testCases := []struct {
+		name          string
+		hcl           string
+		instanceState map[string]string
+		expectedDiff  map[string]*terraform.ResourceAttrDiff
+	}{
+		{
+			"resource with no custom_tags or spark_conf",
+			"",
+			map[string]string{
+				"custom_tags.ResourceClass":                   "SingleNode",
+				"spark_conf.spark.master":                     "local[*]",
+				"spark_conf.spark.databricks.cluster.profile": "singleNode",
+			},
+			nil,
+		},
+		{
+			"resource with custom_tags and spark_conf",
+			`custom_tags = {
+				"ClusterName" = "SingleNode"
+			}
+			spark_conf = {
+				"spark.databricks.delta.preview.enabled" = "true"
+			}`,
+			map[string]string{
+				"custom_tags.ClusterName":                           "SingleNode",
+				"custom_tags.ResourceClass":                         "SingleNode",
+				"spark_conf.spark.master":                           "local[*]",
+				"spark_conf.spark.databricks.cluster.profile":       "singleNode",
+				"spark_conf.spark.databricks.delta.preview.enabled": "true",
+			},
+			nil,
+		},
+		{
+			"resource with custom_tags and spark_conf changes",
+			`custom_tags = {
+				"ClusterName" = "MonoNode"
+			}
+			spark_conf = {
+				"spark.databricks.delta.preview.enabled" = "false"
+			}`,
+			map[string]string{
+				"custom_tags.ClusterName":                           "SingleNode",
+				"custom_tags.ResourceClass":                         "SingleNode",
+				"spark_conf.spark.master":                           "local[*]",
+				"spark_conf.spark.databricks.cluster.profile":       "singleNode",
+				"spark_conf.spark.databricks.delta.preview.enabled": "true",
+			},
+			map[string]*terraform.ResourceAttrDiff{
+				"custom_tags.ClusterName":                           {New: "MonoNode", Old: "SingleNode"},
+				"spark_conf.spark.databricks.delta.preview.enabled": {New: "false", Old: "true"},
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			expectedDiff := testCase.expectedDiff
+
+			if expectedDiff == nil {
+				expectedDiff = make(map[string]*terraform.ResourceAttrDiff)
+			}
+
+			expectedDiff["default_tags.%"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["driver_instance_pool_id"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["driver_node_type_id"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["enable_elastic_disk"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["enable_local_disk_encryption"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["state"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+			expectedDiff["url"] = &terraform.ResourceAttrDiff{Old: "", New: "", NewComputed: true, NewRemoved: false, RequiresNew: false, Sensitive: false}
+
+			instanceState := testCase.instanceState
+			instanceState["cluster_id"] = "abc"
+			instanceState["autotermination_minutes"] = "60"
+			instanceState["cluster_name"] = "Single Node Cluster"
+			instanceState["data_security_mode"] = "SINGLE_USER"
+			instanceState["spark_version"] = "15.4.x-scala2.12"
+			instanceState["single_user_name"] = "testuser"
+			instanceState["runtime_engine"] = "STANDARD"
+			instanceState["num_workers"] = "0"
+			instanceState["node_type_id"] = "Standard_F4s"
+			instanceState["kind"] = "CLASSIC_PREVIEW"
+			instanceState["is_single_node"] = "true"
+
+			qa.ResourceFixture{
+				HCL: `
+					spark_version           = "15.4.x-scala2.12"
+					runtime_engine          = "STANDARD"
+					node_type_id            = "Standard_F4s"
+					kind                    = "CLASSIC_PREVIEW"
+					cluster_name            = "Single Node Cluster"
+					data_security_mode      = "SINGLE_USER"
+					autotermination_minutes = 60
+					is_single_node          = true
+					single_user_name        = "testuser"
+				` + testCase.hcl,
+				InstanceState: instanceState,
+				ExpectedDiff:  expectedDiff,
+				Resource:      ResourceCluster(),
+			}.ApplyNoError(t)
+		})
+	}
+}
+
 func TestResourceClusterCreate_NegativeNumWorkers(t *testing.T) {
 	_, err := qa.ResourceFixture{
 		Create:   true,

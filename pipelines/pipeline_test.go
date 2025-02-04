@@ -143,24 +143,30 @@ func pipelineRunAsTemplate(runAs string) string {
 }
 
 func TestAccPipelineRunAsUser(t *testing.T) {
+	if !IsGcp(t) {
+		Skipf(t)("Only GCP service principals are treated as users")
+	}
+
 	WorkspaceLevel(t, Step{
 		Template: pipelineRunAsTemplate(`user_name = data.databricks_current_user.me.user_name`),
 	})
 }
 
-func TestAccPipelineRunAsServicePrincipal(t *testing.T) {
+func TestUcAccPipelineRunAsServicePrincipal(t *testing.T) {
+	LoadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
-	WorkspaceLevel(t, Step{
+	UnityWorkspaceLevel(t, Step{
 		Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
 	})
 }
 
-func TestAccPipelineRunAsMutations(t *testing.T) {
+func TestUcAccPipelineRunAsMutations(t *testing.T) {
+	LoadUcwsEnv(t)
 	spId := GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	// Note: the attribute must match the type of principal that the test is run as.
 	ctx := context.Background()
 	attribute := getRunAsAttribute(t, ctx)
-	WorkspaceLevel(
+	UnityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`
 		Step{

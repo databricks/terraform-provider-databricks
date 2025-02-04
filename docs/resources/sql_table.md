@@ -196,3 +196,74 @@ This resource can be imported by its full name:
 ```bash
 terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
 ```
+
+## Migration from `databricks_table`
+
+The `databricks_table` resource has been deprecated in favor of `databricks_sql_table`. To migrate from `databricks_table` to `databricks_sql_table`:
+1. Define a `databricks_sql_table` resource with arguments corresponding to `databricks_table`.
+2. Add a `removed` block to remove the `databricks_table` resource without deleting the existing table by using the `lifecycle` block. If you're using Terraform version below v1.7.0, you will need to use the `terraform state rm` command instead.
+3. Add an `import` block to add the `databricks_sql_table` resource, corresponding to the existing table. If you're using Terraform version below v1.5.0, you will need to use `terraform import` command instead.
+
+For example, suppose we have the following `databricks_table` resource:
+```hcl
+resource "databricks_table" "this" {
+  catalog_name = "catalog"
+  schema_name = "schema"
+  name = "table"
+  table_type = "MANAGED"
+  data_source_format = "DELTA"
+  column {
+    name = "col1"
+    type_name = "STRING"
+    type_json = "{\"type\":\"STRING\"}"
+    comment = "comment"
+    nullable = true
+  }
+  comment = "comment"
+  properties = {
+    key = "value"
+  }
+}
+```
+
+The migration would look like this:
+```hcl
+# Leave this resource definition as-is.
+resource "databricks_table" "this" { ... }
+
+# Remove the old resource without destroying the existing table.
+removed {
+  from = databricks_table.this.id
+  lifecycle {
+    destroy = false
+  }
+}
+
+# Import the existing table as a databricks_sql_table.
+import {
+  to = databricks_sql_table.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+
+# Define the new databricks_sql_table resource.
+resource "databricks_sql_table" "this" {
+  catalog_name = "catalog"
+  schema_name = "schema"
+  name = "table"
+  table_type = "MANAGED"
+  data_source_format = "DELTA"
+  column {
+    name = "col1"
+    type = "STRING"   # <-- changed from type_name
+    type_json = "{\"type\":\"STRING\"}"
+    comment = "comment"
+    nullable = true
+  }
+  comment = "comment"
+  properties = {
+    key = "value"
+  }
+}
+```
+
+Finally, run `terraform plan` to verify the changes, followed by `terraform apply` to apply the changes.

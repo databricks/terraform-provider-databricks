@@ -256,12 +256,12 @@ func (c *DatabricksClient) IsAzure() bool {
 	return c.Config.IsAzure()
 }
 
-// IsAws returns true if client is configured for AWS
+// acceptance.IsAws returns true if client is configured for AWS
 func (c *DatabricksClient) IsAws() bool {
 	return !c.IsGcp() && !c.IsAzure()
 }
 
-// IsGcp returns true if client is configured for GCP
+// acceptance.IsGcp returns true if client is configured for GCP
 func (c *DatabricksClient) IsGcp() bool {
 	return c.Config.GoogleServiceAccount != "" || c.Config.IsGcp()
 }

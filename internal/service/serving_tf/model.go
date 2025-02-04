@@ -3006,59 +3006,6 @@ func (o ExternalFunctionRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type ExternalFunctionResponse struct {
-	// The HTTP status code of the response
-	StatusCode types.Int64 `tfsdk:"status_code"`
-	// The content of the response
-	Text types.String `tfsdk:"text"`
-}
-
-func (newState *ExternalFunctionResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalFunctionResponse) {
-}
-
-func (newState *ExternalFunctionResponse) SyncEffectiveFieldsDuringRead(existingState ExternalFunctionResponse) {
-}
-
-func (c ExternalFunctionResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["status_code"] = attrs["status_code"].SetOptional()
-	attrs["text"] = attrs["text"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalFunctionResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ExternalFunctionResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalFunctionResponse
-// only implements ToObjectValue() and Type().
-func (o ExternalFunctionResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"status_code": o.StatusCode,
-			"text":        o.Text,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ExternalFunctionResponse) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"status_code": types.Int64Type,
-			"text":        types.StringType,
-		},
-	}
-}
-
 type ExternalModel struct {
 	// AI21Labs Config. Only required if the provider is 'ai21labs'.
 	Ai21labsConfig types.Object `tfsdk:"ai21labs_config"`
@@ -3860,6 +3807,41 @@ func (o GoogleCloudVertexAiConfig) Type(ctx context.Context) attr.Type {
 			"private_key_plaintext": types.StringType,
 			"project_id":            types.StringType,
 			"region":                types.StringType,
+		},
+	}
+}
+
+type HttpRequestResponse struct {
+	Contents types.Object `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a HttpRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, HttpRequestResponse
+// only implements ToObjectValue() and Type().
+func (o HttpRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"contents": o.Contents,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o HttpRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"contents": types.ObjectType{},
 		},
 	}
 }

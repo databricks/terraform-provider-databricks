@@ -127,7 +127,7 @@ def clean_next_changelog(package_path: str) -> None:
         content = file.read()
 
     # Remove content between ### sections
-    cleaned_content = re.sub(r'(### [^\n]+\n).*?(?=(###|$))', r'\1\n', content)
+    cleaned_content = re.sub(r'(### [^\n]+\n)(?:.*?\n?)*?(?=###|$)', r'\1', content)
     # Ensure there is exactly one empty line before each section
     cleaned_content = re.sub(r'(\n*)(###[^\n]+)', r'\n\n\2', cleaned_content)
     # Find the version number
@@ -151,7 +151,7 @@ def clean_next_changelog(package_path: str) -> None:
 
 def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
     """
-    Extracts the previous tag info from the "CHANGELOG.md" file. 
+    Extracts the previous tag info from the "CHANGELOG.md" file.
     Used for failure recovery purposes.
     """
     changelog_path = os.path.join(os.getcwd(), package.path, CHANGELOG_FILE_NAME)
@@ -160,7 +160,8 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
         changelog = f.read()
 
     # Extract the latest release section using regex
-    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)", changelog, re.S)
+    match = re.search(r"## (\[Release\] )?Release v[\d\.]+.*?(?=\n## (\[Release\] )?Release v|\Z)",
+                      changelog, re.S)
 
     # E.g., for new packages.
     if not match:
@@ -177,7 +178,7 @@ def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
 
 def get_next_tag_info(package: Package) -> Optional[TagInfo]:
     """
-    Extracts the changes from the "NEXT_CHANGELOG.md" file. 
+    Extracts the changes from the "NEXT_CHANGELOG.md" file.
     The result is already processed.
     """
     next_changelog_path = os.path.join(os.getcwd(), package.path, NEXT_CHANGELOG_FILE_NAME)
@@ -299,18 +300,42 @@ def find_pending_tags() -> List[TagInfo]:
     return [tag for tag in tag_infos if not is_tag_applied(tag)]
 
 
-def push_changes() -> None:
+def generate_commit_message(tag_infos: List[TagInfo]) -> str:
+    """
+    Generates a commit message for the release.
+    """
+    if not tag_infos:
+        raise Exception("No tag infos provided to generate commit message")
+
+    info = tag_infos[0]
+    # Legacy mode for SDKs without per service packaging
+    if not info.package.name:
+        if len(tag_infos) > 1:
+            raise Exception("Multiple packages found in legacy mode")
+        return f"[Release] Release v{info.version}\n\n{info.content}"
+
+    # Sort tag_infos by package name for consistency
+    tag_infos.sort(key=lambda info: info.package.name)
+    return 'Release\n\n' + '\n\n'.join(f"## {info.package.name}/v{info.version}\n\n{info.content}"
+                                       for info in tag_infos)
+
+
+def push_changes(tag_infos: List[TagInfo]) -> None:
     """Pushes changes to the remote repository after handling possible merge conflicts."""
+
+    commit_message = generate_commit_message(tag_infos)
 
     # Create the release metadata file
     file_name = os.path.join(os.getcwd(), ".release_metadata.json")
-    metadata = {"timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%Z")}
+    metadata = {"timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")}
     with open(file_name, "w") as f:
         json.dump(metadata, f, indent=4)
 
     # Commit the changes
     subprocess.check_output(['git', 'add', '--all'])  # Stage all changes
-    subprocess.check_output(['git', 'commit', '-m', 'Release'])  # Commit with message "Release"
+    commit_command = ['git', 'commit', '-m', commit_message]
+    subprocess.check_output(commit_command)
+    print(f'Running command: {" ".join(commit_command)}')
 
     # Push the changes
     subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote
@@ -341,7 +366,7 @@ def retry_function(func: Callable[[], List[TagInfo]],
                    delay: int = 5) -> List[TagInfo]:
     """
     Calls a function call up to `max_attempts` times if an exception occurs.
-    
+
     :param func: The function to call.
     :param cleanup: Cleanup function in between retries
     :param max_attempts: The maximum number of retries.
@@ -372,7 +397,7 @@ def update_changelogs(packages: List[Package]) -> List[TagInfo]:
     ]
     # If any package was changed, push the changes.
     if tag_infos:
-        push_changes()
+        push_changes(tag_infos)
     return tag_infos
 
 
@@ -382,7 +407,10 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     """
     for tag_info in tag_infos:
         # Create the tag locally
-        command_tag = ['git', 'tag', tag_info.tag_name(), '-m', tag_info.content]
+        command_tag = [
+            'git', 'tag', '-a',
+            tag_info.tag_name(), '--cleanup=verbatim', '-m', tag_info.content
+        ]
         print(f'Running command: {" ".join(command_tag)}')
         subprocess.run(command_tag, check=True)
 

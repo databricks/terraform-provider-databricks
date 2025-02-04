@@ -6392,6 +6392,69 @@ func (o Created_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CustomPolicyTag_SdkV2 struct {
+	// The key of the tag. - Must be unique among all custom tags of the same
+	// policy - Cannot be “budget-policy-name”, “budget-policy-id” or
+	// "budget-policy-resolution-result" - these tags are preserved.
+	//
+	// - Follows the regex pattern defined in
+	// cluster-common/conf/src/ClusterTagConstraints.scala
+	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L17)
+	Key types.String `tfsdk:"key"`
+	// The value of the tag.
+	//
+	// - Follows the regex pattern defined in
+	// cluster-common/conf/src/ClusterTagConstraints.scala
+	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L24)
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *CustomPolicyTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomPolicyTag_SdkV2) {
+}
+
+func (newState *CustomPolicyTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomPolicyTag_SdkV2) {
+}
+
+func (c CustomPolicyTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomPolicyTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CustomPolicyTag_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomPolicyTag_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CustomPolicyTag_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CustomPolicyTag_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
 type DataPlaneEventDetails_SdkV2 struct {
 	// <needs content added>
 	EventType types.String `tfsdk:"event_type"`

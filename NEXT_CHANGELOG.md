@@ -14,6 +14,7 @@
    This change allows integrations, such as DABs, to manage & update the configuration of a model serving endpoint independently of the lifecycle of the endpoint itself.
  * Correctly handle PAT and OBO tokens without expiration ([#4444](https://github.com/databricks/terraform-provider-databricks/pull/4444)).
  * Mark `task.spark_jar_task.run_as_repl` as `computed` to fix configuration drift ([#4452](https://github.com/databricks/terraform-provider-databricks/pull/4452)).
+ * Recreate `databricks_external_location` when its name changes ([#4467](https://github.com/databricks/terraform-provider-databricks/pull/4467)).
 
 ### Documentation
 

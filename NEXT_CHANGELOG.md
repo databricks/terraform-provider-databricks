@@ -16,6 +16,7 @@
 
  * Fix attribute name in `databricks_instance_profile` examples ([#4426](https://github.com/databricks/terraform-provider-databricks/pull/4426)).
  * Remove mention that databricks_credential is storage-only on GCP ([#4460](https://github.com/databricks/terraform-provider-databricks/pull/4460)).
+ * Officially document `databricks_table` as deprecated. Users of this resource should migrate to `databricks_sql_table`. See https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/sql_table for more information.
  * Improve examples and fix headers layout for `databricks_job` ([#4455](https://github.com/databricks/terraform-provider-databricks/pull/4455)).
 
 ### Exporter

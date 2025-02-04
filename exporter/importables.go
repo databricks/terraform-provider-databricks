@@ -2276,6 +2276,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			return res
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+			if pathString == "config" {
+				return d.Get("config.#").(int) == 0
+			}
 			if pathString == "config.0.traffic_config" || pathString == "config.0.auto_capture_config.0.enabled" ||
 				(pathString == "config.0.auto_capture_config.0.table_name_prefix" && d.Get(pathString).(string) != "") {
 				return false

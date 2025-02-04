@@ -201,8 +201,8 @@ terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
 
 The `databricks_table` resource has been deprecated in favor of `databricks_sql_table`. To migrate from `databricks_table` to `databricks_sql_table`:
 1. Define a `databricks_sql_table` resource with arguments corresponding to `databricks_table`.
-2. Add a `removed` block to remove the `databricks_table` resource without deleting the existing table by using the `lifecycle` block.
-3. Add an `import` block to add the `databricks_sql_table` resource, corresponding to the existing table.
+2. Add a `removed` block to remove the `databricks_table` resource without deleting the existing table by using the `lifecycle` block. If you're using Terraform version below v1.7.0, you will need to use the `terraform state rm` command instead.
+3. Add an `import` block to add the `databricks_sql_table` resource, corresponding to the existing table. If you're using Terraform version below v1.5.0, you will need to use `terraform import` command instead.
 
 For example, suppose we have the following `databricks_table` resource:
 ```hcl
@@ -211,7 +211,7 @@ resource "databricks_table" "this" {
   schema_name = "schema"
   name = "table"
   table_type = "MANAGED"
-  data_source_format = "FORMAT"
+  data_source_format = "DELTA"
   column {
     name = "col1"
     type_name = "STRING"
@@ -219,8 +219,6 @@ resource "databricks_table" "this" {
     comment = "comment"
     nullable = true
   }
-  storage_location = "path/to/location"
-  storage_credential_name = "credential"
   comment = "comment"
   properties = {
     key = "value"
@@ -253,7 +251,7 @@ resource "databricks_sql_table" "this" {
   schema_name = "schema"
   name = "table"
   table_type = "MANAGED"
-  data_source_format = "FORMAT"
+  data_source_format = "DELTA"
   column {
     name = "col1"
     type = "STRING"   # <-- changed from type_name
@@ -261,8 +259,6 @@ resource "databricks_sql_table" "this" {
     comment = "comment"
     nullable = true
   }
-  storage_location = "path/to/location"
-  storage_credential_name = "credential"
   comment = "comment"
   properties = {
     key = "value"
@@ -271,5 +267,3 @@ resource "databricks_sql_table" "this" {
 ```
 
 Finally, run `terraform plan` to verify the changes, followed by `terraform apply` to apply the changes.
-
-If you're using Terraform on a version before v1.7.0, you will need to use the `terraform state rm` CLI command to remove the `databricks_table` from your Terraform state. If you're using a version before v1.5.0, you will need to use `terraform import` to import the existing table into the new `databricks_sql_table` resource.

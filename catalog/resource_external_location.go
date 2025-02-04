@@ -30,7 +30,7 @@ func ResourceExternalLocation() common.Resource {
 				return old == "false" && new == "true"
 			}
 			common.CustomizeSchemaPath(m, "url").SetRequired().SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
-			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 			common.CustomizeSchemaPath(m, "credential_name").SetRequired()
 			common.CustomizeSchemaPath(m, "isolation_mode").SetComputed()
 			common.CustomizeSchemaPath(m, "owner").SetComputed()

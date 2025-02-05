@@ -1,12 +1,10 @@
 # NEXT CHANGELOG
 
-## Release v1.65.1
+## Release v1.66.0
 
 ### New Features and Improvements
 
 ### Bug Fixes
-
- * Do not send `run_as` when updating `databricks_pipeline` resource if no change is planned.
 
 ### Documentation
 

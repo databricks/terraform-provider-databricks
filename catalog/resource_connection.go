@@ -36,10 +36,19 @@ type ConnectionInfo struct {
 
 var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
 
+func suppressPemPrivateKeyExpiration(key, old, new string, d *schema.ResourceData) bool {
+	k := "options.pem_private_key_expiration_epoch_sec"
+	if _, ok := d.GetOk(k); ok && !d.HasChange(k) {
+		return true
+	}
+	return false
+}
+
 func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			m["options"].DiffSuppressFunc = suppressPemPrivateKeyExpiration
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(

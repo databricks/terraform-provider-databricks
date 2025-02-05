@@ -96,6 +96,9 @@ func TestAccPipelineResource_CreatePipeline(t *testing.T) {
 }
 
 func pipelineRunAsTemplate(runAs string) string {
+	if runAs != "" {
+		runAs = `run_as { ` + runAs + ` }`
+	}
 	return `
 	data "databricks_current_user" "me" {}
 
@@ -135,9 +138,7 @@ func pipelineRunAsTemplate(runAs string) string {
 
 		continuous = false
 
-		run_as {
-			` + runAs + `
-		}
+		` + runAs + `
 	}
 	` + dltNotebookResource
 }
@@ -179,6 +180,10 @@ func TestUcAccPipelineRunAsMutations(t *testing.T) {
 		// Update job back to a service principal `run_as`
 		acceptance.Step{
 			Template: pipelineRunAsTemplate(`service_principal_name = "` + spId + `"`),
+		},
+		// Remove run_as, and there should be no change.
+		acceptance.Step{
+			Template: pipelineRunAsTemplate(""),
 		},
 	)
 }

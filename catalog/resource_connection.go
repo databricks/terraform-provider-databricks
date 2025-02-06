@@ -39,10 +39,8 @@ var sensitiveOptions = []string{"user", "password", "personalAccessToken", "acce
 
 func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData) bool {
 	if k == "options.pem_private_key_expiration_epoch_sec" {
-		if old != "" && new == "" {
-			log.Printf("[INFO] Suppressing diff on %s", k)
-			return true
-		}
+		log.Printf("[INFO] Suppressing diff on %s", k)
+		return true
 	}
 	return false
 }

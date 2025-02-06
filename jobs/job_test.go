@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAccJobTasks(t *testing.T) {
@@ -365,35 +363,12 @@ func TestUcAccJobRunAsServicePrincipal(t *testing.T) {
 	})
 }
 
-func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
-	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx)
-	if err != nil {
-		return false, err
-	}
-	for _, emailValue := range user.Emails {
-		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
-func getRunAsAttribute(t *testing.T, ctx context.Context) string {
-	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
-	require.NoError(t, err)
-	if isSp {
-		return "service_principal_name"
-	}
-	return "user_name"
-}
-
 func TestUcAccJobRunAsMutations(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	spId := acceptance.GetEnvOrSkipTest(t, "ACCOUNT_LEVEL_SERVICE_PRINCIPAL_ID")
 	// Note: the attribute must match the type of principal that the test is run as.
 	ctx := context.Background()
-	attribute := getRunAsAttribute(t, ctx)
+	attribute := acceptance.GetRunAsAttribute(t, ctx)
 	acceptance.UnityWorkspaceLevel(
 		t,
 		// Provision job with service principal `run_as`

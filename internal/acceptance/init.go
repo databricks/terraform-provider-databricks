@@ -448,3 +448,28 @@ func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 		os.Setenv(k, v)
 	}
 }
+
+func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	user, err := w.CurrentUser.Me(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, emailValue := range user.Emails {
+		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func GetRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	if err != nil {
+		t.Fatalf("cannot determine the user: %s", err)
+	}
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
+}

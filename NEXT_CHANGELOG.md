@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+ * Support updating `options` in `databricks_catalog`.
+
 ### Bug Fixes
 
 ### Documentation

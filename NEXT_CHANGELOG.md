@@ -4,7 +4,7 @@
 
 ### New Features and Improvements
 
- * Support updating `options` in `databricks_catalog`.
+ * Support updating `options` in `databricks_catalog` ([#4476](https://github.com/databricks/terraform-provider-databricks/pull/4476)).
 
 ### Bug Fixes
 

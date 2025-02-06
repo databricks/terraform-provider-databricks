@@ -36,7 +36,7 @@ type CatalogInfo struct {
 	ShareName                    string            `json:"share_name,omitempty" tf:"force_new,conflicts:storage_root"`
 	ConnectionName               string            `json:"connection_name,omitempty" tf:"force_new,conflicts:storage_root"`
 	EnablePredictiveOptimization string            `json:"enable_predictive_optimization,omitempty" tf:"computed"`
-	Options                      map[string]string `json:"options,omitempty" tf:"force_new"`
+	Options                      map[string]string `json:"options,omitempty"`
 	Properties                   map[string]string `json:"properties,omitempty"`
 	Owner                        string            `json:"owner,omitempty" tf:"computed"`
 	IsolationMode                string            `json:"isolation_mode,omitempty" tf:"computed"`

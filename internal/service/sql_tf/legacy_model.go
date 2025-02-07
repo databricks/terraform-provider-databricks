@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -41,6 +42,7 @@ func (newState *AccessControl_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 func (c AccessControl_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_RUN", "CAN_VIEW"))
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
 	return attrs
@@ -142,12 +144,14 @@ func (c Alert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "TRASHED"))
 	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["query_id"] = attrs["query_id"].SetOptional()
 	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OK", "TRIGGERED", "UNKNOWN"))
 	attrs["trigger_time"] = attrs["trigger_time"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 
@@ -263,7 +267,9 @@ func (newState *AlertCondition_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c AlertCondition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["empty_result_state"] = attrs["empty_result_state"].SetOptional()
+	attrs["empty_result_state"] = attrs["empty_result_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OK", "TRIGGERED", "UNKNOWN"))
 	attrs["op"] = attrs["op"].SetOptional()
+	attrs["op"] = attrs["op"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EQUAL", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", "IS_NULL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "NOT_EQUAL"))
 	attrs["operand"] = attrs["operand"].SetOptional()
 	attrs["operand"] = attrs["operand"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["threshold"] = attrs["threshold"].SetOptional()
@@ -667,6 +673,7 @@ func (c AlertOptions_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["custom_body"] = attrs["custom_body"].SetOptional()
 	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
 	attrs["empty_result_state"] = attrs["empty_result_state"].SetOptional()
+	attrs["empty_result_state"] = attrs["empty_result_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ok", "triggered", "unknown"))
 	attrs["muted"] = attrs["muted"].SetOptional()
 	attrs["op"] = attrs["op"].SetRequired()
 	attrs["value"] = attrs["value"].SetRequired()
@@ -1050,6 +1057,7 @@ func (newState *Channel_SdkV2) SyncEffectiveFieldsDuringRead(existingState Chann
 func (c Channel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbsql_version"] = attrs["dbsql_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CHANNEL_NAME_CURRENT", "CHANNEL_NAME_CUSTOM", "CHANNEL_NAME_PREVIEW", "CHANNEL_NAME_PREVIOUS"))
 
 	return attrs
 }
@@ -1104,6 +1112,7 @@ func (newState *ChannelInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState C
 func (c ChannelInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbsql_version"] = attrs["dbsql_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CHANNEL_NAME_CURRENT", "CHANNEL_NAME_CUSTOM", "CHANNEL_NAME_PREVIEW", "CHANNEL_NAME_PREVIOUS"))
 
 	return attrs
 }
@@ -1264,6 +1273,7 @@ func (c ColumnInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["position"] = attrs["position"].SetOptional()
 	attrs["type_interval_type"] = attrs["type_interval_type"].SetOptional()
 	attrs["type_name"] = attrs["type_name"].SetOptional()
+	attrs["type_name"] = attrs["type_name"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ARRAY", "BINARY", "BOOLEAN", "BYTE", "CHAR", "DATE", "DECIMAL", "DOUBLE", "FLOAT", "INT", "INTERVAL", "LONG", "MAP", "NULL", "SHORT", "STRING", "STRUCT", "TIMESTAMP", "USER_DEFINED_TYPE"))
 	attrs["type_precision"] = attrs["type_precision"].SetOptional()
 	attrs["type_scale"] = attrs["type_scale"].SetOptional()
 	attrs["type_text"] = attrs["type_text"].SetOptional()
@@ -1736,6 +1746,7 @@ func (c CreateQueryRequestQuery_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OWNER", "VIEWER"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -2143,9 +2154,11 @@ func (c CreateWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "POLICY_UNSPECIFIED", "RELIABILITY_OPTIMIZED"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC", "PRO", "TYPE_UNSPECIFIED"))
 
 	return attrs
 }
@@ -2486,6 +2499,7 @@ func (c Dashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["options"] = attrs["options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["permission_tier"] = attrs["permission_tier"].SetOptional()
+	attrs["permission_tier"] = attrs["permission_tier"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_RUN", "CAN_VIEW"))
 	attrs["slug"] = attrs["slug"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
@@ -2700,6 +2714,7 @@ func (c DashboardEditContent_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("owner", "viewer"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
@@ -2853,6 +2868,7 @@ func (c DashboardPostContent_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("owner", "viewer"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
@@ -3098,7 +3114,9 @@ func (c DateRangeValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["date_range_value"] = attrs["date_range_value"].SetOptional()
 	attrs["date_range_value"] = attrs["date_range_value"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dynamic_date_range_value"] = attrs["dynamic_date_range_value"].SetOptional()
+	attrs["dynamic_date_range_value"] = attrs["dynamic_date_range_value"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("LAST_12_MONTHS", "LAST_14_DAYS", "LAST_24_HOURS", "LAST_30_DAYS", "LAST_60_DAYS", "LAST_7_DAYS", "LAST_8_HOURS", "LAST_90_DAYS", "LAST_HOUR", "LAST_MONTH", "LAST_WEEK", "LAST_YEAR", "THIS_MONTH", "THIS_WEEK", "THIS_YEAR", "TODAY", "YESTERDAY"))
 	attrs["precision"] = attrs["precision"].SetOptional()
+	attrs["precision"] = attrs["precision"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DAY_PRECISION", "MINUTE_PRECISION", "SECOND_PRECISION"))
 	attrs["start_day_of_week"] = attrs["start_day_of_week"].SetOptional()
 
 	return attrs
@@ -3190,7 +3208,9 @@ func (newState *DateValue_SdkV2) SyncEffectiveFieldsDuringRead(existingState Dat
 func (c DateValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["date_value"] = attrs["date_value"].SetOptional()
 	attrs["dynamic_date_value"] = attrs["dynamic_date_value"].SetOptional()
+	attrs["dynamic_date_value"] = attrs["dynamic_date_value"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NOW", "YESTERDAY"))
 	attrs["precision"] = attrs["precision"].SetOptional()
+	attrs["precision"] = attrs["precision"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DAY_PRECISION", "MINUTE_PRECISION", "SECOND_PRECISION"))
 
 	return attrs
 }
@@ -3740,9 +3760,11 @@ func (c EditWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["min_num_clusters"] = attrs["min_num_clusters"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "POLICY_UNSPECIFIED", "RELIABILITY_OPTIMIZED"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC", "PRO", "TYPE_UNSPECIFIED"))
 
 	return attrs
 }
@@ -4026,6 +4048,7 @@ func (c EndpointHealth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["failure_reason"] = attrs["failure_reason"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DEGRADED", "FAILED", "HEALTHY", "STATUS_UNSPECIFIED"))
 	attrs["summary"] = attrs["summary"].SetOptional()
 
 	return attrs
@@ -4204,10 +4227,13 @@ func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "POLICY_UNSPECIFIED", "RELIABILITY_OPTIMIZED"))
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELETED", "DELETING", "RUNNING", "STARTING", "STOPPED", "STOPPING"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC", "PRO", "TYPE_UNSPECIFIED"))
 
 	return attrs
 }
@@ -4781,8 +4807,11 @@ func (c ExecuteStatementRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["byte_limit"] = attrs["byte_limit"].SetOptional()
 	attrs["catalog"] = attrs["catalog"].SetOptional()
 	attrs["disposition"] = attrs["disposition"].SetOptional()
+	attrs["disposition"] = attrs["disposition"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EXTERNAL_LINKS", "INLINE"))
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format"] = attrs["format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ARROW_STREAM", "CSV", "JSON_ARRAY"))
 	attrs["on_wait_timeout"] = attrs["on_wait_timeout"].SetOptional()
+	attrs["on_wait_timeout"] = attrs["on_wait_timeout"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCEL", "CONTINUE"))
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["row_limit"] = attrs["row_limit"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
@@ -5670,10 +5699,13 @@ func (c GetWarehouseResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["odbc_params"] = attrs["odbc_params"].SetOptional()
 	attrs["odbc_params"] = attrs["odbc_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].SetOptional()
+	attrs["spot_instance_policy"] = attrs["spot_instance_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "POLICY_UNSPECIFIED", "RELIABILITY_OPTIMIZED"))
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELETED", "DELETING", "RUNNING", "STARTING", "STOPPED", "STOPPING"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["tags"] = attrs["tags"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC", "PRO", "TYPE_UNSPECIFIED"))
 
 	return attrs
 }
@@ -5910,6 +5942,7 @@ func (c GetWorkspaceWarehouseConfigResponse_SdkV2) ApplySchemaCustomizations(att
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["security_policy"] = attrs["security_policy"].SetOptional()
+	attrs["security_policy"] = attrs["security_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_ACCESS_CONTROL", "NONE", "PASSTHROUGH"))
 	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].SetOptional()
 	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -6185,6 +6218,7 @@ func (c LegacyAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["query"] = attrs["query"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["rearm"] = attrs["rearm"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ok", "triggered", "unknown"))
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["user"] = attrs["user"].SetOptional()
 	attrs["user"] = attrs["user"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6427,9 +6461,11 @@ func (c LegacyQuery_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["options"] = attrs["options"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["permission_tier"] = attrs["permission_tier"].SetOptional()
+	attrs["permission_tier"] = attrs["permission_tier"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_RUN", "CAN_VIEW"))
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["query_hash"] = attrs["query_hash"].SetOptional()
 	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("owner", "viewer"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["user"] = attrs["user"].SetOptional()
@@ -6966,11 +7002,13 @@ func (c ListAlertsResponseAlert_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "TRASHED"))
 	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
 	attrs["query_id"] = attrs["query_id"].SetOptional()
 	attrs["seconds_to_retrigger"] = attrs["seconds_to_retrigger"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OK", "TRIGGERED", "UNKNOWN"))
 	attrs["trigger_time"] = attrs["trigger_time"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 
@@ -7521,10 +7559,12 @@ func (c ListQueryObjectsResponseQuery_SdkV2) ApplySchemaCustomizations(attrs map
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_modifier_user_name"] = attrs["last_modifier_user_name"].SetOptional()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "TRASHED"))
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OWNER", "VIEWER"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
@@ -8176,6 +8216,7 @@ func (c Parameter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["queryId"] = attrs["queryId"].SetOptional()
 	attrs["title"] = attrs["title"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("datetime", "enum", "number", "query", "text"))
 	attrs["value"] = attrs["value"].SetOptional()
 
 	return attrs
@@ -8308,11 +8349,13 @@ func (c Query_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_modifier_user_name"] = attrs["last_modifier_user_name"].SetOptional()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetOptional()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "TRASHED"))
 	attrs["owner_user_name"] = attrs["owner_user_name"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["parent_path"] = attrs["parent_path"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OWNER", "VIEWER"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
@@ -8603,6 +8646,7 @@ func (c QueryEditContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["query_id"] = attrs["query_id"].SetRequired()
 	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("owner", "viewer"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
@@ -8971,6 +9015,7 @@ func (c QueryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["metrics"] = attrs["metrics"].SetOptional()
 	attrs["metrics"] = attrs["metrics"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["plans_state"] = attrs["plans_state"].SetOptional()
+	attrs["plans_state"] = attrs["plans_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMPTY", "EXISTS", "IGNORED_LARGE_PLANS_SIZE", "IGNORED_SMALL_DURATION", "IGNORED_SPARK_PLAN_TYPE", "UNKNOWN"))
 	attrs["query_end_time_ms"] = attrs["query_end_time_ms"].SetOptional()
 	attrs["query_id"] = attrs["query_id"].SetOptional()
 	attrs["query_start_time_ms"] = attrs["query_start_time_ms"].SetOptional()
@@ -8978,7 +9023,9 @@ func (c QueryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["rows_produced"] = attrs["rows_produced"].SetOptional()
 	attrs["spark_ui_url"] = attrs["spark_ui_url"].SetOptional()
 	attrs["statement_type"] = attrs["statement_type"].SetOptional()
+	attrs["statement_type"] = attrs["statement_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALTER", "ANALYZE", "COPY", "CREATE", "DELETE", "DESCRIBE", "DROP", "EXPLAIN", "GRANT", "INSERT", "MERGE", "OPTIMIZE", "OTHER", "REFRESH", "REPLACE", "REVOKE", "SELECT", "SET", "SHOW", "TRUNCATE", "UPDATE", "USE"))
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "COMPILED", "COMPILING", "FAILED", "FINISHED", "QUEUED", "RUNNING", "STARTED"))
 	attrs["user_id"] = attrs["user_id"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -9782,6 +9829,7 @@ func (c QueryPostContent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["parent"] = attrs["parent"].SetOptional()
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["run_as_role"] = attrs["run_as_role"].SetOptional()
+	attrs["run_as_role"] = attrs["run_as_role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("owner", "viewer"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
@@ -10257,6 +10305,7 @@ func (newState *ResultManifest_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c ResultManifest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["chunks"] = attrs["chunks"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format"] = attrs["format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ARROW_STREAM", "CSV", "JSON_ARRAY"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["schema"] = attrs["schema"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["total_byte_count"] = attrs["total_byte_count"].SetOptional()
@@ -10466,6 +10515,7 @@ func (newState *ServiceError_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c ServiceError_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["error_code"] = attrs["error_code"].SetOptional()
+	attrs["error_code"] = attrs["error_code"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ABORTED", "ALREADY_EXISTS", "BAD_REQUEST", "CANCELLED", "DEADLINE_EXCEEDED", "INTERNAL_ERROR", "IO_ERROR", "NOT_FOUND", "RESOURCE_EXHAUSTED", "SERVICE_UNDER_MAINTENANCE", "TEMPORARILY_UNAVAILABLE", "UNAUTHENTICATED", "UNKNOWN", "WORKSPACE_TEMPORARILY_UNAVAILABLE"))
 	attrs["message"] = attrs["message"].SetOptional()
 
 	return attrs
@@ -10698,6 +10748,7 @@ func (c SetWorkspaceWarehouseConfigRequest_SdkV2) ApplySchemaCustomizations(attr
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["security_policy"] = attrs["security_policy"].SetOptional()
+	attrs["security_policy"] = attrs["security_policy"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_ACCESS_CONTROL", "NONE", "PASSTHROUGH"))
 	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].SetOptional()
 	attrs["sql_configuration_parameters"] = attrs["sql_configuration_parameters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -11290,6 +11341,7 @@ func (c StatementStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["error"] = attrs["error"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "CLOSED", "FAILED", "PENDING", "RUNNING", "SUCCEEDED"))
 
 	return attrs
 }
@@ -11447,6 +11499,7 @@ func (newState *Success_SdkV2) SyncEffectiveFieldsDuringRead(existingState Succe
 
 func (c Success_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetOptional()
+	attrs["message"] = attrs["message"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Success"))
 
 	return attrs
 }
@@ -11500,8 +11553,10 @@ func (newState *TerminationReason_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 
 func (c TerminationReason_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
+	attrs["code"] = attrs["code"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ABUSE_DETECTED", "ATTACH_PROJECT_FAILURE", "AWS_AUTHORIZATION_FAILURE", "AWS_INSUFFICIENT_FREE_ADDRESSES_IN_SUBNET_FAILURE", "AWS_INSUFFICIENT_INSTANCE_CAPACITY_FAILURE", "AWS_MAX_SPOT_INSTANCE_COUNT_EXCEEDED_FAILURE", "AWS_REQUEST_LIMIT_EXCEEDED", "AWS_UNSUPPORTED_FAILURE", "AZURE_BYOK_KEY_PERMISSION_FAILURE", "AZURE_EPHEMERAL_DISK_FAILURE", "AZURE_INVALID_DEPLOYMENT_TEMPLATE", "AZURE_OPERATION_NOT_ALLOWED_EXCEPTION", "AZURE_QUOTA_EXCEEDED_EXCEPTION", "AZURE_RESOURCE_MANAGER_THROTTLING", "AZURE_RESOURCE_PROVIDER_THROTTLING", "AZURE_UNEXPECTED_DEPLOYMENT_TEMPLATE_FAILURE", "AZURE_VM_EXTENSION_FAILURE", "AZURE_VNET_CONFIGURATION_FAILURE", "BOOTSTRAP_TIMEOUT", "BOOTSTRAP_TIMEOUT_CLOUD_PROVIDER_EXCEPTION", "CLOUD_PROVIDER_DISK_SETUP_FAILURE", "CLOUD_PROVIDER_LAUNCH_FAILURE", "CLOUD_PROVIDER_RESOURCE_STOCKOUT", "CLOUD_PROVIDER_SHUTDOWN", "COMMUNICATION_LOST", "CONTAINER_LAUNCH_FAILURE", "CONTROL_PLANE_REQUEST_FAILURE", "DATABASE_CONNECTION_FAILURE", "DBFS_COMPONENT_UNHEALTHY", "DOCKER_IMAGE_PULL_FAILURE", "DRIVER_UNREACHABLE", "DRIVER_UNRESPONSIVE", "EXECUTION_COMPONENT_UNHEALTHY", "GCP_QUOTA_EXCEEDED", "GCP_SERVICE_ACCOUNT_DELETED", "GLOBAL_INIT_SCRIPT_FAILURE", "HIVE_METASTORE_PROVISIONING_FAILURE", "IMAGE_PULL_PERMISSION_DENIED", "INACTIVITY", "INIT_SCRIPT_FAILURE", "INSTANCE_POOL_CLUSTER_FAILURE", "INSTANCE_UNREACHABLE", "INTERNAL_ERROR", "INVALID_ARGUMENT", "INVALID_SPARK_IMAGE", "IP_EXHAUSTION_FAILURE", "JOB_FINISHED", "K8S_AUTOSCALING_FAILURE", "K8S_DBR_CLUSTER_LAUNCH_TIMEOUT", "METASTORE_COMPONENT_UNHEALTHY", "NEPHOS_RESOURCE_MANAGEMENT", "NETWORK_CONFIGURATION_FAILURE", "NFS_MOUNT_FAILURE", "NPIP_TUNNEL_SETUP_FAILURE", "NPIP_TUNNEL_TOKEN_FAILURE", "REQUEST_REJECTED", "REQUEST_THROTTLED", "SECRET_RESOLUTION_ERROR", "SECURITY_DAEMON_REGISTRATION_EXCEPTION", "SELF_BOOTSTRAP_FAILURE", "SKIPPED_SLOW_NODES", "SLOW_IMAGE_DOWNLOAD", "SPARK_ERROR", "SPARK_IMAGE_DOWNLOAD_FAILURE", "SPARK_STARTUP_FAILURE", "SPOT_INSTANCE_TERMINATION", "STORAGE_DOWNLOAD_FAILURE", "STS_CLIENT_SETUP_FAILURE", "SUBNET_EXHAUSTED_FAILURE", "TEMPORARILY_UNAVAILABLE", "TRIAL_EXPIRED", "UNEXPECTED_LAUNCH_FAILURE", "UNKNOWN", "UNSUPPORTED_INSTANCE_TYPE", "UPDATE_INSTANCE_PROFILE_FAILURE", "USER_REQUEST", "WORKER_SETUP_FAILURE", "WORKSPACE_CANCELLED_ERROR", "WORKSPACE_CONFIGURATION_ERROR"))
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLIENT_ERROR", "CLOUD_FAILURE", "SERVICE_FAULT", "SUCCESS"))
 
 	return attrs
 }
@@ -12228,6 +12283,7 @@ func (c UpdateQueryRequestQuery_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["run_as_mode"] = attrs["run_as_mode"].SetOptional()
+	attrs["run_as_mode"] = attrs["run_as_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OWNER", "VIEWER"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
@@ -12704,6 +12760,7 @@ func (newState *WarehouseAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRe
 func (c WarehouseAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MONITOR", "CAN_USE", "IS_OWNER"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -12863,6 +12920,7 @@ func (c WarehousePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MONITOR", "CAN_USE", "IS_OWNER"))
 
 	return attrs
 }
@@ -13034,6 +13092,7 @@ func (newState *WarehousePermissionsDescription_SdkV2) SyncEffectiveFieldsDuring
 func (c WarehousePermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MONITOR", "CAN_USE", "IS_OWNER"))
 
 	return attrs
 }
@@ -13170,6 +13229,7 @@ func (newState *WarehouseTypePair_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 func (c WarehouseTypePair_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["enabled"] = attrs["enabled"].SetOptional()
 	attrs["warehouse_type"] = attrs["warehouse_type"].SetOptional()
+	attrs["warehouse_type"] = attrs["warehouse_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC", "PRO", "TYPE_UNSPECIFIED"))
 
 	return attrs
 }

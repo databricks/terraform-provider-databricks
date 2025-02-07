@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -437,6 +438,7 @@ func (newState *AiGatewayGuardrailPiiBehavior_SdkV2) SyncEffectiveFieldsDuringRe
 
 func (c AiGatewayGuardrailPiiBehavior_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["behavior"] = attrs["behavior"].SetOptional()
+	attrs["behavior"] = attrs["behavior"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BLOCK", "NONE"))
 
 	return attrs
 }
@@ -675,7 +677,9 @@ func (newState *AiGatewayRateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existing
 func (c AiGatewayRateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["calls"] = attrs["calls"].SetRequired()
 	attrs["key"] = attrs["key"].SetOptional()
+	attrs["key"] = attrs["key"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("endpoint", "user"))
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["renewal_period"] = attrs["renewal_period"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("minute"))
 
 	return attrs
 }
@@ -810,6 +814,7 @@ func (c AmazonBedrockConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["aws_secret_access_key"] = attrs["aws_secret_access_key"].SetOptional()
 	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].SetOptional()
 	attrs["bedrock_provider"] = attrs["bedrock_provider"].SetRequired()
+	attrs["bedrock_provider"] = attrs["bedrock_provider"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ai21labs", "amazon", "anthropic", "cohere"))
 
 	return attrs
 }
@@ -1267,6 +1272,7 @@ func (newState *ChatMessage_SdkV2) SyncEffectiveFieldsDuringRead(existingState C
 func (c ChatMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["role"] = attrs["role"].SetOptional()
+	attrs["role"] = attrs["role"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("assistant", "system", "user"))
 
 	return attrs
 }
@@ -1919,6 +1925,7 @@ func (c EmbeddingsV1ResponseEmbeddingElement_SdkV2) ApplySchemaCustomizations(at
 	attrs["embedding"] = attrs["embedding"].SetOptional()
 	attrs["index"] = attrs["index"].SetOptional()
 	attrs["object"] = attrs["object"].SetOptional()
+	attrs["object"] = attrs["object"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("embedding"))
 
 	return attrs
 }
@@ -2706,7 +2713,9 @@ func (newState *EndpointState_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 
 func (c EndpointState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["config_update"] = attrs["config_update"].SetOptional()
+	attrs["config_update"] = attrs["config_update"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("IN_PROGRESS", "NOT_UPDATING", "UPDATE_CANCELED", "UPDATE_FAILED"))
 	attrs["ready"] = attrs["ready"].SetOptional()
+	attrs["ready"] = attrs["ready"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NOT_READY", "READY"))
 
 	return attrs
 }
@@ -2976,6 +2985,7 @@ func (c ExternalFunctionRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["headers"] = attrs["headers"].SetOptional()
 	attrs["json"] = attrs["json"].SetOptional()
 	attrs["method"] = attrs["method"].SetRequired()
+	attrs["method"] = attrs["method"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELETE", "GET", "PATCH", "POST", "PUT"))
 	attrs["params"] = attrs["params"].SetOptional()
 	attrs["path"] = attrs["path"].SetRequired()
 
@@ -3078,6 +3088,7 @@ func (c ExternalModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["palm_config"] = attrs["palm_config"].SetOptional()
 	attrs["palm_config"] = attrs["palm_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["provider"] = attrs["provider"].SetRequired()
+	attrs["provider"] = attrs["provider"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ai21labs", "amazon-bedrock", "anthropic", "cohere", "databricks-model-serving", "google-cloud-vertex-ai", "openai", "palm"))
 	attrs["task"] = attrs["task"].SetRequired()
 
 	return attrs
@@ -5333,6 +5344,7 @@ func (c QueryEndpointResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["model"] = attrs["model"].SetOptional()
 	attrs["object"] = attrs["object"].SetOptional()
+	attrs["object"] = attrs["object"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("chat.completion", "list", "text_completion"))
 	attrs["predictions"] = attrs["predictions"].SetOptional()
 	attrs["served-model-name"] = attrs["served-model-name"].SetOptional()
 	attrs["usage"] = attrs["usage"].SetOptional()
@@ -5527,7 +5539,9 @@ func (newState *RateLimit_SdkV2) SyncEffectiveFieldsDuringRead(existingState Rat
 func (c RateLimit_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["calls"] = attrs["calls"].SetRequired()
 	attrs["key"] = attrs["key"].SetOptional()
+	attrs["key"] = attrs["key"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("endpoint", "user"))
 	attrs["renewal_period"] = attrs["renewal_period"].SetRequired()
+	attrs["renewal_period"] = attrs["renewal_period"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("minute"))
 
 	return attrs
 }
@@ -5699,6 +5713,7 @@ func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CPU", "GPU_LARGE", "GPU_MEDIUM", "GPU_SMALL", "MULTIGPU_MEDIUM"))
 
 	return attrs
 }
@@ -5905,6 +5920,7 @@ func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CPU", "GPU_LARGE", "GPU_MEDIUM", "GPU_SMALL", "MULTIGPU_MEDIUM"))
 
 	return attrs
 }
@@ -6276,7 +6292,9 @@ func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetRequired()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
+	attrs["workload_size"] = attrs["workload_size"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Large", "Medium", "Small"))
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CPU", "GPU_LARGE", "GPU_MEDIUM", "GPU_SMALL", "MULTIGPU_MEDIUM"))
 
 	return attrs
 }
@@ -6426,6 +6444,7 @@ func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
+	attrs["workload_type"] = attrs["workload_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CPU", "GPU_LARGE", "GPU_MEDIUM", "GPU_SMALL", "MULTIGPU_MEDIUM"))
 
 	return attrs
 }
@@ -6612,6 +6631,7 @@ func (newState *ServedModelState_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 
 func (c ServedModelState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["deployment"] = attrs["deployment"].SetOptional()
+	attrs["deployment"] = attrs["deployment"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DEPLOYMENT_ABORTED", "DEPLOYMENT_CREATING", "DEPLOYMENT_FAILED", "DEPLOYMENT_READY", "DEPLOYMENT_RECOVERING"))
 	attrs["deployment_state_message"] = attrs["deployment_state_message"].SetOptional()
 
 	return attrs
@@ -6935,6 +6955,7 @@ func (newState *ServingEndpointAccessControlRequest_SdkV2) SyncEffectiveFieldsDu
 func (c ServingEndpointAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_QUERY", "CAN_VIEW"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -7135,6 +7156,7 @@ func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["pending_config"] = attrs["pending_config"].SetOptional()
 	attrs["pending_config"] = attrs["pending_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_QUERY", "CAN_VIEW"))
 	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -7396,6 +7418,7 @@ func (c ServingEndpointPermission_SdkV2) ApplySchemaCustomizations(attrs map[str
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_QUERY", "CAN_VIEW"))
 
 	return attrs
 }
@@ -7567,6 +7590,7 @@ func (newState *ServingEndpointPermissionsDescription_SdkV2) SyncEffectiveFields
 func (c ServingEndpointPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_QUERY", "CAN_VIEW"))
 
 	return attrs
 }

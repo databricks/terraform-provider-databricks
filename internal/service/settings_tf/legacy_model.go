@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -133,6 +134,7 @@ func (newState *AibiDashboardEmbeddingAccessPolicy_SdkV2) SyncEffectiveFieldsDur
 
 func (c AibiDashboardEmbeddingAccessPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_policy_type"] = attrs["access_policy_type"].SetRequired()
+	attrs["access_policy_type"] = attrs["access_policy_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW_ALL_DOMAINS", "ALLOW_APPROVED_DOMAINS", "DENY_ALL_DOMAINS"))
 
 	return attrs
 }
@@ -878,7 +880,9 @@ func (newState *ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_S
 
 func (c ClusterAutoRestartMessageMaintenanceWindowWeekDayBasedSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["day_of_week"] = attrs["day_of_week"].SetOptional()
+	attrs["day_of_week"] = attrs["day_of_week"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FRIDAY", "MONDAY", "SATURDAY", "SUNDAY", "THURSDAY", "TUESDAY", "WEDNESDAY"))
 	attrs["frequency"] = attrs["frequency"].SetOptional()
+	attrs["frequency"] = attrs["frequency"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EVERY_WEEK", "FIRST_AND_THIRD_OF_MONTH", "FIRST_OF_MONTH", "FOURTH_OF_MONTH", "SECOND_AND_FOURTH_OF_MONTH", "SECOND_OF_MONTH", "THIRD_OF_MONTH"))
 	attrs["window_start_time"] = attrs["window_start_time"].SetOptional()
 	attrs["window_start_time"] = attrs["window_start_time"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -1427,6 +1431,7 @@ func (c CreateIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetRequired()
 	attrs["list_type"] = attrs["list_type"].SetRequired()
+	attrs["list_type"] = attrs["list_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW", "BLOCK"))
 
 	return attrs
 }
@@ -1881,6 +1886,7 @@ func (newState *CreatePrivateEndpointRuleRequest_SdkV2) SyncEffectiveFieldsDurin
 
 func (c CreatePrivateEndpointRuleRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_id"] = attrs["group_id"].SetRequired()
+	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("blob", "dfs", "mysqlServer", "sqlServer"))
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetRequired()
 	attrs["resource_id"] = attrs["resource_id"].SetRequired()
 
@@ -3925,6 +3931,7 @@ func (c EgressNetworkPolicyInternetAccessPolicy_SdkV2) ApplySchemaCustomizations
 	attrs["log_only_mode"] = attrs["log_only_mode"].SetOptional()
 	attrs["log_only_mode"] = attrs["log_only_mode"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["restriction_mode"] = attrs["restriction_mode"].SetOptional()
+	attrs["restriction_mode"] = attrs["restriction_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FULL_ACCESS", "PRIVATE_ACCESS_ONLY", "RESTRICTED_ACCESS"))
 
 	return attrs
 }
@@ -4078,7 +4085,9 @@ func (newState *EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2
 func (c EgressNetworkPolicyInternetAccessPolicyInternetDestination_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["destination"] = attrs["destination"].SetOptional()
 	attrs["protocol"] = attrs["protocol"].SetOptional()
+	attrs["protocol"] = attrs["protocol"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("TCP"))
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FQDN"))
 
 	return attrs
 }
@@ -4132,6 +4141,7 @@ func (newState *EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) SyncEf
 
 func (c EgressNetworkPolicyInternetAccessPolicyLogOnlyMode_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_only_mode_type"] = attrs["log_only_mode_type"].SetOptional()
+	attrs["log_only_mode_type"] = attrs["log_only_mode_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALL_SERVICES", "SELECTED_SERVICES"))
 	attrs["workloads"] = attrs["workloads"].SetOptional()
 
 	return attrs
@@ -4234,6 +4244,7 @@ func (c EgressNetworkPolicyInternetAccessPolicyStorageDestination_SdkV2) ApplySc
 	attrs["bucket_name"] = attrs["bucket_name"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AWS_S3", "AZURE_STORAGE", "CLOUDFLARE_R2", "GOOGLE_CLOUD_STORAGE"))
 
 	return attrs
 }
@@ -4753,6 +4764,7 @@ func (c ExchangeToken_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["ownerId"] = attrs["ownerId"].SetOptional()
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["tokenType"] = attrs["tokenType"].SetOptional()
+	attrs["tokenType"] = attrs["tokenType"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ARCLIGHT_AZURE_EXCHANGE_TOKEN", "ARCLIGHT_AZURE_EXCHANGE_TOKEN_WITH_USER_DELEGATION_KEY", "AZURE_ACTIVE_DIRECTORY_TOKEN"))
 
 	return attrs
 }
@@ -6426,6 +6438,7 @@ func (c IpAccessListInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["label"] = attrs["label"].SetOptional()
 	attrs["list_id"] = attrs["list_id"].SetOptional()
 	attrs["list_type"] = attrs["list_type"].SetOptional()
+	attrs["list_type"] = attrs["list_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW", "BLOCK"))
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["updated_by"] = attrs["updated_by"].SetOptional()
 
@@ -6933,6 +6946,7 @@ func (newState *ListNotificationDestinationsResult_SdkV2) SyncEffectiveFieldsDur
 
 func (c ListNotificationDestinationsResult_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["destination_type"] = attrs["destination_type"].SetOptional()
+	attrs["destination_type"] = attrs["destination_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMAIL", "MICROSOFT_TEAMS", "PAGERDUTY", "SLACK", "WEBHOOK"))
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 
@@ -7393,11 +7407,13 @@ func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead
 
 func (c NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["connection_state"] = attrs["connection_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISCONNECTED", "ESTABLISHED", "INIT", "PENDING", "REJECTED"))
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["deactivated"] = attrs["deactivated"].SetComputed()
 	attrs["deactivated_at"] = attrs["deactivated_at"].SetComputed()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetComputed()
 	attrs["group_id"] = attrs["group_id"].SetOptional()
+	attrs["group_id"] = attrs["group_id"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("blob", "dfs", "mysqlServer", "sqlServer"))
 	attrs["network_connectivity_config_id"] = attrs["network_connectivity_config_id"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
 	attrs["rule_id"] = attrs["rule_id"].SetComputed()
@@ -8034,6 +8050,7 @@ func (c NotificationDestination_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["destination_type"] = attrs["destination_type"].SetOptional()
+	attrs["destination_type"] = attrs["destination_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMAIL", "MICROSOFT_TEAMS", "PAGERDUTY", "SLACK", "WEBHOOK"))
 	attrs["display_name"] = attrs["display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 
@@ -8228,6 +8245,7 @@ func (newState *PersonalComputeMessage_SdkV2) SyncEffectiveFieldsDuringRead(exis
 
 func (c PersonalComputeMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["value"] = attrs["value"].SetRequired()
+	attrs["value"] = attrs["value"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELEGATE", "ON"))
 
 	return attrs
 }
@@ -8457,6 +8475,7 @@ func (c ReplaceIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetRequired()
 	attrs["list_type"] = attrs["list_type"].SetRequired()
+	attrs["list_type"] = attrs["list_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW", "BLOCK"))
 
 	return attrs
 }
@@ -8572,6 +8591,7 @@ func (newState *RestrictWorkspaceAdminsMessage_SdkV2) SyncEffectiveFieldsDuringR
 
 func (c RestrictWorkspaceAdminsMessage_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["status"] = attrs["status"].SetRequired()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW_ALL", "RESTRICT_TOKENS_AND_JOB_RUN_AS"))
 
 	return attrs
 }
@@ -8946,6 +8966,7 @@ func (newState *TokenAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(e
 func (c TokenAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -9195,6 +9216,7 @@ func (c TokenPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 
 	return attrs
 }
@@ -9366,6 +9388,7 @@ func (newState *TokenPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead
 func (c TokenPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 
 	return attrs
 }
@@ -10731,6 +10754,7 @@ func (c UpdateIpAccessList_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["ip_addresses"] = attrs["ip_addresses"].SetOptional()
 	attrs["label"] = attrs["label"].SetOptional()
 	attrs["list_type"] = attrs["list_type"].SetOptional()
+	attrs["list_type"] = attrs["list_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALLOW", "BLOCK"))
 
 	return attrs
 }

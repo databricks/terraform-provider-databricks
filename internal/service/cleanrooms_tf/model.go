@@ -21,6 +21,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/jobs_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -67,6 +68,7 @@ func (newState *CleanRoom) SyncEffectiveFieldsDuringRead(existingState CleanRoom
 
 func (c CleanRoom) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_restricted"] = attrs["access_restricted"].SetComputed()
+	attrs["access_restricted"] = attrs["access_restricted"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CSP_MISMATCH", "NO_RESTRICTION"))
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
@@ -75,6 +77,7 @@ func (c CleanRoom) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["remote_detailed_info"] = attrs["remote_detailed_info"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DELETED", "FAILED", "PROVISIONING"))
 	attrs["updated_at"] = attrs["updated_at"].SetComputed()
 
 	return attrs
@@ -241,12 +244,14 @@ func (newState *CleanRoomAsset) SyncEffectiveFieldsDuringRead(existingState Clea
 func (c CleanRoomAsset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["added_at"] = attrs["added_at"].SetComputed()
 	attrs["asset_type"] = attrs["asset_type"].SetOptional()
+	attrs["asset_type"] = attrs["asset_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FOREIGN_TABLE", "NOTEBOOK_FILE", "TABLE", "VIEW", "VOLUME"))
 	attrs["foreign_table"] = attrs["foreign_table"].SetOptional()
 	attrs["foreign_table_local_details"] = attrs["foreign_table_local_details"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notebook"] = attrs["notebook"].SetOptional()
 	attrs["owner_collaborator_alias"] = attrs["owner_collaborator_alias"].SetComputed()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "PENDING", "PERMISSION_DENIED"))
 	attrs["table"] = attrs["table"].SetOptional()
 	attrs["table_local_details"] = attrs["table_local_details"].SetOptional()
 	attrs["view"] = attrs["view"].SetOptional()
@@ -695,6 +700,7 @@ func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("APPROVED", "PENDING", "REJECTED"))
 	attrs["reviews"] = attrs["reviews"].SetOptional()
 	attrs["runner_collaborators"] = attrs["runner_collaborators"].SetOptional()
 
@@ -1249,6 +1255,7 @@ func (c CleanRoomNotebookReview) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at_millis"] = attrs["created_at_millis"].SetOptional()
 	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("APPROVED", "PENDING", "REJECTED"))
 	attrs["reviewer_collaborator_alias"] = attrs["reviewer_collaborator_alias"].SetOptional()
 
 	return attrs
@@ -1453,6 +1460,7 @@ func (newState *CleanRoomOutputCatalog) SyncEffectiveFieldsDuringRead(existingSt
 func (c CleanRoomOutputCatalog) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CREATED", "NOT_CREATED", "NOT_ELIGIBLE"))
 
 	return attrs
 }

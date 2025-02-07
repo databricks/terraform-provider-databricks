@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -821,6 +822,7 @@ func (c CreateFileRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["file_parent"] = attrs["file_parent"].SetRequired()
 	attrs["file_parent"] = attrs["file_parent"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetRequired()
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMBEDDED_NOTEBOOK", "PROVIDER_ICON"))
 	attrs["mime_type"] = attrs["mime_type"].SetRequired()
 
 	return attrs
@@ -1002,6 +1004,7 @@ func (c CreateInstallationRequest_SdkV2) ApplySchemaCustomizations(attrs map[str
 	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
 	attrs["listing_id"] = attrs["listing_id"].SetRequired()
 	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS", "DELTA_SHARING_RECIPIENT_TYPE_OPEN"))
 	attrs["repo_detail"] = attrs["repo_detail"].SetOptional()
 	attrs["repo_detail"] = attrs["repo_detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["share_name"] = attrs["share_name"].SetOptional()
@@ -1272,6 +1275,7 @@ func (c CreatePersonalizationRequest_SdkV2) ApplySchemaCustomizations(attrs map[
 	attrs["last_name"] = attrs["last_name"].SetOptional()
 	attrs["listing_id"] = attrs["listing_id"].SetRequired()
 	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS", "DELTA_SHARING_RECIPIENT_TYPE_OPEN"))
 
 	return attrs
 }
@@ -1540,6 +1544,7 @@ func (newState *DataRefreshInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c DataRefreshInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["interval"] = attrs["interval"].SetRequired()
 	attrs["unit"] = attrs["unit"].SetRequired()
+	attrs["unit"] = attrs["unit"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DAILY", "HOURLY", "MINUTE", "MONTHLY", "NONE", "QUARTERLY", "SECOND", "WEEKLY", "YEARLY"))
 
 	return attrs
 }
@@ -2220,6 +2225,7 @@ func (c ExchangeFilter_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["created_by"] = attrs["created_by"].SetOptional()
 	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
 	attrs["filter_type"] = attrs["filter_type"].SetRequired()
+	attrs["filter_type"] = attrs["filter_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GLOBAL_METASTORE_ID"))
 	attrs["filter_value"] = attrs["filter_value"].SetRequired()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -2390,8 +2396,10 @@ func (c FileInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["file_parent"] = attrs["file_parent"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].SetOptional()
+	attrs["marketplace_file_type"] = attrs["marketplace_file_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMBEDDED_NOTEBOOK", "PROVIDER_ICON"))
 	attrs["mime_type"] = attrs["mime_type"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FILE_STATUS_PUBLISHED", "FILE_STATUS_SANITIZATION_FAILED", "FILE_STATUS_SANITIZING", "FILE_STATUS_STAGING"))
 	attrs["status_message"] = attrs["status_message"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
@@ -2491,6 +2499,7 @@ func (newState *FileParent_SdkV2) SyncEffectiveFieldsDuringRead(existingState Fi
 
 func (c FileParent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file_parent_type"] = attrs["file_parent_type"].SetOptional()
+	attrs["file_parent_type"] = attrs["file_parent_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("LISTING", "PROVIDER"))
 	attrs["parent_id"] = attrs["parent_id"].SetOptional()
 
 	return attrs
@@ -3514,10 +3523,12 @@ func (c InstallationDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["listing_id"] = attrs["listing_id"].SetOptional()
 	attrs["listing_name"] = attrs["listing_name"].SetOptional()
 	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS", "DELTA_SHARING_RECIPIENT_TYPE_OPEN"))
 	attrs["repo_name"] = attrs["repo_name"].SetOptional()
 	attrs["repo_path"] = attrs["repo_path"].SetOptional()
 	attrs["share_name"] = attrs["share_name"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED", "INSTALLED"))
 	attrs["token_detail"] = attrs["token_detail"].SetOptional()
 	attrs["token_detail"] = attrs["token_detail"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tokens"] = attrs["tokens"].SetOptional()
@@ -5425,6 +5436,7 @@ func (c ListingDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["collection_granularity"] = attrs["collection_granularity"].SetOptional()
 	attrs["collection_granularity"] = attrs["collection_granularity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cost"] = attrs["cost"].SetOptional()
+	attrs["cost"] = attrs["cost"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FREE", "PAID"))
 	attrs["data_source"] = attrs["data_source"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["documentation_link"] = attrs["documentation_link"].SetOptional()
@@ -5706,8 +5718,10 @@ func (newState *ListingFulfillment_SdkV2) SyncEffectiveFieldsDuringRead(existing
 
 func (c ListingFulfillment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["fulfillment_type"] = attrs["fulfillment_type"].SetOptional()
+	attrs["fulfillment_type"] = attrs["fulfillment_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("INSTALL", "REQUEST_ACCESS"))
 	attrs["listing_id"] = attrs["listing_id"].SetRequired()
 	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS", "DELTA_SHARING_RECIPIENT_TYPE_OPEN"))
 	attrs["repo_info"] = attrs["repo_info"].SetOptional()
 	attrs["repo_info"] = attrs["repo_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["share_info"] = attrs["share_info"].SetOptional()
@@ -5826,6 +5840,7 @@ func (newState *ListingSetting_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c ListingSetting_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["visibility"] = attrs["visibility"].SetOptional()
+	attrs["visibility"] = attrs["visibility"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PRIVATE", "PUBLIC"))
 
 	return attrs
 }
@@ -5918,6 +5933,7 @@ func (c ListingSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["git_repo"] = attrs["git_repo"].SetOptional()
 	attrs["git_repo"] = attrs["git_repo"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["listingType"] = attrs["listingType"].SetRequired()
+	attrs["listingType"] = attrs["listingType"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PERSONALIZED", "STANDARD"))
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["provider_id"] = attrs["provider_id"].SetOptional()
 	attrs["provider_region"] = attrs["provider_region"].SetOptional()
@@ -5929,6 +5945,7 @@ func (c ListingSummary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["share"] = attrs["share"].SetOptional()
 	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DRAFT", "PENDING", "PUBLISHED", "SUSPENDED"))
 	attrs["subtitle"] = attrs["subtitle"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 	attrs["updated_by"] = attrs["updated_by"].SetOptional()
@@ -6195,6 +6212,7 @@ func (newState *ListingTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState Li
 
 func (c ListingTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["tag_name"] = attrs["tag_name"].SetOptional()
+	attrs["tag_name"] = attrs["tag_name"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("LISTING_TAG_TYPE_LANGUAGE", "LISTING_TAG_TYPE_TASK"))
 	attrs["tag_values"] = attrs["tag_values"].SetOptional()
 
 	return attrs
@@ -6319,9 +6337,11 @@ func (c PersonalizationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
 	attrs["provider_id"] = attrs["provider_id"].SetOptional()
 	attrs["recipient_type"] = attrs["recipient_type"].SetOptional()
+	attrs["recipient_type"] = attrs["recipient_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SHARING_RECIPIENT_TYPE_DATABRICKS", "DELTA_SHARING_RECIPIENT_TYPE_OPEN"))
 	attrs["share"] = attrs["share"].SetOptional()
 	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DENIED", "FULFILLED", "NEW", "REQUEST_PENDING"))
 	attrs["status_message"] = attrs["status_message"].SetOptional()
 	attrs["updated_at"] = attrs["updated_at"].SetOptional()
 
@@ -7118,6 +7138,7 @@ func (newState *ShareInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sha
 func (c ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["type"] = attrs["type"].SetRequired()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FULL", "SAMPLE"))
 
 	return attrs
 }
@@ -8031,6 +8052,7 @@ func (c UpdatePersonalizationRequestRequest_SdkV2) ApplySchemaCustomizations(att
 	attrs["share"] = attrs["share"].SetOptional()
 	attrs["share"] = attrs["share"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetRequired()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DENIED", "FULFILLED", "NEW", "REQUEST_PENDING"))
 
 	return attrs
 }

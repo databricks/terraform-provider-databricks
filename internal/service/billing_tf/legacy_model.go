@@ -19,6 +19,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -42,6 +43,7 @@ func (newState *ActionConfiguration_SdkV2) SyncEffectiveFieldsDuringRead(existin
 func (c ActionConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_configuration_id"] = attrs["action_configuration_id"].SetOptional()
 	attrs["action_type"] = attrs["action_type"].SetOptional()
+	attrs["action_type"] = attrs["action_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMAIL_NOTIFICATION"))
 	attrs["target"] = attrs["target"].SetOptional()
 
 	return attrs
@@ -112,8 +114,11 @@ func (c AlertConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["alert_configuration_id"] = attrs["alert_configuration_id"].SetOptional()
 	attrs["quantity_threshold"] = attrs["quantity_threshold"].SetOptional()
 	attrs["quantity_type"] = attrs["quantity_type"].SetOptional()
+	attrs["quantity_type"] = attrs["quantity_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("LIST_PRICE_DOLLARS_USD"))
 	attrs["time_period"] = attrs["time_period"].SetOptional()
+	attrs["time_period"] = attrs["time_period"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MONTH"))
 	attrs["trigger_type"] = attrs["trigger_type"].SetOptional()
+	attrs["trigger_type"] = attrs["trigger_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CUMULATIVE_SPENDING_EXCEEDED"))
 
 	return attrs
 }
@@ -460,6 +465,7 @@ func (newState *BudgetConfigurationFilterClause_SdkV2) SyncEffectiveFieldsDuring
 
 func (c BudgetConfigurationFilterClause_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operator"] = attrs["operator"].SetOptional()
+	attrs["operator"] = attrs["operator"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("IN"))
 	attrs["values"] = attrs["values"].SetOptional()
 
 	return attrs
@@ -625,6 +631,7 @@ func (newState *BudgetConfigurationFilterWorkspaceIdClause_SdkV2) SyncEffectiveF
 
 func (c BudgetConfigurationFilterWorkspaceIdClause_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["operator"] = attrs["operator"].SetOptional()
+	attrs["operator"] = attrs["operator"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("IN"))
 	attrs["values"] = attrs["values"].SetOptional()
 
 	return attrs
@@ -803,6 +810,7 @@ func (newState *CreateBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDur
 
 func (c CreateBillingUsageDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
+	attrs["dashboard_type"] = attrs["dashboard_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("USAGE_DASHBOARD_TYPE_GLOBAL", "USAGE_DASHBOARD_TYPE_WORKSPACE"))
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
 	return attrs
@@ -1031,6 +1039,7 @@ func (newState *CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) SyncE
 
 func (c CreateBudgetConfigurationBudgetActionConfigurations_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action_type"] = attrs["action_type"].SetOptional()
+	attrs["action_type"] = attrs["action_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EMAIL_NOTIFICATION"))
 	attrs["target"] = attrs["target"].SetOptional()
 
 	return attrs
@@ -1096,8 +1105,11 @@ func (c CreateBudgetConfigurationBudgetAlertConfigurations_SdkV2) ApplySchemaCus
 	attrs["action_configurations"] = attrs["action_configurations"].SetOptional()
 	attrs["quantity_threshold"] = attrs["quantity_threshold"].SetOptional()
 	attrs["quantity_type"] = attrs["quantity_type"].SetOptional()
+	attrs["quantity_type"] = attrs["quantity_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("LIST_PRICE_DOLLARS_USD"))
 	attrs["time_period"] = attrs["time_period"].SetOptional()
+	attrs["time_period"] = attrs["time_period"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MONTH"))
 	attrs["trigger_type"] = attrs["trigger_type"].SetOptional()
+	attrs["trigger_type"] = attrs["trigger_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CUMULATIVE_SPENDING_EXCEEDED"))
 
 	return attrs
 }
@@ -1507,8 +1519,11 @@ func (c CreateLogDeliveryConfigurationParams_SdkV2) ApplySchemaCustomizations(at
 	attrs["delivery_path_prefix"] = attrs["delivery_path_prefix"].SetOptional()
 	attrs["delivery_start_time"] = attrs["delivery_start_time"].SetOptional()
 	attrs["log_type"] = attrs["log_type"].SetRequired()
+	attrs["log_type"] = attrs["log_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AUDIT_LOGS", "BILLABLE_USAGE"))
 	attrs["output_format"] = attrs["output_format"].SetRequired()
+	attrs["output_format"] = attrs["output_format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CSV", "JSON"))
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISABLED", "ENABLED"))
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetRequired()
 	attrs["workspace_ids_filter"] = attrs["workspace_ids_filter"].SetOptional()
 
@@ -2645,8 +2660,11 @@ func (c LogDeliveryConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["log_delivery_status"] = attrs["log_delivery_status"].SetOptional()
 	attrs["log_delivery_status"] = attrs["log_delivery_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["log_type"] = attrs["log_type"].SetOptional()
+	attrs["log_type"] = attrs["log_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AUDIT_LOGS", "BILLABLE_USAGE"))
 	attrs["output_format"] = attrs["output_format"].SetOptional()
+	attrs["output_format"] = attrs["output_format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CSV", "JSON"))
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISABLED", "ENABLED"))
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetOptional()
 	attrs["workspace_ids_filter"] = attrs["workspace_ids_filter"].SetOptional()
@@ -2804,6 +2822,7 @@ func (c LogDeliveryStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["last_successful_attempt_time"] = attrs["last_successful_attempt_time"].SetOptional()
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CREATED", "NOT_FOUND", "SUCCEEDED", "SYSTEM_FAILURE", "USER_FAILURE"))
 
 	return attrs
 }
@@ -2891,6 +2910,7 @@ func (newState *SortSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sort
 func (c SortSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["descending"] = attrs["descending"].SetOptional()
 	attrs["field"] = attrs["field"].SetOptional()
+	attrs["field"] = attrs["field"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("POLICY_NAME"))
 
 	return attrs
 }
@@ -3316,6 +3336,7 @@ func (newState *UpdateLogDeliveryConfigurationStatusRequest_SdkV2) SyncEffective
 func (c UpdateLogDeliveryConfigurationStatusRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
 	attrs["status"] = attrs["status"].SetRequired()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISABLED", "ENABLED"))
 
 	return attrs
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -86,6 +87,7 @@ func (newState *CreateEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c CreateEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetRequired()
+	attrs["endpoint_type"] = attrs["endpoint_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("STANDARD"))
 	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
@@ -160,6 +162,7 @@ func (c CreateVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
 	attrs["index_type"] = attrs["index_type"].SetRequired()
+	attrs["index_type"] = attrs["index_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SYNC", "DIRECT_ACCESS"))
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["primary_key"] = attrs["primary_key"].SetRequired()
 
@@ -531,6 +534,7 @@ func (c DeleteDataVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map
 	attrs["result"] = attrs["result"].SetOptional()
 	attrs["result"] = attrs["result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILURE", "PARTIAL_SUCCESS", "SUCCESS"))
 
 	return attrs
 }
@@ -772,6 +776,7 @@ func (c DeltaSyncVectorIndexSpecRequest_SdkV2) ApplySchemaCustomizations(attrs m
 	attrs["embedding_vector_columns"] = attrs["embedding_vector_columns"].SetOptional()
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
 	attrs["pipeline_type"] = attrs["pipeline_type"].SetOptional()
+	attrs["pipeline_type"] = attrs["pipeline_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CONTINUOUS", "TRIGGERED"))
 	attrs["source_table"] = attrs["source_table"].SetOptional()
 
 	return attrs
@@ -941,6 +946,7 @@ func (c DeltaSyncVectorIndexSpecResponse_SdkV2) ApplySchemaCustomizations(attrs 
 	attrs["embedding_writeback_table"] = attrs["embedding_writeback_table"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["pipeline_type"] = attrs["pipeline_type"].SetOptional()
+	attrs["pipeline_type"] = attrs["pipeline_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CONTINUOUS", "TRIGGERED"))
 	attrs["source_table"] = attrs["source_table"].SetOptional()
 
 	return attrs
@@ -1307,6 +1313,7 @@ func (c EndpointInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["endpoint_status"] = attrs["endpoint_status"].SetOptional()
 	attrs["endpoint_status"] = attrs["endpoint_status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_type"] = attrs["endpoint_type"].SetOptional()
+	attrs["endpoint_type"] = attrs["endpoint_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("STANDARD"))
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["last_updated_user"] = attrs["last_updated_user"].SetOptional()
@@ -1410,6 +1417,7 @@ func (newState *EndpointStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c EndpointStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OFFLINE", "ONLINE", "PROVISIONING"))
 
 	return attrs
 }
@@ -1958,6 +1966,7 @@ func (c MiniVectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["creator"] = attrs["creator"].SetOptional()
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
 	attrs["index_type"] = attrs["index_type"].SetOptional()
+	attrs["index_type"] = attrs["index_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SYNC", "DIRECT_ACCESS"))
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["primary_key"] = attrs["primary_key"].SetOptional()
 
@@ -2947,6 +2956,7 @@ func (c UpsertDataVectorIndexResponse_SdkV2) ApplySchemaCustomizations(attrs map
 	attrs["result"] = attrs["result"].SetOptional()
 	attrs["result"] = attrs["result"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILURE", "PARTIAL_SUCCESS", "SUCCESS"))
 
 	return attrs
 }
@@ -3186,6 +3196,7 @@ func (c VectorIndex_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["direct_access_index_spec"] = attrs["direct_access_index_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["endpoint_name"] = attrs["endpoint_name"].SetOptional()
 	attrs["index_type"] = attrs["index_type"].SetOptional()
+	attrs["index_type"] = attrs["index_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELTA_SYNC", "DIRECT_ACCESS"))
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["primary_key"] = attrs["primary_key"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()

@@ -15,4 +15,6 @@
 
 ### Exporter
 
+ * Refactor UC, SQL and SCIM objects into separate files ([#4477](https://github.com/databricks/terraform-provider-databricks/pull/4477)).
+
 ### Internal Changes

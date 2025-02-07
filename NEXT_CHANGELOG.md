@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
  * Support updating `options` in `databricks_catalog` ([#4476](https://github.com/databricks/terraform-provider-databricks/pull/4476)).
+ * Increase `databricks_library` timeout from 15m to 30m.
 
 ### Bug Fixes
 

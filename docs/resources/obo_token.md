@@ -3,6 +3,8 @@ subcategory: "Security"
 ---
 # databricks_obo_token Resource
 
+-> This resource can only be used with a workspace-level provider!
+
 This resource creates [On-Behalf-Of tokens](https://docs.databricks.com/administration-guide/users-groups/service-principals.html#manage-personal-access-tokens-for-a-service-principal) for a [databricks_service_principal](service_principal.md) in Databricks workspaces on AWS. It is very useful, when you want to provision resources within a workspace through narrowly-scoped service principal, that has no access to other workspaces within the same Databricks Account.
 
 ## Example Usage

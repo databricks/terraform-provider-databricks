@@ -17,10 +17,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/storage"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func (ic *importContext) isServiceEnabled(service string) bool {
@@ -430,48 +427,11 @@ func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
 	return err
 }
 
-func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	if pathString == "owner" {
-		return d.Get(pathString).(string) == ""
-	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-}
-
-func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	if pathString == "isolation_mode" {
-		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-	}
-	return shouldOmitForUnityCatalog(ic, pathString, as, d)
-}
-
 func appendEndingSlashToDirName(dir string) string {
 	if dir == "" || dir[len(dir)-1] == '/' {
 		return dir
 	}
 	return dir + "/"
-}
-
-func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-		// catalog and schema names for the source resource
-		res_catalog_name := res.Data.Get(catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(schema_name_attr).(string)
-		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
-		if res_catalog_name == "" || res_schema_name == "" {
-			return false
-		}
-		// catalog and schema names for target resource approximation
-		ra_catalog_name, cat_found := ra.Get("catalog_name")
-		ra_schema_name, schema_found := ra.Get("name")
-		if !cat_found || !schema_found {
-			log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
-				ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
-			return false
-		}
-		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
-		return result
-
-	}
 }
 
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
@@ -487,13 +447,6 @@ func isMatchignShareObject(obj string) isValidAproximationFunc {
 	}
 }
 
-func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
-	matchType, ok := res.Data.GetOk(objPath)
-	artifactType := res.Data.Get("artifact_type").(string)
-	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
-}
-
 func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) func(ic *importContext, r *resource) bool {
 	return func(ic *importContext, r *resource) bool {
 		res := (r.Data != nil && r.Data.Get(attrName).(string) == "")
@@ -502,27 +455,6 @@ func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) 
 		}
 		return res
 	}
-}
-
-func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) (string, *resource) {
-	gr := &resource{
-		Resource: "databricks_grants",
-		ID:       id,
-	}
-	var owner string
-	if parentResource.Data != nil {
-		ignoreFunc := ic.Importables[parentResource.Resource].Ignore
-		if ignoreFunc != nil && ignoreFunc(ic, parentResource) {
-			return "", nil
-		}
-		ownerRaw, ok := parentResource.Data.GetOk("owner")
-		if ok {
-			gr.AddExtraData("owner", ownerRaw)
-			owner = ownerRaw.(string)
-		}
-	}
-	ic.Emit(gr)
-	return owner, gr
 }
 
 func (ic *importContext) addTfVar(name, value string) {
@@ -544,42 +476,18 @@ func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name strin
 	}
 }
 
-func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
-	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindingsAll(ic.Context, catalog.GetBindingsRequest{
-		SecurableName: securableName,
-		SecurableType: catalog.GetBindingsSecurableType(securableType),
-	})
-	if err != nil {
-		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
-		return
-	}
-	for _, binding := range bindings {
-		id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securableType, securableName)
-		// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
-		// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
-		// to decrease a number of API calls.
-		d := ic.Resources["databricks_workspace_binding"].Data(
-			&terraform.InstanceState{
-				ID: id,
-				Attributes: map[string]string{
-					"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
-					"securable_type": securableType,
-					"securable_name": securableName,
-					"binding_type":   binding.BindingType.String(),
-				},
-			})
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_binding",
-			ID:       id,
-			Name:     fmt.Sprintf("%s_%s_ws_%d", securableType, securableName, binding.WorkspaceId),
-			Data:     d,
-		})
+func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		return d.Get(nm).(string) + "_" + d.Id()
 	}
 }
 
-func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	res_securable_type := res.Data.Get("securable_type").(string)
-	res_securable_name := res.Data.Get("securable_name").(string)
-	ra_name, _ := ra.Get("name")
-	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
+func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		name := d.Get("name").(string)
+		if name == "" {
+			return d.Id()
+		}
+		return name
+	}
 }

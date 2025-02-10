@@ -8,6 +8,7 @@
  * Increase `databricks_library` timeout from 15m to 30m.
 
 ### Bug Fixes
+ * Fixed an issue where reordering objects in a (pluginfw) Share wouldn’t update properly unless other changes were made ([#4481](https://github.com/databricks/terraform-provider-databricks/pull/4481)).
 
 ### Documentation
 

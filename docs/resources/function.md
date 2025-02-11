@@ -85,8 +85,21 @@ The following arguments are supported:
 * `catalog_name` - (Required) The name of the parent [databricks_catalog](../resources/catalog.md). 
 * `schema_name` - (Required) The name of [databricks_schema](../resources/schema.md) where the function will reside.
 * `input_params` - (Required) A list of objects specifying the input parameters for the function. 
-    * `name` - (Required) The name of the parameter.
-    * `type` - (Required) The data type of the parameter (e.g., `DOUBLE`, `INT`, etc.).
+    * `parameters` - (Required) An array of objects describing the function's return parameters. Each object includes:
+        * `name` - (Required) The name of the input parameter.
+        * `type_text` - (Required) The full data type specification as SQL/catalog string text.
+        * `type_json` - The full data type specification as JSON-serialized text.
+        * `type_name` - (Required) The name of the data type (e.g., `BOOLEAN`, `INT`, `STRING`, etc.).
+        * `type_precision` - (Required for `DecimalTypes`) Digits of precision for the type.
+        * `type_scale` - (Required for `DecimalTypes`) Digits to the right of the decimal for the type.
+        * `type_interval_type` - The format of `IntervalType`.
+        * `position` - (Required) The ordinal position of the parameter (starting at 0).
+        * `parameter_mode` - The mode of the parameter. Possible value: `IN`.
+        * `parameter_type` - The type of the parameter. Possible values:
+            * `PARAM` - Represents a generic parameter.
+            * `COLUMN` - Represents a column parameter.
+        * `parameter_default` - The default value for the parameter, if any.
+        * `comment` - User-provided free-form text description of the parameter.
 * `data_type` - (Required) The return data type of the function (e.g., `DOUBLE`).
 * `full_data_type` - (Required) Pretty printed function data type (e.g. `string`).
 * `return_params` - (Optional) A list of objects specifying the function's return parameters.

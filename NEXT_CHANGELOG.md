@@ -13,6 +13,7 @@
 ### Documentation
 
  * Add an example for Databricks Apps permissions ([#4475](https://github.com/databricks/terraform-provider-databricks/pull/4475)).
+ * Add explanation of timeouts to the troubleshooting guide ([#4482](https://github.com/databricks/terraform-provider-databricks/pull/4482)).
 
 ### Exporter
 

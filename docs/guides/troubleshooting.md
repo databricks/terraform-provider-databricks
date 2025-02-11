@@ -263,11 +263,11 @@ You may see several different kinds of timeout messages when using the Terraform
    ```
    You can request this feature for a specific resource by opening a GitHub issue. Please include the resource name and debug logs from the failed operation.
 
-2. The HTTP client timeout. This controls how long the underlying SDK's HTTP client waits for a response for a single API call. This is controlled with `http_timeout_seconds` in the provider configuration. If this timeout is exceeded, users see a message like `request timed out after 1m0s of inactivity`. Users can increase this timeout as needed, and it will apply to all API requests made by the TF provider.
+2. The **HTTP client timeout** controls how long the underlying SDK's HTTP client waits for a response for a single API call. This is controlled with `http_timeout_seconds` in the provider configuration. If this timeout is exceeded, users see a message like `request timed out after 1m0s of inactivity`. Users can increase this timeout as needed, and it will apply to all API requests made by the TF provider.
    ```
    provider "databricks" {
      ...
      http_timeout_seconds = 120
    }
    ```
-3. The API proxy timeout. This is a server-side timeout that needs to be configured by each API team at Databricks for their API endpoints. If this timeout is exceeded, users see a message like `The service at ... is taking too long to process your request. Please try again later or try a faster operation.`. Users cannot modify this timeout: it is configured by a Databricks team responsible for the backend service. If users see this error, they should reach out to Databricks support to investigate the issue.
+3. The **API proxy timeout** is a server-side timeout that controls how long to wait for backend service to handle an API request. This timeout is configured by each API team at Databricks for their API endpoints. If this timeout is exceeded, users see a message like `The service at ... is taking too long to process your request. Please try again later or try a faster operation.`. Users cannot modify this timeout: it is configured by a Databricks team responsible for the backend service. If users see this error, they should reach out to Databricks support to investigate the issue.

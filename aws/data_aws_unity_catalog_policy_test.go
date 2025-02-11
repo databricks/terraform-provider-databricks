@@ -35,8 +35,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:ListBucketMultipartUploads",
-					      "s3:ListMultipartUploadParts",
-					      "s3:AbortMultipartUpload"
+		"s3:ListMultipartUploadParts",
+		"s3:AbortMultipartUpload"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",
@@ -151,8 +151,8 @@ func TestDataAwsUnityCatalogPolicyFullKms(t *testing.T) {
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:ListBucketMultipartUploads",
-					      "s3:ListMultipartUploadParts",
-					      "s3:AbortMultipartUpload"
+		"s3:ListMultipartUploadParts",
+		"s3:AbortMultipartUpload"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",
@@ -266,8 +266,8 @@ func TestDataAwsUnityCatalogPolicyWithoutKMS(t *testing.T) {
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:ListBucketMultipartUploads",
-					      "s3:ListMultipartUploadParts",
-					      "s3:AbortMultipartUpload"
+		"s3:ListMultipartUploadParts",
+		"s3:AbortMultipartUpload"
               ],
               "Resource": [
                 "arn:aws:s3:::databricks-bucket/*",
@@ -372,8 +372,8 @@ func TestDataAwsUnityCatalogPolicyPartionGov(t *testing.T) {
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:ListBucketMultipartUploads",
-					      "s3:ListMultipartUploadParts",
-					      "s3:AbortMultipartUpload"
+		"s3:ListMultipartUploadParts",
+		"s3:AbortMultipartUpload"
               ],
               "Resource": [
                 "arn:aws-us-gov:s3:::databricks-bucket/*",

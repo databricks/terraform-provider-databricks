@@ -58,13 +58,13 @@ resource "databricks_grants" "external_creds" {
 }
 ```
 
-For GCP (only applicable when purpose is `STORAGE`)
+For GCP 
 
 ```hcl
 resource "databricks_credential" "external_gcp_sa" {
   name = "gcp_sa_credential"
   databricks_gcp_service_account {}
-  purpose = "STORAGE"
+  purpose = "SERVICE"
   comment = "GCP SA credential managed by TF"
 }
 
@@ -106,7 +106,7 @@ The following arguments are required:
 - `application_id` - The application ID of the application registration within the referenced AAD tenant
 - `client_secret` - The client secret generated for the above app ID in AAD. **This field is redacted on output**
 
-`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account.  Only applicable when purpose is `STORAGE`:
+`databricks_gcp_service_account` optional configuration block for creating a Databricks-managed GCP Service Account:
 
 - `email` (output only) - The email of the GCP service account created, to be granted access to relevant buckets.
 

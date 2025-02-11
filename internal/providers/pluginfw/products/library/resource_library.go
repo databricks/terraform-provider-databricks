@@ -29,7 +29,7 @@ import (
 )
 
 const resourceName = "library"
-const libraryDefaultInstallationTimeout = 15 * time.Minute
+const libraryDefaultInstallationTimeout = 30 * time.Minute
 
 var _ resource.ResourceWithConfigure = &LibraryResource{}
 

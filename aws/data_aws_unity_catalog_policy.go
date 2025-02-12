@@ -28,6 +28,10 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 					"s3:DeleteObject",
 					"s3:ListBucket",
 					"s3:GetBucketLocation",
+					// Multipart uploads support
+					"s3:ListBucketMultipartUploads",
+					"s3:ListMultipartUploadParts",
+					"s3:AbortMultipartUpload",
 				},
 				Resources: []string{
 					fmt.Sprintf("arn:%s:s3:::%s/*", awsPartition, bucket),

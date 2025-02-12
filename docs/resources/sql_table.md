@@ -209,17 +209,17 @@ For example, suppose we have the following `databricks_table` resource:
 
 ```hcl
 resource "databricks_table" "this" {
-  catalog_name = "catalog"
-  schema_name = "schema"
-  name = "table"
-  table_type = "MANAGED"
+  catalog_name       = "catalog"
+  schema_name        = "schema"
+  name               = "table"
+  table_type         = "MANAGED"
   data_source_format = "DELTA"
   column {
-    name = "col1"
+    name      = "col1"
     type_name = "STRING"
     type_json = "{\"type\":\"STRING\"}"
-    comment = "comment"
-    nullable = true
+    comment   = "comment"
+    nullable  = true
   }
   comment = "comment"
   properties = {

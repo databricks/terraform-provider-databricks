@@ -17,6 +17,7 @@
  * Add an example for Databricks Apps permissions ([#4475](https://github.com/databricks/terraform-provider-databricks/pull/4475)).
  * Add explanation of timeouts to the troubleshooting guide ([#4482](https://github.com/databricks/terraform-provider-databricks/pull/4482)).
  * Clarify that `databricks_token` and `databricks_obo_token` could be used only with workspace-level provider ([#4480](https://github.com/databricks/terraform-provider-databricks/pull/4480)).
+ * Clarify limitations whe importing `databricks_sql_table` ([#4483](https://github.com/databricks/terraform-provider-databricks/pull/4483)).
 
 ### Exporter
 

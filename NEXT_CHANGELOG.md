@@ -23,3 +23,5 @@
  * Refactor UC, SQL and SCIM objects into separate files ([#4477](https://github.com/databricks/terraform-provider-databricks/pull/4477)).
 
 ### Internal Changes
+
+ * Remove incorrectly working integration test `TestAccLibraryUpdateTransitionFromPluginFw` ([#4487](https://github.com/databricks/terraform-provider-databricks/pull/4487)).

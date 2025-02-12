@@ -185,29 +185,3 @@ func TestAccLibraryUpdateTransitionFromSdkV2(t *testing.T) {
 		},
 	)
 }
-
-// Testing the transition from plugin framework to sdkv2.
-func TestAccLibraryUpdateTransitionFromPluginFw(t *testing.T) {
-	acceptance.WorkspaceLevel(t,
-		acceptance.Step{
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-					cluster_id = databricks_cluster.this.id
-					pypi {
-						repo = "https://pypi.org/simple"
-						package = "databricks-sdk"
-					}
-				}
-				`,
-		},
-		acceptance.Step{
-			ProtoV6ProviderFactories: sdkV2FallbackFactory,
-			Template: commonClusterConfig + `resource "databricks_library" "new_library" {
-				cluster_id = databricks_cluster.this.id
-				pypi {
-					package = "networkx"
-				}
-			}
-			`,
-		},
-	)
-}

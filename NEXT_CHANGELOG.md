@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
  * Add multipart permissions to `databricks_aws_unity_catalog_policy` data source ([#4440](https://github.com/databricks/terraform-provider-databricks/pull/4440)).
+ * Add support for cluster logs delivery to UC Volumes ([#4492](https://github.com/databricks/terraform-provider-databricks/pull/4492)).
 
 ### Bug Fixes
  * Fixed an issue where reordering objects in a (pluginfw) Share wouldn’t update properly unless other changes were made ([#4481](https://github.com/databricks/terraform-provider-databricks/pull/4481)).

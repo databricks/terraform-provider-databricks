@@ -1037,11 +1037,12 @@ type ClusterAttributes struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -1740,11 +1741,12 @@ type ClusterDetails struct {
 	// restarts and resizes, while each new cluster has a globally unique id.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster log delivery status.
 	ClusterLogStatus types.Object `tfsdk:"cluster_log_status"`
@@ -2886,6 +2888,9 @@ type ClusterLogConf struct {
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
 	S3 types.Object `tfsdk:"s3"`
+	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
+	// "/Volumes/catalog/schema/volume/cluster_log" } }`
+	Volumes types.Object `tfsdk:"volumes"`
 }
 
 func (newState *ClusterLogConf) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf) {
@@ -2897,6 +2902,7 @@ func (newState *ClusterLogConf) SyncEffectiveFieldsDuringRead(existingState Clus
 func (c ClusterLogConf) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dbfs"] = attrs["dbfs"].SetOptional()
 	attrs["s3"] = attrs["s3"].SetOptional()
+	attrs["volumes"] = attrs["volumes"].SetOptional()
 
 	return attrs
 }
@@ -2910,8 +2916,9 @@ func (c ClusterLogConf) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 // SDK values.
 func (a ClusterLogConf) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dbfs": reflect.TypeOf(DbfsStorageInfo{}),
-		"s3":   reflect.TypeOf(S3StorageInfo{}),
+		"dbfs":    reflect.TypeOf(DbfsStorageInfo{}),
+		"s3":      reflect.TypeOf(S3StorageInfo{}),
+		"volumes": reflect.TypeOf(VolumesStorageInfo{}),
 	}
 }
 
@@ -2922,8 +2929,9 @@ func (o ClusterLogConf) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbfs": o.Dbfs,
-			"s3":   o.S3,
+			"dbfs":    o.Dbfs,
+			"s3":      o.S3,
+			"volumes": o.Volumes,
 		})
 }
 
@@ -2931,8 +2939,9 @@ func (o ClusterLogConf) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 func (o ClusterLogConf) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"dbfs": DbfsStorageInfo{}.Type(ctx),
-			"s3":   S3StorageInfo{}.Type(ctx),
+			"dbfs":    DbfsStorageInfo{}.Type(ctx),
+			"s3":      S3StorageInfo{}.Type(ctx),
+			"volumes": VolumesStorageInfo{}.Type(ctx),
 		},
 	}
 }
@@ -2991,6 +3000,34 @@ func (o *ClusterLogConf) GetS3(ctx context.Context) (S3StorageInfo, bool) {
 func (o *ClusterLogConf) SetS3(ctx context.Context, v S3StorageInfo) {
 	vs := v.ToObjectValue(ctx)
 	o.S3 = vs
+}
+
+// GetVolumes returns the value of the Volumes field in ClusterLogConf as
+// a VolumesStorageInfo value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterLogConf) GetVolumes(ctx context.Context) (VolumesStorageInfo, bool) {
+	var e VolumesStorageInfo
+	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
+		return e, false
+	}
+	var v []VolumesStorageInfo
+	d := o.Volumes.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVolumes sets the value of the Volumes field in ClusterLogConf.
+func (o *ClusterLogConf) SetVolumes(ctx context.Context, v VolumesStorageInfo) {
+	vs := v.ToObjectValue(ctx)
+	o.Volumes = vs
 }
 
 type ClusterPermission struct {
@@ -3952,11 +3989,12 @@ type ClusterSpec struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -4935,11 +4973,12 @@ type CreateCluster struct {
 	// creation of a new cluster.
 	CloneFrom types.Object `tfsdk:"clone_from"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -7269,11 +7308,12 @@ type EditCluster struct {
 	// ID of the cluster
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -16873,11 +16913,12 @@ type UpdateClusterResource struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.Object `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -17577,7 +17618,8 @@ func (o UpdateResponse) Type(ctx context.Context) attr.Type {
 }
 
 type VolumesStorageInfo struct {
-	// Unity Catalog Volumes file destination, e.g. `/Volumes/my-init.sh`
+	// Unity Catalog volumes file destination, e.g.
+	// `/Volumes/catalog/schema/volume/dir/file`
 	Destination types.String `tfsdk:"destination"`
 }
 

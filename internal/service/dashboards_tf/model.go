@@ -1436,6 +1436,55 @@ func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Co
 	o.StatementResponse = vs
 }
 
+// Get conversation message SQL query result by attachment id
+type GenieGetQueryResultByAttachmentRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetQueryResultByAttachmentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetQueryResultByAttachmentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetQueryResultByAttachmentRequest
+// only implements ToObjectValue() and Type().
+func (o GenieGetQueryResultByAttachmentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":   o.AttachmentId,
+			"conversation_id": o.ConversationId,
+			"message_id":      o.MessageId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":   types.StringType,
+			"conversation_id": types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
 type GenieMessage struct {
 	// AI produced response to the message
 	Attachments types.List `tfsdk:"attachments"`

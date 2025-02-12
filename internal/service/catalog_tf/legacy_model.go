@@ -1259,7 +1259,7 @@ func (newState *AzureManagedIdentity_SdkV2) SyncEffectiveFieldsDuringRead(existi
 
 func (c AzureManagedIdentity_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["access_connector_id"] = attrs["access_connector_id"].SetRequired()
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
 	attrs["managed_identity_id"] = attrs["managed_identity_id"].SetOptional()
 
 	return attrs
@@ -4982,9 +4982,9 @@ func (newState *DatabricksGcpServiceAccount_SdkV2) SyncEffectiveFieldsDuringRead
 }
 
 func (c DatabricksGcpServiceAccount_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credential_id"] = attrs["credential_id"].SetOptional()
-	attrs["email"] = attrs["email"].SetOptional()
-	attrs["private_key_id"] = attrs["private_key_id"].SetOptional()
+	attrs["credential_id"] = attrs["credential_id"].SetComputed()
+	attrs["email"] = attrs["email"].SetComputed()
+	attrs["private_key_id"] = attrs["private_key_id"].SetComputed()
 
 	return attrs
 }

@@ -43,7 +43,6 @@ func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaReques
 		c.SetOptional("comment")
 		c.SetOptional("properties")
 
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "browse_only")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "catalog_name")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "comment")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "data_type")

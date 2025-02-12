@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"log"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -34,12 +35,21 @@ type ConnectionInfo struct {
 	ReadOnly bool `json:"read_only,omitempty" tf:"force_new,computed"`
 }
 
-var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
+var sensitiveOptions = []string{"user", "password", "personalAccessToken", "access_token", "client_secret", "pem_private_key", "OAuthPvtKey", "GoogleServiceAccountKeyJson"}
+
+func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData) bool {
+	if k == "options.pem_private_key_expiration_epoch_sec" {
+		log.Printf("[INFO] Suppressing diff on %s", k)
+		return true
+	}
+	return false
+}
 
 func ResourceConnection() common.Resource {
 	s := common.StructToSchema(ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			m["options"].DiffSuppressFunc = suppressPemPrivateKeyExpiration
 			return m
 		})
 	pi := common.NewPairID("metastore_id", "name").Schema(
@@ -132,6 +142,7 @@ func ResourceConnection() common.Resource {
 			}
 
 			updateConnectionRequest.Owner = ""
+			delete(updateConnectionRequest.Options, "pem_private_key_expiration_epoch_sec")
 			_, err = w.Connections.Update(ctx, updateConnectionRequest)
 			if err != nil {
 				if d.HasChange("owner") {

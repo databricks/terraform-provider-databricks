@@ -108,6 +108,10 @@ type CreateCustomAppIntegration_SdkV2 struct {
 	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *CreateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCustomAppIntegration_SdkV2) {
@@ -123,6 +127,7 @@ func (c CreateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -136,9 +141,10 @@ func (c CreateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[st
 // SDK values.
 func (a CreateCustomAppIntegration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"scopes":              reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -149,11 +155,12 @@ func (o CreateCustomAppIntegration_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"confidential":        o.Confidential,
-			"name":                o.Name,
-			"redirect_urls":       o.RedirectUrls,
-			"scopes":              o.Scopes,
-			"token_access_policy": o.TokenAccessPolicy,
+			"confidential":           o.Confidential,
+			"name":                   o.Name,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -171,6 +178,9 @@ func (o CreateCustomAppIntegration_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"token_access_policy": basetypes.ListType{
 				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
+			},
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
 			},
 		},
 	}
@@ -252,6 +262,32 @@ func (o *CreateCustomAppIntegration_SdkV2) SetTokenAccessPolicy(ctx context.Cont
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
 	o.TokenAccessPolicy = types.ListValueMust(t, vs)
+}
+
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in CreateCustomAppIntegration_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateCustomAppIntegration_SdkV2) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in CreateCustomAppIntegration_SdkV2.
+func (o *CreateCustomAppIntegration_SdkV2) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
 type CreateCustomAppIntegrationOutput_SdkV2 struct {
@@ -1105,6 +1141,10 @@ type GetCustomAppIntegrationOutput_SdkV2 struct {
 	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *GetCustomAppIntegrationOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCustomAppIntegrationOutput_SdkV2) {
@@ -1125,6 +1165,7 @@ func (c GetCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map
 	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -1138,9 +1179,10 @@ func (c GetCustomAppIntegrationOutput_SdkV2) ApplySchemaCustomizations(attrs map
 // SDK values.
 func (a GetCustomAppIntegrationOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"scopes":              reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -1151,16 +1193,17 @@ func (o GetCustomAppIntegrationOutput_SdkV2) ToObjectValue(ctx context.Context) 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client_id":           o.ClientId,
-			"confidential":        o.Confidential,
-			"create_time":         o.CreateTime,
-			"created_by":          o.CreatedBy,
-			"creator_username":    o.CreatorUsername,
-			"integration_id":      o.IntegrationId,
-			"name":                o.Name,
-			"redirect_urls":       o.RedirectUrls,
-			"scopes":              o.Scopes,
-			"token_access_policy": o.TokenAccessPolicy,
+			"client_id":              o.ClientId,
+			"confidential":           o.Confidential,
+			"create_time":            o.CreateTime,
+			"created_by":             o.CreatedBy,
+			"creator_username":       o.CreatorUsername,
+			"integration_id":         o.IntegrationId,
+			"name":                   o.Name,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -1183,6 +1226,9 @@ func (o GetCustomAppIntegrationOutput_SdkV2) Type(ctx context.Context) attr.Type
 			},
 			"token_access_policy": basetypes.ListType{
 				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
+			},
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
 			},
 		},
 	}
@@ -1264,6 +1310,32 @@ func (o *GetCustomAppIntegrationOutput_SdkV2) SetTokenAccessPolicy(ctx context.C
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
 	o.TokenAccessPolicy = types.ListValueMust(t, vs)
+}
+
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in GetCustomAppIntegrationOutput_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCustomAppIntegrationOutput_SdkV2) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in GetCustomAppIntegrationOutput_SdkV2.
+func (o *GetCustomAppIntegrationOutput_SdkV2) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
 // Get OAuth Custom App Integration
@@ -2614,8 +2686,16 @@ type UpdateCustomAppIntegration_SdkV2 struct {
 	// List of OAuth redirect urls to be updated in the custom OAuth app
 	// integration
 	RedirectUrls types.List `tfsdk:"redirect_urls"`
+	// List of OAuth scopes to be updated in the custom OAuth app integration,
+	// similar to redirect URIs this will fully replace the existing values
+	// instead of appending
+	Scopes types.List `tfsdk:"scopes"`
 	// Token access policy to be updated in the custom OAuth app integration
 	TokenAccessPolicy types.List `tfsdk:"token_access_policy"`
+	// Scopes that will need to be consented by end user to mint the access
+	// token. If the user does not authorize the access token will not be
+	// minted. Must be a subset of scopes.
+	UserAuthorizedScopes types.List `tfsdk:"user_authorized_scopes"`
 }
 
 func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCustomAppIntegration_SdkV2) {
@@ -2627,8 +2707,10 @@ func (newState *UpdateCustomAppIntegration_SdkV2) SyncEffectiveFieldsDuringRead(
 func (c UpdateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["integration_id"] = attrs["integration_id"].SetRequired()
 	attrs["redirect_urls"] = attrs["redirect_urls"].SetOptional()
+	attrs["scopes"] = attrs["scopes"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].SetOptional()
 	attrs["token_access_policy"] = attrs["token_access_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["user_authorized_scopes"] = attrs["user_authorized_scopes"].SetOptional()
 
 	return attrs
 }
@@ -2642,8 +2724,10 @@ func (c UpdateCustomAppIntegration_SdkV2) ApplySchemaCustomizations(attrs map[st
 // SDK values.
 func (a UpdateCustomAppIntegration_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"redirect_urls":       reflect.TypeOf(types.String{}),
-		"token_access_policy": reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"redirect_urls":          reflect.TypeOf(types.String{}),
+		"scopes":                 reflect.TypeOf(types.String{}),
+		"token_access_policy":    reflect.TypeOf(TokenAccessPolicy_SdkV2{}),
+		"user_authorized_scopes": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2654,9 +2738,11 @@ func (o UpdateCustomAppIntegration_SdkV2) ToObjectValue(ctx context.Context) bas
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"integration_id":      o.IntegrationId,
-			"redirect_urls":       o.RedirectUrls,
-			"token_access_policy": o.TokenAccessPolicy,
+			"integration_id":         o.IntegrationId,
+			"redirect_urls":          o.RedirectUrls,
+			"scopes":                 o.Scopes,
+			"token_access_policy":    o.TokenAccessPolicy,
+			"user_authorized_scopes": o.UserAuthorizedScopes,
 		})
 }
 
@@ -2668,8 +2754,14 @@ func (o UpdateCustomAppIntegration_SdkV2) Type(ctx context.Context) attr.Type {
 			"redirect_urls": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"token_access_policy": basetypes.ListType{
 				ElemType: TokenAccessPolicy_SdkV2{}.Type(ctx),
+			},
+			"user_authorized_scopes": basetypes.ListType{
+				ElemType: types.StringType,
 			},
 		},
 	}
@@ -2701,6 +2793,32 @@ func (o *UpdateCustomAppIntegration_SdkV2) SetRedirectUrls(ctx context.Context, 
 	o.RedirectUrls = types.ListValueMust(t, vs)
 }
 
+// GetScopes returns the value of the Scopes field in UpdateCustomAppIntegration_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration_SdkV2) GetScopes(ctx context.Context) ([]types.String, bool) {
+	if o.Scopes.IsNull() || o.Scopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Scopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetScopes sets the value of the Scopes field in UpdateCustomAppIntegration_SdkV2.
+func (o *UpdateCustomAppIntegration_SdkV2) SetScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Scopes = types.ListValueMust(t, vs)
+}
+
 // GetTokenAccessPolicy returns the value of the TokenAccessPolicy field in UpdateCustomAppIntegration_SdkV2 as
 // a TokenAccessPolicy_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -2725,6 +2843,32 @@ func (o *UpdateCustomAppIntegration_SdkV2) SetTokenAccessPolicy(ctx context.Cont
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_access_policy"]
 	o.TokenAccessPolicy = types.ListValueMust(t, vs)
+}
+
+// GetUserAuthorizedScopes returns the value of the UserAuthorizedScopes field in UpdateCustomAppIntegration_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateCustomAppIntegration_SdkV2) GetUserAuthorizedScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserAuthorizedScopes.IsNull() || o.UserAuthorizedScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserAuthorizedScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserAuthorizedScopes sets the value of the UserAuthorizedScopes field in UpdateCustomAppIntegration_SdkV2.
+func (o *UpdateCustomAppIntegration_SdkV2) SetUserAuthorizedScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_authorized_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserAuthorizedScopes = types.ListValueMust(t, vs)
 }
 
 type UpdateCustomAppIntegrationOutput_SdkV2 struct {

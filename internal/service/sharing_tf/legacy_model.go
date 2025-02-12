@@ -31,8 +31,8 @@ type CreateProvider_SdkV2 struct {
 	Comment types.String `tfsdk:"comment"`
 	// The name of the Provider.
 	Name types.String `tfsdk:"name"`
-	// This field is required when the __authentication_type__ is **TOKEN** or
-	// not provided.
+	// This field is required when the __authentication_type__ is **TOKEN**,
+	// **OAUTH_CLIENT_CREDENTIALS** or not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str"`
 }
 
@@ -94,7 +94,7 @@ type CreateRecipient_SdkV2 struct {
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment"`
 	// The global Unity Catalog metastore id provided by the data recipient.
-	// This field is required when the __authentication_type__ is
+	// This field is only present when the __authentication_type__ is
 	// **DATABRICKS**. The identifier is of format
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
@@ -106,10 +106,13 @@ type CreateRecipient_SdkV2 struct {
 	Name types.String `tfsdk:"name"`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner"`
-	// Recipient properties as map of string key-value pairs.
+	// Recipient properties as map of string key-value pairs. When provided in
+	// update request, the specified properties will override the existing
+	// properties. To add and remove properties, one would need to perform a
+	// read-modify-write.
 	PropertiesKvpairs types.List `tfsdk:"properties_kvpairs"`
 	// The one-time sharing code provided by the data recipient. This field is
-	// required when the __authentication_type__ is **DATABRICKS**.
+	// only present when the __authentication_type__ is **DATABRICKS**.
 	SharingCode types.String `tfsdk:"sharing_code"`
 }
 
@@ -1617,7 +1620,7 @@ type ProviderInfo_SdkV2 struct {
 	CreatedBy types.String `tfsdk:"created_by"`
 	// The global UC metastore id of the data provider. This field is only
 	// present when the __authentication_type__ is **DATABRICKS**. The
-	// identifier is of format <cloud>:<region>:<metastore-uuid>.
+	// identifier is of format __cloud__:__region__:__metastore-uuid__.
 	DataProviderGlobalMetastoreId types.String `tfsdk:"data_provider_global_metastore_id"`
 	// UUID of the provider's UC metastore. This field is only present when the
 	// __authentication_type__ is **DATABRICKS**.
@@ -1627,17 +1630,17 @@ type ProviderInfo_SdkV2 struct {
 	// Username of Provider owner.
 	Owner types.String `tfsdk:"owner"`
 	// The recipient profile. This field is only present when the
-	// authentication_type is `TOKEN`.
+	// authentication_type is `TOKEN` or `OAUTH_CLIENT_CREDENTIALS`.
 	RecipientProfile types.List `tfsdk:"recipient_profile"`
-	// This field is only present when the authentication_type is `TOKEN` or not
-	// provided.
+	// This field is required when the __authentication_type__ is **TOKEN**,
+	// **OAUTH_CLIENT_CREDENTIALS** or not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str"`
 	// Cloud region of the provider's UC metastore. This field is only present
 	// when the __authentication_type__ is **DATABRICKS**.
 	Region types.String `tfsdk:"region"`
 	// Time at which this Provider was created, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
-	// Username of user who last modified Share.
+	// Username of user who last modified Provider.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -1649,20 +1652,20 @@ func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c ProviderInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["authentication_type"] = attrs["authentication_type"].SetOptional()
-	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["cloud"] = attrs["cloud"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["created_at"] = attrs["created_at"].SetOptional()
-	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["data_provider_global_metastore_id"] = attrs["data_provider_global_metastore_id"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["recipient_profile"] = attrs["recipient_profile"].SetOptional()
 	attrs["recipient_profile"] = attrs["recipient_profile"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["recipient_profile_str"] = attrs["recipient_profile_str"].SetOptional()
-	attrs["region"] = attrs["region"].SetOptional()
-	attrs["updated_at"] = attrs["updated_at"].SetOptional()
-	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+	attrs["region"] = attrs["region"].SetComputed()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	return attrs
 }
@@ -1811,8 +1814,8 @@ type RecipientInfo_SdkV2 struct {
 	ActivationUrl types.String `tfsdk:"activation_url"`
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type"`
-	// Cloud vendor of the recipient's Unity Catalog Metstore. This field is
-	// only present when the __authentication_type__ is **DATABRICKS**`.
+	// Cloud vendor of the recipient's Unity Catalog Metastore. This field is
+	// only present when the __authentication_type__ is **DATABRICKS**.
 	Cloud types.String `tfsdk:"cloud"`
 	// Description about the recipient.
 	Comment types.String `tfsdk:"comment"`
@@ -1825,18 +1828,23 @@ type RecipientInfo_SdkV2 struct {
 	// **DATABRICKS**. The identifier is of format
 	// __cloud__:__region__:__metastore-uuid__.
 	DataRecipientGlobalMetastoreId types.String `tfsdk:"data_recipient_global_metastore_id"`
+	// Expiration timestamp of the token, in epoch milliseconds.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 	// IP Access List
 	IpAccessList types.List `tfsdk:"ip_access_list"`
-	// Unique identifier of recipient's Unity Catalog metastore. This field is
-	// only present when the __authentication_type__ is **DATABRICKS**
+	// Unique identifier of recipient's Unity Catalog Metastore. This field is
+	// only present when the __authentication_type__ is **DATABRICKS**.
 	MetastoreId types.String `tfsdk:"metastore_id"`
 	// Name of Recipient.
 	Name types.String `tfsdk:"name"`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner"`
-	// Recipient properties as map of string key-value pairs.
+	// Recipient properties as map of string key-value pairs. When provided in
+	// update request, the specified properties will override the existing
+	// properties. To add and remove properties, one would need to perform a
+	// read-modify-write.
 	PropertiesKvpairs types.List `tfsdk:"properties_kvpairs"`
-	// Cloud region of the recipient's Unity Catalog Metstore. This field is
+	// Cloud region of the recipient's Unity Catalog Metastore. This field is
 	// only present when the __authentication_type__ is **DATABRICKS**.
 	Region types.String `tfsdk:"region"`
 	// The one-time sharing code provided by the data recipient. This field is
@@ -1857,26 +1865,27 @@ func (newState *RecipientInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 }
 
 func (c RecipientInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activated"] = attrs["activated"].SetOptional()
-	attrs["activation_url"] = attrs["activation_url"].SetOptional()
+	attrs["activated"] = attrs["activated"].SetComputed()
+	attrs["activation_url"] = attrs["activation_url"].SetComputed()
 	attrs["authentication_type"] = attrs["authentication_type"].SetOptional()
-	attrs["cloud"] = attrs["cloud"].SetOptional()
+	attrs["cloud"] = attrs["cloud"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["created_at"] = attrs["created_at"].SetOptional()
-	attrs["created_by"] = attrs["created_by"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
 	attrs["ip_access_list"] = attrs["ip_access_list"].SetOptional()
 	attrs["ip_access_list"] = attrs["ip_access_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["properties_kvpairs"] = attrs["properties_kvpairs"].SetOptional()
 	attrs["properties_kvpairs"] = attrs["properties_kvpairs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["region"] = attrs["region"].SetOptional()
+	attrs["region"] = attrs["region"].SetComputed()
 	attrs["sharing_code"] = attrs["sharing_code"].SetOptional()
-	attrs["tokens"] = attrs["tokens"].SetOptional()
-	attrs["updated_at"] = attrs["updated_at"].SetOptional()
-	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+	attrs["tokens"] = attrs["tokens"].SetComputed()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	return attrs
 }
@@ -1911,6 +1920,7 @@ func (o RecipientInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"created_at":                         o.CreatedAt,
 			"created_by":                         o.CreatedBy,
 			"data_recipient_global_metastore_id": o.DataRecipientGlobalMetastoreId,
+			"expiration_time":                    o.ExpirationTime,
 			"ip_access_list":                     o.IpAccessList,
 			"metastore_id":                       o.MetastoreId,
 			"name":                               o.Name,
@@ -1936,6 +1946,7 @@ func (o RecipientInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"created_at":                         types.Int64Type,
 			"created_by":                         types.StringType,
 			"data_recipient_global_metastore_id": types.StringType,
+			"expiration_time":                    types.Int64Type,
 			"ip_access_list": basetypes.ListType{
 				ElemType: IpAccessList_SdkV2{}.Type(ctx),
 			},
@@ -2096,7 +2107,7 @@ type RecipientTokenInfo_SdkV2 struct {
 	// Full activation URL to retrieve the access token. It will be empty if the
 	// token is already retrieved.
 	ActivationUrl types.String `tfsdk:"activation_url"`
-	// Time at which this recipient Token was created, in epoch milliseconds.
+	// Time at which this recipient token was created, in epoch milliseconds.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// Username of recipient token creator.
 	CreatedBy types.String `tfsdk:"created_by"`
@@ -2104,9 +2115,9 @@ type RecipientTokenInfo_SdkV2 struct {
 	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
 	// Unique ID of the recipient token.
 	Id types.String `tfsdk:"id"`
-	// Time at which this recipient Token was updated, in epoch milliseconds.
+	// Time at which this recipient token was updated, in epoch milliseconds.
 	UpdatedAt types.Int64 `tfsdk:"updated_at"`
-	// Username of recipient Token updater.
+	// Username of recipient token updater.
 	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
@@ -2117,13 +2128,13 @@ func (newState *RecipientTokenInfo_SdkV2) SyncEffectiveFieldsDuringRead(existing
 }
 
 func (c RecipientTokenInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activation_url"] = attrs["activation_url"].SetOptional()
-	attrs["created_at"] = attrs["created_at"].SetOptional()
-	attrs["created_by"] = attrs["created_by"].SetOptional()
-	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["updated_at"] = attrs["updated_at"].SetOptional()
-	attrs["updated_by"] = attrs["updated_by"].SetOptional()
+	attrs["activation_url"] = attrs["activation_url"].SetComputed()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["expiration_time"] = attrs["expiration_time"].SetComputed()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["updated_at"] = attrs["updated_at"].SetComputed()
+	attrs["updated_by"] = attrs["updated_by"].SetComputed()
 
 	return attrs
 }
@@ -2226,10 +2237,10 @@ func (newState *RetrieveTokenResponse_SdkV2) SyncEffectiveFieldsDuringRead(exist
 }
 
 func (c RetrieveTokenResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["bearerToken"] = attrs["bearerToken"].SetOptional()
-	attrs["endpoint"] = attrs["endpoint"].SetOptional()
-	attrs["expirationTime"] = attrs["expirationTime"].SetOptional()
-	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetOptional()
+	attrs["bearerToken"] = attrs["bearerToken"].SetComputed()
+	attrs["endpoint"] = attrs["endpoint"].SetComputed()
+	attrs["expirationTime"] = attrs["expirationTime"].SetComputed()
+	attrs["shareCredentialsVersion"] = attrs["shareCredentialsVersion"].SetComputed()
 
 	return attrs
 }
@@ -2277,7 +2288,7 @@ type RotateRecipientToken_SdkV2 struct {
 	// cannot extend the expiration_time. Use 0 to expire the existing token
 	// immediately, negative number will return an error.
 	ExistingTokenExpireInSeconds types.Int64 `tfsdk:"existing_token_expire_in_seconds"`
-	// The name of the recipient.
+	// The name of the Recipient.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -2998,8 +3009,8 @@ type UpdateProvider_SdkV2 struct {
 	NewName types.String `tfsdk:"new_name"`
 	// Username of Provider owner.
 	Owner types.String `tfsdk:"owner"`
-	// This field is required when the __authentication_type__ is **TOKEN** or
-	// not provided.
+	// This field is required when the __authentication_type__ is **TOKEN**,
+	// **OAUTH_CLIENT_CREDENTIALS** or not provided.
 	RecipientProfileStr types.String `tfsdk:"recipient_profile_str"`
 }
 
@@ -3067,7 +3078,7 @@ type UpdateRecipient_SdkV2 struct {
 	IpAccessList types.List `tfsdk:"ip_access_list"`
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
-	// New name for the recipient.
+	// New name for the recipient. .
 	NewName types.String `tfsdk:"new_name"`
 	// Username of the recipient owner.
 	Owner types.String `tfsdk:"owner"`
@@ -3198,36 +3209,6 @@ func (o *UpdateRecipient_SdkV2) SetPropertiesKvpairs(ctx context.Context, v Secu
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["properties_kvpairs"]
 	o.PropertiesKvpairs = types.ListValueMust(t, vs)
-}
-
-type UpdateResponse_SdkV2 struct {
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a UpdateResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateResponse_SdkV2
-// only implements ToObjectValue() and Type().
-func (o UpdateResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
 }
 
 type UpdateShare_SdkV2 struct {

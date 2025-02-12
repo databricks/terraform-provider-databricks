@@ -420,12 +420,7 @@ func (o *AiGatewayGuardrailParameters) SetValidTopics(ctx context.Context, v []t
 }
 
 type AiGatewayGuardrailPiiBehavior struct {
-	// Behavior for PII filter. Currently only 'BLOCK' is supported. If 'BLOCK'
-	// is set for the input guardrail and the request contains PII, the request
-	// is not sent to the model server and 400 status code is returned; if
-	// 'BLOCK' is set for the output guardrail and the model response contains
-	// PII, the PII info in the response is redacted and 400 status code is
-	// returned.
+	// Configuration for input guardrail filters.
 	Behavior types.String `tfsdk:"behavior"`
 }
 
@@ -436,7 +431,7 @@ func (newState *AiGatewayGuardrailPiiBehavior) SyncEffectiveFieldsDuringRead(exi
 }
 
 func (c AiGatewayGuardrailPiiBehavior) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["behavior"] = attrs["behavior"].SetRequired()
+	attrs["behavior"] = attrs["behavior"].SetOptional()
 
 	return attrs
 }
@@ -764,9 +759,9 @@ func (o AiGatewayUsageTrackingConfig) Type(ctx context.Context) attr.Type {
 type AmazonBedrockConfig struct {
 	// The Databricks secret key reference for an AWS access key ID with
 	// permissions to interact with Bedrock services. If you prefer to paste
-	// your API key directly, see `aws_access_key_id`. You must provide an API
-	// key using one of the following fields: `aws_access_key_id` or
-	// `aws_access_key_id_plaintext`.
+	// your API key directly, see `aws_access_key_id_plaintext`. You must
+	// provide an API key using one of the following fields: `aws_access_key_id`
+	// or `aws_access_key_id_plaintext`.
 	AwsAccessKeyId types.String `tfsdk:"aws_access_key_id"`
 	// An AWS access key ID with permissions to interact with Bedrock services
 	// provided as a plaintext string. If you prefer to reference your key using
@@ -979,15 +974,18 @@ func (o AutoCaptureConfigInput) Type(ctx context.Context) attr.Type {
 }
 
 type AutoCaptureConfigOutput struct {
-	// The name of the catalog in Unity Catalog.
+	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
+	// change the catalog name if the inference table is already enabled.
 	CatalogName types.String `tfsdk:"catalog_name"`
 	// Indicates whether the inference table is enabled.
 	Enabled types.Bool `tfsdk:"enabled"`
-	// The name of the schema in Unity Catalog.
+	// The name of the schema in Unity Catalog. NOTE: On update, you cannot
+	// change the schema name if the inference table is already enabled.
 	SchemaName types.String `tfsdk:"schema_name"`
 
 	State types.Object `tfsdk:"state"`
-	// The prefix of the table in Unity Catalog.
+	// The prefix of the table in Unity Catalog. NOTE: On update, you cannot
+	// change the prefix name if the inference table is already enabled.
 	TableNamePrefix types.String `tfsdk:"table_name_prefix"`
 }
 
@@ -1363,8 +1361,9 @@ func (o CohereConfig) Type(ctx context.Context) attr.Type {
 }
 
 type CreateServingEndpoint struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: only
-	// external model endpoints are supported as of now.
+	// The AI Gateway configuration for the serving endpoint. NOTE: Only
+	// external model and provisioned throughput endpoints are currently
+	// supported.
 	AiGateway types.Object `tfsdk:"ai_gateway"`
 	// The core config of the serving endpoint.
 	Config types.Object `tfsdk:"config"`
@@ -1390,7 +1389,7 @@ func (newState *CreateServingEndpoint) SyncEffectiveFieldsDuringRead(existingSta
 
 func (c CreateServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
-	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
 	attrs["route_optimized"] = attrs["route_optimized"].SetOptional()
@@ -1557,6 +1556,7 @@ func (o *CreateServingEndpoint) SetTags(ctx context.Context, v []EndpointTag) {
 	o.Tags = types.ListValueMust(t, vs)
 }
 
+// Details necessary to query this object's API through the DataPlane APIs.
 type DataPlaneInfo struct {
 	// Authorization details as a string.
 	AuthorizationDetails types.String `tfsdk:"authorization_details"`
@@ -1856,7 +1856,6 @@ func (o DeleteResponse) Type(ctx context.Context) attr.Type {
 
 // Delete a serving endpoint
 type DeleteServingEndpointRequest struct {
-	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1980,18 +1979,19 @@ func (o *EmbeddingsV1ResponseEmbeddingElement) SetEmbedding(ctx context.Context,
 
 type EndpointCoreConfigInput struct {
 	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog.
+	// responses to Unity Catalog. Note: this field is deprecated for creating
+	// new provisioned throughput endpoints, or updating existing provisioned
+	// throughput endpoints that never have inference table configured; in these
+	// cases please use AI Gateway to manage inference tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The name of the serving endpoint to update. This field is required.
 	Name types.String `tfsdk:"-"`
-	// A list of served entities for the endpoint to serve. A serving endpoint
-	// can have up to 15 served entities.
+	// The list of served entities under the serving endpoint config.
 	ServedEntities types.List `tfsdk:"served_entities"`
-	// (Deprecated, use served_entities instead) A list of served models for the
-	// endpoint to serve. A serving endpoint can have up to 15 served models.
+	// (Deprecated, use served_entities instead) The list of served models under
+	// the serving endpoint config.
 	ServedModels types.List `tfsdk:"served_models"`
-	// The traffic config defining how invocations to the serving endpoint
-	// should be routed.
+	// The traffic configuration associated with the serving endpoint config.
 	TrafficConfig types.Object `tfsdk:"traffic_config"`
 }
 
@@ -2169,7 +2169,10 @@ func (o *EndpointCoreConfigInput) SetTrafficConfig(ctx context.Context, v Traffi
 
 type EndpointCoreConfigOutput struct {
 	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog.
+	// responses to Unity Catalog. Note: this field is deprecated for creating
+	// new provisioned throughput endpoints, or updating existing provisioned
+	// throughput endpoints that never have inference table configured; in these
+	// cases please use AI Gateway to manage inference tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
@@ -2469,7 +2472,10 @@ func (o *EndpointCoreConfigSummary) SetServedModels(ctx context.Context, v []Ser
 
 type EndpointPendingConfig struct {
 	// Configuration for Inference Tables which automatically logs requests and
-	// responses to Unity Catalog.
+	// responses to Unity Catalog. Note: this field is deprecated for creating
+	// new provisioned throughput endpoints, or updating existing provisioned
+	// throughput endpoints that never have inference table configured; in these
+	// cases please use AI Gateway to manage inference tables.
 	AutoCaptureConfig types.Object `tfsdk:"auto_capture_config"`
 	// The config version that the serving endpoint is currently serving.
 	ConfigVersion types.Int64 `tfsdk:"config_version"`
@@ -2666,7 +2672,7 @@ type EndpointState struct {
 	// pending_config is in progress, if the update failed, or if there is no
 	// update in progress. Note that if the endpoint's config_update state value
 	// is IN_PROGRESS, another update can not be made until the update completes
-	// or fails."
+	// or fails.
 	ConfigUpdate types.String `tfsdk:"config_update"`
 	// The state of an endpoint, indicating whether or not the endpoint is
 	// queryable. An endpoint is READY if all of the served entities in its
@@ -2774,6 +2780,83 @@ func (o EndpointTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type EndpointTags struct {
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *EndpointTags) SyncEffectiveFieldsDuringCreateOrUpdate(plan EndpointTags) {
+}
+
+func (newState *EndpointTags) SyncEffectiveFieldsDuringRead(existingState EndpointTags) {
+}
+
+func (c EndpointTags) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EndpointTags.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EndpointTags) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"tags": reflect.TypeOf(EndpointTag{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EndpointTags
+// only implements ToObjectValue() and Type().
+func (o EndpointTags) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"tags": o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EndpointTags) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tags": basetypes.ListType{
+				ElemType: EndpointTag{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetTags returns the value of the Tags field in EndpointTags as
+// a slice of EndpointTag values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EndpointTags) GetTags(ctx context.Context) ([]EndpointTag, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in EndpointTags.
+func (o *EndpointTags) SetTags(ctx context.Context, v []EndpointTag) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 // Get metrics of a serving endpoint
 type ExportMetricsRequest struct {
 	// The name of the serving endpoint to retrieve metrics for. This field is
@@ -2847,6 +2930,82 @@ func (o ExportMetricsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Simple Proto message for testing
+type ExternalFunctionRequest struct {
+	// The connection name to use. This is required to identify the external
+	// connection.
+	ConnectionName types.String `tfsdk:"connection_name"`
+	// Additional headers for the request. If not provided, only auth headers
+	// from connections would be passed.
+	Headers types.String `tfsdk:"headers"`
+	// The JSON payload to send in the request body.
+	Json types.String `tfsdk:"json"`
+	// The HTTP method to use (e.g., 'GET', 'POST').
+	Method types.String `tfsdk:"method"`
+	// Query parameters for the request.
+	Params types.String `tfsdk:"params"`
+	// The relative path for the API endpoint. This is required.
+	Path types.String `tfsdk:"path"`
+}
+
+func (newState *ExternalFunctionRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalFunctionRequest) {
+}
+
+func (newState *ExternalFunctionRequest) SyncEffectiveFieldsDuringRead(existingState ExternalFunctionRequest) {
+}
+
+func (c ExternalFunctionRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["headers"] = attrs["headers"].SetOptional()
+	attrs["json"] = attrs["json"].SetOptional()
+	attrs["method"] = attrs["method"].SetRequired()
+	attrs["params"] = attrs["params"].SetOptional()
+	attrs["path"] = attrs["path"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalFunctionRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalFunctionRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalFunctionRequest
+// only implements ToObjectValue() and Type().
+func (o ExternalFunctionRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"connection_name": o.ConnectionName,
+			"headers":         o.Headers,
+			"json":            o.Json,
+			"method":          o.Method,
+			"params":          o.Params,
+			"path":            o.Path,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalFunctionRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"connection_name": types.StringType,
+			"headers":         types.StringType,
+			"json":            types.StringType,
+			"method":          types.StringType,
+			"params":          types.StringType,
+			"path":            types.StringType,
+		},
+	}
+}
+
 type ExternalModel struct {
 	// AI21Labs Config. Only required if the provider is 'ai21labs'.
 	Ai21labsConfig types.Object `tfsdk:"ai21labs_config"`
@@ -2870,8 +3029,8 @@ type ExternalModel struct {
 	PalmConfig types.Object `tfsdk:"palm_config"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
-	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and
-	// 'palm'.",
+	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', 'palm',
+	// and 'custom'.
 	Provider types.String `tfsdk:"provider"`
 	// The task type of the external model.
 	Task types.String `tfsdk:"task"`
@@ -3241,14 +3400,15 @@ func (o ExternalModelUsageElement) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// All fields are not sensitive as they are hard-coded in the system and made
+// available to customers.
 type FoundationModel struct {
-	// The description of the foundation model.
 	Description types.String `tfsdk:"description"`
-	// The display name of the foundation model.
+
 	DisplayName types.String `tfsdk:"display_name"`
-	// The URL to the documentation of the foundation model.
+
 	Docs types.String `tfsdk:"docs"`
-	// The name of the foundation model.
+
 	Name types.String `tfsdk:"name"`
 }
 
@@ -3342,9 +3502,8 @@ func (o GetOpenApiRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// The response is an OpenAPI spec in JSON format that typically includes fields
-// like openapi, info, servers and paths, etc.
 type GetOpenApiResponse struct {
+	Contents types.Object `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiResponse.
@@ -3364,13 +3523,17 @@ func (a GetOpenApiResponse) GetComplexFieldTypes(ctx context.Context) map[string
 func (o GetOpenApiResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
+		map[string]attr.Value{
+			"contents": o.Contents,
+		})
 }
 
 // Type implements basetypes.ObjectValuable.
 func (o GetOpenApiResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
+		AttrTypes: map[string]attr.Type{
+			"contents": types.ObjectType{},
+		},
 	}
 }
 
@@ -3571,7 +3734,8 @@ type GoogleCloudVertexAiConfig struct {
 	// key using one of the following fields: `private_key` or
 	// `private_key_plaintext`
 	//
-	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
+	// [Best practices for managing service account keys]:
+	// https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
 	PrivateKey types.String `tfsdk:"private_key"`
 	// The private key for the service account which has access to the Google
 	// Cloud Vertex AI Service provided as a plaintext secret. See [Best
@@ -3580,7 +3744,8 @@ type GoogleCloudVertexAiConfig struct {
 	// API key using one of the following fields: `private_key` or
 	// `private_key_plaintext`.
 	//
-	// [Best practices for managing service account keys]: https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
+	// [Best practices for managing service account keys]:
+	// https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
 	PrivateKeyPlaintext types.String `tfsdk:"private_key_plaintext"`
 	// This is the Google Cloud project id that the service account is
 	// associated with.
@@ -3589,7 +3754,8 @@ type GoogleCloudVertexAiConfig struct {
 	// regions] for more details. Some models are only available in specific
 	// regions.
 	//
-	// [supported regions]: https://cloud.google.com/vertex-ai/docs/general/locations
+	// [supported regions]:
+	// https://cloud.google.com/vertex-ai/docs/general/locations
 	Region types.String `tfsdk:"region"`
 }
 
@@ -3602,8 +3768,8 @@ func (newState *GoogleCloudVertexAiConfig) SyncEffectiveFieldsDuringRead(existin
 func (c GoogleCloudVertexAiConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["private_key"] = attrs["private_key"].SetOptional()
 	attrs["private_key_plaintext"] = attrs["private_key_plaintext"].SetOptional()
-	attrs["project_id"] = attrs["project_id"].SetOptional()
-	attrs["region"] = attrs["region"].SetOptional()
+	attrs["project_id"] = attrs["project_id"].SetRequired()
+	attrs["region"] = attrs["region"].SetRequired()
 
 	return attrs
 }
@@ -3641,6 +3807,41 @@ func (o GoogleCloudVertexAiConfig) Type(ctx context.Context) attr.Type {
 			"private_key_plaintext": types.StringType,
 			"project_id":            types.StringType,
 			"region":                types.StringType,
+		},
+	}
+}
+
+type HttpRequestResponse struct {
+	Contents types.Object `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpRequestResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a HttpRequestResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, HttpRequestResponse
+// only implements ToObjectValue() and Type().
+func (o HttpRequestResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"contents": o.Contents,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o HttpRequestResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"contents": types.ObjectType{},
 		},
 	}
 }
@@ -3766,6 +3967,8 @@ func (o LogsRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A representation of all DataPlaneInfo for operations that can be done on a
+// model through Data Plane APIs.
 type ModelDataPlaneInfo struct {
 	// Information required to query DataPlane API 'query' endpoint.
 	QueryInfo types.Object `tfsdk:"query_info"`
@@ -3844,6 +4047,7 @@ func (o *ModelDataPlaneInfo) SetQueryInfo(ctx context.Context, v DataPlaneInfo) 
 	o.QueryInfo = vs
 }
 
+// Configs needed to create an OpenAI model route.
 type OpenAiConfig struct {
 	// This field is only required for Azure AD OpenAI and is the Microsoft
 	// Entra Client ID.
@@ -4149,11 +4353,10 @@ func (o *PatchServingEndpointTags) SetDeleteTags(ctx context.Context, v []types.
 }
 
 type PayloadTable struct {
-	// The name of the payload table.
 	Name types.String `tfsdk:"name"`
-	// The status of the payload table.
+
 	Status types.String `tfsdk:"status"`
-	// The status message of the payload table.
+
 	StatusMessage types.String `tfsdk:"status_message"`
 }
 
@@ -4206,7 +4409,6 @@ func (o PayloadTable) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Update AI Gateway of a serving endpoint
 type PutAiGatewayRequest struct {
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
@@ -4224,6 +4426,22 @@ type PutAiGatewayRequest struct {
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
 	UsageTrackingConfig types.Object `tfsdk:"usage_tracking_config"`
+}
+
+func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayRequest) {
+}
+
+func (newState *PutAiGatewayRequest) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayRequest) {
+}
+
+func (c PutAiGatewayRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["guardrails"] = attrs["guardrails"].SetOptional()
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayRequest.
@@ -4388,7 +4606,7 @@ type PutAiGatewayResponse struct {
 	Guardrails types.Object `tfsdk:"guardrails"`
 	// Configuration for payload logging using inference tables. Use these
 	// tables to monitor and audit data being sent to and received from model
-	// APIs and to improve model quality .
+	// APIs and to improve model quality.
 	InferenceTableConfig types.Object `tfsdk:"inference_table_config"`
 	// Configuration for rate limits which can be set to limit endpoint traffic.
 	RateLimits types.List `tfsdk:"rate_limits"`
@@ -4396,6 +4614,21 @@ type PutAiGatewayResponse struct {
 	// allow you to monitor operational usage on endpoints and their associated
 	// costs.
 	UsageTrackingConfig types.Object `tfsdk:"usage_tracking_config"`
+}
+
+func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutAiGatewayResponse) {
+}
+
+func (newState *PutAiGatewayResponse) SyncEffectiveFieldsDuringRead(existingState PutAiGatewayResponse) {
+}
+
+func (c PutAiGatewayResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["guardrails"] = attrs["guardrails"].SetOptional()
+	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+	attrs["usage_tracking_config"] = attrs["usage_tracking_config"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutAiGatewayResponse.
@@ -4552,13 +4785,25 @@ func (o *PutAiGatewayResponse) SetUsageTrackingConfig(ctx context.Context, v AiG
 	o.UsageTrackingConfig = vs
 }
 
-// Update rate limits of a serving endpoint
 type PutRequest struct {
 	// The name of the serving endpoint whose rate limits are being updated.
 	// This field is required.
 	Name types.String `tfsdk:"-"`
 	// The list of endpoint rate limits.
 	RateLimits types.List `tfsdk:"rate_limits"`
+}
+
+func (newState *PutRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutRequest) {
+}
+
+func (newState *PutRequest) SyncEffectiveFieldsDuringRead(existingState PutRequest) {
+}
+
+func (c PutRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutRequest.
@@ -4627,6 +4872,18 @@ func (o *PutRequest) SetRateLimits(ctx context.Context, v []RateLimit) {
 type PutResponse struct {
 	// The list of endpoint rate limits.
 	RateLimits types.List `tfsdk:"rate_limits"`
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan PutResponse) {
+}
+
+func (newState *PutResponse) SyncEffectiveFieldsDuringRead(existingState PutResponse) {
+}
+
+func (c PutResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["rate_limits"] = attrs["rate_limits"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PutResponse.
@@ -5335,10 +5592,9 @@ type ServedEntityInput struct {
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
 	// name of the object should be given in the form of
-	// __catalog_name__.__schema_name__.__model_name__.
+	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-	// The version of the model in Databricks Model Registry to be served or
-	// empty if the entity is a FEATURE_SPEC.
+
 	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
@@ -5367,8 +5623,7 @@ type ServedEntityInput struct {
 	// served entity name can consist of alphanumeric characters, dashes, and
 	// underscores. If not specified for an external model, this field defaults
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
-	// specified for other entities, it defaults to
-	// <entity-name>-<entity-version>.
+	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
@@ -5387,7 +5642,7 @@ type ServedEntityInput struct {
 	// available by selecting workload types like GPU_SMALL and others. See the
 	// available [GPU types].
 	//
-	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
+	// [GPU types]: https://docs.databricks.com/en/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
@@ -5524,18 +5779,16 @@ func (o *ServedEntityInput) SetExternalModel(ctx context.Context, v ExternalMode
 }
 
 type ServedEntityOutput struct {
-	// The creation timestamp of the served entity in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// The email of the user who created the served entity.
+
 	Creator types.String `tfsdk:"creator"`
-	// The name of the entity served. The entity may be a model in the
+	// The name of the entity to be served. The entity may be a model in the
 	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
 	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
-	// name of the object is given in the form of
-	// __catalog_name__.__schema_name__.__model_name__.
+	// name of the object should be given in the form of
+	// **catalog_name.schema_name.model_name**.
 	EntityName types.String `tfsdk:"entity_name"`
-	// The version of the served entity in Databricks Model Registry or empty if
-	// the entity is a FEATURE_SPEC.
+
 	EntityVersion types.String `tfsdk:"entity_version"`
 	// An object containing a set of optional, user-specified environment
 	// variable key-value pairs used for serving this entity. Note: this is an
@@ -5544,15 +5797,17 @@ type ServedEntityOutput struct {
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
 	EnvironmentVars types.Map `tfsdk:"environment_vars"`
-	// The external model that is served. NOTE: Only one of external_model,
-	// foundation_model, and (entity_name, entity_version, workload_size,
-	// workload_type, and scale_to_zero_enabled) is returned based on the
-	// endpoint type.
+	// The external model to be served. NOTE: Only one of external_model and
+	// (entity_name, entity_version, workload_size, workload_type, and
+	// scale_to_zero_enabled) can be specified with the latter set being used
+	// for custom model serving for a Databricks registered model. For an
+	// existing endpoint with external_model, it cannot be updated to an
+	// endpoint without external_model. If the endpoint is created without
+	// external_model, users cannot update it to add external_model later. The
+	// task type of all external models within an endpoint must be the same.
 	ExternalModel types.Object `tfsdk:"external_model"`
-	// The foundation model that is served. NOTE: Only one of foundation_model,
-	// external_model, and (entity_name, entity_version, workload_size,
-	// workload_type, and scale_to_zero_enabled) is returned based on the
-	// endpoint type.
+	// All fields are not sensitive as they are hard-coded in the system and
+	// made available to customers.
 	FoundationModel types.Object `tfsdk:"foundation_model"`
 	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
@@ -5561,12 +5816,16 @@ type ServedEntityOutput struct {
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
-	// The name of the served entity.
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
-	// Information corresponding to the state of the served entity.
+
 	State types.Object `tfsdk:"state"`
 	// The workload size of the served entity. The workload size corresponds to
 	// a range of provisioned concurrency that the compute autoscales between. A
@@ -5574,7 +5833,7 @@ type ServedEntityOutput struct {
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size will be 0.
+	// the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -5582,7 +5841,7 @@ type ServedEntityOutput struct {
 	// available by selecting workload types like GPU_SMALL and others. See the
 	// available [GPU types].
 	//
-	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
+	// [GPU types]: https://docs.databricks.com/en/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
@@ -5789,24 +6048,15 @@ func (o *ServedEntityOutput) SetState(ctx context.Context, v ServedModelState) {
 }
 
 type ServedEntitySpec struct {
-	// The name of the entity served. The entity may be a model in the
-	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
-	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
-	// name of the object is given in the form of
-	// __catalog_name__.__schema_name__.__model_name__.
 	EntityName types.String `tfsdk:"entity_name"`
-	// The version of the served entity in Databricks Model Registry or empty if
-	// the entity is a FEATURE_SPEC.
+
 	EntityVersion types.String `tfsdk:"entity_version"`
-	// The external model that is served. NOTE: Only one of external_model,
-	// foundation_model, and (entity_name, entity_version) is returned based on
-	// the endpoint type.
+
 	ExternalModel types.Object `tfsdk:"external_model"`
-	// The foundation model that is served. NOTE: Only one of foundation_model,
-	// external_model, and (entity_name, entity_version) is returned based on
-	// the endpoint type.
+	// All fields are not sensitive as they are hard-coded in the system and
+	// made available to customers.
 	FoundationModel types.Object `tfsdk:"foundation_model"`
-	// The name of the served entity.
+
 	Name types.String `tfsdk:"name"`
 }
 
@@ -5926,49 +6176,47 @@ func (o *ServedEntitySpec) SetFoundationModel(ctx context.Context, v FoundationM
 
 type ServedModelInput struct {
 	// An object containing a set of optional, user-specified environment
-	// variable key-value pairs used for serving this model. Note: this is an
-	// experimental feature and subject to change. Example model environment
+	// variable key-value pairs used for serving this entity. Note: this is an
+	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
 	EnvironmentVars types.Map `tfsdk:"environment_vars"`
-	// ARN of the instance profile that the served model will use to access AWS
+	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The maximum tokens per second that the endpoint can scale up to.
 	MaxProvisionedThroughput types.Int64 `tfsdk:"max_provisioned_throughput"`
 	// The minimum tokens per second that the endpoint can scale down to.
 	MinProvisionedThroughput types.Int64 `tfsdk:"min_provisioned_throughput"`
-	// The name of the model in Databricks Model Registry to be served or if the
-	// model resides in Unity Catalog, the full name of model, in the form of
-	// __catalog_name__.__schema_name__.__model_name__.
+
 	ModelName types.String `tfsdk:"model_name"`
-	// The version of the model in Databricks Model Registry or Unity Catalog to
-	// be served.
+
 	ModelVersion types.String `tfsdk:"model_version"`
-	// The name of a served model. It must be unique across an endpoint. If not
-	// specified, this field will default to <model-name>-<model-version>. A
-	// served model name can consist of alphanumeric characters, dashes, and
-	// underscores.
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
-	// Whether the compute resources for the served model should scale down to
+	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
-	// The workload size of the served model. The workload size corresponds to a
-	// range of provisioned concurrency that the compute will autoscale between.
-	// A single unit of provisioned concurrency can process one request at a
-	// time. Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
+	// The workload size of the served entity. The workload size corresponds to
+	// a range of provisioned concurrency that the compute autoscales between. A
+	// single unit of provisioned concurrency can process one request at a time.
+	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size will be 0.
+	// the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
-	// The workload type of the served model. The workload type selects which
+	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
 	// available by selecting workload types like GPU_SMALL and others. See the
 	// available [GPU types].
 	//
-	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
+	// [GPU types]: https://docs.databricks.com/en/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
@@ -6073,48 +6321,49 @@ func (o *ServedModelInput) SetEnvironmentVars(ctx context.Context, v map[string]
 }
 
 type ServedModelOutput struct {
-	// The creation timestamp of the served model in Unix time.
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
-	// The email of the user who created the served model.
+
 	Creator types.String `tfsdk:"creator"`
 	// An object containing a set of optional, user-specified environment
-	// variable key-value pairs used for serving this model. Note: this is an
-	// experimental feature and subject to change. Example model environment
+	// variable key-value pairs used for serving this entity. Note: this is an
+	// experimental feature and subject to change. Example entity environment
 	// variables that refer to Databricks secrets: `{"OPENAI_API_KEY":
 	// "{{secrets/my_scope/my_key}}", "DATABRICKS_TOKEN":
 	// "{{secrets/my_scope2/my_key2}}"}`
 	EnvironmentVars types.Map `tfsdk:"environment_vars"`
-	// ARN of the instance profile that the served model will use to access AWS
+	// ARN of the instance profile that the served entity uses to access AWS
 	// resources.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
-	// The name of the model in Databricks Model Registry or the full name of
-	// the model in Unity Catalog.
+
 	ModelName types.String `tfsdk:"model_name"`
-	// The version of the model in Databricks Model Registry or Unity Catalog to
-	// be served.
+
 	ModelVersion types.String `tfsdk:"model_version"`
-	// The name of the served model.
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
-	// Whether the compute resources for the Served Model should scale down to
+	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
-	// Information corresponding to the state of the Served Model.
+
 	State types.Object `tfsdk:"state"`
-	// The workload size of the served model. The workload size corresponds to a
-	// range of provisioned concurrency that the compute will autoscale between.
-	// A single unit of provisioned concurrency can process one request at a
-	// time. Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
+	// The workload size of the served entity. The workload size corresponds to
+	// a range of provisioned concurrency that the compute autoscales between. A
+	// single unit of provisioned concurrency can process one request at a time.
+	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
 	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size will be 0.
+	// the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
-	// The workload type of the served model. The workload type selects which
+	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
 	// parameter is "CPU". For deep learning workloads, GPU acceleration is
 	// available by selecting workload types like GPU_SMALL and others. See the
 	// available [GPU types].
 	//
-	// [GPU types]: https://docs.databricks.com/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
+	// [GPU types]: https://docs.databricks.com/en/machine-learning/model-serving/create-manage-serving-endpoints.html#gpu-workload-types
 	WorkloadType types.String `tfsdk:"workload_type"`
 }
 
@@ -6251,13 +6500,11 @@ func (o *ServedModelOutput) SetState(ctx context.Context, v ServedModelState) {
 }
 
 type ServedModelSpec struct {
-	// The name of the model in Databricks Model Registry or the full name of
-	// the model in Unity Catalog.
+	// Only one of model_name and entity_name should be populated
 	ModelName types.String `tfsdk:"model_name"`
-	// The version of the model in Databricks Model Registry or Unity Catalog to
-	// be served.
+	// Only one of model_version and entity_version should be populated
 	ModelVersion types.String `tfsdk:"model_version"`
-	// The name of the served model.
+
 	Name types.String `tfsdk:"name"`
 }
 
@@ -6311,20 +6558,8 @@ func (o ServedModelSpec) Type(ctx context.Context) attr.Type {
 }
 
 type ServedModelState struct {
-	// The state of the served entity deployment. DEPLOYMENT_CREATING indicates
-	// that the served entity is not ready yet because the deployment is still
-	// being created (i.e container image is building, model server is deploying
-	// for the first time, etc.). DEPLOYMENT_RECOVERING indicates that the
-	// served entity was previously in a ready state but no longer is and is
-	// attempting to recover. DEPLOYMENT_READY indicates that the served entity
-	// is ready to receive traffic. DEPLOYMENT_FAILED indicates that there was
-	// an error trying to bring up the served entity (e.g container image build
-	// failed, the model server failed to start due to a model loading error,
-	// etc.) DEPLOYMENT_ABORTED indicates that the deployment was terminated
-	// likely due to a failure in bringing up another served entity under the
-	// same endpoint and config version.
 	Deployment types.String `tfsdk:"deployment"`
-	// More information about the state of the served entity, if available.
+
 	DeploymentStateMessage types.String `tfsdk:"deployment_state_message"`
 }
 
@@ -6425,7 +6660,8 @@ func (o ServerLogsResponse) Type(ctx context.Context) attr.Type {
 
 type ServingEndpoint struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model endpoints are currently supported.
+	// external model and provisioned throughput endpoints are currently
+	// supported.
 	AiGateway types.Object `tfsdk:"ai_gateway"`
 	// The config that is currently being served by the endpoint.
 	Config types.Object `tfsdk:"config"`
@@ -6433,8 +6669,8 @@ type ServingEndpoint struct {
 	CreationTimestamp types.Int64 `tfsdk:"creation_timestamp"`
 	// The email of the user who created the serving endpoint.
 	Creator types.String `tfsdk:"creator"`
-	// System-generated ID of the endpoint. This is used to refer to the
-	// endpoint in the Permissions API
+	// System-generated ID of the endpoint, included to be used by the
+	// Permissions API.
 	Id types.String `tfsdk:"id"`
 	// The timestamp when the endpoint was last updated by a user in Unix time.
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
@@ -6798,7 +7034,8 @@ func (o *ServingEndpointAccessControlResponse) SetAllPermissions(ctx context.Con
 
 type ServingEndpointDetailed struct {
 	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model endpoints are currently supported.
+	// external model and provisioned throughput endpoints are currently
+	// supported.
 	AiGateway types.Object `tfsdk:"ai_gateway"`
 	// The config that is currently being served by the endpoint.
 	Config types.Object `tfsdk:"config"`

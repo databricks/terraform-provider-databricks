@@ -1,0 +1,105 @@
+# Generated file. DO NOT EDIT.
+name: Check for NEXT_CHANGELOG.md Changes
+
+on:
+  # Use pull_request_target to have access to GitHub API
+  pull_request_target:
+
+jobs:
+  check-next-changelog:
+    runs-on:
+      group: databricks-deco-testing-runner-group
+      labels: ubuntu-latest-deco
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Fetch list of changed files
+        id: changed-files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use the GitHub API to fetch changed files
+          files=$(gh pr view ${{ github.event.pull_request.number }} --json files -q '.files[].path')
+          
+          # Sanitize to avoid code injection
+          sanitized_files=$(echo "$files" | sed 's/[^a-zA-Z0-9._/-]/_/g')
+          
+          # Store the sanitized list of files in a temporary file to avoid env variable issues
+          echo "$sanitized_files" > modified_files.txt
+
+      - name: Fetch PR message
+        id: pr-message
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use the GitHub API to fetch the PR message
+          pr_message=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
+          
+          # Sanitize the PR message to avoid code injection, keeping the equal sign
+          sanitized_pr_message=$(echo "$pr_message" | sed 's/[^a-zA-Z0-9._/-=]/_/g')
+          
+          # Store the sanitized PR message
+          echo "$sanitized_pr_message" > pr_message.txt
+
+      - name: Verify NEXT_CHANGELOG.md was modified or PR message contains NO_CHANGELOG=true
+        run: |
+          # Read the sanitized files and PR message from the temporary files
+          modified_files=$(cat modified_files.txt)
+          pr_message=$(cat pr_message.txt)
+          
+          # Check if NEXT_CHANGELOG.md exists in the list of changed files
+          echo "Changed files: $modified_files"
+          if ! echo "$modified_files" | grep -q "NEXT_CHANGELOG.md"; then
+            echo "NEXT_CHANGELOG.md not modified."
+          
+            # Check if PR message contains NO_CHANGELOG=true
+            if echo "$pr_message" | grep -q "NO_CHANGELOG=true"; then
+              echo "NO_CHANGELOG=true found in PR message. Skipping changelog check."
+              exit 0
+            else
+              echo "WARNING: file NEXT_CHANGELOG.md not changed. If this is expected, add NO_CHANGELOG=true to the PR message."
+              exit 1
+            fi
+          fi
+
+      - name: Comment on PR with instructions if needed
+        if: failure() # This step will only run if the previous step fails (i.e., if NEXT_CHANGELOG.md was not modified and NO_CHANGELOG=true was not in the PR message)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a comment exists with the instructions
+          previous_comment_ids=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            --jq '.[] | select(.body | startswith("<!-- NEXT_CHANGELOG_INSTRUCTIONS -->")) | .id')
+          echo "Previous comment IDs: $previous_comment_ids"
+
+          # If no previous comment exists, add one with instructions
+          if [ -z "$previous_comment_ids" ]; then
+            echo "Adding instructions comment."
+            gh pr comment ${{ github.event.pull_request.number }} --body \
+            "<!-- NEXT_CHANGELOG_INSTRUCTIONS -->
+            Please ensure that the NEXT_CHANGELOG.md file is updated with any relevant changes. 
+            If this is not necessary for your PR, please include the following in your PR description:
+            NO_CHANGELOG=true
+            and rerun the job."
+          fi
+
+      - name: Delete instructions comment on success
+        if: success() # This step will only run if the previous check passed (i.e., if NEXT_CHANGELOG.md was modified or NO_CHANGELOG=true is in the PR message)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if there is a previous instructions comment
+          previous_comment_ids=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            --jq '.[] | select(.body | startswith("<!-- NEXT_CHANGELOG_INSTRUCTIONS -->")) | .id')
+          
+            # If a comment exists, delete it
+            if [ -n "$previous_comment_ids" ]; then
+              echo "Deleting previous instructions comment."
+              for comment_id in $previous_comment_ids; do
+                gh api "repos/${{ github.repository }}/issues/comments/$comment_id" --method DELETE
+              done
+            else
+              echo "No instructions comment found to delete."
+            fi

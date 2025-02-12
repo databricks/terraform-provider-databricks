@@ -3,6 +3,8 @@ package tokens
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,7 +31,8 @@ func (a TokenManagementAPI) CreateTokenOnBehalfOfServicePrincipal(request OboTok
 }
 
 func (a TokenManagementAPI) Delete(tokenID string) error {
-	return a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	err := a.client.Delete(a.context, fmt.Sprintf("/token-management/tokens/%s", tokenID), map[string]any{})
+	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
 }
 
 func (a TokenManagementAPI) Read(tokenID string) (ti TokenResponse, err error) {
@@ -62,10 +65,23 @@ func ResourceOboToken() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			ot, err := NewTokenManagementAPI(ctx, c).Read(d.Id())
 			if err != nil {
-				return err
+				err = common.IgnoreNotFoundError(err)
+				if err != nil {
+					return err
+				}
+				log.Printf("[INFO] OBO token with id %s not found, recreating it", d.Id())
+				d.SetId("")
+			} else { // check if token is expired
+				if ot.TokenInfo.ExpiryTime > 0 && time.Now().UnixMilli() > ot.TokenInfo.ExpiryTime {
+					log.Printf("[INFO] OBO token with id %s is expired, recreating it", d.Id())
+					d.SetId("")
+				}
 			}
-			// this method is just a shim to check if token does still exist
-			return d.Set("comment", ot.TokenInfo.Comment)
+			if d.Id() != "" {
+				// set comment only if token exists
+				d.Set("comment", ot.TokenInfo.Comment)
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTokenManagementAPI(ctx, c).Delete(d.Id())

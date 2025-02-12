@@ -292,19 +292,32 @@ resource "databricks_job" "sql_aggregation_job" {
 
 #### library Configuration Block
 
-This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+This block descripes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
 resource "databricks_job" "this" {
-  library {
-    pypi {
-      package = "databricks-mosaic==0.3.14"
+  task {
+    task_key = "some_task"
+    # ....
+    library {
+      pypi {
+        package = "databricks-mosaic==0.3.14"
+      }
     }
   }
 }
 ```
 
-#### environment Configuration Block
+#### depends_on Configuration Block
+
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
+
+* `task_key` - (Required) The name of the task this task depends on.
+* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
+
+-> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
+
+### environment Confaguration Block
 
 This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
 
@@ -322,15 +335,6 @@ environment {
   environment_key = "Default"
 }
 ```
-
-#### depends_on Configuration Block
-
-This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
-
-* `task_key` - (Required) The name of the task this task depends on.
-* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
-
--> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
 ### run_as Configuration Block
 

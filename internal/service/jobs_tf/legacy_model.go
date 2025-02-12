@@ -166,6 +166,12 @@ type BaseRun_SdkV2 struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// effective_performance_target is the actual performance target used by the
+	// run during execution. effective_performance_target can differ from
+	// performance_target depending on if the job was eligible to be
+	// cost-optimized (e.g. contains at least 1 serverless task) or if we
+	// specifically override the value for the run (ex. RunNow).
+	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -296,6 +302,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["cluster_spec"] = attrs["cluster_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -363,38 +370,39 @@ func (o BaseRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":          o.AttemptNumber,
-			"cleanup_duration":        o.CleanupDuration,
-			"cluster_instance":        o.ClusterInstance,
-			"cluster_spec":            o.ClusterSpec,
-			"creator_user_name":       o.CreatorUserName,
-			"description":             o.Description,
-			"end_time":                o.EndTime,
-			"execution_duration":      o.ExecutionDuration,
-			"git_source":              o.GitSource,
-			"has_more":                o.HasMore,
-			"job_clusters":            o.JobClusters,
-			"job_id":                  o.JobId,
-			"job_parameters":          o.JobParameters,
-			"job_run_id":              o.JobRunId,
-			"number_in_job":           o.NumberInJob,
-			"original_attempt_run_id": o.OriginalAttemptRunId,
-			"overriding_parameters":   o.OverridingParameters,
-			"queue_duration":          o.QueueDuration,
-			"repair_history":          o.RepairHistory,
-			"run_duration":            o.RunDuration,
-			"run_id":                  o.RunId,
-			"run_name":                o.RunName,
-			"run_page_url":            o.RunPageUrl,
-			"run_type":                o.RunType,
-			"schedule":                o.Schedule,
-			"setup_duration":          o.SetupDuration,
-			"start_time":              o.StartTime,
-			"state":                   o.State,
-			"status":                  o.Status,
-			"tasks":                   o.Tasks,
-			"trigger":                 o.Trigger,
-			"trigger_info":            o.TriggerInfo,
+			"attempt_number":               o.AttemptNumber,
+			"cleanup_duration":             o.CleanupDuration,
+			"cluster_instance":             o.ClusterInstance,
+			"cluster_spec":                 o.ClusterSpec,
+			"creator_user_name":            o.CreatorUserName,
+			"description":                  o.Description,
+			"effective_performance_target": o.EffectivePerformanceTarget,
+			"end_time":                     o.EndTime,
+			"execution_duration":           o.ExecutionDuration,
+			"git_source":                   o.GitSource,
+			"has_more":                     o.HasMore,
+			"job_clusters":                 o.JobClusters,
+			"job_id":                       o.JobId,
+			"job_parameters":               o.JobParameters,
+			"job_run_id":                   o.JobRunId,
+			"number_in_job":                o.NumberInJob,
+			"original_attempt_run_id":      o.OriginalAttemptRunId,
+			"overriding_parameters":        o.OverridingParameters,
+			"queue_duration":               o.QueueDuration,
+			"repair_history":               o.RepairHistory,
+			"run_duration":                 o.RunDuration,
+			"run_id":                       o.RunId,
+			"run_name":                     o.RunName,
+			"run_page_url":                 o.RunPageUrl,
+			"run_type":                     o.RunType,
+			"schedule":                     o.Schedule,
+			"setup_duration":               o.SetupDuration,
+			"start_time":                   o.StartTime,
+			"state":                        o.State,
+			"status":                       o.Status,
+			"tasks":                        o.Tasks,
+			"trigger":                      o.Trigger,
+			"trigger_info":                 o.TriggerInfo,
 		})
 }
 
@@ -410,10 +418,11 @@ func (o BaseRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"cluster_spec": basetypes.ListType{
 				ElemType: ClusterSpec_SdkV2{}.Type(ctx),
 			},
-			"creator_user_name":  types.StringType,
-			"description":        types.StringType,
-			"end_time":           types.Int64Type,
-			"execution_duration": types.Int64Type,
+			"creator_user_name":            types.StringType,
+			"description":                  types.StringType,
+			"effective_performance_target": types.StringType,
+			"end_time":                     types.Int64Type,
+			"execution_duration":           types.Int64Type,
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
@@ -1087,6 +1096,155 @@ func (o *CleanRoomsNotebookTask_SdkV2) SetNotebookBaseParameters(ctx context.Con
 	o.NotebookBaseParameters = types.MapValueMust(t, vs)
 }
 
+type CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 struct {
+	// The run state of the clean rooms notebook task.
+	CleanRoomJobRunState types.List `tfsdk:"clean_room_job_run_state"`
+	// The notebook output for the clean room run
+	NotebookOutput types.List `tfsdk:"notebook_output"`
+	// Information on how to access the output schema for the clean room run
+	OutputSchemaInfo types.List `tfsdk:"output_schema_info"`
+}
+
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) {
+}
+
+func (newState *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) {
+}
+
+func (c CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_room_job_run_state"] = attrs["clean_room_job_run_state"].SetOptional()
+	attrs["clean_room_job_run_state"] = attrs["clean_room_job_run_state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["notebook_output"] = attrs["notebook_output"].SetOptional()
+	attrs["notebook_output"] = attrs["notebook_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["output_schema_info"] = attrs["output_schema_info"].SetOptional()
+	attrs["output_schema_info"] = attrs["output_schema_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"clean_room_job_run_state": reflect.TypeOf(CleanRoomTaskRunState_SdkV2{}),
+		"notebook_output":          reflect.TypeOf(NotebookOutput_SdkV2{}),
+		"output_schema_info":       reflect.TypeOf(OutputSchemaInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"clean_room_job_run_state": o.CleanRoomJobRunState,
+			"notebook_output":          o.NotebookOutput,
+			"output_schema_info":       o.OutputSchemaInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"clean_room_job_run_state": basetypes.ListType{
+				ElemType: CleanRoomTaskRunState_SdkV2{}.Type(ctx),
+			},
+			"notebook_output": basetypes.ListType{
+				ElemType: NotebookOutput_SdkV2{}.Type(ctx),
+			},
+			"output_schema_info": basetypes.ListType{
+				ElemType: OutputSchemaInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCleanRoomJobRunState returns the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
+// a CleanRoomTaskRunState_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetCleanRoomJobRunState(ctx context.Context) (CleanRoomTaskRunState_SdkV2, bool) {
+	var e CleanRoomTaskRunState_SdkV2
+	if o.CleanRoomJobRunState.IsNull() || o.CleanRoomJobRunState.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomTaskRunState_SdkV2
+	d := o.CleanRoomJobRunState.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomJobRunState sets the value of the CleanRoomJobRunState field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetCleanRoomJobRunState(ctx context.Context, v CleanRoomTaskRunState_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_room_job_run_state"]
+	o.CleanRoomJobRunState = types.ListValueMust(t, vs)
+}
+
+// GetNotebookOutput returns the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
+// a NotebookOutput_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetNotebookOutput(ctx context.Context) (NotebookOutput_SdkV2, bool) {
+	var e NotebookOutput_SdkV2
+	if o.NotebookOutput.IsNull() || o.NotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []NotebookOutput_SdkV2
+	d := o.NotebookOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotebookOutput sets the value of the NotebookOutput field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetNotebookOutput(ctx context.Context, v NotebookOutput_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["notebook_output"]
+	o.NotebookOutput = types.ListValueMust(t, vs)
+}
+
+// GetOutputSchemaInfo returns the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 as
+// a OutputSchemaInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) GetOutputSchemaInfo(ctx context.Context) (OutputSchemaInfo_SdkV2, bool) {
+	var e OutputSchemaInfo_SdkV2
+	if o.OutputSchemaInfo.IsNull() || o.OutputSchemaInfo.IsUnknown() {
+		return e, false
+	}
+	var v []OutputSchemaInfo_SdkV2
+	d := o.OutputSchemaInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOutputSchemaInfo sets the value of the OutputSchemaInfo field in CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2.
+func (o *CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) SetOutputSchemaInfo(ctx context.Context, v OutputSchemaInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["output_schema_info"]
+	o.OutputSchemaInfo = types.ListValueMust(t, vs)
+}
+
 type ClusterInstance_SdkV2 struct {
 	// The canonical identifier for the cluster used by a run. This field is
 	// always available for runs on existing clusters. For runs on new clusters,
@@ -1477,6 +1635,9 @@ type CreateJob_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// PerformanceTarget defines how performant or cost efficient the execution
+	// of run on serverless should be.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue"`
 	// Write-only setting. Specifies the user or service principal that the job
@@ -1540,6 +1701,7 @@ func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -1609,6 +1771,7 @@ func (o CreateJob_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"name":                  o.Name,
 			"notification_settings": o.NotificationSettings,
 			"parameter":             o.Parameters,
+			"performance_target":    o.PerformanceTarget,
 			"queue":                 o.Queue,
 			"run_as":                o.RunAs,
 			"schedule":              o.Schedule,
@@ -1660,6 +1823,7 @@ func (o CreateJob_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
+			"performance_target": types.StringType,
 			"queue": basetypes.ListType{
 				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
@@ -5462,6 +5626,9 @@ type JobSettings_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
+	// PerformanceTarget defines how performant or cost efficient the execution
+	// of run on serverless should be.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.List `tfsdk:"queue"`
 	// Write-only setting. Specifies the user or service principal that the job
@@ -5524,6 +5691,7 @@ func (c JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -5591,6 +5759,7 @@ func (o JobSettings_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 			"name":                  o.Name,
 			"notification_settings": o.NotificationSettings,
 			"parameter":             o.Parameters,
+			"performance_target":    o.PerformanceTarget,
 			"queue":                 o.Queue,
 			"run_as":                o.RunAs,
 			"schedule":              o.Schedule,
@@ -5639,6 +5808,7 @@ func (o JobSettings_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameter": basetypes.ListType{
 				ElemType: JobParameterDefinition_SdkV2{}.Type(ctx),
 			},
+			"performance_target": types.StringType,
 			"queue": basetypes.ListType{
 				ElemType: QueueSettings_SdkV2{}.Type(ctx),
 			},
@@ -6961,6 +7131,66 @@ func (o *NotebookTask_SdkV2) SetBaseParameters(ctx context.Context, v map[string
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["base_parameters"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.BaseParameters = types.MapValueMust(t, vs)
+}
+
+// Stores the catalog name, schema name, and the output schema expiration time
+// for the clean room run.
+type OutputSchemaInfo_SdkV2 struct {
+	CatalogName types.String `tfsdk:"catalog_name"`
+	// The expiration time for the output schema as a Unix timestamp in
+	// milliseconds.
+	ExpirationTime types.Int64 `tfsdk:"expiration_time"`
+
+	SchemaName types.String `tfsdk:"schema_name"`
+}
+
+func (newState *OutputSchemaInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OutputSchemaInfo_SdkV2) {
+}
+
+func (newState *OutputSchemaInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState OutputSchemaInfo_SdkV2) {
+}
+
+func (c OutputSchemaInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog_name"] = attrs["catalog_name"].SetOptional()
+	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
+	attrs["schema_name"] = attrs["schema_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OutputSchemaInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OutputSchemaInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OutputSchemaInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o OutputSchemaInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog_name":    o.CatalogName,
+			"expiration_time": o.ExpirationTime,
+			"schema_name":     o.SchemaName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o OutputSchemaInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog_name":    types.StringType,
+			"expiration_time": types.Int64Type,
+			"schema_name":     types.StringType,
+		},
+	}
 }
 
 type PeriodicTriggerConfiguration_SdkV2 struct {
@@ -9170,6 +9400,12 @@ type Run_SdkV2 struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
+	// effective_performance_target is the actual performance target used by the
+	// run during execution. effective_performance_target can differ from
+	// performance_target depending on if the job was eligible to be
+	// cost-optimized (e.g. contains at least 1 serverless task) or if we
+	// specifically override the value for the run (ex. RunNow).
+	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -9305,6 +9541,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["cluster_spec"] = attrs["cluster_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -9375,40 +9612,41 @@ func (o Run_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":          o.AttemptNumber,
-			"cleanup_duration":        o.CleanupDuration,
-			"cluster_instance":        o.ClusterInstance,
-			"cluster_spec":            o.ClusterSpec,
-			"creator_user_name":       o.CreatorUserName,
-			"description":             o.Description,
-			"end_time":                o.EndTime,
-			"execution_duration":      o.ExecutionDuration,
-			"git_source":              o.GitSource,
-			"has_more":                o.HasMore,
-			"iterations":              o.Iterations,
-			"job_clusters":            o.JobClusters,
-			"job_id":                  o.JobId,
-			"job_parameters":          o.JobParameters,
-			"job_run_id":              o.JobRunId,
-			"next_page_token":         o.NextPageToken,
-			"number_in_job":           o.NumberInJob,
-			"original_attempt_run_id": o.OriginalAttemptRunId,
-			"overriding_parameters":   o.OverridingParameters,
-			"queue_duration":          o.QueueDuration,
-			"repair_history":          o.RepairHistory,
-			"run_duration":            o.RunDuration,
-			"run_id":                  o.RunId,
-			"run_name":                o.RunName,
-			"run_page_url":            o.RunPageUrl,
-			"run_type":                o.RunType,
-			"schedule":                o.Schedule,
-			"setup_duration":          o.SetupDuration,
-			"start_time":              o.StartTime,
-			"state":                   o.State,
-			"status":                  o.Status,
-			"tasks":                   o.Tasks,
-			"trigger":                 o.Trigger,
-			"trigger_info":            o.TriggerInfo,
+			"attempt_number":               o.AttemptNumber,
+			"cleanup_duration":             o.CleanupDuration,
+			"cluster_instance":             o.ClusterInstance,
+			"cluster_spec":                 o.ClusterSpec,
+			"creator_user_name":            o.CreatorUserName,
+			"description":                  o.Description,
+			"effective_performance_target": o.EffectivePerformanceTarget,
+			"end_time":                     o.EndTime,
+			"execution_duration":           o.ExecutionDuration,
+			"git_source":                   o.GitSource,
+			"has_more":                     o.HasMore,
+			"iterations":                   o.Iterations,
+			"job_clusters":                 o.JobClusters,
+			"job_id":                       o.JobId,
+			"job_parameters":               o.JobParameters,
+			"job_run_id":                   o.JobRunId,
+			"next_page_token":              o.NextPageToken,
+			"number_in_job":                o.NumberInJob,
+			"original_attempt_run_id":      o.OriginalAttemptRunId,
+			"overriding_parameters":        o.OverridingParameters,
+			"queue_duration":               o.QueueDuration,
+			"repair_history":               o.RepairHistory,
+			"run_duration":                 o.RunDuration,
+			"run_id":                       o.RunId,
+			"run_name":                     o.RunName,
+			"run_page_url":                 o.RunPageUrl,
+			"run_type":                     o.RunType,
+			"schedule":                     o.Schedule,
+			"setup_duration":               o.SetupDuration,
+			"start_time":                   o.StartTime,
+			"state":                        o.State,
+			"status":                       o.Status,
+			"tasks":                        o.Tasks,
+			"trigger":                      o.Trigger,
+			"trigger_info":                 o.TriggerInfo,
 		})
 }
 
@@ -9424,10 +9662,11 @@ func (o Run_SdkV2) Type(ctx context.Context) attr.Type {
 			"cluster_spec": basetypes.ListType{
 				ElemType: ClusterSpec_SdkV2{}.Type(ctx),
 			},
-			"creator_user_name":  types.StringType,
-			"description":        types.StringType,
-			"end_time":           types.Int64Type,
-			"execution_duration": types.Int64Type,
+			"creator_user_name":            types.StringType,
+			"description":                  types.StringType,
+			"effective_performance_target": types.StringType,
+			"end_time":                     types.Int64Type,
+			"execution_duration":           types.Int64Type,
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
 			},
@@ -10552,6 +10791,10 @@ type RunNow_SdkV2 struct {
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
 	Only types.List `tfsdk:"only"`
+	// PerformanceTarget defines how performant or cost efficient the execution
+	// of run on serverless compute should be. For RunNow request, the run will
+	// execute with this settings instead of ones defined in job.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
 
@@ -10615,6 +10858,7 @@ func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
 	attrs["only"] = attrs["only"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
@@ -10664,6 +10908,7 @@ func (o RunNow_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"job_parameters":      o.JobParameters,
 			"notebook_params":     o.NotebookParams,
 			"only":                o.Only,
+			"performance_target":  o.PerformanceTarget,
 			"pipeline_params":     o.PipelineParams,
 			"python_named_params": o.PythonNamedParams,
 			"python_params":       o.PythonParams,
@@ -10694,6 +10939,7 @@ func (o RunNow_SdkV2) Type(ctx context.Context) attr.Type {
 			"only": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"performance_target": types.StringType,
 			"pipeline_params": basetypes.ListType{
 				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
@@ -11059,6 +11305,8 @@ func (o RunNowResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Run output was retrieved successfully.
 type RunOutput_SdkV2 struct {
+	// The output of a clean rooms notebook task, if available
+	CleanRoomsNotebookOutput types.List `tfsdk:"clean_rooms_notebook_output"`
 	// The output of a dbt task, if available.
 	DbtOutput types.List `tfsdk:"dbt_output"`
 	// An error message indicating why a task failed or why output is not
@@ -11104,6 +11352,8 @@ func (newState *RunOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingState Run
 }
 
 func (c RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
+	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["dbt_output"] = attrs["dbt_output"].SetOptional()
 	attrs["dbt_output"] = attrs["dbt_output"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["error"] = attrs["error"].SetOptional()
@@ -11132,11 +11382,12 @@ func (c RunOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (a RunOutput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dbt_output":      reflect.TypeOf(DbtOutput_SdkV2{}),
-		"metadata":        reflect.TypeOf(Run_SdkV2{}),
-		"notebook_output": reflect.TypeOf(NotebookOutput_SdkV2{}),
-		"run_job_output":  reflect.TypeOf(RunJobOutput_SdkV2{}),
-		"sql_output":      reflect.TypeOf(SqlOutput_SdkV2{}),
+		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2{}),
+		"dbt_output":                  reflect.TypeOf(DbtOutput_SdkV2{}),
+		"metadata":                    reflect.TypeOf(Run_SdkV2{}),
+		"notebook_output":             reflect.TypeOf(NotebookOutput_SdkV2{}),
+		"run_job_output":              reflect.TypeOf(RunJobOutput_SdkV2{}),
+		"sql_output":                  reflect.TypeOf(SqlOutput_SdkV2{}),
 	}
 }
 
@@ -11147,16 +11398,17 @@ func (o RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbt_output":      o.DbtOutput,
-			"error":           o.Error,
-			"error_trace":     o.ErrorTrace,
-			"info":            o.Info,
-			"logs":            o.Logs,
-			"logs_truncated":  o.LogsTruncated,
-			"metadata":        o.Metadata,
-			"notebook_output": o.NotebookOutput,
-			"run_job_output":  o.RunJobOutput,
-			"sql_output":      o.SqlOutput,
+			"clean_rooms_notebook_output": o.CleanRoomsNotebookOutput,
+			"dbt_output":                  o.DbtOutput,
+			"error":                       o.Error,
+			"error_trace":                 o.ErrorTrace,
+			"info":                        o.Info,
+			"logs":                        o.Logs,
+			"logs_truncated":              o.LogsTruncated,
+			"metadata":                    o.Metadata,
+			"notebook_output":             o.NotebookOutput,
+			"run_job_output":              o.RunJobOutput,
+			"sql_output":                  o.SqlOutput,
 		})
 }
 
@@ -11164,6 +11416,9 @@ func (o RunOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"clean_rooms_notebook_output": basetypes.ListType{
+				ElemType: CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2{}.Type(ctx),
+			},
 			"dbt_output": basetypes.ListType{
 				ElemType: DbtOutput_SdkV2{}.Type(ctx),
 			},
@@ -11186,6 +11441,32 @@ func (o RunOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetCleanRoomsNotebookOutput returns the value of the CleanRoomsNotebookOutput field in RunOutput_SdkV2 as
+// a CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput_SdkV2) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2, bool) {
+	var e CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
+	if o.CleanRoomsNotebookOutput.IsNull() || o.CleanRoomsNotebookOutput.IsUnknown() {
+		return e, false
+	}
+	var v []CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2
+	d := o.CleanRoomsNotebookOutput.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCleanRoomsNotebookOutput sets the value of the CleanRoomsNotebookOutput field in RunOutput_SdkV2.
+func (o *RunOutput_SdkV2) SetCleanRoomsNotebookOutput(ctx context.Context, v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["clean_rooms_notebook_output"]
+	o.CleanRoomsNotebookOutput = types.ListValueMust(t, vs)
 }
 
 // GetDbtOutput returns the value of the DbtOutput field in RunOutput_SdkV2 as
@@ -11936,6 +12217,15 @@ type RunTask_SdkV2 struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
+	// Denotes whether or not the task was disabled by the user. Disabled tasks
+	// do not execute and are immediately skipped as soon as they are unblocked.
+	Disabled types.Bool `tfsdk:"disabled"`
+	// effective_performance_target is the actual performance target used by the
+	// run during execution. effective_performance_target can differ from
+	// performance_target depending on if the job was eligible to be
+	// cost-optimized (e.g. contains at least 1 serverless task) or if an
+	// override was provided for the run (ex. RunNow).
+	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
 	EmailNotifications types.List `tfsdk:"email_notifications"`
@@ -12087,6 +12377,8 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["dbt_task"] = attrs["dbt_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["disabled"] = attrs["disabled"].SetComputed()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -12182,46 +12474,48 @@ func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"attempt_number":            o.AttemptNumber,
-			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
-			"cleanup_duration":          o.CleanupDuration,
-			"cluster_instance":          o.ClusterInstance,
-			"condition_task":            o.ConditionTask,
-			"dbt_task":                  o.DbtTask,
-			"depends_on":                o.DependsOn,
-			"description":               o.Description,
-			"email_notifications":       o.EmailNotifications,
-			"end_time":                  o.EndTime,
-			"environment_key":           o.EnvironmentKey,
-			"execution_duration":        o.ExecutionDuration,
-			"existing_cluster_id":       o.ExistingClusterId,
-			"for_each_task":             o.ForEachTask,
-			"git_source":                o.GitSource,
-			"job_cluster_key":           o.JobClusterKey,
-			"library":                   o.Libraries,
-			"new_cluster":               o.NewCluster,
-			"notebook_task":             o.NotebookTask,
-			"notification_settings":     o.NotificationSettings,
-			"pipeline_task":             o.PipelineTask,
-			"python_wheel_task":         o.PythonWheelTask,
-			"queue_duration":            o.QueueDuration,
-			"resolved_values":           o.ResolvedValues,
-			"run_duration":              o.RunDuration,
-			"run_id":                    o.RunId,
-			"run_if":                    o.RunIf,
-			"run_job_task":              o.RunJobTask,
-			"run_page_url":              o.RunPageUrl,
-			"setup_duration":            o.SetupDuration,
-			"spark_jar_task":            o.SparkJarTask,
-			"spark_python_task":         o.SparkPythonTask,
-			"spark_submit_task":         o.SparkSubmitTask,
-			"sql_task":                  o.SqlTask,
-			"start_time":                o.StartTime,
-			"state":                     o.State,
-			"status":                    o.Status,
-			"task_key":                  o.TaskKey,
-			"timeout_seconds":           o.TimeoutSeconds,
-			"webhook_notifications":     o.WebhookNotifications,
+			"attempt_number":               o.AttemptNumber,
+			"clean_rooms_notebook_task":    o.CleanRoomsNotebookTask,
+			"cleanup_duration":             o.CleanupDuration,
+			"cluster_instance":             o.ClusterInstance,
+			"condition_task":               o.ConditionTask,
+			"dbt_task":                     o.DbtTask,
+			"depends_on":                   o.DependsOn,
+			"description":                  o.Description,
+			"disabled":                     o.Disabled,
+			"effective_performance_target": o.EffectivePerformanceTarget,
+			"email_notifications":          o.EmailNotifications,
+			"end_time":                     o.EndTime,
+			"environment_key":              o.EnvironmentKey,
+			"execution_duration":           o.ExecutionDuration,
+			"existing_cluster_id":          o.ExistingClusterId,
+			"for_each_task":                o.ForEachTask,
+			"git_source":                   o.GitSource,
+			"job_cluster_key":              o.JobClusterKey,
+			"library":                      o.Libraries,
+			"new_cluster":                  o.NewCluster,
+			"notebook_task":                o.NotebookTask,
+			"notification_settings":        o.NotificationSettings,
+			"pipeline_task":                o.PipelineTask,
+			"python_wheel_task":            o.PythonWheelTask,
+			"queue_duration":               o.QueueDuration,
+			"resolved_values":              o.ResolvedValues,
+			"run_duration":                 o.RunDuration,
+			"run_id":                       o.RunId,
+			"run_if":                       o.RunIf,
+			"run_job_task":                 o.RunJobTask,
+			"run_page_url":                 o.RunPageUrl,
+			"setup_duration":               o.SetupDuration,
+			"spark_jar_task":               o.SparkJarTask,
+			"spark_python_task":            o.SparkPythonTask,
+			"spark_submit_task":            o.SparkSubmitTask,
+			"sql_task":                     o.SqlTask,
+			"start_time":                   o.StartTime,
+			"state":                        o.State,
+			"status":                       o.Status,
+			"task_key":                     o.TaskKey,
+			"timeout_seconds":              o.TimeoutSeconds,
+			"webhook_notifications":        o.WebhookNotifications,
 		})
 }
 
@@ -12246,7 +12540,9 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency_SdkV2{}.Type(ctx),
 			},
-			"description": types.StringType,
+			"description":                  types.StringType,
+			"disabled":                     types.BoolType,
+			"effective_performance_target": types.StringType,
 			"email_notifications": basetypes.ListType{
 				ElemType: JobEmailNotifications_SdkV2{}.Type(ctx),
 			},
@@ -12934,6 +13230,8 @@ type SparkJarTask_SdkV2 struct {
 	//
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	Parameters types.List `tfsdk:"parameters"`
+	// Deprecated. A value of `false` is no longer supported.
+	RunAsRepl types.Bool `tfsdk:"run_as_repl"`
 }
 
 func (newState *SparkJarTask_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SparkJarTask_SdkV2) {
@@ -12946,6 +13244,7 @@ func (c SparkJarTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["jar_uri"] = attrs["jar_uri"].SetOptional()
 	attrs["main_class_name"] = attrs["main_class_name"].SetOptional()
 	attrs["parameters"] = attrs["parameters"].SetOptional()
+	attrs["run_as_repl"] = attrs["run_as_repl"].SetOptional()
 
 	return attrs
 }
@@ -12973,6 +13272,7 @@ func (o SparkJarTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"jar_uri":         o.JarUri,
 			"main_class_name": o.MainClassName,
 			"parameters":      o.Parameters,
+			"run_as_repl":     o.RunAsRepl,
 		})
 }
 
@@ -12985,6 +13285,7 @@ func (o SparkJarTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"parameters": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"run_as_repl": types.BoolType,
 		},
 	}
 }

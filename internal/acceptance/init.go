@@ -108,7 +108,7 @@ type Step struct {
 	ProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 }
 
-func createUuid() string {
+func CreateUuid() string {
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -122,7 +122,7 @@ func createUuid() string {
 func environmentTemplate(t *testing.T, template string, otherVars ...map[string]string) string {
 	vars := map[string]string{
 		"RANDOM":      qa.RandomName("t"),
-		"RANDOM_UUID": createUuid(),
+		"RANDOM_UUID": CreateUuid(),
 	}
 	if len(otherVars) > 1 {
 		Skipf(t)("cannot have more than one custom variable map")
@@ -249,7 +249,7 @@ func run(t *testing.T, steps []Step) {
 }
 
 // resourceCheck calls back a function with client and resource id
-func resourceCheck(name string,
+func ResourceCheck(name string,
 	cb func(ctx context.Context, client *common.DatabricksClient, id string) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -267,7 +267,7 @@ func resourceCheck(name string,
 }
 
 // resourceCheckWithState calls back a function with client and resource instance state
-func resourceCheckWithState(name string,
+func ResourceCheckWithState(name string,
 	cb func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -416,28 +416,14 @@ func isCloudEnvInList(t *testing.T, cloudEnvs []string) bool {
 	return slices.Contains(cloudEnvs, cloudEnv)
 }
 
-func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
-	w := databricks.Must(databricks.NewWorkspaceClient())
-	user, err := w.CurrentUser.Me(ctx)
-	if err != nil {
-		return false, err
-	}
-	for _, emailValue := range user.Emails {
-		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
-			return false, nil
-		}
-	}
-	return true, nil
-}
-
 func initTest(t *testing.T, key string) {
 	setDebugLogger()
-	loadDebugEnvIfRunsFromIDE(t, key)
+	LoadDebugEnvIfRunsFromIDE(t, key)
 	t.Log(GetEnvOrSkipTest(t, "CLOUD_ENV"))
 }
 
 // loads debug environment from ~/.databricks/debug-env.json
-func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
+func LoadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	if !isInDebug() {
 		return
 	}
@@ -461,4 +447,29 @@ func loadDebugEnvIfRunsFromIDE(t *testing.T, key string) {
 	for k, v := range vars {
 		os.Setenv(k, v)
 	}
+}
+
+func isAuthedAsWorkspaceServicePrincipal(ctx context.Context) (bool, error) {
+	w := databricks.Must(databricks.NewWorkspaceClient())
+	user, err := w.CurrentUser.Me(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, emailValue := range user.Emails {
+		if emailValue.Primary && strings.Contains(emailValue.Value, "@") {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+func GetRunAsAttribute(t *testing.T, ctx context.Context) string {
+	isSp, err := isAuthedAsWorkspaceServicePrincipal(ctx)
+	if err != nil {
+		t.Fatalf("cannot determine the user: %s", err)
+	}
+	if isSp {
+		return "service_principal_name"
+	}
+	return "user_name"
 }

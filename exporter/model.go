@@ -304,11 +304,15 @@ func (r *resource) ImportResource(ic *importContext) {
 		log.Printf("[ERROR] %s is not available for import", r)
 		return
 	}
-	if ic.HasInState(r, true) {
+	rString := r.String()
+	ic.importingMutex.Lock()
+	isAdded, ok := ic.importing[rString]
+	if ok && isAdded {
+		ic.importingMutex.Unlock()
 		log.Printf("[DEBUG] %s already imported", r)
 		return
 	}
-
+	ic.importingMutex.Unlock()
 	if r.ID == "" {
 		if ir.Search == nil {
 			log.Printf("[ERROR] Searching %s is not available", r)

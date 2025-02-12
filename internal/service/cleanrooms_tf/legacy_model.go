@@ -1114,7 +1114,7 @@ func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringRead(exist
 }
 
 func (c CleanRoomCollaborator_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetOptional()
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetRequired()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()

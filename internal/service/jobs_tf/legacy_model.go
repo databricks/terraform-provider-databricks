@@ -19,6 +19,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -303,6 +304,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -323,6 +325,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["run_name"] = attrs["run_name"].SetOptional()
 	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
 	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("JOB_RUN", "SUBMIT_RUN", "WORKFLOW_RUN"))
 	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["setup_duration"] = attrs["setup_duration"].SetOptional()
@@ -333,6 +336,7 @@ func (c BaseRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FILE_ARRIVAL", "ONE_TIME", "PERIODIC", "RETRY", "RUN_JOB_TASK", "TABLE"))
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -963,7 +967,9 @@ func (newState *CleanRoomTaskRunState_SdkV2) SyncEffectiveFieldsDuringRead(exist
 
 func (c CleanRoomTaskRunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
+	attrs["life_cycle_state"] = attrs["life_cycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BLOCKED", "INTERNAL_ERROR", "PENDING", "QUEUED", "RUNNING", "RUN_LIFE_CYCLE_STATE_UNSPECIFIED", "SKIPPED", "TERMINATED", "TERMINATING", "WAITING_FOR_RETRY"))
 	attrs["result_state"] = attrs["result_state"].SetOptional()
+	attrs["result_state"] = attrs["result_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "DISABLED", "EVICTED", "EXCLUDED", "FAILED", "MAXIMUM_CONCURRENT_RUNS_REACHED", "RUN_RESULT_STATE_UNSPECIFIED", "SUCCESS", "SUCCESS_WITH_FAILURES", "TIMEDOUT", "UPSTREAM_CANCELED", "UPSTREAM_EVICTED", "UPSTREAM_FAILED"))
 
 	return attrs
 }
@@ -1470,6 +1476,7 @@ func (newState *ConditionTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 func (c ConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["left"] = attrs["left"].SetRequired()
 	attrs["op"] = attrs["op"].SetRequired()
+	attrs["op"] = attrs["op"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EQUAL_TO", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "NOT_EQUAL"))
 	attrs["right"] = attrs["right"].SetRequired()
 
 	return attrs
@@ -1524,6 +1531,7 @@ func (newState *Continuous_SdkV2) SyncEffectiveFieldsDuringRead(existingState Co
 
 func (c Continuous_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PAUSED", "UNPAUSED"))
 
 	return attrs
 }
@@ -1687,10 +1695,12 @@ func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EDITABLE", "UI_LOCKED"))
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format"] = attrs["format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MULTI_TASK", "SINGLE_TASK"))
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["health"] = attrs["health"].SetOptional()
@@ -1702,6 +1712,7 @@ func (c CreateJob_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -2364,6 +2375,7 @@ func (newState *CronSchedule_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c CronSchedule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PAUSED", "UNPAUSED"))
 	attrs["quartz_cron_expression"] = attrs["quartz_cron_expression"].SetRequired()
 	attrs["timezone_id"] = attrs["timezone_id"].SetRequired()
 
@@ -2541,6 +2553,7 @@ func (c DbtTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["project_directory"] = attrs["project_directory"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["source"] = attrs["source"].SetOptional()
+	attrs["source"] = attrs["source"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GIT", "WORKSPACE"))
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
 	return attrs
@@ -4053,6 +4066,7 @@ func (c GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["commit"] = attrs["commit"].SetOptional()
 	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["git_provider"] = attrs["git_provider"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("awsCodeCommit", "azureDevOpsServices", "bitbucketCloud", "bitbucketServer", "gitHub", "gitHubEnterprise", "gitLab", "gitLabEnterpriseEdition"))
 	attrs["git_snapshot"] = attrs["git_snapshot"].SetOptional()
 	attrs["git_snapshot"] = attrs["git_snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tag"] = attrs["tag"].SetOptional()
@@ -4317,6 +4331,7 @@ func (newState *JobAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead(exi
 func (c JobAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MANAGE_RUN", "CAN_VIEW", "IS_OWNER"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -4653,6 +4668,7 @@ func (newState *JobDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 
 func (c JobDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["kind"] = attrs["kind"].SetRequired()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BUNDLE"))
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
 	return attrs
@@ -5202,6 +5218,7 @@ func (c JobPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MANAGE_RUN", "CAN_VIEW", "IS_OWNER"))
 
 	return attrs
 }
@@ -5373,6 +5390,7 @@ func (newState *JobPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRead(e
 func (c JobPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MANAGE_RUN", "CAN_VIEW", "IS_OWNER"))
 
 	return attrs
 }
@@ -5677,10 +5695,12 @@ func (c JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["edit_mode"] = attrs["edit_mode"].SetOptional()
+	attrs["edit_mode"] = attrs["edit_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EDITABLE", "UI_LOCKED"))
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["environment"] = attrs["environment"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format"] = attrs["format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MULTI_TASK", "SINGLE_TASK"))
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["health"] = attrs["health"].SetOptional()
@@ -5692,6 +5712,7 @@ func (c JobSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["notification_settings"] = attrs["notification_settings"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["parameter"] = attrs["parameter"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["queue"] = attrs["queue"].SetOptional()
 	attrs["queue"] = attrs["queue"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -6278,6 +6299,7 @@ func (newState *JobSource_SdkV2) SyncEffectiveFieldsDuringRead(existingState Job
 
 func (c JobSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dirty_state"] = attrs["dirty_state"].SetOptional()
+	attrs["dirty_state"] = attrs["dirty_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISCONNECTED", "NOT_SYNCED"))
 	attrs["import_from_git_branch"] = attrs["import_from_git_branch"].SetRequired()
 	attrs["job_config_path"] = attrs["job_config_path"].SetRequired()
 
@@ -6349,7 +6371,9 @@ func (newState *JobsHealthRule_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c JobsHealthRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["metric"] = attrs["metric"].SetRequired()
+	attrs["metric"] = attrs["metric"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("RUN_DURATION_SECONDS", "STREAMING_BACKLOG_BYTES", "STREAMING_BACKLOG_FILES", "STREAMING_BACKLOG_RECORDS", "STREAMING_BACKLOG_SECONDS"))
 	attrs["op"] = attrs["op"].SetRequired()
+	attrs["op"] = attrs["op"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GREATER_THAN"))
 	attrs["value"] = attrs["value"].SetRequired()
 
 	return attrs
@@ -7061,6 +7085,7 @@ func (c NotebookTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["base_parameters"] = attrs["base_parameters"].SetOptional()
 	attrs["notebook_path"] = attrs["notebook_path"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
+	attrs["source"] = attrs["source"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GIT", "WORKSPACE"))
 	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
 
 	return attrs
@@ -7209,6 +7234,7 @@ func (newState *PeriodicTriggerConfiguration_SdkV2) SyncEffectiveFieldsDuringRea
 func (c PeriodicTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["interval"] = attrs["interval"].SetRequired()
 	attrs["unit"] = attrs["unit"].SetRequired()
+	attrs["unit"] = attrs["unit"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DAYS", "HOURS", "WEEKS"))
 
 	return attrs
 }
@@ -7495,6 +7521,7 @@ func (newState *QueueDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c QueueDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
+	attrs["code"] = attrs["code"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE_RUNS_LIMIT_REACHED", "ACTIVE_RUN_JOB_TASKS_LIMIT_REACHED", "MAX_CONCURRENT_RUNS_REACHED"))
 	attrs["message"] = attrs["message"].SetOptional()
 
 	return attrs
@@ -7617,6 +7644,7 @@ func (c RepairHistoryItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["task_run_ids"] = attrs["task_run_ids"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ORIGINAL", "REPAIR"))
 
 	return attrs
 }
@@ -9542,6 +9570,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["execution_duration"] = attrs["execution_duration"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].SetOptional()
@@ -9564,6 +9593,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["run_name"] = attrs["run_name"].SetOptional()
 	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
 	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("JOB_RUN", "SUBMIT_RUN", "WORKFLOW_RUN"))
 	attrs["schedule"] = attrs["schedule"].SetOptional()
 	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["setup_duration"] = attrs["setup_duration"].SetOptional()
@@ -9574,6 +9604,7 @@ func (c Run_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["status"] = attrs["status"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tasks"] = attrs["tasks"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
+	attrs["trigger"] = attrs["trigger"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FILE_ARRIVAL", "ONE_TIME", "PERIODIC", "RETRY", "RUN_JOB_TASK", "TABLE"))
 	attrs["trigger_info"] = attrs["trigger_info"].SetOptional()
 	attrs["trigger_info"] = attrs["trigger_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -10089,6 +10120,7 @@ func (newState *RunConditionTask_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 func (c RunConditionTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["left"] = attrs["left"].SetRequired()
 	attrs["op"] = attrs["op"].SetRequired()
+	attrs["op"] = attrs["op"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EQUAL_TO", "GREATER_THAN", "GREATER_THAN_OR_EQUAL", "LESS_THAN", "LESS_THAN_OR_EQUAL", "NOT_EQUAL"))
 	attrs["outcome"] = attrs["outcome"].SetOptional()
 	attrs["right"] = attrs["right"].SetRequired()
 
@@ -10859,6 +10891,7 @@ func (c RunNow_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
 	attrs["only"] = attrs["only"].SetOptional()
 	attrs["performance_target"] = attrs["performance_target"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
@@ -12008,8 +12041,10 @@ func (newState *RunState_SdkV2) SyncEffectiveFieldsDuringRead(existingState RunS
 
 func (c RunState_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["life_cycle_state"] = attrs["life_cycle_state"].SetOptional()
+	attrs["life_cycle_state"] = attrs["life_cycle_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BLOCKED", "INTERNAL_ERROR", "PENDING", "QUEUED", "RUNNING", "SKIPPED", "TERMINATED", "TERMINATING", "WAITING_FOR_RETRY"))
 	attrs["queue_reason"] = attrs["queue_reason"].SetOptional()
 	attrs["result_state"] = attrs["result_state"].SetOptional()
+	attrs["result_state"] = attrs["result_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "DISABLED", "EXCLUDED", "FAILED", "MAXIMUM_CONCURRENT_RUNS_REACHED", "SUCCESS", "SUCCESS_WITH_FAILURES", "TIMEDOUT", "UPSTREAM_CANCELED", "UPSTREAM_FAILED"))
 	attrs["state_message"] = attrs["state_message"].SetOptional()
 	attrs["user_cancelled_or_timedout"] = attrs["user_cancelled_or_timedout"].SetOptional()
 
@@ -12076,6 +12111,7 @@ func (c RunStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["queue_details"] = attrs["queue_details"].SetOptional()
 	attrs["queue_details"] = attrs["queue_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BLOCKED", "PENDING", "QUEUED", "RUNNING", "TERMINATED", "TERMINATING"))
 	attrs["termination_details"] = attrs["termination_details"].SetOptional()
 	attrs["termination_details"] = attrs["termination_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -12379,6 +12415,7 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["disabled"] = attrs["disabled"].SetComputed()
 	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetComputed()
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COST_OPTIMIZED", "PERFORMANCE_OPTIMIZED"))
 	attrs["email_notifications"] = attrs["email_notifications"].SetOptional()
 	attrs["email_notifications"] = attrs["email_notifications"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["end_time"] = attrs["end_time"].SetOptional()
@@ -12407,6 +12444,7 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["run_duration"] = attrs["run_duration"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALL_DONE", "ALL_FAILED", "ALL_SUCCESS", "AT_LEAST_ONE_FAILED", "AT_LEAST_ONE_SUCCESS", "NONE_FAILED"))
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
 	attrs["run_job_task"] = attrs["run_job_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_page_url"] = attrs["run_page_url"].SetOptional()
@@ -13352,6 +13390,7 @@ func (c SparkPythonTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["python_file"] = attrs["python_file"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
+	attrs["source"] = attrs["source"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GIT", "WORKSPACE"))
 
 	return attrs
 }
@@ -13530,6 +13569,7 @@ func (newState *SqlAlertOutput_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c SqlAlertOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert_state"] = attrs["alert_state"].SetOptional()
+	attrs["alert_state"] = attrs["alert_state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("OK", "TRIGGERED", "UNKNOWN"))
 	attrs["output_link"] = attrs["output_link"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["sql_statements"] = attrs["sql_statements"].SetOptional()
@@ -13720,6 +13760,7 @@ func (c SqlDashboardWidgetOutput_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["output_link"] = attrs["output_link"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELLED", "FAILED", "PENDING", "RUNNING", "SUCCESS"))
 	attrs["widget_id"] = attrs["widget_id"].SetOptional()
 	attrs["widget_title"] = attrs["widget_title"].SetOptional()
 
@@ -14576,6 +14617,7 @@ func (newState *SqlTaskFile_SdkV2) SyncEffectiveFieldsDuringRead(existingState S
 func (c SqlTaskFile_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["path"] = attrs["path"].SetRequired()
 	attrs["source"] = attrs["source"].SetOptional()
+	attrs["source"] = attrs["source"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GIT", "WORKSPACE"))
 
 	return attrs
 }
@@ -15350,6 +15392,7 @@ func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALL_DONE", "ALL_FAILED", "ALL_SUCCESS", "AT_LEAST_ONE_FAILED", "AT_LEAST_ONE_SUCCESS", "NONE_FAILED"))
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
 	attrs["run_job_task"] = attrs["run_job_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
@@ -16024,6 +16067,7 @@ func (newState *TableUpdateTriggerConfiguration_SdkV2) SyncEffectiveFieldsDuring
 
 func (c TableUpdateTriggerConfiguration_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["condition"] = attrs["condition"].SetOptional()
+	attrs["condition"] = attrs["condition"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALL_UPDATED", "ANY_UPDATED"))
 	attrs["min_time_between_triggers_seconds"] = attrs["min_time_between_triggers_seconds"].SetOptional()
 	attrs["table_names"] = attrs["table_names"].SetOptional()
 	attrs["wait_after_last_change_seconds"] = attrs["wait_after_last_change_seconds"].SetOptional()
@@ -16266,6 +16310,7 @@ func (c Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
+	attrs["run_if"] = attrs["run_if"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ALL_DONE", "ALL_FAILED", "ALL_SUCCESS", "AT_LEAST_ONE_FAILED", "AT_LEAST_ONE_SUCCESS", "NONE_FAILED"))
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
 	attrs["run_job_task"] = attrs["run_job_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["spark_jar_task"] = attrs["spark_jar_task"].SetOptional()
@@ -17350,8 +17395,10 @@ func (newState *TerminationDetails_SdkV2) SyncEffectiveFieldsDuringRead(existing
 
 func (c TerminationDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
+	attrs["code"] = attrs["code"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BUDGET_POLICY_LIMIT_EXCEEDED", "CANCELED", "CLOUD_FAILURE", "CLUSTER_ERROR", "CLUSTER_REQUEST_LIMIT_EXCEEDED", "DRIVER_ERROR", "FEATURE_DISABLED", "INTERNAL_ERROR", "INVALID_CLUSTER_REQUEST", "INVALID_RUN_CONFIGURATION", "LIBRARY_INSTALLATION_ERROR", "MAX_CONCURRENT_RUNS_EXCEEDED", "MAX_JOB_QUEUE_SIZE_EXCEEDED", "MAX_SPARK_CONTEXTS_EXCEEDED", "REPOSITORY_CHECKOUT_FAILED", "RESOURCE_NOT_FOUND", "RUN_EXECUTION_ERROR", "SKIPPED", "STORAGE_ACCESS_ERROR", "SUCCESS", "UNAUTHORIZED_ERROR", "USER_CANCELED", "WORKSPACE_RUN_LIMIT_EXCEEDED"))
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLIENT_ERROR", "CLOUD_FAILURE", "INTERNAL_ERROR", "SUCCESS"))
 
 	return attrs
 }
@@ -17463,6 +17510,7 @@ func (c TriggerSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["file_arrival"] = attrs["file_arrival"].SetOptional()
 	attrs["file_arrival"] = attrs["file_arrival"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["pause_status"] = attrs["pause_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PAUSED", "UNPAUSED"))
 	attrs["periodic"] = attrs["periodic"].SetOptional()
 	attrs["periodic"] = attrs["periodic"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["table"] = attrs["table"].SetOptional()
@@ -17810,6 +17858,7 @@ func (c ViewItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DASHBOARD", "NOTEBOOK"))
 
 	return attrs
 }

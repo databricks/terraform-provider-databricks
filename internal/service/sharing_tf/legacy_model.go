@@ -19,6 +19,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -44,6 +45,7 @@ func (newState *CreateProvider_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 
 func (c CreateProvider_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["authentication_type"] = attrs["authentication_type"].SetRequired()
+	attrs["authentication_type"] = attrs["authentication_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATABRICKS", "TOKEN"))
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["recipient_profile_str"] = attrs["recipient_profile_str"].SetOptional()
@@ -124,6 +126,7 @@ func (newState *CreateRecipient_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 
 func (c CreateRecipient_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["authentication_type"] = attrs["authentication_type"].SetRequired()
+	attrs["authentication_type"] = attrs["authentication_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATABRICKS", "TOKEN"))
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
 	attrs["expiration_time"] = attrs["expiration_time"].SetOptional()
@@ -1480,6 +1483,7 @@ func (newState *PartitionValue_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c PartitionValue_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["op"] = attrs["op"].SetOptional()
+	attrs["op"] = attrs["op"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("EQUAL", "LIKE"))
 	attrs["recipient_property_key"] = attrs["recipient_property_key"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
 
@@ -1652,6 +1656,7 @@ func (newState *ProviderInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c ProviderInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["authentication_type"] = attrs["authentication_type"].SetOptional()
+	attrs["authentication_type"] = attrs["authentication_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATABRICKS", "TOKEN"))
 	attrs["cloud"] = attrs["cloud"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
@@ -1868,6 +1873,7 @@ func (c RecipientInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["activated"] = attrs["activated"].SetComputed()
 	attrs["activation_url"] = attrs["activation_url"].SetComputed()
 	attrs["authentication_type"] = attrs["authentication_type"].SetOptional()
+	attrs["authentication_type"] = attrs["authentication_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATABRICKS", "TOKEN"))
 	attrs["cloud"] = attrs["cloud"].SetComputed()
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["created_at"] = attrs["created_at"].SetComputed()
@@ -2779,8 +2785,10 @@ func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["data_object_type"] = attrs["data_object_type"].SetOptional()
+	attrs["data_object_type"] = attrs["data_object_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FEATURE_SPEC", "FUNCTION", "MATERIALIZED_VIEW", "MODEL", "NOTEBOOK_FILE", "SCHEMA", "STREAMING_TABLE", "TABLE", "VIEW"))
 	attrs["effective_history_data_sharing_status"] = attrs["effective_history_data_sharing_status"].SetComputed()
 	attrs["history_data_sharing_status"] = attrs["history_data_sharing_status"].SetOptional()
+	attrs["history_data_sharing_status"] = attrs["history_data_sharing_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DISABLED", "ENABLED"))
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["partition"] = attrs["partition"].SetOptional()
 	attrs["effective_shared_as"] = attrs["effective_shared_as"].SetComputed()
@@ -2788,6 +2796,7 @@ func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["effective_start_version"] = attrs["effective_start_version"].SetComputed()
 	attrs["start_version"] = attrs["start_version"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "PERMISSION_DENIED"))
 	attrs["string_shared_as"] = attrs["string_shared_as"].SetOptional()
 
 	return attrs
@@ -2901,6 +2910,7 @@ func (newState *SharedDataObjectUpdate_SdkV2) SyncEffectiveFieldsDuringRead(exis
 
 func (c SharedDataObjectUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["action"] = attrs["action"].SetOptional()
+	attrs["action"] = attrs["action"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ADD", "REMOVE", "UPDATE"))
 	attrs["data_object"] = attrs["data_object"].SetOptional()
 	attrs["data_object"] = attrs["data_object"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 

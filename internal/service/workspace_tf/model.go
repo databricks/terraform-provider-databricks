@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -37,6 +38,7 @@ func (newState *AclItem) SyncEffectiveFieldsDuringRead(existingState AclItem) {
 
 func (c AclItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MANAGE", "READ", "WRITE"))
 	attrs["principal"] = attrs["principal"].SetRequired()
 
 	return attrs
@@ -491,6 +493,7 @@ func (c CreateScope) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 	attrs["initial_manage_principal"] = attrs["initial_manage_principal"].SetOptional()
 	attrs["scope"] = attrs["scope"].SetRequired()
 	attrs["scope_backend_type"] = attrs["scope_backend_type"].SetOptional()
+	attrs["scope_backend_type"] = attrs["scope_backend_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AZURE_KEYVAULT", "DATABRICKS"))
 
 	return attrs
 }
@@ -2035,7 +2038,9 @@ func (newState *Import) SyncEffectiveFieldsDuringRead(existingState Import) {
 func (c Import) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["format"] = attrs["format"].SetOptional()
+	attrs["format"] = attrs["format"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AUTO", "DBC", "HTML", "JUPYTER", "RAW", "R_MARKDOWN", "SOURCE"))
 	attrs["language"] = attrs["language"].SetOptional()
+	attrs["language"] = attrs["language"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PYTHON", "R", "SCALA", "SQL"))
 	attrs["overwrite"] = attrs["overwrite"].SetOptional()
 	attrs["path"] = attrs["path"].SetRequired()
 
@@ -2881,9 +2886,11 @@ func (newState *ObjectInfo) SyncEffectiveFieldsDuringRead(existingState ObjectIn
 func (c ObjectInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["created_at"] = attrs["created_at"].SetOptional()
 	attrs["language"] = attrs["language"].SetOptional()
+	attrs["language"] = attrs["language"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PYTHON", "R", "SCALA", "SQL"))
 	attrs["modified_at"] = attrs["modified_at"].SetOptional()
 	attrs["object_id"] = attrs["object_id"].SetOptional()
 	attrs["object_type"] = attrs["object_type"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DASHBOARD", "DIRECTORY", "FILE", "LIBRARY", "NOTEBOOK", "REPO"))
 	attrs["path"] = attrs["path"].SetOptional()
 	attrs["resource_id"] = attrs["resource_id"].SetOptional()
 	attrs["size"] = attrs["size"].SetOptional()
@@ -2953,6 +2960,7 @@ func (newState *PutAcl) SyncEffectiveFieldsDuringRead(existingState PutAcl) {
 
 func (c PutAcl) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MANAGE", "READ", "WRITE"))
 	attrs["principal"] = attrs["principal"].SetRequired()
 	attrs["scope"] = attrs["scope"].SetRequired()
 
@@ -3137,6 +3145,7 @@ func (newState *RepoAccessControlRequest) SyncEffectiveFieldsDuringRead(existing
 func (c RepoAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -3405,6 +3414,7 @@ func (c RepoPermission) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 
 	return attrs
 }
@@ -3576,6 +3586,7 @@ func (newState *RepoPermissionsDescription) SyncEffectiveFieldsDuringRead(existi
 func (c RepoPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 
 	return attrs
 }
@@ -3765,6 +3776,7 @@ func (newState *SecretScope) SyncEffectiveFieldsDuringRead(existingState SecretS
 
 func (c SecretScope) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["backend_type"] = attrs["backend_type"].SetOptional()
+	attrs["backend_type"] = attrs["backend_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AZURE_KEYVAULT", "DATABRICKS"))
 	attrs["keyvault_metadata"] = attrs["keyvault_metadata"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 
@@ -4275,6 +4287,7 @@ func (newState *WorkspaceObjectAccessControlRequest) SyncEffectiveFieldsDuringRe
 func (c WorkspaceObjectAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -4434,6 +4447,7 @@ func (c WorkspaceObjectPermission) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 
 	return attrs
 }
@@ -4605,6 +4619,7 @@ func (newState *WorkspaceObjectPermissionsDescription) SyncEffectiveFieldsDuring
 func (c WorkspaceObjectPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ", "CAN_RUN"))
 
 	return attrs
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -87,13 +88,16 @@ func (newState *Activity_SdkV2) SyncEffectiveFieldsDuringRead(existingState Acti
 
 func (c Activity_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["activity_type"] = attrs["activity_type"].SetOptional()
+	attrs["activity_type"] = attrs["activity_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("APPLIED_TRANSITION", "APPROVED_REQUEST", "CANCELLED_REQUEST", "NEW_COMMENT", "REJECTED_REQUEST", "REQUESTED_TRANSITION", "SYSTEM_TRANSITION"))
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["from_stage"] = attrs["from_stage"].SetOptional()
+	attrs["from_stage"] = attrs["from_stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["system_comment"] = attrs["system_comment"].SetOptional()
 	attrs["to_stage"] = attrs["to_stage"].SetOptional()
+	attrs["to_stage"] = attrs["to_stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["user_id"] = attrs["user_id"].SetOptional()
 
 	return attrs
@@ -179,6 +183,7 @@ func (c ApproveTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["stage"] = attrs["stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["version"] = attrs["version"].SetRequired()
 
 	return attrs
@@ -1077,6 +1082,7 @@ func (c CreateRegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DISABLED", "TEST_MODE"))
 
 	return attrs
 }
@@ -1413,6 +1419,7 @@ func (c CreateTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["stage"] = attrs["stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["version"] = attrs["version"].SetRequired()
 
 	return attrs
@@ -2803,6 +2810,7 @@ func (newState *ExperimentAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringR
 func (c ExperimentAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -2962,6 +2970,7 @@ func (c ExperimentPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ"))
 
 	return attrs
 }
@@ -3133,6 +3142,7 @@ func (newState *ExperimentPermissionsDescription_SdkV2) SyncEffectiveFieldsDurin
 func (c ExperimentPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_READ"))
 
 	return attrs
 }
@@ -6398,6 +6408,7 @@ func (c ModelDatabricks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["latest_versions"] = attrs["latest_versions"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE_STAGING_VERSIONS", "CAN_READ"))
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["user_id"] = attrs["user_id"].SetOptional()
 
@@ -6611,6 +6622,7 @@ func (c ModelVersion_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["run_link"] = attrs["run_link"].SetOptional()
 	attrs["source"] = attrs["source"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED_REGISTRATION", "PENDING_REGISTRATION", "READY"))
 	attrs["status_message"] = attrs["status_message"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["user_id"] = attrs["user_id"].SetOptional()
@@ -6764,14 +6776,17 @@ func (newState *ModelVersionDatabricks_SdkV2) SyncEffectiveFieldsDuringRead(exis
 func (c ModelVersionDatabricks_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["current_stage"] = attrs["current_stage"].SetOptional()
+	attrs["current_stage"] = attrs["current_stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE_STAGING_VERSIONS", "CAN_READ"))
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_link"] = attrs["run_link"].SetOptional()
 	attrs["source"] = attrs["source"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED_REGISTRATION", "PENDING_REGISTRATION", "READY"))
 	attrs["status_message"] = attrs["status_message"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["user_id"] = attrs["user_id"].SetOptional()
@@ -6993,6 +7008,7 @@ func (newState *RegisteredModelAccessControlRequest_SdkV2) SyncEffectiveFieldsDu
 func (c RegisteredModelAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE_STAGING_VERSIONS", "CAN_READ"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -7152,6 +7168,7 @@ func (c RegisteredModelPermission_SdkV2) ApplySchemaCustomizations(attrs map[str
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE_STAGING_VERSIONS", "CAN_READ"))
 
 	return attrs
 }
@@ -7323,6 +7340,7 @@ func (newState *RegisteredModelPermissionsDescription_SdkV2) SyncEffectiveFields
 func (c RegisteredModelPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_EDIT", "CAN_MANAGE", "CAN_MANAGE_PRODUCTION_VERSIONS", "CAN_MANAGE_STAGING_VERSIONS", "CAN_READ"))
 
 	return attrs
 }
@@ -7520,6 +7538,7 @@ func (c RegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DISABLED", "TEST_MODE"))
 
 	return attrs
 }
@@ -7688,6 +7707,7 @@ func (c RejectTransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["stage"] = attrs["stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["version"] = attrs["version"].SetRequired()
 
 	return attrs
@@ -8551,6 +8571,7 @@ func (c RunInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED", "FINISHED", "KILLED", "RUNNING", "SCHEDULED"))
 	attrs["user_id"] = attrs["user_id"].SetOptional()
 
 	return attrs
@@ -8764,6 +8785,7 @@ func (c SearchExperiments_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["order_by"] = attrs["order_by"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["view_type"] = attrs["view_type"].SetOptional()
+	attrs["view_type"] = attrs["view_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE_ONLY", "ALL", "DELETED_ONLY"))
 
 	return attrs
 }
@@ -9299,6 +9321,7 @@ func (c SearchRuns_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["order_by"] = attrs["order_by"].SetOptional()
 	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["run_view_type"] = attrs["run_view_type"].SetOptional()
+	attrs["run_view_type"] = attrs["run_view_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE_ONLY", "ALL", "DELETED_ONLY"))
 
 	return attrs
 }
@@ -9980,6 +10003,7 @@ func (newState *TestRegistryWebhookRequest_SdkV2) SyncEffectiveFieldsDuringRead(
 
 func (c TestRegistryWebhookRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["event"] = attrs["event"].SetOptional()
+	attrs["event"] = attrs["event"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COMMENT_CREATED", "MODEL_VERSION_CREATED", "MODEL_VERSION_TAG_SET", "MODEL_VERSION_TRANSITIONED_STAGE", "MODEL_VERSION_TRANSITIONED_TO_ARCHIVED", "MODEL_VERSION_TRANSITIONED_TO_PRODUCTION", "MODEL_VERSION_TRANSITIONED_TO_STAGING", "REGISTERED_MODEL_CREATED", "TRANSITION_REQUEST_CREATED", "TRANSITION_REQUEST_TO_ARCHIVED_CREATED", "TRANSITION_REQUEST_TO_PRODUCTION_CREATED", "TRANSITION_REQUEST_TO_STAGING_CREATED"))
 	attrs["id"] = attrs["id"].SetRequired()
 
 	return attrs
@@ -10117,6 +10141,7 @@ func (c TransitionModelVersionStageDatabricks_SdkV2) ApplySchemaCustomizations(a
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["stage"] = attrs["stage"].SetRequired()
+	attrs["stage"] = attrs["stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["version"] = attrs["version"].SetRequired()
 
 	return attrs
@@ -10195,6 +10220,7 @@ func (c TransitionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
 	attrs["to_stage"] = attrs["to_stage"].SetOptional()
+	attrs["to_stage"] = attrs["to_stage"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Archived", "None", "Production", "Staging"))
 	attrs["user_id"] = attrs["user_id"].SetOptional()
 
 	return attrs
@@ -10788,6 +10814,7 @@ func (c UpdateRegistryWebhook_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["job_spec"] = attrs["job_spec"].SetOptional()
 	attrs["job_spec"] = attrs["job_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DISABLED", "TEST_MODE"))
 
 	return attrs
 }
@@ -10944,6 +10971,7 @@ func (c UpdateRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED", "FINISHED", "KILLED", "RUNNING", "SCHEDULED"))
 
 	return attrs
 }

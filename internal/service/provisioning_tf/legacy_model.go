@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1280,6 +1281,7 @@ func (c CreateWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
 	attrs["network_id"] = attrs["network_id"].SetOptional()
 	attrs["pricing_tier"] = attrs["pricing_tier"].SetOptional()
+	attrs["pricing_tier"] = attrs["pricing_tier"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COMMUNITY_EDITION", "DEDICATED", "ENTERPRISE", "PREMIUM", "STANDARD", "UNKNOWN"))
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
 	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
@@ -2696,6 +2698,7 @@ func (newState *GkeConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState Gke
 
 func (c GkeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connectivity_type"] = attrs["connectivity_type"].SetOptional()
+	attrs["connectivity_type"] = attrs["connectivity_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PRIVATE_NODE_PUBLIC_MASTER", "PUBLIC_NODE_PUBLIC_MASTER"))
 	attrs["master_ip_range"] = attrs["master_ip_range"].SetOptional()
 
 	return attrs
@@ -2790,6 +2793,7 @@ func (c Network_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
 	attrs["vpc_status"] = attrs["vpc_status"].SetComputed()
+	attrs["vpc_status"] = attrs["vpc_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BROKEN", "UNATTACHED", "VALID", "WARNED"))
 	attrs["warning_messages"] = attrs["warning_messages"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
@@ -3043,6 +3047,7 @@ func (newState *NetworkHealth_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 func (c NetworkHealth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["error_type"] = attrs["error_type"].SetOptional()
+	attrs["error_type"] = attrs["error_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("credentials", "networkAcl", "securityGroup", "subnet", "vpc"))
 
 	return attrs
 }
@@ -3215,6 +3220,7 @@ func (newState *NetworkWarning_SdkV2) SyncEffectiveFieldsDuringRead(existingStat
 func (c NetworkWarning_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["warning_message"] = attrs["warning_message"].SetOptional()
 	attrs["warning_type"] = attrs["warning_type"].SetOptional()
+	attrs["warning_type"] = attrs["warning_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("securityGroup", "subnet"))
 
 	return attrs
 }
@@ -3289,6 +3295,7 @@ func (c PrivateAccessSettings_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
 	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
+	attrs["private_access_level"] = attrs["private_access_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACCOUNT", "ENDPOINT"))
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
 	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetOptional()
 	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
@@ -3814,6 +3821,7 @@ func (newState *UpsertPrivateAccessSettingsRequest_SdkV2) SyncEffectiveFieldsDur
 func (c UpsertPrivateAccessSettingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["allowed_vpc_endpoint_ids"] = attrs["allowed_vpc_endpoint_ids"].SetOptional()
 	attrs["private_access_level"] = attrs["private_access_level"].SetOptional()
+	attrs["private_access_level"] = attrs["private_access_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACCOUNT", "ENDPOINT"))
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetRequired()
 	attrs["private_access_settings_name"] = attrs["private_access_settings_name"].SetRequired()
 	attrs["public_access_enabled"] = attrs["public_access_enabled"].SetOptional()
@@ -3947,6 +3955,7 @@ func (c VpcEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["region"] = attrs["region"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["use_case"] = attrs["use_case"].SetOptional()
+	attrs["use_case"] = attrs["use_case"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATAPLANE_RELAY_ACCESS", "WORKSPACE_ACCESS"))
 	attrs["vpc_endpoint_id"] = attrs["vpc_endpoint_id"].SetOptional()
 	attrs["vpc_endpoint_name"] = attrs["vpc_endpoint_name"].SetOptional()
 
@@ -4161,12 +4170,14 @@ func (c Workspace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["managed_services_customer_managed_key_id"] = attrs["managed_services_customer_managed_key_id"].SetOptional()
 	attrs["network_id"] = attrs["network_id"].SetOptional()
 	attrs["pricing_tier"] = attrs["pricing_tier"].SetOptional()
+	attrs["pricing_tier"] = attrs["pricing_tier"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("COMMUNITY_EDITION", "DEDICATED", "ENTERPRISE", "PREMIUM", "STANDARD", "UNKNOWN"))
 	attrs["private_access_settings_id"] = attrs["private_access_settings_id"].SetOptional()
 	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
 	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["workspace_name"] = attrs["workspace_name"].SetOptional()
 	attrs["workspace_status"] = attrs["workspace_status"].SetComputed()
+	attrs["workspace_status"] = attrs["workspace_status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BANNED", "CANCELLING", "FAILED", "NOT_PROVISIONED", "PROVISIONING", "RUNNING"))
 	attrs["workspace_status_message"] = attrs["workspace_status_message"].SetComputed()
 
 	return attrs

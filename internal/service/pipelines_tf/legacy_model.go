@@ -19,6 +19,7 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/compute_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1841,6 +1842,7 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
+	attrs["health"] = attrs["health"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("HEALTHY", "UNHEALTHY"))
 	attrs["last_modified"] = attrs["last_modified"].SetOptional()
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
@@ -1849,6 +1851,7 @@ func (c GetPipelineResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["spec"] = attrs["spec"].SetOptional()
 	attrs["spec"] = attrs["spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELETED", "DEPLOYING", "FAILED", "IDLE", "RECOVERING", "RESETTING", "RUNNING", "STARTING", "STOPPING"))
 
 	return attrs
 }
@@ -3293,6 +3296,7 @@ func (newState *PipelineAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRea
 func (c PipelineAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_RUN", "CAN_VIEW", "IS_OWNER"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -3950,6 +3954,7 @@ func (c PipelineClusterAutoscale_SdkV2) ApplySchemaCustomizations(attrs map[stri
 	attrs["max_workers"] = attrs["max_workers"].SetRequired()
 	attrs["min_workers"] = attrs["min_workers"].SetRequired()
 	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["mode"] = attrs["mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ENHANCED", "LEGACY"))
 
 	return attrs
 }
@@ -4004,6 +4009,7 @@ func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existing
 
 func (c PipelineDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("BUNDLE"))
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
 	return attrs
@@ -4075,7 +4081,9 @@ func (c PipelineEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["event_type"] = attrs["event_type"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["level"] = attrs["level"].SetOptional()
+	attrs["level"] = attrs["level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ERROR", "INFO", "METRICS", "WARN"))
 	attrs["maturity_level"] = attrs["maturity_level"].SetOptional()
+	attrs["maturity_level"] = attrs["maturity_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DEPRECATED", "EVOLVING", "STABLE"))
 	attrs["message"] = attrs["message"].SetOptional()
 	attrs["origin"] = attrs["origin"].SetOptional()
 	attrs["origin"] = attrs["origin"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4400,6 +4408,7 @@ func (c PipelinePermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_RUN", "CAN_VIEW", "IS_OWNER"))
 
 	return attrs
 }
@@ -4571,6 +4580,7 @@ func (newState *PipelinePermissionsDescription_SdkV2) SyncEffectiveFieldsDuringR
 func (c PipelinePermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_RUN", "CAN_VIEW", "IS_OWNER"))
 
 	return attrs
 }
@@ -5185,11 +5195,13 @@ func (c PipelineStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["health"] = attrs["health"].SetOptional()
+	attrs["health"] = attrs["health"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("HEALTHY", "UNHEALTHY"))
 	attrs["latest_updates"] = attrs["latest_updates"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DELETED", "DEPLOYING", "FAILED", "IDLE", "RECOVERING", "RESETTING", "RUNNING", "STARTING", "STOPPING"))
 
 	return attrs
 }
@@ -6007,6 +6019,7 @@ func (newState *StartUpdate_SdkV2) SyncEffectiveFieldsDuringRead(existingState S
 
 func (c StartUpdate_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cause"] = attrs["cause"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("API_CALL", "JOB_TASK", "RETRY_ON_FAILURE", "SCHEMA_CHANGE", "SERVICE_UPGRADE", "USER_ACTION"))
 	attrs["full_refresh"] = attrs["full_refresh"].SetOptional()
 	attrs["full_refresh_selection"] = attrs["full_refresh_selection"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
@@ -6377,6 +6390,7 @@ func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
+	attrs["scd_type"] = attrs["scd_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("SCD_TYPE_1", "SCD_TYPE_2"))
 	attrs["sequence_by"] = attrs["sequence_by"].SetOptional()
 
 	return attrs
@@ -6519,6 +6533,7 @@ func (newState *UpdateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState Up
 
 func (c UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cause"] = attrs["cause"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("API_CALL", "JOB_TASK", "RETRY_ON_FAILURE", "SCHEMA_CHANGE", "SERVICE_UPGRADE", "USER_ACTION"))
 	attrs["cluster_id"] = attrs["cluster_id"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6528,6 +6543,7 @@ func (c UpdateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
 	attrs["refresh_selection"] = attrs["refresh_selection"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "COMPLETED", "CREATED", "FAILED", "INITIALIZING", "QUEUED", "RESETTING", "RUNNING", "SETTING_UP_TABLES", "STOPPING", "WAITING_FOR_RESOURCES"))
 	attrs["update_id"] = attrs["update_id"].SetOptional()
 	attrs["validate_only"] = attrs["validate_only"].SetOptional()
 
@@ -6690,6 +6706,7 @@ func (newState *UpdateStateInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c UpdateStateInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["creation_time"] = attrs["creation_time"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELED", "COMPLETED", "CREATED", "FAILED", "INITIALIZING", "QUEUED", "RESETTING", "RUNNING", "SETTING_UP_TABLES", "STOPPING", "WAITING_FOR_RESOURCES"))
 	attrs["update_id"] = attrs["update_id"].SetOptional()
 
 	return attrs

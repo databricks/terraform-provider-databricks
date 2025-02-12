@@ -18,6 +18,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -334,11 +335,13 @@ func (newState *AwsAttributes_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 
 func (c AwsAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["availability"] = attrs["availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND", "SPOT", "SPOT_WITH_FALLBACK"))
 	attrs["ebs_volume_count"] = attrs["ebs_volume_count"].SetOptional()
 	attrs["ebs_volume_iops"] = attrs["ebs_volume_iops"].SetOptional()
 	attrs["ebs_volume_size"] = attrs["ebs_volume_size"].SetOptional()
 	attrs["ebs_volume_throughput"] = attrs["ebs_volume_throughput"].SetOptional()
 	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].SetOptional()
+	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GENERAL_PURPOSE_SSD", "THROUGHPUT_OPTIMIZED_HDD"))
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
@@ -430,6 +433,7 @@ func (newState *AzureAttributes_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 
 func (c AzureAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["availability"] = attrs["availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND_AZURE", "SPOT_AZURE", "SPOT_WITH_FALLBACK_AZURE"))
 	attrs["first_on_demand"] = attrs["first_on_demand"].SetOptional()
 	attrs["log_analytics_info"] = attrs["log_analytics_info"].SetOptional()
 	attrs["log_analytics_info"] = attrs["log_analytics_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -884,6 +888,7 @@ func (newState *ClusterAccessControlRequest_SdkV2) SyncEffectiveFieldsDuringRead
 func (c ClusterAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE", "CAN_RESTART"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -1201,6 +1206,7 @@ func (c ClusterAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
@@ -1213,9 +1219,11 @@ func (c ClusterAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
@@ -1988,9 +1996,11 @@ func (c ClusterDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["cluster_memory_mb"] = attrs["cluster_memory_mb"].SetOptional()
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["cluster_source"] = attrs["cluster_source"].SetOptional()
+	attrs["cluster_source"] = attrs["cluster_source"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("API", "JOB", "MODELS", "PIPELINE", "PIPELINE_MAINTENANCE", "SQL", "UI"))
 	attrs["creator_user_name"] = attrs["creator_user_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["default_tags"] = attrs["default_tags"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -2008,12 +2018,14 @@ func (c ClusterDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["jdbc_port"] = attrs["jdbc_port"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["last_restarted_time"] = attrs["last_restarted_time"].SetOptional()
 	attrs["last_state_loss_time"] = attrs["last_state_loss_time"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_context_id"] = attrs["spark_context_id"].SetOptional()
@@ -2024,6 +2036,7 @@ func (c ClusterDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["ssh_public_keys"] = attrs["ssh_public_keys"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ERROR", "PENDING", "RESIZING", "RESTARTING", "RUNNING", "TERMINATED", "TERMINATING", "UNKNOWN"))
 	attrs["state_message"] = attrs["state_message"].SetOptional()
 	attrs["terminated_time"] = attrs["terminated_time"].SetOptional()
 	attrs["termination_reason"] = attrs["termination_reason"].SetOptional()
@@ -2712,6 +2725,7 @@ func (c ClusterEvent_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["details"] = attrs["details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ADD_NODES_FAILED", "AUTOMATIC_CLUSTER_UPDATE", "AUTOSCALING_BACKOFF", "AUTOSCALING_FAILED", "AUTOSCALING_STATS_REPORT", "CREATING", "DBFS_DOWN", "DID_NOT_EXPAND_DISK", "DRIVER_HEALTHY", "DRIVER_NOT_RESPONDING", "DRIVER_UNAVAILABLE", "EDITED", "EXPANDED_DISK", "FAILED_TO_EXPAND_DISK", "INIT_SCRIPTS_FINISHED", "INIT_SCRIPTS_STARTED", "METASTORE_DOWN", "NODES_LOST", "NODE_BLACKLISTED", "NODE_EXCLUDED_DECOMMISSIONED", "PINNED", "RESIZING", "RESTARTING", "RUNNING", "SPARK_EXCEPTION", "STARTING", "TERMINATING", "UNPINNED", "UPSIZE_COMPLETED"))
 
 	return attrs
 }
@@ -3034,6 +3048,7 @@ func (c ClusterPermission_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE", "CAN_RESTART"))
 
 	return attrs
 }
@@ -3205,6 +3220,7 @@ func (newState *ClusterPermissionsDescription_SdkV2) SyncEffectiveFieldsDuringRe
 func (c ClusterPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE", "CAN_RESTART"))
 
 	return attrs
 }
@@ -3344,6 +3360,7 @@ func (newState *ClusterPolicyAccessControlRequest_SdkV2) SyncEffectiveFieldsDuri
 func (c ClusterPolicyAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -3503,6 +3520,7 @@ func (c ClusterPolicyPermission_SdkV2) ApplySchemaCustomizations(attrs map[strin
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 
 	return attrs
 }
@@ -3674,6 +3692,7 @@ func (newState *ClusterPolicyPermissionsDescription_SdkV2) SyncEffectiveFieldsDu
 func (c ClusterPolicyPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_USE"))
 
 	return attrs
 }
@@ -4152,6 +4171,7 @@ func (c ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
@@ -4164,10 +4184,12 @@ func (c ClusterSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
@@ -4677,6 +4699,7 @@ func (c Command_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["command"] = attrs["command"].SetOptional()
 	attrs["contextId"] = attrs["contextId"].SetOptional()
 	attrs["language"] = attrs["language"].SetOptional()
+	attrs["language"] = attrs["language"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("python", "scala", "sql"))
 
 	return attrs
 }
@@ -4781,6 +4804,7 @@ func (c CommandStatusResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["results"] = attrs["results"].SetOptional()
 	attrs["results"] = attrs["results"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Cancelled", "Cancelling", "Error", "Finished", "Queued", "Running"))
 
 	return attrs
 }
@@ -4905,6 +4929,7 @@ func (newState *ContextStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(exist
 func (c ContextStatusResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("Error", "Pending", "Running"))
 
 	return attrs
 }
@@ -5145,6 +5170,7 @@ func (c CreateCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
@@ -5157,10 +5183,12 @@ func (c CreateCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
@@ -5705,6 +5733,7 @@ func (newState *CreateContext_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 func (c CreateContext_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clusterId"] = attrs["clusterId"].SetOptional()
 	attrs["language"] = attrs["language"].SetOptional()
+	attrs["language"] = attrs["language"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("python", "scala", "sql"))
 
 	return attrs
 }
@@ -6474,6 +6503,7 @@ func (newState *DataPlaneEventDetails_SdkV2) SyncEffectiveFieldsDuringRead(exist
 
 func (c DataPlaneEventDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["event_type"] = attrs["event_type"].SetOptional()
+	attrs["event_type"] = attrs["event_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NODE_BLACKLISTED", "NODE_EXCLUDED_DECOMMISSIONED"))
 	attrs["executor_failures"] = attrs["executor_failures"].SetOptional()
 	attrs["host_id"] = attrs["host_id"].SetOptional()
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
@@ -7117,7 +7147,9 @@ func (newState *DiskType_SdkV2) SyncEffectiveFieldsDuringRead(existingState Disk
 
 func (c DiskType_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["azure_disk_volume_type"] = attrs["azure_disk_volume_type"].SetOptional()
+	attrs["azure_disk_volume_type"] = attrs["azure_disk_volume_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("PREMIUM_LRS", "STANDARD_LRS"))
 	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].SetOptional()
+	attrs["ebs_volume_type"] = attrs["ebs_volume_type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("GENERAL_PURPOSE_SSD", "THROUGHPUT_OPTIMIZED_HDD"))
 
 	return attrs
 }
@@ -7492,6 +7524,7 @@ func (c EditCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
@@ -7504,10 +7537,12 @@ func (c EditCluster_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()
@@ -8664,6 +8699,7 @@ func (c EventDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["attributes"] = attrs["attributes"].SetOptional()
 	attrs["attributes"] = attrs["attributes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cause"] = attrs["cause"].SetOptional()
+	attrs["cause"] = attrs["cause"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AUTORECOVERY", "AUTOSCALE", "REPLACE_BAD_NODES", "USER_REQUEST"))
 	attrs["cluster_size"] = attrs["cluster_size"].SetOptional()
 	attrs["cluster_size"] = attrs["cluster_size"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["current_num_vcpus"] = attrs["current_num_vcpus"].SetOptional()
@@ -8977,6 +9013,7 @@ func (newState *GcpAttributes_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 
 func (c GcpAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["availability"] = attrs["availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND_GCP", "PREEMPTIBLE_GCP", "PREEMPTIBLE_WITH_FALLBACK_GCP"))
 	attrs["boot_disk_size"] = attrs["boot_disk_size"].SetOptional()
 	attrs["google_service_account"] = attrs["google_service_account"].SetOptional()
 	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
@@ -9614,6 +9651,7 @@ func (c GetEvents_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["limit"] = attrs["limit"].SetOptional()
 	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["order"] = attrs["order"].SetOptional()
+	attrs["order"] = attrs["order"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ASC", "DESC"))
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 
 	return attrs
@@ -9952,6 +9990,7 @@ func (c GetInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DELETED", "STOPPED"))
 	attrs["stats"] = attrs["stats"].SetOptional()
 	attrs["stats"] = attrs["stats"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
@@ -11090,6 +11129,7 @@ func (c InitScriptExecutionDetails_SdkV2) ApplySchemaCustomizations(attrs map[st
 	attrs["error_message"] = attrs["error_message"].SetOptional()
 	attrs["execution_duration_seconds"] = attrs["execution_duration_seconds"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED_EXECUTION", "FAILED_FETCH", "NOT_EXECUTED", "SKIPPED", "SUCCEEDED", "UNKNOWN"))
 
 	return attrs
 }
@@ -11687,6 +11727,7 @@ func (newState *InstancePoolAccessControlRequest_SdkV2) SyncEffectiveFieldsDurin
 func (c InstancePoolAccessControlRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -11931,6 +11972,7 @@ func (c InstancePoolAndStats_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DELETED", "STOPPED"))
 	attrs["stats"] = attrs["stats"].SetOptional()
 	attrs["stats"] = attrs["stats"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["status"] = attrs["status"].SetOptional()
@@ -12335,6 +12377,7 @@ func (newState *InstancePoolAwsAttributes_SdkV2) SyncEffectiveFieldsDuringRead(e
 
 func (c InstancePoolAwsAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["availability"] = attrs["availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND", "SPOT"))
 	attrs["spot_bid_price_percent"] = attrs["spot_bid_price_percent"].SetOptional()
 	attrs["zone_id"] = attrs["zone_id"].SetOptional()
 
@@ -12395,6 +12438,7 @@ func (newState *InstancePoolAzureAttributes_SdkV2) SyncEffectiveFieldsDuringRead
 
 func (c InstancePoolAzureAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["availability"] = attrs["availability"].SetOptional()
+	attrs["availability"] = attrs["availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND_AZURE", "SPOT_AZURE"))
 	attrs["spot_bid_max_price"] = attrs["spot_bid_max_price"].SetOptional()
 
 	return attrs
@@ -12472,6 +12516,7 @@ func (newState *InstancePoolGcpAttributes_SdkV2) SyncEffectiveFieldsDuringRead(e
 
 func (c InstancePoolGcpAttributes_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["gcp_availability"] = attrs["gcp_availability"].SetOptional()
+	attrs["gcp_availability"] = attrs["gcp_availability"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ON_DEMAND_GCP", "PREEMPTIBLE_GCP", "PREEMPTIBLE_WITH_FALLBACK_GCP"))
 	attrs["local_ssd_count"] = attrs["local_ssd_count"].SetOptional()
 	attrs["zone_id"] = attrs["zone_id"].SetOptional()
 
@@ -12531,6 +12576,7 @@ func (c InstancePoolPermission_SdkV2) ApplySchemaCustomizations(attrs map[string
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE"))
 
 	return attrs
 }
@@ -12702,6 +12748,7 @@ func (newState *InstancePoolPermissionsDescription_SdkV2) SyncEffectiveFieldsDur
 func (c InstancePoolPermissionsDescription_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_ATTACH_TO", "CAN_MANAGE"))
 
 	return attrs
 }
@@ -13249,6 +13296,7 @@ func (c LibraryFullStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["library"] = attrs["library"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["messages"] = attrs["messages"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("FAILED", "INSTALLED", "INSTALLING", "PENDING", "RESOLVING", "RESTORED", "SKIPPED", "UNINSTALL_ON_RESTART"))
 
 	return attrs
 }
@@ -14035,7 +14083,9 @@ func (newState *ListClustersSortBy_SdkV2) SyncEffectiveFieldsDuringRead(existing
 
 func (c ListClustersSortBy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["direction"] = attrs["direction"].SetOptional()
+	attrs["direction"] = attrs["direction"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ASC", "DESC"))
 	attrs["field"] = attrs["field"].SetOptional()
+	attrs["field"] = attrs["field"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLUSTER_NAME", "DEFAULT"))
 
 	return attrs
 }
@@ -16025,6 +16075,7 @@ func (c Results_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["isJsonSchema"] = attrs["isJsonSchema"].SetOptional()
 	attrs["pos"] = attrs["pos"].SetOptional()
 	attrs["resultType"] = attrs["resultType"].SetOptional()
+	attrs["resultType"] = attrs["resultType"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("error", "image", "images", "table", "text"))
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["summary"] = attrs["summary"].SetOptional()
 	attrs["truncated"] = attrs["truncated"].SetOptional()
@@ -16568,8 +16619,10 @@ func (newState *TerminationReason_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 
 func (c TerminationReason_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["code"] = attrs["code"].SetOptional()
+	attrs["code"] = attrs["code"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ABUSE_DETECTED", "ATTACH_PROJECT_FAILURE", "AWS_AUTHORIZATION_FAILURE", "AWS_INSUFFICIENT_FREE_ADDRESSES_IN_SUBNET_FAILURE", "AWS_INSUFFICIENT_INSTANCE_CAPACITY_FAILURE", "AWS_MAX_SPOT_INSTANCE_COUNT_EXCEEDED_FAILURE", "AWS_REQUEST_LIMIT_EXCEEDED", "AWS_UNSUPPORTED_FAILURE", "AZURE_BYOK_KEY_PERMISSION_FAILURE", "AZURE_EPHEMERAL_DISK_FAILURE", "AZURE_INVALID_DEPLOYMENT_TEMPLATE", "AZURE_OPERATION_NOT_ALLOWED_EXCEPTION", "AZURE_QUOTA_EXCEEDED_EXCEPTION", "AZURE_RESOURCE_MANAGER_THROTTLING", "AZURE_RESOURCE_PROVIDER_THROTTLING", "AZURE_UNEXPECTED_DEPLOYMENT_TEMPLATE_FAILURE", "AZURE_VM_EXTENSION_FAILURE", "AZURE_VNET_CONFIGURATION_FAILURE", "BOOTSTRAP_TIMEOUT", "BOOTSTRAP_TIMEOUT_CLOUD_PROVIDER_EXCEPTION", "CLOUD_PROVIDER_DISK_SETUP_FAILURE", "CLOUD_PROVIDER_LAUNCH_FAILURE", "CLOUD_PROVIDER_RESOURCE_STOCKOUT", "CLOUD_PROVIDER_SHUTDOWN", "COMMUNICATION_LOST", "CONTAINER_LAUNCH_FAILURE", "CONTROL_PLANE_REQUEST_FAILURE", "DATABASE_CONNECTION_FAILURE", "DBFS_COMPONENT_UNHEALTHY", "DOCKER_IMAGE_PULL_FAILURE", "DRIVER_UNREACHABLE", "DRIVER_UNRESPONSIVE", "EXECUTION_COMPONENT_UNHEALTHY", "GCP_QUOTA_EXCEEDED", "GCP_SERVICE_ACCOUNT_DELETED", "GLOBAL_INIT_SCRIPT_FAILURE", "HIVE_METASTORE_PROVISIONING_FAILURE", "IMAGE_PULL_PERMISSION_DENIED", "INACTIVITY", "INIT_SCRIPT_FAILURE", "INSTANCE_POOL_CLUSTER_FAILURE", "INSTANCE_UNREACHABLE", "INTERNAL_ERROR", "INVALID_ARGUMENT", "INVALID_SPARK_IMAGE", "IP_EXHAUSTION_FAILURE", "JOB_FINISHED", "K8S_AUTOSCALING_FAILURE", "K8S_DBR_CLUSTER_LAUNCH_TIMEOUT", "METASTORE_COMPONENT_UNHEALTHY", "NEPHOS_RESOURCE_MANAGEMENT", "NETWORK_CONFIGURATION_FAILURE", "NFS_MOUNT_FAILURE", "NPIP_TUNNEL_SETUP_FAILURE", "NPIP_TUNNEL_TOKEN_FAILURE", "REQUEST_REJECTED", "REQUEST_THROTTLED", "SECRET_RESOLUTION_ERROR", "SECURITY_DAEMON_REGISTRATION_EXCEPTION", "SELF_BOOTSTRAP_FAILURE", "SKIPPED_SLOW_NODES", "SLOW_IMAGE_DOWNLOAD", "SPARK_ERROR", "SPARK_IMAGE_DOWNLOAD_FAILURE", "SPARK_STARTUP_FAILURE", "SPOT_INSTANCE_TERMINATION", "STORAGE_DOWNLOAD_FAILURE", "STS_CLIENT_SETUP_FAILURE", "SUBNET_EXHAUSTED_FAILURE", "TEMPORARILY_UNAVAILABLE", "TRIAL_EXPIRED", "UNEXPECTED_LAUNCH_FAILURE", "UNKNOWN", "UNSUPPORTED_INSTANCE_TYPE", "UPDATE_INSTANCE_PROFILE_FAILURE", "USER_REQUEST", "WORKER_SETUP_FAILURE", "WORKSPACE_CANCELLED_ERROR", "WORKSPACE_CONFIGURATION_ERROR"))
 	attrs["parameters"] = attrs["parameters"].SetOptional()
 	attrs["type"] = attrs["type"].SetOptional()
+	attrs["type"] = attrs["type"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLIENT_ERROR", "CLOUD_FAILURE", "SERVICE_FAULT", "SUCCESS"))
 
 	return attrs
 }
@@ -17138,6 +17191,7 @@ func (c UpdateClusterResource_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["cluster_name"] = attrs["cluster_name"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["data_security_mode"] = attrs["data_security_mode"].SetOptional()
+	attrs["data_security_mode"] = attrs["data_security_mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("DATA_SECURITY_MODE_AUTO", "DATA_SECURITY_MODE_DEDICATED", "DATA_SECURITY_MODE_STANDARD", "LEGACY_PASSTHROUGH", "LEGACY_SINGLE_USER", "LEGACY_SINGLE_USER_STANDARD", "LEGACY_TABLE_ACL", "NONE", "SINGLE_USER", "USER_ISOLATION"))
 	attrs["docker_image"] = attrs["docker_image"].SetOptional()
 	attrs["docker_image"] = attrs["docker_image"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["driver_instance_pool_id"] = attrs["driver_instance_pool_id"].SetOptional()
@@ -17150,10 +17204,12 @@ func (c UpdateClusterResource_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetOptional()
 	attrs["is_single_node"] = attrs["is_single_node"].SetOptional()
 	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CLASSIC_PREVIEW"))
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["num_workers"] = attrs["num_workers"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetOptional()
 	attrs["runtime_engine"] = attrs["runtime_engine"].SetOptional()
+	attrs["runtime_engine"] = attrs["runtime_engine"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("NULL", "PHOTON", "STANDARD"))
 	attrs["single_user_name"] = attrs["single_user_name"].SetOptional()
 	attrs["spark_conf"] = attrs["spark_conf"].SetOptional()
 	attrs["spark_env_vars"] = attrs["spark_env_vars"].SetOptional()

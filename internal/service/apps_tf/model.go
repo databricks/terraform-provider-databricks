@@ -17,6 +17,7 @@ import (
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -316,6 +317,7 @@ func (newState *AppAccessControlRequest) SyncEffectiveFieldsDuringRead(existingS
 func (c AppAccessControlRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["group_name"] = attrs["group_name"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_USE"))
 	attrs["service_principal_name"] = attrs["service_principal_name"].SetOptional()
 	attrs["user_name"] = attrs["user_name"].SetOptional()
 
@@ -494,6 +496,7 @@ func (c AppDeployment) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["deployment_artifacts"] = attrs["deployment_artifacts"].SetComputed()
 	attrs["deployment_id"] = attrs["deployment_id"].SetOptional()
 	attrs["mode"] = attrs["mode"].SetOptional()
+	attrs["mode"] = attrs["mode"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("AUTO_SYNC", "SNAPSHOT"))
 	attrs["source_code_path"] = attrs["source_code_path"].SetOptional()
 	attrs["status"] = attrs["status"].SetComputed()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -670,6 +673,7 @@ func (newState *AppDeploymentStatus) SyncEffectiveFieldsDuringRead(existingState
 func (c AppDeploymentStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CANCELLED", "FAILED", "IN_PROGRESS", "SUCCEEDED"))
 
 	return attrs
 }
@@ -725,6 +729,7 @@ func (c AppPermission) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["inherited"] = attrs["inherited"].SetOptional()
 	attrs["inherited_from_object"] = attrs["inherited_from_object"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_USE"))
 
 	return attrs
 }
@@ -896,6 +901,7 @@ func (newState *AppPermissionsDescription) SyncEffectiveFieldsDuringRead(existin
 func (c AppPermissionsDescription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["permission_level"] = attrs["permission_level"].SetOptional()
+	attrs["permission_level"] = attrs["permission_level"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_USE"))
 
 	return attrs
 }
@@ -1222,6 +1228,7 @@ func (newState *AppResourceJob) SyncEffectiveFieldsDuringRead(existingState AppR
 func (c AppResourceJob) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_MANAGE_RUN", "CAN_VIEW", "IS_OWNER"))
 
 	return attrs
 }
@@ -1278,6 +1285,7 @@ func (newState *AppResourceSecret) SyncEffectiveFieldsDuringRead(existingState A
 func (c AppResourceSecret) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["key"] = attrs["key"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("MANAGE", "READ", "WRITE"))
 	attrs["scope"] = attrs["scope"].SetRequired()
 
 	return attrs
@@ -1335,6 +1343,7 @@ func (newState *AppResourceServingEndpoint) SyncEffectiveFieldsDuringRead(existi
 func (c AppResourceServingEndpoint) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_QUERY", "CAN_VIEW"))
 
 	return attrs
 }
@@ -1389,6 +1398,7 @@ func (newState *AppResourceSqlWarehouse) SyncEffectiveFieldsDuringRead(existingS
 func (c AppResourceSqlWarehouse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["permission"] = attrs["permission"].SetRequired()
+	attrs["permission"] = attrs["permission"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CAN_MANAGE", "CAN_USE", "IS_OWNER"))
 
 	return attrs
 }
@@ -1442,6 +1452,7 @@ func (newState *ApplicationStatus) SyncEffectiveFieldsDuringRead(existingState A
 func (c ApplicationStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("CRASHED", "DEPLOYING", "RUNNING", "UNAVAILABLE"))
 
 	return attrs
 }
@@ -1495,6 +1506,7 @@ func (newState *ComputeStatus) SyncEffectiveFieldsDuringRead(existingState Compu
 func (c ComputeStatus) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["message"] = attrs["message"].SetComputed()
 	attrs["state"] = attrs["state"].SetComputed()
+	attrs["state"] = attrs["state"].(tfschema.StringAttributeBuilder).AddValidator(stringvalidator.OneOf("ACTIVE", "DELETING", "ERROR", "STARTING", "STOPPED", "STOPPING", "UPDATING"))
 
 	return attrs
 }

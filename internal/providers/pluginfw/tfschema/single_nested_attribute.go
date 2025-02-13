@@ -2,6 +2,7 @@ package tfschema
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -49,7 +50,8 @@ func (a SingleNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute 
 
 func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
-		panic("attribute is already optional")
+		log.Print("[WARN] attribute is already optional")
+		return a
 	}
 	a.Optional = true
 	a.Required = false
@@ -58,7 +60,8 @@ func (a SingleNestedAttributeBuilder) SetOptional() AttributeBuilder {
 
 func (a SingleNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
-		panic("attribute is already required")
+		log.Print("[WARN] attribute is already required")
+		return a
 	}
 	a.Optional = false
 	a.Required = true
@@ -67,7 +70,8 @@ func (a SingleNestedAttributeBuilder) SetRequired() AttributeBuilder {
 
 func (a SingleNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
-		panic("attribute is already sensitive")
+		log.Print("[WARN] attribute is already sensitive")
+		return a
 	}
 	a.Sensitive = true
 	return a
@@ -75,7 +79,8 @@ func (a SingleNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 
 func (a SingleNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
-		panic("attribute is already computed")
+		log.Print("[WARN] attribute is already computed")
+		return a
 	}
 	a.Computed = true
 	return a
@@ -83,7 +88,8 @@ func (a SingleNestedAttributeBuilder) SetComputed() AttributeBuilder {
 
 func (a SingleNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
-		panic("attribute is already read only")
+		log.Print("[WARN] attribute is already read only")
+		return a
 	}
 	a.Computed = true
 	a.Optional = false

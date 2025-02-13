@@ -31,7 +31,7 @@ class GitHubRepo:
     def __init__(self, repo: Repository):
         self.repo = repo
         self.changed_files: list[InputGitTreeElement] = []
-        self.ref = "refs/heads/main"
+        self.ref = "heads/main"
         head_ref = self.repo.get_git_ref(self.ref)
         self.sha = head_ref.object.sha
 

@@ -28,6 +28,7 @@ func ResourceConnection() common.Resource {
 			common.CustomizeSchemaPath(m, "url").SetReadOnly()
 			common.CustomizeSchemaPath(m, "metastore_id").SetReadOnly()
 			common.CustomizeSchemaPath(m, "credential_type").SetReadOnly()
+			common.CustomizeSchemaPath(m, "connection_id").SetReadOnly()
 			common.CustomizeSchemaPath(m, "created_at").SetReadOnly()
 			common.CustomizeSchemaPath(m, "created_by").SetReadOnly()
 			common.CustomizeSchemaPath(m, "full_name").SetReadOnly()

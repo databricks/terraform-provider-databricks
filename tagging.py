@@ -31,13 +31,14 @@ class GitHubRepo:
     def __init__(self, repo: Repository):
         self.repo = repo
         self.changed_files: list[InputGitTreeElement] = []
-        self.ref = "refs/heads/main"
+        self.ref = "heads/main"
         head_ref = self.repo.get_git_ref(self.ref)
         self.sha = head_ref.object.sha
 
     # Replaces "git add file"
     def add_file(self, loc: str, content: str):
-        local_path = os.path.relpath(os.getcwd(), loc)
+        local_path = os.path.relpath(loc, os.getcwd())
+        print(f"Adding file {local_path}")
         blob = self.repo.create_git_blob(content=content, encoding="utf-8")
         element = InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=blob.sha)
         self.changed_files.append(element)

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
@@ -35,13 +36,7 @@ func (r *FunctionResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, catalog_tf.FunctionInfo{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.SetOptional("return_params")
-		c.SetOptional("routine_dependencies")
-		c.SetOptional("external_name")
-		c.SetOptional("external_language")
-		c.SetOptional("sql_path")
-		c.SetOptional("comment")
-		c.SetOptional("properties")
+		c.SetOptional("input_params", "parameters", "type_text")
 
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "catalog_name")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "comment")
@@ -49,16 +44,16 @@ func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaReques
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "external_language")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "external_name")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "full_data_type")
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "input_params")
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_deterministic")
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_null_call")
+		c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "input_params")
+		// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_deterministic")
+		// c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "is_null_call")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "name")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "parameter_style")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "properties")
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "return_params")
+		c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "return_params")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "routine_body")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "routine_definition")
-		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "routine_dependencies")
+		c.AddPlanModifier(objectplanmodifier.RequiresReplace(), "routine_dependencies")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "schema_name")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "security_type")
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "specific_name")
@@ -73,6 +68,8 @@ func (r *FunctionResource) Schema(ctx context.Context, req resource.SchemaReques
 		c.SetReadOnly("created_by")
 		c.SetReadOnly("updated_at")
 		c.SetReadOnly("updated_by")
+		// We calculate it ourselves based on the position of the parameter in the list
+		c.SetReadOnly("input_params", "parameters", "position")
 
 		return c
 	})
@@ -109,10 +106,12 @@ func (r *FunctionResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	var createReq catalog.CreateFunctionRequest
-
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, planFunc, &createReq)...)
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, planFunc, &createReq.FunctionInfo)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	for i := range createReq.FunctionInfo.InputParams.Parameters {
+		createReq.FunctionInfo.InputParams.Parameters[i].Position = i
 	}
 
 	funcInfo, err := w.Functions.Create(ctx, createReq)
@@ -144,12 +143,7 @@ func (r *FunctionResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	var updateReq catalog.UpdateFunction
-
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, planFunc, &updateReq)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	updateReq.Owner = planFunc.Owner.ValueString()
 	funcInfo, err := w.Functions.Update(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update function", err.Error())

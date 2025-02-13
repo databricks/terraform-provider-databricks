@@ -4,6 +4,7 @@
 
 ### New Features and Improvements
 
+ * Add `databricks_function` resource ([#4189](https://github.com/databricks/terraform-provider-databricks/pull/4189)).
  * Add multipart permissions to `databricks_aws_unity_catalog_policy` data source ([#4440](https://github.com/databricks/terraform-provider-databricks/pull/4440)).
 
 ### Bug Fixes

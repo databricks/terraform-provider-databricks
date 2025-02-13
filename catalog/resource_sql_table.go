@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -67,6 +68,16 @@ type SqlTableInfo struct {
 	sqlExec sql.StatementExecutionInterface
 }
 
+// need a separate struct as partition_index is 0-based
+type ColumnPartitionInfo struct {
+	Name           string `json:"name"`
+	PartitionIndex *int   `json:"partition_index,omitempty"`
+}
+
+type PartitionInfo struct {
+	ColumnInfos []ColumnPartitionInfo `json:"columns,omitempty"`
+}
+
 func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
@@ -106,6 +117,11 @@ func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	// Copy returned properties & options to read-only attributes
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil
+	return
+}
+
+func (a SqlTablesAPI) getPartitions(name string) (ti PartitionInfo, err error) {
+	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
 	return
 }
 
@@ -675,6 +691,11 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
+			partitionInfo, err := NewSqlTablesAPI(ctx, c).getPartitions(d.Id())
+			if err != nil {
+				return err
+			}
+			partitionIndexes := map[int]string{}
 			for i := range ti.ColumnInfos {
 				c := &ti.ColumnInfos[i]
 				c.Identity, err = reconstructIdentity(c)
@@ -682,6 +703,26 @@ func ResourceSqlTable() common.Resource {
 					return err
 				}
 			}
+
+			for i := range partitionInfo.ColumnInfos {
+				c := &partitionInfo.ColumnInfos[i]
+				if c.PartitionIndex != nil {
+					partitionIndexes[*c.PartitionIndex] = c.Name
+				}
+			}
+			indexes := []int{}
+			partitions := []string{}
+
+			for index := range partitionIndexes {
+				indexes = append(indexes, index)
+			}
+			sort.Ints(indexes)
+
+			for _, p := range indexes {
+				partitions = append(partitions, partitionIndexes[p])
+			}
+
+			d.Set("partitions", partitions)
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

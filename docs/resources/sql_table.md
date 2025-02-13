@@ -191,7 +191,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its full name. `partitions` attribute is not imported due to Unity Catalog limitations and therefore should not be specified:
+This resource can be imported by its full name.
 
 ```bash
 terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>

@@ -229,6 +229,11 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
+			},
 		}, useExistingClusterForSql...),
 		Create:   true,
 		Resource: ResourceSqlTable(),
@@ -303,6 +308,11 @@ func TestResourceSqlTableCreateTableWithOwner(t *testing.T) {
 						"three": "four",
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
 			},
 		}, useExistingClusterForSql...),
 		Create:   true,
@@ -823,6 +833,11 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 				},
 			},
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: PartitionInfo{},
+			},
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
 				ExpectedRequest: clusters.ClusterID{
@@ -876,6 +891,11 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 					ViewDefinition: "SELECT * FROM main.foo.bar",
 					Comment:        "to be changed (requires new)",
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
+				Response: PartitionInfo{},
 			},
 			{
 				Method:   "POST",
@@ -1357,6 +1377,11 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
+			},
 		},
 		Create:   true,
 		Resource: ResourceSqlTable(),
@@ -1450,6 +1475,11 @@ func TestResourceSqlTableCreateTableWithIdentityColumn_ExistingSQLWarehouse(t *t
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
+			},
 		},
 		Create:   true,
 		Resource: ResourceSqlTable(),
@@ -1516,6 +1546,11 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 					},
 				},
 			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
+			},
 		},
 		ID:       "main.foo.bar",
 		Read:     true,
@@ -1524,6 +1559,96 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 		"column.0.identity": "always",
 		"column.1.identity": "",
 		"column.2.identity": "default",
+	})
+}
+
+func getPtr(num int) *int {
+	return &num
+}
+func TestResourceSqlTableReadTableWithPartitionColumn_ExistingSQLWarehouse(t *testing.T) {
+	qa.ResourceFixture{
+		CommandMock: func(commandStr string) common.CommandResults {
+			return common.CommandResults{
+				ResultType: "",
+				Data:       nil,
+			}
+		},
+		HCL: `
+		name               = "bar"
+		catalog_name       = "main"
+		schema_name        = "foo"
+		table_type         = "MANAGED"
+		data_source_format = "DELTA"
+		storage_location   = "abfss://container@account/somepath"
+		warehouse_id       = "existingwarehouse"
+	  
+	
+		comment = "this table is managed by terraform"
+		`,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: SqlTableInfo{
+					Name:                  "bar",
+					CatalogName:           "main",
+					SchemaName:            "foo",
+					TableType:             "EXTERNAL",
+					DataSourceFormat:      "DELTA",
+					StorageLocation:       "s3://ext-main/foo/bar1",
+					StorageCredentialName: "somecred",
+					Comment:               "terraform managed",
+					Properties: map[string]string{
+						"one":   "two",
+						"three": "four",
+					},
+					ColumnInfos: []SqlColumnInfo{
+						{
+							Name:     "id",
+							Type:     "bigint",
+							TypeJson: "{\"type\":\"bigint\",\"nullable\":true, \"metadata\":{\"delta.identity.start\":1,\"delta.identity.allowExplicitInsert\":false}}",
+						},
+						{
+							Name:    "name",
+							Type:    "string",
+							Comment: "name of thing",
+						},
+						{
+							Name:     "number",
+							Type:     "bigint",
+							TypeJson: "{\"type\":\"bigint\",\"nullable\":true, \"metadata\":{\"delta.identity.start\":1,\"delta.identity.allowExplicitInsert\":true}}",
+						},
+					},
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{
+					ColumnInfos: []ColumnPartitionInfo{
+						{
+							Name:           "id",
+							PartitionIndex: getPtr(1),
+						},
+						{
+							Name:           "name",
+							PartitionIndex: getPtr(0),
+						},
+						{
+							Name: "number",
+						},
+					},
+				},
+			},
+		},
+		ID:       "main.foo.bar",
+		Read:     true,
+		Resource: ResourceSqlTable(),
+	}.ApplyAndExpectData(t, map[string]any{
+		"column.0.identity": "always",
+		"column.1.identity": "",
+		"column.2.identity": "default",
+		"partitions":        []any{"name", "id"},
 	})
 }
 
@@ -1586,6 +1711,11 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 						"delta.enableDeletionVectors": "false",
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
+				Response: PartitionInfo{},
 			},
 		},
 		Create:   true,

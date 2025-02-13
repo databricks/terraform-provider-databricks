@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import subprocess
 import time
 import json
-from github import Github, Repository, InputGitTreeElement
+from github import Github, Repository, InputGitTreeElement, InputGitAuthor
 from datetime import datetime, timezone
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
@@ -68,15 +68,17 @@ class GitHubRepo:
         # Create a tag pointing to the new commit
         # The email MUST be the GitHub Apps email.
         # Otherwise, the tag will not be verified.
+        tagger = InputGitAuthor(
+            name="Databricks SDK Release Bot",
+            email="DECO-SDK-Tagging[bot]@users.noreply.github.com"
+        )
+
         tag = self.repo.create_git_tag(
             tag=tag_name,
             message=tag_message,
             object=self.sha,
             type="commit",
-            tagger={
-                "name": "Databricks SDK Release Bot",
-                "email": "DECO-SDK-Tagging[bot]@users.noreply.github.com"
-            })
+            tagger=tagger)
         # Create a Git ref (the actual reference for the tag in the repo)
         self.repo.create_git_ref(ref=f"refs/tags/{tag_name}", sha=tag.sha)
 

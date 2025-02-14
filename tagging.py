@@ -8,11 +8,82 @@ from dataclasses import dataclass
 import subprocess
 import time
 import json
+from github import Github, Repository, InputGitTreeElement, InputGitAuthor
 from datetime import datetime, timezone
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
 CHANGELOG_FILE_NAME = "CHANGELOG.md"
 PACKAGE_FILE_NAME = ".package.json"
+"""
+This script tags the release of the SDKs using a combination of the GitHub API and Git commands.  
+It reads the local repository to determine necessary changes, updates changelogs, and creates tags.  
+
+### How it Works:
+- It does **not** modify the local repository directly.
+- Instead of committing and pushing changes locally, it uses the **GitHub API** to create commits and tags.
+"""
+
+
+# GitHub does not support signing commits for GitHub Apps directly.
+# This class replaces usages for git commands such as "git add", "git commit", and "git push".
+@dataclass
+class GitHubRepo:
+    def __init__(self, repo: Repository):
+        self.repo = repo
+        self.changed_files: list[InputGitTreeElement] = []
+        self.ref = "heads/main"
+        head_ref = self.repo.get_git_ref(self.ref)
+        self.sha = head_ref.object.sha
+
+    # Replaces "git add file"
+    def add_file(self, loc: str, content: str):
+        local_path = os.path.relpath(loc, os.getcwd())
+        print(f"Adding file {local_path}")
+        blob = self.repo.create_git_blob(content=content, encoding="utf-8")
+        element = InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=blob.sha)
+        self.changed_files.append(element)
+
+    # Replaces "git commit && git push"
+    def commit_and_push(self, message: str):
+        head_ref = self.repo.get_git_ref(self.ref)
+        base_tree = self.repo.get_git_tree(sha=head_ref.object.sha)
+        new_tree = self.repo.create_git_tree(self.changed_files, base_tree)
+        parent_commit = self.repo.get_git_commit(head_ref.object.sha)
+
+        new_commit = self.repo.create_git_commit(
+            message=message, tree=new_tree, parents=[parent_commit])
+        # Update branch reference
+        head_ref.edit(new_commit.sha)
+        self.sha = new_commit.sha
+
+    def reset(self, sha: Optional[str] = None):
+        self.changed_files = []
+        if sha:
+            self.sha = sha
+        else:
+            head_ref = self.repo.get_git_ref(self.ref)
+            self.sha = head_ref.object.sha
+
+    def tag(self, tag_name: str, tag_message: str):
+        # Create a tag pointing to the new commit
+        # The email MUST be the GitHub Apps email.
+        # Otherwise, the tag will not be verified.
+        tagger = InputGitAuthor(
+            name="Databricks SDK Release Bot",
+            email="DECO-SDK-Tagging[bot]@users.noreply.github.com"
+        )
+
+        tag = self.repo.create_git_tag(
+            tag=tag_name,
+            message=tag_message,
+            object=self.sha,
+            type="commit",
+            tagger=tagger)
+        # Create a Git ref (the actual reference for the tag in the repo)
+        self.repo.create_git_ref(ref=f"refs/tags/{tag_name}", sha=tag.sha)
+
+
+gh: Optional[GitHubRepo] = None
 
 
 @dataclass
@@ -60,7 +131,7 @@ class TagInfo:
     version: str
     content: str
 
-    def tag_name(self):
+    def tag_name(self) -> str:
         return f"{self.package.name}/v{self.version}" if self.package.name else f"v{self.version}"
 
 
@@ -109,9 +180,7 @@ def update_version_references(tag_info: TagInfo) -> None:
         # Replace the version in the file content
         updated_content = re.sub(previous_version, new_version, content)
 
-        # Write the updated content back to the file
-        with open(loc, 'w') as file:
-            file.write(updated_content)
+        gh.add_file(loc, updated_content)
 
 
 def clean_next_changelog(package_path: str) -> None:
@@ -144,9 +213,8 @@ def clean_next_changelog(package_path: str) -> None:
     new_version = f'Release v{major}.{minor}.{patch}'
     cleaned_content = cleaned_content.replace(version_match.group(0), new_version)
 
-    # Write changes to disk
-    with open(file_path, 'w') as file:
-        file.write(cleaned_content)
+    # Update file with cleaned content
+    gh.add_file(file_path, cleaned_content)
 
 
 def get_previous_tag_info(package: Package) -> Optional[TagInfo]:
@@ -215,8 +283,7 @@ def write_changelog(tag_info: TagInfo) -> None:
         changelog = f.read()
     updated_changelog = re.sub(r'(# Version changelog\n\n)', f'\\1{tag_info.content.strip()}\n\n\n',
                                changelog)
-    with open(changelog_path, 'w') as f:
-        f.write(updated_changelog)
+    gh.add_file(changelog_path, updated_changelog)
 
 
 def process_package(package: Package) -> TagInfo:
@@ -328,17 +395,10 @@ def push_changes(tag_infos: List[TagInfo]) -> None:
     # Create the release metadata file
     file_name = os.path.join(os.getcwd(), ".release_metadata.json")
     metadata = {"timestamp": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S%z")}
-    with open(file_name, "w") as f:
-        json.dump(metadata, f, indent=4)
+    content = json.dumps(metadata, indent=4)
+    gh.add_file(file_name, content)
 
-    # Commit the changes
-    subprocess.check_output(['git', 'add', '--all'])  # Stage all changes
-    commit_command = ['git', 'commit', '-m', commit_message]
-    subprocess.check_output(commit_command)
-    print(f'Running command: {" ".join(commit_command)}')
-
-    # Push the changes
-    subprocess.check_output(['git', 'push'])  # Step 3: Push the commit to the remote
+    gh.commit_and_push(commit_message)
 
 
 def reset_repository(hash: Optional[str] = None) -> None:
@@ -352,6 +412,9 @@ def reset_repository(hash: Optional[str] = None) -> None:
 
     # Determine the commit hash (default to origin/main if none is provided)
     commit_hash = hash or 'origin/main'
+
+    # Reset in memory changed files and the commit hash
+    gh.reset(hash)
 
     # Construct the Git reset command
     command = ['git', 'reset', '--hard', commit_hash]
@@ -406,18 +469,7 @@ def push_tags(tag_infos: List[TagInfo]) -> None:
     Creates and pushes tags to the repository.
     """
     for tag_info in tag_infos:
-        # Create the tag locally
-        command_tag = [
-            'git', 'tag', '-a',
-            tag_info.tag_name(), '--cleanup=verbatim', '-m', tag_info.content
-        ]
-        print(f'Running command: {" ".join(command_tag)}')
-        subprocess.run(command_tag, check=True)
-
-        # Push the tag to the remote repository
-        command_push = ['git', 'push', 'origin', tag_info.tag_name()]
-        print(f'Running command: {" ".join(command_push)}')
-        subprocess.run(command_push, check=True)
+        gh.tag(tag_info.tag_name(), tag_info.content)
 
 
 def run_command(command: List[str]) -> str:
@@ -457,6 +509,15 @@ def get_package_from_args() -> Optional[str]:
     return args.package
 
 
+def init_github():
+    token = os.environ['GITHUB_TOKEN']
+    repo_name = os.environ['GITHUB_REPOSITORY']
+    g = Github(token)
+    repo = g.get_repo(repo_name)
+    global gh
+    gh = GitHubRepo(repo)
+
+
 def process():
     """
     Main entry point for tagging process.
@@ -470,6 +531,7 @@ def process():
 
     If any tag are pending from an early process, it will skip updating the CHANGELOG.md files and only apply the tags.
     """
+
     package_name = get_package_from_args()
     pending_tags = find_pending_tags()
 
@@ -497,5 +559,18 @@ def process():
     push_tags(pending_tags)
 
 
+def validate_git_root():
+    """
+    Validate that the script is run from the root of the repository.
+    """
+    repo_root = subprocess.check_output(["git", "rev-parse",
+                                         "--show-toplevel"]).strip().decode("utf-8")
+    current_dir = subprocess.check_output(["pwd"]).strip().decode("utf-8")
+    if repo_root != current_dir:
+        raise Exception("Please run this script from the root of the repository.")
+
+
 if __name__ == "__main__":
+    validate_git_root()
+    init_github()
     process()

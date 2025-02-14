@@ -3029,8 +3029,8 @@ type ExternalModel struct {
 	PalmConfig types.Object `tfsdk:"palm_config"`
 	// The name of the provider for the external model. Currently, the supported
 	// providers are 'ai21labs', 'anthropic', 'amazon-bedrock', 'cohere',
-	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', and
-	// 'palm'.
+	// 'databricks-model-serving', 'google-cloud-vertex-ai', 'openai', 'palm',
+	// and 'custom'.
 	Provider types.String `tfsdk:"provider"`
 	// The task type of the external model.
 	Task types.String `tfsdk:"task"`

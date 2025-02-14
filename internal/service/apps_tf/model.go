@@ -40,6 +40,8 @@ type App struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
+	// The unique identifier of the app.
+	Id types.String `tfsdk:"id"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
@@ -76,6 +78,7 @@ func (c App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilde
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["pending_deployment"] = attrs["pending_deployment"].SetComputed()
 	attrs["resources"] = attrs["resources"].SetOptional()
@@ -120,6 +123,7 @@ func (o App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"creator":                     o.Creator,
 			"default_source_code_path":    o.DefaultSourceCodePath,
 			"description":                 o.Description,
+			"id":                          o.Id,
 			"name":                        o.Name,
 			"pending_deployment":          o.PendingDeployment,
 			"resources":                   o.Resources,
@@ -143,6 +147,7 @@ func (o App) Type(ctx context.Context) attr.Type {
 			"creator":                  types.StringType,
 			"default_source_code_path": types.StringType,
 			"description":              types.StringType,
+			"id":                       types.StringType,
 			"name":                     types.StringType,
 			"pending_deployment":       AppDeployment{}.Type(ctx),
 			"resources": basetypes.ListType{

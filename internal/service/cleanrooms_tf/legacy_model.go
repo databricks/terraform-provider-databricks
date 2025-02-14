@@ -688,12 +688,6 @@ type CleanRoomAssetNotebook_SdkV2 struct {
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
 	NotebookContent types.String `tfsdk:"notebook_content"`
-	// top-level status derived from all reviews
-	ReviewState types.String `tfsdk:"review_state"`
-	// All existing approvals or rejections
-	Reviews types.List `tfsdk:"reviews"`
-	// collaborators that can run the notebook
-	RunnerCollaborators types.List `tfsdk:"runner_collaborators"`
 }
 
 func (newState *CleanRoomAssetNotebook_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook_SdkV2) {
@@ -705,9 +699,6 @@ func (newState *CleanRoomAssetNotebook_SdkV2) SyncEffectiveFieldsDuringRead(exis
 func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
-	attrs["review_state"] = attrs["review_state"].SetOptional()
-	attrs["reviews"] = attrs["reviews"].SetOptional()
-	attrs["runner_collaborators"] = attrs["runner_collaborators"].SetOptional()
 
 	return attrs
 }
@@ -720,10 +711,7 @@ func (c CleanRoomAssetNotebook_SdkV2) ApplySchemaCustomizations(attrs map[string
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a CleanRoomAssetNotebook_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"reviews":              reflect.TypeOf(CleanRoomNotebookReview_SdkV2{}),
-		"runner_collaborators": reflect.TypeOf(CleanRoomCollaborator_SdkV2{}),
-	}
+	return map[string]reflect.Type{}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -733,11 +721,8 @@ func (o CleanRoomAssetNotebook_SdkV2) ToObjectValue(ctx context.Context) basetyp
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":                 o.Etag,
-			"notebook_content":     o.NotebookContent,
-			"review_state":         o.ReviewState,
-			"reviews":              o.Reviews,
-			"runner_collaborators": o.RunnerCollaborators,
+			"etag":             o.Etag,
+			"notebook_content": o.NotebookContent,
 		})
 }
 
@@ -747,67 +732,8 @@ func (o CleanRoomAssetNotebook_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"etag":             types.StringType,
 			"notebook_content": types.StringType,
-			"review_state":     types.StringType,
-			"reviews": basetypes.ListType{
-				ElemType: CleanRoomNotebookReview_SdkV2{}.Type(ctx),
-			},
-			"runner_collaborators": basetypes.ListType{
-				ElemType: CleanRoomCollaborator_SdkV2{}.Type(ctx),
-			},
 		},
 	}
-}
-
-// GetReviews returns the value of the Reviews field in CleanRoomAssetNotebook_SdkV2 as
-// a slice of CleanRoomNotebookReview_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetNotebook_SdkV2) GetReviews(ctx context.Context) ([]CleanRoomNotebookReview_SdkV2, bool) {
-	if o.Reviews.IsNull() || o.Reviews.IsUnknown() {
-		return nil, false
-	}
-	var v []CleanRoomNotebookReview_SdkV2
-	d := o.Reviews.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetReviews sets the value of the Reviews field in CleanRoomAssetNotebook_SdkV2.
-func (o *CleanRoomAssetNotebook_SdkV2) SetReviews(ctx context.Context, v []CleanRoomNotebookReview_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reviews"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Reviews = types.ListValueMust(t, vs)
-}
-
-// GetRunnerCollaborators returns the value of the RunnerCollaborators field in CleanRoomAssetNotebook_SdkV2 as
-// a slice of CleanRoomCollaborator_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetNotebook_SdkV2) GetRunnerCollaborators(ctx context.Context) ([]CleanRoomCollaborator_SdkV2, bool) {
-	if o.RunnerCollaborators.IsNull() || o.RunnerCollaborators.IsUnknown() {
-		return nil, false
-	}
-	var v []CleanRoomCollaborator_SdkV2
-	d := o.RunnerCollaborators.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetRunnerCollaborators sets the value of the RunnerCollaborators field in CleanRoomAssetNotebook_SdkV2.
-func (o *CleanRoomAssetNotebook_SdkV2) SetRunnerCollaborators(ctx context.Context, v []CleanRoomCollaborator_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runner_collaborators"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.RunnerCollaborators = types.ListValueMust(t, vs)
 }
 
 type CleanRoomAssetTable_SdkV2 struct {
@@ -1235,69 +1161,6 @@ func (o CleanRoomCollaborator_SdkV2) Type(ctx context.Context) attr.Type {
 			"invite_recipient_email":        types.StringType,
 			"invite_recipient_workspace_id": types.Int64Type,
 			"organization_name":             types.StringType,
-		},
-	}
-}
-
-type CleanRoomNotebookReview_SdkV2 struct {
-	// review comment
-	Comment types.String `tfsdk:"comment"`
-	// timestamp of when the review was submitted
-	CreatedAtMillis types.Int64 `tfsdk:"created_at_millis"`
-	// review outcome
-	ReviewState types.String `tfsdk:"review_state"`
-	// collaborator alias of the reviewer
-	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
-}
-
-func (newState *CleanRoomNotebookReview_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookReview_SdkV2) {
-}
-
-func (newState *CleanRoomNotebookReview_SdkV2) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookReview_SdkV2) {
-}
-
-func (c CleanRoomNotebookReview_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["created_at_millis"] = attrs["created_at_millis"].SetOptional()
-	attrs["review_state"] = attrs["review_state"].SetOptional()
-	attrs["reviewer_collaborator_alias"] = attrs["reviewer_collaborator_alias"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomNotebookReview.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a CleanRoomNotebookReview_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomNotebookReview_SdkV2
-// only implements ToObjectValue() and Type().
-func (o CleanRoomNotebookReview_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"comment":                     o.Comment,
-			"created_at_millis":           o.CreatedAtMillis,
-			"review_state":                o.ReviewState,
-			"reviewer_collaborator_alias": o.ReviewerCollaboratorAlias,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o CleanRoomNotebookReview_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"comment":                     types.StringType,
-			"created_at_millis":           types.Int64Type,
-			"review_state":                types.StringType,
-			"reviewer_collaborator_alias": types.StringType,
 		},
 	}
 }

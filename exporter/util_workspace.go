@@ -133,6 +133,7 @@ func (ic *importContext) emitWorkspaceObject(objType, path string) {
 }
 
 func (ic *importContext) emitDirectoryOrRepo(path string) {
+	log.Printf("[DEBUG] Emitting directory or repo for %s", path)
 	ic.emitWorkspaceObject("databricks_directory", path)
 }
 
@@ -246,6 +247,9 @@ func (ic *importContext) maybeEmitWorkspaceObject(resourceType, path string, obj
 			}
 			if data != nil {
 				data = ic.generateNewData(data, resourceType, path, obj)
+				if data != nil {
+					workspace.SetWorkspaceObjectComputedProperties(data, ic.Client)
+				}
 			}
 		}
 		ic.Emit(&resource{

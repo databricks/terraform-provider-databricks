@@ -100,13 +100,21 @@ func ResourceConnection() common.Resource {
 			if err != nil {
 				return err
 			}
+			if conn.Options == nil {
+				conn.Options = map[string]string{}
+			}
+			// remove not necessary parameters for builtin HMS
+			if val, exists := conn.Options["builtin"]; exists && val == "true" {
+				log.Printf("[DEBUG] Removing not necessary parameters for builtin HMS")
+				delete(conn.Options, "host")
+				delete(conn.Options, "port")
+				delete(conn.Options, "home_workspace_id")
+				delete(conn.Options, "database")
+			}
 			// We need to preserve original sensitive options as API doesn't return them
 			var cOrig catalog.CreateConnection
 			common.DataToStructPointer(d, s, &cOrig)
 			// If there are no options returned, need to initialize the map
-			if conn.Options == nil {
-				conn.Options = map[string]string{}
-			}
 			for key, element := range cOrig.Options {
 				if slices.Contains(sensitiveOptions, key) {
 					conn.Options[key] = element

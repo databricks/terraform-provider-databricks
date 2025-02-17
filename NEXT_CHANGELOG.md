@@ -16,4 +16,4 @@
 
 ### Internal Changes
 
- * Bump golange version to 1.24.0 ([#4508](https://github.com/databricks/terraform-provider-databricks/pull/4508)).
+ * Bump golang version to 1.24.0 ([#4508](https://github.com/databricks/terraform-provider-databricks/pull/4508)).

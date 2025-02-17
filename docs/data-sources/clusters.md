@@ -26,7 +26,7 @@ data "databricks_clusters" "all_shared" {
 
 ### Filtering clusters
 
-Filter clusters by state, source, or policy:
+Listing clusters can be slow for workspaces containing many clusters. Use filters to limit the number of clusters returned for better performance. You can filter clusters by state, source, policy, or pinned status:
 
 ```hcl
 data "databricks_clusters" "all_running_clusters" {
@@ -44,6 +44,12 @@ data "databricks_clusters" "all_clusters_with_policy" {
 data "databricks_clusters" "all_api_clusters" {
   filter_by {
     cluster_sources = ["API"]
+  }
+}
+
+data "databricks_clusters" "all_pinned_clusters" {
+  filter_by {
+    is_pinned = true
   }
 }
 ```

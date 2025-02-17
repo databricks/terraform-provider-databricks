@@ -24,6 +24,30 @@ data "databricks_clusters" "all_shared" {
 }
 ```
 
+### Filtering clusters
+
+Filter clusters by state, source, or policy:
+
+```hcl
+data "databricks_clusters" "all_running_clusters" {
+  filter_by {
+    cluster_states = ["RUNNING"]
+  }
+}
+
+data "databricks_clusters" "all_clusters_with_policy" {
+  filter_by {
+    policy_id = "1234-5678-9012"
+  }
+}
+
+data "databricks_clusters" "all_api_clusters" {
+  filter_by {
+    cluster_sources = ["API"]
+  }
+}
+```
+
 ## Argument Reference
 
 * `cluster_name_contains` - (Optional) Only return [databricks_cluster](../resources/cluster.md#cluster_id) ids that match the given name string.

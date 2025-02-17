@@ -24,25 +24,18 @@ func suppressPemPrivateKeyExpiration(k, old, new string, d *schema.ResourceData)
 func ResourceConnection() common.Resource {
 	s := common.StructToSchema(catalog.ConnectionInfo{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["options"].DiffSuppressFunc = suppressPemPrivateKeyExpiration
-			common.CustomizeSchemaPath(m, "url").SetReadOnly()
-			common.CustomizeSchemaPath(m, "metastore_id").SetReadOnly()
-			common.CustomizeSchemaPath(m, "credential_type").SetReadOnly()
-			common.CustomizeSchemaPath(m, "connection_id").SetReadOnly()
-			common.CustomizeSchemaPath(m, "created_at").SetReadOnly()
-			common.CustomizeSchemaPath(m, "created_by").SetReadOnly()
-			common.CustomizeSchemaPath(m, "full_name").SetReadOnly()
-			common.CustomizeSchemaPath(m, "provisioning_info").SetReadOnly()
-			common.CustomizeSchemaPath(m, "securable_type").SetReadOnly()
-			common.CustomizeSchemaPath(m, "updated_at").SetReadOnly()
-			common.CustomizeSchemaPath(m, "updated_by").SetReadOnly()
-			common.CustomizeSchemaPath(m, "owner").SetComputed()
-			common.CustomizeSchemaPath(m, "options").SetSensitive()
-			common.CustomizeSchemaPath(m, "read_only").SetComputed().SetForceNew()
+			for _, v := range []string{"url", "metastore_id", "credential_type", "connection_id",
+				"created_at", "created_by", "full_name", "provisioning_info", "securable_type", "updated_at", "updated_by"} {
+				common.CustomizeSchemaPath(m, v).SetReadOnly()
+			}
+			for _, v := range []string{"owner", "read_only"} {
+				common.CustomizeSchemaPath(m, v).SetComputed()
+			}
+			for _, v := range []string{"read_only", "properties", "comment", "connection_type"} {
+				common.CustomizeSchemaPath(m, v).SetForceNew()
+			}
+			common.CustomizeSchemaPath(m, "options").SetSensitive().SetCustomSuppressDiff(suppressPemPrivateKeyExpiration)
 			common.CustomizeSchemaPath(m, "name").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
-			common.CustomizeSchemaPath(m, "properties").SetForceNew()
-			common.CustomizeSchemaPath(m, "comment").SetForceNew()
-			common.CustomizeSchemaPath(m, "connection_type").SetForceNew()
 
 			return m
 		})

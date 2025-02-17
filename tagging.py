@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import subprocess
 import time
 import json
-from github import Github, Repository, InputGitTreeElement
+from github import Github, Repository, InputGitTreeElement, InputGitAuthor
 from datetime import datetime, timezone
 
 NEXT_CHANGELOG_FILE_NAME = "NEXT_CHANGELOG.md"
@@ -31,13 +31,14 @@ class GitHubRepo:
     def __init__(self, repo: Repository):
         self.repo = repo
         self.changed_files: list[InputGitTreeElement] = []
-        self.ref = "refs/heads/main"
+        self.ref = "heads/main"
         head_ref = self.repo.get_git_ref(self.ref)
         self.sha = head_ref.object.sha
 
     # Replaces "git add file"
     def add_file(self, loc: str, content: str):
-        local_path = os.path.relpath(os.getcwd(), loc)
+        local_path = os.path.relpath(loc, os.getcwd())
+        print(f"Adding file {local_path}")
         blob = self.repo.create_git_blob(content=content, encoding="utf-8")
         element = InputGitTreeElement(path=local_path, mode="100644", type="blob", sha=blob.sha)
         self.changed_files.append(element)
@@ -67,15 +68,17 @@ class GitHubRepo:
         # Create a tag pointing to the new commit
         # The email MUST be the GitHub Apps email.
         # Otherwise, the tag will not be verified.
+        tagger = InputGitAuthor(
+            name="Databricks SDK Release Bot",
+            email="DECO-SDK-Tagging[bot]@users.noreply.github.com"
+        )
+
         tag = self.repo.create_git_tag(
             tag=tag_name,
             message=tag_message,
             object=self.sha,
             type="commit",
-            tagger={
-                "name": "Databricks SDK Release Bot",
-                "email": "DECO-SDK-Tagging[bot]@users.noreply.github.com"
-            })
+            tagger=tagger)
         # Create a Git ref (the actual reference for the tag in the repo)
         self.repo.create_git_ref(ref=f"refs/tags/{tag_name}", sha=tag.sha)
 

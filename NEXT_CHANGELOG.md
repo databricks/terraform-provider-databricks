@@ -8,7 +8,7 @@
 
 ### Documentation
 
- * Update `databricks_cluster` and `databricks_clusters` data source documentation.
+ * Update `databricks_cluster` and `databricks_clusters` data source documentation ([#4506](https://github.com/databricks/terraform-provider-databricks/pull/4506)).
 
 ### Exporter
 

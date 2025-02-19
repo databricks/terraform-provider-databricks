@@ -60,7 +60,7 @@ func ResourceDirectory() common.Resource {
 		if err != nil {
 			return err
 		}
-		d.Set("workspace_path", "/Workspace"+d.Id())
+		SetWorkspaceObjectComputedProperties(d, c)
 		return nil
 	}
 

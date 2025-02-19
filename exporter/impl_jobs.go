@@ -148,13 +148,7 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 	}
 	ic.emitLibraries(task.Libraries)
 
-	if task.WebhookNotifications != nil {
-		ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnFailure)
-		ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnSuccess)
-		ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnDurationWarningThresholdExceeded)
-		ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStart)
-		ic.emitJobsDestinationNotifications(task.WebhookNotifications.OnStreamingBacklogExceeded)
-	}
+	emitWebhookNotifications(ic, task.WebhookNotifications)
 	if task.EmailNotifications != nil {
 		ic.emitListOfUsers(task.EmailNotifications.OnDurationWarningThresholdExceeded)
 		ic.emitListOfUsers(task.EmailNotifications.OnFailure)
@@ -199,19 +193,23 @@ func importJob(ic *importContext, r *resource) error {
 		ic.emitListOfUsers(job.EmailNotifications.OnSuccess)
 		ic.emitListOfUsers(job.EmailNotifications.OnStreamingBacklogExceeded)
 	}
-	if job.WebhookNotifications != nil {
-		ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnFailure)
-		ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnSuccess)
-		ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnDurationWarningThresholdExceeded)
-		ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStart)
-		ic.emitJobsDestinationNotifications(job.WebhookNotifications.OnStreamingBacklogExceeded)
-	}
+	emitWebhookNotifications(ic, job.WebhookNotifications)
 	for _, param := range job.Parameters {
 		ic.emitIfWsfsFile(param.Default)
 		ic.emitIfVolumeFile(param.Default)
 	}
 
 	return ic.importLibraries(r.Data, s)
+}
+
+func emitWebhookNotifications(ic *importContext, notifications *sdk_jobs.WebhookNotifications) {
+	if notifications != nil {
+		ic.emitJobsDestinationNotifications(notifications.OnFailure)
+		ic.emitJobsDestinationNotifications(notifications.OnSuccess)
+		ic.emitJobsDestinationNotifications(notifications.OnDurationWarningThresholdExceeded)
+		ic.emitJobsDestinationNotifications(notifications.OnStart)
+		ic.emitJobsDestinationNotifications(notifications.OnStreamingBacklogExceeded)
+	}
 }
 
 func listJobs(ic *importContext) error {

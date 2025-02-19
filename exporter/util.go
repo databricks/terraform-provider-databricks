@@ -484,7 +484,7 @@ func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceDat
 
 func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
 	return func(ic *importContext, d *schema.ResourceData) string {
-		name := d.Get("name").(string)
+		name := d.Get(nm).(string)
 		if name == "" {
 			return d.Id()
 		}

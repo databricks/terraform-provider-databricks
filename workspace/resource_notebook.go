@@ -221,7 +221,7 @@ func (a NotebooksAPI) Delete(path string, recursive bool) error {
 	}, nil)
 }
 
-func setComputedProperties(d *schema.ResourceData, c *common.DatabricksClient) {
+func SetWorkspaceObjectComputedProperties(d *schema.ResourceData, c *common.DatabricksClient) {
 	d.Set("url", c.FormatURL("#workspace", d.Id()))
 	d.Set("workspace_path", "/Workspace"+d.Id())
 }
@@ -326,7 +326,7 @@ func ResourceNotebook() common.Resource {
 			}
 			d.Set("object_id", resp.ObjectID)
 			d.SetId(path)
-			setComputedProperties(d, c)
+			SetWorkspaceObjectComputedProperties(d, c)
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -351,7 +351,7 @@ func ResourceNotebook() common.Resource {
 			if err != nil {
 				return err
 			}
-			setComputedProperties(d, c)
+			SetWorkspaceObjectComputedProperties(d, c)
 			err = common.StructToData(objectStatus, s, d)
 			if err != nil {
 				return err
@@ -390,7 +390,7 @@ func ResourceNotebook() common.Resource {
 				return err
 			}
 			d.Set("object_id", resp.ObjectID)
-			setComputedProperties(d, c)
+			SetWorkspaceObjectComputedProperties(d, c)
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

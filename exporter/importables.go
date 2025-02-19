@@ -328,7 +328,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			ic.importCluster(&c)
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/clusters/%s", r.ID),
 				"cluster_"+ic.Importables["databricks_cluster"].Name(ic, r.Data))
-			return ic.importClusterLibraries(r.Data, s)
+			return ic.importClusterLibraries(r.Data)
 		},
 		ShouldOmitField: makeShouldOmitFieldForCluster(nil),
 	},
@@ -1369,15 +1369,17 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
 			{Path: "parameter.query_backed_value.query_id", Resource: "databricks_query", Match: "id"},
-			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "catalog", Resource: "databricks_catalog"},
 			{Path: "schema", Resource: "databricks_schema", Match: "name",
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema"),
 				SkipDirectLookup:     true},
 			// TODO: add match like for workspace files?
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
 			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 			// TODO: add support for Repos?
 		},
 	},
@@ -1496,11 +1498,13 @@ var resourcesMap map[string]importable = map[string]importable{
 		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_alert", "display_name"),
 		Depends: []reference{
 			{Path: "query_id", Resource: "databricks_query"},
-			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			// TODO: add match like for workspace files?
+			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
 			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
+			{Path: "owner_user_name", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_pipeline": {
@@ -2482,9 +2486,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "file_path", File: true},
 			{Path: "warehouse_id", Resource: "databricks_sql_endpoint"},
-			{Path: "parent_path", Resource: "databricks_directory"},
 			{Path: "parent_path", Resource: "databricks_user", Match: "home"},
-			{Path: "parent_path", Resource: "databricks_service_principal"},
+			{Path: "parent_path", Resource: "databricks_service_principal", Match: "home"},
+			{Path: "parent_path", Resource: "databricks_directory"},
+			{Path: "parent_path", Resource: "databricks_directory", Match: "workspace_path"},
 		},
 	},
 	"databricks_notification_destination": {

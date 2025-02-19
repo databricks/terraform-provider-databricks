@@ -217,7 +217,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 
 func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 	if ws.NetworkID == "" {
-		return fmt.Errorf(ws.WorkspaceStatusMessage)
+		return fmt.Errorf("%s", ws.WorkspaceStatusMessage)
 	}
 	network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
 	if nerr != nil {
@@ -255,7 +255,7 @@ func (a WorkspacesAPI) WaitForRunning(ws Workspace, timeout time.Duration) error
 		default:
 			log.Printf("[INFO] Workspace %s is %s: %s", workspace.DeploymentName,
 				workspace.WorkspaceStatus, workspace.WorkspaceStatusMessage)
-			return resource.RetryableError(fmt.Errorf(workspace.WorkspaceStatusMessage))
+			return resource.RetryableError(fmt.Errorf("%s", workspace.WorkspaceStatusMessage))
 		}
 	})
 }

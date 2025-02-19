@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+ * Add support for cluster logs delivery to UC Volumes ([#4492](https://github.com/databricks/terraform-provider-databricks/pull/4492)).
+
 ### Bug Fixes
 
 ### Documentation

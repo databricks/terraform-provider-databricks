@@ -394,10 +394,19 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	SetForceSendFieldsForCluster(&createClusterRequest, d)
+	log.Printf("[DEBUG] tanmay-0 - create")
 	if createClusterRequest.GcpAttributes != nil {
-		if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
+		log.Printf("[DEBUG] tanmay-1 - create")
+		local_ssd_specified := d.Get("gcp_attributes.0.local_ssd_count").(int)
+		if local_ssd_specified == -1 {
+			createClusterRequest.GcpAttributes.LocalSsdCount = 0
 			createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
 		}
+		// Doesn't work
+		// if _, ok := d.GetOkExists("gcp_attributes.0.local_ssd_count"); ok {
+		// 	log.Printf("[DEBUG] tanmay-2 - create")
+		// 	createClusterRequest.GcpAttributes.ForceSendFields = []string{"LocalSsdCount"}
+		// }
 	}
 	clusterWaiter, err := clusters.Create(ctx, createClusterRequest)
 	if err != nil {
@@ -475,6 +484,7 @@ func setPinnedStatus(ctx context.Context, d *schema.ResourceData, clusterAPI com
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+	log.Printf("[DEBUG] tanmay-0 - read")
 	w, err := c.WorkspaceClient()
 	if err != nil {
 		return err

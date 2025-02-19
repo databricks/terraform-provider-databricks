@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+ * Populate `partitions` when reading `databricks_sql_table` ([#4483](https://github.com/databricks/terraform-provider-databricks/pull/4483)).
+
 ### Documentation
 
  * Update `databricks_cluster` and `databricks_clusters` data source documentation ([#4506](https://github.com/databricks/terraform-provider-databricks/pull/4506)).

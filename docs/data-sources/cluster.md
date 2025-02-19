@@ -38,7 +38,7 @@ data "databricks_clusters" "my_cluster" {
 }
 
 data "databricks_cluster" "my_cluster" {
-  cluster_id = data.databricks_clusters.my_cluster.ids[0]
+  cluster_id = tolist(data.databricks_clusters.my_cluster.ids)[0]
 }
 ```
 

@@ -217,7 +217,7 @@ func (a WorkspacesAPI) verifyWorkspaceReachable(ws Workspace) *resource.RetryErr
 
 func (a WorkspacesAPI) explainWorkspaceFailure(ws Workspace) error {
 	if ws.NetworkID == "" {
-		return fmt.Errorf("%s", ws.WorkspaceStatusMessage)
+		return errors.New(ws.WorkspaceStatusMessage)
 	}
 	network, nerr := NewNetworksAPI(a.context, a.client).Read(ws.AccountID, ws.NetworkID)
 	if nerr != nil {

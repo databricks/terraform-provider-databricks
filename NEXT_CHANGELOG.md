@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+ * Only allow `authorized_paths` to be updated in the `options` field of `databricks_catalog`.
+
 ### Documentation
 
  * Update `databricks_cluster` and `databricks_clusters` data source documentation ([#4506](https://github.com/databricks/terraform-provider-databricks/pull/4506)).

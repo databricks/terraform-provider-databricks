@@ -204,5 +204,29 @@ func ResourceCatalog() common.Resource {
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// The only scenario in which we can update options is for the `authorized_paths` key. Any
+			// other changes to the options field will result in an error.
+			if d.HasChange("options") {
+				old, new := d.GetChange("options")
+				oldMap := old.(map[string]interface{})
+				newMap := new.(map[string]interface{})
+				delete(oldMap, "authorized_paths")
+				delete(newMap, "authorized_paths")
+				// If any attribute other than `authorized_paths` is removed, the resource should be recreated.
+				for k := range oldMap {
+					if _, ok := newMap[k]; !ok {
+						d.ForceNew("options." + k)
+					}
+				}
+				// If any attribute other than `authorized_paths` is added or changed, the resource should be recreated.
+				for k, v := range newMap {
+					if oldV, ok := oldMap[k]; !ok || oldV != v {
+						d.ForceNew("options." + k)
+					}
+				}
+			}
+			return nil
+		},
 	}
 }

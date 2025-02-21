@@ -94,6 +94,8 @@ func ResourceCatalog() common.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
+			// Options must be set in the create request only (aside from HMS-backed catalogs).
+			updateCatalogRequest.Options = nil
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err

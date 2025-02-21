@@ -251,8 +251,8 @@ func TestResourceSqlTableCreateTable(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		}, useExistingClusterForSql...),
 		Create:   true,
@@ -331,8 +331,8 @@ func TestResourceSqlTableCreateTableWithOwner(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		}, useExistingClusterForSql...),
 		Create:   true,
@@ -457,6 +457,11 @@ func TestResourceSqlTableUpdateTable(t *testing.T) {
 				},
 			},
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
+			},
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
 				ExpectedRequest: clusters.ClusterID{
@@ -558,6 +563,11 @@ func TestResourceSqlTableUpdateTableAndOwner(t *testing.T) {
 				},
 			},
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
+			},
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
 				ExpectedRequest: clusters.ClusterID{
@@ -654,6 +664,11 @@ func TestResourceSqlTableUpdateTableClusterKeys(t *testing.T) {
 				},
 			},
 			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
+			},
+			{
 				Method:   "POST",
 				Resource: "/api/2.0/clusters/start",
 				ExpectedRequest: clusters.ClusterID{
@@ -742,6 +757,11 @@ func TestResourceSqlTableUpdateView(t *testing.T) {
 						},
 					},
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 			{
 				Method:   "POST",
@@ -854,8 +874,8 @@ func TestResourceSqlTableUpdateView_Definition(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview?",
+				Response: catalog.TableInfo{},
 			},
 			{
 				Method:   "POST",
@@ -914,8 +934,8 @@ func TestResourceSqlTableUpdateView_Comments(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.barview?",
+				Response: catalog.TableInfo{},
 			},
 			{
 				Method:   "POST",
@@ -1008,6 +1028,11 @@ func resourceSqlTableUpdateColumnHelper(t *testing.T, testMetaData resourceSqlTa
 					Comment:               "terraform managed",
 					ColumnInfos:           testMetaData.oldColumns,
 				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 			{
 				Method:   "POST",
@@ -1399,8 +1424,8 @@ func TestResourceSqlTableCreateTable_ExistingSQLWarehouse(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		},
 		Create:   true,
@@ -1497,8 +1522,8 @@ func TestResourceSqlTableCreateTableWithIdentityColumn_ExistingSQLWarehouse(t *t
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		},
 		Create:   true,
@@ -1568,8 +1593,8 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		},
 		ID:       "main.foo.bar",
@@ -1582,9 +1607,6 @@ func TestResourceSqlTableReadTableWithIdentityColumn_ExistingSQLWarehouse(t *tes
 	})
 }
 
-func getPtr(num int) *int {
-	return &num
-}
 func TestResourceSqlTableReadTableWithPartitionColumn_ExistingSQLWarehouse(t *testing.T) {
 	qa.ResourceFixture{
 		CommandMock: func(commandStr string) common.CommandResults {
@@ -1643,16 +1665,18 @@ func TestResourceSqlTableReadTableWithPartitionColumn_ExistingSQLWarehouse(t *te
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{
-					ColumnInfos: []ColumnPartitionInfo{
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{
+					Columns: []catalog.ColumnInfo{
 						{
-							Name:           "id",
-							PartitionIndex: getPtr(1),
+							Name:            "id",
+							PartitionIndex:  1,
+							ForceSendFields: []string{"PartitionIndex"},
 						},
 						{
-							Name:           "name",
-							PartitionIndex: getPtr(0),
+							Name:            "name",
+							PartitionIndex:  0,
+							ForceSendFields: []string{"PartitionIndex"},
 						},
 						{
 							Name: "number",
@@ -1734,8 +1758,8 @@ func TestResourceSqlTableCreateTable_OnlyManagedProperties(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar",
-				Response: PartitionInfo{},
+				Resource: "/api/2.1/unity-catalog/tables/main.foo.bar?",
+				Response: catalog.TableInfo{},
 			},
 		},
 		Create:   true,

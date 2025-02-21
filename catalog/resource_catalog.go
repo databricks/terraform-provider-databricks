@@ -153,6 +153,14 @@ func ResourceCatalog() common.Resource {
 			}
 
 			updateCatalogRequest.Owner = ""
+			// The only option allowed in update is "authorized_paths". All other options must be removed.
+			if opts := updateCatalogRequest.Options; opts != nil {
+				if v, ok := opts["authorized_paths"]; ok {
+					updateCatalogRequest.Options = map[string]string{"authorized_paths": v}
+				} else {
+					updateCatalogRequest.Options = nil
+				}
+			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 
 			if err != nil {
@@ -218,13 +226,17 @@ func ResourceCatalog() common.Resource {
 				// If any attribute other than `authorized_paths` is removed, the resource should be recreated.
 				for k := range oldMap {
 					if _, ok := newMap[k]; !ok {
-						d.ForceNew("options." + k)
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
 					}
 				}
 				// If any attribute other than `authorized_paths` is added or changed, the resource should be recreated.
 				for k, v := range newMap {
 					if oldV, ok := oldMap[k]; !ok || oldV != v {
-						d.ForceNew("options." + k)
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
 					}
 				}
 			}

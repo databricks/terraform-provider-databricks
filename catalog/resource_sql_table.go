@@ -68,16 +68,6 @@ type SqlTableInfo struct {
 	sqlExec sql.StatementExecutionInterface
 }
 
-// need a separate struct as partition_index is 0-based
-type ColumnPartitionInfo struct {
-	Name           string `json:"name"`
-	PartitionIndex *int   `json:"partition_index,omitempty"`
-}
-
-type PartitionInfo struct {
-	ColumnInfos []ColumnPartitionInfo `json:"columns,omitempty"`
-}
-
 func (ti SqlTableInfo) CustomizeSchema(s *common.CustomizableSchema) *common.CustomizableSchema {
 	caseInsensitiveFields := []string{"name", "catalog_name", "schema_name"}
 	for _, field := range caseInsensitiveFields {
@@ -117,11 +107,6 @@ func (a SqlTablesAPI) getTable(name string) (ti SqlTableInfo, err error) {
 	// Copy returned properties & options to read-only attributes
 	ti.EffectiveProperties = ti.Properties
 	ti.Properties = nil
-	return
-}
-
-func (a SqlTablesAPI) getPartitions(name string) (ti PartitionInfo, err error) {
-	err = a.client.Get(a.context, "/unity-catalog/tables/"+name, nil, &ti)
 	return
 }
 
@@ -684,7 +669,11 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
-			partitionInfo, err := NewSqlTablesAPI(ctx, c).getPartitions(d.Id())
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			partitionInfo, err := w.Tables.GetByFullName(ctx, d.Id())
 			if err != nil {
 				return err
 			}
@@ -697,10 +686,10 @@ func ResourceSqlTable() common.Resource {
 				}
 			}
 
-			for i := range partitionInfo.ColumnInfos {
-				c := &partitionInfo.ColumnInfos[i]
-				if c.PartitionIndex != nil {
-					partitionIndexes[*c.PartitionIndex] = c.Name
+			for i := range partitionInfo.Columns {
+				c := &partitionInfo.Columns[i]
+				if slices.Contains(c.ForceSendFields, "PartitionIndex") {
+					partitionIndexes[c.PartitionIndex] = c.Name
 				}
 			}
 			indexes := []int{}

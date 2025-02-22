@@ -146,6 +146,9 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 
 	// Set the ID to the table name
 	newMonitorInfoTfSDK.ID = newMonitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	newMonitorInfoTfSDK.WarehouseId = monitorInfoTfSDK.WarehouseId
+	newMonitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDK.SkipBuiltinDashboard
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
@@ -177,16 +180,14 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// we need it to fill additional fields as they are not returned by the API
-	var monitorInfoTfSDKPrev MonitorInfoExtended
-	resp.Diagnostics.Append(req.State.Get(ctx, &monitorInfoTfSDKPrev)...)
+
+	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &monitorInfoTfSDK.WarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &monitorInfoTfSDK.SkipBuiltinDashboard)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
-	monitorInfoTfSDK.WarehouseId = monitorInfoTfSDKPrev.WarehouseId
-	monitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDKPrev.SkipBuiltinDashboard
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }

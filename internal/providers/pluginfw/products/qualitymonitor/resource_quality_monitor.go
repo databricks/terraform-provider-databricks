@@ -177,8 +177,16 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// we need it to fill additional fields as they are not returned by the API
+	var monitorInfoTfSDKPrev MonitorInfoExtended
+	resp.Diagnostics.Append(req.State.Get(ctx, &monitorInfoTfSDKPrev)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+	monitorInfoTfSDK.WarehouseId = monitorInfoTfSDKPrev.WarehouseId
+	monitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDKPrev.SkipBuiltinDashboard
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }

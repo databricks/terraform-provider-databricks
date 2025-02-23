@@ -234,6 +234,12 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// We need it to fill additional fields as they are not returned by the API
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &monitorInfoTfSDK.WarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &monitorInfoTfSDK.SkipBuiltinDashboard)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }

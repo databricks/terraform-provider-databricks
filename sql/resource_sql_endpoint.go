@@ -103,6 +103,11 @@ func ResourceSqlEndpoint() common.Resource {
 			}
 			resp, err := wait.Get()
 			if err != nil {
+				// Rollback by deleting the warehouse
+				rollbackErr := w.Warehouses.DeleteById(ctx, wait.Id)
+				if rollbackErr != nil {
+					return fmt.Errorf("failed deleting warehouse: %w", rollbackErr)
+				}
 				return fmt.Errorf("failed waiting for warehouse to start: %w", err)
 			}
 			d.SetId(resp.Id)

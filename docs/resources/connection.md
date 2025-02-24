@@ -90,6 +90,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this connection in form of `<metastore_id>|<name>`.
+- `connection_id` - Unique ID of the connection.
+- `created_at` - Time at which this connection was created, in epoch milliseconds.
+- `created_by` -  Username of connection creator.
+- `credential_type` - The type of credential for this connection.
+- `full_name` - Full name of connection.
+- `metastore_id` - Unique ID of the UC metastore for this connection.
+- `provisioning_info` - Object with the status of an asynchronously provisioned resource.
+- `updated_at` - Time at which connection this was last modified, in epoch milliseconds.
+- `updated_by` - Username of user who last modified the connection.
+- `url` - URL of the remote data source, extracted from options.
 
 ## Import
 

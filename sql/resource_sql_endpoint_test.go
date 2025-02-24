@@ -228,6 +228,34 @@ func TestResourceSQLEndpointCreateRollback(t *testing.T) {
 	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch")
 }
 
+func TestResourceSQLEndpointCreateRollbackFailed(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(errors.New("Cannot delete warehouse"))
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch. when rolling back, also failed: Cannot delete warehouse")
+}
+
 func TestResourceSQLEndpointRead(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(mwc *mocks.MockWorkspaceClient) {

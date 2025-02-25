@@ -4,9 +4,13 @@
 
 ### New Features and Improvements
 
+ * Add support for cluster logs delivery to UC Volumes ([#4492](https://github.com/databricks/terraform-provider-databricks/pull/4492)).
+ * Expose more attributes for `databricks_connection` resource ([#4502](https://github.com/databricks/terraform-provider-databricks/pull/4502)).
+
 ### Bug Fixes
 
  * Populate `partitions` when reading `databricks_sql_table` ([#4483](https://github.com/databricks/terraform-provider-databricks/pull/4483)).
+ * Delete `databricks_sql_endpoint` that failed to start ([#4520](https://github.com/databricks/terraform-provider-databricks/pull/4520))
 
 ### Documentation
 
@@ -18,3 +22,5 @@
  * Fix matching on `workspace_path` and refactoring ([#4504](https://github.com/databricks/terraform-provider-databricks/pull/4504)).
 
 ### Internal Changes
+
+ * Bump golang version to 1.24.0 ([#4508](https://github.com/databricks/terraform-provider-databricks/pull/4508)).

@@ -9,6 +9,7 @@
 
 ### Bug Fixes
 
+ * Fix configuration drift when configuring `databricks_connection` to builtin Hive Metastore ([#4505](https://github.com/databricks/terraform-provider-databricks/pull/4505)).
  * Only allow `authorized_paths` to be updated in the `options` field of `databricks_catalog` ([#4517](https://github.com/databricks/terraform-provider-databricks/pull/4517)).
  * Mark `default_catalog_name` attribute in `databricks_metastore_assignment` as deprecated ([#4522](https://github.com/databricks/terraform-provider-databricks/pull/4522))
  * Delete `databricks_sql_endpoint` that failed to start ([#4520](https://github.com/databricks/terraform-provider-databricks/pull/4520))

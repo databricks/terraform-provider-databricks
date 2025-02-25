@@ -149,7 +149,6 @@ func TestUcAccCatalogHmsConnectionUpdate(t *testing.T) {
 			skip_validation = true
 		}
 	`, authorizedPath, otherAuthorizedPath)
-	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: otherInfra + fmt.Sprintf(`
 		resource "databricks_catalog" "sandbox" {

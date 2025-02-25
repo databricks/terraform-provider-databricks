@@ -259,6 +259,16 @@ cluster_log_conf {
 }
 ```
 
+Example of pushing all cluster logs to UC Volumes:
+
+```hcl
+cluster_log_conf {
+  volumes {
+    destination = "/Volumes/catalog/schema/cluster_logs_volume/"
+  }
+}
+```
+
 There are a few more advanced attributes for S3 log delivery:
 
 * `destination` - S3 destination, e.g., `s3://my-bucket/some-prefix` You must configure the cluster with an instance profile, and the instance profile must have write access to the destination. You cannot use AWS keys.

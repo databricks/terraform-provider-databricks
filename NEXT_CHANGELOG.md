@@ -4,11 +4,13 @@
 
 ### New Features and Improvements
 
+ * Add support for cluster logs delivery to UC Volumes ([#4492](https://github.com/databricks/terraform-provider-databricks/pull/4492)).
  * Expose more attributes for `databricks_connection` resource ([#4502](https://github.com/databricks/terraform-provider-databricks/pull/4502)).
 
 ### Bug Fixes
 
  * Mark `default_catalog_name` attribute in `databricks_metastore_assignment` as deprecated ([#4522](https://github.com/databricks/terraform-provider-databricks/pull/4522))
+ * Delete `databricks_sql_endpoint` that failed to start ([#4520](https://github.com/databricks/terraform-provider-databricks/pull/4520))
 
 ### Documentation
 

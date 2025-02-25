@@ -14,7 +14,7 @@ func CheckDataSourceDashboardsPopulated(t *testing.T) func(s *terraform.State) e
 		ds, ok := s.Modules[0].Resources["data.databricks_dashboards.this"]
 		require.True(t, ok, "data.databricks_dashboards.this has to be there")
 
-		dashboardsCount := ds.Primary.Attributes["databricks_dashboards.#"]
+		dashboardsCount := ds.Primary.Attributes["dashboards.#"]
 		dashboardsCountInt, err := strconv.Atoi(dashboardsCount)
 		require.NoError(t, err, "dashboards count is not a number")
 		require.NotEqual(t, 0, dashboardsCountInt, "dashboard list is empty")
@@ -23,7 +23,7 @@ func CheckDataSourceDashboardsPopulated(t *testing.T) func(s *terraform.State) e
 	}
 }
 
-func TestAccDashboardsCreation(t *testing.T) {
+func TestAccDashboardsDataSource(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 			resource "databricks_dashboard" "dashboard" {

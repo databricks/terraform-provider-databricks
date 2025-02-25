@@ -28,7 +28,7 @@ func TestAccDashboardsCreation(t *testing.T) {
 		Template: `
 			resource "databricks_dashboard" "dashboard" {
 				display_name         = "New Dashboard"
-				warehouse_id         = data.databricks_sql_warehouse.starter.id
+				warehouse_id         = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				serialized_dashboard = "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
 				embed_credentials    = false // Optional
 				parent_path          = "/Shared/provider-test"

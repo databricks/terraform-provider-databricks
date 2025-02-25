@@ -183,10 +183,18 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
 	// We need it to fill additional fields as they are not returned by the API
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &monitorInfoTfSDK.WarehouseId)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &monitorInfoTfSDK.SkipBuiltinDashboard)...)
+	var origWarehouseId types.String
+	var origSkipBuiltinDashboard types.Bool
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &origWarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &origSkipBuiltinDashboard)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	if origWarehouseId.ValueString() != "" {
+		monitorInfoTfSDK.WarehouseId = origWarehouseId
+	}
+	if origSkipBuiltinDashboard.ValueBool() {
+		monitorInfoTfSDK.SkipBuiltinDashboard = origSkipBuiltinDashboard
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)

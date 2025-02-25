@@ -51,7 +51,6 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			name = "bar"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
-			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
 				name      = "id"
@@ -68,7 +67,6 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			name = "bar_2"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
-			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
 				name      = "id"

@@ -174,7 +174,7 @@ func (a CommandsAPI) waitForCommandFinished(commandID, contextID, clusterID stri
 			return nil
 		}
 		log.Printf("[DEBUG] Command is in %s state", commandInfo.Status)
-		return resource.RetryableError(fmt.Errorf(commandInfo.Status))
+		return resource.RetryableError(errors.New(commandInfo.Status))
 	})
 }
 

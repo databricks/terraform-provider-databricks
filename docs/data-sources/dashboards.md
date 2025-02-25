@@ -29,7 +29,7 @@ resource "databricks_permissions" "dashboards_permissions" {
 
 The following arguments are supported:
 
-* `display_name_contains` - (Optional) A **case-insensitive** substring to filter Dashboards by their display name.
+* `dashboard_name_contains` - (Optional) A **case-insensitive** substring to filter Dashboards by their name.
 
 ## Attribute Reference
 

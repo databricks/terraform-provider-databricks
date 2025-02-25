@@ -32,12 +32,12 @@ type DashboardsDataSource struct {
 }
 
 type DashboardsInfo struct {
-	DisplayNameContains types.String `tfsdk:"display_name_contains"`
-	Dashboards          types.List   `tfsdk:"dashboards"`
+	DashboardNameContains types.String `tfsdk:"dashboard_name_contains"`
+	Dashboards            types.List   `tfsdk:"dashboards"`
 }
 
 func (DashboardsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["display_name_contains"] = attrs["display_name_contains"].SetOptional()
+	attrs["dashboard_name_contains"] = attrs["dashboard_name_contains"].SetOptional()
 	attrs["dashboards"] = attrs["dashboards"].SetComputed()
 
 	return attrs
@@ -84,7 +84,7 @@ func (d *DashboardsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	dashboardName := strings.ToLower(dashboardInfo.DisplayNameContains.ValueString())
+	dashboardName := strings.ToLower(dashboardInfo.DashboardNameContains.ValueString())
 
 	dashboardsGoSdk, err := w.Lakeview.ListAll(ctx, dashboards.ListDashboardsRequest{})
 	if err != nil {

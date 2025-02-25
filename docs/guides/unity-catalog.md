@@ -184,8 +184,9 @@ resource "databricks_metastore_assignment" "default_metastore" {
   for_each             = toset(var.databricks_workspace_ids)
   workspace_id         = each.key
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
+
+
 ```
 
 ## Configure external locations and credentials

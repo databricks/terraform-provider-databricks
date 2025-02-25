@@ -117,7 +117,6 @@ resource "databricks_metastore_assignment" "this" {
   provider             = databricks.accounts
   workspace_id         = var.databricks_workspace_id
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
 ```
 

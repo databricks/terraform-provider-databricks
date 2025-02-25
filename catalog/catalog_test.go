@@ -1,12 +1,17 @@
 package catalog_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func TestUcAccCatalog(t *testing.T) {
@@ -57,6 +62,35 @@ func TestUcAccCatalogIsolated(t *testing.T) {
 	})
 }
 
+type checkResourceRecreate struct {
+	address string
+}
+
+func (c checkResourceRecreate) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	var change *tfjson.ResourceChange
+	for _, resourceChange := range req.Plan.ResourceChanges {
+		if resourceChange.Address == c.address {
+			change = resourceChange
+			break
+		}
+	}
+	if change == nil {
+		addressesWithPlannedChanges := make([]string, 0, len(req.Plan.ResourceChanges))
+		for _, change := range req.Plan.ResourceChanges {
+			addressesWithPlannedChanges = append(addressesWithPlannedChanges, change.Address)
+		}
+		resp.Error = fmt.Errorf("address %s not found in resource changes; only planned changes for addresses %s", c.address, strings.Join(addressesWithPlannedChanges, ", "))
+		return
+	}
+	if change.Change.Actions[0] != tfjson.ActionDelete {
+		plannedActions := make([]string, 0, len(change.Change.Actions))
+		for _, action := range change.Change.Actions {
+			plannedActions = append(plannedActions, string(action))
+		}
+		resp.Error = fmt.Errorf("no delete is planned for %s; planned actions are: %s", c.address, strings.Join(plannedActions, ", "))
+	}
+}
+
 func TestUcAccCatalogUpdate(t *testing.T) {
 	acceptance.LoadUcwsEnv(t)
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
@@ -102,6 +136,26 @@ func TestUcAccCatalogUpdate(t *testing.T) {
 			%s
 			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
 		}`, getPredictiveOptimizationSetting(t, false)),
+	}, acceptance.Step{
+		// Adding options should cause the catalog to be recreated.
+		Template: fmt.Sprintf(`
+		resource "databricks_catalog" "sandbox" {
+			name           = "sandbox{var.STICKY_RANDOM}"
+			comment        = "this catalog is managed by terraform - updated comment"
+			properties     = {
+				purpose = "testing"
+			}
+			options = {
+				user = "miles"
+			}
+			%s
+			owner = "{env.TEST_METASTORE_ADMIN_GROUP_NAME}"
+		}`, getPredictiveOptimizationSetting(t, false)),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceRecreate{address: "databricks_catalog.sandbox"},
+			},
+		},
 	})
 }
 

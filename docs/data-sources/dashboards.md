@@ -13,7 +13,7 @@ data "databricks_dashboards" "all" {
 
 resource "databricks_permissions" "dashboards_permissions" {
   depends = [ data.databricks_dashboards.all ]
-  for_each = data.databricks_dashboards.this.dashboards[*].dashboard_id
+  for_each = data.databricks_dashboards.all.dashboards[*].dashboard_id
 
   dashboard_id = each.value
 

@@ -5,8 +5,6 @@ subcategory: "Unity Catalog"
 
 -> This resource can only be used with a workspace-level provider.
 
--> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
-
 A credential represents an authentication and authorization mechanism for accessing services on your cloud tenant. Each credential is subject to Unity Catalog access-control policies that control which users and groups can access the credential.
 
 The type of credential to be created is determined by the `purpose` field, which should be either `SERVICE` or `STORAGE`.

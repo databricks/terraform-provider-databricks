@@ -77,6 +77,7 @@ func ResourceMetastoreAssignment() common.Resource {
 					return err
 				}
 				d.Set("metastore_id", ma.MetastoreId)
+				d.Set("default_catalog_name", ma.DefaultCatalogName)
 				d.Set("workspace_id", workspaceId)
 				return nil
 			})

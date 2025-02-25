@@ -7,6 +7,7 @@
 ### Bug Fixes
 
  * Fix automatic cluster creation for `databricks_sql_permissions` ([#4141](https://github.com/databricks/terraform-provider-databricks/pull/4141))
+ * Populate `partitions` when reading `databricks_sql_table` ([#4486](https://github.com/databricks/terraform-provider-databricks/pull/4486)).
 
 ### Documentation
 

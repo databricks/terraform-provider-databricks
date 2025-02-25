@@ -9,7 +9,7 @@
 
 ### Bug Fixes
 
- * Populate `partitions` when reading `databricks_sql_table` ([#4483](https://github.com/databricks/terraform-provider-databricks/pull/4483)).
+ * Populate `partitions` when reading `databricks_sql_table` ([#4486](https://github.com/databricks/terraform-provider-databricks/pull/4486)).
  * Delete `databricks_sql_endpoint` that failed to start ([#4520](https://github.com/databricks/terraform-provider-databricks/pull/4520))
 
 ### Documentation

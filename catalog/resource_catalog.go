@@ -94,6 +94,8 @@ func ResourceCatalog() common.Resource {
 			var updateCatalogRequest catalog.UpdateCatalog
 			common.DataToStructPointer(d, catalogSchema, &updateCatalogRequest)
 			updateCatalogRequest.Name = d.Id()
+			// Options must be set in the create request only (aside from HMS-backed catalogs).
+			updateCatalogRequest.Options = nil
 			_, err = w.Catalogs.Update(ctx, updateCatalogRequest)
 			if err != nil {
 				return err
@@ -151,6 +153,14 @@ func ResourceCatalog() common.Resource {
 			}
 
 			updateCatalogRequest.Owner = ""
+			// The only option allowed in update is "authorized_paths". All other options must be removed.
+			if opts := updateCatalogRequest.Options; opts != nil {
+				if v, ok := opts["authorized_paths"]; ok {
+					updateCatalogRequest.Options = map[string]string{"authorized_paths": v}
+				} else {
+					updateCatalogRequest.Options = nil
+				}
+			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
 
 			if err != nil {
@@ -203,6 +213,34 @@ func ResourceCatalog() common.Resource {
 				}
 			}
 			return w.Catalogs.Delete(ctx, catalog.DeleteCatalogRequest{Force: force, Name: d.Id()})
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// The only scenario in which we can update options is for the `authorized_paths` key. Any
+			// other changes to the options field will result in an error.
+			if d.HasChange("options") {
+				old, new := d.GetChange("options")
+				oldMap := old.(map[string]interface{})
+				newMap := new.(map[string]interface{})
+				delete(oldMap, "authorized_paths")
+				delete(newMap, "authorized_paths")
+				// If any attribute other than `authorized_paths` is removed, the resource should be recreated.
+				for k := range oldMap {
+					if _, ok := newMap[k]; !ok {
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
+					}
+				}
+				// If any attribute other than `authorized_paths` is added or changed, the resource should be recreated.
+				for k, v := range newMap {
+					if oldV, ok := oldMap[k]; !ok || oldV != v {
+						if err := d.ForceNew("options"); err != nil {
+							return err
+						}
+					}
+				}
+			}
+			return nil
 		},
 	}
 }

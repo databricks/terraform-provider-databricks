@@ -255,8 +255,6 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 				vpc_id = "{env.TEST_VPC_ID}"
 				subnet_id = "{env.TEST_SUBNET_ID}"
 				subnet_region = "{env.GOOGLE_REGION}"
-				pod_ip_range_name = "pods"
-				service_ip_range_name = "svc"
 			}
 		}
 		
@@ -272,11 +270,6 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 			}
 
 			network_id = databricks_mws_networks.this.network_id
-			
-			gke_config {
-				connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-				master_ip_range = "10.3.0.0/28"
-			}
 		}`,
 	})
 }
@@ -292,8 +285,6 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
 				vpc_id = "{env.VPC_NETWORK_ID}"
 				subnet_id = "{env.SUBNET_ID}"
 				subnet_region = "{env.GOOGLE_REGION}"
-				pod_ip_range_name = "{env.POD_IP_RANGE_NAME}"
-				service_ip_range_name = "{env.SVC_IP_RANGE_NAME}"
 			}
 		}
 
@@ -318,11 +309,6 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
             
             private_access_settings_id = databricks_mws_private_access_settings.this.private_access_settings_id
 			network_id = databricks_mws_networks.this.network_id
-			
-			gke_config {
-				connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-				master_ip_range = "10.3.0.0/28"
-			}
 		}`,
 	})
 }

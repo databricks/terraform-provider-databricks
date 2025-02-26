@@ -81,8 +81,8 @@ func ResourceMwsNetworks() common.Resource {
 		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
 		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
 		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids"}
-		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("pod_ip_range_name"))
-		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("pod_ip_range_name"))
+		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name"))
+		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name"))
 
 		return s
 	})

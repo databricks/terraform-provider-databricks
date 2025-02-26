@@ -61,13 +61,13 @@ type CloudResourceContainer struct {
 
 type GCPManagedNetworkConfig struct {
 	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range,omitempty"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range,omitempty"`
 }
 
 type GkeConfig struct {
-	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
-	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
+	ConnectivityType string `json:"connectivity_type,omitempty"`
+	MasterIPRange    string `json:"master_ip_range,omitempty"`
 }
 
 type externalCustomerInfo struct {
@@ -537,6 +537,9 @@ func ResourceMwsWorkspaces() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
+			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config"))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range"))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range"))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(

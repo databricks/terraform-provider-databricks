@@ -104,13 +104,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					},
 					"location":   "bcd",
 					"network_id": "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "d",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
 						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
@@ -151,12 +145,6 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "d"
-			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -185,13 +173,7 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
 						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
@@ -232,12 +214,6 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		custom_tags = {
 			SoldToCode = "1234"
@@ -266,13 +242,7 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
 						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
@@ -312,12 +282,6 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		`,
 		Gcp:    true,
@@ -342,13 +306,7 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 					"location":                   "bcd",
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
-					"gke_config": map[string]any{
-						"master_ip_range":   "e",
-						"connectivity_type": "PRIVATE_NODE_PUBLIC_MASTER",
-					},
 					"gcp_managed_network_config": map[string]any{
-						"gke_cluster_pod_ip_range":     "b",
-						"gke_cluster_service_ip_range": "c",
 						"subnet_cidr":                  "a",
 					},
 					"workspace_name": "labdata",
@@ -390,12 +348,6 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 		network_id = "net_id_a"
 		gcp_managed_network_config {
 			subnet_cidr = "a"
-			gke_cluster_pod_ip_range = "b"
-			gke_cluster_service_ip_range = "c"
-		}
-		gke_config {
-			connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-			master_ip_range = "e"
 		}
 		managed_services_customer_managed_key_id = "managed_services_cmk"
 		storage_customer_managed_key_id = "storage_cmk"
@@ -1729,12 +1681,6 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					WorkspaceName:   "labdata",
 					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
 						SubnetCIDR:               "a",
-						GKEClusterPodIPRange:     "b",
-						GKEClusterServiceIPRange: "c",
-					},
-					GkeConfig: &GkeConfig{
-						ConnectivityType: "d",
-						MasterIPRange:    "e",
 					},
 				},
 			},

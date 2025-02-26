@@ -230,10 +230,6 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
 
   token {
     comment = "Terraform"

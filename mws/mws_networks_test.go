@@ -36,8 +36,6 @@ func TestMwsAccGcpPscNetworks(t *testing.T) {
 			  vpc_id = "{env.VPC_NETWORK_ID}"
 			  subnet_id = "{env.SUBNET_ID}"
 			  subnet_region = "{env.GOOGLE_REGION}"
-			  pod_ip_range_name = "{env.POD_IP_RANGE_NAME}"
-			  service_ip_range_name = "{env.SVC_IP_RANGE_NAME}"
             }
             vpc_endpoints {
         	  rest_api = ["{env.REST_API_VPCE_ID}"]

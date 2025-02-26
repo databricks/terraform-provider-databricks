@@ -237,6 +237,8 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = var.vpc_id
     subnet_id             = var.subnet_id
     subnet_region         = var.subnet_region
+    pod_ip_range_name     = "pods"
+    service_ip_range_name = "svc"
   }
 }
 
@@ -252,6 +254,11 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
+  gke_config {
+    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+    master_ip_range   = "10.3.0.0/28"
+  }
+
   token {}
 }
 
@@ -292,6 +299,11 @@ resource "databricks_mws_workspaces" "this" {
     }
   }
 
+  gke_config {
+    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+    master_ip_range   = "10.3.0.0/28"
+  }
+
   token {}
 }
 
@@ -319,7 +331,7 @@ The following arguments are available:
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
     * `project_id` - The Google Cloud project ID, which the workspace uses to instantiate cloud resources for your workspace.
-* `gke_config` (Deprecated) - (GCP only) This field is deprecated and will be removed in a future release. A block that specifies GKE configuration for the Databricks workspace:
+* `gke_config` - (GCP only) A block that specifies GKE configuration for the Databricks workspace:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.

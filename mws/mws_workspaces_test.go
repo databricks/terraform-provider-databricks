@@ -307,7 +307,7 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 			},
 		},
 	}, acceptance.Step{
-		// Removing gke_config only triggers update and removes gke_config from the resource state.
+		// Removing gke_config is a no-op because of suppress_diff.
 		Template: commonResources + `
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
@@ -324,7 +324,7 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 		}`,
 		ConfigPlanChecks: resource.ConfigPlanChecks{
 			PreApply: []plancheck.PlanCheck{
-				checkResourceActions{"databricks_mws_workspaces.this", []tfjson.Action{tfjson.ActionUpdate}},
+				checkResourceActions{"databricks_mws_workspaces.this", []tfjson.Action{tfjson.ActionNoop}},
 			},
 		},
 		Check: func(s *terraform.State) error {

@@ -607,18 +607,10 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err != nil {
 				return err
 			}
-			// If gke_config, gcp_managed_network_config.0.gke_cluster_pod_ip_range, or
-			// gcp_managed_network_config.0.gke_cluster_service_ip_range are unset in the plan,
-			// remove them from the returned network so that they are not persisted in state.
-			if v, ok := d.Get("gke_config.#").(int); ok && v == 0 {
-				workspace.GkeConfig = nil
-			}
-			if v, ok := d.Get("gcp_managed_network_config.0.gke_cluster_pod_ip_range").(string); ok && v == "" && workspace.GCPManagedNetworkConfig != nil {
-				workspace.GCPManagedNetworkConfig.GKEClusterPodIPRange = ""
-			}
-			if v, ok := d.Get("gcp_managed_network_config.0.gke_cluster_service_ip_range").(string); ok && v == "" && workspace.GCPManagedNetworkConfig != nil {
-				workspace.GCPManagedNetworkConfig.GKEClusterServiceIPRange = ""
-			}
+			// The gke_config, gcp_managed_network_config.0.gke_cluster_pod_ip_range, and
+			// gcp_managed_network_config.0.gke_cluster_service_ip_range fields do not need
+			// to be removed from the returned plan because they are marked with "suppress_diff",
+			// so their diff will be removed anyways.
 
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
@@ -669,31 +661,14 @@ func ResourceMwsWorkspaces() common.Resource {
 			//
 			// This should only run on update, thus we skip this check if the ID is not known.
 			if d.Id() != "" {
-				gkeDeprecatedArguments := []struct {
-					key       string
-					zeroValue any
-				}{
-					{"gke_config.#", 0},
-					{"gcp_managed_network_config.0.gke_cluster_pod_ip_range", ""},
-					{"gcp_managed_network_config.0.gke_cluster_service_ip_range", ""},
-				}
-				for _, config := range gkeDeprecatedArguments {
-					if !d.HasChange(config.key) {
+				for _, key := range []string{"gke_config.#", "gcp_managed_network_config.0.gke_cluster_pod_ip_range", "gcp_managed_network_config.0.gke_cluster_service_ip_range"} {
+					// These fields are all tagged with "suppress_diff". This means that removing them from
+					// the config doesn't result in their disappearing from the diff. Thus, there is no change
+					// in the plan when these fields are removed.
+					if !d.HasChange(key) {
 						continue
 					}
-					isZero := false
-					switch v := d.Get(config.key).(type) {
-					case int:
-						isZero = v == config.zeroValue.(int)
-					case string:
-						isZero = v == config.zeroValue.(string)
-					default:
-						return fmt.Errorf("unexpected type %T for key %s when checking for deprecated GKE arguments. %s", v, v, common.TerraformBugErrorMessage)
-					}
-					if isZero {
-						continue
-					}
-					if err := d.ForceNew(config.key); err != nil {
+					if err := d.ForceNew(key); err != nil {
 						return err
 					}
 				}

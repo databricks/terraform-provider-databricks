@@ -205,6 +205,8 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
     subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
+    pod_ip_range_name     = "pods"
+    service_ip_range_name = "svc"
   }
 }
 ```
@@ -230,6 +232,10 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
+  gke_config {
+    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+    master_ip_range   = "10.3.0.0/28"
+  }
 
   token {
     comment = "Terraform"

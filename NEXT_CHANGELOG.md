@@ -19,6 +19,7 @@
 ### Documentation
 
  * Update `databricks_cluster` and `databricks_clusters` data source documentation ([#4506](https://github.com/databricks/terraform-provider-databricks/pull/4506)).
+ * Update `vector_search_index` resource documentation ([#4534](https://github.com/databricks/terraform-provider-databricks/pull/4534)).
 
 ### Exporter
 

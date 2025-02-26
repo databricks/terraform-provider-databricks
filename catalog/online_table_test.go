@@ -27,26 +27,13 @@ resource "databricks_catalog" "sandbox" {
 	force_destroy = true
   }
   
-  resource "databricks_sql_endpoint" "this" {
-	name             = "tf-{var.STICKY_RANDOM}"
-	cluster_size     = "2X-Small"
-	max_num_clusters = 1
-	warehouse_type   = "PRO"
-	tags {
-		custom_tags {
-			key   = "Owner"
-			value = "eng-dev-ecosystem-team_at_databricks.com"
-		}
-	}
-  }
-  
-  resource "databricks_sql_table" "table" {
+    resource "databricks_sql_table" "table" {
 	catalog_name       = databricks_catalog.sandbox.id
 	schema_name        = databricks_schema.things.name
 	name               = "ot_src_{var.STICKY_RANDOM}"
 	table_type         = "MANAGED"
 	data_source_format = "DELTA"
-	warehouse_id       = databricks_sql_endpoint.this.id
+	warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
   
 	column {
 	  name = "id"

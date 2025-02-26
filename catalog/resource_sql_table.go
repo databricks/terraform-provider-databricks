@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -420,6 +421,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 
 	if ti.TableType == "VIEW" {
 		// View only attributes
+		formatViewDefinition(ti)
 		if ti.ViewDefinition != oldti.ViewDefinition {
 			statements = append(statements, fmt.Sprintf("ALTER VIEW %s AS %s", ti.SQLFullName(), ti.ViewDefinition))
 		}
@@ -457,6 +459,19 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 	statements = ti.getStatementsForColumnDiffs(oldti, statements, typestring)
 
 	return statements, nil
+}
+
+// formatViewDefinition removes empty lines and changes tabs to 4 spaces
+// in order to compare view definitions correctly
+func formatViewDefinition(ti *SqlTableInfo) {
+
+	// remove empty lines
+	// 1\n\n\n2 => 1\n2
+	ti.ViewDefinition = regexp.MustCompile(`[\r\n]+`).ReplaceAllString(ti.ViewDefinition, "\n")
+
+	// change tab to 4 spaces
+	// 1\t2 => 1    2
+	ti.ViewDefinition = strings.ReplaceAll(ti.ViewDefinition, "\t", "    ")
 }
 
 func (ti *SqlTableInfo) updateTable(oldti *SqlTableInfo) error {

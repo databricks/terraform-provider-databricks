@@ -105,7 +105,7 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 					"location":   "bcd",
 					"network_id": "net_id_a",
 					"gcp_managed_network_config": map[string]any{
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -174,7 +174,7 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
 					"gcp_managed_network_config": map[string]any{
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 					"custom_tags": map[string]any{
@@ -243,7 +243,7 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
 					"gcp_managed_network_config": map[string]any{
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 				},
@@ -307,7 +307,7 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 					"private_access_settings_id": "pas_id_a",
 					"network_id":                 "net_id_a",
 					"gcp_managed_network_config": map[string]any{
-						"subnet_cidr":                  "a",
+						"subnet_cidr": "a",
 					},
 					"workspace_name": "labdata",
 					"managed_services_customer_managed_key_id": "managed_services_cmk",
@@ -1680,7 +1680,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 					DeploymentName:  "900150983cd24fb0",
 					WorkspaceName:   "labdata",
 					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
-						SubnetCIDR:               "a",
+						SubnetCIDR: "a",
 					},
 				},
 			},

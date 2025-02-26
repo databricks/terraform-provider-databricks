@@ -63,10 +63,10 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 					AccountID:   "abc",
 					NetworkName: "Open Workers",
 					GcpNetworkInfo: &GcpNetworkInfo{
-						NetworkProjectId:   "project_a",
-						VpcId:              "vpc_a",
-						SubnetId:           "subnet_a",
-						SubnetRegion:       "region_a",
+						NetworkProjectId: "project_a",
+						VpcId:            "vpc_a",
+						SubnetId:         "subnet_a",
+						SubnetRegion:     "region_a",
 					},
 				},
 				Response: Network{
@@ -111,10 +111,10 @@ func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
 					AccountID:   "abc",
 					NetworkName: "Open Workers",
 					GcpNetworkInfo: &GcpNetworkInfo{
-						NetworkProjectId:   "project_a",
-						VpcId:              "vpc_a",
-						SubnetId:           "subnet_a",
-						SubnetRegion:       "region_a",
+						NetworkProjectId: "project_a",
+						VpcId:            "vpc_a",
+						SubnetId:         "subnet_a",
+						SubnetRegion:     "region_a",
 					},
 					VPCEndpoints: &NetworkVPCEndpoints{
 						RestAPI:           []string{"rest_api_endpoint"},

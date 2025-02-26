@@ -61,13 +61,13 @@ type CloudResourceContainer struct {
 
 type GCPManagedNetworkConfig struct {
 	SubnetCIDR               string `json:"subnet_cidr" tf:"force_new"`
-	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range" tf:"force_new"`
-	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range" tf:"force_new"`
+	GKEClusterPodIPRange     string `json:"gke_cluster_pod_ip_range,omitempty"`
+	GKEClusterServiceIPRange string `json:"gke_cluster_service_ip_range,omitempty"`
 }
 
 type GkeConfig struct {
-	ConnectivityType string `json:"connectivity_type" tf:"force_new"`
-	MasterIPRange    string `json:"master_ip_range" tf:"force_new"`
+	ConnectivityType string `json:"connectivity_type,omitempty"`
+	MasterIPRange    string `json:"master_ip_range,omitempty"`
 }
 
 type externalCustomerInfo struct {
@@ -537,6 +537,9 @@ func ResourceMwsWorkspaces() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
+			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config"))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range"))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range"))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
@@ -604,6 +607,11 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err != nil {
 				return err
 			}
+			// The gke_config, gcp_managed_network_config.0.gke_cluster_pod_ip_range, and
+			// gcp_managed_network_config.0.gke_cluster_service_ip_range fields do not need
+			// to be removed from the returned plan because they are marked with "suppress_diff",
+			// so their diff will be removed anyways.
+
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
 			workspace.IsNoPublicIPEnabled = true
@@ -644,6 +652,26 @@ func ResourceMwsWorkspaces() common.Resource {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			// For `gke_config`, `gcp_managed_network_config.0.gke_cluster_pod_ip_range` or
+			// `gcp_managed_network_config.0.gke_cluster_service_ip_range`, users should be able to
+			// remove these keys without recreating the workspace as part of the GKE deprecation process.
+			//
+			// Otherwise, any change for these keys will cause the workspace resource to be recreated.
+			//
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				for _, key := range []string{"gke_config.#", "gcp_managed_network_config.0.gke_cluster_pod_ip_range", "gcp_managed_network_config.0.gke_cluster_service_ip_range"} {
+					// These fields are all tagged with "suppress_diff". This means that removing them from
+					// the config doesn't result in their disappearing from the diff. Thus, there is no change
+					// in the plan when these fields are removed.
+					if !d.HasChange(key) {
+						continue
+					}
+					if err := d.ForceNew(key); err != nil {
+						return err
+					}
+				}
 			}
 			return nil
 		},

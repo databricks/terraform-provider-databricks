@@ -18,9 +18,11 @@ func TestQualityMonitorCreateTimeseries(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQualityMonitorsAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateMonitor{
-				TableName:        "test_table",
-				OutputSchemaName: "output.schema",
-				AssetsDir:        "sample.dir",
+				TableName:            "test_table",
+				OutputSchemaName:     "output.schema",
+				AssetsDir:            "sample.dir",
+				WarehouseId:          "1234",
+				SkipBuiltinDashboard: true,
 				TimeSeries: &catalog.MonitorTimeSeries{
 					Granularities: []string{"1 day"},
 					TimestampCol:  "timestamp",
@@ -45,13 +47,18 @@ func TestQualityMonitorCreateTimeseries(t *testing.T) {
 			table_name = "test_table",
 			assets_dir = "sample.dir",
 			output_schema_name = "output.schema",
+			warehouse_id = "1234",
+			skip_builtin_dashboard = true,
 			time_series = {
 				granularities = ["1 day"],
 				timestamp_col = "timestamp"
 			} 
 		`,
 		Create: true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"warehouse_id":           "1234",
+		"skip_builtin_dashboard": true,
+	})
 }
 
 func TestQualityMonitorCreateInference(t *testing.T) {

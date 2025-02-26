@@ -35,6 +35,7 @@ resource "databricks_sql_table" "myInferenceTable" {
 	name = "bar{var.STICKY_RANDOM}_inference"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
+	warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 	
 	column {
 		name = "model_id"
@@ -63,6 +64,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -78,6 +80,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				name = "bar{var.STICKY_RANDOM}_timeseries"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"
@@ -89,6 +92,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myTimeseries.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				time_series {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -101,6 +105,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				name = "bar{var.STICKY_RANDOM}_snapshot"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"
@@ -112,6 +117,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.mySnapshot.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myTimeseries.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				snapshot {
 				} 
 			}
@@ -129,6 +135,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 				table_name = databricks_sql_table.myInferenceTable.id
 				assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 				output_schema_name = databricks_schema.things.id
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				inference_log {
 				  granularities = ["1 day"]
 				  timestamp_col = "timestamp"
@@ -144,6 +151,7 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			inference_log {
 				granularities = ["1 hour"]
 				timestamp_col = "timestamp"
@@ -228,6 +236,7 @@ func TestUcAccUpdateQualityMonitorTransitionFromPluginFw(t *testing.T) {
 			table_name = databricks_sql_table.myInferenceTable.id
 			assets_dir = "/Shared/provider-test/databricks_quality_monitoring/${databricks_sql_table.myInferenceTable.name}"
 			output_schema_name = databricks_schema.things.id
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			inference_log {
 				granularities = ["1 hour"]
 				timestamp_col = "timestamp"

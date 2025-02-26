@@ -111,10 +111,10 @@ func ResourceMwsNetworks() common.Resource {
 			// If gcp_network_info.0.pod_ip_range_name or gcp_network_info.0.service_ip_range_name are
 			// unset in the plan, remove them from the returned network so that they are not persisted
 			// in state.
-			if d.Get("gcp_network_info.0.pod_ip_range_name") == "" && network.GcpNetworkInfo != nil {
+			if v, ok := d.Get("gcp_network_info.0.pod_ip_range_name").(string); ok && v == "" && network.GcpNetworkInfo != nil {
 				network.GcpNetworkInfo.PodIpRangeName = ""
 			}
-			if d.Get("gcp_network_info.0.service_ip_range_name") == "" && network.GcpNetworkInfo != nil {
+			if v, ok := d.Get("gcp_network_info.0.service_ip_range_name").(string); ok && v == "" && network.GcpNetworkInfo != nil {
 				network.GcpNetworkInfo.ServiceIpRangeName = ""
 			}
 			return common.StructToData(network, s, d)

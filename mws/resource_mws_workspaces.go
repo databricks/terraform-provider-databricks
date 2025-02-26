@@ -607,6 +607,19 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err != nil {
 				return err
 			}
+			// If gke_config, gcp_managed_network_config.0.gke_cluster_pod_ip_range, or
+			// gcp_managed_network_config.0.gke_cluster_service_ip_range are unset in the plan,
+			// remove them from the returned network so that they are not persisted in state.
+			if v, ok := d.Get("gke_config.#").(int); ok && v == 0 {
+				workspace.GkeConfig = nil
+			}
+			if v, ok := d.Get("gcp_managed_network_config.0.gke_cluster_pod_ip_range").(string); ok && v == "" && workspace.GCPManagedNetworkConfig != nil {
+				workspace.GCPManagedNetworkConfig.GKEClusterPodIPRange = ""
+			}
+			if v, ok := d.Get("gcp_managed_network_config.0.gke_cluster_service_ip_range").(string); ok && v == "" && workspace.GCPManagedNetworkConfig != nil {
+				workspace.GCPManagedNetworkConfig.GKEClusterServiceIPRange = ""
+			}
+
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
 			workspace.IsNoPublicIPEnabled = true
@@ -647,6 +660,43 @@ func ResourceMwsWorkspaces() common.Resource {
 			old, new := d.GetChange("private_access_settings_id")
 			if old != "" && new == "" {
 				return fmt.Errorf("cannot remove private access setting from workspace")
+			}
+			// For `gke_config`, `gcp_managed_network_config.0.gke_cluster_pod_ip_range` or
+			// `gcp_managed_network_config.0.gke_cluster_service_ip_range`, users should be able to
+			// remove these keys without recreating the workspace as part of the GKE deprecation process.
+			//
+			// Otherwise, any change for these keys will cause the workspace resource to be recreated.
+			//
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				gkeDeprecatedArguments := []struct {
+					key       string
+					zeroValue any
+				}{
+					{"gke_config.#", 0},
+					{"gcp_managed_network_config.0.gke_cluster_pod_ip_range", ""},
+					{"gcp_managed_network_config.0.gke_cluster_service_ip_range", ""},
+				}
+				for _, config := range gkeDeprecatedArguments {
+					if !d.HasChange(config.key) {
+						continue
+					}
+					isZero := false
+					switch v := d.Get(config.key).(type) {
+					case int:
+						isZero = v == config.zeroValue.(int)
+					case string:
+						isZero = v == config.zeroValue.(string)
+					default:
+						return fmt.Errorf("unexpected type %T for key %s when checking for deprecated GKE arguments. %s", v, v, common.TerraformBugErrorMessage)
+					}
+					if isZero {
+						continue
+					}
+					if err := d.ForceNew(config.key); err != nil {
+						return err
+					}
+				}
 			}
 			return nil
 		},

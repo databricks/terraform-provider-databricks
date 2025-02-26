@@ -1,6 +1,20 @@
 package mws
 
-import "github.com/databricks/databricks-sdk-go/marshal"
+import (
+	"fmt"
+
+	"github.com/databricks/databricks-sdk-go/marshal"
+)
+
+const gkeDocumentationLink = "https://docs.gcp.databricks.com/..."
+
+func getGkeDeprecationMessage(fieldName string) string {
+	return fmt.Sprintf(
+		"%s is deprecated and will be removed in a future release. For more information, consult our documentation at %s",
+		fieldName,
+		gkeDocumentationLink,
+	)
+}
 
 // StsRole is the object that contains cross account role arn and external app id
 type StsRole struct {

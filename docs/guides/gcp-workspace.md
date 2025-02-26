@@ -205,8 +205,6 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
     subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
   }
 }
 ```

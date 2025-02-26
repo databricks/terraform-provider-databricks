@@ -17,8 +17,8 @@ func checkTablesDataSourcePopulated(t *testing.T) func(s *terraform.State) error
 
 		attr := r.Primary.Attributes
 
-		assert.Equal(t, s.Modules[0].Resources["databricks_table.mytable"].Primary.ID, attr["ids.0"])
-		assert.Equal(t, s.Modules[0].Resources["databricks_table.mytable_2"].Primary.ID, attr["ids.1"])
+		assert.Equal(t, s.Modules[0].Resources["databricks_sql_table.mytable"].Primary.ID, attr["ids.0"])
+		assert.Equal(t, s.Modules[0].Resources["databricks_sql_table.mytable_2"].Primary.ID, attr["ids.1"])
 
 		num_tables, _ := strconv.Atoi(s.Modules[0].Outputs["tables"].Value.(string))
 		assert.Equal(t, num_tables, 2)
@@ -45,12 +45,13 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			}
 		}
 		
-		resource "databricks_table" "mytable" {
+		resource "databricks_sql_table" "mytable" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
 			name = "bar"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
 				name      = "id"
@@ -61,12 +62,13 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			}
 		}
 
-		resource "databricks_table" "mytable_2" {
+		resource "databricks_sql_table" "mytable_2" {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name
 			name = "bar_2"
 			table_type = "MANAGED"
 			data_source_format = "DELTA"
+			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
 				name      = "id"
@@ -81,8 +83,8 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			catalog_name = databricks_catalog.sandbox.id
 			schema_name = databricks_schema.things.name			
 			depends_on = [
-				databricks_table.mytable,
-				databricks_table.mytable_2
+				databricks_sql_table.mytable,
+				databricks_sql_table.mytable_2
 			]
 		}
 		output "tables" {

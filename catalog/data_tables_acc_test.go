@@ -54,11 +54,8 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
-				name      = "id"
-				position  = 0
-				type_name = "INT"
-				type_text = "int"
-				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				name = "id"
+				type = "int"
 			}
 		}
 
@@ -71,11 +68,8 @@ func TestUcAccDataSourceTables(t *testing.T) {
 			warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			
 			column {
-				name      = "id"
-				position  = 0
-				type_name = "INT"
-				type_text = "int"
-				type_json = "{\"name\":\"id\",\"type\":\"integer\",\"nullable\":true,\"metadata\":{}}"
+				name = "id"
+				type = "int"
 			}
 		}			
 

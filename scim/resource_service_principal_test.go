@@ -245,10 +245,10 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 				},
 			},
 		},
-		Resource: ResourceServicePrincipal(),
+		Resource:      ResourceServicePrincipal(),
 		InstanceState: map[string]string{},
-		Update: true,
-		ID:     "abc",
+		Update:        true,
+		ID:            "abc",
 		HCL: `
 		display_name = "New Service Principal Display Name"
 		allow_cluster_create = false

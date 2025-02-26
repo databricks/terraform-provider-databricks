@@ -164,7 +164,7 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "EXTERNAL"
 			data_source_format = "DELTA"
-			storage_location   = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
+			storage_location   = databricks_external_location.some.url
 			comment 		   = "this table is managed by terraform"
 			owner              = "account users"
 			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"

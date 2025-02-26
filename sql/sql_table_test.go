@@ -168,6 +168,10 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			comment 		   = "this table is managed by terraform"
 			owner              = "account users"
 			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+
+			depends_on = [
+				databricks_external_location.some
+			]
 		}`,
 	})
 }

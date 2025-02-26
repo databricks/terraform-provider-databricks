@@ -137,20 +137,21 @@ func ResourceMwsNetworks() common.Resource {
 			// users should be able to remove these keys without recreating their networks as part of the
 			// GKE deprecation process.
 			//
-			// Otherwise, any change for these keys or any change for any other key will cause the
-			// network resource to be recreated.
+			// Otherwise, any change for these keys will cause the network resource to be recreated.
 			//
 			// This should only run on update, thus we skip this check if the ID is not known.
 			if d.Id() != "" {
-				for _, key := range d.GetChangedKeysPrefix("") {
+				for _, key := range []string{"gcp_network_info.0.pod_ip_range_name", "gcp_network_info.0.service_ip_range_name"} {
+					if !d.HasChange(key) {
+						continue
+					}
 					v, ok := d.Get(key).(string)
-					if ok && v == "" && (key == "gcp_network_info.0.pod_ip_range_name" || key == "gcp_network_info.0.service_ip_range_name") {
+					if ok && v == "" {
 						continue
 					}
 					if err := d.ForceNew(key); err != nil {
 						return err
 					}
-					break
 				}
 			}
 			return nil

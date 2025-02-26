@@ -108,7 +108,22 @@ func ResourceMwsNetworks() common.Resource {
 			if err != nil {
 				return err
 			}
+			// If gcp_network_info.0.pod_ip_range_name or gcp_network_info.0.service_ip_range_name are
+			// unset in the plan, remove them from the returned network so that they are not persisted
+			// in state.
+			if d.Get("gcp_network_info.0.pod_ip_range_name") == "" && network.GcpNetworkInfo != nil {
+				network.GcpNetworkInfo.PodIpRangeName = ""
+			}
+			if d.Get("gcp_network_info.0.service_ip_range_name") == "" && network.GcpNetworkInfo != nil {
+				network.GcpNetworkInfo.ServiceIpRangeName = ""
+			}
 			return common.StructToData(network, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// This will only be called when removing gcp_network_info.0.pod_ip_range_name or
+			// gcp_network_info.0.service_ip_range_name. This is a no-op and doesn't require
+			// making any API call.
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, networkID, err := p.Unpack(d)
@@ -116,6 +131,29 @@ func ResourceMwsNetworks() common.Resource {
 				return err
 			}
 			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// For `gcp_network_info.0.pod_ip_range_name` or `gcp_network_info.0.service_ip_range_name`,
+			// users should be able to remove these keys without recreating their networks as part of the
+			// GKE deprecation process.
+			//
+			// Otherwise, any change for these keys or any change for any other key will cause the
+			// network resource to be recreated.
+			//
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				for _, key := range d.GetChangedKeysPrefix("") {
+					v, ok := d.Get(key).(string)
+					if ok && v == "" && (key == "gcp_network_info.0.pod_ip_range_name" || key == "gcp_network_info.0.service_ip_range_name") {
+						continue
+					}
+					if err := d.ForceNew(key); err != nil {
+						return err
+					}
+					break
+				}
+			}
+			return nil
 		},
 	}
 }

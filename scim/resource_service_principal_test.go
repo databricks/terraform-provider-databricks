@@ -173,7 +173,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					// application ID is created by platform on AWS
 					ApplicationID: "existing-application-id",
 
-					DisplayName: "Example Service Principal",
+					DisplayName: "Existing Service Principal Display Name",
 					Active:      true,
 					ID:          "abc",
 					Entitlements: entitlements{
@@ -200,7 +200,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					// application ID is not allowed to be modified by client side on AWS
 
 					Schemas:     []URN{ServicePrincipalSchema},
-					DisplayName: "Example Service Principal",
+					DisplayName: "New Service Principal Display Name",
 					Active:      true,
 					Entitlements: entitlements{
 						{
@@ -225,7 +225,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 				Response: User{
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
-					DisplayName:   "Example Service Principal",
+					DisplayName:   "New Service Principal Display Name",
 					Active:        true,
 					Entitlements: entitlements{
 						{
@@ -246,18 +246,16 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 			},
 		},
 		Resource: ResourceServicePrincipal(),
-		InstanceState: map[string]string{
-			"display_name": "Example Service Principal",
-		},
+		InstanceState: map[string]string{},
 		Update: true,
 		ID:     "abc",
 		HCL: `
-		display_name = "Example Service Principal"
+		display_name = "New Service Principal Display Name"
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
 	}.ApplyAndExpectData(t, map[string]any{
-		"display_name":               "Example Service Principal",
+		"display_name":               "New Service Principal Display Name",
 		"allow_cluster_create":       false,
 		"allow_instance_pool_create": true,
 	})

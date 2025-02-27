@@ -63,12 +63,10 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 					AccountID:   "abc",
 					NetworkName: "Open Workers",
 					GcpNetworkInfo: &GcpNetworkInfo{
-						NetworkProjectId:   "project_a",
-						VpcId:              "vpc_a",
-						SubnetId:           "subnet_a",
-						SubnetRegion:       "region_a",
-						PodIpRangeName:     "pods",
-						ServiceIpRangeName: "svc",
+						NetworkProjectId: "project_a",
+						VpcId:            "vpc_a",
+						SubnetId:         "subnet_a",
+						SubnetRegion:     "region_a",
 					},
 				},
 				Response: Network{
@@ -97,8 +95,6 @@ func TestResourceNetworkCreate_GCP(t *testing.T) {
 			vpc_id = "vpc_a"
 			subnet_id = "subnet_a"
 			subnet_region = "region_a"
-			pod_ip_range_name = "pods"
-			service_ip_range_name = "svc"
         }
 		`,
 		Create: true,
@@ -115,12 +111,10 @@ func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
 					AccountID:   "abc",
 					NetworkName: "Open Workers",
 					GcpNetworkInfo: &GcpNetworkInfo{
-						NetworkProjectId:   "project_a",
-						VpcId:              "vpc_a",
-						SubnetId:           "subnet_a",
-						SubnetRegion:       "region_a",
-						PodIpRangeName:     "pods",
-						ServiceIpRangeName: "svc",
+						NetworkProjectId: "project_a",
+						VpcId:            "vpc_a",
+						SubnetId:         "subnet_a",
+						SubnetRegion:     "region_a",
 					},
 					VPCEndpoints: &NetworkVPCEndpoints{
 						RestAPI:           []string{"rest_api_endpoint"},
@@ -153,8 +147,6 @@ func TestResourceNetworkCreate_GCPPsc(t *testing.T) {
 			vpc_id = "vpc_a"
 			subnet_id = "subnet_a"
 			subnet_region = "region_a"
-			pod_ip_range_name = "pods"
-			service_ip_range_name = "svc"
 		}
         vpc_endpoints {
         	rest_api = ["rest_api_endpoint"]
@@ -184,8 +176,6 @@ func TestResourceNetworkCreate_ConflictErrors(t *testing.T) {
 			vpc_id = "vpc_a"
 			subnet_id = "subnet_a"
 			subnet_region = "region_a"
-			pod_ip_range_name = "pods"
-			service_ip_range_name = "svc"
         }
 		`,
 		Create: true,

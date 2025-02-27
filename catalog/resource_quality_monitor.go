@@ -90,7 +90,18 @@ func ResourceQualityMonitor() common.Resource {
 				return err
 
 			}
-			return common.StructToData(endpoint, monitorSchema, d)
+			oldWarehouseId := d.Get("warehouse_id").(string)
+			oldSkipBuiltinDashboard := d.Get("skip_builtin_dashboard").(bool)
+
+			err = common.StructToData(endpoint, monitorSchema, d)
+			if err != nil {
+				return err
+			}
+			// we need this because Get API doesn't return that information
+			d.Set("warehouse_id", oldWarehouseId)
+			d.Set("skip_builtin_dashboard", oldSkipBuiltinDashboard)
+
+			return nil
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

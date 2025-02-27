@@ -16,7 +16,7 @@ type AWSIamMount struct {
 }
 
 // Source ...
-func (m AWSIamMount) Source() string {
+func (m AWSIamMount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("s3a://%s", m.S3BucketName)
 }
 

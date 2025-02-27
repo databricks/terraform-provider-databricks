@@ -3,9 +3,12 @@ package tfschema
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -13,15 +16,29 @@ import (
 )
 
 type TestTfSdk struct {
-	Description       types.String            `tfsdk:"description" tf:""`
-	Nested            *NestedTfSdk            `tfsdk:"nested" tf:"optional"`
-	NestedSliceObject []NestedTfSdk           `tfsdk:"nested_slice_object" tf:"optional,object"`
-	Map               map[string]types.String `tfsdk:"map" tf:"optional"`
+	Description       types.String `tfsdk:"description"`
+	Nested            types.List   `tfsdk:"nested"`
+	NestedSliceObject types.List   `tfsdk:"nested_slice_object"`
+	Map               types.Map    `tfsdk:"map"`
+}
+
+func (TestTfSdk) ApplySchemaCustomizations(attrs map[string]AttributeBuilder) map[string]AttributeBuilder {
+	attrs["nested_slice_object"] = attrs["nested_slice_object"].(ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(AttributeBuilder)
+
+	return attrs
+}
+
+func (TestTfSdk) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"nested":              reflect.TypeOf(NestedTfSdk{}),
+		"nested_slice_object": reflect.TypeOf(NestedTfSdk{}),
+		"map":                 reflect.TypeOf(types.StringType),
+	}
 }
 
 type NestedTfSdk struct {
-	Name    types.String `tfsdk:"name" tf:"optional"`
-	Enabled types.Bool   `tfsdk:"enabled" tf:"optional"`
+	Name    types.String `tfsdk:"name"`
+	Enabled types.Bool   `tfsdk:"enabled"`
 }
 
 type stringLengthBetweenValidator struct {
@@ -60,16 +77,16 @@ func (v stringLengthBetweenValidator) ValidateString(ctx context.Context, req va
 }
 
 func TestCustomizeSchemaSetRequired(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetRequired("nested", "enabled")
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["enabled"].IsRequired())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["enabled"].IsRequired())
 }
 
 func TestCustomizeSchemaSetOptional(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetOptional("description")
 		return c
 	})
@@ -78,16 +95,16 @@ func TestCustomizeSchemaSetOptional(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetSensitive(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetSensitive("nested", "name")
 		return c
 	})
 
-	assert.True(t, scm.Blocks["nested"].(schema.ListNestedBlock).NestedObject.Attributes["name"].IsSensitive())
+	assert.True(t, scm.Attributes["nested"].(schema.ListNestedAttribute).NestedObject.Attributes["name"].IsSensitive())
 }
 
 func TestCustomizeSchemaSetDeprecated(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetDeprecated("deprecated", "map")
 		return c
 	})
@@ -96,7 +113,7 @@ func TestCustomizeSchemaSetDeprecated(t *testing.T) {
 }
 
 func TestCustomizeSchemaSetReadOnly(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.SetReadOnly("map")
 		return c
 	})
@@ -105,8 +122,30 @@ func TestCustomizeSchemaSetReadOnly(t *testing.T) {
 	assert.True(t, scm.Attributes["map"].IsComputed())
 }
 
+type testTfSdkListNestedAttribute struct {
+	List types.List `tfsdk:"list"`
+}
+
+func (testTfSdkListNestedAttribute) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"list": reflect.TypeOf(NestedTfSdk{}),
+	}
+}
+
+func TestCustomizeSchemaSetReadOnly_RecursivelySetsFieldsOfListNestedAttributes(t *testing.T) {
+	scm := ResourceStructToSchema(context.Background(), testTfSdkListNestedAttribute{}, func(c CustomizableSchema) CustomizableSchema {
+		c.SetReadOnly("list")
+		return c
+	})
+	for _, field := range []string{"name", "enabled"} {
+		assert.True(t, !scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsOptional())
+		assert.True(t, !scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsRequired())
+		assert.True(t, scm.Attributes["list"].(schema.ListNestedAttribute).NestedObject.Attributes[field].IsComputed())
+	}
+}
+
 func TestCustomizeSchemaAddValidator(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.AddValidator(stringLengthBetweenValidator{}, "description")
 		return c
 	})
@@ -115,7 +154,7 @@ func TestCustomizeSchemaAddValidator(t *testing.T) {
 }
 
 func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		c.AddPlanModifier(stringplanmodifier.RequiresReplace(), "description")
 		return c
 	})
@@ -124,9 +163,217 @@ func TestCustomizeSchemaAddPlanModifier(t *testing.T) {
 }
 
 func TestCustomizeSchemaObjectTypeValidatorAdded(t *testing.T) {
-	scm := ResourceStructToSchema(TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+	scm := ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
 		return c
 	})
 
-	assert.True(t, len(scm.Blocks["nested_slice_object"].(schema.ListNestedBlock).Validators) == 1)
+	assert.True(t, len(scm.Attributes["nested_slice_object"].(schema.ListNestedAttribute).Validators) == 1)
+}
+
+func TestCustomizeSchema_SetRequired_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
+			c.SetRequired("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetOptional_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
+			c.SetOptional("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetSensitive_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
+			c.SetSensitive("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetReadOnly_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
+			c.SetReadOnly("nested")
+			return c
+		})
+	})
+}
+
+func TestCustomizeSchema_SetComputed_PanicOnBlock(t *testing.T) {
+	assert.Panics(t, func() {
+		_ = ResourceStructToSchema(context.Background(), TestTfSdk{}, func(c CustomizableSchema) CustomizableSchema {
+			c.ConfigureAsSdkV2Compatible()
+			c.SetComputed("nested")
+			return c
+		})
+	})
+}
+
+type mockPlanModifier struct{}
+
+// Description implements planmodifier.List.
+func (m mockPlanModifier) Description(context.Context) string {
+	panic("unimplemented")
+}
+
+// MarkdownDescription implements planmodifier.List.
+func (m mockPlanModifier) MarkdownDescription(context.Context) string {
+	panic("unimplemented")
+}
+
+// PlanModifyList implements planmodifier.List.
+func (m mockPlanModifier) PlanModifyList(context.Context, planmodifier.ListRequest, *planmodifier.ListResponse) {
+	panic("unimplemented")
+}
+
+// PlanModifyList implements planmodifier.List.
+func (m mockPlanModifier) PlanModifyObject(context.Context, planmodifier.ObjectRequest, *planmodifier.ObjectResponse) {
+	panic("unimplemented")
+}
+
+var _ planmodifier.List = mockPlanModifier{}
+var _ planmodifier.Object = mockPlanModifier{}
+
+type mockValidator struct{}
+
+// Description implements validator.List.
+func (m mockValidator) Description(context.Context) string {
+	panic("unimplemented")
+}
+
+// MarkdownDescription implements validator.List.
+func (m mockValidator) MarkdownDescription(context.Context) string {
+	panic("unimplemented")
+}
+
+// ValidateList implements validator.List.
+func (m mockValidator) ValidateList(context.Context, validator.ListRequest, *validator.ListResponse) {
+	panic("unimplemented")
+}
+
+// ValidateList implements validator.Object.
+func (m mockValidator) ValidateObject(context.Context, validator.ObjectRequest, *validator.ObjectResponse) {
+	panic("unimplemented")
+}
+
+var _ validator.List = mockValidator{}
+var _ validator.Object = mockValidator{}
+
+func TestCustomizeSchema_ConfigureAsSdkV2Compatible(t *testing.T) {
+	v := mockValidator{}
+	pm := mockPlanModifier{}
+	testCases := []struct {
+		name        string
+		baseSchema  NestedBlockObject
+		want        NestedBlockObject
+		expectPanic bool
+	}{
+		{
+			name: "ListNestedAttribute",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"list": ListNestedAttributeBuilder{
+						NestedObject: NestedAttributeObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+			want: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Attributes: map[string]AttributeBuilder{
+								"attr": StringAttributeBuilder{},
+							},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.List{v},
+						PlanModifiers:      []planmodifier.List{pm},
+					},
+				},
+			},
+		},
+		{
+			name: "ListNestedAttribute/RecursiveBlocks",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"list": ListNestedAttributeBuilder{
+						NestedObject: NestedAttributeObject{
+							Attributes: map[string]AttributeBuilder{
+								"nested_block": ListNestedAttributeBuilder{
+									NestedObject: NestedAttributeObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: NestedBlockObject{
+				Blocks: map[string]BlockBuilder{
+					"list": ListNestedBlockBuilder{
+						NestedObject: NestedBlockObject{
+							Blocks: map[string]BlockBuilder{
+								"nested_block": ListNestedBlockBuilder{
+									NestedObject: NestedBlockObject{
+										Attributes: map[string]AttributeBuilder{
+											"attr": StringAttributeBuilder{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "SingleNestedBlock/Panics",
+			baseSchema: NestedBlockObject{
+				Attributes: map[string]AttributeBuilder{
+					"single": SingleNestedAttributeBuilder{
+						Attributes: map[string]AttributeBuilder{
+							"attr": StringAttributeBuilder{},
+						},
+						DeprecationMessage: "deprecated",
+						Validators:         []validator.Object{v},
+						PlanModifiers:      []planmodifier.Object{pm},
+					},
+				},
+			},
+			expectPanic: true,
+		},
+	}
+	for _, c := range testCases {
+		t.Run(c.name, func(t *testing.T) {
+			if c.expectPanic {
+				assert.Panics(t, func() {
+					ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
+				})
+			} else {
+				got := ConstructCustomizableSchema(c.baseSchema).ConfigureAsSdkV2Compatible()
+				assert.Equal(t, c.want, got.attr.(SingleNestedBlockBuilder).NestedObject)
+			}
+		})
+	}
 }

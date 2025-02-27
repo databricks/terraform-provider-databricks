@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -668,6 +669,15 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			partitionInfo, err := w.Tables.GetByFullName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			partitionIndexes := map[int]string{}
 			for i := range ti.ColumnInfos {
 				c := &ti.ColumnInfos[i]
 				c.Identity, err = reconstructIdentity(c)
@@ -675,6 +685,26 @@ func ResourceSqlTable() common.Resource {
 					return err
 				}
 			}
+
+			for i := range partitionInfo.Columns {
+				c := &partitionInfo.Columns[i]
+				if slices.Contains(c.ForceSendFields, "PartitionIndex") {
+					partitionIndexes[c.PartitionIndex] = c.Name
+				}
+			}
+			indexes := []int{}
+			partitions := []string{}
+
+			for index := range partitionIndexes {
+				indexes = append(indexes, index)
+			}
+			sort.Ints(indexes)
+
+			for _, p := range indexes {
+				partitions = append(partitions, partitionIndexes[p])
+			}
+
+			d.Set("partitions", partitions)
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

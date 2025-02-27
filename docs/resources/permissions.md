@@ -423,7 +423,6 @@ Valid [permission levels](https://docs.databricks.com/security/access-control/wo
 
 A folder could be specified by using either `directory_path` or `directory_id` attribute.  The value for the `directory_id` is the object ID of the resource in the Databricks Workspace that is exposed as `object_id` attribute of the `databricks_directory` resource as shown below.
 
-
 ```hcl
 resource "databricks_group" "auto" {
   display_name = "Automation"
@@ -642,6 +641,8 @@ resource "databricks_permissions" "ml_serving_usage" {
 ## Mosaic AI Vector Search usage
 
 Valid permission levels for [databricks_vector_search_endpoint](vector_search_endpoint.md) are: `CAN_USE` and `CAN_MANAGE`.
+
+-> You need to use the `endpoint_id` attribute of `databricks_vector_search_endpoint` as value for `vector_search_endpoint_id`, not the `id`!
 
 ```hcl
 resource "databricks_vector_search_endpoint" "this" {
@@ -886,6 +887,30 @@ resource "databricks_permissions" "alert_usage" {
 }
 ```
 
+## Databricks Apps usage
+
+[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) have two possible permissions: `CAN_USE` and `CAN_MANAGE`:
+
+```hcl
+resource "databricks_group" "eng" {
+  display_name = "Engineering"
+}
+
+resource "databricks_permissions" "app_usage" {
+  app_name = "myapp"
+
+  access_control {
+    group_name       = "users"
+    permission_level = "CAN_USE"
+  }
+
+  access_control {
+    group_name       = databricks_group.eng.display_name
+    permission_level = "CAN_MANAGE"
+  }
+}
+```
+
 ## Instance Profiles
 
 [Instance Profiles](instance_profile.md) are not managed by General Permissions API and therefore [databricks_group_instance_profile](group_instance_profile.md) and [databricks_user_instance_profile](user_instance_profile.md) should be used to allow usage of specific AWS EC2 IAM roles to users or groups.
@@ -900,7 +925,7 @@ General Permissions API does not apply to access control for tables and they hav
 
 ## Data Access with Unity Catalog
 
-Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) resource.
+Initially in Unity Catalog all users have no access to data, which has to be later assigned through [databricks_grants](grants.md) or [databricks_grant](grant.md) resource.
 
 ## Argument Reference
 
@@ -910,6 +935,7 @@ One type argument and at least one access control block argument are required.
 
 Exactly one of the following arguments is required:
 
+- `app_name` - [app](app.md) name
 - `cluster_id` - [cluster](cluster.md) id
 - `cluster_policy_id` - [cluster policy](cluster_policy.md) id
 - `instance_pool_id` - [instance pool](instance_pool.md) id

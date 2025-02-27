@@ -19,7 +19,7 @@ type GSMount struct {
 }
 
 // Source ...
-func (m GSMount) Source() string {
+func (m GSMount) Source(_ *common.DatabricksClient) string {
 	return fmt.Sprintf("gs://%s", m.BucketName)
 }
 

@@ -3,6 +3,7 @@ package qualitymonitor
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go"
@@ -55,10 +56,16 @@ func waitForMonitor(ctx context.Context, w *databricks.WorkspaceClient, monitor 
 }
 
 type MonitorInfoExtended struct {
-	catalog_tf.MonitorInfo
-	WarehouseId          types.String `tfsdk:"warehouse_id" tf:"optional"`
-	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard" tf:"optional"`
-	ID                   types.String `tfsdk:"id" tf:"optional,computed"` // Adding ID field to stay compatible with SDKv2
+	catalog_tf.MonitorInfo_SdkV2
+	WarehouseId          types.String `tfsdk:"warehouse_id"`
+	SkipBuiltinDashboard types.Bool   `tfsdk:"skip_builtin_dashboard"`
+	ID                   types.String `tfsdk:"id"` // Adding ID field to stay compatible with SDKv2
+}
+
+var _ pluginfwcommon.ComplexFieldTypeProvider = MonitorInfoExtended{}
+
+func (m MonitorInfoExtended) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return m.MonitorInfo_SdkV2.GetComplexFieldTypes(ctx)
 }
 
 type QualityMonitorResource struct {
@@ -70,7 +77,8 @@ func (r *QualityMonitorResource) Metadata(ctx context.Context, req resource.Meta
 }
 
 func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, MonitorInfoExtended{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.ConfigureAsSdkV2Compatible()
 		c.SetRequired("assets_dir")
 		c.SetRequired("output_schema_name")
 		c.SetReadOnly("monitor_version")
@@ -79,6 +87,10 @@ func (r *QualityMonitorResource) Schema(ctx context.Context, req resource.Schema
 		c.SetReadOnly("status")
 		c.SetReadOnly("dashboard_id")
 		c.SetReadOnly("schedule", "pause_status")
+		c.SetOptional("warehouse_id")
+		c.SetOptional("skip_builtin_dashboard")
+		c.SetComputed("id")
+		c.SetOptional("id")
 		return c
 	})
 	resp.Schema = schema.Schema{
@@ -134,6 +146,9 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 
 	// Set the ID to the table name
 	newMonitorInfoTfSDK.ID = newMonitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	newMonitorInfoTfSDK.WarehouseId = monitorInfoTfSDK.WarehouseId
+	newMonitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDK.SkipBuiltinDashboard
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
@@ -167,6 +182,20 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	var origWarehouseId types.String
+	var origSkipBuiltinDashboard types.Bool
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &origWarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &origSkipBuiltinDashboard)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if origWarehouseId.ValueString() != "" {
+		monitorInfoTfSDK.WarehouseId = origWarehouseId
+	}
+	if origSkipBuiltinDashboard.ValueBool() {
+		monitorInfoTfSDK.SkipBuiltinDashboard = origSkipBuiltinDashboard
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }
@@ -210,6 +239,12 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 
 	var newMonitorInfoTfSDK MonitorInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// We need it to fill additional fields as they are not returned by the API
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &newMonitorInfoTfSDK.WarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &newMonitorInfoTfSDK.SkipBuiltinDashboard)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

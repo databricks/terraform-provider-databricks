@@ -44,7 +44,7 @@ func (a ListNestedAttributeBuilder) BuildResourceAttribute() schema.Attribute {
 	}
 }
 
-func (a ListNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
+func (a ListNestedAttributeBuilder) SetOptional() AttributeBuilder {
 	if a.Optional && !a.Required {
 		panic("attribute is already optional")
 	}
@@ -53,7 +53,7 @@ func (a ListNestedAttributeBuilder) SetOptional() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
+func (a ListNestedAttributeBuilder) SetRequired() AttributeBuilder {
 	if !a.Optional && a.Required {
 		panic("attribute is already required")
 	}
@@ -62,7 +62,7 @@ func (a ListNestedAttributeBuilder) SetRequired() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
+func (a ListNestedAttributeBuilder) SetSensitive() AttributeBuilder {
 	if a.Sensitive {
 		panic("attribute is already sensitive")
 	}
@@ -70,7 +70,7 @@ func (a ListNestedAttributeBuilder) SetSensitive() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
+func (a ListNestedAttributeBuilder) SetComputed() AttributeBuilder {
 	if a.Computed {
 		panic("attribute is already computed")
 	}
@@ -78,13 +78,14 @@ func (a ListNestedAttributeBuilder) SetComputed() BaseSchemaBuilder {
 	return a
 }
 
-func (a ListNestedAttributeBuilder) SetReadOnly() BaseSchemaBuilder {
+func (a ListNestedAttributeBuilder) SetReadOnly() AttributeBuilder {
 	if a.Computed && !a.Optional && !a.Required {
 		panic("attribute is already read only")
 	}
 	a.Computed = true
 	a.Optional = false
 	a.Required = false
+	a.NestedObject.SetReadOnly()
 	return a
 }
 
@@ -101,4 +102,13 @@ func (a ListNestedAttributeBuilder) AddValidator(v validator.List) BaseSchemaBui
 func (a ListNestedAttributeBuilder) AddPlanModifier(v planmodifier.List) BaseSchemaBuilder {
 	a.PlanModifiers = append(a.PlanModifiers, v)
 	return a
+}
+
+func (a ListNestedAttributeBuilder) ToBlock() BlockBuilder {
+	return ListNestedBlockBuilder{
+		NestedObject:       convertAttributesToBlocks(a.NestedObject.Attributes, nil),
+		DeprecationMessage: a.DeprecationMessage,
+		Validators:         a.Validators,
+		PlanModifiers:      a.PlanModifiers,
+	}
 }

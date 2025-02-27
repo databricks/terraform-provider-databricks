@@ -10,6 +10,8 @@ To work with external tables, Unity Catalog introduces two new objects to access
 - `databricks_storage_credential` represents authentication methods to access cloud storage (e.g. an IAM role for Amazon S3 or a service principal/managed identity for Azure Storage). Storage credentials are access-controlled to determine which users can use the credential.
 - [databricks_external_location](external_location.md) are objects that combine a cloud storage path with a Storage Credential that can be used to access the location.
 
+On AWS, the IAM role for a storage credential requires a trust policy. See [documentation](https://docs.databricks.com/en/connect/unity-catalog/cloud-storage/storage-credentials.html#step-1-create-an-iam-role) for more details. The data source [databricks_aws_unity_catalog_assume_role_policy](../data-sources/aws_unity_catalog_assume_role_policy.md) can be used to create the necessary AWS Unity Catalog assume role policy.
+
 ## Example Usage
 
 For AWS
@@ -44,7 +46,7 @@ resource "databricks_storage_credential" "external_mi" {
 }
 
 resource "databricks_grants" "external_creds" {
-  storage_credential = databricks_storage_credential.external.id
+  storage_credential = databricks_storage_credential.external_mi.id
   grant {
     principal  = "Data Engineers"
     privileges = ["CREATE_EXTERNAL_TABLE"]

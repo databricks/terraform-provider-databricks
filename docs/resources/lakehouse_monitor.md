@@ -37,8 +37,8 @@ resource "databricks_sql_table" "myTestTable" {
   data_source_format = "DELTA"
 
   column {
-    name     = "timestamp"
-    type     = "int"
+    name = "timestamp"
+    type = "int"
   }
 }
 

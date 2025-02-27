@@ -530,6 +530,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("run_as").SetComputed()
 	s.SchemaPath("task", "retry_on_timeout").SetComputed()
 	s.SchemaPath("task", "for_each_task", "task", "retry_on_timeout").SetComputed()
+	s.SchemaPath("task", "spark_jar_task", "run_as_repl").SetComputed()
 	s.SchemaPath("format").SetComputed()
 
 	// Default
@@ -677,8 +678,7 @@ func (a JobsAPI) ListByName(name string, expandTasks bool) ([]Job, error) {
 
 // List all jobs
 func (a JobsAPI) List() (l []Job, err error) {
-	l, err = a.ListByName("", false)
-	return
+	return a.ListByName("", false)
 }
 
 // RunsList returns a job runs list

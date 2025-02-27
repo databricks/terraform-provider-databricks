@@ -113,7 +113,7 @@ Services are just logical groups of resources used for filtering and organizatio
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` - [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
@@ -128,15 +128,16 @@ Services are just logical groups of resources used for filtering and organizatio
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
 * `queries` - **listing** [databricks_query](../resources/query.md).
-* `repos` - **listing** [databricks_repo](../resources/repo.md)
+* `repos` - **listing** [databricks_repo](../resources/repo.md) (both classical Repos in `/Repos` and Git Folders in artbitrary locations).
 * `secrets` - **listing** [databricks_secret_scope](../resources/secret_scope.md) along with [keys](../resources/secret.md) and [ACLs](../resources/secret_acl.md).
 * `settings` - **listing** [databricks_notification_destination](../resources/notification_destination.md).
 * `sql-dashboards` - **listing** Legacy [databricks_sql_dashboard](../resources/sql_dashboard.md) along with associated [databricks_sql_widget](../resources/sql_widget.md) and [databricks_sql_visualization](../resources/sql_visualization.md).
-* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md) along with [databricks_sql_global_config](../resources/sql_global_config.md).
+* `sql-endpoints` - **listing** [databricks_sql_endpoint](../resources/sql_endpoint.md).
 * `storage` - only [databricks_dbfs_file](../resources/dbfs_file.md) and [databricks_file](../resources/file.md) referenced in other resources (libraries, init scripts, ...) will be downloaded locally and properly arranged into terraform state.
 * `uc-artifact-allowlist` - **listing** exports [databricks_artifact_allowlist](../resources/artifact_allowlist.md) resources for Unity Catalog Allow Lists attached to the current metastore.
 * `uc-catalogs` - **listing** [databricks_catalog](../resources/catalog.md) and [databricks_workspace_binding](../resources/workspace_binding.md)
 * `uc-connections` - **listing** [databricks_connection](../resources/connection.md).  *Please note that because API doesn't return sensitive fields, such as, passwords, tokens, ..., the generated `options` block could be incomplete!*
+* `uc-credentials` - **listing** exports [databricks_credential](../resources/credential.md) resources on workspace or account level.  *Please note that it will skip storage credentials! Use the `uc-storage-credentials` service for them*
 * `uc-external-locations` - **listing** exports [databricks_external_location](../resources/external_location.md) resource.
 * `uc-grants` -  [databricks_grants](../resources/grants.md). *Please note that during export the list of grants is expanded to include the identity that does the export! This is done to allow to creation of objects in case when catalogs/schemas have different owners than the current identity.*.
 * `uc-metastores` - **listing** [databricks_metastore](../resources/metastore.md) and [databricks_metastore_assignment](../resource/metastore_assignment.md) (only on account-level).  *Please note that when using workspace-level configuration, only the metastores from the workspace's region are listed!*
@@ -150,7 +151,7 @@ Services are just logical groups of resources used for filtering and organizatio
 * `uc-volumes` - **listing** (*we can't list directly, only via dependencies to top-level object*) [databricks_volume](../resources/volume.md)
 * `users` - **listing** [databricks_user](../resources/user.md) and [databricks_service_principal](../resources/service_principal.md) are written to their own file, simply because of their amount. If you use SCIM provisioning, migrating workspaces is the only use case for importing `users` service.
 * `vector-search` - **listing** exports [databricks_vector_search_endpoint](../resources/vector_search_endpoint.md) and [databricks_vector_search_index](../resources/vector_search_index.md)
-* `workspace` - **listing** [databricks_workspace_conf](../resources/workspace_conf.md) and [databricks_global_init_script](../resources/global_init_script.md)
+* `wsconf` - **listing** exports Workspace-level configuration: [databricks_workspace_conf](../resources/workspace_conf.md), [databricks_sql_global_config](../resources/sql_global_config.md) and [databricks_global_init_script](../resources/global_init_script.md).
 * `wsfiles` - **listing** [databricks_workspace_file](../resources/workspace_file.md).
 
 ## Secrets
@@ -162,7 +163,7 @@ For security reasons, [databricks_secret](../resources/secret.md) cannot contain
 To speed up export, Terraform Exporter performs many operations, such as listing & actual data exporting, in parallel using Goroutines.  Built-in defaults control the parallelism, but it's also possible to tune some parameters using environment variables specific to the exporter:
 
 * `EXPORTER_WS_LIST_PARALLELISM` (default: `5`) controls how many Goroutines are used to perform parallel listing of Databricks Workspace objects (notebooks, directories, workspace files, ...).
-* `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `100000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; default value should be ok for most cases); otherwise, there is a chance of deadlock.
+* `EXPORTER_DIRECTORIES_CHANNEL_SIZE` (default: `300000`) controls the channel's capacity when listing workspace objects. Please ensure that this value is big enough (greater than the number of directories in the workspace; default value should be ok for most cases); otherwise, there is a chance of deadlock.
 * `EXPORTER_DEDICATED_RESOUSE_CHANNELS` - by default, only specific resources (`databricks_user`, `databricks_service_principal`, `databricks_group`) have dedicated channels - the rest are handled by the shared channel.  This is done to prevent throttling by specific APIs.  You can override this by providing a comma-separated list of resources as this environment variable.
 * `EXPORTER_PARALLELISM_NNN` - number of Goroutines used to process resources of a specific type (replace `NNN` with the exact resource name, for example, `EXPORTER_PARALLELISM_databricks_notebook=10` sets the number of Goroutines for `databricks_notebook` resource to `10`).  There is a shared channel (with name `default`) for handling of resources for which there are no dedicated channels - use `EXPORTER_PARALLELISM_default` to increase its size (default size is `15`).   Defaults for some resources are defined by the `goroutinesNumber` map in `exporter/context.go` or equal to `2` if there is no value.  *Don't increase default values too much to avoid REST API throttling!*
 * `EXPORTER_DEFAULT_HANDLER_CHANNEL_SIZE` is the size of the shared channel (default: `200000`). You may need to increase it if you have a huge workspace.
@@ -179,6 +180,7 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_cluster](../resources/cluster.md) | Yes | No | Yes | No |
 | [databricks_cluster_policy](../resources/cluster_policy.md) | Yes | No | Yes | No |
 | [databricks_connection](../resources/connection.md) | Yes | Yes | Yes | No |
+| [databricks_credential](../resources/credential.md) | Yes | Yes | Yes | No |
 | [databricks_dashboard](../resources/dashboard.md) | Yes | No | Yes | No |
 | [databricks_dbfs_file](../resources/dbfs_file.md) | Yes | No | Yes | No |
 | [databricks_external_location](../resources/external_location.md) | Yes | Yes | Yes | No |

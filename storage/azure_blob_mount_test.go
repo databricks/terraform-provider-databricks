@@ -14,7 +14,7 @@ import (
 )
 
 func TestResourceAzureBlobMountCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -50,11 +50,12 @@ func TestResourceAzureBlobMountCreate(t *testing.T) {
 			"token_secret_key":     "g",
 			"token_secret_scope":   "h",
 		},
+		Azure:  true,
 		Create: true,
-	}.Apply(t)
-	require.NoError(t, err)
-	assert.Equal(t, "e", d.Id())
-	assert.Equal(t, "wasbs://c@f.blob.core.windows.net/d", d.Get("source"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":     "e",
+		"source": "wasbs://c@f.blob.core.windows.net/d",
+	})
 }
 
 func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
@@ -86,6 +87,7 @@ func TestResourceAzureBlobMountCreate_Error(t *testing.T) {
 			"token_secret_scope":   "h",
 		},
 		Create: true,
+		Azure:  true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
 	assert.Equal(t, "e", d.Id())
@@ -124,8 +126,9 @@ func TestResourceAzureBlobMountRead(t *testing.T) {
 			"token_secret_key":     "g",
 			"token_secret_scope":   "h",
 		},
-		ID:   "e",
-		Read: true,
+		ID:    "e",
+		Read:  true,
+		Azure: true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())
@@ -165,6 +168,7 @@ func TestResourceAzureBlobMountRead_NotFound(t *testing.T) {
 		ID:      "e",
 		Read:    true,
 		Removed: true,
+		Azure:   true,
 	}.ApplyNoError(t)
 }
 
@@ -198,8 +202,9 @@ func TestResourceAzureBlobMountRead_Error(t *testing.T) {
 			"token_secret_key":     "g",
 			"token_secret_scope":   "h",
 		},
-		ID:   "e",
-		Read: true,
+		ID:    "e",
+		Azure: true,
+		Read:  true,
 	}.Apply(t)
 	require.EqualError(t, err, "Some error")
 	assert.Equal(t, "e", d.Id())
@@ -239,6 +244,7 @@ func TestResourceAzureBlobMountDelete(t *testing.T) {
 		},
 		ID:     "e",
 		Delete: true,
+		Azure:  true,
 	}.Apply(t)
 	require.NoError(t, err)
 	assert.Equal(t, "e", d.Id())

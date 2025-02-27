@@ -11,17 +11,8 @@ import (
 
 // This structure contains the fields of both catalog.UpdateExternalLocation and catalog.CreateExternalLocation
 type ExternalLocationInfo struct {
-	Name           string                     `json:"name" tf:"force_new"`
-	URL            string                     `json:"url"`
-	CredentialName string                     `json:"credential_name"`
-	Comment        string                     `json:"comment,omitempty"`
-	SkipValidation bool                       `json:"skip_validation,omitempty"`
-	Owner          string                     `json:"owner,omitempty" tf:"computed"`
-	MetastoreID    string                     `json:"metastore_id,omitempty" tf:"computed"`
-	ReadOnly       bool                       `json:"read_only,omitempty"`
-	AccessPoint    string                     `json:"access_point,omitempty"`
-	EncDetails     *catalog.EncryptionDetails `json:"encryption_details,omitempty"`
-	IsolationMode  string                     `json:"isolation_mode,omitempty" tf:"computed"`
+	catalog.ExternalLocationInfo
+	SkipValidation bool `json:"skip_validation,omitempty"`
 }
 
 func ResourceExternalLocation() common.Resource {
@@ -38,8 +29,15 @@ func ResourceExternalLocation() common.Resource {
 			m["skip_validation"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old == "false" && new == "true"
 			}
-			m["url"].DiffSuppressFunc = ucDirectoryPathSlashOnlySuppressDiff
-			m["name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
+			common.CustomizeSchemaPath(m, "url").SetRequired().SetCustomSuppressDiff(ucDirectoryPathSlashOnlySuppressDiff)
+			common.CustomizeSchemaPath(m, "name").SetRequired().SetForceNew().SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
+			common.CustomizeSchemaPath(m, "credential_name").SetRequired()
+			common.CustomizeSchemaPath(m, "isolation_mode").SetComputed()
+			common.CustomizeSchemaPath(m, "owner").SetComputed()
+			common.CustomizeSchemaPath(m, "metastore_id").SetComputed()
+			for _, key := range []string{"created_at", "created_by", "credential_id", "updated_at", "updated_by", "browse_only"} {
+				common.CustomizeSchemaPath(m, key).SetReadOnly()
+			}
 			return m
 		})
 	return common.Resource{
@@ -102,7 +100,6 @@ func ResourceExternalLocation() common.Resource {
 			common.DataToStructPointer(d, s, &updateExternalLocationRequest)
 			updateExternalLocationRequest.Name = d.Id()
 			updateExternalLocationRequest.Force = force
-
 			if d.HasChange("owner") {
 				_, err = w.ExternalLocations.Update(ctx, catalog.UpdateExternalLocation{
 					Name:  updateExternalLocationRequest.Name,
@@ -118,6 +115,9 @@ func ResourceExternalLocation() common.Resource {
 			}
 			if d.HasChange("read_only") {
 				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "ReadOnly")
+			}
+			if d.HasChange("fallback") {
+				updateExternalLocationRequest.ForceSendFields = append(updateExternalLocationRequest.ForceSendFields, "Fallback")
 			}
 
 			updateExternalLocationRequest.Owner = ""

@@ -355,6 +355,7 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("autoscale", "min_workers").SetOptional()
 	s.SchemaPath("cluster_log_conf", "dbfs", "destination").SetRequired()
 	s.SchemaPath("cluster_log_conf", "s3", "destination").SetRequired()
+	s.SchemaPath("cluster_log_conf", "volumes", "destination").SetRequired()
 	s.SchemaPath("spark_version").SetRequired()
 	s.AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
@@ -697,7 +698,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, c *commo
 		return err
 	}
 	err = w.Clusters.PermanentDeleteByClusterId(ctx, d.Id())
-	if err == nil {
+	if err == nil || apierr.IsMissing(err) {
 		return nil
 	}
 	if !strings.Contains(err.Error(), "unpin the cluster first") {

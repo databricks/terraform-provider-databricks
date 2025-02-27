@@ -34,6 +34,8 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `cluster_name` - (Optional) Cluster name, which doesn’t have to be unique. If not specified at creation, the cluster name will be an empty string.
 * `spark_version` - (Required) [Runtime version](https://docs.databricks.com/runtime/index.html) of the cluster. Any supported [databricks_spark_version](../data-sources/spark_version.md) id.  We advise using [Cluster Policies](cluster_policy.md) to restrict the list of versions for simplicity while maintaining enough control.
 * `runtime_engine` - (Optional) The type of runtime engine to use. If not specified, the runtime engine type is inferred based on the spark_version value. Allowed values include: `PHOTON`, `STANDARD`.
+* `use_ml_runtime` - (Optional, Boolean, only with `kind`) Whenever ML runtime should be selected or not.  Actual runtime is determined by `spark_version` (DBR release), this field `use_ml_runtime`, and whether `node_type_id` is GPU node or not.
+* `is_single_node` - (Optional, Boolean, only with `kind`) When set to true, Databricks will automatically set single node related `custom_tags`, `spark_conf`, and `num_workers`.
 * `driver_node_type_id` - (Optional) The node type of the Spark driver. This field is optional; if unset, API will set the driver node type to the same value as `node_type_id` defined above.
 * `node_type_id` - (Required - optional if `instance_pool_id` is given) Any supported [databricks_node_type](../data-sources/node_type.md) id. If `instance_pool_id` is specified, this field is not needed.
 * `instance_pool_id` (Optional - required if `node_type_id` is not given) - To reduce cluster start time, you can attach a cluster to a [predefined pool of idle instances](instance_pool.md). When attached to a pool, a cluster allocates its driver and worker nodes from the pool. If the pool does not have sufficient idle resources to accommodate the cluster’s request, it expands by allocating new instances from the instance provider. When an attached cluster changes its state to `TERMINATED`, the instances it used are returned to the pool and reused by a different cluster.
@@ -43,8 +45,12 @@ resource "databricks_cluster" "shared_autoscaling" {
 * `autotermination_minutes` - (Optional) Automatically terminate the cluster after being inactive for this time in minutes. If specified, the threshold must be between 10 and 10000 minutes. You can also set this value to 0 to explicitly disable automatic termination. Defaults to `60`.  *We highly recommend having this setting present for Interactive/BI clusters.*
 * `enable_elastic_disk` - (Optional) If you don’t want to allocate a fixed number of EBS volumes at cluster creation time, use autoscaling local storage. With autoscaling local storage, Databricks monitors the amount of free disk space available on your cluster’s Spark workers. If a worker begins to run too low on disk, Databricks automatically attaches a new EBS volume to the worker before it runs out of disk space. EBS volumes are attached up to a limit of 5 TB of total disk space per instance (including the instance’s local storage). To scale down EBS usage, make sure you have `autotermination_minutes` and `autoscale` attributes set. More documentation available at [cluster configuration page](https://docs.databricks.com/clusters/configure.html#autoscaling-local-storage-1).
 * `enable_local_disk_encryption` - (Optional) Some instance types you use to run clusters may have locally attached disks. Databricks may store shuffle data or temporary data on these locally attached disks. To ensure that all data at rest is encrypted for all storage types, including shuffle data stored temporarily on your cluster’s local disks, you can enable local disk encryption. When local disk encryption is enabled, Databricks generates an encryption key locally unique to each cluster node and uses it to encrypt all data stored on local disks. The scope of the key is local to each cluster node and is destroyed along with the cluster node itself. During its lifetime, the key resides in memory for encryption and decryption and is stored encrypted on the disk. *Your workloads may run more slowly because of the performance impact of reading and writing encrypted data to and from local volumes. This feature is not available for all Azure Databricks subscriptions. Contact your Microsoft or Databricks account representative to request access.*
-* `data_security_mode` - (Optional) Select the security features of the cluster. [Unity Catalog requires](https://docs.databricks.com/data-governance/unity-catalog/compute.html#create-clusters--sql-warehouses-with-unity-catalog-access) `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. If omitted, default security features are enabled. To disable security features use `NONE` or legacy mode `NO_ISOLATION`. In the Databricks UI, this has been recently been renamed *Access Mode* and `USER_ISOLATION` has been renamed *Shared*, but use these terms here.
-* `single_user_name` - (Optional) The optional user name of the user to assign to an interactive cluster. This field is required when using `data_security_mode` set to `SINGLE_USER` or AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
+* `kind` - (Optional, enum) The kind of compute described by this compute specification.  Possible values (see [API docs](https://docs.databricks.com/api/workspace/clusters/create#kind) for full list): `CLASSIC_PREVIEW` (if corresponding public preview is enabled).
+* `data_security_mode` - (Optional) Select the security features of the cluster (see [API docs](https://docs.databricks.com/api/workspace/clusters/create#data_security_mode) for full list of values). [Unity Catalog requires](https://docs.databricks.com/data-governance/unity-catalog/compute.html#create-clusters--sql-warehouses-with-unity-catalog-access) `SINGLE_USER` or `USER_ISOLATION` mode. `LEGACY_PASSTHROUGH` for passthrough cluster and `LEGACY_TABLE_ACL` for Table ACL cluster. If omitted, default security features are enabled. To disable security features use `NONE` or legacy mode `NO_ISOLATION`.  If `kind` is specified, then the following options are available:
+  * `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate access mode depending on your compute configuration.
+  * `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`.
+  * `DATA_SECURITY_MODE_DEDICATED`: Alias for `SINGLE_USER`.
+* `single_user_name` - (Optional) The optional user name of the user (or group name if `kind` if specified) to assign to an interactive cluster. This field is required when using `data_security_mode` set to `SINGLE_USER` or AAD Passthrough for Azure Data Lake Storage (ADLS) with a single-user cluster (i.e., not high-concurrency clusters).
 * `idempotency_token` - (Optional) An optional token to guarantee the idempotency of cluster creation requests. If an active cluster with the provided token already exists, the request will not create a new cluster, but it will return the existing running cluster's ID instead. If you specify the idempotency token, upon failure, you can retry until the request succeeds. Databricks platform guarantees to launch exactly one cluster with that idempotency token. This token should have at most 64 characters.
 * `ssh_public_keys` - (Optional) SSH public key contents that will be added to each Spark node in this cluster. The corresponding private keys can be used to login with the user name ubuntu on port 2200. You can specify up to 10 keys.
 * `spark_env_vars` - (Optional) Map with environment variable key-value pairs to fine-tune Spark clusters. Key-value pairs of the form (X,Y) are exported (i.e., X='Y') while launching the driver and workers.
@@ -249,6 +255,16 @@ cluster_log_conf {
   s3 {
     destination = "s3://acmecorp-main/cluster-logs"
     region      = "us-east-1"
+  }
+}
+```
+
+Example of pushing all cluster logs to UC Volumes:
+
+```hcl
+cluster_log_conf {
+  volumes {
+    destination = "/Volumes/catalog/schema/cluster_logs_volume/"
   }
 }
 ```

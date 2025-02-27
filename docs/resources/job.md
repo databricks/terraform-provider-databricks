@@ -108,6 +108,7 @@ The resource supports the following arguments:
 * `health` - (Optional) An optional block that specifies the health conditions for the job [documented below](#health-configuration-block).
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
+* `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
 
 ### task Configuration Block
 
@@ -115,6 +116,7 @@ This block describes individual tasks:
 
 * `task_key` - (Required) string specifying an unique key for a given task.
 * `*_task` - (Required) one of the specific task blocks described below:
+  * `clean_rooms_notebook_task`
   * `condition_task`
   * `dbt_task`
   * `for_each_task`
@@ -144,6 +146,15 @@ This block describes individual tasks:
 * `webhook_notifications` - (Optional) (List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below.
 
 -> If no `job_cluster_key`, `existing_cluster_id`, or `new_cluster` were specified in task definition, then task will executed using serverless compute.
+
+#### clean_rooms_notebook_task Configuration Block
+
+The `clean_rooms_notebook_task` runs a clean rooms notebook.  The following attributes are supported:
+
+* `clean_room_name` (Required) The clean room that the notebook belongs to.
+* `notebook_name` (Required) Name of the notebook being run.
+* `notebook_base_parameters` (Optional) (Map) Base parameters to be used for the clean room notebook job.
+* `etag` (Optional) Checksum to validate the freshness of the notebook resource.
 
 #### condition_task Configuration Block
 
@@ -281,19 +292,32 @@ resource "databricks_job" "sql_aggregation_job" {
 
 #### library Configuration Block
 
-This block descripes an optional library to be installed on the cluster that will execute the job. For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
+This block descripes an optional library to be installed on the cluster that will execute the job (as part of a task execution). For multiple libraries, use multiple blocks. If the job specifies more than one task, these blocks needs to be placed within the task block. Please consult [libraries section of the databricks_cluster](cluster.md#library-configuration-block) resource for more information.
 
 ```hcl
 resource "databricks_job" "this" {
-  library {
-    pypi {
-      package = "databricks-mosaic==0.3.14"
+  task {
+    task_key = "some_task"
+    # ....
+    library {
+      pypi {
+        package = "databricks-mosaic==0.3.14"
+      }
     }
   }
 }
 ```
 
-#### environment Configuration Block
+#### depends_on Configuration Block
+
+This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
+
+* `task_key` - (Required) The name of the task this task depends on.
+* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
+
+-> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
+
+### environment Confaguration Block
 
 This block describes [an Environment](https://docs.databricks.com/en/compute/serverless/dependencies.html) that is used to specify libraries used by the tasks running on serverless compute.  This block contains following attributes:
 
@@ -311,15 +335,6 @@ environment {
   environment_key = "Default"
 }
 ```
-
-#### depends_on Configuration Block
-
-This block describes upstream dependencies of a given task. For multiple upstream dependencies, use multiple blocks.
-
-* `task_key` - (Required) The name of the task this task depends on.
-* `outcome` - (Optional, string) Can only be specified on condition task dependencies. The outcome of the dependent task that must be met for this task to run. Possible values are `"true"` or `"false"`.
-
--> Similar to the tasks themselves, each dependency inside the task need to be declared in alphabetical order with respect to task_key in order to get consistent Terraform diffs.
 
 ### run_as Configuration Block
 

@@ -3,6 +3,7 @@ package notificationdestinations
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -32,9 +34,23 @@ type NotificationDestinationsDataSource struct {
 }
 
 type NotificationDestinationsInfo struct {
-	DisplayNameContains      types.String                                     `tfsdk:"display_name_contains" tf:"optional"`
-	Type                     types.String                                     `tfsdk:"type" tf:"optional"`
-	NotificationDestinations []settings_tf.ListNotificationDestinationsResult `tfsdk:"notification_destinations" tf:"computed"`
+	DisplayNameContains      types.String `tfsdk:"display_name_contains"`
+	Type                     types.String `tfsdk:"type"`
+	NotificationDestinations types.List   `tfsdk:"notification_destinations"`
+}
+
+func (NotificationDestinationsInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["display_name_contains"] = attrs["display_name_contains"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+	attrs["notification_destinations"] = attrs["notification_destinations"].SetComputed()
+
+	return attrs
+}
+
+func (NotificationDestinationsInfo) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notification_destinations": reflect.TypeOf(settings_tf.ListNotificationDestinationsResult{}),
+	}
 }
 
 func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -42,7 +58,7 @@ func (d *NotificationDestinationsDataSource) Metadata(ctx context.Context, req d
 }
 
 func (d *NotificationDestinationsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(NotificationDestinationsInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, NotificationDestinationsInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,
@@ -100,7 +116,7 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	var notificationsTfSdk []settings_tf.ListNotificationDestinationsResult
+	var notificationsTfSdk []attr.Value
 	for _, notification := range notificationsGoSdk {
 		if (notificationType != "" && notification.DestinationType.String() != notificationType) ||
 			(notificationDisplayName != "" && !strings.Contains(strings.ToLower(notification.DisplayName), notificationDisplayName)) {
@@ -111,10 +127,10 @@ func (d *NotificationDestinationsDataSource) Read(ctx context.Context, req datas
 		if AppendDiagAndCheckErrors(resp, converters.GoSdkToTfSdkStruct(ctx, notification, &notificationDestination)) {
 			return
 		}
-		notificationsTfSdk = append(notificationsTfSdk, notificationDestination)
+		notificationsTfSdk = append(notificationsTfSdk, notificationDestination.ToObjectValue(ctx))
 	}
 
-	notificationInfo.NotificationDestinations = notificationsTfSdk
+	notificationInfo.NotificationDestinations = types.ListValueMust(settings_tf.ListNotificationDestinationsResult{}.Type(ctx), notificationsTfSdk)
 	resp.Diagnostics.Append(resp.State.Set(ctx, notificationInfo)...)
 
 }

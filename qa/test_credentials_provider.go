@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/databricks-sdk-go/credentials"
+	"github.com/databricks/databricks-sdk-go/config/credentials"
 )
 
 type testCredentialsProvider struct {

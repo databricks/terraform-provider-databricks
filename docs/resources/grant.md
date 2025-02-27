@@ -50,8 +50,8 @@ See [databricks_grants Catalog grants](grants.md#catalog-grants) for the list of
 
 ```hcl
 resource "databricks_catalog" "sandbox" {
-  name         = "sandbox"
-  comment      = "this catalog is managed by terraform"
+  name    = "sandbox"
+  comment = "this catalog is managed by terraform"
   properties = {
     purpose = "testing"
   }
@@ -229,6 +229,28 @@ resource "databricks_grant" "udf_data_analysts" {
 
   principal  = "Data Analysts"
   privileges = ["EXECUTE"]
+}
+```
+
+## Service credential grants
+
+See [databricks_grants Service credential grants](grants.md#service-credential-grants) for the list of privileges that apply to Service credentials.
+
+```hcl
+resource "databricks_credential" "external" {
+  name = aws_iam_role.external_data_access.name
+  aws_iam_role {
+    role_arn = aws_iam_role.external_data_access.arn
+  }
+  purpose = "SERVICE"
+  comment = "Managed by TF"
+}
+
+resource "databricks_grant" "external_creds" {
+  credential = databricks_credential.external.id
+
+  principal  = "Data Engineers"
+  privileges = ["ACCESS"]
 }
 ```
 

@@ -2,7 +2,6 @@ package sql_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"testing"
@@ -12,9 +11,6 @@ import (
 )
 
 func TestUcAccResourceSqlTable_Managed(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -27,6 +23,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				this      = "that"
 				something = "else"
@@ -55,6 +52,7 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				that      = "this"
 				something = "else2"
@@ -74,9 +72,6 @@ func TestUcAccResourceSqlTable_Managed(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -89,6 +84,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				this      = "that"
 				something = "else"
@@ -118,6 +114,7 @@ func TestUcAccResourceSqlTableWithIdentityColumn_Managed(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				that      = "this"
 				something = "else2"
@@ -167,17 +164,19 @@ func TestUcAccResourceSqlTable_External(t *testing.T) {
 			schema_name        = databricks_schema.this.name
 			table_type         = "EXTERNAL"
 			data_source_format = "DELTA"
-			storage_location   = "s3://{env.TEST_BUCKET}/some{var.RANDOM}"
+			storage_location   = databricks_external_location.some.url
 			comment 		   = "this table is managed by terraform"
 			owner              = "account users"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+
+			depends_on = [
+				databricks_external_location.some
+			]
 		}`,
 	})
 }
 
 func TestUcAccResourceSqlTable_View(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -193,6 +192,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			data_source_format = "DELTA"
 			comment 		   = "this table is managed by terraform..."
 			owner              = "account users"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 			column {
 				name      = "id"
@@ -212,6 +212,7 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 			table_type         = "VIEW"
 			comment 		   = "this view is managed by terraform..."
 			view_definition    = format("SELECT id, name FROM %s", databricks_sql_table.this.id)
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 			column {
 				name      = "id"
@@ -226,24 +227,8 @@ func TestUcAccResourceSqlTable_View(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
-		resource "databricks_sql_endpoint" "this" {
-			name = "tf-{var.RANDOM}"
-			cluster_size = "2X-Small"
-			max_num_clusters = 1
-
-			tags {
-				custom_tags {
-					key   = "Owner"
-					value = "eng-dev-ecosystem-team@databricks.com"
-				}
-			}
-		}
-
 		resource "databricks_schema" "this" {
 			name         = "{var.STICKY_RANDOM}"
 			catalog_name = "main"
@@ -254,7 +239,7 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
-			warehouse_id       = databricks_sql_endpoint.this.id
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				them      = "that"
 				something = "else"
@@ -277,9 +262,6 @@ func TestUcAccResourceSqlTable_WarehousePartition(t *testing.T) {
 	})
 }
 func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_schema" "this" {
@@ -292,6 +274,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				them      = "that"
 				something = "else"
@@ -323,6 +306,7 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				them      = "that"
 				something = "else"
@@ -359,6 +343,7 @@ func constructManagedSqlTableTemplate(tableName string, columnInfos []catalog.Sq
 			catalog_name       = "main"
 			schema_name        = databricks_schema.this.name
 			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 			properties         = {
 				"this"                        = "that"
 				"something"                   = "else"
@@ -381,9 +366,6 @@ var inlineAndMembershipChangeErrorPattern = "detected changes in both number of 
 var inlineAndMembershipChangeErrorRegex = regexp.MustCompile(inlineAndMembershipChangeErrorPattern)
 
 func TestUcAccResourceSqlTable_RenameColumn(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -406,9 +388,6 @@ func constructManagedSqlTableTemplateWithColumnTypeUpdates(tableName string, col
 }
 
 func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	columnName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
@@ -448,9 +427,6 @@ func TestUcAccResourceSqlTable_ColumnTypeSuppressDiff(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -460,9 +436,6 @@ func TestUcAccResourceSqlTable_AddColumnComment(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -472,9 +445,6 @@ func TestUcAccResourceSqlTable_DropColumnNullable(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -484,9 +454,6 @@ func TestUcAccResourceSqlTable_MultipleColumnUpdates(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
@@ -498,9 +465,6 @@ func TestUcAccResourceSqlTable_ChangeColumnTypeThrows(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
@@ -513,9 +477,6 @@ func TestUcAccResourceSqlTable_DropColumn(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{
@@ -529,9 +490,6 @@ func TestUcAccResourceSqlTable_DropMultipleColumns(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -544,9 +502,6 @@ func TestUcAccResourceSqlTable_AddColumn(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -560,10 +515,6 @@ func TestUcAccResourceSqlTable_AddMultipleColumns(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
-
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{{Name: "name", Type: "string", Nullable: true, Comment: "comment"}}),
@@ -577,10 +528,6 @@ func TestUcAccResourceSqlTable_AddColumnAndUpdateThrows(t *testing.T) {
 }
 
 func TestUcAccResourceSqlTable_DropColumnAndUpdateThrows(t *testing.T) {
-	if os.Getenv("GOOGLE_CREDENTIALS") != "" {
-		acceptance.Skipf(t)("databricks_sql_table resource not available on GCP")
-	}
-
 	tableName := acceptance.RandomName()
 	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
 		Template: constructManagedSqlTableTemplate(tableName, []catalog.SqlColumnInfo{

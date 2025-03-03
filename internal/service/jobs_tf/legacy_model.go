@@ -167,10 +167,9 @@ type BaseRun_SdkV2 struct {
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from
-	// performance_target depending on if the job was eligible to be
-	// cost-optimized (e.g. contains at least 1 serverless task) or if we
-	// specifically override the value for the run (ex. RunNow).
+	// run during execution. effective_performance_target can differ from the
+	// client-set performance_target depending on if the job was eligible to be
+	// cost-optimized.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
@@ -1439,6 +1438,65 @@ func (o *ClusterSpec_SdkV2) SetNewCluster(ctx context.Context, v compute_tf.Clus
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["new_cluster"]
 	o.NewCluster = types.ListValueMust(t, vs)
+}
+
+// Next field: 4
+type ComputeConfig_SdkV2 struct {
+	// IDof the GPU pool to use.
+	GpuNodePoolId types.String `tfsdk:"gpu_node_pool_id"`
+	// GPU type.
+	GpuType types.String `tfsdk:"gpu_type"`
+	// Number of GPUs.
+	NumGpus types.Int64 `tfsdk:"num_gpus"`
+}
+
+func (newState *ComputeConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ComputeConfig_SdkV2) {
+}
+
+func (newState *ComputeConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState ComputeConfig_SdkV2) {
+}
+
+func (c ComputeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["gpu_node_pool_id"] = attrs["gpu_node_pool_id"].SetRequired()
+	attrs["gpu_type"] = attrs["gpu_type"].SetOptional()
+	attrs["num_gpus"] = attrs["num_gpus"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ComputeConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ComputeConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ComputeConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ComputeConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"gpu_node_pool_id": o.GpuNodePoolId,
+			"gpu_type":         o.GpuType,
+			"num_gpus":         o.NumGpus,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ComputeConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"gpu_node_pool_id": types.StringType,
+			"gpu_type":         types.StringType,
+			"num_gpus":         types.Int64Type,
+		},
+	}
 }
 
 type ConditionTask_SdkV2 struct {
@@ -3546,6 +3604,136 @@ func (o ForEachTaskTaskRunStats_SdkV2) Type(ctx context.Context) attr.Type {
 			"total_iterations":     types.Int64Type,
 		},
 	}
+}
+
+// Next field: 9
+type GenAiComputeTask_SdkV2 struct {
+	// Command launcher to run the actual script, e.g. bash, python etc.
+	Command types.String `tfsdk:"command"`
+	// Next field: 4
+	Compute types.List `tfsdk:"compute"`
+	// Runtime image
+	DlRuntimeImage types.String `tfsdk:"dl_runtime_image"`
+	// Optional string containing the name of the MLflow experiment to log the
+	// run to. If name is not found, backend will create the mlflow experiment
+	// using the name.
+	MlflowExperimentName types.String `tfsdk:"mlflow_experiment_name"`
+	// Optional location type of the training script. When set to `WORKSPACE`,
+	// the script will be retrieved from the local Databricks workspace. When
+	// set to `GIT`, the script will be retrieved from a Git repository defined
+	// in `git_source`. If the value is empty, the task will use `GIT` if
+	// `git_source` is defined and `WORKSPACE` otherwise. * `WORKSPACE`: Script
+	// is located in Databricks workspace. * `GIT`: Script is located in cloud
+	// Git provider.
+	Source types.String `tfsdk:"source"`
+	// The training script file path to be executed. Cloud file URIs (such as
+	// dbfs:/, s3:/, adls:/, gcs:/) and workspace paths are supported. For
+	// python files stored in the Databricks workspace, the path must be
+	// absolute and begin with `/`. For files stored in a remote repository, the
+	// path must be relative. This field is required.
+	TrainingScriptPath types.String `tfsdk:"training_script_path"`
+	// Optional string containing model parameters passed to the training script
+	// in yaml format. If present, then the content in yaml_parameters_file_path
+	// will be ignored.
+	YamlParameters types.String `tfsdk:"yaml_parameters"`
+	// Optional path to a YAML file containing model parameters passed to the
+	// training script.
+	YamlParametersFilePath types.String `tfsdk:"yaml_parameters_file_path"`
+}
+
+func (newState *GenAiComputeTask_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenAiComputeTask_SdkV2) {
+}
+
+func (newState *GenAiComputeTask_SdkV2) SyncEffectiveFieldsDuringRead(existingState GenAiComputeTask_SdkV2) {
+}
+
+func (c GenAiComputeTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["command"] = attrs["command"].SetOptional()
+	attrs["compute"] = attrs["compute"].SetOptional()
+	attrs["compute"] = attrs["compute"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dl_runtime_image"] = attrs["dl_runtime_image"].SetRequired()
+	attrs["mlflow_experiment_name"] = attrs["mlflow_experiment_name"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["training_script_path"] = attrs["training_script_path"].SetOptional()
+	attrs["yaml_parameters"] = attrs["yaml_parameters"].SetOptional()
+	attrs["yaml_parameters_file_path"] = attrs["yaml_parameters_file_path"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenAiComputeTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenAiComputeTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"compute": reflect.TypeOf(ComputeConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenAiComputeTask_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GenAiComputeTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"command":                   o.Command,
+			"compute":                   o.Compute,
+			"dl_runtime_image":          o.DlRuntimeImage,
+			"mlflow_experiment_name":    o.MlflowExperimentName,
+			"source":                    o.Source,
+			"training_script_path":      o.TrainingScriptPath,
+			"yaml_parameters":           o.YamlParameters,
+			"yaml_parameters_file_path": o.YamlParametersFilePath,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenAiComputeTask_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"command": types.StringType,
+			"compute": basetypes.ListType{
+				ElemType: ComputeConfig_SdkV2{}.Type(ctx),
+			},
+			"dl_runtime_image":          types.StringType,
+			"mlflow_experiment_name":    types.StringType,
+			"source":                    types.StringType,
+			"training_script_path":      types.StringType,
+			"yaml_parameters":           types.StringType,
+			"yaml_parameters_file_path": types.StringType,
+		},
+	}
+}
+
+// GetCompute returns the value of the Compute field in GenAiComputeTask_SdkV2 as
+// a ComputeConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenAiComputeTask_SdkV2) GetCompute(ctx context.Context) (ComputeConfig_SdkV2, bool) {
+	var e ComputeConfig_SdkV2
+	if o.Compute.IsNull() || o.Compute.IsUnknown() {
+		return e, false
+	}
+	var v []ComputeConfig_SdkV2
+	d := o.Compute.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCompute sets the value of the Compute field in GenAiComputeTask_SdkV2.
+func (o *GenAiComputeTask_SdkV2) SetCompute(ctx context.Context, v ComputeConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["compute"]
+	o.Compute = types.ListValueMust(t, vs)
 }
 
 // Get job permission levels
@@ -9401,10 +9589,9 @@ type Run_SdkV2 struct {
 	// Description of the run
 	Description types.String `tfsdk:"description"`
 	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from
-	// performance_target depending on if the job was eligible to be
-	// cost-optimized (e.g. contains at least 1 serverless task) or if we
-	// specifically override the value for the run (ex. RunNow).
+	// run during execution. effective_performance_target can differ from the
+	// client-set performance_target depending on if the job was eligible to be
+	// cost-optimized.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
@@ -10792,8 +10979,8 @@ type RunNow_SdkV2 struct {
 	// provided, all tasks in the job will be run.
 	Only types.List `tfsdk:"only"`
 	// PerformanceTarget defines how performant or cost efficient the execution
-	// of run on serverless compute should be. For RunNow request, the run will
-	// execute with this settings instead of ones defined in job.
+	// of run on serverless compute should be. For RunNow, this performance
+	// target will override the target defined on the job-level.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
@@ -12221,10 +12408,9 @@ type RunTask_SdkV2 struct {
 	// do not execute and are immediately skipped as soon as they are unblocked.
 	Disabled types.Bool `tfsdk:"disabled"`
 	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from
-	// performance_target depending on if the job was eligible to be
-	// cost-optimized (e.g. contains at least 1 serverless task) or if an
-	// override was provided for the run (ex. RunNow).
+	// run during execution. effective_performance_target can differ from the
+	// client-set performance_target depending on if the job was eligible to be
+	// cost-optimized.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
@@ -12252,6 +12438,8 @@ type RunTask_SdkV2 struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.List `tfsdk:"for_each_task"`
+	// Next field: 9
+	GenAiComputeTask types.List `tfsdk:"gen_ai_compute_task"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
 	// notebook, dbt, Python script, and SQL File tasks. If `git_source` is set,
@@ -12387,6 +12575,8 @@ func (c RunTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["git_source"] = attrs["git_source"].SetOptional()
 	attrs["git_source"] = attrs["git_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
@@ -12448,6 +12638,7 @@ func (a RunTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]refl
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
 		"for_each_task":             reflect.TypeOf(RunForEachTask_SdkV2{}),
+		"gen_ai_compute_task":       reflect.TypeOf(GenAiComputeTask_SdkV2{}),
 		"git_source":                reflect.TypeOf(GitSource_SdkV2{}),
 		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
 		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
@@ -12490,6 +12681,7 @@ func (o RunTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue 
 			"execution_duration":           o.ExecutionDuration,
 			"existing_cluster_id":          o.ExistingClusterId,
 			"for_each_task":                o.ForEachTask,
+			"gen_ai_compute_task":          o.GenAiComputeTask,
 			"git_source":                   o.GitSource,
 			"job_cluster_key":              o.JobClusterKey,
 			"library":                      o.Libraries,
@@ -12552,6 +12744,9 @@ func (o RunTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
 				ElemType: RunForEachTask_SdkV2{}.Type(ctx),
+			},
+			"gen_ai_compute_task": basetypes.ListType{
+				ElemType: GenAiComputeTask_SdkV2{}.Type(ctx),
 			},
 			"git_source": basetypes.ListType{
 				ElemType: GitSource_SdkV2{}.Type(ctx),
@@ -12795,6 +12990,32 @@ func (o *RunTask_SdkV2) SetForEachTask(ctx context.Context, v RunForEachTask_Sdk
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
 	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetGenAiComputeTask returns the value of the GenAiComputeTask field in RunTask_SdkV2 as
+// a GenAiComputeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+	var e GenAiComputeTask_SdkV2
+	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+		return e, false
+	}
+	var v []GenAiComputeTask_SdkV2
+	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGenAiComputeTask sets the value of the GenAiComputeTask field in RunTask_SdkV2.
+func (o *RunTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	o.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetGitSource returns the value of the GitSource field in RunTask_SdkV2 as
@@ -15247,6 +15468,8 @@ type SubmitTask_SdkV2 struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.List `tfsdk:"for_each_task"`
+	// Next field: 9
+	GenAiComputeTask types.List `tfsdk:"gen_ai_compute_task"`
 	// An optional set of health rules that can be defined for this job.
 	Health types.List `tfsdk:"health"`
 	// An optional list of libraries to be installed on the cluster. The default
@@ -15336,6 +15559,8 @@ func (c SubmitTask_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["library"] = attrs["library"].SetOptional()
@@ -15383,6 +15608,7 @@ func (a SubmitTask_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]r
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications_SdkV2{}),
 		"for_each_task":             reflect.TypeOf(ForEachTask_SdkV2{}),
+		"gen_ai_compute_task":       reflect.TypeOf(GenAiComputeTask_SdkV2{}),
 		"health":                    reflect.TypeOf(JobsHealthRules_SdkV2{}),
 		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
 		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
@@ -15415,6 +15641,7 @@ func (o SubmitTask_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
 			"for_each_task":             o.ForEachTask,
+			"gen_ai_compute_task":       o.GenAiComputeTask,
 			"health":                    o.Health,
 			"library":                   o.Libraries,
 			"new_cluster":               o.NewCluster,
@@ -15458,6 +15685,9 @@ func (o SubmitTask_SdkV2) Type(ctx context.Context) attr.Type {
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
 				ElemType: ForEachTask_SdkV2{}.Type(ctx),
+			},
+			"gen_ai_compute_task": basetypes.ListType{
+				ElemType: GenAiComputeTask_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
 				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
@@ -15659,6 +15889,32 @@ func (o *SubmitTask_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_Sdk
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
 	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetGenAiComputeTask returns the value of the GenAiComputeTask field in SubmitTask_SdkV2 as
+// a GenAiComputeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+	var e GenAiComputeTask_SdkV2
+	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+		return e, false
+	}
+	var v []GenAiComputeTask_SdkV2
+	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGenAiComputeTask sets the value of the GenAiComputeTask field in SubmitTask_SdkV2.
+func (o *SubmitTask_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	o.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in SubmitTask_SdkV2 as
@@ -16138,6 +16394,8 @@ type Task_SdkV2 struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.List `tfsdk:"for_each_task"`
+	// Next field: 9
+	GenAiComputeTask types.List `tfsdk:"gen_ai_compute_task"`
 	// An optional set of health rules that can be defined for this job.
 	Health types.List `tfsdk:"health"`
 	// If job_cluster_key, this task is executed reusing the cluster specified
@@ -16248,6 +16506,8 @@ func (c Task_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["existing_cluster_id"] = attrs["existing_cluster_id"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].SetOptional()
 	attrs["for_each_task"] = attrs["for_each_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].SetOptional()
+	attrs["gen_ai_compute_task"] = attrs["gen_ai_compute_task"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["health"] = attrs["health"].SetOptional()
 	attrs["health"] = attrs["health"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["job_cluster_key"] = attrs["job_cluster_key"].SetOptional()
@@ -16299,6 +16559,7 @@ func (a Task_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"depends_on":                reflect.TypeOf(TaskDependency_SdkV2{}),
 		"email_notifications":       reflect.TypeOf(TaskEmailNotifications_SdkV2{}),
 		"for_each_task":             reflect.TypeOf(ForEachTask_SdkV2{}),
+		"gen_ai_compute_task":       reflect.TypeOf(GenAiComputeTask_SdkV2{}),
 		"health":                    reflect.TypeOf(JobsHealthRules_SdkV2{}),
 		"library":                   reflect.TypeOf(compute_tf.Library_SdkV2{}),
 		"new_cluster":               reflect.TypeOf(compute_tf.ClusterSpec_SdkV2{}),
@@ -16332,6 +16593,7 @@ func (o Task_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"environment_key":           o.EnvironmentKey,
 			"existing_cluster_id":       o.ExistingClusterId,
 			"for_each_task":             o.ForEachTask,
+			"gen_ai_compute_task":       o.GenAiComputeTask,
 			"health":                    o.Health,
 			"job_cluster_key":           o.JobClusterKey,
 			"library":                   o.Libraries,
@@ -16380,6 +16642,9 @@ func (o Task_SdkV2) Type(ctx context.Context) attr.Type {
 			"existing_cluster_id": types.StringType,
 			"for_each_task": basetypes.ListType{
 				ElemType: ForEachTask_SdkV2{}.Type(ctx),
+			},
+			"gen_ai_compute_task": basetypes.ListType{
+				ElemType: GenAiComputeTask_SdkV2{}.Type(ctx),
 			},
 			"health": basetypes.ListType{
 				ElemType: JobsHealthRules_SdkV2{}.Type(ctx),
@@ -16585,6 +16850,32 @@ func (o *Task_SdkV2) SetForEachTask(ctx context.Context, v ForEachTask_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["for_each_task"]
 	o.ForEachTask = types.ListValueMust(t, vs)
+}
+
+// GetGenAiComputeTask returns the value of the GenAiComputeTask field in Task_SdkV2 as
+// a GenAiComputeTask_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task_SdkV2) GetGenAiComputeTask(ctx context.Context) (GenAiComputeTask_SdkV2, bool) {
+	var e GenAiComputeTask_SdkV2
+	if o.GenAiComputeTask.IsNull() || o.GenAiComputeTask.IsUnknown() {
+		return e, false
+	}
+	var v []GenAiComputeTask_SdkV2
+	d := o.GenAiComputeTask.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGenAiComputeTask sets the value of the GenAiComputeTask field in Task_SdkV2.
+func (o *Task_SdkV2) SetGenAiComputeTask(ctx context.Context, v GenAiComputeTask_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gen_ai_compute_task"]
+	o.GenAiComputeTask = types.ListValueMust(t, vs)
 }
 
 // GetHealth returns the value of the Health field in Task_SdkV2 as

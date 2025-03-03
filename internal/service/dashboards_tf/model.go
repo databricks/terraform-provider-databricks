@@ -979,8 +979,11 @@ func (o ExecuteQueryResponse) Type(ctx context.Context) attr.Type {
 
 // Genie AI Response
 type GenieAttachment struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"attachment_id"`
+	// Query Attachment if Genie responds with a SQL query
 	Query types.Object `tfsdk:"query"`
-
+	// Text Attachment if Genie responds with text
 	Text types.Object `tfsdk:"text"`
 }
 
@@ -991,6 +994,7 @@ func (newState *GenieAttachment) SyncEffectiveFieldsDuringRead(existingState Gen
 }
 
 func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["attachment_id"] = attrs["attachment_id"].SetOptional()
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["text"] = attrs["text"].SetOptional()
 
@@ -1006,7 +1010,7 @@ func (c GenieAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 // SDK values.
 func (a GenieAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"query": reflect.TypeOf(QueryAttachment{}),
+		"query": reflect.TypeOf(GenieQueryAttachment{}),
 		"text":  reflect.TypeOf(TextAttachment{}),
 	}
 }
@@ -1018,8 +1022,9 @@ func (o GenieAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"query": o.Query,
-			"text":  o.Text,
+			"attachment_id": o.AttachmentId,
+			"query":         o.Query,
+			"text":          o.Text,
 		})
 }
 
@@ -1027,21 +1032,22 @@ func (o GenieAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GenieAttachment) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query": QueryAttachment{}.Type(ctx),
-			"text":  TextAttachment{}.Type(ctx),
+			"attachment_id": types.StringType,
+			"query":         GenieQueryAttachment{}.Type(ctx),
+			"text":          TextAttachment{}.Type(ctx),
 		},
 	}
 }
 
 // GetQuery returns the value of the Query field in GenieAttachment as
-// a QueryAttachment value.
+// a GenieQueryAttachment value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *GenieAttachment) GetQuery(ctx context.Context) (QueryAttachment, bool) {
-	var e QueryAttachment
+func (o *GenieAttachment) GetQuery(ctx context.Context) (GenieQueryAttachment, bool) {
+	var e GenieQueryAttachment
 	if o.Query.IsNull() || o.Query.IsUnknown() {
 		return e, false
 	}
-	var v []QueryAttachment
+	var v []GenieQueryAttachment
 	d := o.Query.As(ctx, &v, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
@@ -1056,7 +1062,7 @@ func (o *GenieAttachment) GetQuery(ctx context.Context) (QueryAttachment, bool) 
 }
 
 // SetQuery sets the value of the Query field in GenieAttachment.
-func (o *GenieAttachment) SetQuery(ctx context.Context, v QueryAttachment) {
+func (o *GenieAttachment) SetQuery(ctx context.Context, v GenieQueryAttachment) {
 	vs := v.ToObjectValue(ctx)
 	o.Query = vs
 }
@@ -1090,9 +1096,11 @@ func (o *GenieAttachment) SetText(ctx context.Context, v TextAttachment) {
 }
 
 type GenieConversation struct {
+	// Conversation ID
+	ConversationId types.String `tfsdk:"conversation_id"`
 	// Timestamp when the message was created
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
-	// Conversation ID
+	// Conversation ID. Legacy identifier, use conversation_id instead
 	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
@@ -1111,6 +1119,7 @@ func (newState *GenieConversation) SyncEffectiveFieldsDuringRead(existingState G
 }
 
 func (c GenieConversation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["conversation_id"] = attrs["conversation_id"].SetRequired()
 	attrs["created_timestamp"] = attrs["created_timestamp"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
@@ -1139,6 +1148,7 @@ func (o GenieConversation) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"conversation_id":        o.ConversationId,
 			"created_timestamp":      o.CreatedTimestamp,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
@@ -1152,6 +1162,7 @@ func (o GenieConversation) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o GenieConversation) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"conversation_id":        types.StringType,
 			"created_timestamp":      types.Int64Type,
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
@@ -1312,7 +1323,7 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 	}
 }
 
-// Get conversation message SQL query result
+// [Deprecated] Get conversation message SQL query result
 type GenieGetMessageQueryResultRequest struct {
 	// Conversation ID
 	ConversationId types.String `tfsdk:"-"`
@@ -1436,7 +1447,7 @@ func (o *GenieGetMessageQueryResultResponse) SetStatementResponse(ctx context.Co
 	o.StatementResponse = vs
 }
 
-// Get conversation message SQL query result by attachment id
+// Get conversation message SQL query result
 type GenieGetQueryResultByAttachmentRequest struct {
 	// Attachment ID
 	AttachmentId types.String `tfsdk:"-"`
@@ -1485,8 +1496,45 @@ func (o GenieGetQueryResultByAttachmentRequest) Type(ctx context.Context) attr.T
 	}
 }
 
+// Get details of a Genie Space
+type GenieGetSpaceRequest struct {
+	// The ID associated with the Genie space
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetSpaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetSpaceRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetSpaceRequest
+// only implements ToObjectValue() and Type().
+func (o GenieGetSpaceRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"space_id": o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetSpaceRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"space_id": types.StringType,
+		},
+	}
+}
+
 type GenieMessage struct {
-	// AI produced response to the message
+	// AI-generated response to the message
 	Attachments types.List `tfsdk:"attachments"`
 	// User message content
 	Content types.String `tfsdk:"content"`
@@ -1494,34 +1542,35 @@ type GenieMessage struct {
 	ConversationId types.String `tfsdk:"conversation_id"`
 	// Timestamp when the message was created
 	CreatedTimestamp types.Int64 `tfsdk:"created_timestamp"`
-	// Error message if AI failed to respond to the message
+	// Error message if Genie failed to respond to the message
 	Error types.Object `tfsdk:"error"`
-	// Message ID
+	// Message ID. Legacy identifier, use message_id instead
 	Id types.String `tfsdk:"id"`
 	// Timestamp when the message was last updated
 	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-	// The result of SQL query if the message has a query attachment
+	// Message ID
+	MessageId types.String `tfsdk:"message_id"`
+	// The result of SQL query if the message includes a query attachment.
+	// Deprecated. Use `query_result_metadata` in `GenieQueryAttachment`
+	// instead.
 	QueryResult types.Object `tfsdk:"query_result"`
 	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
-	// MesssageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
+	// MessageStatus. The possible values are: * `FETCHING_METADATA`: Fetching
 	// metadata from the data sources. * `FILTERING_CONTEXT`: Running smart
 	// context step to determine relevant context. * `ASKING_AI`: Waiting for
-	// the LLM to respond to the users question. * `PENDING_WAREHOUSE`: Waiting
+	// the LLM to respond to the user's question. * `PENDING_WAREHOUSE`: Waiting
 	// for warehouse before the SQL query can start executing. *
-	// `EXECUTING_QUERY`: Executing AI provided SQL query. Get the SQL query
+	// `EXECUTING_QUERY`: Executing a generated SQL query. Get the SQL query
 	// result by calling
-	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
-	// **Important: The message status will stay in the `EXECUTING_QUERY` until
-	// a client calls
-	// [getMessageQueryResult](:method:genie/getMessageQueryResult)**. *
-	// `FAILED`: Generating a response or the executing the query failed. Please
-	// see `error` field. * `COMPLETED`: Message processing is completed.
-	// Results are in the `attachments` field. Get the SQL query result by
-	// calling [getMessageQueryResult](:method:genie/getMessageQueryResult) API.
-	// * `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL
-	// result is not available anymore. The user needs to execute the query
-	// again. * `CANCELLED`: Message has been cancelled.
+	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API. *
+	// `FAILED`: The response generation or query execution failed. See `error`
+	// field. * `COMPLETED`: Message processing is completed. Results are in the
+	// `attachments` field. Get the SQL query result by calling
+	// [getMessageQueryResult](:method:genie/getMessageQueryResult) API. *
+	// `SUBMITTED`: Message has been submitted. * `QUERY_RESULT_EXPIRED`: SQL
+	// result is not available anymore. The user needs to rerun the query. *
+	// `CANCELLED`: Message has been cancelled.
 	Status types.String `tfsdk:"status"`
 	// ID of the user who created the message
 	UserId types.Int64 `tfsdk:"user_id"`
@@ -1541,6 +1590,7 @@ func (c GenieMessage) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["message_id"] = attrs["message_id"].SetRequired()
 	attrs["query_result"] = attrs["query_result"].SetOptional()
 	attrs["space_id"] = attrs["space_id"].SetRequired()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -1578,6 +1628,7 @@ func (o GenieMessage) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"error":                  o.Error,
 			"id":                     o.Id,
 			"last_updated_timestamp": o.LastUpdatedTimestamp,
+			"message_id":             o.MessageId,
 			"query_result":           o.QueryResult,
 			"space_id":               o.SpaceId,
 			"status":                 o.Status,
@@ -1598,6 +1649,7 @@ func (o GenieMessage) Type(ctx context.Context) attr.Type {
 			"error":                  MessageError{}.Type(ctx),
 			"id":                     types.StringType,
 			"last_updated_timestamp": types.Int64Type,
+			"message_id":             types.StringType,
 			"query_result":           Result{}.Type(ctx),
 			"space_id":               types.StringType,
 			"status":                 types.StringType,
@@ -1686,6 +1738,220 @@ func (o *GenieMessage) GetQueryResult(ctx context.Context) (Result, bool) {
 func (o *GenieMessage) SetQueryResult(ctx context.Context, v Result) {
 	vs := v.ToObjectValue(ctx)
 	o.QueryResult = vs
+}
+
+type GenieQueryAttachment struct {
+	// Description of the query
+	Description types.String `tfsdk:"description"`
+
+	Id types.String `tfsdk:"id"`
+	// Time when the user updated the query last
+	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
+	// AI generated SQL query
+	Query types.String `tfsdk:"query"`
+	// Metadata associated with the query result.
+	QueryResultMetadata types.Object `tfsdk:"query_result_metadata"`
+	// Name of the query
+	Title types.String `tfsdk:"title"`
+}
+
+func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieQueryAttachment) {
+}
+
+func (newState *GenieQueryAttachment) SyncEffectiveFieldsDuringRead(existingState GenieQueryAttachment) {
+}
+
+func (c GenieQueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
+	attrs["query"] = attrs["query"].SetOptional()
+	attrs["query_result_metadata"] = attrs["query_result_metadata"].SetOptional()
+	attrs["title"] = attrs["title"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieQueryAttachment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieQueryAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"query_result_metadata": reflect.TypeOf(GenieResultMetadata{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieQueryAttachment
+// only implements ToObjectValue() and Type().
+func (o GenieQueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description":            o.Description,
+			"id":                     o.Id,
+			"last_updated_timestamp": o.LastUpdatedTimestamp,
+			"query":                  o.Query,
+			"query_result_metadata":  o.QueryResultMetadata,
+			"title":                  o.Title,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieQueryAttachment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description":            types.StringType,
+			"id":                     types.StringType,
+			"last_updated_timestamp": types.Int64Type,
+			"query":                  types.StringType,
+			"query_result_metadata":  GenieResultMetadata{}.Type(ctx),
+			"title":                  types.StringType,
+		},
+	}
+}
+
+// GetQueryResultMetadata returns the value of the QueryResultMetadata field in GenieQueryAttachment as
+// a GenieResultMetadata value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieQueryAttachment) GetQueryResultMetadata(ctx context.Context) (GenieResultMetadata, bool) {
+	var e GenieResultMetadata
+	if o.QueryResultMetadata.IsNull() || o.QueryResultMetadata.IsUnknown() {
+		return e, false
+	}
+	var v []GenieResultMetadata
+	d := o.QueryResultMetadata.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQueryResultMetadata sets the value of the QueryResultMetadata field in GenieQueryAttachment.
+func (o *GenieQueryAttachment) SetQueryResultMetadata(ctx context.Context, v GenieResultMetadata) {
+	vs := v.ToObjectValue(ctx)
+	o.QueryResultMetadata = vs
+}
+
+type GenieResultMetadata struct {
+	// Indicates whether the result set is truncated.
+	IsTruncated types.Bool `tfsdk:"is_truncated"`
+	// The number of rows in the result set.
+	RowCount types.Int64 `tfsdk:"row_count"`
+}
+
+func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieResultMetadata) {
+}
+
+func (newState *GenieResultMetadata) SyncEffectiveFieldsDuringRead(existingState GenieResultMetadata) {
+}
+
+func (c GenieResultMetadata) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_truncated"] = attrs["is_truncated"].SetOptional()
+	attrs["row_count"] = attrs["row_count"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieResultMetadata.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieResultMetadata) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieResultMetadata
+// only implements ToObjectValue() and Type().
+func (o GenieResultMetadata) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"is_truncated": o.IsTruncated,
+			"row_count":    o.RowCount,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieResultMetadata) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"is_truncated": types.BoolType,
+			"row_count":    types.Int64Type,
+		},
+	}
+}
+
+type GenieSpace struct {
+	// Description of the Genie Space
+	Description types.String `tfsdk:"description"`
+	// Space ID
+	SpaceId types.String `tfsdk:"space_id"`
+	// Title of the Genie Space
+	Title types.String `tfsdk:"title"`
+}
+
+func (newState *GenieSpace) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieSpace) {
+}
+
+func (newState *GenieSpace) SyncEffectiveFieldsDuringRead(existingState GenieSpace) {
+}
+
+func (c GenieSpace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["space_id"] = attrs["space_id"].SetRequired()
+	attrs["title"] = attrs["title"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieSpace.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieSpace) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieSpace
+// only implements ToObjectValue() and Type().
+func (o GenieSpace) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"description": o.Description,
+			"space_id":    o.SpaceId,
+			"title":       o.Title,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieSpace) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"description": types.StringType,
+			"space_id":    types.StringType,
+			"title":       types.StringType,
+		},
+	}
 }
 
 type GenieStartConversationMessageRequest struct {
@@ -3021,125 +3287,6 @@ func (o PublishedDashboard) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type QueryAttachment struct {
-	CachedQuerySchema types.Object `tfsdk:"cached_query_schema"`
-	// Description of the query
-	Description types.String `tfsdk:"description"`
-
-	Id types.String `tfsdk:"id"`
-	// If the query was created on an instruction (trusted asset) we link to the
-	// id
-	InstructionId types.String `tfsdk:"instruction_id"`
-	// Always store the title next to the id in case the original instruction
-	// title changes or the instruction is deleted.
-	InstructionTitle types.String `tfsdk:"instruction_title"`
-	// Time when the user updated the query last
-	LastUpdatedTimestamp types.Int64 `tfsdk:"last_updated_timestamp"`
-	// AI generated SQL query
-	Query types.String `tfsdk:"query"`
-
-	StatementId types.String `tfsdk:"statement_id"`
-	// Name of the query
-	Title types.String `tfsdk:"title"`
-}
-
-func (newState *QueryAttachment) SyncEffectiveFieldsDuringCreateOrUpdate(plan QueryAttachment) {
-}
-
-func (newState *QueryAttachment) SyncEffectiveFieldsDuringRead(existingState QueryAttachment) {
-}
-
-func (c QueryAttachment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["cached_query_schema"] = attrs["cached_query_schema"].SetOptional()
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["instruction_id"] = attrs["instruction_id"].SetOptional()
-	attrs["instruction_title"] = attrs["instruction_title"].SetOptional()
-	attrs["last_updated_timestamp"] = attrs["last_updated_timestamp"].SetOptional()
-	attrs["query"] = attrs["query"].SetOptional()
-	attrs["statement_id"] = attrs["statement_id"].SetOptional()
-	attrs["title"] = attrs["title"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in QueryAttachment.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a QueryAttachment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"cached_query_schema": reflect.TypeOf(QuerySchema{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, QueryAttachment
-// only implements ToObjectValue() and Type().
-func (o QueryAttachment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"cached_query_schema":    o.CachedQuerySchema,
-			"description":            o.Description,
-			"id":                     o.Id,
-			"instruction_id":         o.InstructionId,
-			"instruction_title":      o.InstructionTitle,
-			"last_updated_timestamp": o.LastUpdatedTimestamp,
-			"query":                  o.Query,
-			"statement_id":           o.StatementId,
-			"title":                  o.Title,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o QueryAttachment) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"cached_query_schema":    QuerySchema{}.Type(ctx),
-			"description":            types.StringType,
-			"id":                     types.StringType,
-			"instruction_id":         types.StringType,
-			"instruction_title":      types.StringType,
-			"last_updated_timestamp": types.Int64Type,
-			"query":                  types.StringType,
-			"statement_id":           types.StringType,
-			"title":                  types.StringType,
-		},
-	}
-}
-
-// GetCachedQuerySchema returns the value of the CachedQuerySchema field in QueryAttachment as
-// a QuerySchema value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QueryAttachment) GetCachedQuerySchema(ctx context.Context) (QuerySchema, bool) {
-	var e QuerySchema
-	if o.CachedQuerySchema.IsNull() || o.CachedQuerySchema.IsUnknown() {
-		return e, false
-	}
-	var v []QuerySchema
-	d := o.CachedQuerySchema.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetCachedQuerySchema sets the value of the CachedQuerySchema field in QueryAttachment.
-func (o *QueryAttachment) SetCachedQuerySchema(ctx context.Context, v QuerySchema) {
-	vs := v.ToObjectValue(ctx)
-	o.CachedQuerySchema = vs
-}
-
 type QueryResponseStatus struct {
 	// Represents an empty message, similar to google.protobuf.Empty, which is
 	// not available in the firm right now.
@@ -3328,149 +3475,6 @@ func (o *QueryResponseStatus) GetSuccess(ctx context.Context) (SuccessStatus, bo
 func (o *QueryResponseStatus) SetSuccess(ctx context.Context, v SuccessStatus) {
 	vs := v.ToObjectValue(ctx)
 	o.Success = vs
-}
-
-type QuerySchema struct {
-	Columns types.List `tfsdk:"columns"`
-	// Used to determine if the stored query schema is compatible with the
-	// latest run. The service should always clear the schema when the query is
-	// re-executed.
-	StatementId types.String `tfsdk:"statement_id"`
-}
-
-func (newState *QuerySchema) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchema) {
-}
-
-func (newState *QuerySchema) SyncEffectiveFieldsDuringRead(existingState QuerySchema) {
-}
-
-func (c QuerySchema) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["columns"] = attrs["columns"].SetOptional()
-	attrs["statement_id"] = attrs["statement_id"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchema.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a QuerySchema) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"columns": reflect.TypeOf(QuerySchemaColumn{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, QuerySchema
-// only implements ToObjectValue() and Type().
-func (o QuerySchema) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"columns":      o.Columns,
-			"statement_id": o.StatementId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o QuerySchema) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"columns": basetypes.ListType{
-				ElemType: QuerySchemaColumn{}.Type(ctx),
-			},
-			"statement_id": types.StringType,
-		},
-	}
-}
-
-// GetColumns returns the value of the Columns field in QuerySchema as
-// a slice of QuerySchemaColumn values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *QuerySchema) GetColumns(ctx context.Context) ([]QuerySchemaColumn, bool) {
-	if o.Columns.IsNull() || o.Columns.IsUnknown() {
-		return nil, false
-	}
-	var v []QuerySchemaColumn
-	d := o.Columns.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetColumns sets the value of the Columns field in QuerySchema.
-func (o *QuerySchema) SetColumns(ctx context.Context, v []QuerySchemaColumn) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Columns = types.ListValueMust(t, vs)
-}
-
-type QuerySchemaColumn struct {
-	// Populated from
-	// https://docs.databricks.com/sql/language-manual/sql-ref-datatypes.html
-	DataType types.String `tfsdk:"data_type"`
-
-	Name types.String `tfsdk:"name"`
-	// Corresponds to type desc
-	TypeText types.String `tfsdk:"type_text"`
-}
-
-func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan QuerySchemaColumn) {
-}
-
-func (newState *QuerySchemaColumn) SyncEffectiveFieldsDuringRead(existingState QuerySchemaColumn) {
-}
-
-func (c QuerySchemaColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_type"] = attrs["data_type"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["type_text"] = attrs["type_text"].SetRequired()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in QuerySchemaColumn.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a QuerySchemaColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, QuerySchemaColumn
-// only implements ToObjectValue() and Type().
-func (o QuerySchemaColumn) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"data_type": o.DataType,
-			"name":      o.Name,
-			"type_text": o.TypeText,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o QuerySchemaColumn) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"data_type": types.StringType,
-			"name":      types.StringType,
-			"type_text": types.StringType,
-		},
-	}
 }
 
 type Result struct {

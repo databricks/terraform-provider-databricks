@@ -156,6 +156,8 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 		c.SetRequired("object", "partition", "value", "op")
 		c.SetRequired("object", "partition", "value", "name")
 
+		c.SetComputed("status")
+		c.SetComputed("history_data_sharing_status")
 		return c
 	})
 	resp.Schema = schema.Schema{

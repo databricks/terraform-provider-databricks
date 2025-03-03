@@ -2066,6 +2066,8 @@ func (o QueryVectorIndexNextPageRequest_SdkV2) Type(ctx context.Context) attr.Ty
 type QueryVectorIndexRequest_SdkV2 struct {
 	// List of column names to include in the response.
 	Columns types.List `tfsdk:"columns"`
+	// Column names used to retrieve data to send to the reranker.
+	ColumnsToRerank types.List `tfsdk:"columns_to_rerank"`
 	// JSON string representing query filters.
 	//
 	// Example filters: - `{"id <": 5}`: Filter for id less than 5. - `{"id >":
@@ -2096,6 +2098,7 @@ func (newState *QueryVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(exi
 
 func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["columns"] = attrs["columns"].SetRequired()
+	attrs["columns_to_rerank"] = attrs["columns_to_rerank"].SetOptional()
 	attrs["filters_json"] = attrs["filters_json"].SetOptional()
 	attrs["index_name"] = attrs["index_name"].SetRequired()
 	attrs["num_results"] = attrs["num_results"].SetOptional()
@@ -2116,8 +2119,9 @@ func (c QueryVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[strin
 // SDK values.
 func (a QueryVectorIndexRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"columns":      reflect.TypeOf(types.String{}),
-		"query_vector": reflect.TypeOf(types.Float64{}),
+		"columns":           reflect.TypeOf(types.String{}),
+		"columns_to_rerank": reflect.TypeOf(types.String{}),
+		"query_vector":      reflect.TypeOf(types.Float64{}),
 	}
 }
 
@@ -2128,14 +2132,15 @@ func (o QueryVectorIndexRequest_SdkV2) ToObjectValue(ctx context.Context) basety
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"columns":         o.Columns,
-			"filters_json":    o.FiltersJson,
-			"index_name":      o.IndexName,
-			"num_results":     o.NumResults,
-			"query_text":      o.QueryText,
-			"query_type":      o.QueryType,
-			"query_vector":    o.QueryVector,
-			"score_threshold": o.ScoreThreshold,
+			"columns":           o.Columns,
+			"columns_to_rerank": o.ColumnsToRerank,
+			"filters_json":      o.FiltersJson,
+			"index_name":        o.IndexName,
+			"num_results":       o.NumResults,
+			"query_text":        o.QueryText,
+			"query_type":        o.QueryType,
+			"query_vector":      o.QueryVector,
+			"score_threshold":   o.ScoreThreshold,
 		})
 }
 
@@ -2144,6 +2149,9 @@ func (o QueryVectorIndexRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"columns_to_rerank": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"filters_json": types.StringType,
@@ -2183,6 +2191,32 @@ func (o *QueryVectorIndexRequest_SdkV2) SetColumns(ctx context.Context, v []type
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Columns = types.ListValueMust(t, vs)
+}
+
+// GetColumnsToRerank returns the value of the ColumnsToRerank field in QueryVectorIndexRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryVectorIndexRequest_SdkV2) GetColumnsToRerank(ctx context.Context) ([]types.String, bool) {
+	if o.ColumnsToRerank.IsNull() || o.ColumnsToRerank.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ColumnsToRerank.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetColumnsToRerank sets the value of the ColumnsToRerank field in QueryVectorIndexRequest_SdkV2.
+func (o *QueryVectorIndexRequest_SdkV2) SetColumnsToRerank(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["columns_to_rerank"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ColumnsToRerank = types.ListValueMust(t, vs)
 }
 
 // GetQueryVector returns the value of the QueryVector field in QueryVectorIndexRequest_SdkV2 as

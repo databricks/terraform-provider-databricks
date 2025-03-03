@@ -1208,6 +1208,8 @@ func (o *CreateRegistryWebhook) SetJobSpec(ctx context.Context, v JobSpec) {
 type CreateRun struct {
 	// ID of the associated experiment.
 	ExperimentId types.String `tfsdk:"experiment_id"`
+	// The name of the run.
+	RunName types.String `tfsdk:"run_name"`
 	// Unix timestamp in milliseconds of when the run started.
 	StartTime types.Int64 `tfsdk:"start_time"`
 	// Additional metadata for run.
@@ -1226,6 +1228,7 @@ func (newState *CreateRun) SyncEffectiveFieldsDuringRead(existingState CreateRun
 
 func (c CreateRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["user_id"] = attrs["user_id"].SetOptional()
@@ -1254,6 +1257,7 @@ func (o CreateRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"experiment_id": o.ExperimentId,
+			"run_name":      o.RunName,
 			"start_time":    o.StartTime,
 			"tags":          o.Tags,
 			"user_id":       o.UserId,
@@ -1265,6 +1269,7 @@ func (o CreateRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"experiment_id": types.StringType,
+			"run_name":      types.StringType,
 			"start_time":    types.Int64Type,
 			"tags": basetypes.ListType{
 				ElemType: RunTag{}.Type(ctx),
@@ -1580,6 +1585,8 @@ func (o *CreateWebhookResponse) SetWebhook(ctx context.Context, v RegistryWebhoo
 	o.Webhook = vs
 }
 
+// Dataset. Represents a reference to data used for training, testing, or
+// evaluation during the model development process.
 type Dataset struct {
 	// Dataset digest, e.g. an md5 hash of the dataset that uniquely identifies
 	// it within datasets of the same name.
@@ -1594,12 +1601,12 @@ type Dataset struct {
 	// The schema of the dataset. E.g., MLflow ColSpec JSON for a dataframe,
 	// MLflow TensorSpec JSON for an ndarray, or another schema format.
 	Schema types.String `tfsdk:"schema"`
-	// The type of the dataset source, e.g. ‘databricks-uc-table’,
-	// ‘DBFS’, ‘S3’, ...
-	Source types.String `tfsdk:"source"`
 	// Source information for the dataset. Note that the source may not exactly
 	// reproduce the dataset if it was transformed / modified before use with
 	// MLflow.
+	Source types.String `tfsdk:"source"`
+	// The type of the dataset source, e.g. ‘databricks-uc-table’,
+	// ‘DBFS’, ‘S3’, ...
 	SourceType types.String `tfsdk:"source_type"`
 }
 
@@ -1610,12 +1617,12 @@ func (newState *Dataset) SyncEffectiveFieldsDuringRead(existingState Dataset) {
 }
 
 func (c Dataset) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["digest"] = attrs["digest"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["digest"] = attrs["digest"].SetRequired()
+	attrs["name"] = attrs["name"].SetRequired()
 	attrs["profile"] = attrs["profile"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["source"] = attrs["source"].SetOptional()
-	attrs["source_type"] = attrs["source_type"].SetOptional()
+	attrs["source"] = attrs["source"].SetRequired()
+	attrs["source_type"] = attrs["source_type"].SetRequired()
 
 	return attrs
 }
@@ -1661,6 +1668,7 @@ func (o Dataset) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// DatasetInput. Represents a dataset and input tags.
 type DatasetInput struct {
 	// The dataset being used as a Run input.
 	Dataset types.Object `tfsdk:"dataset"`
@@ -1676,7 +1684,7 @@ func (newState *DatasetInput) SyncEffectiveFieldsDuringRead(existingState Datase
 }
 
 func (c DatasetInput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dataset"] = attrs["dataset"].SetOptional()
+	attrs["dataset"] = attrs["dataset"].SetRequired()
 	attrs["tags"] = attrs["tags"].SetOptional()
 
 	return attrs
@@ -2667,6 +2675,7 @@ func (o DeleteWebhookResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// An experiment and its metadata.
 type Experiment struct {
 	// Location where artifacts for the experiment are stored.
 	ArtifactLocation types.String `tfsdk:"artifact_location"`
@@ -3245,6 +3254,7 @@ func (o *ExperimentPermissionsRequest) SetAccessControlList(ctx context.Context,
 	o.AccessControlList = types.ListValueMust(t, vs)
 }
 
+// A tag for an experiment.
 type ExperimentTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key"`
@@ -3298,6 +3308,7 @@ func (o ExperimentTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Metadata of a single artifact file or directory.
 type FileInfo struct {
 	// Size in bytes. Unset for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
@@ -3356,7 +3367,7 @@ func (o FileInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get metadata
+// Get an experiment by name
 type GetByNameRequest struct {
 	// Name of the associated experiment.
 	ExperimentName types.String `tfsdk:"-"`
@@ -3391,6 +3402,84 @@ func (o GetByNameRequest) Type(ctx context.Context) attr.Type {
 			"experiment_name": types.StringType,
 		},
 	}
+}
+
+type GetExperimentByNameResponse struct {
+	// Experiment details.
+	Experiment types.Object `tfsdk:"experiment"`
+}
+
+func (newState *GetExperimentByNameResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExperimentByNameResponse) {
+}
+
+func (newState *GetExperimentByNameResponse) SyncEffectiveFieldsDuringRead(existingState GetExperimentByNameResponse) {
+}
+
+func (c GetExperimentByNameResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment"] = attrs["experiment"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExperimentByNameResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetExperimentByNameResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"experiment": reflect.TypeOf(Experiment{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetExperimentByNameResponse
+// only implements ToObjectValue() and Type().
+func (o GetExperimentByNameResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment": o.Experiment,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetExperimentByNameResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment": Experiment{}.Type(ctx),
+		},
+	}
+}
+
+// GetExperiment returns the value of the Experiment field in GetExperimentByNameResponse as
+// a Experiment value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetExperimentByNameResponse) GetExperiment(ctx context.Context) (Experiment, bool) {
+	var e Experiment
+	if o.Experiment.IsNull() || o.Experiment.IsUnknown() {
+		return e, false
+	}
+	var v []Experiment
+	d := o.Experiment.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetExperiment sets the value of the Experiment field in GetExperimentByNameResponse.
+func (o *GetExperimentByNameResponse) SetExperiment(ctx context.Context, v Experiment) {
+	vs := v.ToObjectValue(ctx)
+	o.Experiment = vs
 }
 
 // Get experiment permission levels
@@ -3660,7 +3749,7 @@ func (o *GetExperimentResponse) SetExperiment(ctx context.Context, v Experiment)
 	o.Experiment = vs
 }
 
-// Get history of a given metric within a run
+// Get metric history for a run
 type GetHistoryRequest struct {
 	// Maximum number of Metric records to return per paginated request. Default
 	// is set to 25,000. If set higher than 25,000, a request Exception will be
@@ -3672,8 +3761,8 @@ type GetHistoryRequest struct {
 	PageToken types.String `tfsdk:"-"`
 	// ID of the run from which to fetch metric values. Must be provided.
 	RunId types.String `tfsdk:"-"`
-	// [Deprecated, use run_id instead] ID of the run from which to fetch metric
-	// values. This field will be removed in a future MLflow version.
+	// [Deprecated, use `run_id` instead] ID of the run from which to fetch
+	// metric values. This field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"-"`
 }
 
@@ -3880,10 +3969,14 @@ func (o *GetLatestVersionsResponse) SetModelVersions(ctx context.Context, v []Mo
 }
 
 type GetMetricHistoryResponse struct {
-	// All logged values for this metric.
+	// All logged values for this metric if `max_results` is not specified in
+	// the request or if the total count of metrics returned is less than the
+	// service level pagination threshold. Otherwise, this is one page of
+	// results.
 	Metrics types.List `tfsdk:"metrics"`
-	// Token that can be used to retrieve the next page of metric history
-	// results
+	// A token that can be used to issue a query for the next page of metric
+	// history values. A missing token indicates that no additional metrics are
+	// available to fetch.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 }
 
@@ -4428,8 +4521,8 @@ func (o GetRegisteredModelPermissionsRequest) Type(ctx context.Context) attr.Typ
 type GetRunRequest struct {
 	// ID of the run to fetch. Must be provided.
 	RunId types.String `tfsdk:"-"`
-	// [Deprecated, use run_id instead] ID of the run to fetch. This field will
-	// be removed in a future MLflow version.
+	// [Deprecated, use `run_id` instead] ID of the run to fetch. This field
+	// will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"-"`
 }
 
@@ -4678,6 +4771,7 @@ func (o HttpUrlSpecWithoutSecret) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Tag for a dataset input.
 type InputTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key"`
@@ -4692,8 +4786,8 @@ func (newState *InputTag) SyncEffectiveFieldsDuringRead(existingState InputTag) 
 }
 
 func (c InputTag) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["key"] = attrs["key"].SetOptional()
-	attrs["value"] = attrs["value"].SetOptional()
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetRequired()
 
 	return attrs
 }
@@ -4846,7 +4940,7 @@ func (o JobSpecWithoutSecret) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Get all artifacts
+// List artifacts
 type ListArtifactsRequest struct {
 	// Token indicating the page of artifact results to fetch. `page_token` is
 	// not supported when listing artifacts in UC Volumes. A maximum of 1000
@@ -4860,7 +4954,7 @@ type ListArtifactsRequest struct {
 	Path types.String `tfsdk:"-"`
 	// ID of the run whose artifacts to list. Must be provided.
 	RunId types.String `tfsdk:"-"`
-	// [Deprecated, use run_id instead] ID of the run whose artifacts to list.
+	// [Deprecated, use `run_id` instead] ID of the run whose artifacts to list.
 	// This field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"-"`
 }
@@ -5727,7 +5821,7 @@ func (newState *LogInputs) SyncEffectiveFieldsDuringRead(existingState LogInputs
 
 func (c LogInputs) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["datasets"] = attrs["datasets"].SetOptional()
-	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
 }
@@ -5841,7 +5935,7 @@ type LogMetric struct {
 	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the metric. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
-	// [Deprecated, use run_id instead] ID of the run under which to log the
+	// [Deprecated, use `run_id` instead] ID of the run under which to log the
 	// metric. This field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid"`
 	// Step at which to log the metric
@@ -6050,7 +6144,7 @@ type LogParam struct {
 	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the param. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
-	// [Deprecated, use run_id instead] ID of the run under which to log the
+	// [Deprecated, use `run_id` instead] ID of the run under which to log the
 	// param. This field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid"`
 	// String value of the param being logged. Maximum size is 500 bytes.
@@ -6150,6 +6244,7 @@ func (o LogParamResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Metric associated with a run, represented as a key-value pair.
 type Metric struct {
 	// Key identifying this metric.
 	Key types.String `tfsdk:"key"`
@@ -6910,6 +7005,7 @@ func (o ModelVersionTag) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Param associated with a run.
 type Param struct {
 	// Key identifying this param.
 	Key types.String `tfsdk:"key"`
@@ -8201,6 +8297,7 @@ func (o RestoreRunsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A single run.
 type Run struct {
 	// Run data.
 	Data types.Object `tfsdk:"data"`
@@ -8347,6 +8444,7 @@ func (o *Run) SetInputs(ctx context.Context, v RunInputs) {
 	o.Inputs = vs
 }
 
+// Run data (metrics, params, and tags).
 type RunData struct {
 	// Run metrics.
 	Metrics types.List `tfsdk:"metrics"`
@@ -8493,11 +8591,12 @@ func (o *RunData) SetTags(ctx context.Context, v []RunTag) {
 	o.Tags = types.ListValueMust(t, vs)
 }
 
+// Metadata of a single run.
 type RunInfo struct {
 	// URI of the directory where artifacts should be uploaded. This can be a
 	// local path (starting with "/"), or a distributed file system (DFS) path,
-	// like `s3://bucket/directory` or `dbfs:/my/directory`. If not set, the
-	// local `./mlruns` directory is chosen.
+	// like ``s3://bucket/directory`` or ``dbfs:/my/directory``. If not set, the
+	// local ``./mlruns`` directory is chosen.
 	ArtifactUri types.String `tfsdk:"artifact_uri"`
 	// Unix timestamp of when the run ended in milliseconds.
 	EndTime types.Int64 `tfsdk:"end_time"`
@@ -8507,6 +8606,8 @@ type RunInfo struct {
 	LifecycleStage types.String `tfsdk:"lifecycle_stage"`
 	// Unique identifier for the run.
 	RunId types.String `tfsdk:"run_id"`
+	// The name of the run.
+	RunName types.String `tfsdk:"run_name"`
 	// [Deprecated, use run_id instead] Unique identifier for the run. This
 	// field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid"`
@@ -8532,6 +8633,7 @@ func (c RunInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
 	attrs["lifecycle_stage"] = attrs["lifecycle_stage"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -8563,6 +8665,7 @@ func (o RunInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"experiment_id":   o.ExperimentId,
 			"lifecycle_stage": o.LifecycleStage,
 			"run_id":          o.RunId,
+			"run_name":        o.RunName,
 			"run_uuid":        o.RunUuid,
 			"start_time":      o.StartTime,
 			"status":          o.Status,
@@ -8579,6 +8682,7 @@ func (o RunInfo) Type(ctx context.Context) attr.Type {
 			"experiment_id":   types.StringType,
 			"lifecycle_stage": types.StringType,
 			"run_id":          types.StringType,
+			"run_name":        types.StringType,
 			"run_uuid":        types.StringType,
 			"start_time":      types.Int64Type,
 			"status":          types.StringType,
@@ -8587,6 +8691,7 @@ func (o RunInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Run inputs.
 type RunInputs struct {
 	// Run metrics.
 	DatasetInputs types.List `tfsdk:"dataset_inputs"`
@@ -8665,6 +8770,7 @@ func (o *RunInputs) SetDatasetInputs(ctx context.Context, v []DatasetInput) {
 	o.DatasetInputs = types.ListValueMust(t, vs)
 }
 
+// Tag for a run.
 type RunTag struct {
 	// The tag key.
 	Key types.String `tfsdk:"key"`
@@ -9257,11 +9363,11 @@ type SearchRuns struct {
 	// Maximum number of runs desired. Max threshold is 50000
 	MaxResults types.Int64 `tfsdk:"max_results"`
 	// List of columns to be ordered by, including attributes, params, metrics,
-	// and tags with an optional "DESC" or "ASC" annotation, where "ASC" is the
-	// default. Example: ["params.input DESC", "metrics.alpha ASC",
-	// "metrics.rmse"] Tiebreaks are done by start_time DESC followed by run_id
-	// for runs with the same start time (and this is the default ordering
-	// criterion if order_by is not provided).
+	// and tags with an optional `"DESC"` or `"ASC"` annotation, where `"ASC"`
+	// is the default. Example: `["params.input DESC", "metrics.alpha ASC",
+	// "metrics.rmse"]`. Tiebreaks are done by start_time `DESC` followed by
+	// `run_id` for runs with the same start time (and this is the default
+	// ordering criterion if order_by is not provided).
 	OrderBy types.List `tfsdk:"order_by"`
 	// Token for the current page of runs.
 	PageToken types.String `tfsdk:"page_token"`
@@ -9473,12 +9579,10 @@ func (o *SearchRunsResponse) SetRuns(ctx context.Context, v []Run) {
 type SetExperimentTag struct {
 	// ID of the experiment under which to log the tag. Must be provided.
 	ExperimentId types.String `tfsdk:"experiment_id"`
-	// Name of the tag. Maximum size depends on storage backend. All storage
-	// backends are guaranteed to support key values up to 250 bytes in size.
+	// Name of the tag. Keys up to 250 bytes in size are supported.
 	Key types.String `tfsdk:"key"`
-	// String value of the tag being logged. Maximum size depends on storage
-	// backend. All storage backends are guaranteed to support key values up to
-	// 5000 bytes in size.
+	// String value of the tag being logged. Values up to 64KB in size are
+	// supported.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -9786,17 +9890,15 @@ func (o SetModelVersionTagResponse) Type(ctx context.Context) attr.Type {
 }
 
 type SetTag struct {
-	// Name of the tag. Maximum size depends on storage backend. All storage
-	// backends are guaranteed to support key values up to 250 bytes in size.
+	// Name of the tag. Keys up to 250 bytes in size are supported.
 	Key types.String `tfsdk:"key"`
 	// ID of the run under which to log the tag. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
-	// [Deprecated, use run_id instead] ID of the run under which to log the
+	// [Deprecated, use `run_id` instead] ID of the run under which to log the
 	// tag. This field will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid"`
-	// String value of the tag being logged. Maximum size depends on storage
-	// backend. All storage backends are guaranteed to support key values up to
-	// 5000 bytes in size.
+	// String value of the tag being logged. Values up to 64KB in size are
+	// supported.
 	Value types.String `tfsdk:"value"`
 }
 
@@ -10908,7 +11010,9 @@ type UpdateRun struct {
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// ID of the run to update. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
-	// [Deprecated, use run_id instead] ID of the run to update.. This field
+	// Updated name of the run.
+	RunName types.String `tfsdk:"run_name"`
+	// [Deprecated, use `run_id` instead] ID of the run to update. This field
 	// will be removed in a future MLflow version.
 	RunUuid types.String `tfsdk:"run_uuid"`
 	// Updated status of the run.
@@ -10924,6 +11028,7 @@ func (newState *UpdateRun) SyncEffectiveFieldsDuringRead(existingState UpdateRun
 func (c UpdateRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["run_name"] = attrs["run_name"].SetOptional()
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
 
@@ -10950,6 +11055,7 @@ func (o UpdateRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"end_time": o.EndTime,
 			"run_id":   o.RunId,
+			"run_name": o.RunName,
 			"run_uuid": o.RunUuid,
 			"status":   o.Status,
 		})
@@ -10961,6 +11067,7 @@ func (o UpdateRun) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"end_time": types.Int64Type,
 			"run_id":   types.StringType,
+			"run_name": types.StringType,
 			"run_uuid": types.StringType,
 			"status":   types.StringType,
 		},

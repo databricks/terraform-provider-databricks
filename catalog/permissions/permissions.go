@@ -28,10 +28,22 @@ func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermi
 
 func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableType, name string) (list *catalog.PermissionsList, err error) {
 	if securable.String() == "share" {
-		list, err = a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{
+		sharePermissions, err := a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{
 			Name: name,
 		})
-		return
+		if err != nil {
+			return nil, err
+		}
+		list = &catalog.PermissionsList{
+			PrivilegeAssignments: make([]catalog.PrivilegeAssignment, len(sharePermissions.PrivilegeAssignments)),
+		}
+		for i, pa := range sharePermissions.PrivilegeAssignments {
+			list.PrivilegeAssignments[i] = catalog.PrivilegeAssignment{
+				Principal:  pa.Principal,
+				Privileges: toCatalogPrivileges(pa.Privileges),
+			}
+		}
+		return list, nil
 	}
 	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, securable, name)
 	return
@@ -39,10 +51,19 @@ func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableTy
 
 func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable catalog.SecurableType, name string, diff []catalog.PermissionsChange) error {
 	if securable.String() == "share" {
-		return a.client.Shares.UpdatePermissions(a.context, sharing.UpdateSharePermissions{
-			Changes: diff,
+		var shareDiff []sharing.PermissionsChange
+		for _, c := range diff {
+			shareDiff = append(shareDiff, sharing.PermissionsChange{
+				Add:       toSharingPrivileges(c.Add),
+				Remove:    toSharingPrivileges(c.Remove),
+				Principal: c.Principal,
+			})
+		}
+		_, err := a.client.Shares.UpdatePermissions(a.context, sharing.UpdateSharePermissions{
+			Changes: shareDiff,
 			Name:    name,
 		})
+		return err
 	}
 	_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
 		Changes:       diff,
@@ -152,4 +173,20 @@ func SliceWithoutString(in []string, without string) (out []string) {
 		out = append(out, v)
 	}
 	return
+}
+
+func toCatalogPrivileges(in []sharing.Privilege) []catalog.Privilege {
+	var out = make([]catalog.Privilege, len(in))
+	for i, p := range in {
+		out[i] = catalog.Privilege(p)
+	}
+	return out
+}
+
+func toSharingPrivileges(in []catalog.Privilege) []string {
+	var out = make([]string, len(in))
+	for i, p := range in {
+		out[i] = p.String()
+	}
+	return out
 }

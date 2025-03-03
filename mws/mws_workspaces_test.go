@@ -97,11 +97,24 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			storage_configuration_name = "storage-ws-{var.RANDOM}"
 			bucket_name                = "{env.TEST_ROOT_BUCKET}"
 		}
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-ws-{var.RANDOM}"
+			vpc_id       = "{env.TEST_VPC_ID}"
+			subnet_ids   = [
+				"{env.TEST_SUBNET_PRIVATE}",
+				"{env.TEST_SUBNET_PRIVATE2}",
+			]
+			security_group_ids = [
+				"{env.TEST_SECURITY_GROUP}",
+			]
+		}			
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 			workspace_name  = "terra-{var.RANDOM}"
 			aws_region      = "{env.AWS_REGION}"
 	
+			network_id = databricks_mws_networks.this.network_id
 			credentials_id = databricks_mws_credentials.this.credentials_id
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
@@ -157,11 +170,24 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			storage_configuration_name = "storage-ws-{var.RANDOM}"
 			bucket_name                = "{env.TEST_ROOT_BUCKET}"
 		}
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-ws-{var.RANDOM}"
+			vpc_id       = "{env.TEST_VPC_ID}"
+			subnet_ids   = [
+				"{env.TEST_SUBNET_PRIVATE}",
+				"{env.TEST_SUBNET_PRIVATE2}",
+			]
+			security_group_ids = [
+				"{env.TEST_SECURITY_GROUP}",
+			]
+		}			
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 			workspace_name  = "terra-{var.RANDOM}"
 			aws_region      = "{env.AWS_REGION}"
 	
+			network_id = databricks_mws_networks.this.network_id
 			credentials_id = databricks_mws_credentials.this.credentials_id
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id

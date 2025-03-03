@@ -61,12 +61,25 @@ resource "databricks_connection" "bigquery" {
 }
 ```
 
+Create a connection to builtin Hive Metastore
+
+```hcl
+resource "databricks_connection" "this" {
+  name            = "hms-builtin"
+  connection_type = "HIVE_METASTORE"
+  comment         = "This is a connection to builtin HMS"
+  options = {
+    builtin = "true"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 - `name` - Name of the Connection.
-- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE` or `DATABRICKS` are supported. [Up-to-date list of connection type supported](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
+- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE`, `HIVE_METASTORE`, `GLUE`, `TERADATA`, `ORACLE` or `DATABRICKS` are supported. Up-to-date list of connection type supported is in the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
 - `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
 - `owner` - (Optional) Name of the connection owner.
 - `properties` -  (Optional) Free-form connection properties.

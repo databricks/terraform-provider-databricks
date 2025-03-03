@@ -92,6 +92,7 @@ type Step struct {
 	Destroy                   bool
 	ExpectNonEmptyPlan        bool
 	ExpectError               *regexp.Regexp
+	ConfigPlanChecks          resource.ConfigPlanChecks
 	PlanOnly                  bool
 	PreventDiskCleanup        bool
 	PreventPostDestroyRefresh bool
@@ -219,6 +220,7 @@ func run(t *testing.T, steps []Step) {
 			Config:                               stepConfig,
 			Destroy:                              s.Destroy,
 			ExpectNonEmptyPlan:                   s.ExpectNonEmptyPlan,
+			ConfigPlanChecks:                     s.ConfigPlanChecks,
 			PlanOnly:                             s.PlanOnly,
 			PreventDiskCleanup:                   s.PreventDiskCleanup,
 			PreventPostDestroyRefresh:            s.PreventPostDestroyRefresh,

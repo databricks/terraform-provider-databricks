@@ -77,6 +77,7 @@ The following arguments are supported:
       * `aws_secret_access_key` - The Databricks secret key reference for an AWS Secret Access Key paired with the access key ID, with permissions to interact with Bedrock services.
       * `aws_secret_access_key_plaintext` -  An AWS secret access key paired with the access key ID, with permissions to interact with Bedrock services provided as a plaintext string.
       * `bedrock_provider` - The underlying provider in Amazon Bedrock. Supported values (case insensitive) include: `Anthropic`, `Cohere`, `AI21Labs`, `Amazon`.
+      * `instance_profile_arn` - Optional ARN of the instance profile that the external model will use to access AWS resources. You must authenticate using an instance profile or access keys.
     * `cohere_config` - Cohere Config
       * `cohere_api_key` - The Databricks secret key reference for a Cohere API key.
       * `cohere_api_key_plaintext` - The Cohere API key provided as a plaintext string.

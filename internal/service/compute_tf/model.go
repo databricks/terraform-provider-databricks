@@ -1059,7 +1059,7 @@ type ClusterAttributes struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -1113,7 +1113,7 @@ type ClusterAttributes struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -1123,8 +1123,18 @@ type ClusterAttributes struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -1173,7 +1183,7 @@ type ClusterAttributes struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -1774,7 +1784,7 @@ type ClusterDetails struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -1847,7 +1857,7 @@ type ClusterDetails struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -1860,8 +1870,18 @@ type ClusterDetails struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// the timestamp that the cluster was started/restarted
 	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time"`
@@ -1949,7 +1969,7 @@ type ClusterDetails struct {
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.Object `tfsdk:"termination_reason"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -4011,7 +4031,7 @@ type ClusterSpec struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -4065,7 +4085,7 @@ type ClusterSpec struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -4075,8 +4095,18 @@ type ClusterSpec struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -4136,7 +4166,7 @@ type ClusterSpec struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -4995,7 +5025,7 @@ type CreateCluster struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -5049,7 +5079,7 @@ type CreateCluster struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -5059,8 +5089,18 @@ type CreateCluster struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -5120,7 +5160,7 @@ type CreateCluster struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -7330,7 +7370,7 @@ type EditCluster struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -7384,7 +7424,7 @@ type EditCluster struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -7394,8 +7434,18 @@ type EditCluster struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -7455,7 +7505,7 @@ type EditCluster struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -16935,7 +16985,7 @@ type UpdateClusterResource struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -16989,7 +17039,7 @@ type UpdateClusterResource struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -16999,8 +17049,18 @@ type UpdateClusterResource struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -17060,7 +17120,7 @@ type UpdateClusterResource struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or

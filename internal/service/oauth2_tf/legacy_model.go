@@ -558,10 +558,25 @@ func (o *CreateServicePrincipalFederationPolicyRequest_SdkV2) SetPolicy(ctx cont
 	o.Policy = types.ListValueMust(t, vs)
 }
 
-// Create service principal secret
 type CreateServicePrincipalSecretRequest_SdkV2 struct {
+	// The lifetime of the secret in seconds. If this parameter is not provided,
+	// the secret will have a default lifetime of 730 days (63072000s).
+	Lifetime types.String `tfsdk:"lifetime"`
 	// The service principal ID.
 	ServicePrincipalId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateServicePrincipalSecretRequest_SdkV2) {
+}
+
+func (newState *CreateServicePrincipalSecretRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateServicePrincipalSecretRequest_SdkV2) {
+}
+
+func (c CreateServicePrincipalSecretRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["lifetime"] = attrs["lifetime"].SetOptional()
+	attrs["service_principal_id"] = attrs["service_principal_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateServicePrincipalSecretRequest.
@@ -582,6 +597,7 @@ func (o CreateServicePrincipalSecretRequest_SdkV2) ToObjectValue(ctx context.Con
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"lifetime":             o.Lifetime,
 			"service_principal_id": o.ServicePrincipalId,
 		})
 }
@@ -590,6 +606,7 @@ func (o CreateServicePrincipalSecretRequest_SdkV2) ToObjectValue(ctx context.Con
 func (o CreateServicePrincipalSecretRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"lifetime":             types.StringType,
 			"service_principal_id": types.Int64Type,
 		},
 	}
@@ -598,6 +615,9 @@ func (o CreateServicePrincipalSecretRequest_SdkV2) Type(ctx context.Context) att
 type CreateServicePrincipalSecretResponse_SdkV2 struct {
 	// UTC time when the secret was created
 	CreateTime types.String `tfsdk:"create_time"`
+	// UTC time when the secret will expire. If the field is not present, the
+	// secret does not expire.
+	ExpireTime types.String `tfsdk:"expire_time"`
 	// ID of the secret
 	Id types.String `tfsdk:"id"`
 	// Secret Value
@@ -618,6 +638,7 @@ func (newState *CreateServicePrincipalSecretResponse_SdkV2) SyncEffectiveFieldsD
 
 func (c CreateServicePrincipalSecretResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["secret"] = attrs["secret"].SetOptional()
 	attrs["secret_hash"] = attrs["secret_hash"].SetOptional()
@@ -646,6 +667,7 @@ func (o CreateServicePrincipalSecretResponse_SdkV2) ToObjectValue(ctx context.Co
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": o.CreateTime,
+			"expire_time": o.ExpireTime,
 			"id":          o.Id,
 			"secret":      o.Secret,
 			"secret_hash": o.SecretHash,
@@ -659,6 +681,7 @@ func (o CreateServicePrincipalSecretResponse_SdkV2) Type(ctx context.Context) at
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
+			"expire_time": types.StringType,
 			"id":          types.StringType,
 			"secret":      types.StringType,
 			"secret_hash": types.StringType,
@@ -2484,6 +2507,9 @@ func (o *PublishedAppOutput_SdkV2) SetScopes(ctx context.Context, v []types.Stri
 type SecretInfo_SdkV2 struct {
 	// UTC time when the secret was created
 	CreateTime types.String `tfsdk:"create_time"`
+	// UTC time when the secret will expire. If the field is not present, the
+	// secret does not expire.
+	ExpireTime types.String `tfsdk:"expire_time"`
 	// ID of the secret
 	Id types.String `tfsdk:"id"`
 	// Secret Hash
@@ -2502,6 +2528,7 @@ func (newState *SecretInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState Se
 
 func (c SecretInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["expire_time"] = attrs["expire_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["secret_hash"] = attrs["secret_hash"].SetOptional()
 	attrs["status"] = attrs["status"].SetOptional()
@@ -2529,6 +2556,7 @@ func (o SecretInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"create_time": o.CreateTime,
+			"expire_time": o.ExpireTime,
 			"id":          o.Id,
 			"secret_hash": o.SecretHash,
 			"status":      o.Status,
@@ -2541,6 +2569,7 @@ func (o SecretInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"create_time": types.StringType,
+			"expire_time": types.StringType,
 			"id":          types.StringType,
 			"secret_hash": types.StringType,
 			"status":      types.StringType,

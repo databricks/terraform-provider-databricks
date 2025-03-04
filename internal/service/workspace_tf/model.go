@@ -1214,6 +1214,8 @@ func (o ExportRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The request field `direct_download` determines whether a JSON response or
+// binary contents are returned by this endpoint.
 type ExportResponse struct {
 	// The base64-encoded content. If the limit (10MB) is exceeded, exception
 	// with error code **MAX_NOTEBOOK_SIZE_EXCEEDED** is thrown.
@@ -2847,11 +2849,13 @@ func (o MkdirsResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The information of the object in workspace. It will be returned by “list“
+// and “get-status“.
 type ObjectInfo struct {
 	// Only applicable to files. The creation UTC timestamp.
 	CreatedAt types.Int64 `tfsdk:"created_at"`
 	// The language of the object. This value is set only if the object type is
-	// `NOTEBOOK`.
+	// ``NOTEBOOK``.
 	Language types.String `tfsdk:"language"`
 	// Only applicable to files, the last modified UTC timestamp.
 	ModifiedAt types.Int64 `tfsdk:"modified_at"`

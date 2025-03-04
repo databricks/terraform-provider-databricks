@@ -6,7 +6,7 @@ This data source can be used to fetch the list of budget policies.
 
 ## Example Usage
 
-Referring to a budget policy by name:
+Getting a list of all budget policies:
 
 ```hcl
 data "databricks_budget_policies" "all" {

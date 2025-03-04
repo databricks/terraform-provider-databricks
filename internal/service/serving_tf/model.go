@@ -788,6 +788,12 @@ type AmazonBedrockConfig struct {
 	// The underlying provider in Amazon Bedrock. Supported values (case
 	// insensitive) include: Anthropic, Cohere, AI21Labs, Amazon.
 	BedrockProvider types.String `tfsdk:"bedrock_provider"`
+	// ARN of the instance profile that the external model will use to access
+	// AWS resources. You must authenticate using an instance profile or access
+	// keys. If you prefer to authenticate using access keys, see
+	// `aws_access_key_id`, `aws_access_key_id_plaintext`,
+	// `aws_secret_access_key` and `aws_secret_access_key_plaintext`.
+	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 }
 
 func (newState *AmazonBedrockConfig) SyncEffectiveFieldsDuringCreateOrUpdate(plan AmazonBedrockConfig) {
@@ -803,6 +809,7 @@ func (c AmazonBedrockConfig) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["aws_secret_access_key"] = attrs["aws_secret_access_key"].SetOptional()
 	attrs["aws_secret_access_key_plaintext"] = attrs["aws_secret_access_key_plaintext"].SetOptional()
 	attrs["bedrock_provider"] = attrs["bedrock_provider"].SetRequired()
+	attrs["instance_profile_arn"] = attrs["instance_profile_arn"].SetOptional()
 
 	return attrs
 }
@@ -831,6 +838,7 @@ func (o AmazonBedrockConfig) ToObjectValue(ctx context.Context) basetypes.Object
 			"aws_secret_access_key":           o.AwsSecretAccessKey,
 			"aws_secret_access_key_plaintext": o.AwsSecretAccessKeyPlaintext,
 			"bedrock_provider":                o.BedrockProvider,
+			"instance_profile_arn":            o.InstanceProfileArn,
 		})
 }
 
@@ -844,6 +852,7 @@ func (o AmazonBedrockConfig) Type(ctx context.Context) attr.Type {
 			"aws_secret_access_key":           types.StringType,
 			"aws_secret_access_key_plaintext": types.StringType,
 			"bedrock_provider":                types.StringType,
+			"instance_profile_arn":            types.StringType,
 		},
 	}
 }

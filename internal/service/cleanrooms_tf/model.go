@@ -833,7 +833,7 @@ func (c CleanRoomAssetTableLocalDetails) ApplySchemaCustomizations(attrs map[str
 // SDK values.
 func (a CleanRoomAssetTableLocalDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"partitions": reflect.TypeOf(sharing_tf.PartitionSpecificationPartition{}),
+		"partitions": reflect.TypeOf(sharing_tf.Partition{}),
 	}
 }
 
@@ -855,20 +855,20 @@ func (o CleanRoomAssetTableLocalDetails) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
 			"partitions": basetypes.ListType{
-				ElemType: sharing_tf.PartitionSpecificationPartition{}.Type(ctx),
+				ElemType: sharing_tf.Partition{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetPartitions returns the value of the Partitions field in CleanRoomAssetTableLocalDetails as
-// a slice of sharing_tf.PartitionSpecificationPartition values.
+// a slice of sharing_tf.Partition values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetTableLocalDetails) GetPartitions(ctx context.Context) ([]sharing_tf.PartitionSpecificationPartition, bool) {
+func (o *CleanRoomAssetTableLocalDetails) GetPartitions(ctx context.Context) ([]sharing_tf.Partition, bool) {
 	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
 		return nil, false
 	}
-	var v []sharing_tf.PartitionSpecificationPartition
+	var v []sharing_tf.Partition
 	d := o.Partitions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -877,7 +877,7 @@ func (o *CleanRoomAssetTableLocalDetails) GetPartitions(ctx context.Context) ([]
 }
 
 // SetPartitions sets the value of the Partitions field in CleanRoomAssetTableLocalDetails.
-func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v []sharing_tf.PartitionSpecificationPartition) {
+func (o *CleanRoomAssetTableLocalDetails) SetPartitions(ctx context.Context, v []sharing_tf.Partition) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -2365,7 +2365,8 @@ type ListCleanRoomNotebookTaskRunsRequest struct {
 	CleanRoomName types.String `tfsdk:"-"`
 	// Notebook name
 	NotebookName types.String `tfsdk:"-"`
-	// The maximum number of task runs to return
+	// The maximum number of task runs to return. Currently ignored - all runs
+	// will be returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`

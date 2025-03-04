@@ -50,7 +50,8 @@ func ResourceSystemSchema() common.Resource {
 			SchemaName:  new,
 		})
 		//ignore "schema <schema-name> already exists" error
-		if err != nil && !strings.Contains(err.Error(), "already exists") {
+		//ignore "<schema-name> system schema can only be enabled by Databricks" error
+		if err != nil && !strings.Contains(err.Error(), "already exists") && !strings.Contains(err.Error(), "can only be enabled by Databricks") {
 			return err
 		}
 		//disable old schemas if needed

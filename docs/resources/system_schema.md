@@ -9,6 +9,8 @@ subcategory: "Unity Catalog"
 
 Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
+Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.
+
 ## Example Usage
 
 Enable the system schema `access`

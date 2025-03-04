@@ -4,6 +4,8 @@ subcategory: "FinOps"
 # databricks_budget_policy Data Source
 This data source can be used to get a single budget policy. 
 
+-> **Note** This data source can only be used with an account-level provider!
+
 ## Example Usage
 
 Referring to a budget policy by id:

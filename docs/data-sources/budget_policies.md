@@ -4,6 +4,9 @@ subcategory: "FinOps"
 # databricks_budget_policies Data Source
 This data source can be used to fetch the list of budget policies. 
 
+-> **Note** This data source can only be used with an account-level provider!
+
+
 ## Example Usage
 
 Getting a list of all budget policies:

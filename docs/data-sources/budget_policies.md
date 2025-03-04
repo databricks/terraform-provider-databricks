@@ -23,4 +23,4 @@ data "databricks_budget_policies" "all" {
 
 Data source exposes the following attributes:
 
-- `budget_policies` - The list of the budget policy.
+- `budget_policies` - The list of budget policy.

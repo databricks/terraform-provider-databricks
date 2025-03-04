@@ -1,0 +1,46 @@
+---
+subcategory: "FinOps"
+---
+# databricks_budget_policy Resource
+
+Administrators can use budget policies to ensure that the correct tags appear automatically on serverless resources without depending on users to attach tags manually, allowing for customized cost reporting and chargebacks. Budget policies consist of tags that are applied to any serverless compute activity incurred by a user assigned to the policy. The tags are logged in your billing records, allowing you to attribute serverless usage to specific budgets.
+
+-> **Note** This resource can only be used with an account-level provider!
+
+
+## Example Usage
+
+```hcl
+resource "databricks_budget_policy" "this" {
+  policy_name = "my-budget-policy"
+  custom_tags = [{
+    key = "mykey"
+    value = "myvalue"
+  }]
+}
+```
+
+## Argument Reference
+
+The following arguments are available:
+* `policy_name` - (Required) The name of the policy. Must be unique among active policies. Can contain only characters from the ISO 8859-1 (latin1) set.
+* `custom_tags` - (Optional) A list of tags defined by the customer. At most 20 entries are allowed per policy. 
+
+### custom_tags Configuration Block
+* `key` - The key of the tag. - Must be unique among all custom tags of the same policy. Cannot be “budget-policy-name”, “budget-policy-id” or "budget-policy-resolution-result" as these tags are preserved. 
+* `value` - The value of the tag. 
+
+
+## Attribute Reference
+
+In addition to all arguments above, the following attribute is exported:
+* `policy_id` - ID of the budget policy 
+
+
+## Import
+
+This resource can be imported by ID.
+
+```sh
+terraform import databricks_budget_policy.this policy_id
+```

@@ -8,6 +8,8 @@
 
 ### Documentation
 
+* Added budget_policy resource and data source documentation
+
 ### Exporter
 
 ### Internal Changes

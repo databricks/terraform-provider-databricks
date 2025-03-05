@@ -21,6 +21,10 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeString,
 			Computed: true,
 		}
+		m["auto_enabled"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Computed: true,
+		}
 		m["state"].Computed = true
 		return m
 	})
@@ -49,12 +53,20 @@ func ResourceSystemSchema() common.Resource {
 			MetastoreId: metastoreSummary.MetastoreId,
 			SchemaName:  new,
 		})
-		//ignore "schema <schema-name> already exists" error
-		if err != nil && !strings.Contains(err.Error(), "already exists") {
-			return err
+		if err != nil {
+			//ignore "<schema-name> system schema can only be enabled by Databricks" error, also mark it to make delete no-op
+			d.Set("auto_enabled", strings.Contains(err.Error(), "can only be enabled by Databricks"))
+			//ignore "schema <schema-name> already exists" error
+			if !strings.Contains(err.Error(), "already exists") && !strings.Contains(err.Error(), "can only be enabled by Databricks") {
+				return err
+			}
 		}
 		//disable old schemas if needed
 		if old != "" {
+			if d.Get("auto_enabled").(bool) {
+				log.Printf("[WARN] %s is auto enabled, ignoring it", old)
+				return nil
+			}
 			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
 				SchemaName:  old,
@@ -115,6 +127,10 @@ func ResourceSystemSchema() common.Resource {
 			_, schemaName, err := pi.Unpack(d)
 			if err != nil {
 				return err
+			}
+			if d.Get("auto_enabled").(bool) {
+				log.Printf("[WARN] %s is auto enabled, ignoring it", schemaName)
+				return nil
 			}
 			w, err := c.WorkspaceClient()
 			if err != nil {

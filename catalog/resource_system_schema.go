@@ -108,8 +108,7 @@ func ResourceSystemSchema() common.Resource {
 					// only track enabled/legacy schemas
 					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
 						schema.State != catalog.SystemSchemaInfoStateEnableInitialized &&
-						schema.State != catalog.SystemSchemaInfoStateUnavailable &&
-						schema.State != catalog.SystemSchemaInfoStateAvailable {
+						schema.State != catalog.SystemSchemaInfoStateUnavailable {
 						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
 						d.SetId("")
 						return nil

@@ -1,5 +1,16 @@
 # Version changelog
 
+## Release v1.69.0
+
+### Documentation
+
+* Added budget_policy resource and data source documentation
+
+### Internal Changes
+
+ * Bump Go SDK version to 0.59.0 ([#4544](https://github.com/databricks/terraform-provider-databricks/pull/4544))
+
+
 ## Release v1.68.0
 
 ### Documentation

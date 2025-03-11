@@ -710,7 +710,7 @@ func (newState *BudgetPolicy) SyncEffectiveFieldsDuringRead(existingState Budget
 
 func (c BudgetPolicy) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+	attrs["policy_id"] = attrs["policy_id"].SetComputed()
 	attrs["policy_name"] = attrs["policy_name"].SetOptional()
 
 	return attrs
@@ -1324,13 +1324,10 @@ func (o *CreateBudgetConfigurationResponse) SetBudget(ctx context.Context, v Bud
 
 // A request to create a BudgetPolicy.
 type CreateBudgetPolicyRequest struct {
-	// A list of tags defined by the customer. At most 40 entries are allowed
-	// per policy.
-	CustomTags types.List `tfsdk:"custom_tags"`
-	// The name of the policy. - Must be unique among active policies. - Can
-	// contain only characters of 0-9, a-z, A-Z, -, =, ., :, /, @, _, +,
-	// whitespace.
-	PolicyName types.String `tfsdk:"policy_name"`
+	// The policy to create. `policy_id` needs to be empty as it will be
+	// generated `policy_name` must be provided, custom_tags may need to be
+	// provided depending on the cloud provider. All other fields are optional.
+	Policy types.Object `tfsdk:"policy"`
 	// A unique identifier for this request. Restricted to 36 ASCII characters.
 	// A random UUID is recommended. This request is only idempotent if a
 	// `request_id` is provided.
@@ -1344,8 +1341,7 @@ func (newState *CreateBudgetPolicyRequest) SyncEffectiveFieldsDuringRead(existin
 }
 
 func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
-	attrs["policy_name"] = attrs["policy_name"].SetOptional()
+	attrs["policy"] = attrs["policy"].SetOptional()
 	attrs["request_id"] = attrs["request_id"].SetOptional()
 
 	return attrs
@@ -1360,7 +1356,7 @@ func (c CreateBudgetPolicyRequest) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (a CreateBudgetPolicyRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(compute_tf.CustomPolicyTag{}),
+		"policy": reflect.TypeOf(BudgetPolicy{}),
 	}
 }
 
@@ -1371,9 +1367,8 @@ func (o CreateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_tags": o.CustomTags,
-			"policy_name": o.PolicyName,
-			"request_id":  o.RequestId,
+			"policy":     o.Policy,
+			"request_id": o.RequestId,
 		})
 }
 
@@ -1381,39 +1376,38 @@ func (o CreateBudgetPolicyRequest) ToObjectValue(ctx context.Context) basetypes.
 func (o CreateBudgetPolicyRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_tags": basetypes.ListType{
-				ElemType: compute_tf.CustomPolicyTag{}.Type(ctx),
-			},
-			"policy_name": types.StringType,
-			"request_id":  types.StringType,
+			"policy":     BudgetPolicy{}.Type(ctx),
+			"request_id": types.StringType,
 		},
 	}
 }
 
-// GetCustomTags returns the value of the CustomTags field in CreateBudgetPolicyRequest as
-// a slice of compute_tf.CustomPolicyTag values.
+// GetPolicy returns the value of the Policy field in CreateBudgetPolicyRequest as
+// a BudgetPolicy value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CreateBudgetPolicyRequest) GetCustomTags(ctx context.Context) ([]compute_tf.CustomPolicyTag, bool) {
-	if o.CustomTags.IsNull() || o.CustomTags.IsUnknown() {
-		return nil, false
+func (o *CreateBudgetPolicyRequest) GetPolicy(ctx context.Context) (BudgetPolicy, bool) {
+	var e BudgetPolicy
+	if o.Policy.IsNull() || o.Policy.IsUnknown() {
+		return e, false
 	}
-	var v []compute_tf.CustomPolicyTag
-	d := o.CustomTags.ElementsAs(ctx, &v, true)
+	var v []BudgetPolicy
+	d := o.Policy.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
-	return v, true
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
 }
 
-// SetCustomTags sets the value of the CustomTags field in CreateBudgetPolicyRequest.
-func (o *CreateBudgetPolicyRequest) SetCustomTags(ctx context.Context, v []compute_tf.CustomPolicyTag) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.CustomTags = types.ListValueMust(t, vs)
+// SetPolicy sets the value of the Policy field in CreateBudgetPolicyRequest.
+func (o *CreateBudgetPolicyRequest) SetPolicy(ctx context.Context, v BudgetPolicy) {
+	vs := v.ToObjectValue(ctx)
+	o.Policy = vs
 }
 
 type CreateLogDeliveryConfigurationParams struct {

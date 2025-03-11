@@ -36,26 +36,33 @@ The following arguments are supported (change of any parameter leads to recreati
 * `index_type` - (required) Mosaic AI Vector Search index type. Currently supported values are:
   * `DELTA_SYNC`: An index that automatically syncs with a source Delta Table, automatically and incrementally updating the index as the underlying data in the Delta Table changes.
   * `DIRECT_ACCESS`: An index that supports the direct read and write of vectors and metadata through our REST and SDK APIs. With this model, the user manages index updates.
-* `delta_sync_index_spec` - (object) Specification for Delta Sync Index. Required if `index_type` is `DELTA_SYNC`.
-  * `source_table` (required) The name of the source table.
-  * `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
-  * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
-	* `name` - The name of the column
-	* `embedding_model_endpoint_name` - The name of the embedding model endpoint
-  * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
-	* `name` - The name of the column.
-	* `embedding_dimension` - Dimension of the embedding vector.
-  * `pipeline_type` - Pipeline execution mode. Possible values are:
-	* `TRIGGERED`: If the pipeline uses the triggered execution mode, the system stops processing after successfully refreshing the source table in the pipeline once, ensuring the table is updated based on the data available when the update started.
-	* `CONTINUOUS`: If the pipeline uses continuous execution, the pipeline processes new data as it arrives in the source table to keep the vector index fresh.
-* `direct_access_index_spec` - (object) Specification for Direct Vector Access Index. Required if `index_type` is `DIRECT_ACCESS`.
-  * `schema_json` - The schema of the index in JSON format.  Check the [API documentation](https://docs.databricks.com/api/workspace/vectorsearchindexes/createindex#direct_access_index_spec-schema_json) for a list of supported data types.
-  * `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
-	* `name` - The name of the column
-	* `embedding_model_endpoint_name` - The name of the embedding model endpoint
-  * `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
-	* `name` - The name of the column.
-	* `embedding_dimension` - Dimension of the embedding vector.
+* `delta_sync_index_spec` - (object) Specification for Delta Sync Index. Required if `index_type` is `DELTA_SYNC`. This field is a block and is [documented below](#delta_sync_index_spec-Configuration-Block).
+* `direct_access_index_spec` - (object) Specification for Direct Vector Access Index. Required if `index_type` is `DIRECT_ACCESS`. This field is a block and is [documented below](#direct_access_index_spec-Configuration-Block).
+
+### delta_sync_index_spec Configuration Block
+
+* `source_table` (required) The name of the source table.
+* `columns_to_sync` - (optional) list of columns to sync. If not specified, all columns are syncronized.
+* `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
+  * `name` - The name of the column
+  * `embedding_model_endpoint_name` - The name of the embedding model endpoint
+* `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
+  * `name` - The name of the column.
+  * `embedding_dimension` - Dimension of the embedding vector.
+* `pipeline_type` - Pipeline execution mode. Possible values are:
+  * `TRIGGERED`: If the pipeline uses the triggered execution mode, the system stops processing after successfully refreshing the source table in the pipeline once, ensuring the table is updated based on the data available when the update started.
+  * `CONTINUOUS`: If the pipeline uses continuous execution, the pipeline processes new data as it arrives in the source table to keep the vector index fresh.
+* `embedding_writeback_table` - (optional) Automatically sync the vector index contents and computed embeddings to the specified Delta table. The only supported table name is the index name with the suffix `_writeback_table`.
+
+### direct_access_index_spec Configuration Block
+
+* `schema_json` - The schema of the index in JSON format.  Check the [API documentation](https://docs.databricks.com/api/workspace/vectorsearchindexes/createindex#direct_access_index_spec-schema_json) for a list of supported data types.
+* `embedding_source_columns` - (required if `embedding_vector_columns` isn't provided) array of objects representing columns that contain the embedding source.  Each entry consists of:
+  * `name` - The name of the column
+  * `embedding_model_endpoint_name` - The name of the embedding model endpoint
+* `embedding_vector_columns`  - (required if `embedding_source_columns` isn't provided)  array of objects representing columns that contain the embedding vectors. Each entry consists of:
+  * `name` - The name of the column.
+  * `embedding_dimension` - Dimension of the embedding vector.
 
 ## Attribute Reference
 

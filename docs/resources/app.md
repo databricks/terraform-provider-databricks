@@ -44,6 +44,7 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
+* `budget_policy_id` - The optional Budget Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 
 ### resources Configuration Attribute
@@ -87,6 +88,7 @@ In addition to all arguments above, the following attributes are exported:
 * `service_principal_id` - id of the app service principal
 * `service_principal_name` - name of the app service principal
 * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
+* `effective_budget_policy_id` - The effective budget policy ID.
 
 ## Import
 

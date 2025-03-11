@@ -45,6 +45,8 @@ In addition to all arguments above, the following attributes are exported:
   * `service_principal_id` - id of the app service principal
   * `service_principal_name` - name of the app service principal
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
+  * `budget_policy_id` - The Budget Policy ID set for this resource.
+  * `effective_budget_policy_id` - The effective budget policy ID.
 
 ### resources Attribute
 

@@ -44,6 +44,57 @@ func TestExperimentCreate(t *testing.T) {
 	assert.Equal(t, re.Name, d.Get("name"), "Experiment name should be set")
 }
 
+func TestExperimentCreateWithTags(t *testing.T) {
+	re := Experiment{
+		Name: "xyz",
+		Tags: []ExperimentTag{
+			{
+				Key:   "testKey",
+				Value: "testValue",
+			},
+		},
+	}
+	re.ExperimentId = "123456790123456"
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/mlflow/experiments/create",
+				ExpectedRequest: Experiment{
+					Name: "xyz",
+					Tags: []ExperimentTag{
+						{
+							Key:   "testKey",
+							Value: "testValue",
+						},
+					},
+				},
+				Response: re,
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/mlflow/experiments/get?experiment_id=123456790123456",
+				Response: experimentWrapper{
+					Experiment: re,
+				},
+			},
+		},
+		Resource: ResourceMlflowExperiment(),
+		Create:   true,
+		HCL: `
+		name = "xyz"
+		tags = [{
+			key = "testKey"
+			value = "testValue"
+		}]
+		`,
+	}.Apply(t)
+
+	assert.NoError(t, err)
+	assert.Equal(t, re.ExperimentId, d.Id(), "Resource ID should not be empty")
+	assert.Equal(t, re.Name, d.Get("name"), "Experiment name should be set")
+}
+
 func TestExperimentCreatePostError(t *testing.T) {
 	re := e()
 	re.ExperimentId = "123456790123456"

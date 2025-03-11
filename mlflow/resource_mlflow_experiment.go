@@ -9,13 +9,21 @@ import (
 
 // Experiment defines the response object from the API
 type Experiment struct {
-	Name             string `json:"name"`
-	Description      string `json:"description,omitempty"`
-	ExperimentId     string `json:"experiment_id,omitempty" tf:"computed"`
-	ArtifactLocation string `json:"artifact_location,omitempty" tf:"force_new,suppress_diff"`
-	LifecycleStage   string `json:"lifecycle_stage,omitempty" tf:"computed"`
-	LastUpdateTime   int64  `json:"last_update_time,omitempty" tf:"computed"`
-	CreationTime     int64  `json:"creation_time,omitempty" tf:"computed"`
+	Name             string          `json:"name"`
+	ArtifactLocation string          `json:"artifact_location,omitempty" tf:"force_new,suppress_diff"`
+	Tags             []ExperimentTag `json:"tags,omitempty"`
+	ExperimentId     string          `json:"experiment_id,omitempty" tf:"computed"`
+	LifecycleStage   string          `json:"lifecycle_stage,omitempty" tf:"computed"`
+	LastUpdateTime   int64           `json:"last_update_time,omitempty" tf:"computed"`
+	CreationTime     int64           `json:"creation_time,omitempty" tf:"computed"`
+}
+
+// A tag for an experiment.
+type ExperimentTag struct {
+	// The tag key.
+	Key string `json:"key"`
+	// The tag value.
+	Value string `json:"value"`
 }
 
 type experimentUpdate struct {

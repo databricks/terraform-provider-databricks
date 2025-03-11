@@ -33,6 +33,9 @@ func ResourceSecretACL() common.Resource {
 	}
 	return common.Resource{
 		Schema: s,
+		CanSkipReadAfterCreateAndUpdate: func(_ *schema.ResourceData) bool {
+			return true
+		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {
@@ -75,10 +78,11 @@ func ResourceSecretACL() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.Secrets.DeleteAcl(ctx, workspace.DeleteAcl{
+			err = w.Secrets.DeleteAcl(ctx, workspace.DeleteAcl{
 				Scope:     scope,
 				Principal: principal,
 			})
+			return common.IgnoreNotFoundError(err)
 		},
 	}
 }

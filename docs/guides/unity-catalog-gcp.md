@@ -143,6 +143,32 @@ resource "databricks_storage_credential" "ext" {
   depends_on = [databricks_metastore_assignment.this]
 }
 
+resource "google_project_iam_custom_role" "uc_file_events" {
+  role_id     = "ucFileEvents"
+  title       = "Unity Catalog file events role"
+  permissions = [
+    "pubsub.subscriptions.consume",
+    "pubsub.subscriptions.create",
+    "pubsub.subscriptions.delete",
+    "pubsub.subscriptions.get",
+    "pubsub.subscriptions.list",
+    "pubsub.subscriptions.update",
+    "pubsub.topics.attachSubscription",
+    "pubsub.topics.create",
+    "pubsub.topics.delete",
+    "pubsub.topics.get",
+    "pubsub.topics.list",
+    "pubsub.topics.update",
+    "storage.buckets.update"
+  ]
+}
+
+resource "google_project_iam_member" "unity_project_file_events_admin" {
+  project = var.project
+  role    = google_project_iam_custom_role.uc_file_events.id
+  member  = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
   bucket = google_storage_bucket.ext_bucket.name
   role   = "roles/storage.objectAdmin"
@@ -152,6 +178,12 @@ resource "google_storage_bucket_iam_member" "unity_cred_admin" {
 resource "google_storage_bucket_iam_member" "unity_cred_reader" {
   bucket = google_storage_bucket.ext_bucket.name
   role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_storage_bucket_iam_member" "unity_cred_file_events" {
+  bucket = google_storage_bucket.ext_bucket.name
+  role   = google_project_iam_custom_role.uc_file_events.id
   member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
 }
 ```
@@ -177,6 +209,7 @@ resource "databricks_external_location" "some" {
     databricks_metastore_assignment.this,
     google_storage_bucket_iam_member.unity_cred_reader,
     google_storage_bucket_iam_member.unity_cred_admin
+    google_storage_bucket_iam_member.unity_cred_file_events
   ]
 }
 
@@ -236,7 +269,7 @@ resource "databricks_grants" "things" {
 
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a ‘Security Mode’ set to either **User Isolation** or **Single User**.
 
 - **User Isolation** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
@@ -264,7 +297,7 @@ resource "databricks_cluster" "unity_shared" {
 ```
 
 - To use those advanced cluster features or languages like Machine Learning Runtime and R with Unity Catalog, one must choose **Single User** mode when launching the cluster. The cluster can only be used exclusively by a single user (by default the owner of the cluster); other users are not allowed to attach to the cluster.
-The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
+  The below example will create a collection of single-user [databricks_cluster](../resources/cluster.md) for each user in a group managed through SCIM provisioning. Individual user will be able to restart their cluster, but not anyone else. Terraform's `for_each` meta-attribute will help us achieve this.
 
 First we use [databricks_group](../data-sources/group.md) and [databricks_user](../data-sources/user.md) data resources to get the list of user names that belong to a group.
 

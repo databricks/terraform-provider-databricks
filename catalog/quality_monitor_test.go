@@ -75,6 +75,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "myTimeseries" {
+				depends_on = [databricks_quality_monitor.testMonitorInference]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_timeseries"
@@ -103,6 +104,7 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "mySnapshot" {
+				depends_on = [databricks_quality_monitor.testMonitorTimeseries]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_snapshot"

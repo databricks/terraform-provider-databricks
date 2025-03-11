@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* [Fix] Update databricks_mlflow_experiment resource to include tags ([#4569](https://github.com/databricks/terraform-provider-databricks/pull/4569))
 
 ### Documentation
 

@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+ * Support updating tags for `databricks_model_serving`.
+
 ### Documentation
 
 ### Exporter

@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,6 +13,64 @@ import (
 
 const DefaultProvisionTimeout = 45 * time.Minute
 const deleteCallTimeout = 10 * time.Second
+
+// updateConfig updates the configuration of the provided serving endpoint to the provided config.
+func updateConfig(ctx context.Context, w *databricks.WorkspaceClient, name string, e *serving.EndpointCoreConfigInput, d *schema.ResourceData) error {
+	e.Name = name
+	waiter, err := w.ServingEndpoints.UpdateConfig(ctx, *e)
+	if err != nil {
+		return err
+	}
+	_, err = waiter.GetWithTimeout(d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// updateTags updates the tags of the provided serving endpoint to the given tags. Any tags not present on the existing
+// endpoint will be removed, any tags absent on the endpoint will be added, existing tags will be updated, and unchanged
+// tags will remain as-is.
+func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string, newTags []serving.EndpointTag, d *schema.ResourceData) error {
+	currentEndpoint, err := w.ServingEndpoints.Get(ctx, serving.GetServingEndpointRequest{
+		Name: name,
+	})
+	oldTags := currentEndpoint.Tags
+	if err != nil {
+		return err
+	}
+	req := serving.PatchServingEndpointTags{
+		Name: name,
+	}
+	for _, newTag := range newTags {
+		found := false
+		for _, oldTag := range oldTags {
+			if oldTag.Key == newTag.Key && oldTag.Value == newTag.Value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.AddTags = append(req.AddTags, newTag)
+		}
+	}
+	for _, oldTag := range oldTags {
+		found := false
+		for _, newTag := range newTags {
+			if oldTag.Key == newTag.Key {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.DeleteTags = append(req.DeleteTags, oldTag.Key)
+		}
+	}
+	if _, err := w.ServingEndpoints.Patch(ctx, req); err != nil {
+		return err
+	}
+	return nil
+}
 
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
@@ -111,13 +170,12 @@ func ResourceModelServing() common.Resource {
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
 			if d.HasChange("config") {
-				e.Config.Name = e.Name
-				waiter, err := w.ServingEndpoints.UpdateConfig(ctx, *e.Config)
-				if err != nil {
+				if err := updateConfig(ctx, w, e.Name, e.Config, d); err != nil {
 					return err
 				}
-				_, err = waiter.GetWithTimeout(d.Timeout(schema.TimeoutUpdate))
-				if err != nil {
+			}
+			if d.HasChange("tags") {
+				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
 					return err
 				}
 			}

@@ -133,7 +133,7 @@ func deleteWorkspaceConf(ctx context.Context, d *schema.ResourceData, c *common.
 		// operation. So if our attempted reset fails, don't fail resource deletion.
 		var apiErr *apierr.APIError
 		if errors.As(err, &apiErr) && strings.HasPrefix(apiErr.Message, "Some values are not allowed") {
-			tflog.Warn(ctx, fmt.Sprintf("Encountered error while deleting databricks_workspace_conf: %s. The workspace configuration may not be fully restored to its original state. For more information, see %s", apiErr.Message, docs.ResourceDocumentationUrl("workspace_conf")))
+			tflog.Warn(ctx, fmt.Sprintf("Encountered error while deleting databricks_workspace_conf: %s. The workspace configuration may not be fully restored to its original state. For more information, see %s", apiErr.Message, docs.DocumentationUrl(docs.DocOptions{Slug: "workspace_conf"})))
 		} else if err != nil {
 			return err
 		}

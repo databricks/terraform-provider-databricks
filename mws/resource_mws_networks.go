@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,8 +82,13 @@ func ResourceMwsNetworks() common.Resource {
 		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
 		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
 		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids"}
-		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name"))
-		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name"))
+		docOptions := docs.DocOptions{
+			Section:  docs.Guides,
+			Slug:     "gcp-workspace",
+			Fragment: "creating-a-vpc",
+		}
+		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name", docOptions))
+		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name", docOptions))
 
 		return s
 	})

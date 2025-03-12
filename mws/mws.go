@@ -4,15 +4,14 @@ import (
 	"fmt"
 
 	"github.com/databricks/databricks-sdk-go/marshal"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 )
 
-const gkeDocumentationLink = "https://docs.gcp.databricks.com/..."
-
-func getGkeDeprecationMessage(fieldName string) string {
+func getGkeDeprecationMessage(fieldName string, docOptions docs.DocOptions) string {
 	return fmt.Sprintf(
-		"%s is deprecated and will be removed in a future release. For more information, consult our documentation at %s",
+		"%s is deprecated and will be removed in a future release. For more information, review the documentation at %s",
 		fieldName,
-		gkeDocumentationLink,
+		docs.DocumentationUrl(docOptions),
 	)
 }
 

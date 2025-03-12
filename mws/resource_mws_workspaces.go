@@ -15,6 +15,7 @@ import (
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 	"github.com/databricks/terraform-provider-databricks/tokens"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -537,9 +538,14 @@ func ResourceMwsWorkspaces() common.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			}
-			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config"))
-			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range"))
-			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range"))
+			docOptions := docs.DocOptions{
+				Section:  docs.Guides,
+				Slug:     "gcp-workspace",
+				Fragment: "creating-a-databricks-workspace",
+			}
+			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config", docOptions))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(

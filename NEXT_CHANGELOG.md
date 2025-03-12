@@ -6,7 +6,7 @@
 
 ### Bug Fixes
 
- * Support updating tags for `databricks_model_serving`.
+ * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
 
 ### Documentation
 

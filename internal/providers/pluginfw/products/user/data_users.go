@@ -37,7 +37,7 @@ func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataR
 }
 
 func (d *UsersDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(UsersInfo{}, nil)
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, UsersInfo{}, nil)
 	resp.Schema = schema.Schema{
 		Attributes: attrs,
 		Blocks:     blocks,

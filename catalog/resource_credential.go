@@ -82,6 +82,9 @@ func ResourceCredential() common.Resource {
 			var update catalog.UpdateCredentialRequest
 			common.DataToStructPointer(d, credentialSchema, &update)
 			update.NameArg = d.Id()
+			if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				update.DatabricksGcpServiceAccount = nil
+			}
 			_, err = w.Credentials.UpdateCredential(ctx, update)
 			if err != nil {
 				return err

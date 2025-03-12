@@ -9,6 +9,7 @@
  * Fix creation of `databricks_storage_credential` and `databricks_credential` resources on GCP with isolation mode ([#4563](https://github.com/databricks/terraform-provider-databricks/pull/4563))
  * Handle auto-enabled errors with `databricks_system_schema` [#4547](https://github.com/databricks/terraform-provider-databricks/pull/4547)
  * Skip Read after Create in `databricks_secret_acl` to avoid errors([#4548](https://github.com/databricks/terraform-provider-databricks/pull/4548)).
+ * Recreate `databricks_access_control_rule_set` when the `name` changes ([#4572](https://github.com/databricks/terraform-provider-databricks/pull/4572)).
 
 ### Documentation
 

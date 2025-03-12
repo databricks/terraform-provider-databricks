@@ -258,7 +258,7 @@ resource "databricks_access_control_rule_set" "budget_policy_usage" {
 
 ## Argument Reference
 
-* `name` - (Required) Unique identifier of a rule set. The name determines the resource to which the rule set applies. Currently, only default rule sets are supported. The following rule set formats are supported:
+* `name` - (Required) Unique identifier of a rule set. The name determines the resource to which the rule set applies. **Changing the name recreates the resource!**. Currently, only default rule sets are supported. The following rule set formats are supported:
   * `accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default`
   * `accounts/{account_id}/groups/{group_id}/ruleSets/default`
   * `accounts/{account_id}/ruleSets/default`
@@ -266,7 +266,7 @@ resource "databricks_access_control_rule_set" "budget_policy_usage" {
 
 * `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 
-!> **Warning** Name uniquely identifies a rule set resource. Ensure all the grant_rules blocks for a rule set name are present in one `databricks_access_control_rule_set` resource block. Otherwise, after applying changes, users might lose their role assignment even if that was not intended.
+!> Name uniquely identifies a rule set resource. Ensure all the grant_rules blocks for a rule set name are present in one `databricks_access_control_rule_set` resource block. Otherwise, after applying changes, users might lose their role assignment even if that was not intended.
 
 ### grant_rules
 

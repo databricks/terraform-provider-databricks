@@ -6,7 +6,8 @@
 
 ### Bug Fixes
 
- - Skip Read after Create in `databricks_secret_acl` to avoid errors([#4548](https://github.com/databricks/terraform-provider-databricks/pull/4548)).
+ * Handle auto-enabled errors with `databricks_system_schema` [#4547](https://github.com/databricks/terraform-provider-databricks/pull/4547)
+ * Skip Read after Create in `databricks_secret_acl` to avoid errors([#4548](https://github.com/databricks/terraform-provider-databricks/pull/4548)).
 
 ### Documentation
 

@@ -19,4 +19,6 @@
 
 ### Exporter
 
+ * Add support for special selectors in `-listing` and `-services` [#4573](https://github.com/databricks/terraform-provider-databricks/pull/4573)
+
 ### Internal Changes

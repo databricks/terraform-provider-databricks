@@ -72,6 +72,27 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 	return nil
 }
 
+// Update the rate limit configuration for a model serving endpoint.
+func updateRateLimits(ctx context.Context, w *databricks.WorkspaceClient, name string, newRateLimits []serving.RateLimit, d *schema.ResourceData) error {
+	_, err := w.ServingEndpoints.Put(ctx, serving.PutRequest{
+		Name:       name,
+		RateLimits: newRateLimits,
+	})
+	return err
+}
+
+// Update the AI Gateway configuration for a model serving endpoint.
+func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name string, newAiGateway serving.AiGatewayConfig, d *schema.ResourceData) error {
+	_, err := w.ServingEndpoints.PutAiGateway(ctx, serving.PutAiGatewayRequest{
+		Name:                 name,
+		Guardrails:           newAiGateway.Guardrails,
+		InferenceTableConfig: newAiGateway.InferenceTableConfig,
+		RateLimits:           newAiGateway.RateLimits,
+		UsageTrackingConfig:  newAiGateway.UsageTrackingConfig,
+	})
+	return err
+}
+
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(
 		serving.CreateServingEndpoint{},
@@ -176,6 +197,16 @@ func ResourceModelServing() common.Resource {
 			}
 			if d.HasChange("tags") {
 				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
+					return err
+				}
+			}
+			if d.HasChange("rate_limits") {
+				if err := updateRateLimits(ctx, w, e.Name, e.RateLimits, d); err != nil {
+					return err
+				}
+			}
+			if d.HasChange("ai_gateway") {
+				if err := updateAiGateway(ctx, w, e.Name, *e.AiGateway, d); err != nil {
 					return err
 				}
 			}

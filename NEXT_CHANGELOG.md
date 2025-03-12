@@ -18,4 +18,7 @@
 
 ### Exporter
 
+ * Allow the selective export of `databricks_mws_permission_assignment`, and change it's service name to `idfed` instead of `access` ([#4571](https://github.com/databricks/terraform-provider-databricks/pull/4571))
+
+
 ### Internal Changes

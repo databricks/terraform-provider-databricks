@@ -2394,16 +2394,22 @@ var resourcesMap map[string]importable = map[string]importable{
 	},
 	"databricks_mws_permission_assignment": {
 		AccountLevel: true,
-		Service:      "access",
+		Service:      "idfed",
 		List: func(ic *importContext) error {
 			workspaces, err := ic.accountClient.Workspaces.List(ic.Context)
 			if err != nil {
 				return err
 			}
 			for _, ws := range workspaces {
+				// list only specific workspaces if ic.match is set
+				if !ic.MatchesName(strconv.FormatInt(ws.WorkspaceId, 10)) {
+					log.Printf("[DEBUG] Skipping workspace %d because it doesn't match to the filter", ws.WorkspaceId)
+					continue
+				}
 				pas, err := ic.accountClient.WorkspaceAssignment.ListByWorkspaceId(ic.Context, ws.WorkspaceId)
 				if err != nil {
-					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s", ws.WorkspaceId, err.Error())
+					log.Printf("[ERROR] listing workspace permission assignments for workspace %d: %s",
+						ws.WorkspaceId, err.Error())
 					continue
 				}
 				log.Printf("[DEBUG] Emitting permission assignments for workspace %d", ws.WorkspaceId)
@@ -2416,11 +2422,8 @@ var resourcesMap map[string]importable = map[string]importable{
 						perm, pa.Principal.PrincipalId)
 					// We  generate Data directly to avoid calling APIs
 					data := mws.ResourceMwsPermissionAssignment().ToResource().TestResourceData()
-					scm := ic.Resources["databricks_mws_permission_assignment"].Schema
-					data.MarkNewResource()
 					paId := fmt.Sprintf("%d|%d", ws.WorkspaceId, pa.Principal.PrincipalId)
-					data.SetId(paId)
-					common.StructToData(pa, scm, data)
+					data = ic.generateNewData(data, "databricks_mws_permission_assignment", paId, pa)
 					data.Set("workspace_id", ws.WorkspaceId)
 					data.Set("principal_id", pa.Principal.PrincipalId)
 					ic.Emit(&resource{
@@ -2430,7 +2433,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						Data:     data,
 					})
 					// Emit principals
-					strPrincipalId := fmt.Sprintf("%d", pa.Principal.PrincipalId)
+					strPrincipalId := strconv.FormatInt(pa.Principal.PrincipalId, 10)
 					if pa.Principal.ServicePrincipalName != "" {
 						ic.Emit(&resource{
 							Resource: "databricks_service_principal",

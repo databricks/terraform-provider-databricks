@@ -88,7 +88,7 @@ func ResourceMwsNetworks() common.Resource {
 			Fragment: "creating-a-vpc",
 		}
 		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name", docOptions))
-		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name", docOptions))
+		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.service_ip_range_name", docOptions))
 
 		return s
 	})

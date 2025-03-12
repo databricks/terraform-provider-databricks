@@ -255,7 +255,7 @@ output "databricks_token" {
 }
 ```
 
--> The `gke_config` argument and the `gke_cluster_service_ip_range` and `gke_pod_service_ip_range` arguments in `gcp_managed_network_config` are now deprecated and no longer supported. Omit these when creating workspaces in the future. If you bhave already created a workspace using these fields, it is safe to remove them from your Terraform template.
+-> The `gke_config` argument and the `gke_cluster_service_ip_range` and `gke_pod_service_ip_range` arguments in `gcp_managed_network_config` are now deprecated and no longer supported. Omit these when creating workspaces in the future. If you have already created a workspace using these fields, it is safe to remove them from your Terraform template.
 
 ### Data resources and Authentication is not configured errors
 

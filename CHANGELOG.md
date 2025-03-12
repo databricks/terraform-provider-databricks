@@ -1,5 +1,23 @@
 # Version changelog
 
+## Release v1.69.0
+
+### Documentation
+
+* Added budget_policy resource and data source documentation
+
+### Internal Changes
+
+ * Bump Go SDK version to 0.59.0 ([#4544](https://github.com/databricks/terraform-provider-databricks/pull/4544))
+
+
+## Release v1.68.0
+
+### Documentation
+
+* Update `vector_search_index` resource documentation ([#4534](https://github.com/databricks/terraform-provider-databricks/pull/4534)).
+
+
 ## Release v1.67.0
 
 ### New Features and Improvements

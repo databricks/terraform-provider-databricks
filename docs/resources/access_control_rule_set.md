@@ -212,12 +212,57 @@ resource "databricks_access_control_rule_set" "account_rule_set" {
 }
 ```
 
+## Budget policy usage
+
+Access to [budget policies](budget_policy.md) could be controlled with this resource:
+
+```hcl
+locals {
+  account_id = "00000000-0000-0000-0000-000000000000"
+}
+
+// account level group
+data "databricks_group" "ds" {
+  display_name = "Data Science"
+}
+
+data "databricks_user" "john" {
+  user_name = "john.doe@example.com"
+}
+
+resource "databricks_budget_policy" "this" {
+  policy_name = "data-science-budget-policy"
+  custom_tags = [{
+    key = "mykey"
+    value = "myvalue"
+  }]
+}
+
+resource "databricks_access_control_rule_set" "budget_policy_usage" {
+  name = "accounts/${local.account_id}/budgetPolicies/${databricks_budget_policy.this.policy_id}/ruleSets/default"
+
+  // user john is the manager of this budget policy
+  grant_rules {
+    principals = [data.databricks_user.john.acl_principal_id]
+    role       = "roles/budgetPolicy.manager"
+  }
+
+  // group data science is the user of the given budget policy
+  grant_rules {
+    principals = [data.databricks_group.ds.acl_principal_id]
+    role       = "roles/budgetPolicy.user"
+  }
+}
+```
+
+
 ## Argument Reference
 
 * `name` - (Required) Unique identifier of a rule set. The name determines the resource to which the rule set applies. Currently, only default rule sets are supported. The following rule set formats are supported:
   * `accounts/{account_id}/servicePrincipals/{service_principal_application_id}/ruleSets/default`
   * `accounts/{account_id}/groups/{group_id}/ruleSets/default`
   * `accounts/{account_id}/ruleSets/default`
+  * `accounts/{account_id}/budgetPolicies/{budget_policy_id}/ruleSets/default`
 
 * `grant_rules` - (Required) The access control rules to be granted by this rule set, consisting of a set of principals and roles to be granted to them.
 
@@ -238,11 +283,13 @@ grant_rules {
 
 Arguments of the `grant_rules` block are:
 
-* `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles), [group roles](https://docs.databricks.com/en/administration-guide/users-groups/groups.html#manage-roles-on-an-account-group-using-the-workspace-admin-settings-page) or [marketplace roles](https://docs.databricks.com/en/marketplace/get-started-provider.html#assign-the-marketplace-admin-role).
+* `role` - (Required) Role to be granted. The supported roles are listed below. For more information about these roles, refer to [service principal roles](https://docs.databricks.com/security/auth-authz/access-control/service-principal-acl.html#service-principal-roles), [group roles](https://docs.databricks.com/en/administration-guide/users-groups/groups.html#manage-roles-on-an-account-group-using-the-workspace-admin-settings-page), [marketplace roles](https://docs.databricks.com/en/marketplace/get-started-provider.html#assign-the-marketplace-admin-role) or [budget policy permissions](https://docs.databricks.com/aws/en/admin/usage/budget-policies#manage-budget-policy-permissions).
   * `roles/servicePrincipal.manager` - Manager of a service principal.
   * `roles/servicePrincipal.user` - User of a service principal.
   * `roles/group.manager` - Manager of a group.
   * `roles/marketplace.admin` - Admin of marketplace.
+  * `roles/budgetPolicy.manager` - Manager of a budget policy.
+  * `roles/budgetPolicy.user` - User of a budget policy.
 * `principals` - (Required) a list of principals who are granted a role. The following format is supported:
   * `users/{username}` (also exposed as `acl_principal_id` attribute of `databricks_user` resource).
   * `groups/{groupname}` (also exposed as `acl_principal_id` attribute of `databricks_group` resource).

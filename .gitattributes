@@ -1,3 +1,6 @@
+internal/providers/pluginfw/products/budget_policy/data_budget_policies.go linguist-generated=true
+internal/providers/pluginfw/products/budget_policy/data_budget_policy.go linguist-generated=true
+internal/providers/pluginfw/products/budget_policy/resource_budget_policy.go linguist-generated=true
 internal/service/apps_tf/legacy_model.go linguist-generated=true
 internal/service/apps_tf/model.go linguist-generated=true
 internal/service/billing_tf/legacy_model.go linguist-generated=true

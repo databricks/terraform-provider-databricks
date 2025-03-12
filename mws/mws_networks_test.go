@@ -135,5 +135,19 @@ func TestMwsAccGcpPscNetworks(t *testing.T) {
 			assert.Empty(t, r.Attributes["gcp_network_info.0.service_ip_range_name"])
 			return nil
 		},
+	}, acceptance.Step{
+		// Destroy and recreate this resource without deprecated GKE-related fields.
+		Template: `
+		resource "databricks_mws_networks" "my_network" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-test-new-{var.STICKY_RANDOM}"
+			gcp_network_info {
+			  network_project_id = "{env.GOOGLE_PROJECT}"
+			  vpc_id = "{env.TEST_VPC_ID}"
+			  subnet_id = "{env.TEST_SUBNET_ID}"
+			  subnet_region = "{env.GOOGLE_REGION}"
+            }
+		}`,
+		Taint: []string{"databricks_mws_networks.my_network"},
 	})
 }

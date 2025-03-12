@@ -123,6 +123,9 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Computed = true
 			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Computed = true
 
+			// route_optimized cannot be updated.
+			common.MustSchemaPath(m, "route_optimized").ForceNew = true
+
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,

@@ -8,7 +8,8 @@
 
 ### Documentation
 
+Added file events permissions to GCP external location documentation.
+
 ### Exporter
 
 ### Internal Changes
-

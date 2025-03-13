@@ -152,6 +152,11 @@ func ResourceCatalog() common.Resource {
 				updateCatalogRequest.ForceSendFields = append(updateCatalogRequest.ForceSendFields, "Comment")
 			}
 
+			if d.HasChange("name") {
+				newName := d.Get("name").(string)
+				updateCatalogRequest.NewName = newName
+			}
+
 			updateCatalogRequest.Owner = ""
 			// The only option allowed in update is "authorized_paths". All other options must be removed.
 			if opts := updateCatalogRequest.Options; opts != nil {
@@ -162,7 +167,6 @@ func ResourceCatalog() common.Resource {
 				}
 			}
 			ci, err := w.Catalogs.Update(ctx, updateCatalogRequest)
-
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback

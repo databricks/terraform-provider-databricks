@@ -197,6 +197,35 @@ var workspaceConfKeys = map[string]any{
 	"storeInteractiveNotebookResultsInCustomerAccount": false,
 	"enableDeprecatedClusterNamedInitScripts":          false,
 	"enableDeprecatedGlobalInitScripts":                false,
+	"enforceWorkspaceViewAcls":                         false,
+	"enforceUserIsolation":                             false,
+	"enableProjectTypeInWorkspace":                     false,
+	"enableWorkspaceFilesystem":                        false,
+	"enableProjectsAllowList":                          false,
+	"projectsAllowList":                                "",
+	"reposIpynbResultsExportPermissions":               "ALLOW",
+	"enable-X-Frame-Options":                           false,
+	"enable-X-Content-Type-Options":                    false,
+	"enable-X-XSS-Protection":                          false,
+	"enableResultsDownloading":                         false,
+	"enableUploadDataUis":                              false,
+	"enableExportNotebook":                             false,
+	"enableNotebookTableClipboard":                     false,
+	"enableWebTerminal":                                false,
+	"enableDbfsFileBrowser":                            false,
+	"enableDatabricksAutologgingAdminConf":             false,
+	"mlflowRunArtifactDownloadEnabled":                 false,
+	"mlflowModelServingEndpointCreationEnabled":        false,
+	"mlflowModelRegistryEmailNotificationsEnabled":     false,
+	"rStudioUserDefaultHomeBase":                       false,
+	"enableVerboseAuditLogs":                           false,
+	"enableEnforceImdsV2":                              false,
+	"enableLibraryAndInitScriptOnSharedCluster":        false,
+	"enablePipelinesDataSample":                        false,
+	"customerApprovedWSLoginExpirationTime":            false,
+	"enableLegacyNotebookVisualizations":               "indefinite",
+	"enableJobViewAcls":                                false,
+	"enforceClusterViewAcls":                           false,
 }
 
 const (
@@ -626,37 +655,20 @@ func (ic *importContext) closeImportChannels() {
 	close(ic.defaultChannel)
 }
 
-// This function checks if resource exist in any state (already added or in process of addition)
-func (ic *importContext) Has(r *resource) bool {
-	return ic.HasInState(r, false)
-}
-
-func (ic *importContext) isImporting(s string) (bool, bool) {
-	ic.importingMutex.RLocker().Lock()
-	defer ic.importingMutex.RLocker().Unlock()
-	v, visiting := ic.importing[s]
-	return v, visiting
-}
-
-// This function checks if resource exist. onlyAdded flag enforces that true is returned only if it was added with Add()
-func (ic *importContext) HasInState(r *resource, onlyAdded bool) bool {
-	v, visiting := ic.isImporting(r.String())
-	if visiting && (v || !onlyAdded) {
-		return true
-	}
+func (ic *importContext) HasInState(r *resource) bool {
 	return ic.State.Has(r)
 }
 
 func (ic *importContext) Add(r *resource) {
-	if ic.HasInState(r, true) { // resource must exist and already marked as added
+	if ic.HasInState(r) { // resource must exist in the state
 		return
 	}
 	rString := r.String()
 	ic.importingMutex.Lock()
-	_, ok := ic.importing[rString]
-	if ok {
+	isAdded, ok := ic.importing[rString]
+	if ok && isAdded {
 		ic.importingMutex.Unlock()
-		log.Printf("[DEBUG] %s already being added", rString)
+		log.Printf("[DEBUG] %s is already added", rString)
 		return
 	}
 	ic.importing[rString] = true // mark resource as added
@@ -742,7 +754,6 @@ func (ic *importContext) EmitIfUpdatedAfterIsoString(r *resource, updatedAt, mes
 }
 
 func (ic *importContext) Emit(r *resource) {
-	// TODO: change into channels, if stack trace depth issues would surface
 	_, v := r.MatchPair()
 	if v == "" {
 		log.Printf("[DEBUG] %s has got empty identifier", r)
@@ -757,10 +768,6 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[DEBUG] %s (%s service) is not part of the import", r.Resource, ir.Service)
 		return
 	}
-	if ic.Has(r) {
-		log.Printf("[DEBUG] %s already imported", r)
-		return
-	}
 	rString := r.String()
 	if ic.testEmits != nil {
 		log.Printf("[INFO] %s is emitted in test mode", r)
@@ -769,8 +776,9 @@ func (ic *importContext) Emit(r *resource) {
 		ic.testEmitsMutex.Unlock()
 		return
 	}
-	// we need to check that we're not importing the same resource twice - this may happen under high concurrency
-	// for specific resources, for example, directories when they aren't part of the listing
+	// we need to check that we're not importing the same resource twice - this may happen
+	// under high concurrency for specific resources, for example, directories when they
+	// aren't part of the listing
 	ic.importingMutex.Lock()
 	res, ok := ic.importing[rString]
 	if ok {
@@ -778,7 +786,7 @@ func (ic *importContext) Emit(r *resource) {
 		log.Printf("[DEBUG] %s already being imported: %v", rString, res)
 		return
 	}
-	ic.importing[rString] = false // // we're starting to add a new resource
+	ic.importing[rString] = false // we're starting to add a new resource
 	ic.importingMutex.Unlock()
 	_, ok = ic.Resources[r.Resource]
 	if !ok {
@@ -787,11 +795,13 @@ func (ic *importContext) Emit(r *resource) {
 	}
 
 	if ic.accountLevel && !ir.AccountLevel {
-		log.Printf("[DEBUG] %s (%s service) is not part of the account level export", r.Resource, ir.Service)
+		log.Printf("[DEBUG] %s (%s service) is not part of the account level export",
+			r.Resource, ir.Service)
 		return
 	}
 	if !ic.accountLevel && !ir.WorkspaceLevel {
-		log.Printf("[DEBUG] %s (%s service) is not part of the workspace level export", r.Resource, ir.Service)
+		log.Printf("[DEBUG] %s (%s service) is not part of the workspace level export",
+			r.Resource, ir.Service)
 		return
 	}
 	// from here, it should be done by the goroutine...  send resource into the channel

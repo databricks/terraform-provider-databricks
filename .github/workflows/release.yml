@@ -22,7 +22,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
+          go-version-file: go.mod
 
           # The default cache key for this action considers only the `go.sum` file.
           # We include .goreleaser.yaml here to differentiate from the cache used by the push action

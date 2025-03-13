@@ -1,0 +1,15 @@
+{
+  "access_control_list": [
+    {
+      "all_permissions": [
+        {
+          "inherited":false,
+          "permission_level":"CAN_MANAGE"
+        }
+      ],
+      "group_name":"admins"
+    }
+  ],
+  "object_id":"/authorization/tokens",
+  "object_type":"tokens"
+}

@@ -346,9 +346,10 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
+	upToDateShareInfo := currentShareInfo
 	if len(changes) > 0 {
 		// if there are any other changes, update the share with the changes
-		updatedShareInfo, err := client.Shares.Update(ctx, sharing.UpdateShare{
+		upToDateShareInfo, err = client.Shares.Update(ctx, sharing.UpdateShare{
 			Name:    plan.Name.ValueString(),
 			Updates: changes,
 		})
@@ -371,11 +372,12 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 		}
 
-		matchOrder(updatedShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
-		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, updatedShareInfo, &state)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	}
+
+	matchOrder(upToDateShareInfo.Objects, planGoSDK.Objects, func(obj sharing.SharedDataObject) string { return obj.Name })
+	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, upToDateShareInfo, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	state, d := r.syncEffectiveFields(ctx, plan, state, effectiveFieldsActionCreateOrUpdate{})

@@ -1039,11 +1039,12 @@ type ClusterAttributes_SdkV2 struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.List `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -1060,7 +1061,7 @@ type ClusterAttributes_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -1114,7 +1115,7 @@ type ClusterAttributes_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -1124,8 +1125,18 @@ type ClusterAttributes_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -1174,7 +1185,7 @@ type ClusterAttributes_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -1748,11 +1759,12 @@ type ClusterDetails_SdkV2 struct {
 	// restarts and resizes, while each new cluster has a globally unique id.
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster log delivery status.
 	ClusterLogStatus types.List `tfsdk:"cluster_log_status"`
@@ -1780,7 +1792,7 @@ type ClusterDetails_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -1853,7 +1865,7 @@ type ClusterDetails_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -1866,8 +1878,18 @@ type ClusterDetails_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// the timestamp that the cluster was started/restarted
 	LastRestartedTime types.Int64 `tfsdk:"last_restarted_time"`
@@ -1955,7 +1977,7 @@ type ClusterDetails_SdkV2 struct {
 	// Information about why the cluster was terminated. This field only appears
 	// when the cluster is in a `TERMINATING` or `TERMINATED` state.
 	TerminationReason types.List `tfsdk:"termination_reason"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -2907,6 +2929,9 @@ type ClusterLogConf_SdkV2 struct {
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
 	S3 types.List `tfsdk:"s3"`
+	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
+	// "/Volumes/catalog/schema/volume/cluster_log" } }`
+	Volumes types.List `tfsdk:"volumes"`
 }
 
 func (newState *ClusterLogConf_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterLogConf_SdkV2) {
@@ -2920,6 +2945,8 @@ func (c ClusterLogConf_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["dbfs"] = attrs["dbfs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["s3"] = attrs["s3"].SetOptional()
 	attrs["s3"] = attrs["s3"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["volumes"] = attrs["volumes"].SetOptional()
+	attrs["volumes"] = attrs["volumes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -2933,8 +2960,9 @@ func (c ClusterLogConf_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 // SDK values.
 func (a ClusterLogConf_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dbfs": reflect.TypeOf(DbfsStorageInfo_SdkV2{}),
-		"s3":   reflect.TypeOf(S3StorageInfo_SdkV2{}),
+		"dbfs":    reflect.TypeOf(DbfsStorageInfo_SdkV2{}),
+		"s3":      reflect.TypeOf(S3StorageInfo_SdkV2{}),
+		"volumes": reflect.TypeOf(VolumesStorageInfo_SdkV2{}),
 	}
 }
 
@@ -2945,8 +2973,9 @@ func (o ClusterLogConf_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"dbfs": o.Dbfs,
-			"s3":   o.S3,
+			"dbfs":    o.Dbfs,
+			"s3":      o.S3,
+			"volumes": o.Volumes,
 		})
 }
 
@@ -2959,6 +2988,9 @@ func (o ClusterLogConf_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"s3": basetypes.ListType{
 				ElemType: S3StorageInfo_SdkV2{}.Type(ctx),
+			},
+			"volumes": basetypes.ListType{
+				ElemType: VolumesStorageInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -3014,6 +3046,32 @@ func (o *ClusterLogConf_SdkV2) SetS3(ctx context.Context, v S3StorageInfo_SdkV2)
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
 	o.S3 = types.ListValueMust(t, vs)
+}
+
+// GetVolumes returns the value of the Volumes field in ClusterLogConf_SdkV2 as
+// a VolumesStorageInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ClusterLogConf_SdkV2) GetVolumes(ctx context.Context) (VolumesStorageInfo_SdkV2, bool) {
+	var e VolumesStorageInfo_SdkV2
+	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
+		return e, false
+	}
+	var v []VolumesStorageInfo_SdkV2
+	d := o.Volumes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVolumes sets the value of the Volumes field in ClusterLogConf_SdkV2.
+func (o *ClusterLogConf_SdkV2) SetVolumes(ctx context.Context, v VolumesStorageInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
+	o.Volumes = types.ListValueMust(t, vs)
 }
 
 type ClusterPermission_SdkV2 struct {
@@ -3976,11 +4034,12 @@ type ClusterSpec_SdkV2 struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.List `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -3997,7 +4056,7 @@ type ClusterSpec_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -4051,7 +4110,7 @@ type ClusterSpec_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -4061,8 +4120,18 @@ type ClusterSpec_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -4122,7 +4191,7 @@ type ClusterSpec_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -4967,11 +5036,12 @@ type CreateCluster_SdkV2 struct {
 	// creation of a new cluster.
 	CloneFrom types.List `tfsdk:"clone_from"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -4988,7 +5058,7 @@ type CreateCluster_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -5042,7 +5112,7 @@ type CreateCluster_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -5052,8 +5122,18 @@ type CreateCluster_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -5113,7 +5193,7 @@ type CreateCluster_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -6392,6 +6472,69 @@ func (o Created_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CustomPolicyTag_SdkV2 struct {
+	// The key of the tag. - Must be unique among all custom tags of the same
+	// policy - Cannot be “budget-policy-name”, “budget-policy-id” or
+	// "budget-policy-resolution-result" - these tags are preserved.
+	//
+	// - Follows the regex pattern defined in
+	// cluster-common/conf/src/ClusterTagConstraints.scala
+	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L17)
+	Key types.String `tfsdk:"key"`
+	// The value of the tag.
+	//
+	// - Follows the regex pattern defined in
+	// cluster-common/conf/src/ClusterTagConstraints.scala
+	// (https://src.dev.databricks.com/databricks/universe@1647196627c8dc7b4152ad098a94b86484b93a6c/-/blob/cluster-common/conf/src/ClusterTagConstraints.scala?L24)
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *CustomPolicyTag_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomPolicyTag_SdkV2) {
+}
+
+func (newState *CustomPolicyTag_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomPolicyTag_SdkV2) {
+}
+
+func (c CustomPolicyTag_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomPolicyTag.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CustomPolicyTag_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomPolicyTag_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CustomPolicyTag_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":   o.Key,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CustomPolicyTag_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":   types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
 type DataPlaneEventDetails_SdkV2 struct {
 	// <needs content added>
 	EventType types.String `tfsdk:"event_type"`
@@ -7252,11 +7395,12 @@ type EditCluster_SdkV2 struct {
 	// ID of the cluster
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -7273,7 +7417,7 @@ type EditCluster_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -7327,7 +7471,7 @@ type EditCluster_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -7337,8 +7481,18 @@ type EditCluster_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -7398,7 +7552,7 @@ type EditCluster_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -16900,11 +17054,12 @@ type UpdateClusterResource_SdkV2 struct {
 	// specified at cluster creation, a set of default values will be used.
 	AzureAttributes types.List `tfsdk:"azure_attributes"`
 	// The configuration for delivering spark logs to a long-term storage
-	// destination. Two kinds of destinations (dbfs and s3) are supported. Only
-	// one destination can be specified for one cluster. If the conf is given,
-	// the logs will be delivered to the destination every `5 mins`. The
-	// destination of driver logs is `$destination/$clusterId/driver`, while the
-	// destination of executor logs is `$destination/$clusterId/executor`.
+	// destination. Three kinds of destinations (DBFS, S3 and Unity Catalog
+	// volumes) are supported. Only one destination can be specified for one
+	// cluster. If the conf is given, the logs will be delivered to the
+	// destination every `5 mins`. The destination of driver logs is
+	// `$destination/$clusterId/driver`, while the destination of executor logs
+	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
 	// not specified at creation, the cluster name will be an empty string.
@@ -16921,7 +17076,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// Data security mode decides what data governance model to use when
 	// accessing data from a cluster.
 	//
-	// The following modes can only be used with `kind`. *
+	// The following modes can only be used when `kind = CLASSIC_PREVIEW`. *
 	// `DATA_SECURITY_MODE_AUTO`: Databricks will choose the most appropriate
 	// access mode depending on your compute configuration. *
 	// `DATA_SECURITY_MODE_STANDARD`: Alias for `USER_ISOLATION`. *
@@ -16975,7 +17130,7 @@ type UpdateClusterResource_SdkV2 struct {
 	InitScripts types.List `tfsdk:"init_scripts"`
 	// The optional ID of the instance pool to which the cluster belongs.
 	InstancePoolId types.String `tfsdk:"instance_pool_id"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// When set to true, Databricks will automatically set single node related
 	// `custom_tags`, `spark_conf`, and `num_workers`
@@ -16985,8 +17140,18 @@ type UpdateClusterResource_SdkV2 struct {
 	// Depending on `kind`, different validations and default values will be
 	// applied.
 	//
-	// The first usage of this value is for the simple cluster form where it
-	// sets `kind = CLASSIC_PREVIEW`.
+	// Clusters with `kind = CLASSIC_PREVIEW` support the following fields,
+	// whereas clusters with no specified `kind` do not. *
+	// [is_single_node](/api/workspace/clusters/create#is_single_node) *
+	// [use_ml_runtime](/api/workspace/clusters/create#use_ml_runtime) *
+	// [data_security_mode](/api/workspace/clusters/create#data_security_mode)
+	// set to `DATA_SECURITY_MODE_AUTO`, `DATA_SECURITY_MODE_DEDICATED`, or
+	// `DATA_SECURITY_MODE_STANDARD`
+	//
+	// By using the [simple form], your clusters are automatically using `kind =
+	// CLASSIC_PREVIEW`.
+	//
+	// [simple form]: https://docs.databricks.com/compute/simple-form.html
 	Kind types.String `tfsdk:"kind"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
@@ -17046,7 +17211,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// cluster. The corresponding private keys can be used to login with the
 	// user name `ubuntu` on port `2200`. Up to 10 keys can be specified.
 	SshPublicKeys types.List `tfsdk:"ssh_public_keys"`
-	// This field can only be used with `kind`.
+	// This field can only be used when `kind = CLASSIC_PREVIEW`.
 	//
 	// `effective_spark_version` is determined by `spark_version` (DBR release),
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
@@ -17611,7 +17776,8 @@ func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type VolumesStorageInfo_SdkV2 struct {
-	// Unity Catalog Volumes file destination, e.g. `/Volumes/my-init.sh`
+	// Unity Catalog volumes file destination, e.g.
+	// `/Volumes/catalog/schema/volume/dir/file`
 	Destination types.String `tfsdk:"destination"`
 }
 

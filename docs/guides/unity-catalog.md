@@ -35,7 +35,7 @@ To get started with Unity Catalog, this guide takes you through the following hi
 
 ## Provider initialization
 
-Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-service-principal) for more details.
+Initialize [provider with `mws` alias](https://www.terraform.io/language/providers/configuration#alias-multiple-provider-configurations) to set up account-level resources. See [provider authentication](../index.md#authenticating-with-databricks-managed-service-principal) for more details.
 
 ```hcl
 terraform {
@@ -184,8 +184,9 @@ resource "databricks_metastore_assignment" "default_metastore" {
   for_each             = toset(var.databricks_workspace_ids)
   workspace_id         = each.key
   metastore_id         = databricks_metastore.this.id
-  default_catalog_name = "hive_metastore"
 }
+
+
 ```
 
 ## Configure external locations and credentials
@@ -343,9 +344,9 @@ resource "databricks_grants" "things" {
 
 ## Configure Unity Catalog clusters
 
-To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has a  ‘Security Mode’ set to either **User Isolation** or **Single User**.
+To ensure the integrity of ACLs, Unity Catalog data can be accessed only through compute resources configured with strong isolation guarantees and other security features. A Unity Catalog [databricks_cluster](../resources/cluster.md) has the access mode set to either **Shared** or **Single User**.
 
-- **User Isolation** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
+- **Shared** clusters can be shared by multiple users, but has certain [limitations](https://docs.databricks.com/en/compute/access-mode-limitations.html#shared-access-mode-limitations-on-unity-catalog)
 
 ```hcl
 data "databricks_spark_version" "latest" {

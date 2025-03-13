@@ -844,7 +844,7 @@ func (c CleanRoomAssetTableLocalDetails_SdkV2) ApplySchemaCustomizations(attrs m
 // SDK values.
 func (a CleanRoomAssetTableLocalDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"partitions": reflect.TypeOf(sharing_tf.PartitionSpecificationPartition_SdkV2{}),
+		"partitions": reflect.TypeOf(sharing_tf.Partition_SdkV2{}),
 	}
 }
 
@@ -866,20 +866,20 @@ func (o CleanRoomAssetTableLocalDetails_SdkV2) Type(ctx context.Context) attr.Ty
 		AttrTypes: map[string]attr.Type{
 			"local_name": types.StringType,
 			"partitions": basetypes.ListType{
-				ElemType: sharing_tf.PartitionSpecificationPartition_SdkV2{}.Type(ctx),
+				ElemType: sharing_tf.Partition_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetPartitions returns the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2 as
-// a slice of sharing_tf.PartitionSpecificationPartition_SdkV2 values.
+// a slice of sharing_tf.Partition_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Context) ([]sharing_tf.PartitionSpecificationPartition_SdkV2, bool) {
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Context) ([]sharing_tf.Partition_SdkV2, bool) {
 	if o.Partitions.IsNull() || o.Partitions.IsUnknown() {
 		return nil, false
 	}
-	var v []sharing_tf.PartitionSpecificationPartition_SdkV2
+	var v []sharing_tf.Partition_SdkV2
 	d := o.Partitions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -888,7 +888,7 @@ func (o *CleanRoomAssetTableLocalDetails_SdkV2) GetPartitions(ctx context.Contex
 }
 
 // SetPartitions sets the value of the Partitions field in CleanRoomAssetTableLocalDetails_SdkV2.
-func (o *CleanRoomAssetTableLocalDetails_SdkV2) SetPartitions(ctx context.Context, v []sharing_tf.PartitionSpecificationPartition_SdkV2) {
+func (o *CleanRoomAssetTableLocalDetails_SdkV2) SetPartitions(ctx context.Context, v []sharing_tf.Partition_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -1114,7 +1114,7 @@ func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringRead(exist
 }
 
 func (c CleanRoomCollaborator_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetOptional()
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetRequired()
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
@@ -2382,7 +2382,8 @@ type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 	// Notebook name
 	NotebookName types.String `tfsdk:"-"`
-	// The maximum number of task runs to return
+	// The maximum number of task runs to return. Currently ignored - all runs
+	// will be returned.
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`

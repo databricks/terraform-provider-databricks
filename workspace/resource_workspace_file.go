@@ -78,8 +78,7 @@ func ResourceWorkspaceFile() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("url", c.FormatURL("#workspace", d.Id()))
-			d.Set("workspace_path", "/Workspace"+objectStatus.Path)
+			SetWorkspaceObjectComputedProperties(d, c)
 			return common.StructToData(objectStatus, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

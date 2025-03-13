@@ -55,7 +55,7 @@ const baseResources = `
 func makeTemplate(description string) string {
 	appTemplate := baseResources + `
 	resource "databricks_app" "this" {
-		name = "{var.STICKY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "%s"
 		resources = [{
 			name = "secret"
@@ -93,7 +93,7 @@ func makeTemplate(description string) string {
 
 var templateWithInvalidResource = `
 	resource "databricks_app" "this" {
-		name = "{var.STICKY_RANDOM}"
+		name = "tf-{var.STICKY_RANDOM}"
 		description = "My app"
 		resources = [{
 			name = "invalid resource"
@@ -145,5 +145,44 @@ func TestAccAppResource(t *testing.T) {
 		// I cannot enable ImportStateVerify because computed fields don't appear to be filled in during import.
 		// ImportStateVerify: true,
 		ImportStateVerifyIdentifierAttribute: "name",
+	})
+}
+
+func TestAccAppResource_NoCompute(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+	resource "databricks_secret_scope" "this" {
+		name = "tf-{var.STICKY_RANDOM}"
+	}
+
+	resource "databricks_secret" "this" {
+	    scope = databricks_secret_scope.this.name
+		key = "tf-{var.STICKY_RANDOM}"
+		string_value = "secret"
+	}
+	resource "databricks_app" "this" {
+		no_compute = true
+		name = "tf-{var.STICKY_RANDOM}"
+		description = "no_compute app"
+		resources = [{
+			name = "secret"
+			description = "secret for app"
+			secret = {
+				scope = databricks_secret_scope.this.name
+				key = databricks_secret.this.key
+				permission = "MANAGE"
+			}
+		}]
+	}
+		`,
+		Check: func(s *terraform.State) error {
+			computeStatus := s.RootModule().Resources["databricks_app.this"].Primary.Attributes["compute_status.state"]
+			assert.Equal(t, "STOPPED", computeStatus)
+			return nil
+		},
 	})
 }

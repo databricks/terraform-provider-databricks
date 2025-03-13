@@ -112,7 +112,7 @@ func TestImportContextHas(t *testing.T) {
 				},
 			},
 		}})
-	assert.True(t, (&importContext{State: state}).Has(&resource{
+	assert.True(t, (&importContext{State: state}).HasInState(&resource{
 		Resource:  "a",
 		Attribute: "b",
 		Value:     "d",

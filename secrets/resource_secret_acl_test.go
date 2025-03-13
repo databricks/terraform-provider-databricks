@@ -3,14 +3,26 @@ package secrets
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/workspace"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
 )
 
+var internalErrorResponse = apierr.APIError{
+	ErrorCode:  "INVALID_REQUEST",
+	Message:    "Internal error happened",
+	StatusCode: 400,
+}
+
+var doesNotExistResponse = apierr.APIError{
+	StatusCode: 404,
+	ErrorCode:  "NOT_FOUND",
+	Message:    "Secret Scope does not exist",
+}
+
 func TestResourceSecretACLRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -23,12 +35,12 @@ func TestResourceSecretACLRead(t *testing.T) {
 		Resource: ResourceSecretACL(),
 		Read:     true,
 		ID:       "global|||something",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "global|||something", d.Id(), "Id should not be empty")
-	assert.Equal(t, "MANAGE", d.Get("permission"))
-	assert.Equal(t, "something", d.Get("principal"))
-	assert.Equal(t, "global", d.Get("scope"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"permission": "MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+		"id":         "global|||something",
+	})
 }
 
 func TestResourceSecretACLRead_NotFound(t *testing.T) {
@@ -37,11 +49,8 @@ func TestResourceSecretACLRead_NotFound(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
-					ErrorCode: "NOT_FOUND",
-					Message:   "Item not found",
-				},
-				Status: 404,
+				Response: doesNotExistResponse,
+				Status:   404,
 			},
 		},
 		Resource: ResourceSecretACL(),
@@ -57,11 +66,8 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
+				Response: internalErrorResponse,
+				Status:   400,
 			},
 		},
 		Resource: ResourceSecretACL(),
@@ -73,7 +79,7 @@ func TestResourceSecretACLRead_Error(t *testing.T) {
 }
 
 func TestResourceSecretACLCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -84,13 +90,6 @@ func TestResourceSecretACLCreate(t *testing.T) {
 					Scope:      "global",
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=global",
-				Response: workspace.AclItem{
-					Permission: "MANAGE",
-				},
-			},
 		},
 		Resource: ResourceSecretACL(),
 		State: map[string]any{
@@ -99,13 +98,16 @@ func TestResourceSecretACLCreate(t *testing.T) {
 			"scope":      "global",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "global|||something", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"permission": "MANAGE",
+		"principal":  "something",
+		"scope":      "global",
+		"id":         "global|||something",
+	})
 }
 
 func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -116,13 +118,6 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 					Scope:      "myapplication/branch",
 				},
 			},
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/secrets/acls/get?principal=something&scope=myapplication%2Fbranch",
-				Response: workspace.AclItem{
-					Permission: "MANAGE",
-				},
-			},
 		},
 		Resource: ResourceSecretACL(),
 		State: map[string]any{
@@ -131,9 +126,12 @@ func TestResourceSecretACLCreate_ScopeWithSlash(t *testing.T) {
 			"scope":      "myapplication/branch",
 		},
 		Create: true,
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "myapplication/branch|||something", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"permission": "MANAGE",
+		"principal":  "something",
+		"scope":      "myapplication/branch",
+		"id":         "myapplication/branch|||something",
+	})
 }
 
 func TestResourceSecretACLCreate_Error(t *testing.T) {
@@ -142,11 +140,8 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 			{ // read log output for better stub url...
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/put",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
+				Response: internalErrorResponse,
+				Status:   400,
 			},
 		},
 		Resource: ResourceSecretACL(),
@@ -162,7 +157,7 @@ func TestResourceSecretACLCreate_Error(t *testing.T) {
 }
 
 func TestResourceSecretACLDelete(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -176,9 +171,28 @@ func TestResourceSecretACLDelete(t *testing.T) {
 		Resource: ResourceSecretACL(),
 		Delete:   true,
 		ID:       "global|||something",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "global|||something", d.Id())
+	}.ApplyAndExpectData(t, map[string]any{
+		"id": "global|||something",
+	})
+}
+
+func TestResourceSecretACLDelete_DoesntExist(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/secrets/acls/delete",
+				ExpectedRequest: map[string]string{
+					"scope":     "global",
+					"principal": "something",
+				},
+				Response: doesNotExistResponse,
+			},
+		},
+		Resource: ResourceSecretACL(),
+		Delete:   true,
+		ID:       "global|||something",
+	}.ApplyNoError(t)
 }
 
 func TestResourceSecretACLDelete_Error(t *testing.T) {
@@ -187,11 +201,8 @@ func TestResourceSecretACLDelete_Error(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/secrets/acls/delete",
-				Response: common.APIErrorBody{
-					ErrorCode: "INVALID_REQUEST",
-					Message:   "Internal error happened",
-				},
-				Status: 400,
+				Response: internalErrorResponse,
+				Status:   400,
 			},
 		},
 		Resource: ResourceSecretACL(),

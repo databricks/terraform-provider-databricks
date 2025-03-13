@@ -48,7 +48,7 @@ resource "databricks_sql_permissions" "foo_table" {
 
 ## Argument Reference
 
-* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate data security mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a single-node TACL cluster named `terraform-table-acl` is automatically created.
+* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate access mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a single-node TACL cluster named `terraform-table-acl` is automatically created.
 
 ```hcl
 resource "databricks_sql_permissions" "foo_table" {

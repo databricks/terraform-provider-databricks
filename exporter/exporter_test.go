@@ -234,6 +234,13 @@ var meAdminFixture = qa.HTTPFixture{
 	},
 }
 
+var getTokensPermissionsFixture = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/permissions/authorization/tokens?",
+	Response:     getJSONObject("test-data/get-tokens-permissions.json"),
+	ReuseRequest: true,
+}
+
 var emptyPipelines = qa.HTTPFixture{
 	Method:       "GET",
 	ReuseRequest: true,
@@ -369,6 +376,15 @@ var emptySqlDashboards = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
+var emptyGlobalInitScripts = qa.HTTPFixture{
+	Method:       "GET",
+	Resource:     "/api/2.0/global-init-scripts",
+	ReuseRequest: true,
+	Response: map[string]any{
+		"scripts": []map[string]any{},
+	},
+}
+
 var emptySqlQueries = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/sql/queries?page_size=100",
@@ -390,13 +406,7 @@ var emptyWorkspaceConf = qa.HTTPFixture{
 	ReuseRequest: true,
 }
 
-var dummyWorkspaceConf = qa.HTTPFixture{
-	Method:   "GET",
-	Resource: "/api/2.0/workspace-conf?keys=zDummyKey",
-	Response: map[string]any{},
-}
-
-var allKnownWorkspaceConfs = qa.HTTPFixture{
+var allKnownWorkspaceConfsNoData = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     fmt.Sprintf("/api/2.0/workspace-conf?keys=%s", workspaceConfKeysToURL()),
 	Response:     map[string]any{},
@@ -512,8 +522,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			emptyClusterPolicies,
 			emptyPolicyFamilies,
 			emptyWorkspaceConf,
-			allKnownWorkspaceConfs,
-			dummyWorkspaceConf,
+			allKnownWorkspaceConfsNoData,
 			emptyGlobalSQLConfig,
 			listSpFixtures[0],
 			listSpFixtures[1],
@@ -575,14 +584,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					}},
 				ReuseRequest: true,
 			},
-			{
-				Method:       "GET",
-				Resource:     "/api/2.0/global-init-scripts",
-				ReuseRequest: true,
-				Response: map[string]any{
-					"scripts": []map[string]any{},
-				},
-			},
+			emptyGlobalInitScripts,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=members",
@@ -735,6 +737,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 					Key:   "b",
 				},
 			},
+			getTokensPermissionsFixture,
 		}, func(ctx context.Context, client *common.DatabricksClient) {
 			tmpDir := fmt.Sprintf("/tmp/tf-%s", qa.RandomName())
 			defer os.RemoveAll(tmpDir)
@@ -780,7 +783,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			emptyWorkspaceConf,
 			emptyInstancePools,
 			emptyClusterPolicies,
-			dummyWorkspaceConf,
+			allKnownWorkspaceConfsNoData,
 			qa.ListGroupsFixtures([]iam.Group{})[0],
 			emptyGitCredentials,
 			emptyIpAccessLIst,
@@ -1600,15 +1603,21 @@ func TestResourceName(t *testing.T) {
 	assert.Equal(t, "general_policy_all_users", norm)
 }
 
-func TestImportingGlobalInitScripts(t *testing.T) {
+func TestImportingGlobalInitScriptsAndWorkspaceConf(t *testing.T) {
 	qa.HTTPFixturesApply(t,
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
-			emptyRepos,
 			emptyWorkspaceConf,
-			dummyWorkspaceConf,
-			allKnownWorkspaceConfs,
+			emptyGlobalSQLConfig,
+			{
+				Method:   "GET",
+				Resource: fmt.Sprintf("/api/2.0/workspace-conf?keys=%s", workspaceConfKeysToURL()),
+				Response: map[string]any{
+					"enableWebTerminal": "true",
+				},
+				ReuseRequest: true,
+			},
 			{
 				Method:       "GET",
 				Resource:     "/api/2.0/global-init-scripts",
@@ -1634,13 +1643,26 @@ func TestImportingGlobalInitScripts(t *testing.T) {
 			ic := newImportContext(client)
 			ic.noFormat = true
 			ic.Directory = tmpDir
-			ic.enableListing("workspace")
+			ic.enableListing("wsconf")
 			services, _ := ic.allServicesAndListing()
 			ic.enableServices(services)
 			ic.generateDeclaration = true
 
 			err := ic.Run()
 			assert.NoError(t, err)
+			content, err := os.ReadFile(tmpDir + "/wsconf.tf")
+			assert.NoError(t, err)
+			contentStr := string(content)
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_global_init_script" "init_script1" {
+  source  = "${path.module}/global_init_scripts/init_script1.sh"
+  name    = "init_script1"
+  enabled = true
+}`))
+			assert.True(t, strings.Contains(contentStr, `resource "databricks_workspace_conf" "global_workspace_conf" {
+  custom_config = {
+    enableWebTerminal = "true"
+  }
+}`))
 		})
 }
 
@@ -1767,8 +1789,8 @@ func TestImportingIPAccessLists(t *testing.T) {
 			noCurrentMetastoreAttached,
 			emptyRepos,
 			emptyWorkspaceConf,
-			dummyWorkspaceConf,
-			allKnownWorkspaceConfs,
+			allKnownWorkspaceConfsNoData,
+			getTokensPermissionsFixture,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/global-init-scripts",
@@ -2296,6 +2318,8 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 		[]qa.HTTPFixture{
 			meAdminFixture,
 			noCurrentMetastoreAttached,
+			allKnownWorkspaceConfsNoData,
+			emptyGlobalInitScripts,
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/warehouses?",
@@ -2326,7 +2350,7 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			ic := newImportContext(client)
 			ic.noFormat = true
 			ic.Directory = tmpDir
-			ic.enableListing("sql-endpoints")
+			ic.enableListing("wsconf")
 
 			err := ic.Run()
 			assert.NoError(t, err)

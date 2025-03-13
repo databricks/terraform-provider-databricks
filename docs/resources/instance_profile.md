@@ -84,7 +84,7 @@ resource "databricks_cluster_policy" "this" {
     # most likely policy might have way more things init.
     "aws_attributes.instance_profile_arn" : {
       "type" : "fixed",
-      "value" : databricks_instance_profile.shared.arn
+      "value" : databricks_instance_profile.shared.id
     }
   })
 }
@@ -96,7 +96,7 @@ You can make instance profile available to all users by [associating it](group_i
 
 ```hcl
 resource "databricks_instance_profile" "this" {
-  instance_profile_arn = aws_iam_instance_profile.shared.arn
+  instance_profile_arn = aws_iam_instance_profile.shared.id
 }
 
 data "databricks_group" "users" {

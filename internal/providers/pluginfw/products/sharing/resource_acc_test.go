@@ -202,3 +202,35 @@ func TestUcAccUpdateShareAddObject(t *testing.T) {
 		}`,
 	})
 }
+
+func TestUcAccUpdateShareReorderObject(t *testing.T) {
+	acceptance.UnityWorkspaceLevel(t, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable.id
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable_3.id
+				data_object_type = "TABLE"
+			}
+		}`,
+	}, acceptance.Step{
+		Template: preTestTemplate + preTestTemplateUpdate +
+			`resource "databricks_share_pluginframework" "myshare" {
+			name  = "{var.STICKY_RANDOM}-terraform-delta-share"
+			owner = "account users"
+			object {
+				name = databricks_table.mytable_3.id
+				data_object_type = "TABLE"
+			}
+			object {
+				name = databricks_table.mytable.id
+				data_object_type = "TABLE"
+			}
+		}`,
+	})
+}

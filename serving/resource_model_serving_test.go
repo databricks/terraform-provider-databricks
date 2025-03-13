@@ -7,6 +7,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestModelServingCornerCases(t *testing.T) {
@@ -21,7 +22,7 @@ func TestModelServingCreate(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -148,7 +149,7 @@ func TestModelServingCreateGPU(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -297,7 +298,7 @@ func TestModelServingCreate_WithErrorOnWait(t *testing.T) {
 				Resource: "/api/2.0/serving-endpoints",
 				ExpectedRequest: serving.CreateServingEndpoint{
 					Name: "test-endpoint",
-					Config: serving.EndpointCoreConfigInput{
+					Config: &serving.EndpointCoreConfigInput{
 						ServedModels: []serving.ServedModelInput{
 							{
 								Name:               "prod_model",
@@ -556,6 +557,24 @@ func TestModelServingUpdate(t *testing.T) {
 				}
 			}
 			`,
+	}.ApplyNoError(t)
+}
+
+func TestModelServingUpdate_RemoveConfigIsNoOp(t *testing.T) {
+	qa.ResourceFixture{
+		Resource: ResourceModelServing(),
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name":                          "test-endpoint",
+			"config.#":                      "1",
+			"config.0.served_models.#":      "1",
+			"config.0.served_models.0.name": "prod_model",
+			"serving_endpoint_id":           "id",
+		},
+		HCL: `
+			name = "test-endpoint"
+			`,
+		ExpectedDiff: map[string]*terraform.ResourceAttrDiff{},
 	}.ApplyNoError(t)
 }
 

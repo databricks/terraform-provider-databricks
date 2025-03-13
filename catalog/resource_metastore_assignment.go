@@ -13,7 +13,8 @@ import (
 func ResourceMetastoreAssignment() common.Resource {
 	s := common.StructToSchema(catalog.MetastoreAssignment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["default_catalog_name"].Default = "hive_metastore"
+			m["default_catalog_name"].Computed = true
+			m["default_catalog_name"].Deprecated = "Use databricks_default_namespace_setting resource instead"
 			m["workspace_id"].ForceNew = true
 			m["metastore_id"].ForceNew = true
 			return m

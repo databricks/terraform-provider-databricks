@@ -184,6 +184,139 @@ func (o *AccessControlResponse_SdkV2) SetAllPermissions(ctx context.Context, v [
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// represents an identity trying to access a resource - user or a service
+// principal group can be a principal of a permission set assignment but an
+// actor is always a user or a service principal
+type Actor_SdkV2 struct {
+	ActorId types.Int64 `tfsdk:"actor_id"`
+}
+
+func (newState *Actor_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Actor_SdkV2) {
+}
+
+func (newState *Actor_SdkV2) SyncEffectiveFieldsDuringRead(existingState Actor_SdkV2) {
+}
+
+func (c Actor_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["actor_id"] = attrs["actor_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Actor.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Actor_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Actor_SdkV2
+// only implements ToObjectValue() and Type().
+func (o Actor_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"actor_id": o.ActorId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Actor_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"actor_id": types.Int64Type,
+		},
+	}
+}
+
+type CheckPolicyResponse_SdkV2 struct {
+	ConsistencyToken types.List `tfsdk:"consistency_token"`
+
+	IsPermitted types.Bool `tfsdk:"is_permitted"`
+}
+
+func (newState *CheckPolicyResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CheckPolicyResponse_SdkV2) {
+}
+
+func (newState *CheckPolicyResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CheckPolicyResponse_SdkV2) {
+}
+
+func (c CheckPolicyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["consistency_token"] = attrs["consistency_token"].SetRequired()
+	attrs["consistency_token"] = attrs["consistency_token"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["is_permitted"] = attrs["is_permitted"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CheckPolicyResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CheckPolicyResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"consistency_token": reflect.TypeOf(ConsistencyToken_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CheckPolicyResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CheckPolicyResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"consistency_token": o.ConsistencyToken,
+			"is_permitted":      o.IsPermitted,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CheckPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"consistency_token": basetypes.ListType{
+				ElemType: ConsistencyToken_SdkV2{}.Type(ctx),
+			},
+			"is_permitted": types.BoolType,
+		},
+	}
+}
+
+// GetConsistencyToken returns the value of the ConsistencyToken field in CheckPolicyResponse_SdkV2 as
+// a ConsistencyToken_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CheckPolicyResponse_SdkV2) GetConsistencyToken(ctx context.Context) (ConsistencyToken_SdkV2, bool) {
+	var e ConsistencyToken_SdkV2
+	if o.ConsistencyToken.IsNull() || o.ConsistencyToken.IsUnknown() {
+		return e, false
+	}
+	var v []ConsistencyToken_SdkV2
+	d := o.ConsistencyToken.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConsistencyToken sets the value of the ConsistencyToken field in CheckPolicyResponse_SdkV2.
+func (o *CheckPolicyResponse_SdkV2) SetConsistencyToken(ctx context.Context, v ConsistencyToken_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["consistency_token"]
+	o.ConsistencyToken = types.ListValueMust(t, vs)
+}
+
 type ComplexValue_SdkV2 struct {
 	Display types.String `tfsdk:"display"`
 
@@ -247,6 +380,53 @@ func (o ComplexValue_SdkV2) Type(ctx context.Context) attr.Type {
 			"$ref":    types.StringType,
 			"type":    types.StringType,
 			"value":   types.StringType,
+		},
+	}
+}
+
+type ConsistencyToken_SdkV2 struct {
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *ConsistencyToken_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ConsistencyToken_SdkV2) {
+}
+
+func (newState *ConsistencyToken_SdkV2) SyncEffectiveFieldsDuringRead(existingState ConsistencyToken_SdkV2) {
+}
+
+func (c ConsistencyToken_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["value"] = attrs["value"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ConsistencyToken.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ConsistencyToken_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ConsistencyToken_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ConsistencyToken_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ConsistencyToken_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"value": types.StringType,
 		},
 	}
 }

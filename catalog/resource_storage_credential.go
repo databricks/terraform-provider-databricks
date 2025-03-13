@@ -48,6 +48,9 @@ func ResourceStorageCredential() common.Resource {
 			common.DataToStructPointer(d, storageCredentialSchema, &create)
 			common.DataToStructPointer(d, storageCredentialSchema, &update)
 			update.Name = d.Get("name").(string)
+			if update.DatabricksGcpServiceAccount != nil { // we can't update it at all
+				update.DatabricksGcpServiceAccount = nil
+			}
 
 			return c.AccountOrWorkspaceRequest(func(acc *databricks.AccountClient) error {
 				storageCredential, err := acc.StorageCredentials.Create(ctx,

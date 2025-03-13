@@ -530,6 +530,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("run_as").SetComputed()
 	s.SchemaPath("task", "retry_on_timeout").SetComputed()
 	s.SchemaPath("task", "for_each_task", "task", "retry_on_timeout").SetComputed()
+	s.SchemaPath("task", "spark_jar_task", "run_as_repl").SetComputed()
 	s.SchemaPath("format").SetComputed()
 
 	// Default

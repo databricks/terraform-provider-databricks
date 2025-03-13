@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/databricks/databricks-sdk-go/retries"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +18,10 @@ func ResourceModelServing() common.Resource {
 		serving.CreateServingEndpoint{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
+			// It is allowed for users to create a serving endpoint with or without a config. Removing a config
+			// from an existing model serving endpoint is a no-op (i.e. the config will remain in the state and
+			// the model serving endpoint will not be changed).
+			common.MustSchemaPath(m, "config").Computed = true
 			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
 			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
 
@@ -107,9 +110,18 @@ func ResourceModelServing() common.Resource {
 			}
 			var e serving.CreateServingEndpoint
 			common.DataToStructPointer(d, s, &e)
-			e.Config.Name = e.Name
-			_, err = w.ServingEndpoints.UpdateConfigAndWait(ctx, e.Config, retries.Timeout[serving.ServingEndpointDetailed](d.Timeout(schema.TimeoutUpdate)))
-			return err
+			if d.HasChange("config") {
+				e.Config.Name = e.Name
+				waiter, err := w.ServingEndpoints.UpdateConfig(ctx, *e.Config)
+				if err != nil {
+					return err
+				}
+				_, err = waiter.GetWithTimeout(d.Timeout(schema.TimeoutUpdate))
+				if err != nil {
+					return err
+				}
+			}
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

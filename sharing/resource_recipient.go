@@ -90,7 +90,7 @@ func ResourceRecipient() common.Resource {
 			updateRecipientRequest.Name = d.Id()
 
 			if d.HasChange("owner") {
-				err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
+				_, err = w.Recipients.Update(ctx, sharing.UpdateRecipient{
 					Name:  updateRecipientRequest.Name,
 					Owner: updateRecipientRequest.Owner,
 				})
@@ -104,12 +104,12 @@ func ResourceRecipient() common.Resource {
 			}
 
 			updateRecipientRequest.Owner = ""
-			err = w.Recipients.Update(ctx, updateRecipientRequest)
+			_, err = w.Recipients.Update(ctx, updateRecipientRequest)
 			if err != nil {
 				if d.HasChange("owner") {
 					// Rollback
 					old, new := d.GetChange("owner")
-					rollbackErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
+					_, rollbackErr := w.Recipients.Update(ctx, sharing.UpdateRecipient{
 						Name:  updateRecipientRequest.Name,
 						Owner: old.(string),
 					})

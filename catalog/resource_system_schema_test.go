@@ -1,13 +1,16 @@
 package catalog
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestSystemSchemaCreate(t *testing.T) {
@@ -85,6 +88,40 @@ func TestSystemSchemaCreate_Error(t *testing.T) {
 	}.Apply(t)
 	qa.AssertErrorStartsWith(t, err, "Internal error happened")
 	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestSystemSchemaCreateAlreadyEnabled(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().Summary(mock.Anything).Return(&catalog.GetMetastoreSummaryResponse{
+				MetastoreId: "abc",
+			}, nil)
+			e := w.GetMockSystemSchemasAPI().EXPECT()
+			e.Enable(mock.Anything, catalog.EnableRequest{
+				MetastoreId: "abc",
+				SchemaName:  "billing",
+			}).Return(errors.New("billing system schema can only be enabled by Databricks"))
+			e.ListByMetastoreId(mock.Anything, "abc").Return(&catalog.ListSystemSchemasResponse{
+				Schemas: []catalog.SystemSchemaInfo{
+					{
+						Schema: "access",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+					{
+						Schema: "billing",
+						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+					},
+				},
+			}, nil)
+		},
+		Resource: ResourceSystemSchema(),
+		HCL:      `schema = "billing"`,
+		Create:   true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"schema":    "billing",
+		"id":        "abc|billing",
+		"full_name": "system.billing",
+	})
 }
 
 func TestSystemSchemaUpdate(t *testing.T) {

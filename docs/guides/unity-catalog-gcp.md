@@ -163,10 +163,18 @@ resource "google_project_iam_custom_role" "uc_file_events" {
   ]
 }
 
-resource "google_project_iam_member" "unity_project_file_events_admin" {
+data "google_storage_project_service_account" "gcs_account" {}
+
+resource "google_project_iam_member" "uc_project_file_events_admin" {
   project = var.project
   role    = google_project_iam_custom_role.uc_file_events.id
   member  = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
+}
+
+resource "google_project_iam_member" "cloud_storage_sa_pubsub_publisher" {
+  project = var.project
+  role  = "roles/pubsub.publisher"
+  member = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
 resource "google_storage_bucket_iam_member" "unity_cred_admin" {
@@ -178,12 +186,6 @@ resource "google_storage_bucket_iam_member" "unity_cred_admin" {
 resource "google_storage_bucket_iam_member" "unity_cred_reader" {
   bucket = google_storage_bucket.ext_bucket.name
   role   = "roles/storage.legacyBucketReader"
-  member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
-}
-
-resource "google_storage_bucket_iam_member" "unity_cred_file_events" {
-  bucket = google_storage_bucket.ext_bucket.name
-  role   = google_project_iam_custom_role.uc_file_events.id
   member = "serviceAccount:${databricks_storage_credential.ext.databricks_gcp_service_account[0].email}"
 }
 ```
@@ -209,7 +211,6 @@ resource "databricks_external_location" "some" {
     databricks_metastore_assignment.this,
     google_storage_bucket_iam_member.unity_cred_reader,
     google_storage_bucket_iam_member.unity_cred_admin
-    google_storage_bucket_iam_member.unity_cred_file_events
   ]
 }
 

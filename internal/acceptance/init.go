@@ -90,6 +90,7 @@ type Step struct {
 	PreConfig func()
 
 	Destroy                   bool
+	Taint                     []string
 	ExpectNonEmptyPlan        bool
 	ExpectError               *regexp.Regexp
 	ConfigPlanChecks          resource.ConfigPlanChecks
@@ -219,6 +220,7 @@ func run(t *testing.T, steps []Step) {
 			},
 			Config:                               stepConfig,
 			Destroy:                              s.Destroy,
+			Taint:                                s.Taint,
 			ExpectNonEmptyPlan:                   s.ExpectNonEmptyPlan,
 			ConfigPlanChecks:                     s.ConfigPlanChecks,
 			PlanOnly:                             s.PlanOnly,

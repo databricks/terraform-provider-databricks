@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+* Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
+
 ### Bug Fixes
 
  * Recreate `databricks_access_control_rule_set` when the `name` changes ([#4572](https://github.com/databricks/terraform-provider-databricks/pull/4572)).

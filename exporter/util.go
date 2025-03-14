@@ -16,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/storage"
+	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -332,21 +333,80 @@ func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }
 
+func (ic *importContext) allServicesAndListing() (string, string) {
+	services := map[string]struct{}{}
+	listing := map[string]struct{}{}
+	for _, ir := range ic.Importables {
+		services[ir.Service] = struct{}{}
+		if ir.List != nil {
+			listing[ir.Service] = struct{}{}
+		}
+	}
+	// We need this to specify default listings of UC & Workspace objects...
+	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles"} {
+		listing[ir] = struct{}{}
+	}
+	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
+}
+
+func (ic *importContext) parseServicesList(services string, isListing bool) []string {
+	allEnabledServices, allEnabledListing := ic.allServicesAndListing()
+	var allServices []string
+	if isListing {
+		allServices = strings.Split(allEnabledListing, ",")
+	} else {
+		allServices = strings.Split(allEnabledServices, ",")
+	}
+	var allUcServices []string
+	for _, s := range allServices {
+		if strings.HasPrefix(s, "uc-") {
+			allUcServices = append(allUcServices, s)
+		}
+	}
+	allUcServices = append(allUcServices, "vector-search")
+	servicesList := map[string]struct{}{}
+	for _, s := range strings.Split(services, ",") {
+		ss := strings.TrimSpace(s)
+		if ss == "all" {
+			for _, service := range allServices {
+				servicesList[service] = struct{}{}
+			}
+		} else if ss == "+uc" || ss == "uc" {
+			for _, service := range allUcServices {
+				servicesList[service] = struct{}{}
+			}
+
+		} else if ss == "-uc" {
+			for _, service := range allUcServices {
+				delete(servicesList, service)
+			}
+		} else if strings.HasPrefix(ss, "-") {
+			delete(servicesList, ss[1:])
+		} else if strings.HasPrefix(ss, "+") {
+			servicesList[ss[1:]] = struct{}{}
+		} else if ss != "" {
+			servicesList[ss] = struct{}{}
+		}
+	}
+	return maps.Keys(servicesList)
+}
+
 func (ic *importContext) enableServices(services string) {
 	ic.services = map[string]struct{}{}
-	for _, s := range strings.Split(services, ",") {
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+	for _, s := range ic.parseServicesList(services, false) {
+		ic.services[s] = struct{}{}
 	}
 	for s := range ic.listing { // Add all services mentioned in the listing
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+		ic.services[s] = struct{}{}
 	}
 }
 
 func (ic *importContext) enableListing(listing string) {
 	ic.listing = map[string]struct{}{}
-	for _, s := range strings.Split(listing, ",") {
-		ic.listing[strings.TrimSpace(s)] = struct{}{}
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+	for _, s := range ic.parseServicesList(listing, true) {
+		ic.listing[s] = struct{}{}
+		ic.services[s] = struct{}{}
 	}
 }
 

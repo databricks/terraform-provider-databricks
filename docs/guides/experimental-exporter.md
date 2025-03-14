@@ -82,7 +82,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ### Use of `-listing` and `-services` for granular resources selection
 
-The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.
+The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.  
 
 For example, if we have a job comprising two notebooks and one SQL dashboard, and tasks have Python libraries on DBFS attached. If we just specify the `-listing jobs`, then it will export the following resources:
 
@@ -106,9 +106,15 @@ but if we also specify `-services notebooks,storage` then it will export only:
 
 The rest of the values, like SQL object IDs, etc. will be hard-coded and not portable between workspaces.
 
+You can also use predefined aliases (`all` and `uc`) to specify multiple services at once.  For example, if `-listing` has value `all,-uc`, then we will discover all services except of Unity Catalog + vector search. 
+
+We can also exclude specific services  For example, we can specify `-services` as `-all,-uc-tables` and then we won't generate code for `databricks_sql_table`.
+
 ## Services
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
+
+Services could be specified in combination with predefined aliases (`all` - for all services and listings, `uc` - for all UC services, including the vector search).  The service could be specified as the service name, or it could have `-` prepended to the service, to exclude it from the list (including `-uc` to exclude all UC-related services).
 
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.

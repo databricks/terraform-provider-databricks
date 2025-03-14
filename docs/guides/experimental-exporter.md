@@ -119,13 +119,14 @@ Services could be specified in combination with predefined aliases (`all` - for 
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
+* `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md).  When listing allows to filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex` and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).

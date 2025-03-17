@@ -146,6 +146,9 @@ func (r *QualityMonitorResource) Create(ctx context.Context, req resource.Create
 
 	// Set the ID to the table name
 	newMonitorInfoTfSDK.ID = newMonitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	newMonitorInfoTfSDK.WarehouseId = monitorInfoTfSDK.WarehouseId
+	newMonitorInfoTfSDK.SkipBuiltinDashboard = monitorInfoTfSDK.SkipBuiltinDashboard
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newMonitorInfoTfSDK)...)
 }
@@ -179,6 +182,20 @@ func (r *QualityMonitorResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	monitorInfoTfSDK.ID = monitorInfoTfSDK.TableName
+	// We need it to fill additional fields as they are not returned by the API
+	var origWarehouseId types.String
+	var origSkipBuiltinDashboard types.Bool
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &origWarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &origSkipBuiltinDashboard)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if origWarehouseId.ValueString() != "" {
+		monitorInfoTfSDK.WarehouseId = origWarehouseId
+	}
+	if origSkipBuiltinDashboard.ValueBool() {
+		monitorInfoTfSDK.SkipBuiltinDashboard = origSkipBuiltinDashboard
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, monitorInfoTfSDK)...)
 }
@@ -222,6 +239,12 @@ func (r *QualityMonitorResource) Update(ctx context.Context, req resource.Update
 
 	var newMonitorInfoTfSDK MonitorInfoExtended
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, monitor, &newMonitorInfoTfSDK)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// We need it to fill additional fields as they are not returned by the API
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("warehouse_id"), &newMonitorInfoTfSDK.WarehouseId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("skip_builtin_dashboard"), &newMonitorInfoTfSDK.SkipBuiltinDashboard)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

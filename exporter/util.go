@@ -16,11 +16,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/storage"
-
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func (ic *importContext) isServiceEnabled(service string) bool {
@@ -335,21 +333,80 @@ func generateUniqueID(v string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(v)))[:10]
 }
 
+func (ic *importContext) allServicesAndListing() (string, string) {
+	services := map[string]struct{}{}
+	listing := map[string]struct{}{}
+	for _, ir := range ic.Importables {
+		services[ir.Service] = struct{}{}
+		if ir.List != nil {
+			listing[ir.Service] = struct{}{}
+		}
+	}
+	// We need this to specify default listings of UC & Workspace objects...
+	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
+		"notebooks", "directories", "wsfiles"} {
+		listing[ir] = struct{}{}
+	}
+	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
+}
+
+func (ic *importContext) parseServicesList(services string, isListing bool) []string {
+	allEnabledServices, allEnabledListing := ic.allServicesAndListing()
+	var allServices []string
+	if isListing {
+		allServices = strings.Split(allEnabledListing, ",")
+	} else {
+		allServices = strings.Split(allEnabledServices, ",")
+	}
+	var allUcServices []string
+	for _, s := range allServices {
+		if strings.HasPrefix(s, "uc-") {
+			allUcServices = append(allUcServices, s)
+		}
+	}
+	allUcServices = append(allUcServices, "vector-search")
+	servicesList := map[string]struct{}{}
+	for _, s := range strings.Split(services, ",") {
+		ss := strings.TrimSpace(s)
+		if ss == "all" {
+			for _, service := range allServices {
+				servicesList[service] = struct{}{}
+			}
+		} else if ss == "+uc" || ss == "uc" {
+			for _, service := range allUcServices {
+				servicesList[service] = struct{}{}
+			}
+
+		} else if ss == "-uc" {
+			for _, service := range allUcServices {
+				delete(servicesList, service)
+			}
+		} else if strings.HasPrefix(ss, "-") {
+			delete(servicesList, ss[1:])
+		} else if strings.HasPrefix(ss, "+") {
+			servicesList[ss[1:]] = struct{}{}
+		} else if ss != "" {
+			servicesList[ss] = struct{}{}
+		}
+	}
+	return maps.Keys(servicesList)
+}
+
 func (ic *importContext) enableServices(services string) {
 	ic.services = map[string]struct{}{}
-	for _, s := range strings.Split(services, ",") {
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+	for _, s := range ic.parseServicesList(services, false) {
+		ic.services[s] = struct{}{}
 	}
 	for s := range ic.listing { // Add all services mentioned in the listing
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+		ic.services[s] = struct{}{}
 	}
 }
 
 func (ic *importContext) enableListing(listing string) {
 	ic.listing = map[string]struct{}{}
-	for _, s := range strings.Split(listing, ",") {
-		ic.listing[strings.TrimSpace(s)] = struct{}{}
-		ic.services[strings.TrimSpace(s)] = struct{}{}
+	for _, s := range ic.parseServicesList(listing, true) {
+		ic.listing[s] = struct{}{}
+		ic.services[s] = struct{}{}
 	}
 }
 
@@ -430,48 +487,11 @@ func runWithRetries[ERR any](runFunc func() ERR, msg string) ERR {
 	return err
 }
 
-func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	if pathString == "owner" {
-		return d.Get(pathString).(string) == ""
-	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
-}
-
-func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	if pathString == "isolation_mode" {
-		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
-	}
-	return shouldOmitForUnityCatalog(ic, pathString, as, d)
-}
-
 func appendEndingSlashToDirName(dir string) string {
 	if dir == "" || dir[len(dir)-1] == '/' {
 		return dir
 	}
 	return dir + "/"
-}
-
-func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-		// catalog and schema names for the source resource
-		res_catalog_name := res.Data.Get(catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(schema_name_attr).(string)
-		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
-		if res_catalog_name == "" || res_schema_name == "" {
-			return false
-		}
-		// catalog and schema names for target resource approximation
-		ra_catalog_name, cat_found := ra.Get("catalog_name")
-		ra_schema_name, schema_found := ra.Get("name")
-		if !cat_found || !schema_found {
-			log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v). Resource: %s, catalog='%s', schema='%s'",
-				ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, res.Resource, res_catalog_name, res_schema_name)
-			return false
-		}
-		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
-		return result
-
-	}
 }
 
 func isMatchingShareRecipient(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
@@ -487,13 +507,6 @@ func isMatchignShareObject(obj string) isValidAproximationFunc {
 	}
 }
 
-func isMatchingAllowListArtifact(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	objPath := strings.Replace(origPath, ".artifact", ".match_type", 1)
-	matchType, ok := res.Data.GetOk(objPath)
-	artifactType := res.Data.Get("artifact_type").(string)
-	return ok && matchType.(string) == "PREFIX_MATCH" && (artifactType == "LIBRARY_JAR" || artifactType == "INIT_SCRIPT")
-}
-
 func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) func(ic *importContext, r *resource) bool {
 	return func(ic *importContext, r *resource) bool {
 		res := (r.Data != nil && r.Data.Get(attrName).(string) == "")
@@ -502,27 +515,6 @@ func generateIgnoreObjectWithEmptyAttributeValue(resourceType, attrName string) 
 		}
 		return res
 	}
-}
-
-func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resource) (string, *resource) {
-	gr := &resource{
-		Resource: "databricks_grants",
-		ID:       id,
-	}
-	var owner string
-	if parentResource.Data != nil {
-		ignoreFunc := ic.Importables[parentResource.Resource].Ignore
-		if ignoreFunc != nil && ignoreFunc(ic, parentResource) {
-			return "", nil
-		}
-		ownerRaw, ok := parentResource.Data.GetOk("owner")
-		if ok {
-			gr.AddExtraData("owner", ownerRaw)
-			owner = ownerRaw.(string)
-		}
-	}
-	ic.Emit(gr)
-	return owner, gr
 }
 
 func (ic *importContext) addTfVar(name, value string) {
@@ -544,42 +536,18 @@ func (ic *importContext) emitPermissionsIfNotIgnored(r *resource, id, name strin
 	}
 }
 
-func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
-	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindingsAll(ic.Context, catalog.GetBindingsRequest{
-		SecurableName: securableName,
-		SecurableType: catalog.GetBindingsSecurableType(securableType),
-	})
-	if err != nil {
-		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
-		return
-	}
-	for _, binding := range bindings {
-		id := fmt.Sprintf("%d|%s|%s", binding.WorkspaceId, securableType, securableName)
-		// We were creating Data instance explicitly because of the bug in the databricks_catalog_workspace_binding
-		// implementation. Technically, after the fix is merged we can remove this, but we're keeping it as-is now
-		// to decrease a number of API calls.
-		d := ic.Resources["databricks_workspace_binding"].Data(
-			&terraform.InstanceState{
-				ID: id,
-				Attributes: map[string]string{
-					"workspace_id":   fmt.Sprintf("%d", binding.WorkspaceId),
-					"securable_type": securableType,
-					"securable_name": securableName,
-					"binding_type":   binding.BindingType.String(),
-				},
-			})
-		ic.Emit(&resource{
-			Resource: "databricks_workspace_binding",
-			ID:       id,
-			Name:     fmt.Sprintf("%s_%s_ws_%d", securableType, securableName, binding.WorkspaceId),
-			Data:     d,
-		})
+func makeNamePlusIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		return d.Get(nm).(string) + "_" + d.Id()
 	}
 }
 
-func isMatchingSecurableTypeAndName(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-	res_securable_type := res.Data.Get("securable_type").(string)
-	res_securable_name := res.Data.Get("securable_name").(string)
-	ra_name, _ := ra.Get("name")
-	return ra.Type == ("databricks_"+res_securable_type) && ra_name.(string) == res_securable_name
+func makeNameOrIdFunc(nm string) func(ic *importContext, d *schema.ResourceData) string {
+	return func(ic *importContext, d *schema.ResourceData) string {
+		name := d.Get(nm).(string)
+		if name == "" {
+			return d.Id()
+		}
+		return name
+	}
 }

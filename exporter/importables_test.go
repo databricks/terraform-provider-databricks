@@ -1280,7 +1280,7 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 				Script:   "YWJj",
 			},
 		},
-	}, "workspace", false, func(ic *importContext) {
+	}, "wsconf", false, func(ic *importContext) {
 		ic.Emit(&resource{
 			Resource: "databricks_global_init_script",
 			ID:       "a",
@@ -1294,7 +1294,7 @@ func TestGlobalInitScriptGeneration(t *testing.T) {
 		  source  = "${path.module}/global_init_scripts/new_importing_things.sh"
 		  name    = "New: Importing ^ Things"
 		  enabled = true
-		}`), getGeneratedFile(ic, "workspace"))
+		}`), getGeneratedFile(ic, "wsconf"))
 	})
 }
 

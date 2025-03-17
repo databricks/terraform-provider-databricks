@@ -325,6 +325,49 @@ func TestUpdateExternalLocation(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestUpdateExternalLocationName(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc",
+				ExpectedRequest: catalog.UpdateExternalLocation{
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+					ReadOnly:       false,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/external-locations/abc?",
+				Response: catalog.ExternalLocationInfo{
+					Name:           "abc",
+					Url:            "s3://foo/bar",
+					CredentialName: "bcd",
+					Comment:        "def",
+				},
+			},
+		},
+		Resource:    ResourceExternalLocation(),
+		Update:      true,
+		RequiresNew: true,
+		ID:          "abc",
+		InstanceState: map[string]string{
+			"name":            "abc-old",
+			"url":             "s3://foo/bar",
+			"credential_name": "abc",
+			"comment":         "def",
+		},
+		HCL: `
+		name = "abc"
+		url = "s3://foo/bar"
+		credential_name = "bcd"
+		comment = "def"
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestUpdateExternalLocation_FromReadOnly(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -103,5 +104,6 @@ func ResourceTable() common.Resource {
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewTablesAPI(ctx, c).deleteTable(d.Id())
 		},
+		DeprecationMessage: fmt.Sprintf("databricks_table is deprecated in favor of databricks_sql_table. Please see %s for more information.", docs.DocumentationUrl(docs.DocOptions{Slug: "sql_table"})),
 	}
 }

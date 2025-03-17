@@ -61,12 +61,25 @@ resource "databricks_connection" "bigquery" {
 }
 ```
 
+Create a connection to builtin Hive Metastore
+
+```hcl
+resource "databricks_connection" "this" {
+  name            = "hms-builtin"
+  connection_type = "HIVE_METASTORE"
+  comment         = "This is a connection to builtin HMS"
+  options = {
+    builtin = "true"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 - `name` - Name of the Connection.
-- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE` or `DATABRICKS` are supported. [Up-to-date list of connection type supported](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
+- `connection_type` - Connection type. `BIGQUERY` `MYSQL` `POSTGRESQL` `SNOWFLAKE` `REDSHIFT` `SQLDW` `SQLSERVER`, `SALESFORCE`, `HIVE_METASTORE`, `GLUE`, `TERADATA`, `ORACLE` or `DATABRICKS` are supported. Up-to-date list of connection type supported is in the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources)
 - `options` - The key value of options required by the connection, e.g. `host`, `port`, `user`, `password` or `GoogleServiceAccountKeyJson`. Please consult the [documentation](https://docs.databricks.com/query-federation/index.html#supported-data-sources) for the required option.
 - `owner` - (Optional) Name of the connection owner.
 - `properties` -  (Optional) Free-form connection properties.
@@ -77,6 +90,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 - `id` - ID of this connection in form of `<metastore_id>|<name>`.
+- `connection_id` - Unique ID of the connection.
+- `created_at` - Time at which this connection was created, in epoch milliseconds.
+- `created_by` -  Username of connection creator.
+- `credential_type` - The type of credential for this connection.
+- `full_name` - Full name of connection.
+- `metastore_id` - Unique ID of the UC metastore for this connection.
+- `provisioning_info` - Object with the status of an asynchronously provisioned resource.
+- `updated_at` - Time at which connection this was last modified, in epoch milliseconds.
+- `updated_by` - Username of user who last modified the connection.
+- `url` - URL of the remote data source, extracted from options.
 
 ## Import
 

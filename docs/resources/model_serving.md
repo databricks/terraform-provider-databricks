@@ -46,7 +46,7 @@ resource "databricks_model_serving" "this" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the model serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores. NOTE: Changing this name will delete the existing endpoint and create a new endpoint with the updated name.
-* `config` - (Required) The model serving endpoint configuration.
+* `config` - The model serving endpoint configuration. This is optional and can be added and modified after creation. If `config` was provided in a previous apply but is not provided in the current apply, no change to the model serving endpoint will occur. To recreate the model serving endpoint without the `config` block, the model serving endpoint must be destroyed and recreated.
   * `served_entities` - A list of served entities for the endpoint to serve. A serving endpoint can have up to 10 served entities.
   * `served_models` - (Deprecated, use `served_entities` instead) Each block represents a served model for the endpoint to serve. A model serving endpoint can have up to 10 served models.
   * `traffic_config` - A single block represents the traffic split configuration amongst the served models.
@@ -77,6 +77,7 @@ The following arguments are supported:
       * `aws_secret_access_key` - The Databricks secret key reference for an AWS Secret Access Key paired with the access key ID, with permissions to interact with Bedrock services.
       * `aws_secret_access_key_plaintext` -  An AWS secret access key paired with the access key ID, with permissions to interact with Bedrock services provided as a plaintext string.
       * `bedrock_provider` - The underlying provider in Amazon Bedrock. Supported values (case insensitive) include: `Anthropic`, `Cohere`, `AI21Labs`, `Amazon`.
+      * `instance_profile_arn` - Optional ARN of the instance profile that the external model will use to access AWS resources. You must authenticate using an instance profile or access keys.
     * `cohere_config` - Cohere Config
       * `cohere_api_key` - The Databricks secret key reference for a Cohere API key.
       * `cohere_api_key_plaintext` - The Cohere API key provided as a plaintext string.

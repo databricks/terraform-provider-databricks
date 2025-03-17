@@ -3,25 +3,80 @@ package scim
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+
+func NewUsersCache(expiration time.Duration) *UsersCache {
+	return &UsersCache {
+		cache: map[string]User{},
+		mutex: sync.Mutex{},
+		cacheExpiration: expiration,
+		// Make sure the cache is populated on the first read
+		populateTime: time.Time{},
+	}
+}
+
+type UsersCache struct {
+	mutex sync.Mutex
+	cache map[string]User
+	cacheExpiration time.Duration
+	populateTime time.Time
+}
+
+var usersCache *UsersCache = NewUsersCache(time.Second * 60)
+
+func (c *UsersCache) populate(api UsersAPI) error {
+	var users UserList
+	req := map[string]string{}
+	req["excludedAttributes"] = "roles"
+	err := api.client.Scim(api.context, http.MethodGet, "/preview/scim/v2/Users", req, &users)
+	if err != nil {
+		return err
+	}
+	u := users.Resources
+	for _, user := range u {
+		tflog.Info(api.context, fmt.Sprintf("Caching user %s", user.UserName))
+		c.cache[strings.ToLower(user.UserName)] = user
+	}
+	c.populateTime = time.Now()
+	return nil
+}
+
+func (c *UsersCache) Get(api UsersAPI, userName string) (User, error) {
+	// Databricks' search is case-insensitive
+	userName = strings.ToLower(userName)
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if time.Since(c.populateTime) > c.cacheExpiration {
+		if err := c.populate(api); err != nil {
+			return User{}, err
+		}
+	}
+
+	tflog.Debug(api.context, fmt.Sprintf("Getting user %s from cache", userName))
+	user, ok := c.cache[userName]
+	tflog.Debug(api.context, fmt.Sprintf("User %s found in cache: %t", userName, ok))
+	if ok {
+		return user, nil
+	}
+
+	return User{}, fmt.Errorf("cannot find user %s", userName)
+}
 
 func getUser(usersAPI UsersAPI, id, name string) (user User, err error) {
 	if id != "" {
 		return usersAPI.Read(id, "userName,displayName,externalId,applicationId")
 	}
-	userList, err := usersAPI.Filter(fmt.Sprintf(`userName eq "%s"`, name), true)
-	if err != nil {
-		return
-	}
-	if len(userList) == 0 {
-		err = fmt.Errorf("cannot find user %s", name)
-		return
-	}
-	user = userList[0]
+	user, err = usersCache.Get(usersAPI, name)
 	return
 }
 

@@ -8,13 +8,14 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 )
 
-// NewUsersAPI creates UsersAPI instance from provider meta
+
 func NewUsersAPI(ctx context.Context, m any) UsersAPI {
 	return UsersAPI{
 		client:  m.(*common.DatabricksClient),
 		context: ctx,
 	}
 }
+
 
 // UsersAPI exposes the scim user API
 type UsersAPI struct {
@@ -36,15 +37,15 @@ func (a UsersAPI) Filter(filter string, excludeRoles bool) (u []User, err error)
 	var users UserList
 	req := map[string]string{}
 	if filter != "" {
-		req["filter"] = filter
+			req["filter"] = filter
 	}
 	// We exclude roles to reduce load on the scim service
 	if excludeRoles {
-		req["excludedAttributes"] = "roles"
+			req["excludedAttributes"] = "roles"
 	}
 	err = a.client.Scim(a.context, http.MethodGet, "/preview/scim/v2/Users", req, &users)
 	if err != nil {
-		return
+			return
 	}
 	u = users.Resources
 	return

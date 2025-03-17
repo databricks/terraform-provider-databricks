@@ -73,7 +73,6 @@ func TestDataSourceUserGerUser(t *testing.T) {
 	})
 }
 
-
 func TestDataSourceUserGerUserEmpty(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{

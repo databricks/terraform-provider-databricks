@@ -13,11 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-
 type GroupMembersInfo struct {
 	initialized bool
 	members     map[string]struct{}
-	lock 	    *sync.Mutex
+	lock        *sync.Mutex
 }
 
 type GroupCache struct {
@@ -25,18 +24,16 @@ type GroupCache struct {
 }
 
 func NewGroupsCache(expiration time.Duration) *GroupCache {
-	return &GroupCache {
+	return &GroupCache{
 		cache: gcache.New(1000).LRU().LoaderFunc(func(key interface{}) (interface{}, error) {
 			return &GroupMembersInfo{
 				initialized: false,
 				members:     make(map[string]struct{}),
 				lock:        &sync.Mutex{},
 			}, nil
-		}).
-		Expiration(expiration).Build(),
+		}).Expiration(expiration).Build(),
 	}
 }
-
 
 func (c *GroupCache) GetMembers(api GroupsAPI, groupID string) (map[string]struct{}, error) {
 	entry, err := c.cache.Get(groupID)
@@ -112,7 +109,6 @@ func hasMember(members map[string]struct{}, memberID string) bool {
 	_, ok := members[memberID]
 	return ok
 }
-
 
 var globalGroupsCache = NewGroupsCache(time.Second * 300)
 

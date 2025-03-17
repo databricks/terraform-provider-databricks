@@ -13,11 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-
 func NewUsersCache(expiration time.Duration) *UsersCache {
-	return &UsersCache {
-		cache: map[string]User{},
-		mutex: sync.Mutex{},
+	return &UsersCache{
+		cache:           map[string]User{},
+		mutex:           sync.Mutex{},
 		cacheExpiration: expiration,
 		// Make sure the cache is populated on the first read
 		populateTime: time.Time{},
@@ -25,10 +24,10 @@ func NewUsersCache(expiration time.Duration) *UsersCache {
 }
 
 type UsersCache struct {
-	mutex sync.Mutex
-	cache map[string]User
+	mutex           sync.Mutex
+	cache           map[string]User
 	cacheExpiration time.Duration
-	populateTime time.Time
+	populateTime    time.Time
 }
 
 var usersCache *UsersCache = NewUsersCache(time.Second * 60)

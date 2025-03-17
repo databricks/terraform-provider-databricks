@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
@@ -190,6 +191,69 @@ func TestResourceSQLEndpointCreate_ErrorDisabled(t *testing.T) {
   		cluster_size = "Small"
 		`,
 	}.ExpectError(t, "failed creating warehouse: Databricks SQL is not supported")
+}
+
+// this is pending https://github.com/databricks/databricks-sdk-go/pull/1155
+func simpleError[R any](err error) poll.PollFunc[R] {
+	return func(_ time.Duration, _ func(*R)) (*R, error) {
+		return nil, err
+	}
+}
+
+func TestResourceSQLEndpointCreateRollback(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(nil)
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch")
+}
+
+func TestResourceSQLEndpointCreateRollbackFailed(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockWarehousesAPI().EXPECT()
+			e.Create(mock.Anything, sql.CreateWarehouseRequest{
+				Name:               "foo",
+				ClusterSize:        "Small",
+				MaxNumClusters:     1,
+				AutoStopMins:       0,
+				EnablePhoton:       true,
+				SpotInstancePolicy: "COST_OPTIMIZED",
+				ForceSendFields:    []string{"AutoStopMins"},
+			}).Return(&sql.WaitGetWarehouseRunning[sql.CreateWarehouseResponse]{
+				Id:   "warehouse_id",
+				Poll: simpleError[sql.GetWarehouseResponse](errors.New("Clusters are failing to launch")),
+			}, nil)
+			e.DeleteById(mock.Anything, "warehouse_id").Return(errors.New("Cannot delete warehouse"))
+		},
+		Resource: ResourceSqlEndpoint(),
+		Create:   true,
+		HCL: `
+		name = "foo"
+  		cluster_size = "Small"
+		auto_stop_mins = 0
+		`,
+	}.ExpectError(t, "failed waiting for warehouse to start: Clusters are failing to launch. when rolling back, also failed: Cannot delete warehouse")
 }
 
 func TestResourceSQLEndpointRead(t *testing.T) {

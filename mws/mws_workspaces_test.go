@@ -15,9 +15,12 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	"github.com/databricks/terraform-provider-databricks/tokens"
+	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -97,11 +100,24 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			storage_configuration_name = "storage-ws-{var.RANDOM}"
 			bucket_name                = "{env.TEST_ROOT_BUCKET}"
 		}
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-ws-{var.RANDOM}"
+			vpc_id       = "{env.TEST_VPC_ID}"
+			subnet_ids   = [
+				"{env.TEST_SUBNET_PRIVATE}",
+				"{env.TEST_SUBNET_PRIVATE2}",
+			]
+			security_group_ids = [
+				"{env.TEST_SECURITY_GROUP}",
+			]
+		}			
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 			workspace_name  = "terra-{var.RANDOM}"
 			aws_region      = "{env.AWS_REGION}"
 	
+			network_id = databricks_mws_networks.this.network_id
 			credentials_id = databricks_mws_credentials.this.credentials_id
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
@@ -157,11 +173,24 @@ func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 			storage_configuration_name = "storage-ws-{var.RANDOM}"
 			bucket_name                = "{env.TEST_ROOT_BUCKET}"
 		}
+		resource "databricks_mws_networks" "this" {
+			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
+			network_name = "network-ws-{var.RANDOM}"
+			vpc_id       = "{env.TEST_VPC_ID}"
+			subnet_ids   = [
+				"{env.TEST_SUBNET_PRIVATE}",
+				"{env.TEST_SUBNET_PRIVATE2}",
+			]
+			security_group_ids = [
+				"{env.TEST_SECURITY_GROUP}",
+			]
+		}			
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 			workspace_name  = "terra-{var.RANDOM}"
 			aws_region      = "{env.AWS_REGION}"
 	
+			network_id = databricks_mws_networks.this.network_id
 			credentials_id = databricks_mws_credentials.this.credentials_id
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
@@ -217,26 +246,31 @@ func TestMwsAccGcpWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
-	t.Skip()
-	// FIXME: flaky with `Secondary IP range (pods, svc) is already in use by another GKE cluster`
-	acceptance.AccountLevel(t, acceptance.Step{
-		Template: `
+	commonResources := func(includeGkeFields bool) string {
+		gkeFields := ""
+		if includeGkeFields {
+			gkeFields = `pod_ip_range_name = "pods"
+				service_ip_range_name = "service"`
+		}
+		return fmt.Sprintf(`
 		resource "databricks_mws_networks" "this" {
 			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-			network_name = "{env.TEST_PREFIX}-network-{var.RANDOM}"
+			network_name = "psc-network-{var.STICKY_RANDOM}"
 			gcp_network_info {
 				network_project_id = "{env.GOOGLE_PROJECT}"
 				vpc_id = "{env.TEST_VPC_ID}"
 				subnet_id = "{env.TEST_SUBNET_ID}"
 				subnet_region = "{env.GOOGLE_REGION}"
-				pod_ip_range_name = "pods"
-				service_ip_range_name = "svc"
+				%s
 			}
 		}
-		
+		`, gkeFields)
+	}
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: commonResources(true) + `
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
-			workspace_name  = "{env.TEST_PREFIX}-{var.RANDOM}"
+			workspace_name  = "psc-test-{var.STICKY_RANDOM}"
 			location        = "{env.GOOGLE_REGION}"
 	
 			cloud_resource_container {
@@ -244,18 +278,92 @@ func TestMwsAccGcpByovpcWorkspaces(t *testing.T) {
 					project_id = "{env.GOOGLE_PROJECT}"
 				}
 			}
-
-			network_id = databricks_mws_networks.this.network_id
-			
+						
 			gke_config {
 				connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
 				master_ip_range = "10.3.0.0/28"
 			}
+            
+			network_id = databricks_mws_networks.this.network_id
 		}`,
+	}, acceptance.Step{
+		// Changing the workspace name recreates the workspace.
+		Template: commonResources(true) + `
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "psc-test-new-{var.STICKY_RANDOM}"
+			location        = "{env.GOOGLE_REGION}"
+	
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+						
+			gke_config {
+				connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
+				master_ip_range = "10.3.0.0/28"
+			}
+            
+			network_id = databricks_mws_networks.this.network_id
+		}`,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceActions{"databricks_mws_workspaces.this", []tfjson.Action{tfjson.ActionDelete, tfjson.ActionCreate}},
+			},
+		},
+	}, acceptance.Step{
+		// Removing gke_config is a no-op because of suppress_diff.
+		Template: commonResources(true) + `
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "psc-test-new-{var.STICKY_RANDOM}"
+			location        = "{env.GOOGLE_REGION}"
+	
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+            
+			network_id = databricks_mws_networks.this.network_id
+		}`,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{
+				checkResourceActions{"databricks_mws_workspaces.this", []tfjson.Action{tfjson.ActionNoop}},
+			},
+		},
+		Check: func(s *terraform.State) error {
+			r := s.RootModule().Resources["databricks_mws_workspaces.this"].Primary
+			assert.Empty(t, r.Attributes["gke_config"])
+			return nil
+		},
+	}, acceptance.Step{
+		// Destroy and recreate the workspace without gke_config.
+		Template: commonResources(false) + `
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "psc-test-new-{var.STICKY_RANDOM}"
+			location        = "{env.GOOGLE_REGION}"
+	
+			cloud_resource_container {
+				gcp {
+					project_id = "{env.GOOGLE_PROJECT}"
+				}
+			}
+            
+			network_id = databricks_mws_networks.this.network_id
+		}`,
+		Taint: []string{
+			"databricks_mws_workspaces.this",
+			"databricks_mws_networks.this",
+		},
 	})
 }
 
 func TestMwsAccGcpPscWorkspaces(t *testing.T) {
+	t.Skip()
+	// private access settings are not enabled in our new E2 account.
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_mws_networks" "this" {

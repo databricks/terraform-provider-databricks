@@ -29,6 +29,8 @@ type App struct {
 
 	AppStatus types.Object `tfsdk:"app_status"`
 
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+
 	ComputeStatus types.Object `tfsdk:"compute_status"`
 	// The creation time of the app. Formatted timestamp in ISO 6801.
 	CreateTime types.String `tfsdk:"create_time"`
@@ -40,6 +42,8 @@ type App struct {
 	DefaultSourceCodePath types.String `tfsdk:"default_source_code_path"`
 	// The description of the app.
 	Description types.String `tfsdk:"description"`
+
+	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
 	// The unique identifier of the app.
 	Id types.String `tfsdk:"id"`
 	// The name of the app. The name must contain only lowercase alphanumeric
@@ -73,11 +77,13 @@ func (newState *App) SyncEffectiveFieldsDuringRead(existingState App) {
 func (c App) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["active_deployment"] = attrs["active_deployment"].SetComputed()
 	attrs["app_status"] = attrs["app_status"].SetComputed()
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["compute_status"] = attrs["compute_status"].SetComputed()
 	attrs["create_time"] = attrs["create_time"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
+	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["pending_deployment"] = attrs["pending_deployment"].SetComputed()
@@ -118,11 +124,13 @@ func (o App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"active_deployment":           o.ActiveDeployment,
 			"app_status":                  o.AppStatus,
+			"budget_policy_id":            o.BudgetPolicyId,
 			"compute_status":              o.ComputeStatus,
 			"create_time":                 o.CreateTime,
 			"creator":                     o.Creator,
 			"default_source_code_path":    o.DefaultSourceCodePath,
 			"description":                 o.Description,
+			"effective_budget_policy_id":  o.EffectiveBudgetPolicyId,
 			"id":                          o.Id,
 			"name":                        o.Name,
 			"pending_deployment":          o.PendingDeployment,
@@ -140,16 +148,18 @@ func (o App) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o App) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"active_deployment":        AppDeployment{}.Type(ctx),
-			"app_status":               ApplicationStatus{}.Type(ctx),
-			"compute_status":           ComputeStatus{}.Type(ctx),
-			"create_time":              types.StringType,
-			"creator":                  types.StringType,
-			"default_source_code_path": types.StringType,
-			"description":              types.StringType,
-			"id":                       types.StringType,
-			"name":                     types.StringType,
-			"pending_deployment":       AppDeployment{}.Type(ctx),
+			"active_deployment":          AppDeployment{}.Type(ctx),
+			"app_status":                 ApplicationStatus{}.Type(ctx),
+			"budget_policy_id":           types.StringType,
+			"compute_status":             ComputeStatus{}.Type(ctx),
+			"create_time":                types.StringType,
+			"creator":                    types.StringType,
+			"default_source_code_path":   types.StringType,
+			"description":                types.StringType,
+			"effective_budget_policy_id": types.StringType,
+			"id":                         types.StringType,
+			"name":                       types.StringType,
+			"pending_deployment":         AppDeployment{}.Type(ctx),
 			"resources": basetypes.ListType{
 				ElemType: AppResource{}.Type(ctx),
 			},

@@ -32,6 +32,7 @@ resource "databricks_sql_table" "myInferenceTable" {
 	name = "bar{var.STICKY_RANDOM}_inference"
 	table_type = "MANAGED"
 	data_source_format = "DELTA"
+	warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 	
 	column {
 		name = "model_id"
@@ -74,11 +75,13 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "myTimeseries" {
+				depends_on = [databricks_quality_monitor.testMonitorInference]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_timeseries"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"
@@ -101,11 +104,13 @@ func TestUcAccQualityMonitor(t *testing.T) {
 			}
 
 			resource "databricks_sql_table" "mySnapshot" {
+				depends_on = [databricks_quality_monitor.testMonitorTimeseries]
 				catalog_name = databricks_catalog.sandbox.id
 				schema_name = databricks_schema.things.name
 				name = "bar{var.STICKY_RANDOM}_snapshot"
 				table_type = "MANAGED"
 				data_source_format = "DELTA"
+				warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 
 				column {
 					name = "timestamp"

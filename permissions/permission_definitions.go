@@ -564,11 +564,11 @@ func allResourcePermissions() []resourcePermissions {
 				return strings.HasPrefix(id, "/sql/warehouses/") || strings.HasPrefix(id, "/warehouses/")
 			},
 			allowedPermissionLevels: map[string]permissionLevelOptions{
-				"CAN_USE":          {isManagementPermission: false},
-				"CAN_MANAGE":       {isManagementPermission: true},
-				"CAN_MONITOR":      {isManagementPermission: false},
-				"CAN_MONITOR_ONLY": {isManagementPermission: false},
-				"IS_OWNER":         {isManagementPermission: true},
+				"CAN_USE":     {isManagementPermission: false},
+				"CAN_MANAGE":  {isManagementPermission: true},
+				"CAN_MONITOR": {isManagementPermission: false},
+				"CAN_VIEW":    {isManagementPermission: false},
+				"IS_OWNER":    {isManagementPermission: true},
 			},
 			updateAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},
 			deleteAclCustomizers: []update.ACLCustomizer{update.AddCurrentUserAsManage},

@@ -722,7 +722,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have five possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MONITOR_ONLY`, `CAN_MANAGE` and `IS_OWNER`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have five possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE`, `CAN_VIEW` and `IS_OWNER`:
 
 - The creator of a warehouse has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a warehouse would revert ownership to the creator.
 - A warehouse must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the warehouse. Nothing would change, per se, if the warehouse was created through Terraform.

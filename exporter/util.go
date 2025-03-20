@@ -237,7 +237,6 @@ val readableMounts = dbutils.fs.mounts
   .par.map { mount =>
     try {
         Await.result(Future {
-            dbutils.fs.ls(mount.mountPoint)
             (mount.mountPoint
                 .replace("/mnt/", "")
                 .stripSuffix("/"), 

@@ -104,7 +104,6 @@ func TestMountPoint_Mount(t *testing.T) {
 			try:
 				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
-				dbutils.fs.ls(mount_point)
 				return mount_source
 			except Exception as e:
 				try:

@@ -31,11 +31,9 @@ func (a GroupsAPI) Create(scimGroupRequest Group) (group Group, err error) {
 
 // Read reads and returns a Group object via SCIM api
 func (a GroupsAPI) Read(groupID, attributes string) (group Group, err error) {
-	err = a.client.Scim(a.context, http.MethodGet, fmt.Sprintf(
-		"/preview/scim/v2/Groups/%v?attributes=%s", groupID, attributes), nil, &group)
-	if err != nil {
-		return
-	}
+	key := fmt.Sprintf(
+		"/preview/scim/v2/Groups/%v?attributes=%s", groupID, attributes)
+	err = a.client.Scim(a.context, http.MethodGet, key, nil, &group)
 	return
 }
 

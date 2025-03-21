@@ -97,6 +97,13 @@ func TestMountPoint_Mount(t *testing.T) {
 	expectedMountConfig := `{"fake-key":"fake-value"}`
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+        import org.apache.hadoop.fs.{FileSystem, Path}
+        
+        def check_path(pathString: String) {
+          val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+          val path = new Path(s"dbfs:${pathString}")
+          fs.exists(path)
+        }  
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -104,6 +111,7 @@ func TestMountPoint_Mount(t *testing.T) {
 			try:
 				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
+                check_path(mount_point)
 				return mount_source
 			except Exception as e:
 				try:

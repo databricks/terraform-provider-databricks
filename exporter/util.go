@@ -231,12 +231,20 @@ import scala.concurrent.{Await, Future}
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import org.apache.hadoop.fs.{FileSystem, Path}
+
+def check_path(pathString: String) {
+  val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+  val path = new Path(s"dbfs:${pathString}")
+  fs.exists(path)
+}  
 
 val readableMounts = dbutils.fs.mounts
   .filter(_.mountPoint.startsWith("/mnt"))
   .par.map { mount =>
     try {
         Await.result(Future {
+			check_path(mount.mountPoint)
             (mount.mountPoint
                 .replace("/mnt/", "")
                 .stripSuffix("/"), 

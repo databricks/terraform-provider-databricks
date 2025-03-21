@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
  * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4531](https://github.com/databricks/terraform-provider-databricks/pull/4531)).
+ * Add a new settings resources disable_legacy_access ([#4578](https://github.com/databricks/terraform-provider-databricks/pull/4578)).
 
 ### Bug Fixes
 

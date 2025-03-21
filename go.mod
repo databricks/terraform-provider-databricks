@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.18.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
-	github.com/hashicorp/terraform-plugin-testing v1.11.0
+	github.com/hashicorp/terraform-plugin-testing v1.12.0
 	github.com/stretchr/testify v1.10.0
 	github.com/zclconf/go-cty v1.16.2
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
@@ -40,7 +40,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

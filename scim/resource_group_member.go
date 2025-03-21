@@ -106,7 +106,8 @@ func (c *GroupCache) addMember(api GroupsAPI, groupID string, memberID string) e
 }
 
 func hasMember(members map[string]struct{}, memberID string) bool {
-	_, ok := members[memberID]
+	memberKey := strings.ToLower(memberID)
+	_, ok := members[memberKey]
 	return ok
 }
 

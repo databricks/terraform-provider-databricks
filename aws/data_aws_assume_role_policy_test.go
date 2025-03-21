@@ -36,6 +36,22 @@ func TestDataAwsAssumeRolePolicyGov(t *testing.T) {
 	assert.Lenf(t, j, 306, "Strange length for policy: %s", j)
 }
 
+func TestDataAwsAssumeRolePolicyGovDoD(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsAssumeRolePolicy(),
+		NonWritable: true,
+		ID:          ".",
+		HCL: `
+		aws_partition = "aws-us-gov-dod"
+		external_id = "abc"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json")
+	assert.Lenf(t, j, 306, "Strange length for policy: %s", j)
+}
+
 func TestDataAwsAssumeRolePolicyLogDelivery(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Read:        true,
@@ -67,4 +83,21 @@ func TestDataAwsAssumeRolePolicyLogDeliveryGov(t *testing.T) {
 	assert.NoError(t, err)
 	j := d.Get("json")
 	assert.Lenf(t, j, 362, "Strange length for policy: %s", j)
+}
+
+func TestDataAwsAssumeRolePolicyLogDeliveryGovDoD(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsAssumeRolePolicy(),
+		NonWritable: true,
+		ID:          ".",
+		HCL: `
+		aws_partition = "aws-us-gov-dod"
+		external_id = "abc"
+		for_log_delivery = true
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json")
+	assert.Lenf(t, j, 367, "Strange length for policy: %s", j)
 }

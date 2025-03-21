@@ -49,7 +49,7 @@ resource "databricks_mws_credentials" "this" {
 ## Argument Reference
 
 * `external_id` (Required) Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/).
-* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
+* `aws_partition` - (Optional) AWS partition. The options are `aws`, `aws-us-gov`, or `aws-us-gov-dod`. Defaults to `aws`
 * `for_log_delivery` (Optional) Either or not this assume role policy should be created for usage log delivery. Defaults to false.
 
 ## Attribute Reference

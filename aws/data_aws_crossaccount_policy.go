@@ -49,6 +49,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 				return fmt.Errorf("security_group_id must begin with 'sg-'")
 			}
 		}
+		awsNamespace := AwsConfig[data.AwsPartition]["awsNamespace"]
 		// non resource-based permissions
 		actions := []string{
 			"ec2:AssignPrivateIpAddresses",
@@ -151,7 +152,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 						"iam:CreateServiceLinkedRole",
 						"iam:PutRolePolicy",
 					},
-					Resources: fmt.Sprintf("arn:%s:iam::*:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot", data.AwsPartition),
+					Resources: fmt.Sprintf("arn:%s:iam::*:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot", awsNamespace),
 					Condition: map[string]map[string]string{
 						"StringLike": {
 							"iam:AWSServiceName": "spot.amazonaws.com",
@@ -174,7 +175,6 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		if data.PolicyType == "restricted" {
 			region := data.Region
 			aws_account_id := data.AwsAccountId
-			awsPartition := data.AwsPartition
 			vpc_id := data.VpcId
 			security_group_id := data.SecurityGroupId
 			policy.Statements = append(policy.Statements,
@@ -186,7 +186,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 						"ec2:DisassociateIamInstanceProfile",
 						"ec2:ReplaceIamInstanceProfileAssociation",
 					},
-					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsPartition, region, aws_account_id),
+					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsNamespace, region, aws_account_id),
 					Condition: map[string]map[string]string{
 						"StringEquals": {
 							"ec2:ResourceTag/Vendor": "Databricks",
@@ -198,8 +198,8 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:RunInstances",
 					Resources: []string{
-						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsPartition, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsNamespace, region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {
@@ -211,7 +211,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Sid:       "AllowEc2RunInstanceImagePerTag",
 					Effect:    "Allow",
 					Actions:   "ec2:RunInstances",
-					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:image/*", awsPartition, region, aws_account_id),
+					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:image/*", awsNamespace, region, aws_account_id),
 					Condition: map[string]map[string]string{
 						"StringEquals": {
 							"aws:ResourceTag/Vendor": "Databricks",
@@ -223,13 +223,13 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:RunInstances",
 					Resources: []string{
-						fmt.Sprintf("arn:%s:ec2:%s:%s:network-interface/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:subnet/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/*", awsPartition, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:network-interface/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:subnet/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/*", awsNamespace, region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {
-							"ec2:vpc": fmt.Sprintf("arn:%s:ec2:%s:%s:vpc/%s", awsPartition, region, aws_account_id, vpc_id),
+							"ec2:vpc": fmt.Sprintf("arn:%s:ec2:%s:%s:vpc/%s", awsNamespace, region, aws_account_id, vpc_id),
 						},
 					},
 				},
@@ -238,19 +238,19 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:RunInstances",
 					NotResources: []string{
-						fmt.Sprintf("arn:%s:ec2:%s:%s:image/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:network-interface/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:subnet/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsPartition, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:image/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:network-interface/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:subnet/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsNamespace, region, aws_account_id),
 					},
 				},
 				&awsIamPolicyStatement{
 					Sid:       "EC2TerminateInstancesTag",
 					Effect:    "Allow",
 					Actions:   "ec2:TerminateInstances",
-					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsPartition, region, aws_account_id),
+					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsNamespace, region, aws_account_id),
 					Condition: map[string]map[string]string{
 						"StringEquals": {
 							"ec2:ResourceTag/Vendor": "Databricks",
@@ -265,8 +265,8 @@ func DataAwsCrossaccountPolicy() common.Resource {
 						"ec2:DetachVolume",
 					},
 					Resources: []string{
-						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsPartition, region, aws_account_id),
-						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsPartition, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:instance/*", awsNamespace, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsNamespace, region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {
@@ -278,7 +278,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Sid:       "EC2CreateVolumeByTag",
 					Effect:    "Allow",
 					Actions:   "ec2:CreateVolume",
-					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsPartition, region, aws_account_id),
+					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsNamespace, region, aws_account_id),
 					Condition: map[string]map[string]string{
 						"StringEquals": {
 							"aws:RequestTag/Vendor": "Databricks",
@@ -290,7 +290,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 					Effect:  "Allow",
 					Actions: "ec2:DeleteVolume",
 					Resources: []string{
-						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsPartition, region, aws_account_id),
+						fmt.Sprintf("arn:%s:ec2:%s:%s:volume/*", awsNamespace, region, aws_account_id),
 					},
 					Condition: map[string]map[string]string{
 						"StringEquals": {
@@ -307,10 +307,10 @@ func DataAwsCrossaccountPolicy() common.Resource {
 						"ec2:RevokeSecurityGroupEgress",
 						"ec2:RevokeSecurityGroupIngress",
 					},
-					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/%s", awsPartition, region, aws_account_id, security_group_id),
+					Resources: fmt.Sprintf("arn:%s:ec2:%s:%s:security-group/%s", awsNamespace, region, aws_account_id, security_group_id),
 					Condition: map[string]map[string]string{
 						"StringEquals": {
-							"ec2:vpc": fmt.Sprintf("arn:%s:ec2:%s:%s:vpc/%s", awsPartition, region, aws_account_id, vpc_id),
+							"ec2:vpc": fmt.Sprintf("arn:%s:ec2:%s:%s:vpc/%s", awsNamespace, region, aws_account_id, vpc_id),
 						},
 					},
 				},

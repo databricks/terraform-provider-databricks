@@ -27,7 +27,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 		if !slices.Contains(AwsPartitions, data.AwsPartition) {
 			return errors.New(AwsPartitionsValidationError)
 		}
-        awsNamespace := AwsConfig[data.AwsPartition]["awsNamespace"]
+
 		if !slices.Contains([]string{"managed", "customer", "restricted"}, data.PolicyType) {
 			return fmt.Errorf("policy_type must be either 'managed', 'customer' or 'restricted'")
 		}
@@ -49,6 +49,7 @@ func DataAwsCrossaccountPolicy() common.Resource {
 				return fmt.Errorf("security_group_id must begin with 'sg-'")
 			}
 		}
+		awsNamespace := AwsConfig[data.AwsPartition]["awsNamespace"]
 		// non resource-based permissions
 		actions := []string{
 			"ec2:AssignPrivateIpAddresses",

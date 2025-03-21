@@ -271,10 +271,14 @@ func (ic *importContext) getMountsThroughCluster(
 
 func eitherString(a any, b any) string {
 	if a != nil {
-		return a.(string)
+		if t, ok := a.(string); ok {
+			return t
+		}
 	}
 	if b != nil {
-		return b.(string)
+		if t, ok := b.(string); ok {
+			return t
+		}
 	}
 	return ""
 }

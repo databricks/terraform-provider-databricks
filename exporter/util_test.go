@@ -3,6 +3,7 @@ package exporter
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/service/compute"
@@ -441,4 +442,46 @@ func TestDirectoryIncrementalMode(t *testing.T) {
 
 	// test emit during workspace listing
 	assert.True(t, ic.shouldSkipWorkspaceObject(workspace.ObjectStatus{ObjectType: workspace.Directory}, 111111))
+}
+
+func TestParsingServices(t *testing.T) {
+	ic := importContextForTest()
+	allServices, allListing := ic.allServicesAndListing()
+	// test for all listings
+	listing := ic.parseServicesList("all", true)
+	assert.ElementsMatch(t, strings.Split(allListing, ","), listing)
+	// Test for all services
+	services := ic.parseServicesList("all", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	//
+	services = ic.parseServicesList("all,-uc,+uc", false)
+	assert.ElementsMatch(t, strings.Split(allServices, ","), services)
+	// Test for all except UC
+	exceptUcServices := ic.parseServicesList("all,-uc", false)
+	expectedExceptUcServices := []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if !strings.HasPrefix(s, "uc-") && s != "vector-search" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+	// Test for all UC except some services
+	exceptUcServices = ic.parseServicesList("uc,-uc-tables", false)
+	expectedExceptUcServices = []string{}
+	for _, s := range strings.Split(allServices, ",") {
+		if (strings.HasPrefix(s, "uc-") || s == "vector-search") && s != "uc-tables" {
+			expectedExceptUcServices = append(expectedExceptUcServices, s)
+		}
+	}
+	assert.ElementsMatch(t, expectedExceptUcServices, exceptUcServices)
+
+	// specific things
+	specificServices := ic.parseServicesList("+uc-tables", false)
+	expectedServices := []string{"uc-tables"}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+	//
+	specificServices = ic.parseServicesList("+uc-tables,-uc-tables", false)
+	expectedServices = []string{}
+	assert.ElementsMatch(t, expectedServices, specificServices)
+
 }

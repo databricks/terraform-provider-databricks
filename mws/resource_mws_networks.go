@@ -8,6 +8,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/internal/docs"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,6 +82,13 @@ func ResourceMwsNetworks() common.Resource {
 		s["subnet_ids"].ExactlyOneOf = []string{"subnet_ids", "gcp_network_info"}
 		s["security_group_ids"].ExactlyOneOf = []string{"security_group_ids", "gcp_network_info"}
 		s["gcp_network_info"].ConflictsWith = []string{"vpc_id", "subnet_ids", "security_group_ids"}
+		docOptions := docs.DocOptions{
+			Section:  docs.Guides,
+			Slug:     "gcp-workspace",
+			Fragment: "creating-a-vpc",
+		}
+		common.CustomizeSchemaPath(s, "gcp_network_info", "pod_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.pod_ip_range_name", docOptions))
+		common.CustomizeSchemaPath(s, "gcp_network_info", "service_ip_range_name").SetDeprecated(getGkeDeprecationMessage("gcp_network_info.service_ip_range_name", docOptions))
 
 		return s
 	})
@@ -106,7 +114,22 @@ func ResourceMwsNetworks() common.Resource {
 			if err != nil {
 				return err
 			}
+			// If gcp_network_info.0.pod_ip_range_name or gcp_network_info.0.service_ip_range_name are
+			// unset in the plan, remove them from the returned network so that they are not persisted
+			// in state.
+			if v, ok := d.Get("gcp_network_info.0.pod_ip_range_name").(string); ok && v == "" && network.GcpNetworkInfo != nil {
+				network.GcpNetworkInfo.PodIpRangeName = ""
+			}
+			if v, ok := d.Get("gcp_network_info.0.service_ip_range_name").(string); ok && v == "" && network.GcpNetworkInfo != nil {
+				network.GcpNetworkInfo.ServiceIpRangeName = ""
+			}
 			return common.StructToData(network, s, d)
+		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			// This will only be called when removing gcp_network_info.0.pod_ip_range_name or
+			// gcp_network_info.0.service_ip_range_name. This is a no-op and doesn't require
+			// making any API call.
+			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			accountID, networkID, err := p.Unpack(d)
@@ -114,6 +137,30 @@ func ResourceMwsNetworks() common.Resource {
 				return err
 			}
 			return NewNetworksAPI(ctx, c).Delete(accountID, networkID)
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
+			// For `gcp_network_info.0.pod_ip_range_name` or `gcp_network_info.0.service_ip_range_name`,
+			// users should be able to remove these keys without recreating their networks as part of the
+			// GKE deprecation process.
+			//
+			// Otherwise, any change for these keys will cause the network resource to be recreated.
+			//
+			// This should only run on update, thus we skip this check if the ID is not known.
+			if d.Id() != "" {
+				for _, key := range []string{"gcp_network_info.0.pod_ip_range_name", "gcp_network_info.0.service_ip_range_name"} {
+					if !d.HasChange(key) {
+						continue
+					}
+					v, ok := d.Get(key).(string)
+					if ok && v == "" {
+						continue
+					}
+					if err := d.ForceNew(key); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
 		},
 	}
 }

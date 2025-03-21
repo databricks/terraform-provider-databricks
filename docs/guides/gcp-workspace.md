@@ -205,11 +205,11 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
     subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
   }
 }
 ```
+
+-> The fields `pod_ip_range_name` and `service_ip_range_name` fields in `gcp_network_info` are now deprecated and no longer supported. Omit these when creating networks in the future. If you have already created a network using these fields, it is safe to remove them from your Terraform template.
 
 ## Creating a Databricks Workspace
 
@@ -254,6 +254,8 @@ output "databricks_token" {
   sensitive = true
 }
 ```
+
+-> The `gke_config` argument and the `gke_cluster_service_ip_range` and `gke_pod_service_ip_range` arguments in `gcp_managed_network_config` are now deprecated and no longer supported. Omit these when creating workspaces in the future. If you have already created a workspace using these fields, it is safe to remove them from your Terraform template.
 
 ### Data resources and Authentication is not configured errors
 

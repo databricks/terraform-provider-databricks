@@ -79,10 +79,10 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 	sparkConfRe := regexp.MustCompile(`"\{\{sparkconf/([^\}]+)\}\}"`)
 	extraConfigs = sparkConfRe.ReplaceAll(extraConfigs, []byte(`spark.conf.get("$1")`))
 	command := fmt.Sprintf(`
-        def check_path(path_string):
-          fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
-          path = spark.sparkContext._jvm.org.apache.hadoop.fs.Path(f"dbfs:{path_string}")
-          fs.exists(path)
+		def check_path(path_string):
+			fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
+			path = spark.sparkContext._jvm.org.apache.hadoop.fs.Path(f"dbfs:{path_string}")
+			fs.exists(path)
 
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
@@ -91,7 +91,7 @@ func (mp MountPoint) Mount(mo Mount, client *common.DatabricksClient) (source st
 			try:
 				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
-                check_path(mount_point)
+				check_path(mount_point)
 				return mount_source
 			except Exception as e:
 				try:

@@ -9,6 +9,7 @@
 ### Bug Fixes
 
  * Recreate `databricks_access_control_rule_set` when the `name` changes ([#4572](https://github.com/databricks/terraform-provider-databricks/pull/4572)).
+ * Fix renaming of `databricks_catalog` resources ([#4579](https://github.com/databricks/terraform-provider-databricks/pull/4579)).
 
 ### Documentation
 

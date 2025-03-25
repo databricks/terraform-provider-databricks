@@ -187,7 +187,6 @@ func TestCatalogCreateCannotDeleteDefaultSchema(t *testing.T) {
 	}.Apply(t)
 	require.Error(t, err)
 	assert.Equal(t, "cannot remove new catalog default schema: Something", fmt.Sprint(err))
-
 }
 
 func TestUpdateCatalog(t *testing.T) {
@@ -205,8 +204,17 @@ func TestUpdateCatalog(t *testing.T) {
 				Comment: "c",
 				Owner:   "administrators",
 			}, nil)
-			e.GetByName(mock.Anything, "a").Return(&catalog.CatalogInfo{
+			e.Update(mock.Anything, catalog.UpdateCatalog{
 				Name:    "a",
+				NewName: "b",
+				Comment: "c",
+			}).Return(&catalog.CatalogInfo{
+				Name:    "b",
+				Comment: "c",
+				Owner:   "administrators",
+			}, nil)
+			e.GetByName(mock.Anything, "b").Return(&catalog.CatalogInfo{
+				Name:    "b",
 				Comment: "c",
 				Owner:   "administrators",
 			}, nil)
@@ -220,7 +228,7 @@ func TestUpdateCatalog(t *testing.T) {
 			"comment":      "c",
 		},
 		HCL: `
-		name = "a"
+		name = "b"
 		comment = "c"
 		owner = "administrators"
 		`,

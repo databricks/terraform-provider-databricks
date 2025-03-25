@@ -165,18 +165,26 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
+// ProvidersWithResourceFallbacks creates test providers, falling back to the SDKv2 provider for the
+// specified resources. This is a convenience constructor that ensures that the resulting mux'ed provider
+// uses the SDKv2 implementation for the specified resources.
 func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provider, provider.Provider) {
-	pluginfwOpt := pluginfw.WithSdkV2ResourceFallbacks(resourceFallbacks...)
-	sdkV2Provider := SdkV2ProviderForTest(sdkv2.WithSdkV2FallbackOptions(pluginfwOpt))
+	pluginfwOpt := pluginfw.WithSdkV2ResourceFallbacks(resourceFallbacks)
 	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
 	return sdkV2Provider, pluginFrameworkProvider
 }
 
+// SdkV2ProviderForTest creates a test provider with the default config customizer.
 func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
 	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
 	return sdkv2.DatabricksProvider(opts...)
 }
 
+// PluginFrameworkProviderForTest creates a test provider with the default config customizer.
 func PluginFrameworkProviderForTest(pluginFwOptions ...pluginfw.PluginFrameworkOption) provider.Provider {
 	opts := append(pluginFwOptions, pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
 	return pluginfw.GetDatabricksProviderPluginFramework(opts...)
@@ -278,7 +286,7 @@ func run(t *testing.T, steps []Step) {
 	})
 }
 
-// DefaultConfigCustomizer is a default config customizer that sets the HTTP timeout to 10 minutes.
+// DefaultConfigCustomizer modifies the SDK configuration, setting the HTTP timeout to 10 minutes.
 // Most APIs have a default timeout of 1 minute, but some have longer. Extending the HTTP timeout
 // ensures that tests don't fail even if individual requests take longer than 1 minute.
 func DefaultConfigCustomizer(cfg *config.Config) error {

@@ -91,7 +91,7 @@ func (o *sdkV2ResourceFallback) Apply(options *pluginFrameworkOptions) {
 }
 
 // WithSdkV2ResourceFallbacks is a helper function to specify resources to fallback to SDK V2
-func WithSdkV2ResourceFallbacks(fallbacks ...string) PluginFrameworkOption {
+func WithSdkV2ResourceFallbacks(fallbacks []string) PluginFrameworkOption {
 	return &sdkV2ResourceFallback{resourceFallbacks: fallbacks}
 }
 
@@ -116,7 +116,7 @@ func (o *configCustomizer) Apply(options *pluginFrameworkOptions) {
 	options.configCustomizer = o.configCustomizer
 }
 
-// WithConfigCustomizer is a helper function to specify config customizer
+// WithConfigCustomizer allows the caller to customize the SDK config after config resolution.
 func WithConfigCustomizer(customizer func(*config.Config) error) PluginFrameworkOption {
 	return &configCustomizer{configCustomizer: customizer}
 }
@@ -194,16 +194,11 @@ func getDataSourceName(dataSourceFunc func() datasource.DataSource) string {
 }
 
 // GetSdkV2ResourcesToRemove is a helper function to get the list of resources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2ResourcesToRemove(sdkV2Fallbacks ...PluginFrameworkOption) []string {
-	fallbackOption := pluginFrameworkOptions{}
-	for _, o := range sdkV2Fallbacks {
-		o.Apply(&fallbackOption)
-	}
-
+func GetSdkV2ResourcesToRemove(resourceFallbacks []string) []string {
 	resourcesToRemove := []string{}
 	for _, resourceFunc := range migratedResources {
 		name := getResourceName(resourceFunc)
-		if !shouldUseSdkV2Resource(name) && !slices.Contains(fallbackOption.resourceFallbacks, name) {
+		if !shouldUseSdkV2Resource(name) && !slices.Contains(resourceFallbacks, name) {
 			resourcesToRemove = append(resourcesToRemove, name)
 		}
 	}
@@ -211,16 +206,11 @@ func GetSdkV2ResourcesToRemove(sdkV2Fallbacks ...PluginFrameworkOption) []string
 }
 
 // GetSdkV2DataSourcesToRemove is a helper function to get the list of data sources that are migrated away from sdkv2 to plugin framework
-func GetSdkV2DataSourcesToRemove(sdkV2Fallbacks ...PluginFrameworkOption) []string {
-	fallbackOption := pluginFrameworkOptions{}
-	for _, o := range sdkV2Fallbacks {
-		o.Apply(&fallbackOption)
-	}
-
+func GetSdkV2DataSourcesToRemove(dataSourceFallbacks []string) []string {
 	dataSourcesToRemove := []string{}
 	for _, dataSourceFunc := range migratedDataSources {
 		name := getDataSourceName(dataSourceFunc)
-		if !shouldUseSdkV2DataSource(name) && !slices.Contains(fallbackOption.dataSourceFallbacks, name) {
+		if !shouldUseSdkV2DataSource(name) && !slices.Contains(dataSourceFallbacks, name) {
 			dataSourcesToRemove = append(dataSourcesToRemove, name)
 		}
 	}

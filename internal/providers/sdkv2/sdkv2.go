@@ -72,15 +72,22 @@ func init() {
 }
 
 type sdkV2ProviderOptions struct {
-	sdkV2Fallbacks   []pluginfw.PluginFrameworkOption
-	configCustomizer func(*config.Config) error
+	sdkV2ResourceFallbacks   []string
+	sdkV2DataSourceFallbacks []string
+	configCustomizer         func(*config.Config) error
 }
 
 type SdkV2ProviderOption func(*sdkV2ProviderOptions)
 
-func WithSdkV2FallbackOptions(options ...pluginfw.PluginFrameworkOption) SdkV2ProviderOption {
+func WithSdkV2ResourceFallbacks(resources []string) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
-		o.sdkV2Fallbacks = options
+		o.sdkV2ResourceFallbacks = resources
+	}
+}
+
+func WithSdkV2DataSourceFallbacks(dataSources []string) SdkV2ProviderOption {
+	return func(o *sdkV2ProviderOptions) {
+		o.sdkV2DataSourceFallbacks = dataSources
 	}
 }
 
@@ -256,14 +263,14 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2Fallbacks...) {
+	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2DataSourceFallbacks) {
 		if _, ok := dataSourceMap[dataSourceToRemove]; !ok {
 			panic(fmt.Sprintf("data source %s not found", dataSourceToRemove))
 		}
 		delete(dataSourceMap, dataSourceToRemove)
 	}
 
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2Fallbacks...) {
+	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2ResourceFallbacks) {
 		if _, ok := resourceMap[resourceToRemove]; !ok {
 			panic(fmt.Sprintf("resource %s not found", resourceToRemove))
 		}

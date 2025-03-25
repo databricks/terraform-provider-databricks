@@ -71,8 +71,32 @@ func init() {
 	}
 }
 
+type sdkV2ProviderOptions struct {
+	sdkV2Fallbacks   []pluginfw.PluginFrameworkOption
+	configCustomizer func(*config.Config) error
+}
+
+type SdkV2ProviderOption func(*sdkV2ProviderOptions)
+
+func WithSdkV2FallbackOptions(options ...pluginfw.PluginFrameworkOption) SdkV2ProviderOption {
+	return func(o *sdkV2ProviderOptions) {
+		o.sdkV2Fallbacks = options
+	}
+}
+
+func WithConfigCustomizer(customizer func(*config.Config) error) SdkV2ProviderOption {
+	return func(o *sdkV2ProviderOptions) {
+		o.configCustomizer = customizer
+	}
+}
+
 // DatabricksProvider returns the entire terraform provider object
-func DatabricksProvider(sdkV2Fallbacks ...pluginfw.SdkV2FallbackOption) *schema.Provider {
+func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
+	providerOptions := &sdkV2ProviderOptions{}
+	for _, optFunc := range opts {
+		optFunc(providerOptions)
+	}
+
 	dataSourceMap := map[string]*schema.Resource{ // must be in alphabetical order
 		"databricks_aws_crossaccount_policy":              aws.DataAwsCrossaccountPolicy().ToResource(),
 		"databricks_aws_assume_role_policy":               aws.DataAwsAssumeRolePolicy().ToResource(),
@@ -232,14 +256,14 @@ func DatabricksProvider(sdkV2Fallbacks ...pluginfw.SdkV2FallbackOption) *schema.
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework
-	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(sdkV2Fallbacks...) {
+	for _, dataSourceToRemove := range pluginfw.GetSdkV2DataSourcesToRemove(providerOptions.sdkV2Fallbacks...) {
 		if _, ok := dataSourceMap[dataSourceToRemove]; !ok {
 			panic(fmt.Sprintf("data source %s not found", dataSourceToRemove))
 		}
 		delete(dataSourceMap, dataSourceToRemove)
 	}
 
-	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(sdkV2Fallbacks...) {
+	for _, resourceToRemove := range pluginfw.GetSdkV2ResourcesToRemove(providerOptions.sdkV2Fallbacks...) {
 		if _, ok := resourceMap[resourceToRemove]; !ok {
 			panic(fmt.Sprintf("resource %s not found", resourceToRemove))
 		}
@@ -259,7 +283,7 @@ func DatabricksProvider(sdkV2Fallbacks ...pluginfw.SdkV2FallbackOption) *schema.
 			useragent.WithUserAgentExtra("terraform", p.TerraformVersion)
 		}
 		logger.SetTfLogger(logger.NewTfLogger(ctx))
-		return ConfigureDatabricksClient(ctx, d)
+		return ConfigureDatabricksClient(ctx, d, providerOptions.configCustomizer)
 	}
 	common.AddContextToAllResources(p, "databricks")
 	return p
@@ -290,7 +314,7 @@ func providerSchema() map[string]*schema.Schema {
 	return ps
 }
 
-func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, configCustomizer func(*config.Config) error) (any, diag.Diagnostics) {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	authsUsed := map[string]bool{}
@@ -329,6 +353,12 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData) (any
 	// by either a timeout or interrupt.
 	if cfg.RetryTimeoutSeconds == 0 {
 		cfg.RetryTimeoutSeconds = -1
+	}
+	if configCustomizer != nil {
+		err := configCustomizer(cfg)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
 	}
 	client, err := client.New(cfg)
 	if err != nil {

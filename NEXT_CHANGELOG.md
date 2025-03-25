@@ -13,6 +13,10 @@
 
 ### Documentation
 
+ * Improve documentation for `databricks_access_control_rule_set` ([#4580](https://github.com/databricks/terraform-provider-databricks/pull/4580)).
+ * Correct `first_on_demand` documentation for `aws_attributes` in `databricks_cluster`.
+ * Added file events permissions to GCP external location documentation. ([#4415](https://github.com/databricks/terraform-provider-databricks/pull/4415)).
+
 ### Exporter
 
  * Add support for special selectors in `-listing` and `-services` [#4573](https://github.com/databricks/terraform-provider-databricks/pull/4573)

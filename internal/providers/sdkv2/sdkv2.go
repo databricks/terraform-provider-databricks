@@ -77,20 +77,26 @@ type sdkV2ProviderOptions struct {
 	configCustomizer         func(*config.Config) error
 }
 
+// SdkV2ProviderOption is a functional option for configuring the SDK V2 provider.
 type SdkV2ProviderOption func(*sdkV2ProviderOptions)
 
+// WithSdkV2ResourceFallbacks configures the SDKv2 provider to support the provided resources that
+// are already migrated to the plugin framework. This should only be used for testing.
 func WithSdkV2ResourceFallbacks(resources []string) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
 		o.sdkV2ResourceFallbacks = resources
 	}
 }
 
+// WithSdkV2ResourceFallbacks configures the SDKv2 provider to support the provided data sources that
+// are already migrated to the plugin framework. This should only be used for testing.
 func WithSdkV2DataSourceFallbacks(dataSources []string) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
 		o.sdkV2DataSourceFallbacks = dataSources
 	}
 }
 
+// WithConfigCustomizer allows the caller to customize the SDK config after config resolution.
 func WithConfigCustomizer(customizer func(*config.Config) error) SdkV2ProviderOption {
 	return func(o *sdkV2ProviderOptions) {
 		o.configCustomizer = customizer

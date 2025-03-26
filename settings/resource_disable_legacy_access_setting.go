@@ -5,11 +5,17 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Disable Legacy Access setting
 var disableLegacyAccess = workspaceSetting[settings.DisableLegacyAccess]{
 	settingStruct: settings.DisableLegacyAccess{},
+	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
+		common.CustomizeSchemaPath(s, "disable_legacy_access", "value").SetRequired()
+		return s
+	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.DisableLegacyAccess, error) {
 		return w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{
 			Etag: etag,

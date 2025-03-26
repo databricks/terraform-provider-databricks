@@ -12,8 +12,7 @@ The `databricks_disable_legacy_access_setting` resource allows you to disable le
 3. Disables Databricks Runtime versions prior to 13.3LTS.
 
 It may take 5 minutes to take effect and requires a restart of clusters and SQL warehouses.
-Please alsoset the default namespace to any value other than hive_metastore to avoid potential issues.
-
+Please also set the default namespace to any value other than hive_metastore to avoid potential issues.
 ## Example Usage
 
 ```hcl

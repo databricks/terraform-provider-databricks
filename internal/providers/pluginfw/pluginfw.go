@@ -26,23 +26,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-func GetDatabricksProviderPluginFramework(sdkV2FallbackOptions ...SdkV2FallbackOption) provider.Provider {
-	p := &DatabricksProviderPluginFramework{sdkV2Fallbacks: sdkV2FallbackOptions}
+func GetDatabricksProviderPluginFramework(opts ...PluginFrameworkOption) provider.Provider {
+	providerOptions := &pluginFrameworkOptions{}
+	for _, opt := range opts {
+		opt.Apply(providerOptions)
+	}
+	p := &DatabricksProviderPluginFramework{
+		sdkV2ResourceFallbacks:   providerOptions.resourceFallbacks,
+		sdkV2DataSourceFallbacks: providerOptions.dataSourceFallbacks,
+		configCustomizer:         providerOptions.configCustomizer,
+	}
 	return p
 }
 
 type DatabricksProviderPluginFramework struct {
-	sdkV2Fallbacks []SdkV2FallbackOption
+	sdkV2ResourceFallbacks   []string
+	sdkV2DataSourceFallbacks []string
+	configCustomizer         func(*config.Config) error
 }
 
 var _ provider.Provider = (*DatabricksProviderPluginFramework)(nil)
 
 func (p *DatabricksProviderPluginFramework) Resources(ctx context.Context) []func() resource.Resource {
-	return getPluginFrameworkResourcesToRegister(p.sdkV2Fallbacks...)
+	return getPluginFrameworkResourcesToRegister(p.sdkV2ResourceFallbacks)
 }
 
 func (p *DatabricksProviderPluginFramework) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return getPluginFrameworkDataSourcesToRegister(p.sdkV2Fallbacks...)
+	return getPluginFrameworkDataSourcesToRegister(p.sdkV2DataSourceFallbacks)
 }
 
 func (p *DatabricksProviderPluginFramework) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
@@ -55,7 +65,7 @@ func (p *DatabricksProviderPluginFramework) Metadata(ctx context.Context, req pr
 }
 
 func (p *DatabricksProviderPluginFramework) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	client := configureDatabricksClient_PluginFramework(ctx, req, resp)
+	client := p.configureDatabricksClient(ctx, req, resp)
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
@@ -88,7 +98,7 @@ func providerSchemaPluginFramework() schema.Schema {
 	}
 }
 
-func configureDatabricksClient_PluginFramework(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
+func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) any {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
 	for _, attr := range config.ConfigAttributes {
@@ -148,6 +158,13 @@ func configureDatabricksClient_PluginFramework(ctx context.Context, req provider
 		if ok {
 			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
 			cfg.AuthType = newer
+		}
+	}
+	if p.configCustomizer != nil {
+		err := p.configCustomizer(cfg)
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to customize config", err.Error())
+			return nil
 		}
 	}
 	client, err := client.New(cfg)

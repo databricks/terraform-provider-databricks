@@ -7563,7 +7563,7 @@ func (newState *NccEgressConfig) SyncEffectiveFieldsDuringRead(existingState Ncc
 }
 
 func (c NccEgressConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_rules"] = attrs["default_rules"].SetOptional()
+	attrs["default_rules"] = attrs["default_rules"].SetComputed()
 	attrs["target_rules"] = attrs["target_rules"].SetOptional()
 
 	return attrs

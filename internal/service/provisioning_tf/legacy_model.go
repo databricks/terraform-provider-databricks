@@ -2789,7 +2789,7 @@ func (c Network_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attri
 	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetComputed()
 	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
-	attrs["vpc_status"] = attrs["vpc_status"].SetOptional()
+	attrs["vpc_status"] = attrs["vpc_status"].SetComputed()
 	attrs["warning_messages"] = attrs["warning_messages"].SetComputed()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 
@@ -4166,7 +4166,7 @@ func (c Workspace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["storage_customer_managed_key_id"] = attrs["storage_customer_managed_key_id"].SetOptional()
 	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
 	attrs["workspace_name"] = attrs["workspace_name"].SetOptional()
-	attrs["workspace_status"] = attrs["workspace_status"].SetOptional()
+	attrs["workspace_status"] = attrs["workspace_status"].SetComputed()
 	attrs["workspace_status_message"] = attrs["workspace_status_message"].SetComputed()
 
 	return attrs

@@ -637,6 +637,248 @@ func (o *DeltaSharingDependencyList_SdkV2) SetDependencies(ctx context.Context, 
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
+type DeltaSharingFunction_SdkV2 struct {
+	// The aliass of registered model.
+	Aliases types.List `tfsdk:"aliases"`
+	// The comment of the function.
+	Comment types.String `tfsdk:"comment"`
+	// The data type of the function.
+	DataType types.String `tfsdk:"data_type"`
+	// The dependency list of the function.
+	DependencyList types.List `tfsdk:"dependency_list"`
+	// The full data type of the function.
+	FullDataType types.String `tfsdk:"full_data_type"`
+	// The id of the function.
+	Id types.String `tfsdk:"id"`
+	// The function parameter information.
+	InputParams types.List `tfsdk:"input_params"`
+	// The name of the function.
+	Name types.String `tfsdk:"name"`
+	// The properties of the function.
+	Properties types.String `tfsdk:"properties"`
+	// The routine definition of the function.
+	RoutineDefinition types.String `tfsdk:"routine_definition"`
+	// The name of the schema that the function belongs to.
+	Schema types.String `tfsdk:"schema"`
+	// The securable kind of the function.
+	SecurableKind types.String `tfsdk:"securable_kind"`
+	// The name of the share that the function belongs to.
+	Share types.String `tfsdk:"share"`
+	// The id of the share that the function belongs to.
+	ShareId types.String `tfsdk:"share_id"`
+	// The storage location of the function.
+	StorageLocation types.String `tfsdk:"storage_location"`
+	// The tags of the function.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *DeltaSharingFunction_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeltaSharingFunction_SdkV2) {
+}
+
+func (newState *DeltaSharingFunction_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeltaSharingFunction_SdkV2) {
+}
+
+func (c DeltaSharingFunction_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aliases"] = attrs["aliases"].SetOptional()
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["data_type"] = attrs["data_type"].SetOptional()
+	attrs["dependency_list"] = attrs["dependency_list"].SetOptional()
+	attrs["dependency_list"] = attrs["dependency_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["full_data_type"] = attrs["full_data_type"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["input_params"] = attrs["input_params"].SetOptional()
+	attrs["input_params"] = attrs["input_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["properties"] = attrs["properties"].SetOptional()
+	attrs["routine_definition"] = attrs["routine_definition"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["securable_kind"] = attrs["securable_kind"].SetOptional()
+	attrs["share"] = attrs["share"].SetOptional()
+	attrs["share_id"] = attrs["share_id"].SetOptional()
+	attrs["storage_location"] = attrs["storage_location"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeltaSharingFunction.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeltaSharingFunction_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"aliases":         reflect.TypeOf(RegisteredModelAlias_SdkV2{}),
+		"dependency_list": reflect.TypeOf(DeltaSharingDependencyList_SdkV2{}),
+		"input_params":    reflect.TypeOf(FunctionParameterInfos_SdkV2{}),
+		"tags":            reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeltaSharingFunction_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeltaSharingFunction_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aliases":            o.Aliases,
+			"comment":            o.Comment,
+			"data_type":          o.DataType,
+			"dependency_list":    o.DependencyList,
+			"full_data_type":     o.FullDataType,
+			"id":                 o.Id,
+			"input_params":       o.InputParams,
+			"name":               o.Name,
+			"properties":         o.Properties,
+			"routine_definition": o.RoutineDefinition,
+			"schema":             o.Schema,
+			"securable_kind":     o.SecurableKind,
+			"share":              o.Share,
+			"share_id":           o.ShareId,
+			"storage_location":   o.StorageLocation,
+			"tags":               o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeltaSharingFunction_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aliases": basetypes.ListType{
+				ElemType: RegisteredModelAlias_SdkV2{}.Type(ctx),
+			},
+			"comment":   types.StringType,
+			"data_type": types.StringType,
+			"dependency_list": basetypes.ListType{
+				ElemType: DeltaSharingDependencyList_SdkV2{}.Type(ctx),
+			},
+			"full_data_type": types.StringType,
+			"id":             types.StringType,
+			"input_params": basetypes.ListType{
+				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
+			},
+			"name":               types.StringType,
+			"properties":         types.StringType,
+			"routine_definition": types.StringType,
+			"schema":             types.StringType,
+			"securable_kind":     types.StringType,
+			"share":              types.StringType,
+			"share_id":           types.StringType,
+			"storage_location":   types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: catalog_tf.TagKeyValue_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetAliases returns the value of the Aliases field in DeltaSharingFunction_SdkV2 as
+// a slice of RegisteredModelAlias_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSharingFunction_SdkV2) GetAliases(ctx context.Context) ([]RegisteredModelAlias_SdkV2, bool) {
+	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
+		return nil, false
+	}
+	var v []RegisteredModelAlias_SdkV2
+	d := o.Aliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAliases sets the value of the Aliases field in DeltaSharingFunction_SdkV2.
+func (o *DeltaSharingFunction_SdkV2) SetAliases(ctx context.Context, v []RegisteredModelAlias_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Aliases = types.ListValueMust(t, vs)
+}
+
+// GetDependencyList returns the value of the DependencyList field in DeltaSharingFunction_SdkV2 as
+// a DeltaSharingDependencyList_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSharingFunction_SdkV2) GetDependencyList(ctx context.Context) (DeltaSharingDependencyList_SdkV2, bool) {
+	var e DeltaSharingDependencyList_SdkV2
+	if o.DependencyList.IsNull() || o.DependencyList.IsUnknown() {
+		return e, false
+	}
+	var v []DeltaSharingDependencyList_SdkV2
+	d := o.DependencyList.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDependencyList sets the value of the DependencyList field in DeltaSharingFunction_SdkV2.
+func (o *DeltaSharingFunction_SdkV2) SetDependencyList(ctx context.Context, v DeltaSharingDependencyList_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependency_list"]
+	o.DependencyList = types.ListValueMust(t, vs)
+}
+
+// GetInputParams returns the value of the InputParams field in DeltaSharingFunction_SdkV2 as
+// a FunctionParameterInfos_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSharingFunction_SdkV2) GetInputParams(ctx context.Context) (FunctionParameterInfos_SdkV2, bool) {
+	var e FunctionParameterInfos_SdkV2
+	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
+		return e, false
+	}
+	var v []FunctionParameterInfos_SdkV2
+	d := o.InputParams.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetInputParams sets the value of the InputParams field in DeltaSharingFunction_SdkV2.
+func (o *DeltaSharingFunction_SdkV2) SetInputParams(ctx context.Context, v FunctionParameterInfos_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_params"]
+	o.InputParams = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in DeltaSharingFunction_SdkV2 as
+// a slice of catalog_tf.TagKeyValue_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DeltaSharingFunction_SdkV2) GetTags(ctx context.Context) ([]catalog_tf.TagKeyValue_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []catalog_tf.TagKeyValue_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in DeltaSharingFunction_SdkV2.
+func (o *DeltaSharingFunction_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
 // A Function in UC as a dependency.
 type DeltaSharingFunctionDependency_SdkV2 struct {
 	FunctionName types.String `tfsdk:"function_name"`
@@ -741,248 +983,6 @@ func (o DeltaSharingTableDependency_SdkV2) Type(ctx context.Context) attr.Type {
 			"table_name":  types.StringType,
 		},
 	}
-}
-
-type Function_SdkV2 struct {
-	// The aliass of registered model.
-	Aliases types.List `tfsdk:"aliases"`
-	// The comment of the function.
-	Comment types.String `tfsdk:"comment"`
-	// The data type of the function.
-	DataType types.String `tfsdk:"data_type"`
-	// The dependency list of the function.
-	DependencyList types.List `tfsdk:"dependency_list"`
-	// The full data type of the function.
-	FullDataType types.String `tfsdk:"full_data_type"`
-	// The id of the function.
-	Id types.String `tfsdk:"id"`
-	// The function parameter information.
-	InputParams types.List `tfsdk:"input_params"`
-	// The name of the function.
-	Name types.String `tfsdk:"name"`
-	// The properties of the function.
-	Properties types.String `tfsdk:"properties"`
-	// The routine definition of the function.
-	RoutineDefinition types.String `tfsdk:"routine_definition"`
-	// The name of the schema that the function belongs to.
-	Schema types.String `tfsdk:"schema"`
-	// The securable kind of the function.
-	SecurableKind types.String `tfsdk:"securable_kind"`
-	// The name of the share that the function belongs to.
-	Share types.String `tfsdk:"share"`
-	// The id of the share that the function belongs to.
-	ShareId types.String `tfsdk:"share_id"`
-	// The storage location of the function.
-	StorageLocation types.String `tfsdk:"storage_location"`
-	// The tags of the function.
-	Tags types.List `tfsdk:"tags"`
-}
-
-func (newState *Function_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Function_SdkV2) {
-}
-
-func (newState *Function_SdkV2) SyncEffectiveFieldsDuringRead(existingState Function_SdkV2) {
-}
-
-func (c Function_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["aliases"] = attrs["aliases"].SetOptional()
-	attrs["comment"] = attrs["comment"].SetOptional()
-	attrs["data_type"] = attrs["data_type"].SetOptional()
-	attrs["dependency_list"] = attrs["dependency_list"].SetOptional()
-	attrs["dependency_list"] = attrs["dependency_list"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["full_data_type"] = attrs["full_data_type"].SetOptional()
-	attrs["id"] = attrs["id"].SetOptional()
-	attrs["input_params"] = attrs["input_params"].SetOptional()
-	attrs["input_params"] = attrs["input_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["properties"] = attrs["properties"].SetOptional()
-	attrs["routine_definition"] = attrs["routine_definition"].SetOptional()
-	attrs["schema"] = attrs["schema"].SetOptional()
-	attrs["securable_kind"] = attrs["securable_kind"].SetOptional()
-	attrs["share"] = attrs["share"].SetOptional()
-	attrs["share_id"] = attrs["share_id"].SetOptional()
-	attrs["storage_location"] = attrs["storage_location"].SetOptional()
-	attrs["tags"] = attrs["tags"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in Function.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a Function_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"aliases":         reflect.TypeOf(RegisteredModelAlias_SdkV2{}),
-		"dependency_list": reflect.TypeOf(DeltaSharingDependencyList_SdkV2{}),
-		"input_params":    reflect.TypeOf(FunctionParameterInfos_SdkV2{}),
-		"tags":            reflect.TypeOf(catalog_tf.TagKeyValue_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, Function_SdkV2
-// only implements ToObjectValue() and Type().
-func (o Function_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"aliases":            o.Aliases,
-			"comment":            o.Comment,
-			"data_type":          o.DataType,
-			"dependency_list":    o.DependencyList,
-			"full_data_type":     o.FullDataType,
-			"id":                 o.Id,
-			"input_params":       o.InputParams,
-			"name":               o.Name,
-			"properties":         o.Properties,
-			"routine_definition": o.RoutineDefinition,
-			"schema":             o.Schema,
-			"securable_kind":     o.SecurableKind,
-			"share":              o.Share,
-			"share_id":           o.ShareId,
-			"storage_location":   o.StorageLocation,
-			"tags":               o.Tags,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o Function_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"aliases": basetypes.ListType{
-				ElemType: RegisteredModelAlias_SdkV2{}.Type(ctx),
-			},
-			"comment":   types.StringType,
-			"data_type": types.StringType,
-			"dependency_list": basetypes.ListType{
-				ElemType: DeltaSharingDependencyList_SdkV2{}.Type(ctx),
-			},
-			"full_data_type": types.StringType,
-			"id":             types.StringType,
-			"input_params": basetypes.ListType{
-				ElemType: FunctionParameterInfos_SdkV2{}.Type(ctx),
-			},
-			"name":               types.StringType,
-			"properties":         types.StringType,
-			"routine_definition": types.StringType,
-			"schema":             types.StringType,
-			"securable_kind":     types.StringType,
-			"share":              types.StringType,
-			"share_id":           types.StringType,
-			"storage_location":   types.StringType,
-			"tags": basetypes.ListType{
-				ElemType: catalog_tf.TagKeyValue_SdkV2{}.Type(ctx),
-			},
-		},
-	}
-}
-
-// GetAliases returns the value of the Aliases field in Function_SdkV2 as
-// a slice of RegisteredModelAlias_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *Function_SdkV2) GetAliases(ctx context.Context) ([]RegisteredModelAlias_SdkV2, bool) {
-	if o.Aliases.IsNull() || o.Aliases.IsUnknown() {
-		return nil, false
-	}
-	var v []RegisteredModelAlias_SdkV2
-	d := o.Aliases.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetAliases sets the value of the Aliases field in Function_SdkV2.
-func (o *Function_SdkV2) SetAliases(ctx context.Context, v []RegisteredModelAlias_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["aliases"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Aliases = types.ListValueMust(t, vs)
-}
-
-// GetDependencyList returns the value of the DependencyList field in Function_SdkV2 as
-// a DeltaSharingDependencyList_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *Function_SdkV2) GetDependencyList(ctx context.Context) (DeltaSharingDependencyList_SdkV2, bool) {
-	var e DeltaSharingDependencyList_SdkV2
-	if o.DependencyList.IsNull() || o.DependencyList.IsUnknown() {
-		return e, false
-	}
-	var v []DeltaSharingDependencyList_SdkV2
-	d := o.DependencyList.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetDependencyList sets the value of the DependencyList field in Function_SdkV2.
-func (o *Function_SdkV2) SetDependencyList(ctx context.Context, v DeltaSharingDependencyList_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependency_list"]
-	o.DependencyList = types.ListValueMust(t, vs)
-}
-
-// GetInputParams returns the value of the InputParams field in Function_SdkV2 as
-// a FunctionParameterInfos_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *Function_SdkV2) GetInputParams(ctx context.Context) (FunctionParameterInfos_SdkV2, bool) {
-	var e FunctionParameterInfos_SdkV2
-	if o.InputParams.IsNull() || o.InputParams.IsUnknown() {
-		return e, false
-	}
-	var v []FunctionParameterInfos_SdkV2
-	d := o.InputParams.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetInputParams sets the value of the InputParams field in Function_SdkV2.
-func (o *Function_SdkV2) SetInputParams(ctx context.Context, v FunctionParameterInfos_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["input_params"]
-	o.InputParams = types.ListValueMust(t, vs)
-}
-
-// GetTags returns the value of the Tags field in Function_SdkV2 as
-// a slice of catalog_tf.TagKeyValue_SdkV2 values.
-// If the field is unknown or null, the boolean return value is false.
-func (o *Function_SdkV2) GetTags(ctx context.Context) ([]catalog_tf.TagKeyValue_SdkV2, bool) {
-	if o.Tags.IsNull() || o.Tags.IsUnknown() {
-		return nil, false
-	}
-	var v []catalog_tf.TagKeyValue_SdkV2
-	d := o.Tags.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	return v, true
-}
-
-// SetTags sets the value of the Tags field in Function_SdkV2.
-func (o *Function_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyValue_SdkV2) {
-	vs := make([]attr.Value, 0, len(v))
-	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
-	}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
-	t = t.(attr.TypeWithElementType).ElementType()
-	o.Tags = types.ListValueMust(t, vs)
 }
 
 // Represents a parameter of a function. The same message is used for both input
@@ -1703,7 +1703,7 @@ func (c ListProviderShareAssetsResponse_SdkV2) ApplySchemaCustomizations(attrs m
 // SDK values.
 func (a ListProviderShareAssetsResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"functions": reflect.TypeOf(Function_SdkV2{}),
+		"functions": reflect.TypeOf(DeltaSharingFunction_SdkV2{}),
 		"notebooks": reflect.TypeOf(NotebookFile_SdkV2{}),
 		"tables":    reflect.TypeOf(Table_SdkV2{}),
 		"volumes":   reflect.TypeOf(Volume_SdkV2{}),
@@ -1729,7 +1729,7 @@ func (o ListProviderShareAssetsResponse_SdkV2) Type(ctx context.Context) attr.Ty
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"functions": basetypes.ListType{
-				ElemType: Function_SdkV2{}.Type(ctx),
+				ElemType: DeltaSharingFunction_SdkV2{}.Type(ctx),
 			},
 			"notebooks": basetypes.ListType{
 				ElemType: NotebookFile_SdkV2{}.Type(ctx),
@@ -1745,13 +1745,13 @@ func (o ListProviderShareAssetsResponse_SdkV2) Type(ctx context.Context) attr.Ty
 }
 
 // GetFunctions returns the value of the Functions field in ListProviderShareAssetsResponse_SdkV2 as
-// a slice of Function_SdkV2 values.
+// a slice of DeltaSharingFunction_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListProviderShareAssetsResponse_SdkV2) GetFunctions(ctx context.Context) ([]Function_SdkV2, bool) {
+func (o *ListProviderShareAssetsResponse_SdkV2) GetFunctions(ctx context.Context) ([]DeltaSharingFunction_SdkV2, bool) {
 	if o.Functions.IsNull() || o.Functions.IsUnknown() {
 		return nil, false
 	}
-	var v []Function_SdkV2
+	var v []DeltaSharingFunction_SdkV2
 	d := o.Functions.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -1760,7 +1760,7 @@ func (o *ListProviderShareAssetsResponse_SdkV2) GetFunctions(ctx context.Context
 }
 
 // SetFunctions sets the value of the Functions field in ListProviderShareAssetsResponse_SdkV2.
-func (o *ListProviderShareAssetsResponse_SdkV2) SetFunctions(ctx context.Context, v []Function_SdkV2) {
+func (o *ListProviderShareAssetsResponse_SdkV2) SetFunctions(ctx context.Context, v []DeltaSharingFunction_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -3703,7 +3703,7 @@ func (c ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["object"] = attrs["object"].SetOptional()
+	attrs["object"] = attrs["object"].SetComputed()
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetComputed()
@@ -3950,12 +3950,10 @@ type SharedDataObject_SdkV2 struct {
 	DataObjectType types.String `tfsdk:"data_object_type"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status"`
-	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status"`
-	// A fully qualified name that uniquely identifies a data object.
-	//
-	// For example, a table's fully qualified name is in the format of
-	// `<catalog>.<schema>.<table>`.
+	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status"`
+	// A fully qualified name that uniquely identifies a data object. For
+	// example, a table's fully qualified name is in the format of
+	// `<catalog>.<schema>.<table>`,
 	Name types.String `tfsdk:"name"`
 	// Array of partitions for the shared data.
 	Partitions types.List `tfsdk:"partition"`
@@ -3987,8 +3985,6 @@ type SharedDataObject_SdkV2 struct {
 func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject_SdkV2) {
 	newState.EffectiveCdfEnabled = newState.CdfEnabled
 	newState.CdfEnabled = plan.CdfEnabled
-	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
-	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
 	newState.EffectiveSharedAs = newState.SharedAs
 	newState.SharedAs = plan.SharedAs
 	newState.EffectiveStartVersion = newState.StartVersion
@@ -3999,10 +3995,6 @@ func (newState *SharedDataObject_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
 	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
 		newState.CdfEnabled = existingState.CdfEnabled
-	}
-	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
-	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
-		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
 	}
 	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
 	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
@@ -4022,7 +4014,6 @@ func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["data_object_type"] = attrs["data_object_type"].SetOptional()
-	attrs["effective_history_data_sharing_status"] = attrs["effective_history_data_sharing_status"].SetComputed()
 	attrs["history_data_sharing_status"] = attrs["history_data_sharing_status"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["partition"] = attrs["partition"].SetOptional()
@@ -4030,7 +4021,7 @@ func (c SharedDataObject_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["shared_as"] = attrs["shared_as"].SetOptional()
 	attrs["effective_start_version"] = attrs["effective_start_version"].SetComputed()
 	attrs["start_version"] = attrs["start_version"].SetOptional()
-	attrs["status"] = attrs["status"].SetComputed()
+	attrs["status"] = attrs["status"].SetOptional()
 	attrs["string_shared_as"] = attrs["string_shared_as"].SetOptional()
 
 	return attrs
@@ -4056,23 +4047,22 @@ func (o SharedDataObject_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"added_at":                              o.AddedAt,
-			"added_by":                              o.AddedBy,
-			"cdf_enabled":                           o.CdfEnabled,
-			"effective_cdf_enabled":                 o.EffectiveCdfEnabled,
-			"comment":                               o.Comment,
-			"content":                               o.Content,
-			"data_object_type":                      o.DataObjectType,
-			"history_data_sharing_status":           o.HistoryDataSharingStatus,
-			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus,
-			"name":                                  o.Name,
-			"partition":                             o.Partitions,
-			"shared_as":                             o.SharedAs,
-			"effective_shared_as":                   o.EffectiveSharedAs,
-			"start_version":                         o.StartVersion,
-			"effective_start_version":               o.EffectiveStartVersion,
-			"status":                                o.Status,
-			"string_shared_as":                      o.StringSharedAs,
+			"added_at":                    o.AddedAt,
+			"added_by":                    o.AddedBy,
+			"cdf_enabled":                 o.CdfEnabled,
+			"effective_cdf_enabled":       o.EffectiveCdfEnabled,
+			"comment":                     o.Comment,
+			"content":                     o.Content,
+			"data_object_type":            o.DataObjectType,
+			"history_data_sharing_status": o.HistoryDataSharingStatus,
+			"name":                        o.Name,
+			"partition":                   o.Partitions,
+			"shared_as":                   o.SharedAs,
+			"effective_shared_as":         o.EffectiveSharedAs,
+			"start_version":               o.StartVersion,
+			"effective_start_version":     o.EffectiveStartVersion,
+			"status":                      o.Status,
+			"string_shared_as":            o.StringSharedAs,
 		})
 }
 
@@ -4080,16 +4070,15 @@ func (o SharedDataObject_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 func (o SharedDataObject_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":                              types.Int64Type,
-			"added_by":                              types.StringType,
-			"cdf_enabled":                           types.BoolType,
-			"effective_cdf_enabled":                 types.BoolType,
-			"comment":                               types.StringType,
-			"content":                               types.StringType,
-			"data_object_type":                      types.StringType,
-			"history_data_sharing_status":           types.StringType,
-			"effective_history_data_sharing_status": types.StringType,
-			"name":                                  types.StringType,
+			"added_at":                    types.Int64Type,
+			"added_by":                    types.StringType,
+			"cdf_enabled":                 types.BoolType,
+			"effective_cdf_enabled":       types.BoolType,
+			"comment":                     types.StringType,
+			"content":                     types.StringType,
+			"data_object_type":            types.StringType,
+			"history_data_sharing_status": types.StringType,
+			"name":                        types.StringType,
 			"partition": basetypes.ListType{
 				ElemType: Partition_SdkV2{}.Type(ctx),
 			},

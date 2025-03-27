@@ -19176,6 +19176,7 @@ func (o *UpdateWorkspaceBindingsParameters) SetRemove(ctx context.Context, v []W
 	o.Remove = types.ListValueMust(t, vs)
 }
 
+// Next ID: 17
 type ValidateCredentialRequest struct {
 	// The AWS IAM role configuration
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`

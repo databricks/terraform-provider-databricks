@@ -17,7 +17,11 @@ func TestPreprocessS3MountOnDeletedClusterNoInstanceProfileSpecifiedError(t *tes
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: apierr.NotFound("cluster deleted"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount()
@@ -35,7 +39,11 @@ func TestPreprocessS3MountOnDeletedClusterWorks(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: apierr.NotFound("cluster deleted"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
 		},
 		{
 			Method:   "GET",

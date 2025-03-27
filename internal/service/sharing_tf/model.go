@@ -3940,7 +3940,8 @@ type SharedDataObject struct {
 	DataObjectType types.String `tfsdk:"data_object_type"`
 	// Whether to enable or disable sharing of data history. If not specified,
 	// the default is **DISABLED**.
-	HistoryDataSharingStatus types.String `tfsdk:"history_data_sharing_status"`
+	HistoryDataSharingStatus          types.String `tfsdk:"history_data_sharing_status"`
+	EffectiveHistoryDataSharingStatus types.String `tfsdk:"effective_history_data_sharing_status"`
 	// A fully qualified name that uniquely identifies a data object. For
 	// example, a table's fully qualified name is in the format of
 	// `<catalog>.<schema>.<table>`,
@@ -3975,6 +3976,8 @@ type SharedDataObject struct {
 func (newState *SharedDataObject) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharedDataObject) {
 	newState.EffectiveCdfEnabled = newState.CdfEnabled
 	newState.CdfEnabled = plan.CdfEnabled
+	newState.EffectiveHistoryDataSharingStatus = newState.HistoryDataSharingStatus
+	newState.HistoryDataSharingStatus = plan.HistoryDataSharingStatus
 	newState.EffectiveSharedAs = newState.SharedAs
 	newState.SharedAs = plan.SharedAs
 	newState.EffectiveStartVersion = newState.StartVersion
@@ -3985,6 +3988,10 @@ func (newState *SharedDataObject) SyncEffectiveFieldsDuringRead(existingState Sh
 	newState.EffectiveCdfEnabled = existingState.EffectiveCdfEnabled
 	if existingState.EffectiveCdfEnabled.ValueBool() == newState.CdfEnabled.ValueBool() {
 		newState.CdfEnabled = existingState.CdfEnabled
+	}
+	newState.EffectiveHistoryDataSharingStatus = existingState.EffectiveHistoryDataSharingStatus
+	if existingState.EffectiveHistoryDataSharingStatus.ValueString() == newState.HistoryDataSharingStatus.ValueString() {
+		newState.HistoryDataSharingStatus = existingState.HistoryDataSharingStatus
 	}
 	newState.EffectiveSharedAs = existingState.EffectiveSharedAs
 	if existingState.EffectiveSharedAs.ValueString() == newState.SharedAs.ValueString() {
@@ -4004,6 +4011,7 @@ func (c SharedDataObject) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["comment"] = attrs["comment"].SetOptional()
 	attrs["content"] = attrs["content"].SetOptional()
 	attrs["data_object_type"] = attrs["data_object_type"].SetOptional()
+	attrs["effective_history_data_sharing_status"] = attrs["effective_history_data_sharing_status"].SetComputed()
 	attrs["history_data_sharing_status"] = attrs["history_data_sharing_status"].SetOptional()
 	attrs["name"] = attrs["name"].SetRequired()
 	attrs["partition"] = attrs["partition"].SetOptional()
@@ -4011,7 +4019,7 @@ func (c SharedDataObject) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["shared_as"] = attrs["shared_as"].SetOptional()
 	attrs["effective_start_version"] = attrs["effective_start_version"].SetComputed()
 	attrs["start_version"] = attrs["start_version"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
+	attrs["status"] = attrs["status"].SetComputed()
 	attrs["string_shared_as"] = attrs["string_shared_as"].SetOptional()
 
 	return attrs
@@ -4037,22 +4045,23 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"added_at":                    o.AddedAt,
-			"added_by":                    o.AddedBy,
-			"cdf_enabled":                 o.CdfEnabled,
-			"effective_cdf_enabled":       o.EffectiveCdfEnabled,
-			"comment":                     o.Comment,
-			"content":                     o.Content,
-			"data_object_type":            o.DataObjectType,
-			"history_data_sharing_status": o.HistoryDataSharingStatus,
-			"name":                        o.Name,
-			"partition":                   o.Partitions,
-			"shared_as":                   o.SharedAs,
-			"effective_shared_as":         o.EffectiveSharedAs,
-			"start_version":               o.StartVersion,
-			"effective_start_version":     o.EffectiveStartVersion,
-			"status":                      o.Status,
-			"string_shared_as":            o.StringSharedAs,
+			"added_at":                              o.AddedAt,
+			"added_by":                              o.AddedBy,
+			"cdf_enabled":                           o.CdfEnabled,
+			"effective_cdf_enabled":                 o.EffectiveCdfEnabled,
+			"comment":                               o.Comment,
+			"content":                               o.Content,
+			"data_object_type":                      o.DataObjectType,
+			"history_data_sharing_status":           o.HistoryDataSharingStatus,
+			"effective_history_data_sharing_status": o.EffectiveHistoryDataSharingStatus,
+			"name":                                  o.Name,
+			"partition":                             o.Partitions,
+			"shared_as":                             o.SharedAs,
+			"effective_shared_as":                   o.EffectiveSharedAs,
+			"start_version":                         o.StartVersion,
+			"effective_start_version":               o.EffectiveStartVersion,
+			"status":                                o.Status,
+			"string_shared_as":                      o.StringSharedAs,
 		})
 }
 
@@ -4060,15 +4069,16 @@ func (o SharedDataObject) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 func (o SharedDataObject) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"added_at":                    types.Int64Type,
-			"added_by":                    types.StringType,
-			"cdf_enabled":                 types.BoolType,
-			"effective_cdf_enabled":       types.BoolType,
-			"comment":                     types.StringType,
-			"content":                     types.StringType,
-			"data_object_type":            types.StringType,
-			"history_data_sharing_status": types.StringType,
-			"name":                        types.StringType,
+			"added_at":                              types.Int64Type,
+			"added_by":                              types.StringType,
+			"cdf_enabled":                           types.BoolType,
+			"effective_cdf_enabled":                 types.BoolType,
+			"comment":                               types.StringType,
+			"content":                               types.StringType,
+			"data_object_type":                      types.StringType,
+			"history_data_sharing_status":           types.StringType,
+			"effective_history_data_sharing_status": types.StringType,
+			"name":                                  types.StringType,
 			"partition": basetypes.ListType{
 				ElemType: Partition{}.Type(ctx),
 			},

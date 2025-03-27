@@ -7392,7 +7392,7 @@ func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead
 }
 
 func (c NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["connection_state"] = attrs["connection_state"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["deactivated"] = attrs["deactivated"].SetComputed()
 	attrs["deactivated_at"] = attrs["deactivated_at"].SetComputed()
@@ -7595,7 +7595,7 @@ func (newState *NccEgressConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c NccEgressConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_rules"] = attrs["default_rules"].SetComputed()
+	attrs["default_rules"] = attrs["default_rules"].SetOptional()
 	attrs["default_rules"] = attrs["default_rules"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["target_rules"] = attrs["target_rules"].SetOptional()
 	attrs["target_rules"] = attrs["target_rules"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)

@@ -1712,12 +1712,6 @@ func TestImportingUser(t *testing.T) {
 		})
 }
 
-func TestEitherString(t *testing.T) {
-	assert.Equal(t, "a", eitherString("a", nil))
-	assert.Equal(t, "a", eitherString(nil, "a"))
-	assert.Equal(t, "", eitherString(nil, nil))
-}
-
 func TestImportingRepos(t *testing.T) {
 	resp := repos.ReposInformation{
 		ID:           121232342,

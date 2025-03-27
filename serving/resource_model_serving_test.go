@@ -444,6 +444,37 @@ func TestModelServingRead(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestModelServingReadEmptyConfig(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: map[string]any{
+					"creation_timestamp":           1743085336000,
+					"creator":                      "b76b6808-9e10-43b3-be20-6b6d19ed1af0",
+					"creator_display_name":         "DECO-TF-AWS-PROD-IS-SPN",
+					"creator_kind":                 "ServicePrincipal",
+					"id":                           "84f4b90597b94fb1846a96cb505772f1",
+					"last_updated_timestamp":       1743085336000,
+					"name":                         "test-endpoint-462f54a7-fefd-4d48-bdc2-2659a5439d94",
+					"permission_level":             "CAN_MANAGE",
+					"resource_credential_strategy": "EMBEDDED_CREDENTIALS",
+					"route_optimized":              false,
+					"state": map[string]any{
+						"config_update": "NOT_UPDATING",
+						"ready":         "NOT_READY",
+						"suspend":       "NOT_SUSPENDED",
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServing(),
+		Read:     true,
+		ID:       "test-endpoint",
+	}.ApplyNoError(t)
+}
+
 func TestModelServingRead_Error(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

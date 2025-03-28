@@ -13,7 +13,7 @@ import (
 var disableLegacyDbfs = workspaceSetting[settings.DisableLegacyDbfs]{
 	settingStruct: settings.DisableLegacyDbfs{},
 	customizeSchemaFunc: func(s map[string]*schema.Schema) map[string]*schema.Schema {
-		common.CustomizeSchemaPath(s, "disable_legacy_access", "value").SetRequired()
+		common.CustomizeSchemaPath(s, "disable_legacy_dbfs", "value").SetRequired()
 		return s
 	},
 	readFunc: func(ctx context.Context, w *databricks.WorkspaceClient, etag string) (*settings.DisableLegacyDbfs, error) {

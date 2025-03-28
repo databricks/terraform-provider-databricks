@@ -23,6 +23,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 								ExistingClusterID: "abc",
 							},
 						},
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
+						},
 						WebhookNotifications: &jobs.WebhookNotifications{
 							OnSuccess: []jobs.Webhook{
 								{Id: "id1"},
@@ -46,6 +49,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 							},
+						},
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
 						},
 						WebhookNotifications: &jobs.WebhookNotifications{
 							OnSuccess: []jobs.Webhook{

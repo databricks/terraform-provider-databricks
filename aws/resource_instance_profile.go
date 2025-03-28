@@ -60,8 +60,12 @@ func (a InstanceProfilesAPI) Read(instanceProfileARN string) (result InstancePro
 			return
 		}
 	}
-	err = apierr.NotFound(fmt.Sprintf("Instance profile with name: %s not found in "+
-		"list of instance profiles in the workspace!", instanceProfileARN))
+	err = &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message: fmt.Sprintf("Instance profile with name: %s not found in "+
+			"list of instance profiles in the workspace!", instanceProfileARN),
+	}
 	return
 }
 

@@ -190,7 +190,11 @@ func ResourceGrants() common.Resource {
 				return err
 			}
 			if len(grants.PrivilegeAssignments) == 0 {
-				return apierr.NotFound("got empty permissions list")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "got empty permissions list",
+				}
 			}
 
 			err = common.StructToData(sdkPermissionsListToPermissionsList(*grants), s, d)

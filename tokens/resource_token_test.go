@@ -288,8 +288,12 @@ func TestResourceTokenDelete_NotFoundNoError(t *testing.T) {
 			{
 				Method:   "POST",
 				Resource: "/api/2.0/token/delete",
-				Response: apierr.NotFound("RESOURCE_DOES_NOT_EXIST"), // per documentation this is the error response
-				Status:   404,
+				Response: apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "RESOURCE_DOES_NOT_EXIST secret not found",
+				}, // per documentation this is the error response
+				Status: 404,
 			},
 		},
 		Resource: ResourceToken(),

@@ -5004,6 +5004,174 @@ func (o *ExternalLink_SdkV2) SetHttpHeaders(ctx context.Context, v map[string]ty
 	o.HttpHeaders = types.MapValueMust(t, vs)
 }
 
+type ExternalQuerySource_SdkV2 struct {
+	// The canonical identifier for this SQL alert
+	AlertId types.String `tfsdk:"alert_id"`
+	// The canonical identifier for this Lakeview dashboard
+	DashboardId types.String `tfsdk:"dashboard_id"`
+	// The canonical identifier for this Genie space
+	GenieSpaceId types.String `tfsdk:"genie_space_id"`
+
+	JobInfo types.List `tfsdk:"job_info"`
+	// The canonical identifier for this legacy dashboard
+	LegacyDashboardId types.String `tfsdk:"legacy_dashboard_id"`
+	// The canonical identifier for this notebook
+	NotebookId types.String `tfsdk:"notebook_id"`
+	// The canonical identifier for this SQL query
+	SqlQueryId types.String `tfsdk:"sql_query_id"`
+}
+
+func (newState *ExternalQuerySource_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalQuerySource_SdkV2) {
+}
+
+func (newState *ExternalQuerySource_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalQuerySource_SdkV2) {
+}
+
+func (c ExternalQuerySource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert_id"] = attrs["alert_id"].SetOptional()
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetOptional()
+	attrs["genie_space_id"] = attrs["genie_space_id"].SetOptional()
+	attrs["job_info"] = attrs["job_info"].SetOptional()
+	attrs["job_info"] = attrs["job_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["legacy_dashboard_id"] = attrs["legacy_dashboard_id"].SetOptional()
+	attrs["notebook_id"] = attrs["notebook_id"].SetOptional()
+	attrs["sql_query_id"] = attrs["sql_query_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalQuerySource.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalQuerySource_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"job_info": reflect.TypeOf(ExternalQuerySourceJobInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalQuerySource_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalQuerySource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alert_id":            o.AlertId,
+			"dashboard_id":        o.DashboardId,
+			"genie_space_id":      o.GenieSpaceId,
+			"job_info":            o.JobInfo,
+			"legacy_dashboard_id": o.LegacyDashboardId,
+			"notebook_id":         o.NotebookId,
+			"sql_query_id":        o.SqlQueryId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalQuerySource_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alert_id":       types.StringType,
+			"dashboard_id":   types.StringType,
+			"genie_space_id": types.StringType,
+			"job_info": basetypes.ListType{
+				ElemType: ExternalQuerySourceJobInfo_SdkV2{}.Type(ctx),
+			},
+			"legacy_dashboard_id": types.StringType,
+			"notebook_id":         types.StringType,
+			"sql_query_id":        types.StringType,
+		},
+	}
+}
+
+// GetJobInfo returns the value of the JobInfo field in ExternalQuerySource_SdkV2 as
+// a ExternalQuerySourceJobInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalQuerySource_SdkV2) GetJobInfo(ctx context.Context) (ExternalQuerySourceJobInfo_SdkV2, bool) {
+	var e ExternalQuerySourceJobInfo_SdkV2
+	if o.JobInfo.IsNull() || o.JobInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalQuerySourceJobInfo_SdkV2
+	d := o.JobInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetJobInfo sets the value of the JobInfo field in ExternalQuerySource_SdkV2.
+func (o *ExternalQuerySource_SdkV2) SetJobInfo(ctx context.Context, v ExternalQuerySourceJobInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["job_info"]
+	o.JobInfo = types.ListValueMust(t, vs)
+}
+
+type ExternalQuerySourceJobInfo_SdkV2 struct {
+	// The canonical identifier for this job.
+	JobId types.String `tfsdk:"job_id"`
+	// The canonical identifier of the run. This ID is unique across all runs of
+	// all jobs.
+	JobRunId types.String `tfsdk:"job_run_id"`
+	// The canonical identifier of the task run.
+	JobTaskRunId types.String `tfsdk:"job_task_run_id"`
+}
+
+func (newState *ExternalQuerySourceJobInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExternalQuerySourceJobInfo_SdkV2) {
+}
+
+func (newState *ExternalQuerySourceJobInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExternalQuerySourceJobInfo_SdkV2) {
+}
+
+func (c ExternalQuerySourceJobInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["job_run_id"] = attrs["job_run_id"].SetOptional()
+	attrs["job_task_run_id"] = attrs["job_task_run_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ExternalQuerySourceJobInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ExternalQuerySourceJobInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ExternalQuerySourceJobInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ExternalQuerySourceJobInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"job_id":          o.JobId,
+			"job_run_id":      o.JobRunId,
+			"job_task_run_id": o.JobTaskRunId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ExternalQuerySourceJobInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"job_id":          types.StringType,
+			"job_run_id":      types.StringType,
+			"job_task_run_id": types.StringType,
+		},
+	}
+}
+
 // Get an alert
 type GetAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
@@ -8927,6 +9095,10 @@ type QueryInfo_SdkV2 struct {
 	QueryEndTimeMs types.Int64 `tfsdk:"query_end_time_ms"`
 	// The query ID.
 	QueryId types.String `tfsdk:"query_id"`
+	// A struct that contains key-value pairs representing Databricks entities
+	// that were involved in the execution of this statement, such as jobs,
+	// notebooks, or dashboards. This field only records Databricks entities.
+	QuerySource types.List `tfsdk:"query_source"`
 	// The time the query started.
 	QueryStartTimeMs types.Int64 `tfsdk:"query_start_time_ms"`
 	// The text of the query.
@@ -8973,6 +9145,8 @@ func (c QueryInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["plans_state"] = attrs["plans_state"].SetOptional()
 	attrs["query_end_time_ms"] = attrs["query_end_time_ms"].SetOptional()
 	attrs["query_id"] = attrs["query_id"].SetOptional()
+	attrs["query_source"] = attrs["query_source"].SetOptional()
+	attrs["query_source"] = attrs["query_source"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["query_start_time_ms"] = attrs["query_start_time_ms"].SetOptional()
 	attrs["query_text"] = attrs["query_text"].SetOptional()
 	attrs["rows_produced"] = attrs["rows_produced"].SetOptional()
@@ -8997,6 +9171,7 @@ func (a QueryInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]re
 	return map[string]reflect.Type{
 		"channel_used": reflect.TypeOf(ChannelInfo_SdkV2{}),
 		"metrics":      reflect.TypeOf(QueryMetrics_SdkV2{}),
+		"query_source": reflect.TypeOf(ExternalQuerySource_SdkV2{}),
 	}
 }
 
@@ -9020,6 +9195,7 @@ func (o QueryInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"plans_state":           o.PlansState,
 			"query_end_time_ms":     o.QueryEndTimeMs,
 			"query_id":              o.QueryId,
+			"query_source":          o.QuerySource,
 			"query_start_time_ms":   o.QueryStartTimeMs,
 			"query_text":            o.QueryText,
 			"rows_produced":         o.RowsProduced,
@@ -9050,9 +9226,12 @@ func (o QueryInfo_SdkV2) Type(ctx context.Context) attr.Type {
 			"metrics": basetypes.ListType{
 				ElemType: QueryMetrics_SdkV2{}.Type(ctx),
 			},
-			"plans_state":         types.StringType,
-			"query_end_time_ms":   types.Int64Type,
-			"query_id":            types.StringType,
+			"plans_state":       types.StringType,
+			"query_end_time_ms": types.Int64Type,
+			"query_id":          types.StringType,
+			"query_source": basetypes.ListType{
+				ElemType: ExternalQuerySource_SdkV2{}.Type(ctx),
+			},
 			"query_start_time_ms": types.Int64Type,
 			"query_text":          types.StringType,
 			"rows_produced":       types.Int64Type,
@@ -9116,6 +9295,32 @@ func (o *QueryInfo_SdkV2) SetMetrics(ctx context.Context, v QueryMetrics_SdkV2) 
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["metrics"]
 	o.Metrics = types.ListValueMust(t, vs)
+}
+
+// GetQuerySource returns the value of the QuerySource field in QueryInfo_SdkV2 as
+// a ExternalQuerySource_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryInfo_SdkV2) GetQuerySource(ctx context.Context) (ExternalQuerySource_SdkV2, bool) {
+	var e ExternalQuerySource_SdkV2
+	if o.QuerySource.IsNull() || o.QuerySource.IsUnknown() {
+		return e, false
+	}
+	var v []ExternalQuerySource_SdkV2
+	d := o.QuerySource.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetQuerySource sets the value of the QuerySource field in QueryInfo_SdkV2.
+func (o *QueryInfo_SdkV2) SetQuerySource(ctx context.Context, v ExternalQuerySource_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["query_source"]
+	o.QuerySource = types.ListValueMust(t, vs)
 }
 
 type QueryList_SdkV2 struct {

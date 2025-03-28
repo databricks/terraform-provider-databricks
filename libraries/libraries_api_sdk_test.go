@@ -20,7 +20,11 @@ func TestWaitForLibrariesInstalledSdk(t *testing.T) {
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=missing",
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("missing"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "missing",
+			},
 		},
 		{
 			Method:       "GET",

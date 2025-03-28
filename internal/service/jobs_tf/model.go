@@ -4188,7 +4188,7 @@ type GitSource struct {
 	GitCommit types.String `tfsdk:"commit"`
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
-	GitProvider types.String `tfsdk:"git_provider"`
+	GitProvider types.String `tfsdk:"provider"`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
 	GitSnapshot types.Object `tfsdk:"git_snapshot"`
@@ -4211,7 +4211,7 @@ func (newState *GitSource) SyncEffectiveFieldsDuringRead(existingState GitSource
 func (c GitSource) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["commit"] = attrs["commit"].SetOptional()
-	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["provider"] = attrs["provider"].SetRequired()
 	attrs["git_snapshot"] = attrs["git_snapshot"].SetOptional()
 	attrs["tag"] = attrs["tag"].SetOptional()
 	attrs["url"] = attrs["url"].SetRequired()
@@ -4243,7 +4243,7 @@ func (o GitSource) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"branch":       o.GitBranch,
 			"commit":       o.GitCommit,
-			"git_provider": o.GitProvider,
+			"provider":     o.GitProvider,
 			"git_snapshot": o.GitSnapshot,
 			"tag":          o.GitTag,
 			"url":          o.GitUrl,
@@ -4257,7 +4257,7 @@ func (o GitSource) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"branch":       types.StringType,
 			"commit":       types.StringType,
-			"git_provider": types.StringType,
+			"provider":     types.StringType,
 			"git_snapshot": GitSnapshot{}.Type(ctx),
 			"tag":          types.StringType,
 			"url":          types.StringType,

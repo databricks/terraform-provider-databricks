@@ -79,9 +79,13 @@ func TestPairIDResource(t *testing.T) {
 			assertID: "a|b|c|d",
 		},
 		{
-			read:     true,
-			id:       "a|b",
-			err:      apierr.NotFound("Nope"),
+			read: true,
+			id:   "a|b",
+			err: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 			left:     "a",
 			right:    "b",
 			assertID: "",

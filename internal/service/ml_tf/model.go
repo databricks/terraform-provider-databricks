@@ -657,6 +657,282 @@ func (o CreateExperimentResponse) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CreateForecastingExperimentRequest struct {
+	// Name of the column in the input training table used to customize the
+	// weight for each time series to calculate weighted metrics.
+	CustomWeightsColumn types.String `tfsdk:"custom_weights_column"`
+	// The path to the created experiment. This is the path where the experiment
+	// will be stored in the workspace.
+	ExperimentPath types.String `tfsdk:"experiment_path"`
+	// The granularity of the forecast. This defines the time interval between
+	// consecutive rows in the time series data. Possible values: '1 second', '1
+	// minute', '5 minutes', '10 minutes', '15 minutes', '30 minutes', 'Hourly',
+	// 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'.
+	ForecastGranularity types.String `tfsdk:"forecast_granularity"`
+	// The number of time steps into the future for which predictions should be
+	// made. This value represents a multiple of forecast_granularity
+	// determining how far ahead the model will forecast.
+	ForecastHorizon types.Int64 `tfsdk:"forecast_horizon"`
+	// Region code(s) to consider when automatically adding holiday features.
+	// When empty, no holiday features are added. Only supports 1 holiday region
+	// for now.
+	HolidayRegions types.List `tfsdk:"holiday_regions"`
+	// The maximum duration in minutes for which the experiment is allowed to
+	// run. If the experiment exceeds this time limit it will be stopped
+	// automatically.
+	MaxRuntime types.Int64 `tfsdk:"max_runtime"`
+	// The three-level (fully qualified) path to a unity catalog table. This
+	// table path serves to store the predictions.
+	PredictionDataPath types.String `tfsdk:"prediction_data_path"`
+	// The evaluation metric used to optimize the forecasting model.
+	PrimaryMetric types.String `tfsdk:"primary_metric"`
+	// The three-level (fully qualified) path to a unity catalog model. This
+	// model path serves to store the best model.
+	RegisterTo types.String `tfsdk:"register_to"`
+	// Name of the column in the input training table used for custom data
+	// splits. The values in this column must be "train", "validate", or "test"
+	// to indicate which split each row belongs to.
+	SplitColumn types.String `tfsdk:"split_column"`
+	// Name of the column in the input training table that serves as the
+	// prediction target. The values in this column will be used as the ground
+	// truth for model training.
+	TargetColumn types.String `tfsdk:"target_column"`
+	// Name of the column in the input training table that represents the
+	// timestamp of each row.
+	TimeColumn types.String `tfsdk:"time_column"`
+	// Name of the column in the input training table used to group the dataset
+	// to predict individual time series
+	TimeseriesIdentifierColumns types.List `tfsdk:"timeseries_identifier_columns"`
+	// The three-level (fully qualified) name of a unity catalog table. This
+	// table serves as the training data for the forecasting model.
+	TrainDataPath types.String `tfsdk:"train_data_path"`
+	// The list of frameworks to include for model tuning. Possible values:
+	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list will include all supported
+	// frameworks.
+	TrainingFrameworks types.List `tfsdk:"training_frameworks"`
+}
+
+func (newState *CreateForecastingExperimentRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateForecastingExperimentRequest) {
+}
+
+func (newState *CreateForecastingExperimentRequest) SyncEffectiveFieldsDuringRead(existingState CreateForecastingExperimentRequest) {
+}
+
+func (c CreateForecastingExperimentRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_weights_column"] = attrs["custom_weights_column"].SetOptional()
+	attrs["experiment_path"] = attrs["experiment_path"].SetOptional()
+	attrs["forecast_granularity"] = attrs["forecast_granularity"].SetRequired()
+	attrs["forecast_horizon"] = attrs["forecast_horizon"].SetRequired()
+	attrs["holiday_regions"] = attrs["holiday_regions"].SetOptional()
+	attrs["max_runtime"] = attrs["max_runtime"].SetOptional()
+	attrs["prediction_data_path"] = attrs["prediction_data_path"].SetOptional()
+	attrs["primary_metric"] = attrs["primary_metric"].SetOptional()
+	attrs["register_to"] = attrs["register_to"].SetOptional()
+	attrs["split_column"] = attrs["split_column"].SetOptional()
+	attrs["target_column"] = attrs["target_column"].SetRequired()
+	attrs["time_column"] = attrs["time_column"].SetRequired()
+	attrs["timeseries_identifier_columns"] = attrs["timeseries_identifier_columns"].SetOptional()
+	attrs["train_data_path"] = attrs["train_data_path"].SetRequired()
+	attrs["training_frameworks"] = attrs["training_frameworks"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateForecastingExperimentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateForecastingExperimentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"holiday_regions":               reflect.TypeOf(types.String{}),
+		"timeseries_identifier_columns": reflect.TypeOf(types.String{}),
+		"training_frameworks":           reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateForecastingExperimentRequest
+// only implements ToObjectValue() and Type().
+func (o CreateForecastingExperimentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_weights_column":         o.CustomWeightsColumn,
+			"experiment_path":               o.ExperimentPath,
+			"forecast_granularity":          o.ForecastGranularity,
+			"forecast_horizon":              o.ForecastHorizon,
+			"holiday_regions":               o.HolidayRegions,
+			"max_runtime":                   o.MaxRuntime,
+			"prediction_data_path":          o.PredictionDataPath,
+			"primary_metric":                o.PrimaryMetric,
+			"register_to":                   o.RegisterTo,
+			"split_column":                  o.SplitColumn,
+			"target_column":                 o.TargetColumn,
+			"time_column":                   o.TimeColumn,
+			"timeseries_identifier_columns": o.TimeseriesIdentifierColumns,
+			"train_data_path":               o.TrainDataPath,
+			"training_frameworks":           o.TrainingFrameworks,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateForecastingExperimentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_weights_column": types.StringType,
+			"experiment_path":       types.StringType,
+			"forecast_granularity":  types.StringType,
+			"forecast_horizon":      types.Int64Type,
+			"holiday_regions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"max_runtime":          types.Int64Type,
+			"prediction_data_path": types.StringType,
+			"primary_metric":       types.StringType,
+			"register_to":          types.StringType,
+			"split_column":         types.StringType,
+			"target_column":        types.StringType,
+			"time_column":          types.StringType,
+			"timeseries_identifier_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"train_data_path": types.StringType,
+			"training_frameworks": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+// GetHolidayRegions returns the value of the HolidayRegions field in CreateForecastingExperimentRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateForecastingExperimentRequest) GetHolidayRegions(ctx context.Context) ([]types.String, bool) {
+	if o.HolidayRegions.IsNull() || o.HolidayRegions.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.HolidayRegions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHolidayRegions sets the value of the HolidayRegions field in CreateForecastingExperimentRequest.
+func (o *CreateForecastingExperimentRequest) SetHolidayRegions(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["holiday_regions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.HolidayRegions = types.ListValueMust(t, vs)
+}
+
+// GetTimeseriesIdentifierColumns returns the value of the TimeseriesIdentifierColumns field in CreateForecastingExperimentRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateForecastingExperimentRequest) GetTimeseriesIdentifierColumns(ctx context.Context) ([]types.String, bool) {
+	if o.TimeseriesIdentifierColumns.IsNull() || o.TimeseriesIdentifierColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TimeseriesIdentifierColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTimeseriesIdentifierColumns sets the value of the TimeseriesIdentifierColumns field in CreateForecastingExperimentRequest.
+func (o *CreateForecastingExperimentRequest) SetTimeseriesIdentifierColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["timeseries_identifier_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.TimeseriesIdentifierColumns = types.ListValueMust(t, vs)
+}
+
+// GetTrainingFrameworks returns the value of the TrainingFrameworks field in CreateForecastingExperimentRequest as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateForecastingExperimentRequest) GetTrainingFrameworks(ctx context.Context) ([]types.String, bool) {
+	if o.TrainingFrameworks.IsNull() || o.TrainingFrameworks.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.TrainingFrameworks.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTrainingFrameworks sets the value of the TrainingFrameworks field in CreateForecastingExperimentRequest.
+func (o *CreateForecastingExperimentRequest) SetTrainingFrameworks(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["training_frameworks"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.TrainingFrameworks = types.ListValueMust(t, vs)
+}
+
+type CreateForecastingExperimentResponse struct {
+	// The unique ID of the created forecasting experiment
+	ExperimentId types.String `tfsdk:"experiment_id"`
+}
+
+func (newState *CreateForecastingExperimentResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateForecastingExperimentResponse) {
+}
+
+func (newState *CreateForecastingExperimentResponse) SyncEffectiveFieldsDuringRead(existingState CreateForecastingExperimentResponse) {
+}
+
+func (c CreateForecastingExperimentResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateForecastingExperimentResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateForecastingExperimentResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateForecastingExperimentResponse
+// only implements ToObjectValue() and Type().
+func (o CreateForecastingExperimentResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment_id": o.ExperimentId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateForecastingExperimentResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment_id": types.StringType,
+		},
+	}
+}
+
 type CreateModelRequest struct {
 	// Optional description for registered model.
 	Description types.String `tfsdk:"description"`
@@ -3367,6 +3643,66 @@ func (o FileInfo) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Represents a forecasting experiment with its unique identifier, URL, and
+// state.
+type ForecastingExperiment struct {
+	// The unique ID for the forecasting experiment.
+	ExperimentId types.String `tfsdk:"experiment_id"`
+	// The URL to the forecasting experiment page.
+	ExperimentPageUrl types.String `tfsdk:"experiment_page_url"`
+	// The current state of the forecasting experiment.
+	State types.String `tfsdk:"state"`
+}
+
+func (newState *ForecastingExperiment) SyncEffectiveFieldsDuringCreateOrUpdate(plan ForecastingExperiment) {
+}
+
+func (newState *ForecastingExperiment) SyncEffectiveFieldsDuringRead(existingState ForecastingExperiment) {
+}
+
+func (c ForecastingExperiment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["experiment_id"] = attrs["experiment_id"].SetOptional()
+	attrs["experiment_page_url"] = attrs["experiment_page_url"].SetOptional()
+	attrs["state"] = attrs["state"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ForecastingExperiment.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ForecastingExperiment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ForecastingExperiment
+// only implements ToObjectValue() and Type().
+func (o ForecastingExperiment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment_id":       o.ExperimentId,
+			"experiment_page_url": o.ExperimentPageUrl,
+			"state":               o.State,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ForecastingExperiment) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment_id":       types.StringType,
+			"experiment_page_url": types.StringType,
+			"state":               types.StringType,
+		},
+	}
+}
+
 // Get an experiment by name
 type GetByNameRequest struct {
 	// Name of the associated experiment.
@@ -3747,6 +4083,43 @@ func (o *GetExperimentResponse) GetExperiment(ctx context.Context) (Experiment, 
 func (o *GetExperimentResponse) SetExperiment(ctx context.Context, v Experiment) {
 	vs := v.ToObjectValue(ctx)
 	o.Experiment = vs
+}
+
+// Get a forecasting experiment
+type GetForecastingExperimentRequest struct {
+	// The unique ID of a forecasting experiment
+	ExperimentId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetForecastingExperimentRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetForecastingExperimentRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetForecastingExperimentRequest
+// only implements ToObjectValue() and Type().
+func (o GetForecastingExperimentRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"experiment_id": o.ExperimentId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetForecastingExperimentRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"experiment_id": types.StringType,
+		},
+	}
 }
 
 // Get metric history for a run

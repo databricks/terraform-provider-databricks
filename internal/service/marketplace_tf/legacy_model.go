@@ -5247,7 +5247,7 @@ type Listing_SdkV2 struct {
 	Detail types.List `tfsdk:"detail"`
 
 	Id types.String `tfsdk:"id"`
-	// Next Number: 26
+
 	Summary types.List `tfsdk:"summary"`
 }
 
@@ -5861,7 +5861,6 @@ func (o ListingSetting_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next Number: 26
 type ListingSummary_SdkV2 struct {
 	Categories types.List `tfsdk:"categories"`
 

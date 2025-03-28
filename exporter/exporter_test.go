@@ -421,10 +421,14 @@ var emptyGlobalSQLConfig = qa.HTTPFixture{
 }
 
 var noCurrentMetastoreAttached = qa.HTTPFixture{
-	Method:       "GET",
-	Resource:     "/api/2.1/unity-catalog/metastore_summary",
-	Status:       404,
-	Response:     apierr.NotFound("nope"),
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/metastore_summary",
+	Status:   404,
+	Response: &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    "nope",
+	},
 	ReuseRequest: true,
 }
 
@@ -669,7 +673,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -805,7 +809,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -860,7 +864,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -1061,7 +1065,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{
 					Jobs: []sdk_jobs.BaseJob{
 						{
@@ -1116,7 +1120,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -1265,7 +1269,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{
 					Jobs: []sdk_jobs.BaseJob{
 						{
@@ -1531,7 +1535,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -2912,7 +2916,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			emptyWorkspace,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: map[string]any{
 					"jobs": []any{
 						getJSONObject("test-data/run-job-main.json"),

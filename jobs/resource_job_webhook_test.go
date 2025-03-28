@@ -12,7 +12,7 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
@@ -22,6 +22,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 							},
+						},
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
 						},
 						WebhookNotifications: &jobs.WebhookNotifications{
 							OnSuccess: []jobs.Webhook{
@@ -37,7 +40,7 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					Settings: &JobSettings{
 						Name: "Webhook test",
@@ -46,6 +49,9 @@ func TestResourceJobUpdate_WebhookNotifications(t *testing.T) {
 								TaskKey:           "task1",
 								ExistingClusterID: "abc",
 							},
+						},
+						Queue: &jobs.QueueSettings{
+							Enabled: false,
 						},
 						WebhookNotifications: &jobs.WebhookNotifications{
 							OnSuccess: []jobs.Webhook{

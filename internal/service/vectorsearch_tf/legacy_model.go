@@ -2251,6 +2251,7 @@ type QueryVectorIndexResponse_SdkV2 struct {
 	// [Optional] Token that can be used in `QueryVectorIndexNextPage` API to
 	// get next page of results. If more than 1000 results satisfy the query,
 	// they are returned in groups of 1000. Empty value means no more results.
+	// The maximum number of results that can be returned is 10,000.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// Data returned in the query result.
 	Result types.List `tfsdk:"result"`

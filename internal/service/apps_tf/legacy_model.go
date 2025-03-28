@@ -45,11 +45,17 @@ type App_SdkV2 struct {
 	Description types.String `tfsdk:"description"`
 
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
+	// The effective api scopes granted to the user access token.
+	EffectiveUserApiScopes types.List `tfsdk:"effective_user_api_scopes"`
 	// The unique identifier of the app.
 	Id types.String `tfsdk:"id"`
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"name"`
+
+	Oauth2AppClientId types.String `tfsdk:"oauth2_app_client_id"`
+
+	Oauth2AppIntegrationId types.String `tfsdk:"oauth2_app_integration_id"`
 	// The pending deployment of the app. A deployment is considered pending
 	// when it is being prepared for deployment to the app compute.
 	PendingDeployment types.List `tfsdk:"pending_deployment"`
@@ -67,6 +73,8 @@ type App_SdkV2 struct {
 	Updater types.String `tfsdk:"updater"`
 	// The URL of the app once it is deployed.
 	Url types.String `tfsdk:"url"`
+
+	UserApiScopes types.List `tfsdk:"user_api_scopes"`
 }
 
 func (newState *App_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan App_SdkV2) {
@@ -88,8 +96,11 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["default_source_code_path"] = attrs["default_source_code_path"].SetComputed()
 	attrs["description"] = attrs["description"].SetOptional()
 	attrs["effective_budget_policy_id"] = attrs["effective_budget_policy_id"].SetComputed()
+	attrs["effective_user_api_scopes"] = attrs["effective_user_api_scopes"].SetComputed()
 	attrs["id"] = attrs["id"].SetComputed()
 	attrs["name"] = attrs["name"].SetRequired()
+	attrs["oauth2_app_client_id"] = attrs["oauth2_app_client_id"].SetComputed()
+	attrs["oauth2_app_integration_id"] = attrs["oauth2_app_integration_id"].SetComputed()
 	attrs["pending_deployment"] = attrs["pending_deployment"].SetComputed()
 	attrs["pending_deployment"] = attrs["pending_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["resources"] = attrs["resources"].SetOptional()
@@ -99,6 +110,7 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["update_time"] = attrs["update_time"].SetComputed()
 	attrs["updater"] = attrs["updater"].SetComputed()
 	attrs["url"] = attrs["url"].SetComputed()
+	attrs["user_api_scopes"] = attrs["user_api_scopes"].SetOptional()
 
 	return attrs
 }
@@ -112,11 +124,13 @@ func (c App_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 // SDK values.
 func (a App_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"active_deployment":  reflect.TypeOf(AppDeployment_SdkV2{}),
-		"app_status":         reflect.TypeOf(ApplicationStatus_SdkV2{}),
-		"compute_status":     reflect.TypeOf(ComputeStatus_SdkV2{}),
-		"pending_deployment": reflect.TypeOf(AppDeployment_SdkV2{}),
-		"resources":          reflect.TypeOf(AppResource_SdkV2{}),
+		"active_deployment":         reflect.TypeOf(AppDeployment_SdkV2{}),
+		"app_status":                reflect.TypeOf(ApplicationStatus_SdkV2{}),
+		"compute_status":            reflect.TypeOf(ComputeStatus_SdkV2{}),
+		"effective_user_api_scopes": reflect.TypeOf(types.String{}),
+		"pending_deployment":        reflect.TypeOf(AppDeployment_SdkV2{}),
+		"resources":                 reflect.TypeOf(AppResource_SdkV2{}),
+		"user_api_scopes":           reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -136,8 +150,11 @@ func (o App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"default_source_code_path":    o.DefaultSourceCodePath,
 			"description":                 o.Description,
 			"effective_budget_policy_id":  o.EffectiveBudgetPolicyId,
+			"effective_user_api_scopes":   o.EffectiveUserApiScopes,
 			"id":                          o.Id,
 			"name":                        o.Name,
+			"oauth2_app_client_id":        o.Oauth2AppClientId,
+			"oauth2_app_integration_id":   o.Oauth2AppIntegrationId,
 			"pending_deployment":          o.PendingDeployment,
 			"resources":                   o.Resources,
 			"service_principal_client_id": o.ServicePrincipalClientId,
@@ -146,6 +163,7 @@ func (o App_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"update_time":                 o.UpdateTime,
 			"updater":                     o.Updater,
 			"url":                         o.Url,
+			"user_api_scopes":             o.UserApiScopes,
 		})
 }
 
@@ -168,8 +186,13 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"default_source_code_path":   types.StringType,
 			"description":                types.StringType,
 			"effective_budget_policy_id": types.StringType,
-			"id":                         types.StringType,
-			"name":                       types.StringType,
+			"effective_user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"id":                        types.StringType,
+			"name":                      types.StringType,
+			"oauth2_app_client_id":      types.StringType,
+			"oauth2_app_integration_id": types.StringType,
 			"pending_deployment": basetypes.ListType{
 				ElemType: AppDeployment_SdkV2{}.Type(ctx),
 			},
@@ -182,6 +205,9 @@ func (o App_SdkV2) Type(ctx context.Context) attr.Type {
 			"update_time":                 types.StringType,
 			"updater":                     types.StringType,
 			"url":                         types.StringType,
+			"user_api_scopes": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
 }
@@ -264,6 +290,32 @@ func (o *App_SdkV2) SetComputeStatus(ctx context.Context, v ComputeStatus_SdkV2)
 	o.ComputeStatus = types.ListValueMust(t, vs)
 }
 
+// GetEffectiveUserApiScopes returns the value of the EffectiveUserApiScopes field in App_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App_SdkV2) GetEffectiveUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if o.EffectiveUserApiScopes.IsNull() || o.EffectiveUserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.EffectiveUserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEffectiveUserApiScopes sets the value of the EffectiveUserApiScopes field in App_SdkV2.
+func (o *App_SdkV2) SetEffectiveUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["effective_user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.EffectiveUserApiScopes = types.ListValueMust(t, vs)
+}
+
 // GetPendingDeployment returns the value of the PendingDeployment field in App_SdkV2 as
 // a AppDeployment_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
@@ -314,6 +366,32 @@ func (o *App_SdkV2) SetResources(ctx context.Context, v []AppResource_SdkV2) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["resources"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Resources = types.ListValueMust(t, vs)
+}
+
+// GetUserApiScopes returns the value of the UserApiScopes field in App_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *App_SdkV2) GetUserApiScopes(ctx context.Context) ([]types.String, bool) {
+	if o.UserApiScopes.IsNull() || o.UserApiScopes.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.UserApiScopes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetUserApiScopes sets the value of the UserApiScopes field in App_SdkV2.
+func (o *App_SdkV2) SetUserApiScopes(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["user_api_scopes"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.UserApiScopes = types.ListValueMust(t, vs)
 }
 
 type AppAccessControlRequest_SdkV2 struct {

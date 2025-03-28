@@ -22,7 +22,11 @@ func ResourceGroupInstanceProfile() common.Resource {
 			group, err := scim.NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := scim.ComplexValues(group.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return apierr.NotFound("Group has no instance profile")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Group has no instance profile",
+				}
 			}
 			return err
 		},

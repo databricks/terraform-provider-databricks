@@ -122,7 +122,11 @@ func (ta *SqlPermissions) read() error {
 		failure := currentGrantsOnThis.Error()
 		if strings.Contains(failure, "does not exist") ||
 			strings.Contains(failure, "RESOURCE_DOES_NOT_EXIST") {
-			return apierr.NotFound(failure)
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    failure,
+			}
 		}
 		return fmt.Errorf("cannot read current grants: %s", failure)
 	}

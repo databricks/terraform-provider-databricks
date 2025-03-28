@@ -27,3 +27,5 @@
   * Fix panic caused by incorrect values in the cluster policies ([#4585](https://github.com/databricks/terraform-provider-databricks/pull/4585))
 
 ### Internal Changes
+
+* Use caching for group membership and user information retrieval to improve performance ([#4581](https://github.com/databricks/terraform-provider-databricks/pull/4581)).

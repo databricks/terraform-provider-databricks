@@ -8,6 +8,7 @@
  * Add support for `aws-us-gov-dod` (AWS Govcloud DoD shard) ([#4594](https://github.com/databricks/terraform-provider-databricks/pull/4594/commits/5ac01118f546070ae5b8938f06807c8325d0f5d7))
 
 ### Bug Fixes
+* [Fix] Update databricks_mlflow_experiment resource to include tags ([#4569](https://github.com/databricks/terraform-provider-databricks/pull/4569))
 
  * Recreate `databricks_access_control_rule_set` when the `name` changes ([#4572](https://github.com/databricks/terraform-provider-databricks/pull/4572)).
  * Avoid timeouts during `databricks_mount` state refresh and creation ([#4590](https://github.com/databricks/terraform-provider-databricks/pull/4590)).

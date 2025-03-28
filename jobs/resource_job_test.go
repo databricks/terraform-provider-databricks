@@ -196,6 +196,9 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					Health: &JobHealth{
 						Rules: []JobHealthRule{
@@ -354,6 +357,9 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					Health: &JobHealth{
 						Rules: []JobHealthRule{
@@ -492,6 +498,9 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 				},
 				Response: Job{
@@ -560,6 +569,9 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 				},
 				Response: Job{
@@ -624,6 +636,9 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 						{
 							TaskKey: "b",
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					MaxConcurrentRuns: 1,
 					Parameters: []jobs.JobParameterDefinition{
@@ -708,6 +723,9 @@ func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
 						{
 							TaskKey: "a",
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					Parameters: []jobs.JobParameterDefinition{
 						{
@@ -832,6 +850,9 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					JobClusters: []JobCluster{
 						{
@@ -951,6 +972,9 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					Environments: []jobs.JobEnvironment{
 						{
@@ -1046,6 +1070,9 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 								},
 							},
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 				},
 				Response: Job{
@@ -1154,6 +1181,9 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 								JobID: 123,
 							},
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 				},
 				Response: Job{
@@ -1906,6 +1936,9 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 								NotebookPath: "/GitSourcedNotebook",
 							},
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					Name:              "GitSourceJob",
 					MaxConcurrentRuns: 1,

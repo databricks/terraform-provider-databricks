@@ -230,6 +230,15 @@ func Create(createJob jobs.CreateJob, w *databricks.WorkspaceClient, ctx context
 			return 0, fmt.Errorf("git source is not empty but none of branch, commit and tag is specified")
 		}
 	}
+	// With the introduction of Jobs2.2, queue becomes enabled by default.
+	// This could break TF customers, so we disable it by default until we
+	// have more clarity.
+	// TODO: Determine whether it is safe to change this and a customer migration is needed.
+	if createJob.Queue == nil {
+		createJob.Queue = &jobs.QueueSettings{
+			Enabled: false,
+		}
+	}
 	res, err := w.Jobs.Create(ctx, createJob)
 	return res.JobId, err
 }

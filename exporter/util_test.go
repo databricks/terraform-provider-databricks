@@ -33,6 +33,18 @@ func TestImportClusterEmitsInitScripts(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /mnt/abc/test.sh)"])
 }
 
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "foo", eitherString("foo", "bar"))
+	assert.Equal(t, "bar", eitherString(nil, "bar"))
+	assert.Equal(t, "foo", eitherString("foo", ""))
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
+	assert.Equal(t, "a", eitherString(1, "a"))
+	assert.Equal(t, "", eitherString(1, nil))
+	assert.Equal(t, "", eitherString(1, 1))
+}
+
 func TestAddAwsMounts(t *testing.T) {
 	ic := importContextForTest()
 	ic.mountMap = map[string]mount{}

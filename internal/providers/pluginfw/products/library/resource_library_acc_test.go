@@ -12,7 +12,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -156,7 +155,8 @@ func TestAccLibraryUpdate(t *testing.T) {
 
 var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
 	"databricks": func() (tfprotov6.ProviderServer, error) {
-		return providers.GetProviderServer(context.Background(), providers.WithSdkV2FallbackOptions(pluginfw.WithSdkV2ResourceFallbacks("databricks_library")))
+		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_library"})
+		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 	},
 }
 

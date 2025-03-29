@@ -59,7 +59,18 @@ func (a GroupsAPI) ReadByDisplayName(displayName, attributes string) (group Grou
 		err = fmt.Errorf("cannot find group: %s", displayName)
 		return
 	}
-	group = groupList.Resources[0]
+	if len(groupList.Resources) == 1 {
+		group = groupList.Resources[0]
+		return
+	}
+	for _, g := range groupList.Resources {
+		if g.DisplayName == displayName {
+			group = g
+			return
+		}
+	}
+
+	err = fmt.Errorf("cannot find group: %s", displayName)
 	return
 }
 

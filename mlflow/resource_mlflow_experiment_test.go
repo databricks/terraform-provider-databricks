@@ -247,6 +247,6 @@ func TestExperimentDeleteError(t *testing.T) {
 func TestExperimentNameSuppressDiff(t *testing.T) {
 	assert.True(t, experimentNameSuppressDiff("", "/Workspace/EXPERIMENT/", "/EXPERIMENT", nil))
 	assert.True(t, experimentNameSuppressDiff("", "/Workspace/EXPERIMENT", "/EXPERIMENT", nil))
-	assert.True(t, experimentNameSuppressDiff("", "/EXPERIMENT", "/EXPERIMENT", nil))
+	assert.True(t, experimentNameSuppressDiff("", "/EXPERIMENT/", "/EXPERIMENT", nil))
 	assert.False(t, experimentNameSuppressDiff("", "/new_name", "/EXPERIMENT/", nil))
 }

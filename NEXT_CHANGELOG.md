@@ -7,7 +7,7 @@
  * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4531](https://github.com/databricks/terraform-provider-databricks/pull/4531)).
  * Add support for `CAN_VIEW` permission level in `databricks_permissions`, which can be assigned to `databricks_sql_endpoint` ([#4464](https://github.com/databricks/terraform-provider-databricks/pull/4464)).
  * Add support for `aws-us-gov-dod` (AWS Govcloud DoD shard) ([#4594](https://github.com/databricks/terraform-provider-databricks/pull/4594/commits/5ac01118f546070ae5b8938f06807c8325d0f5d7))
- * Add a new settings resources disable_legacy_access ([#4578](https://github.com/databricks/terraform-provider-databricks/pull/4578)).
+ * Add a new settings resources disable_legacy_dbfs_setting ([#4605](https://github.com/databricks/terraform-provider-databricks/pull/4605)).
 
 ### Bug Fixes
 

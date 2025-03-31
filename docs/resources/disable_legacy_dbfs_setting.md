@@ -2,17 +2,17 @@
 subcategory: "Settings"
 ---
 
-# databricks_disable_legacy_dbfs Resource
+# databricks_disable_legacy_dbfs_setting Resource
 
 -> This resource can only be used with a workspace-level provider!
 
-The `databricks_disable_legacy_dbfs` resource allows you to disable legacy dbfs features.
+The `databricks_disable_legacy_dbfs_setting` resource allows you to disable legacy dbfs features.
 When this setting is on, access to DBFS root and DBFS mounts is disallowed (as well as creation of new mounts). When the setting is off, all DBFS functionality is enabled. This setting has no impact on workspace internal storage (WIS).
 
 ## Example Usage
 
 ```hcl
-resource "databricks_disable_legacy_dbfs" "this" {
+resource "databricks_disable_legacy_dbfs_setting" "this" {
   disable_legacy_dbfs {
     value = true
   }
@@ -31,5 +31,5 @@ The resource supports the following arguments:
 This resource can be imported by predefined name `global`:
 
 ```bash
-terraform import databricks_disable_legacy_dbfs.this global
+terraform import databricks_disable_legacy_dbfs_setting.this global
 ```

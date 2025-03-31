@@ -23,11 +23,16 @@ func ResourceMlflowExperiment() common.Resource {
 	s := common.StructToSchema(
 		ml.Experiment{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			for _, p := range []string{"creation_time", "experiment_id", "last_update_time", "lifecycle_stage"} {
+			for _, p := range []string{"creation_time", "experiment_id", "last_update_time", "lifecycle_stage", "tags"} {
 				common.CustomizeSchemaPath(m, p).SetComputed()
 			}
 			common.CustomizeSchemaPath(m, "artifact_location").SetForceNew().SetSuppressDiff()
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(experimentNameSuppressDiff)
+			// the API never accepts description, but we need to keep this for backwards compatibility
+			m["description"] = &schema.Schema{
+				Optional: true,
+				Type:     schema.TypeString,
+			}
 			return m
 		})
 
@@ -62,9 +67,10 @@ func ResourceMlflowExperiment() common.Resource {
 			if err != nil {
 				return err
 			}
-			var update ml.UpdateExperiment
-			common.DataToStructPointer(d, s, &update)
-			return w.Experiments.UpdateExperiment(ctx, update)
+			return w.Experiments.UpdateExperiment(ctx, ml.UpdateExperiment{
+				ExperimentId: d.Id(),
+				NewName:      d.Get("name").(string),
+			})
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

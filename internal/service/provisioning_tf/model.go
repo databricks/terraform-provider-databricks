@@ -2768,7 +2768,7 @@ func (c Network) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["network_name"] = attrs["network_name"].SetOptional()
 	attrs["security_group_ids"] = attrs["security_group_ids"].SetOptional()
 	attrs["subnet_ids"] = attrs["subnet_ids"].SetOptional()
-	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetOptional()
+	attrs["vpc_endpoints"] = attrs["vpc_endpoints"].SetComputed()
 	attrs["vpc_id"] = attrs["vpc_id"].SetOptional()
 	attrs["vpc_status"] = attrs["vpc_status"].SetComputed()
 	attrs["warning_messages"] = attrs["warning_messages"].SetComputed()
@@ -4120,7 +4120,7 @@ func (newState *Workspace) SyncEffectiveFieldsDuringRead(existingState Workspace
 func (c Workspace) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["account_id"] = attrs["account_id"].SetOptional()
 	attrs["aws_region"] = attrs["aws_region"].SetOptional()
-	attrs["azure_workspace_info"] = attrs["azure_workspace_info"].SetOptional()
+	attrs["azure_workspace_info"] = attrs["azure_workspace_info"].SetComputed()
 	attrs["cloud"] = attrs["cloud"].SetOptional()
 	attrs["cloud_resource_container"] = attrs["cloud_resource_container"].SetOptional()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()

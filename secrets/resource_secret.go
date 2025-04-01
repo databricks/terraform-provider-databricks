@@ -28,8 +28,11 @@ func readSecret(ctx context.Context, w *databricks.WorkspaceClient, scope string
 		}
 	}
 
-	return secretMeta, apierr.NotFound(
-		fmt.Sprintf("no secret Scope found with secret metadata scope name: %s and key: %s", scope, key))
+	return secretMeta, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("no secret Scope found with secret metadata scope name: %s and key: %s", scope, key),
+	}
 }
 
 // ResourceSecret manages secrets

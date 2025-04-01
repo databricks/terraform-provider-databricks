@@ -56,7 +56,11 @@ func (l PermissionAssignmentList) ForPrincipal(principalId int64) (res Permissio
 		}
 		return Permissions{v.Permissions}, nil
 	}
-	return res, apierr.NotFound(fmt.Sprintf("%d not found", principalId))
+	return res, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("%d not found", principalId),
+	}
 }
 
 func (a PermissionAssignmentAPI) List() (list PermissionAssignmentList, err error) {

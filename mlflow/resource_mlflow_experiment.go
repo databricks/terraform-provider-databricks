@@ -32,7 +32,7 @@ func ResourceMlflowExperiment() common.Resource {
 			m["description"] = &schema.Schema{
 				Optional:   true,
 				Type:       schema.TypeString,
-				Deprecated: "The description field is deprecated and will be removed in a future version.",
+				Deprecated: "Remove the description attribute as it no longer is used and will be removed in a future version.",
 			}
 			return m
 		})

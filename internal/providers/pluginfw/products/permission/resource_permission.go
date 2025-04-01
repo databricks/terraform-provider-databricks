@@ -116,16 +116,20 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
         // generate API request from plan
         var acls []iam.AccessControlRequest
         for _, acl := range plan.AccessControlList {
+                acls = append(acls, iam.AccessControlRequest{
+                        ServicePrincipalName: acl.ServicePrincipalName,
+                        GroupName: acl.GroupName,
+                        UserName: acl.UserName,
+                        PermissionLevel: acl.PermissionLevel,
+                })
         }
 
         // create the permission
-        //TODO: FIGURE OUT PROPER API CALL METHOD FOR THIS ACTION
-        acl, err := r.client.AccessControl.Update(<OBJECT ID?>, iam.UpdateRuleSetRequest{
-                Name: plan.ObjectID,
-                ObjectType: plan.ObjectType,
+        acl, err := r.client.Update.(plan.ObjectID, iam.PermissionsRequest{
+                RequestObjectType: plan.ObjectID,
+                RequestObjectType: plan.ObjectType,
                 AccessControlList: acls,
         })
-
 
 }
 

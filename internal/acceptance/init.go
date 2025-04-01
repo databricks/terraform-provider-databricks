@@ -22,9 +22,13 @@ import (
 	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
 	dbproviderlogger "github.com/databricks/terraform-provider-databricks/logger"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -161,6 +165,31 @@ func environmentTemplate(t *testing.T, template string, otherVars ...map[string]
 	return commands.TrimLeadingWhitespace(template)
 }
 
+// ProvidersWithResourceFallbacks creates test providers, falling back to the SDKv2 provider for the
+// specified resources. This is a convenience constructor that ensures that the resulting mux'ed provider
+// uses the SDKv2 implementation for the specified resources.
+func ProvidersWithResourceFallbacks(resourceFallbacks []string) (*schema.Provider, provider.Provider) {
+	pluginfwOpt := pluginfw.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	pluginFrameworkProvider := PluginFrameworkProviderForTest(pluginfwOpt)
+
+	sdkV2Opt := sdkv2.WithSdkV2ResourceFallbacks(resourceFallbacks)
+	sdkV2Provider := SdkV2ProviderForTest(sdkV2Opt)
+
+	return sdkV2Provider, pluginFrameworkProvider
+}
+
+// SdkV2ProviderForTest creates a test provider with the default config customizer.
+func SdkV2ProviderForTest(sdkV2Options ...sdkv2.SdkV2ProviderOption) *schema.Provider {
+	opts := append(sdkV2Options, sdkv2.WithConfigCustomizer(DefaultConfigCustomizer))
+	return sdkv2.DatabricksProvider(opts...)
+}
+
+// PluginFrameworkProviderForTest creates a test provider with the default config customizer.
+func PluginFrameworkProviderForTest(pluginFwOptions ...pluginfw.PluginFrameworkOption) provider.Provider {
+	opts := append(pluginFwOptions, pluginfw.WithConfigCustomizer(DefaultConfigCustomizer))
+	return pluginfw.GetDatabricksProviderPluginFramework(opts...)
+}
+
 // Test wrapper over terraform testing framework. Multiple steps share the same
 // terraform state context.
 func run(t *testing.T, steps []Step) {
@@ -173,7 +202,12 @@ func run(t *testing.T, steps []Step) {
 		"databricks": func() (tfprotov6.ProviderServer, error) {
 			ctx := context.Background()
 
-			return providers.GetProviderServer(ctx)
+			// The SDKv2 and Plugin Framework providers are customized to increase the default HTTP timeout.
+			// Otherwise, they are no different from the production provider.
+			sdkPluginProvider := SdkV2ProviderForTest()
+			pluginFrameworkProvider := PluginFrameworkProviderForTest()
+
+			return providers.GetProviderServer(ctx, providers.WithSdkV2Provider(sdkPluginProvider), providers.WithPluginFrameworkProvider(pluginFrameworkProvider))
 		},
 	}
 	cwd, err := os.Getwd()
@@ -250,6 +284,14 @@ func run(t *testing.T, steps []Step) {
 			return nil
 		},
 	})
+}
+
+// DefaultConfigCustomizer modifies the SDK configuration, setting the HTTP timeout to 10 minutes.
+// Most APIs have a default timeout of 1 minute, but some have longer. Extending the HTTP timeout
+// ensures that tests don't fail even if individual requests take longer than 1 minute.
+func DefaultConfigCustomizer(cfg *config.Config) error {
+	cfg.HTTPTimeoutSeconds = 10 * 60
+	return nil
 }
 
 // resourceCheck calls back a function with client and resource id

@@ -76,9 +76,17 @@ func TestIgnoreNotFoundError(t *testing.T) {
 	err = IgnoreNotFoundError(fmt.Errorf("error"))
 	assert.EqualError(t, err, "error")
 
-	err = IgnoreNotFoundError(apierr.NotFound("error"))
+	err = IgnoreNotFoundError(&apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    "error",
+	})
 	assert.NoError(t, err)
 
-	err = IgnoreNotFoundError(apierr.ReadError(403, fmt.Errorf("cluster xyz does not exist")))
+	err = IgnoreNotFoundError(&apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    "cluster xyz does not exist",
+	})
 	assert.NoError(t, err)
 }

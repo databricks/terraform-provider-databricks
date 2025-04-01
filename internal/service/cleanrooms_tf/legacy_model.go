@@ -1401,7 +1401,7 @@ func (c CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]
 	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetOptional()
+	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["creator"] = attrs["creator"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)

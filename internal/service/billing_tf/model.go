@@ -698,7 +698,8 @@ type BudgetPolicy struct {
 	// unique.
 	PolicyId types.String `tfsdk:"policy_id"`
 	// The name of the policy. - Must be unique among active policies. - Can
-	// contain only characters from the ISO 8859-1 (latin1) set.
+	// contain only characters from the ISO 8859-1 (latin1) set. - Can't start
+	// with reserved keywords such as `databricks:default-policy`.
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 

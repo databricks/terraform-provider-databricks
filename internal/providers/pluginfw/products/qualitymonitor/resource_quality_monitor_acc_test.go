@@ -7,7 +7,6 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
@@ -168,7 +167,8 @@ func TestUcAccUpdateQualityMonitor(t *testing.T) {
 
 var sdkV2FallbackFactory = map[string]func() (tfprotov6.ProviderServer, error){
 	"databricks": func() (tfprotov6.ProviderServer, error) {
-		return providers.GetProviderServer(context.Background(), providers.WithSdkV2FallbackOptions(pluginfw.WithSdkV2ResourceFallbacks("databricks_quality_monitor")))
+		sdkv2Provider, pluginfwProvider := acceptance.ProvidersWithResourceFallbacks([]string{"databricks_quality_monitor"})
+		return providers.GetProviderServer(context.Background(), providers.WithSdkV2Provider(sdkv2Provider), providers.WithPluginFrameworkProvider(pluginfwProvider))
 	},
 }
 

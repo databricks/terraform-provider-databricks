@@ -496,7 +496,7 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 			})
 			fmt.Printf("client_id: %s, client_secret: %s\n", spAppId, spSecret)
 			pr.ConfigureContextFunc = func(ctx context.Context, c *schema.ResourceData) (interface{}, diag.Diagnostics) {
-				return sdkv2.ConfigureDatabricksClient(ctx, rd)
+				return sdkv2.ConfigureDatabricksClient(ctx, rd, acceptance.DefaultConfigCustomizer)
 			}
 			logger.DefaultLogger = &logger.SimpleLogger{
 				Level: logger.LevelDebug,

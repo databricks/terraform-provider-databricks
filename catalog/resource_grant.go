@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -98,10 +97,18 @@ func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string)
 		}
 	}
 	if len(grantsForPrincipal) == 0 {
-		return nil, apierr.NotFound("got empty permissions list")
+		return nil, &apierr.APIError{
+			ErrorCode:  "NOT_FOUND",
+			StatusCode: 404,
+			Message:    "got empty permissions list",
+		}
 	}
 	if len(grantsForPrincipal) > 1 {
-		return nil, errors.New("got more than one principal in permissions list")
+		return nil, &apierr.APIError{
+			ErrorCode:  "NOT_FOUND",
+			StatusCode: 404,
+			Message:    "got more than one principal in permissions list",
+		}
 	}
 	return &grantsForPrincipal[0], nil
 }

@@ -18,7 +18,11 @@ func ResourceGroupMember() common.Resource {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID, "members")
 			hasMember := ComplexValues(group.Members).HasValue(memberID)
 			if err == nil && !hasMember {
-				return apierr.NotFound("Group has no member")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Group has no member",
+				}
 			}
 			return err
 		},

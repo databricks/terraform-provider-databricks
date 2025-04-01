@@ -131,7 +131,11 @@ func TestHTTP404TriggersResourceRemovalForReadAndDelete(t *testing.T) {
 	nope := func(ctx context.Context,
 		d *schema.ResourceData,
 		c *DatabricksClient) error {
-		return apierr.NotFound("nope")
+		return &apierr.APIError{
+			ErrorCode:  "NOT_FOUND",
+			StatusCode: 404,
+			Message:    "nope",
+		}
 	}
 	r := Resource{
 		Create: nope,
@@ -186,12 +190,20 @@ func TestUpdate(t *testing.T) {
 		Read: func(ctx context.Context,
 			d *schema.ResourceData,
 			c *DatabricksClient) error {
-			return apierr.NotFound("nope")
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			}
 		},
 		Delete: func(ctx context.Context,
 			d *schema.ResourceData,
 			c *DatabricksClient) error {
-			return apierr.NotFound("nope")
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			}
 		},
 		Schema: map[string]*schema.Schema{
 			"foo": {

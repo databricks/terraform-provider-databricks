@@ -385,7 +385,11 @@ func TestImportClusterLibrariesFails(t *testing.T) {
 			Method:       "GET",
 			Status:       404,
 			Resource:     "/api/2.0/libraries/cluster-status?cluster_id=abc",
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -405,7 +409,11 @@ func TestClusterListFails(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.1/clusters/list?filter_by.cluster_sources=UI&filter_by.cluster_sources=API&page_size=100",
 			Status:   404,
-			Response: apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -468,7 +476,7 @@ func TestJobListNoNameMatchOrFromBundles(t *testing.T) {
 	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
 		{
 			Method:   "GET",
-			Resource: "/api/2.1/jobs/list?limit=100",
+			Resource: "/api/2.2/jobs/list?limit=100",
 			Response: sdk_jobs.ListJobsResponse{
 				Jobs: []sdk_jobs.BaseJob{
 					{
@@ -532,7 +540,11 @@ func TestGroupCacheAndSearchError(t *testing.T) {
 			Method:       "GET",
 			Resource:     "/api/2.0/preview/scim/v2/Groups?attributes=id&count=100&startIndex=1",
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -962,7 +974,11 @@ func TestGlobalInitScriptsErrors(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -1014,7 +1030,11 @@ func TestRepoListFails(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -1029,7 +1049,11 @@ func TestNotebookWorkspaceFileImportNotFound(t *testing.T) {
 			ReuseRequest: true,
 			MatchAny:     true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
@@ -1480,7 +1504,11 @@ func TestListSystemSchemasErrorListing(t *testing.T) {
 			Method:   "GET",
 			Resource: fmt.Sprintf("/api/2.1/unity-catalog/metastores/%s/systemschemas?", currentMetastoreResponse.MetastoreId),
 			Status:   404,
-			Response: apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)

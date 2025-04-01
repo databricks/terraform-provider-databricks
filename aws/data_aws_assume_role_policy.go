@@ -34,6 +34,7 @@ func DataAwsAssumeRolePolicy() common.Resource {
 			externalID := d.Get("external_id").(string)
 			awsPartition := d.Get("aws_partition").(string)
 			databricksAwsAccountId := d.Get("databricks_account_id").(string)
+			awsNamespace := AwsConfig[awsPartition]["awsNamespace"]
 
 			if databricksAwsAccountId == "" {
 				databricksAwsAccountId = AwsConfig[awsPartition]["accountId"]
@@ -51,7 +52,7 @@ func DataAwsAssumeRolePolicy() common.Resource {
 							},
 						},
 						Principal: map[string]string{
-							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsPartition, databricksAwsAccountId),
+							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, databricksAwsAccountId),
 						},
 					},
 				},

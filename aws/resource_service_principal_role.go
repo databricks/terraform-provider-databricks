@@ -19,7 +19,11 @@ func ResourceServicePrincipalRole() common.Resource {
 			servicePrincipal, err := scim.NewServicePrincipalsAPI(ctx, c).Read(servicePrincipalID, "roles")
 			hasRole := scim.ComplexValues(servicePrincipal.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return apierr.NotFound("Service Principal has no role")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Service Principal has no role",
+				}
 			}
 			return err
 		},

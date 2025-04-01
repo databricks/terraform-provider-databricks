@@ -52,6 +52,8 @@ type CreatePipeline_SdkV2 struct {
 	DryRun types.Bool `tfsdk:"dry_run"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
@@ -59,7 +61,7 @@ type CreatePipeline_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -79,16 +81,15 @@ type CreatePipeline_SdkV2 struct {
 	// are specified, an error is thrown.
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -113,6 +114,8 @@ func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["dry_run"] = attrs["dry_run"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -150,6 +153,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -179,6 +183,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"development":           o.Development,
 			"dry_run":               o.DryRun,
 			"edition":               o.Edition,
+			"event_log":             o.EventLog,
 			"filters":               o.Filters,
 			"gateway_definition":    o.GatewayDefinition,
 			"id":                    o.Id,
@@ -218,6 +223,9 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"development": types.BoolType,
 			"dry_run":     types.BoolType,
 			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
@@ -329,6 +337,32 @@ func (o *CreatePipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDepl
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in CreatePipeline_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in CreatePipeline_SdkV2 as
@@ -832,6 +866,8 @@ type EditPipeline_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// If present, the last-modified time of the pipeline settings before the
 	// edit. If the settings were modified after that time, then the request
 	// will fail with a conflict.
@@ -843,7 +879,7 @@ type EditPipeline_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -865,16 +901,15 @@ type EditPipeline_SdkV2 struct {
 	// are specified, an error is thrown.
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -898,6 +933,8 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -937,6 +974,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -965,6 +1003,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":             o.Deployment,
 			"development":            o.Development,
 			"edition":                o.Edition,
+			"event_log":              o.EventLog,
 			"expected_last_modified": o.ExpectedLastModified,
 			"filters":                o.Filters,
 			"gateway_definition":     o.GatewayDefinition,
@@ -1003,8 +1042,11 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"deployment": basetypes.ListType{
 				ElemType: PipelineDeployment_SdkV2{}.Type(ctx),
 			},
-			"development":            types.BoolType,
-			"edition":                types.StringType,
+			"development": types.BoolType,
+			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"expected_last_modified": types.Int64Type,
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
@@ -1118,6 +1160,32 @@ func (o *EditPipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in EditPipeline_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in EditPipeline_SdkV2 as
@@ -1450,6 +1518,65 @@ func (o *ErrorDetail_SdkV2) SetExceptions(ctx context.Context, v []SerializedExc
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exceptions"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Exceptions = types.ListValueMust(t, vs)
+}
+
+// Configurable event log parameters.
+type EventLogSpec_SdkV2 struct {
+	// The UC catalog the event log is published under.
+	Catalog types.String `tfsdk:"catalog"`
+	// The name the event log is published to in UC.
+	Name types.String `tfsdk:"name"`
+	// The UC schema the event log is published under.
+	Schema types.String `tfsdk:"schema"`
+}
+
+func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventLogSpec_SdkV2) {
+}
+
+func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState EventLogSpec_SdkV2) {
+}
+
+func (c EventLogSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EventLogSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EventLogSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EventLogSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (o EventLogSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": o.Catalog,
+			"name":    o.Name,
+			"schema":  o.Schema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EventLogSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": types.StringType,
+			"name":    types.StringType,
+			"schema":  types.StringType,
+		},
+	}
 }
 
 type FileLibrary_SdkV2 struct {
@@ -4713,6 +4840,8 @@ type PipelineSpec_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
@@ -4720,7 +4849,7 @@ type PipelineSpec_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -4733,16 +4862,15 @@ type PipelineSpec_SdkV2 struct {
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -4765,6 +4893,8 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -4800,6 +4930,7 @@ func (a PipelineSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -4826,6 +4957,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":           o.Deployment,
 			"development":          o.Development,
 			"edition":              o.Edition,
+			"event_log":            o.EventLog,
 			"filters":              o.Filters,
 			"gateway_definition":   o.GatewayDefinition,
 			"id":                   o.Id,
@@ -4862,6 +4994,9 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
@@ -4970,6 +5105,32 @@ func (o *PipelineSpec_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in PipelineSpec_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in PipelineSpec_SdkV2.
+func (o *PipelineSpec_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in PipelineSpec_SdkV2 as

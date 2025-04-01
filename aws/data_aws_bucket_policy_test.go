@@ -69,3 +69,19 @@ func TestDataAwsBucketPolicyPartitionGov(t *testing.T) {
 	j := d.Get("json")
 	assert.Lenf(t, j, 461, "Strange length for policy: %s", j)
 }
+
+func TestDataAwsBucketPolicyPartitionGovDoD(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Read:        true,
+		Resource:    DataAwsBucketPolicy(),
+		NonWritable: true,
+		ID:          ".",
+		HCL: `
+		bucket = "abc"
+		aws_partition = "aws-us-gov-dod"
+		`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	j := d.Get("json")
+	assert.Lenf(t, j, 461, "Strange length for policy: %s", j)
+}

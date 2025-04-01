@@ -21,3 +21,9 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/scim
       test_name: TestAccServicePrincipalResourceOnAzure
       comment: Failure due to read-after-write inconsistency. Tracked in https://databricks.atlassian.net/browse/ES-1100061
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_Cluster
+      comment: Failure due to API timeouts in the permissions APIs in AWS.
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestAccPermissions_InstancePool
+      comment: Failure due to API timeouts in the permissions APIs in AWS.

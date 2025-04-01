@@ -97,6 +97,11 @@ func TestMountPoint_Mount(t *testing.T) {
 	expectedMountConfig := `{"fake-key":"fake-value"}`
 	mountName := "this_mount"
 	expectedCommand := fmt.Sprintf(`
+		def check_path(path_string):
+			fs = sc._jvm.org.apache.hadoop.fs.FileSystem.get(sc._jsc.hadoopConfiguration())
+			path = spark.sparkContext._jvm.org.apache.hadoop.fs.Path(f"dbfs:{path_string}")
+			fs.exists(path)
+
 		def safe_mount(mount_point, mount_source, configs, encryptionType):
 			for mount in dbutils.fs.mounts():
 				if mount.mountPoint == mount_point and mount.source == mount_source:
@@ -104,7 +109,7 @@ func TestMountPoint_Mount(t *testing.T) {
 			try:
 				dbutils.fs.mount(mount_source, mount_point, extra_configs=configs, encryption_type=encryptionType)
 				dbutils.fs.refreshMounts()
-				dbutils.fs.ls(mount_point)
+				check_path(mount_point)
 				return mount_source
 			except Exception as e:
 				try:
@@ -304,7 +309,11 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
@@ -330,7 +339,11 @@ func TestMountCRD(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount().ToResource()

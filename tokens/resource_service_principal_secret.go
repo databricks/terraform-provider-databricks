@@ -108,7 +108,11 @@ func ResourceServicePrincipalSecret() common.Resource {
 				}
 				return d.Set("status", v.Status)
 			}
-			return apierr.NotFound("client secret not found")
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "client secret not found",
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config.AccountID == "" {

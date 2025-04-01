@@ -19,8 +19,12 @@ func TestCreateFileFails(t *testing.T) {
 				Path:      "/create-fails",
 				Overwrite: true,
 			},
-			Status:   404,
-			Response: apierr.NotFound("fails"),
+			Status: 404,
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 		{
 			Method:   "POST",
@@ -51,8 +55,12 @@ func TestCreateFile_AddBlockFails(t *testing.T) {
 				Data:   "YWJj",
 				Handle: 123,
 			},
-			Status:   404,
-			Response: apierr.NotFound("fails"),
+			Status: 404,
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 		{
 			Method:   "POST",
@@ -79,7 +87,11 @@ func TestCreateFile_CloseFails(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/dbfs/close",
 			Status:   404,
-			Response: apierr.NotFound("fails"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
@@ -94,7 +106,11 @@ func TestDbfsListRecursiveFails(t *testing.T) {
 			Method:   "GET",
 			Resource: "/api/2.0/dbfs/list?path=abc",
 			Status:   404,
-			Response: apierr.NotFound("fails"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 		{
 			Method:   "GET",
@@ -113,7 +129,11 @@ func TestDbfsListRecursiveFails(t *testing.T) {
 			ReuseRequest: true,
 			Resource:     "/api/2.0/dbfs/list?path=bcd",
 			Status:       404,
-			Response:     apierr.NotFound("fails"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)
@@ -131,7 +151,11 @@ func TestDbfsReadFails(t *testing.T) {
 		{
 			MatchAny: true,
 			Status:   404,
-			Response: apierr.NotFound("fails"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "fails",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewDbfsAPI(ctx, client)

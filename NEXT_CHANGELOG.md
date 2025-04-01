@@ -29,3 +29,5 @@
   * Fix panic caused by incorrect values in the cluster policies ([#4585](https://github.com/databricks/terraform-provider-databricks/pull/4585))
 
 ### Internal Changes
+
+* Bump Go SDK version to 0.61.0 ([#4602](https://github.com/databricks/terraform-provider-databricks/pull/4602))

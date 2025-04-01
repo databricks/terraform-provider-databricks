@@ -2266,11 +2266,19 @@ type OidcFederationPolicy_SdkV2 struct {
 	// tokens.
 	Issuer types.String `tfsdk:"issuer"`
 	// The public keys used to validate the signature of federated tokens, in
-	// JWKS format. If unspecified (recommended), Databricks automatically
-	// fetches the public keys from your issuer’s well known endpoint.
-	// Databricks strongly recommends relying on your issuer’s well known
-	// endpoint for discovering public keys.
+	// JWKS format. Most use cases should not need to specify this field. If
+	// jwks_uri and jwks_json are both unspecified (recommended), Databricks
+	// automatically fetches the public keys from your issuer’s well known
+	// endpoint. Databricks strongly recommends relying on your issuer’s well
+	// known endpoint for discovering public keys.
 	JwksJson types.String `tfsdk:"jwks_json"`
+	// URL of the public keys used to validate the signature of federated
+	// tokens, in JWKS format. Most use cases should not need to specify this
+	// field. If jwks_uri and jwks_json are both unspecified (recommended),
+	// Databricks automatically fetches the public keys from your issuer’s
+	// well known endpoint. Databricks strongly recommends relying on your
+	// issuer’s well known endpoint for discovering public keys.
+	JwksUri types.String `tfsdk:"jwks_uri"`
 	// The required token subject, as specified in the subject claim of
 	// federated tokens. Must be specified for service principal federation
 	// policies. Must not be specified for account federation policies.
@@ -2290,6 +2298,7 @@ func (c OidcFederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["audiences"] = attrs["audiences"].SetOptional()
 	attrs["issuer"] = attrs["issuer"].SetOptional()
 	attrs["jwks_json"] = attrs["jwks_json"].SetOptional()
+	attrs["jwks_uri"] = attrs["jwks_uri"].SetOptional()
 	attrs["subject"] = attrs["subject"].SetOptional()
 	attrs["subject_claim"] = attrs["subject_claim"].SetOptional()
 
@@ -2319,6 +2328,7 @@ func (o OidcFederationPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"audiences":     o.Audiences,
 			"issuer":        o.Issuer,
 			"jwks_json":     o.JwksJson,
+			"jwks_uri":      o.JwksUri,
 			"subject":       o.Subject,
 			"subject_claim": o.SubjectClaim,
 		})
@@ -2333,6 +2343,7 @@ func (o OidcFederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"issuer":        types.StringType,
 			"jwks_json":     types.StringType,
+			"jwks_uri":      types.StringType,
 			"subject":       types.StringType,
 			"subject_claim": types.StringType,
 		},

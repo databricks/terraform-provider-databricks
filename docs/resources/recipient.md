@@ -115,6 +115,14 @@ In addition to all arguments above, the following attributes are exported:
 * `cloud` - Cloud vendor of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
 * `region` - Cloud region of the recipient's Unity Catalog Metstore. This field is only present when the authentication_type is `DATABRICKS`.
 
+## Import
+
+The recipient resource can be imported using the name of the recipient.
+
+```bash
+terraform import databricks_recipient.this <recipient_name>
+```
+
 ## Related Resources
 
 The following resources are often used in the same context:

@@ -19,6 +19,7 @@
  * Correct `first_on_demand` documentation for `aws_attributes` in `databricks_cluster`.
  * Added file events permissions to GCP external location documentation. ([#4415](https://github.com/databricks/terraform-provider-databricks/pull/4415)).
  * Improve description of `metric` field in `databricks_job` resource [#4595](https://github.com/databricks/terraform-provider-databricks/pull/4595)
+ * Add import instructions for `databricks_share` and `databricks_recipient` ([#4608](https://github.com/databricks/terraform-provider-databricks/pull/4608))
 
 ### Exporter
 

@@ -30,8 +30,9 @@ func ResourceMlflowExperiment() common.Resource {
 			common.CustomizeSchemaPath(m, "name").SetRequired().SetCustomSuppressDiff(experimentNameSuppressDiff)
 			// the API never accepts description, but we need to keep this for backwards compatibility
 			m["description"] = &schema.Schema{
-				Optional: true,
-				Type:     schema.TypeString,
+				Optional:   true,
+				Type:       schema.TypeString,
+				Deprecated: "The description field is deprecated and will be removed in a future version.",
 			}
 			return m
 		})

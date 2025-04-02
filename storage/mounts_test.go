@@ -309,7 +309,11 @@ func TestGetMountingClusterID_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		// no mounting cluster given, try creating it
@@ -335,7 +339,11 @@ func TestMountCRD(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		r := ResourceMount().ToResource()

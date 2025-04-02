@@ -540,6 +540,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("name").SetDefault("Untitled")
 	s.SchemaPath("task", "dbt_task", "schema").SetDefault("default")
 	s.SchemaPath("task", "for_each_task", "task", "dbt_task", "schema").SetDefault("default")
+	s.SchemaPath("queue").SetSuppressDiff()
 
 	jobSettingsSchema(s.GetSchemaMap(), "")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "task"), "task.0.")

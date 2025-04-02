@@ -108,7 +108,11 @@ func ResourceWorkspaceBinding() common.Resource {
 					return common.StructToData(binding, workspaceBindingSchema, d)
 				}
 			}
-			return apierr.NotFound(fmt.Sprintf("%s has no binding to this workspace", securableName))
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    fmt.Sprintf("%s has no binding to this workspace", securableName),
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

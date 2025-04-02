@@ -42,32 +42,18 @@ func (r *permissionResource) Configure(ctx context.Context, req resource.Configu
                 return
         }
 
-        var provider 
-        //TODO CHECK IF ACCOUNTID ATTRIBUTE IS SET IN PROVIDER CONFIG STRUCT,
-        // SHOULD BE ABLE TO PULL IF IT'S SET OR NOT FROM THE GOLANG STRUCT ITSELF
-        if != "" {
-                accountClient, err := req.ProviderData.(*common.DatabricksClient).AccountClient()
-                if err != nil {
-                        resp.Diagnostics.AddError(
-                                //TODO ADD ERROR MESSAGE IN LINE WITH PROVIDER
-                                "Unable to configure the Databricks client",
-                                fmt.Sprintf("Expected *common.DatabricksClient, got %T", req.ProviderData),
-                        )
-                r.client = accountClient
-                }
 
-        } else {
-                workspaceClient, err := req.ProviderData.(*common.DatabricksClient).WorkspaceClient()
-                if err != nil {
-                        resp.Diagnostics.AddError(
-                                //TODO ADD ERROR MESSAGE IN LINE WITH Provider
-                                "Unable to configure the Databricks client",
-                                fmt.Sprintf("Expected *common.DatabricksClient, got %T", req.ProviderData),
-                        )
+        workspaceClient, err := req.ProviderData.(*common.DatabricksClient).WorkspaceClient()
+        if err != nil {
+                resp.Diagnostics.AddError(
+                        //TODO ADD ERROR MESSAGE IN LINE WITH Provider
+                        "Unable to configure the Databricks client",
+                        fmt.Sprintf("Expected *common.DatabricksClient, got %T", req.ProviderData),
+                )
 
-                r.client = workspaceClient
-                }
         }
+
+        r.client = workspaceClient
 }
 
 func (r *permissionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -118,23 +104,60 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
         for _, acl := range plan.AccessControlList {
                 acls = append(acls, iam.AccessControlRequest{
                         ServicePrincipalName: acl.ServicePrincipalName,
-                        GroupName: acl.GroupName,
-                        UserName: acl.UserName,
-                        PermissionLevel: acl.PermissionLevel,
+                        GroupName: types.StringValue(acl.GroupName),
+                        UserName: types.StringValue(acl.UserName),
+                        PermissionLevel: types.StringValue(acl.PermissionLevel),
                 })
         }
 
         // create the permission
-        acl, err := r.client.Update.(plan.ObjectID, iam.PermissionsRequest{
-                RequestObjectType: plan.ObjectID,
-                RequestObjectType: plan.ObjectType,
+        acl, err := r.client.Set.(plan.ObjectID, iam.PermissionsRequest{
+                RequestObjectId: types.StringValue(plan.ObjectID),
+                RequestObjectType: types.StringValue(plan.ObjectType),
                 AccessControlList: acls,
         })
 
+        plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
+
+        // Set state to fully populated data
+        diags = resp.State.Set(ctx, plan)
+        resp.Diagnostics.Append(diags...)
+        if resp.Diagnostics.HasError() {
+                return
+        }
 }
 
 func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
         ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
+
+        // Get Current State
+        var state permissionResourceModel
+        diags := req.State.Get(ctx, &state)
+        resp.Diagnostics.Append(diags...)
+        if resp.Diagnostics.HasError() {
+                return
+        }
+
+        //Get refreshed acls from API
+        acl, err := r.client.Get(ctx, state.ObjectID)
+        if err != nil {
+                resp.Diagnostics.AddError(
+                        "Failed to get permission", 
+                        "Unable to read permission"+state.ObjectID.ValueString()": "+err.Error(),
+                )
+                return
+        }
+
+        //Overwrite data with refreshed state
+        state.AccessControlList = []permissionAccessControlListModel{}
+
+        //Set refreshed State
+        diags = resp.State.Set(ctx, state)
+        resp.Diagnostics.Append(diags...)
+        if resp.Diagnostics.HasError() {
+                return
+        }
+
 }
 
 func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

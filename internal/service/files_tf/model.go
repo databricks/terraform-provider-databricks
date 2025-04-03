@@ -682,12 +682,13 @@ func (o DownloadRequest) Type(ctx context.Context) attr.Type {
 }
 
 type DownloadResponse struct {
+	// The length of the HTTP response body in bytes.
 	ContentLength types.Int64 `tfsdk:"-"`
 
 	ContentType types.String `tfsdk:"-"`
 
 	Contents types.Object `tfsdk:"-"`
-
+	// The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 
@@ -896,10 +897,11 @@ func (o GetMetadataRequest) Type(ctx context.Context) attr.Type {
 }
 
 type GetMetadataResponse struct {
+	// The length of the HTTP response body in bytes.
 	ContentLength types.Int64 `tfsdk:"-"`
 
 	ContentType types.String `tfsdk:"-"`
-
+	// The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 

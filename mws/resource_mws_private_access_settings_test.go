@@ -155,7 +155,11 @@ func TestResourcePASRead(t *testing.T) {
 func TestResourcePAStRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockPrivateAccessAPI().EXPECT().GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(nil, apierr.NotFound("Item not found"))
+			a.GetMockPrivateAccessAPI().EXPECT().GetByPrivateAccessSettingsId(mock.Anything, "pas_id").Return(nil, &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "Item not found",
+			})
 		},
 		Resource: ResourceMwsPrivateAccessSettings(),
 		Read:     true,

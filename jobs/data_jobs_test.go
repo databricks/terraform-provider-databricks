@@ -11,7 +11,7 @@ func TestJobsData(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: JobListResponse{
 					Jobs: []Job{
 						{
@@ -47,7 +47,7 @@ func TestJobsDataWithFilter(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: JobListResponse{
 					Jobs: []Job{
 						{

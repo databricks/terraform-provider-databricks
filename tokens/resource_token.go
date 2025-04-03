@@ -82,7 +82,11 @@ func (a TokensAPI) Read(tokenID string) (TokenInfo, error) {
 			return tokenInfoRecord, nil
 		}
 	}
-	return tokenInfo, apierr.NotFound(fmt.Sprintf("Unable to locate token: %s", tokenID))
+	return tokenInfo, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Unable to locate token: %s", tokenID),
+	}
 }
 
 // Delete will delete the token given a token id

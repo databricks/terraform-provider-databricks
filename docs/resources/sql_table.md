@@ -37,8 +37,6 @@ resource "databricks_sql_table" "thing" {
   catalog_name       = databricks_catalog.sandbox.name
   schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
-  data_source_format = "DELTA"
-  storage_location   = ""
 
   column {
     name = "id"
@@ -81,8 +79,6 @@ resource "databricks_sql_table" "thing" {
   catalog_name       = databricks_catalog.sandbox.name
   schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
-  data_source_format = "DELTA"
-  storage_location   = ""
   warehouse_id       = databricks_sql_endpoint.this.id
 
   column {
@@ -131,17 +127,35 @@ resource "databricks_schema" "things" {
 }
 resource "databricks_sql_table" "thing" {
   provider           = databricks.workspace
-  name               = "quickstart_table"
+  name               = "identity_table"
   catalog_name       = databricks_catalog.sandbox.name
   schema_name        = databricks_schema.things.name
   table_type         = "MANAGED"
-  data_source_format = "DELTA"
-  storage_location   = ""
   column {
     name     = "id"
     type     = "bigint"
     identity = "default"
   }
+  column {
+    name    = "name"
+    type    = "string"
+    comment = "name of thing"
+  }
+  comment = "this table is managed by terraform"
+}
+```
+
+## Enable automatic clustering
+
+```hcl
+resource "databricks_sql_table" "thing" {
+  provider           = databricks.workspace
+  name               = "auto_cluster_table"
+  catalog_name       = databricks_catalog.sandbox.name
+  schema_name        = databricks_schema.things.name
+  table_type         = "MANAGED"
+  cluster_keys       = ["AUTO"]
+  
   column {
     name    = "name"
     type    = "string"
@@ -164,7 +178,7 @@ The following arguments are supported:
 * `view_definition` - (Optional) SQL text defining the view (for `table_type == "VIEW"`). Not supported for `MANAGED` or `EXTERNAL` table_type.
 * `cluster_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a cluster_id is specified, it will be used to execute SQL commands to manage this table. If empty, a cluster will be created automatically with the name `terraform-sql-table`. Conflicts with `warehouse_id`.
 * `warehouse_id` - (Optional) All table CRUD operations must be executed on a running cluster or SQL warehouse. If a `warehouse_id` is specified, that SQL warehouse will be used to execute SQL commands to manage this table. Conflicts with `cluster_id`.
-* `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. Conflicts with `partitions`.
+* `cluster_keys` - (Optional) a subset of columns to liquid cluster the table by. For automatic clustering, set `cluster_keys` to `["AUTO"]`. To turn off clustering, set it to `["NONE"]`. Conflicts with `partitions`.
 * `partitions` - (Optional) a subset of columns to partition the table by. Change forces the creation of a new resource. Conflicts with `cluster_keys`.
 * `storage_credential_name` - (Optional) For EXTERNAL Tables only: the name of storage credential to use. Change forces the creation of a new resource.
 * `owner` - (Optional) User name/group name/sp application_id of the table owner.

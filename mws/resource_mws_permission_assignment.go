@@ -17,7 +17,11 @@ func getPermissionsByPrincipal(list iam.PermissionAssignments, principalId int64
 		}
 		return iam.UpdateWorkspaceAssignments{Permissions: v.Permissions}, nil
 	}
-	return res, apierr.NotFound(fmt.Sprintf("%d not found", principalId))
+	return res, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("%d not found", principalId),
+	}
 }
 
 func ResourceMwsPermissionAssignment() common.Resource {

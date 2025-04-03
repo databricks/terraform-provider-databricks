@@ -4217,7 +4217,7 @@ type GitSource_SdkV2 struct {
 	GitCommit types.String `tfsdk:"commit"`
 	// Unique identifier of the service used to host the Git repository. The
 	// value is case insensitive.
-	GitProvider types.String `tfsdk:"git_provider"`
+	GitProvider types.String `tfsdk:"provider"`
 	// Read-only state of the remote repository at the time the job was run.
 	// This field is only included on job runs.
 	GitSnapshot types.List `tfsdk:"git_snapshot"`
@@ -4240,7 +4240,7 @@ func (newState *GitSource_SdkV2) SyncEffectiveFieldsDuringRead(existingState Git
 func (c GitSource_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["branch"] = attrs["branch"].SetOptional()
 	attrs["commit"] = attrs["commit"].SetOptional()
-	attrs["git_provider"] = attrs["git_provider"].SetRequired()
+	attrs["provider"] = attrs["provider"].SetRequired()
 	attrs["git_snapshot"] = attrs["git_snapshot"].SetOptional()
 	attrs["git_snapshot"] = attrs["git_snapshot"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["tag"] = attrs["tag"].SetOptional()
@@ -4274,7 +4274,7 @@ func (o GitSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		map[string]attr.Value{
 			"branch":       o.GitBranch,
 			"commit":       o.GitCommit,
-			"git_provider": o.GitProvider,
+			"provider":     o.GitProvider,
 			"git_snapshot": o.GitSnapshot,
 			"tag":          o.GitTag,
 			"url":          o.GitUrl,
@@ -4286,9 +4286,9 @@ func (o GitSource_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o GitSource_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"branch":       types.StringType,
-			"commit":       types.StringType,
-			"git_provider": types.StringType,
+			"branch":   types.StringType,
+			"commit":   types.StringType,
+			"provider": types.StringType,
 			"git_snapshot": basetypes.ListType{
 				ElemType: GitSnapshot_SdkV2{}.Type(ctx),
 			},

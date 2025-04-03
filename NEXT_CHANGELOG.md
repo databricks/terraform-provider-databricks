@@ -4,6 +4,7 @@
 
 ### New Features and Improvements
 
+ * Customize and document `event_log` block in `databricks_pipeline` ([#4612](https://github.com/databricks/terraform-provider-databricks/pull/4612))
  * Add automatic clustering support for `databricks_sql_table` ([#4607](https://github.com/databricks/terraform-provider-databricks/pull/4607))
 
 ### Bug Fixes

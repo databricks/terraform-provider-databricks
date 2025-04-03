@@ -243,6 +243,32 @@ func TestSecurableWorkspaceBindings_Delete(t *testing.T) {
 	}.ApplyNoError(t)
 }
 
+func TestWorkspaceBindingsRead_OldStyleSecurableType(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.1/unity-catalog/bindings/external_location/my_catalog?",
+				Response: catalog.WorkspaceBindingsResponse{
+					Bindings: []catalog.WorkspaceBinding{
+						{
+							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
+							WorkspaceId: int64(1234567890101112),
+						},
+					},
+				},
+			},
+		},
+		Resource: ResourceWorkspaceBinding(),
+		ID:       "1234567890101112|external-location|my_catalog",
+		Read:     true,
+	}.ApplyAndExpectData(t, map[string]any{
+		"workspace_id":   1234567890101112,
+		"securable_type": "external_location",
+		"securable_name": "my_catalog",
+	})
+}
+
 func TestWorkspaceBindingsReadImport(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

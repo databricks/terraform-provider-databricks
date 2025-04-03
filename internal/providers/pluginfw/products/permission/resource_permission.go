@@ -21,7 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const resourceName = "permission"
+const (
+        resourceName = "permission"
+        apiPath = fmt.Sprintf("/api/2.0/permissions/%s/%s", plan.ObjectType.ValueString(), plan.ObjectID.ValueString())
+)
 
 var (
         _ resource.Resource = &permissionResource{}
@@ -36,6 +39,7 @@ type permissionResource struct {
         client *common.DatabricksClient
         context context.Context
 }
+
 
 func (r *permissionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
         if req.ProviderData == nil {
@@ -110,12 +114,20 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
                 })
         }
 
+        
         // create the permission
-        acl, err := r.client.Set.(plan.ObjectID, iam.PermissionsRequest{
-                RequestObjectId: types.StringValue(plan.ObjectID),
-                RequestObjectType: types.StringValue(plan.ObjectType),
+        err := r.client.Patch(ctx, apiPath, iam.PermissionsRequest{
+                RequestObjectId: plan.ObjectID.ValueString(),
+                RequestObjectType: plan.ObjectType.ValueString(),
                 AccessControlList: acls,
         })
+        if err != nil {
+                resp.Diagnostics.AddError(
+                        //TODO ADD ERROR MESSAGE IN LINE WITH Provider
+                        "Unable to Create Permission",
+                        fmt.Sprintf("Error: %s", err.Error()),
+                )
+
 
         plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
@@ -138,21 +150,33 @@ func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest,
                 return
         }
 
+        
         //Get refreshed acls from API
-        acl, err := r.client.Get(ctx, state.ObjectID)
+        var getResponse map[string]interface{}
+        err := r.client.Get(ctx, apiPath, nil, &getResponse)
         if err != nil {
                 resp.Diagnostics.AddError(
                         "Failed to get permission", 
-                        "Unable to read permission"+state.ObjectID.ValueString()": "+err.Error(),
+                        fmt.Sprintf("Unable to read permission, %s", err.Error()),
                 )
                 return
         }
 
         //Overwrite data with refreshed state
+        //TODO: parse getResponse to permissionResourceModel
         state.AccessControlList = []permissionAccessControlListModel{}
+        for _, acl := range getResponse.AccessControlList {
+                state.AccessControlList = append(state.AccessControlList, permissionAccessControlListModel{
+                        ServicePrincipalName: types.StringValue(acl.ServicePrincipalName),
+                        GroupName: types.StringValue(acl.GroupName),
+                        UserName: types.StringValue(acl.UserName),
+                        PermissionLevel: types.StringValue(acl.PermissionLevel),
+                })
+        }
+
 
         //Set refreshed State
-        diags = resp.State.Set(ctx, state)
+        diags = resp.State.Set(ctx, &state)
         resp.Diagnostics.Append(diags...)
         if resp.Diagnostics.HasError() {
                 return

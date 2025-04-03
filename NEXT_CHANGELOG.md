@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+ * Customize and document `event_log` block in `databricks_pipeline` ([#4612](https://github.com/databricks/terraform-provider-databricks/pull/4612))
+
 ### Bug Fixes
 
 ### Documentation

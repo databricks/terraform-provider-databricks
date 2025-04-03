@@ -11,6 +11,7 @@
 
  * Recreate `databricks_access_control_rule_set` when the `name` changes ([#4572](https://github.com/databricks/terraform-provider-databricks/pull/4572)).
  * Avoid timeouts during `databricks_mount` state refresh and creation ([#4590](https://github.com/databricks/terraform-provider-databricks/pull/4590)).
+ * Fix `databricks_workspace_binding` for existing resources using `external-location` or `storage-credential` securable types ([#4611](https://github.com/databricks/terraform-provider-databricks/pull/4611)).
 
 ### Documentation
 

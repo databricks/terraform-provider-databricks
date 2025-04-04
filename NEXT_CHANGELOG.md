@@ -17,4 +17,6 @@
 
 ### Exporter
 
+ * Add export of `databricks_mws_network_connectivity_config` and `databricks_mws_ncc_private_endpoint_rule` ([#4613](https://github.com/databricks/terraform-provider-databricks/pull/4613))
+
 ### Internal Changes

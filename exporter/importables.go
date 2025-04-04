@@ -2687,4 +2687,52 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "direct_access_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
 		},
 	},
+	"databricks_mws_network_connectivity_config": {
+		AccountLevel: true,
+		Service:      "nccs",
+		List: func(ic *importContext) error {
+			updatedSinceMs := ic.getUpdatedSinceMs()
+			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
+				settings.ListNetworkConnectivityConfigurationsRequest{})
+			for it.HasNext(ic.Context) {
+				nc, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				if ic.incremental && nc.UpdatedTime < updatedSinceMs {
+					log.Printf("[DEBUG] skipping %s that was modified at %d (last active=%d)",
+						fmt.Sprintf("network connectivity config '%s'", nc.Name), nc.UpdatedTime, updatedSinceMs)
+					continue
+				}
+				// TODO: technically we can create data directly from the API response
+				ic.Emit(&resource{
+					Resource: "databricks_mws_network_connectivity_config",
+					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
+					Name:     nc.Name,
+				})
+				if nc.EgressConfig.TargetRules != nil {
+					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
+						// TODO: technically we can create data directly from the API response
+						resourceId := strings.ReplaceAll(rule.ResourceId, "/subscriptions/", "")
+						resourceId = strings.ReplaceAll(resourceId, "/resourceGroups/", "_")
+						resourceId = strings.ReplaceAll(resourceId, "/providers/Microsoft", "_")
+						ic.Emit(&resource{
+							Resource: "databricks_mws_ncc_private_endpoint_rule",
+							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
+							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId.String(),
+						})
+					}
+				}
+			}
+			return nil
+		},
+	},
+	"databricks_mws_ncc_private_endpoint_rule": {
+		AccountLevel: true,
+		Service:      "nccs",
+		Depends: []reference{
+			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
+				Match: "network_connectivity_config_id"},
+		},
+	},
 }

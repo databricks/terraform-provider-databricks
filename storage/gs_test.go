@@ -17,7 +17,11 @@ func TestCreateOrValidateClusterForGoogleStorage_Failures(t *testing.T) {
 			MatchAny:     true,
 			ReuseRequest: true,
 			Status:       404,
-			Response:     apierr.NotFound("nope"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "nope",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		d := ResourceMount().ToResource().TestResourceData()
@@ -35,7 +39,11 @@ func TestCreateOrValidateClusterForGoogleStorage_WorksOnDeletedCluster(t *testin
 			Method:   "GET",
 			Resource: "/api/2.0/clusters/get?cluster_id=removed-cluster",
 			Status:   404,
-			Response: apierr.NotFound("cluster deleted"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "cluster deleted",
+			},
 		},
 		{
 			Method:   "GET",

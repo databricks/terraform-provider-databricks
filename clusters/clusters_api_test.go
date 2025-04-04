@@ -1145,7 +1145,11 @@ func TestFailureOfPermanentDeleteOnCreateFailure(t *testing.T) {
 			Method:   "POST",
 			Resource: "/api/2.0/clusters/unpin",
 			Status:   418,
-			Response: apierr.NotFound("missing"),
+			Response: &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    "missing",
+			},
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		a := NewClustersAPI(ctx, client)

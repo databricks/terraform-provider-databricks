@@ -6,6 +6,8 @@ subcategory: "Settings"
 
 -> This resource can only be used with a workspace-level provider!
 
+-> This setting is currently in private preview, and only available for enrolled customers.
+
 The `databricks_disable_legacy_dbfs_setting` resource allows you to disable legacy dbfs features.
 When this setting is on, access to DBFS root and DBFS mounts is disallowed (as well as creation of new mounts). When the setting is off, all DBFS functionality is enabled. This setting has no impact on workspace internal storage (WIS).
 

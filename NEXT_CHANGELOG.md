@@ -13,6 +13,7 @@
 
 ### Documentation
 
+ * Document new fields in `databricks_model_serving` resource ([#4615](https://github.com/databricks/terraform-provider-databricks/pull/4615))
  * Add import instructions for `databricks_share` and `databricks_recipient` ([#4608](https://github.com/databricks/terraform-provider-databricks/pull/4608))
 
 ### Exporter

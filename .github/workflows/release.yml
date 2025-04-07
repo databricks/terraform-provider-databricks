@@ -46,22 +46,18 @@ jobs:
       - name: Extract Release Notes
         id: release_notes
         run: |
-          if ! .github/scripts/extract_release_notes.py > release_notes.txt; then
+          if ! .github/scripts/extract_release_notes.py > release_notes.md; then
             echo "::error::Failed to extract release notes from CHANGELOG.md"
             exit 1
           fi
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          cat release_notes.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: ~> v2
-          args: release --clean ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' || '' }}
+          args: release --clean --release-notes=release_notes.md ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' || '' }}
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}

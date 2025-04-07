@@ -46,8 +46,12 @@ jobs:
       - name: Extract Release Notes
         id: release_notes
         run: |
+          if ! .github/scripts/extract_release_notes.py > release_notes.txt; then
+            echo "::error::Failed to extract release notes from CHANGELOG.md"
+            exit 1
+          fi
           echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          .github/scripts/extract_release_notes.py >> $GITHUB_ENV
+          cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Run GoReleaser

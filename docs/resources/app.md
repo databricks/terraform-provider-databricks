@@ -44,7 +44,7 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
-* `budget_policy_id` - (Optiona) The Budget Policy ID set for this resource.
+* `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
 * `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
 

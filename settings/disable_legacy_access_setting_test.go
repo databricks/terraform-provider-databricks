@@ -64,14 +64,13 @@ func TestAccDisableLegacyAccessSetting(t *testing.T) {
 					assert.FailNow(t, "cannot parse error message %v", err)
 				}
 				etag := aerr.Details[0].Metadata["etag"]
-				_, err = w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{
+				res, err := w.Settings.DisableLegacyAccess().Get(ctx, settings.GetDisableLegacyAccessRequest{
 					Etag: etag,
 				})
-				if !errors.As(err, &aerr) {
-					assert.FailNow(t, "cannot parse error message %v", err)
-				}
-
-				assert.Equal(t, aerr.ErrorCode, "RESOURCE_DOES_NOT_EXIST")
+				// we should not be getting any error
+				assert.NoError(t, err)
+				// setting should go back to default
+				assert.Equal(t, res.DisableLegacyAccess.Value, false)
 				return nil
 			}),
 		},

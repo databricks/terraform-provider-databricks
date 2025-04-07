@@ -163,10 +163,10 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	var acls []iam.AccessControlRequest
 	for _, acl := range plan.AccessControlList {
 		acls = append(acls, iam.AccessControlRequest{
-			ServicePrincipalName: acl.ServicePrincipalId.String(),
-			GroupName:            acl.GroupName.String(),
-			UserName:             acl.UserName.String(),
-			PermissionLevel:      iam.PermissionLevel(acl.PermissionLevel.String()),
+			//ServicePrincipalName: strings.Trim(acl.ServicePrincipalId.String(), "\""),
+			GroupName:            strings.Trim(acl.GroupName.String(), "\""),
+			//UserName:             strings.Trim(acl.UserName.String(), "\""),
+			PermissionLevel:      iam.PermissionLevel(strings.Trim(acl.PermissionLevel.String(), "\"")),
 		})
 	}
 

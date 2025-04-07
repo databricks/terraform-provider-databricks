@@ -10,6 +10,7 @@
 
 ### Bug Fixes
 
+ * Fix `databricks_workspace_binding` for existing resources using `external-location` or `storage-credential` securable types ([#4611](https://github.com/databricks/terraform-provider-databricks/pull/4611)).
  * Suppress diff in `databricks_mlflow_experiment` name ([#4606](https://github.com/databricks/terraform-provider-databricks/pull/4606))
 
 ### Documentation

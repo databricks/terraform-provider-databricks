@@ -101,8 +101,11 @@ func (a VisualizationAPI) Read(queryID, visualizationID string) (*api.Visualizat
 		}
 	}
 
-	return nil, apierr.NotFound(
-		fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID))
+	return nil, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("Cannot find visualization %s attached to query %s", visualizationID, queryID),
+	}
 }
 
 // Update ...

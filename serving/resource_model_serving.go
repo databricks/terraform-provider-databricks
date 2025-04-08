@@ -170,7 +170,9 @@ func ResourceModelServing() common.Resource {
 			}
 			if sOrig.Config == nil {
 				// If it is a new resource, then we only return ServedEntities
-				endpoint.Config.ServedModels = nil
+				if endpoint.Config != nil {
+					endpoint.Config.ServedModels = nil
+				}
 			} else {
 				// If it is an existing resource, then have to set one of the responses to nil
 				if sOrig.Config.ServedModels == nil {

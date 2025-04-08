@@ -304,7 +304,7 @@ func (ti *SqlTableInfo) buildTableCreateStatement() string {
 	}
 
 	if len(ti.ClusterKeys) > 0 {
-		statements = append(statements, fmt.Sprintf("\nCLUSTER BY (%s)", ti.getWrappedClusterKeys())) // CLUSTER BY (`university`, `major`)
+		statements = append(statements, fmt.Sprintf("\nCLUSTER BY %s", ti.getWrappedClusterKeys())) // CLUSTER BY (`university`, `major`)
 	}
 
 	if ti.Comment != "" {
@@ -339,7 +339,14 @@ func (ci SqlColumnInfo) getWrappedColumnName() string {
 
 // Wrapping column name with backticks to avoid special character messing things up.
 func (ti *SqlTableInfo) getWrappedClusterKeys() string {
-	return "`" + strings.Join(ti.ClusterKeys, "`,`") + "`"
+	if len(ti.ClusterKeys) == 1 {
+		clusterKey := strings.ToUpper(ti.ClusterKeys[0])
+		// If the cluster key is AUTO or NONE, we don't need to wrap it with backticks.
+		if slices.Contains([]string{"AUTO", "NONE"}, clusterKey) {
+			return clusterKey
+		}
+	}
+	return "(`" + strings.Join(ti.ClusterKeys, "`,`") + "`)"
 }
 
 func (ti *SqlTableInfo) getStatementsForColumnDiffs(oldti *SqlTableInfo, statements []string, typestring string) []string {
@@ -429,7 +436,7 @@ func (ti *SqlTableInfo) diff(oldti *SqlTableInfo) ([]string, error) {
 		}
 		equal := slices.Equal(ti.ClusterKeys, oldti.ClusterKeys)
 		if !equal {
-			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY (%s)", ti.SQLFullName(), ti.getWrappedClusterKeys()))
+			statements = append(statements, fmt.Sprintf("ALTER TABLE %s CLUSTER BY %s", ti.SQLFullName(), ti.getWrappedClusterKeys()))
 		}
 	}
 

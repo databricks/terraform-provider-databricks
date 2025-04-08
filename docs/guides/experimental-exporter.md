@@ -82,7 +82,7 @@ All arguments are optional, and they tune what code is being generated.
 
 ### Use of `-listing` and `-services` for granular resources selection
 
-The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.
+The `-listing` option is used to discover resources to export; if it's not specified, then all services are listed (if they have the `List` operation implemented). The `-services` restricts the export of resources only to those resources whose service type is in the list specified by this option.  
 
 For example, if we have a job comprising two notebooks and one SQL dashboard, and tasks have Python libraries on DBFS attached. If we just specify the `-listing jobs`, then it will export the following resources:
 
@@ -106,20 +106,27 @@ but if we also specify `-services notebooks,storage` then it will export only:
 
 The rest of the values, like SQL object IDs, etc. will be hard-coded and not portable between workspaces.
 
+You can also use predefined aliases (`all` and `uc`) to specify multiple services at once.  For example, if `-listing` has value `all,-uc`, then we will discover all services except of Unity Catalog + vector search. 
+
+We can also exclude specific services  For example, we can specify `-services` as `-all,-uc-tables` and then we won't generate code for `databricks_sql_table`.
+
 ## Services
 
 Services are just logical groups of resources used for filtering and organization in files written in `-directory`. All resources are globally sorted by their resource name, which allows you to use generated files for compliance purposes. Nevertheless, managing the entire Databricks workspace with Terraform is the preferred way. Except for notebooks and possibly libraries, which may have their own CI/CD processes.
 
+Services could be specified in combination with predefined aliases (`all` - for all services and listings, `uc` - for all UC services, including the vector search).  The service could be specified as the service name, or it could have `-` prepended to the service, to exclude it from the list (including `-uc` to exclude all UC-related services).
+
 -> **Note**
   Please note that for services not marked with **listing**, we'll export resources only if they are referenced from other resources.
 
-* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
+* `access` -  **listing** [databricks_permissions](../resources/permissions.md), [databricks_instance_profile](../resources/instance_profile.md), [databricks_ip_access_list](../resources/ip_access_list.md), and [databricks_access_control_rule_set](../resources/access_control_rule_set.md).   *Please note that for `databricks_permissions` we list only `authorization = "tokens"`, the permissions for other objects (notebooks, ...) will be emitted when corresponding objects are processed!*
 * `alerts` - **listing** [databricks_alert](../resources/alert.md).
 * `compute` - **listing** [databricks_cluster](../resources/cluster.md).
 * `dashboards` - **listing** [databricks_dashboard](../resources/dashboard.md).
 * `directories` - **listing** [databricks_directory](../resources/directory.md).  *Please note that directories aren't listed when running in the incremental mode! Only directories with updated notebooks will be emitted.*
 * `dlt` - **listing** [databricks_pipeline](../resources/pipeline.md).
 * `groups` - **listing** [databricks_group](../data-sources/group.md) with [membership](../resources/group_member.md) and [data access](../resources/group_instance_profile.md).
+* `idfed` - **listing** [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md).  When listing allows to filter assignment only to specific workspace IDs as specified by `-match`, `-matchRegex` and `-excludeRegex` options.  I.e., to export assignments only for two workspaces, use `-matchRegex '^1688808130562317|5493220389262917$'`.
 * `jobs` - **listing** [databricks_job](../resources/job.md). Usually, there are more automated workflows than interactive clusters, so they get their own file in this tool's output.  *Please note that workflows deployed and maintained via [Databricks Asset Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) aren't exported!*
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).

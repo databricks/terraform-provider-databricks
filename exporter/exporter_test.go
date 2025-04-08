@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	sdk_uc "github.com/databricks/databricks-sdk-go/service/catalog"
 	sdk_compute "github.com/databricks/databricks-sdk-go/service/compute"
 	sdk_dashboards "github.com/databricks/databricks-sdk-go/service/dashboards"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -22,9 +22,10 @@ import (
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/databricks-sdk-go/service/settings"
 	"github.com/databricks/databricks-sdk-go/service/sharing"
-	"github.com/databricks/databricks-sdk-go/service/sql"
+	sdk_sql "github.com/databricks/databricks-sdk-go/service/sql"
 	sdk_vs "github.com/databricks/databricks-sdk-go/service/vectorsearch"
 	sdk_workspace "github.com/databricks/databricks-sdk-go/service/workspace"
+
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/commands"
@@ -34,7 +35,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/repos"
 	"github.com/databricks/terraform-provider-databricks/scim"
 	tf_sql "github.com/databricks/terraform-provider-databricks/sql"
-	"github.com/databricks/terraform-provider-databricks/workspace"
+	tf_workspace "github.com/databricks/terraform-provider-databricks/workspace"
+
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
 	"github.com/stretchr/testify/assert"
@@ -275,27 +277,27 @@ var emptyExternalLocations = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/external-locations?",
 	Status:   200,
-	Response: &catalog.ListExternalLocationsResponse{},
+	Response: &sdk_uc.ListExternalLocationsResponse{},
 }
 
 var emptyStorageCredentials = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/storage-credentials?",
 	Status:   200,
-	Response: &catalog.ListStorageCredentialsResponse{},
+	Response: &sdk_uc.ListStorageCredentialsResponse{},
 }
 
 var emptyUcCredentials = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/credentials?",
 	Status:   200,
-	Response: &catalog.ListCredentialsResponse{},
+	Response: &sdk_uc.ListCredentialsResponse{},
 }
 
 var emptyConnections = qa.HTTPFixture{
 	Method:   "GET",
 	Resource: "/api/2.1/unity-catalog/connections?",
-	Response: catalog.ListConnectionsResponse{},
+	Response: sdk_uc.ListConnectionsResponse{},
 }
 
 var emptyRepos = qa.HTTPFixture{
@@ -351,7 +353,7 @@ var emptyIpAccessLIst = qa.HTTPFixture{
 var emptyWorkspace = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.0/workspace/list?path=%2F",
-	Response:     workspace.ObjectList{},
+	Response:     tf_workspace.ObjectList{},
 	ReuseRequest: true,
 }
 
@@ -421,14 +423,18 @@ var emptyGlobalSQLConfig = qa.HTTPFixture{
 }
 
 var noCurrentMetastoreAttached = qa.HTTPFixture{
-	Method:       "GET",
-	Resource:     "/api/2.1/unity-catalog/metastore_summary",
-	Status:       404,
-	Response:     apierr.NotFound("nope"),
+	Method:   "GET",
+	Resource: "/api/2.1/unity-catalog/metastore_summary",
+	Status:   404,
+	Response: &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    "nope",
+	},
 	ReuseRequest: true,
 }
 
-var currentMetastoreResponse = &catalog.GetMetastoreSummaryResponse{
+var currentMetastoreResponse = &sdk_uc.GetMetastoreSummaryResponse{
 	MetastoreId: "12345678-1234",
 	Name:        "test",
 }
@@ -443,7 +449,7 @@ var currentMetastoreSuccess = qa.HTTPFixture{
 var emptyMetastoreList = qa.HTTPFixture{
 	Method:       "GET",
 	Resource:     "/api/2.1/unity-catalog/metastores",
-	Response:     catalog.ListMetastoresResponse{},
+	Response:     sdk_uc.ListMetastoresResponse{},
 	ReuseRequest: true,
 }
 
@@ -669,7 +675,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -805,7 +811,7 @@ func TestImportingNoResourcesError(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -846,12 +852,12 @@ func TestImportingClusters(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Flibs%2Ftest.whl&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2Frepo%2Ftest.sh&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 			{
 				Method:   "GET",
@@ -860,7 +866,7 @@ func TestImportingClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -1061,7 +1067,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{
 					Jobs: []sdk_jobs.BaseJob{
 						{
@@ -1116,7 +1122,7 @@ func TestImportingJobs_JobList(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=14",
+				Resource: "/api/2.2/jobs/get?job_id=14",
 				Response: sdk_jobs.Job{
 					JobId: 14,
 					Settings: &sdk_jobs.JobSettings{
@@ -1265,7 +1271,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			emptyRepos,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{
 					Jobs: []sdk_jobs.BaseJob{
 						{
@@ -1464,7 +1470,7 @@ func TestImportingJobs_JobListMultiTask(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Ffoo%2Fbar.py&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -1531,7 +1537,7 @@ func TestImportingSecrets(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: sdk_jobs.ListJobsResponse{},
 			},
 			{
@@ -1712,12 +1718,6 @@ func TestImportingUser(t *testing.T) {
 		})
 }
 
-func TestEitherString(t *testing.T) {
-	assert.Equal(t, "a", eitherString("a", nil))
-	assert.Equal(t, "a", eitherString(nil, "a"))
-	assert.Equal(t, "", eitherString(nil, nil))
-}
-
 func TestImportingRepos(t *testing.T) {
 	resp := repos.ReposInformation{
 		ID:           121232342,
@@ -1854,12 +1854,12 @@ func TestImportingSqlObjects(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{
+				Response: tf_workspace.ObjectList{
+					Objects: []tf_workspace.ObjectStatus{
 						{
 							Path:       "/Shared",
 							ObjectID:   4451965692354143,
-							ObjectType: workspace.Directory,
+							ObjectType: tf_workspace.Directory,
 						},
 					},
 				},
@@ -1867,15 +1867,15 @@ func TestImportingSqlObjects(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2FShared",
-				Response: workspace.ObjectList{},
+				Response: tf_workspace.ObjectList{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FShared",
-				Response: workspace.ObjectStatus{
+				Response: tf_workspace.ObjectStatus{
 					Path:       "/Shared",
 					ObjectID:   4451965692354143,
-					ObjectType: workspace.Directory,
+					ObjectType: tf_workspace.Directory,
 				},
 			},
 			{
@@ -1901,7 +1901,7 @@ func TestImportingSqlObjects(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/preview/sql/data_sources",
-				Response: []sql.DataSource{
+				Response: []sdk_sql.DataSource{
 					{
 						Id:          "147164a6-8316-4a9d-beff-f57261801374",
 						WarehouseId: "f562046bc1272886",
@@ -2055,7 +2055,7 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FRepos%2Fuser%40domain.com%2Frepo",
-				Response: workspace.ObjectStatus{
+				Response: tf_workspace.ObjectStatus{
 					ObjectID:   123,
 					ObjectType: "REPO",
 					Path:       "/Repos/user@domain.com/repo",
@@ -2106,17 +2106,17 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest+DLT",
-				Response: workspace.ObjectStatus{
-					Language:   workspace.Python,
+				Response: tf_workspace.ObjectStatus{
+					Language:   tf_workspace.Python,
 					ObjectID:   123,
-					ObjectType: workspace.Notebook,
+					ObjectType: tf_workspace.Notebook,
 					Path:       "/Users/user@domain.com/Test DLT",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FUsers%2Fuser%40domain.com%2FTest+DLT",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "spark.range(10)",
 				},
 			},
@@ -2164,16 +2164,16 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh",
-				Response: workspace.ObjectStatus{
+				Response: tf_workspace.ObjectStatus{
 					ObjectID:   789,
-					ObjectType: workspace.File,
+					ObjectType: tf_workspace.File,
 					Path:       "/init.sh",
 				},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2Finit.sh",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
 			},
@@ -2185,12 +2185,12 @@ func TestImportingDLTPipelines(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -2289,12 +2289,12 @@ func TestImportingDLTPipelinesMatchingOnly(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2FUsers%2Fuser%40domain.com%2FTest%20DLT&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/get-status?path=%2Finit.sh&return_git_info=true",
-				Response: workspace.ObjectStatus{},
+				Response: tf_workspace.ObjectStatus{},
 			},
 		},
 		func(ctx context.Context, client *common.DatabricksClient) {
@@ -2323,19 +2323,19 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/warehouses?",
-				Response: sql.ListWarehousesResponse{},
+				Response: sdk_sql.ListWarehousesResponse{},
 			},
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/sql/config/warehouses",
-				Response: sql.GetWorkspaceWarehouseConfigResponse{
-					EnabledWarehouseTypes: []sql.WarehouseTypePair{
+				Response: sdk_sql.GetWorkspaceWarehouseConfigResponse{
+					EnabledWarehouseTypes: []sdk_sql.WarehouseTypePair{
 						{
-							WarehouseType: sql.WarehouseTypePairWarehouseTypeClassic,
+							WarehouseType: sdk_sql.WarehouseTypePairWarehouseTypeClassic,
 							Enabled:       true,
 						},
 						{
-							WarehouseType: sql.WarehouseTypePairWarehouseTypePro,
+							WarehouseType: sdk_sql.WarehouseTypePairWarehouseTypePro,
 							Enabled:       true,
 						},
 					},
@@ -2358,14 +2358,14 @@ func TestImportingGlobalSqlConfig(t *testing.T) {
 }
 
 func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
-	fileStatus := workspace.ObjectStatus{
+	fileStatus := tf_workspace.ObjectStatus{
 		ObjectID:   123,
-		ObjectType: workspace.File,
+		ObjectType: tf_workspace.File,
 		Path:       "/File",
 	}
-	notebookStatus := workspace.ObjectStatus{
+	notebookStatus := tf_workspace.ObjectStatus{
 		ObjectID:   456,
-		ObjectType: workspace.Notebook,
+		ObjectType: tf_workspace.Notebook,
 		Path:       "/Notebook",
 		Language:   "PYTHON",
 	}
@@ -2378,27 +2378,27 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+				Response: tf_workspace.ObjectList{
+					Objects: []tf_workspace.ObjectStatus{notebookStatus, fileStatus,
 						{
 							ObjectID:   4567,
-							ObjectType: workspace.Notebook,
+							ObjectType: tf_workspace.Notebook,
 							Path:       "/UnmatchedNotebook",
 							Language:   "PYTHON",
 						},
 						{
 							ObjectID:   1234,
-							ObjectType: workspace.File,
+							ObjectType: tf_workspace.File,
 							Path:       "/UnmatchedFile",
 						},
 						{
 							ObjectID:   456,
-							ObjectType: workspace.Directory,
+							ObjectType: tf_workspace.Directory,
 							Path:       "/databricks_automl",
 						},
 						{
 							ObjectID:   456,
-							ObjectType: workspace.Directory,
+							ObjectType: tf_workspace.Directory,
 							Path:       "/.bundle",
 						},
 					},
@@ -2408,7 +2408,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2Fdatabricks_automl",
-				Response: workspace.ObjectList{},
+				Response: tf_workspace.ObjectList{},
 			},
 			{
 				Method:       "GET",
@@ -2425,7 +2425,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
 				ReuseRequest: true,
@@ -2433,7 +2433,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FNotebook",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
 				ReuseRequest: true,
@@ -2470,14 +2470,14 @@ func TestImportingNotebooksWorkspaceFilesWithFilter(t *testing.T) {
 }
 
 func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
-	fileStatus := workspace.ObjectStatus{
+	fileStatus := tf_workspace.ObjectStatus{
 		ObjectID:   123,
-		ObjectType: workspace.File,
+		ObjectType: tf_workspace.File,
 		Path:       "/File",
 	}
-	notebookStatus := workspace.ObjectStatus{
+	notebookStatus := tf_workspace.ObjectStatus{
 		ObjectID:   456,
-		ObjectType: workspace.Notebook,
+		ObjectType: tf_workspace.Notebook,
 		Path:       "/Notebook",
 		Language:   "PYTHON",
 	}
@@ -2490,22 +2490,22 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/list?path=%2F",
-				Response: workspace.ObjectList{
-					Objects: []workspace.ObjectStatus{notebookStatus, fileStatus,
+				Response: tf_workspace.ObjectList{
+					Objects: []tf_workspace.ObjectStatus{notebookStatus, fileStatus,
 						{
 							ObjectID:   4567,
-							ObjectType: workspace.Notebook,
+							ObjectType: tf_workspace.Notebook,
 							Path:       "/UnmatchedNotebook",
 							Language:   "PYTHON",
 						},
 						{
 							ObjectID:   1234,
-							ObjectType: workspace.File,
+							ObjectType: tf_workspace.File,
 							Path:       "/UnmatchedFile",
 						},
 						{
 							ObjectID:   456,
-							ObjectType: workspace.Directory,
+							ObjectType: tf_workspace.Directory,
 							Path:       "/databricks_automl",
 						},
 					},
@@ -2527,7 +2527,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=AUTO&path=%2FFile",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
 				ReuseRequest: true,
@@ -2535,7 +2535,7 @@ func TestImportingNotebooksWorkspaceFilesWithFilterDuringWalking(t *testing.T) {
 			{
 				Method:   "GET",
 				Resource: "/api/2.0/workspace/export?format=SOURCE&path=%2FNotebook",
-				Response: workspace.ExportPath{
+				Response: tf_workspace.ExportPath{
 					Content: "dGVzdA==",
 				},
 				ReuseRequest: true,
@@ -2918,7 +2918,7 @@ func TestImportingRunJobTask(t *testing.T) {
 			emptyWorkspace,
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/list?limit=100",
+				Resource: "/api/2.2/jobs/list?limit=100",
 				Response: map[string]any{
 					"jobs": []any{
 						getJSONObject("test-data/run-job-main.json"),

@@ -95,7 +95,11 @@ func ResourceLibrary() common.Resource {
 					return nil
 				}
 			}
-			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID),
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			clusterID, libraryRep := parseId(d.Id())
@@ -120,7 +124,11 @@ func ResourceLibrary() common.Resource {
 					Libraries: []compute.Library{*v.Library},
 				})
 			}
-			return apierr.NotFound(fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID))
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    fmt.Sprintf("cannot find %s on %s", libraryRep, clusterID),
+			}
 		},
 	}
 }

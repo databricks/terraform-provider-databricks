@@ -113,6 +113,14 @@ In addition to all arguments above, the following attributes are exported:
 * `created_by` - The principal that created the share.
 * `status` - Status of the object, one of: `ACTIVE`, `PERMISSION_DENIED`.
 
+## Import
+
+The share resource can be imported using the name of the share.
+
+```bash
+terraform import databricks_share.this <share_name>
+```
+
 ## Related Resources
 
 The following resources are often used in the same context:

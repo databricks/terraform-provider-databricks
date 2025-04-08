@@ -18,7 +18,11 @@ func ResourceGroupRole() common.Resource {
 			group, err := NewGroupsAPI(ctx, c).Read(groupID, "roles")
 			hasRole := ComplexValues(group.Roles).HasValue(role)
 			if err == nil && !hasRole {
-				return apierr.NotFound("Group has no role")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Group has no role",
+				}
 			}
 			return err
 		},

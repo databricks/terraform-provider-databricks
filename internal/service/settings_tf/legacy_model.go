@@ -7392,7 +7392,7 @@ func (newState *NccAzurePrivateEndpointRule_SdkV2) SyncEffectiveFieldsDuringRead
 }
 
 func (c NccAzurePrivateEndpointRule_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["connection_state"] = attrs["connection_state"].SetOptional()
+	attrs["connection_state"] = attrs["connection_state"].SetComputed()
 	attrs["creation_time"] = attrs["creation_time"].SetComputed()
 	attrs["deactivated"] = attrs["deactivated"].SetComputed()
 	attrs["deactivated_at"] = attrs["deactivated_at"].SetComputed()

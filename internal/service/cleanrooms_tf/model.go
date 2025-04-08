@@ -1388,7 +1388,7 @@ func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetOptional()
+	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
 	attrs["region"] = attrs["region"].SetOptional()

@@ -25,7 +25,11 @@ func ResourceUserInstanceProfile() common.Resource {
 			user, err := scim.NewUsersAPI(ctx, c).Read(userID, "roles")
 			hasRole := scim.ComplexValues(user.Roles).HasValue(roleARN)
 			if err == nil && !hasRole {
-				return apierr.NotFound("User has no role")
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "User has no role",
+				}
 			}
 			return err
 		},

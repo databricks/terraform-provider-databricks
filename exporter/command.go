@@ -32,23 +32,6 @@ func (lw *levelWriter) Write(p []byte) (n int, err error) {
 	return
 }
 
-func (ic *importContext) allServicesAndListing() (string, string) {
-	services := map[string]struct{}{}
-	listing := map[string]struct{}{}
-	for _, ir := range ic.Importables {
-		services[ir.Service] = struct{}{}
-		if ir.List != nil {
-			listing[ir.Service] = struct{}{}
-		}
-	}
-	// We need this to specify default listings of UC & Workspace objects...
-	for _, ir := range []string{"uc-schemas", "uc-models", "uc-tables", "uc-volumes",
-		"notebooks", "directories", "wsfiles"} {
-		listing[ir] = struct{}{}
-	}
-	return strings.Join(maps.Keys(services), ","), strings.Join(maps.Keys(listing), ",")
-}
-
 func (ic *importContext) interactivePrompts() string {
 	req, _ := http.NewRequest("GET", "/", nil)
 	for ic.Client.DatabricksClient.Config.Authenticate(req) != nil {

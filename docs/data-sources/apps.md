@@ -39,6 +39,7 @@ The following attributes are exported:
   * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
   * `budget_policy_id` - The Budget Policy ID set for this resource.
   * `effective_budget_policy_id` - The effective budget policy ID.
+  * `effective_user_api_scopes` - A list of effective api scopes granted to the user access token.
 
 ### resources Attribute
 

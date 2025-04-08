@@ -55,6 +55,7 @@ The following arguments are supported:
 * `rate_limits` - A list of rate limit blocks to be applied to the serving endpoint. *Note: only external and foundation model endpoints are supported as of now.*
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. *Note: only available for custom models.*
+* `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
 
 ### served_entities Configuration Block
 
@@ -81,6 +82,15 @@ The following arguments are supported:
     * `cohere_config` - Cohere Config
       * `cohere_api_key` - The Databricks secret key reference for a Cohere API key.
       * `cohere_api_key_plaintext` - The Cohere API key provided as a plaintext string.
+    * `custom_provider_config` - Custom Provider Config. Only required if the provider is 'custom'.
+      * `custom_provider_url` (Required) - URL of the custom provider API.
+      * `api_key_auth` - (Optional) API key authentication for the custom provider API. Conflicts with `bearer_token_auth`.
+        * `key` (Required) - The name of the API key parameter used for authentication.
+        * `value` (Optional) - The Databricks secret key reference for an API Key.
+        * `value_plaintext` (Optional) - The API Key provided as a plaintext string.
+      * `bearer_token_auth` (Optional) - bearer token authentication for the custom provider API.  Conflicts with `api_key_auth`.
+        * `token` (Optional) -  The Databricks secret key reference for a token.
+        * `token_plaintext` (Optional) - The token provided as a plaintext string.
     * `databricks_model_serving_config` - Databricks Model Serving Config
       * `databricks_api_token` - The Databricks secret key reference for a Databricks API token that corresponds to a user or service principal with Can Query access to the model serving endpoint pointed to by this external model.
       * `databricks_api_token_plaintext` - The Databricks API token that corresponds to a user or service principal with Can Query access to the model serving endpoint pointed to by this external model provided as a plaintext string.
@@ -154,6 +164,8 @@ The following arguments are supported:
 
 ### ai_gateway Configuration Block
 
+* `fallback_config` - (Optional) block with configuration for traffic fallback which auto fallbacks to other served entities if the request to a served entity fails with certain error codes, to increase availability.
+  * `enabled` -  Whether to enable traffic fallback. When a served entity in the serving endpoint returns specific error codes (e.g. 500), the request will automatically be round-robin attempted with other served entities in the same endpoint, following the order of served entity list, until a successful response is returned.
 * `guardrails` - (Optional) Block with configuration for AI Guardrails to prevent unwanted data and unsafe data in requests and responses. Consists of the following attributes:
   * `input` - A block with configuration for input guardrail filters:
     * `invalid_keywords` - List of invalid keywords. AI guardrail uses keyword or string matching to decide if the keyword exists in the request or response content.

@@ -718,21 +718,22 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	})
 }
 
-func TestAccPermissions_SqlDashboard(t *testing.T) {
-	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	dashboardTemplate := `
-		resource "databricks_sql_dashboard" "this" {
-			name = "{var.STICKY_RANDOM}"
-		}`
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", groupPermissions("CAN_VIEW")),
-	}, acceptance.Step{
-		Template:    dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_VIEW")),
-		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for dashboard, allowed levels: CAN_MANAGE"),
-	}, acceptance.Step{
-		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_READ", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
-	})
-}
+// Legacy dashboards can no longer be created via the API. Tests for this resource are disabled.
+// func TestAccPermissions_SqlDashboard(t *testing.T) {
+// 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	dashboardTemplate := `
+// 		resource "databricks_sql_dashboard" "this" {
+// 			name = "{var.STICKY_RANDOM}"
+// 		}`
+// 	acceptance.WorkspaceLevel(t, acceptance.Step{
+// 		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", groupPermissions("CAN_VIEW")),
+// 	}, acceptance.Step{
+// 		Template:    dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_VIEW")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for dashboard, allowed levels: CAN_MANAGE"),
+// 	}, acceptance.Step{
+// 		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_READ", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+// 	})
+// }
 
 func TestAccPermissions_SqlAlert(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")

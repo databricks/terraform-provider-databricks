@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+* Use latest etag for `access_control_rule_set` ([#4622](https://github.com/databricks/terraform-provider-databricks/pull/4622)).
+
 ### Documentation
 
  * Document `user_api_scopes` in `databricks_app` resource and data sources ([#4614](https://github.com/databricks/terraform-provider-databricks/pull/4614))

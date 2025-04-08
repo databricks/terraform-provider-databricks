@@ -3,7 +3,7 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - "*"
   merge_group:
     types: [checks_requested]
 
@@ -46,10 +46,7 @@ jobs:
       - name: Extract Release Notes
         id: release_notes
         run: |
-          if ! .github/scripts/extract_release_notes.py > release_notes.md; then
-            echo "::error::Failed to extract release notes from CHANGELOG.md"
-            exit 1
-          fi
+          git for-each-ref --format='%(body)' ${{ github.ref }} > release_notes.md
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6

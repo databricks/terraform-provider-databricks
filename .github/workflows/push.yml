@@ -29,22 +29,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  release-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Run Python tests
-        run: |
-          cd .github/scripts
-          python3 -m unittest test_extract_release_notes.py
-
   fmt:
     runs-on: ubuntu-latest
 

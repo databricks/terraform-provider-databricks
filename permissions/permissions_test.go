@@ -720,6 +720,9 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 
 func TestAccPermissions_SqlDashboard(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("Legacy dashboards are disabled in GCP")
+	}
 	dashboardTemplate := `
 		resource "databricks_sql_dashboard" "this" {
 			name = "{var.STICKY_RANDOM}"

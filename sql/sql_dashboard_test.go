@@ -7,6 +7,9 @@ import (
 )
 
 func TestAccDashboard(t *testing.T) {
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("Legacy dashboards are disabled in GCP")
+	}
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 		resource "databricks_sql_dashboard" "d1" {

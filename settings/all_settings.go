@@ -22,5 +22,6 @@ func AllSettingsResources() map[string]common.Resource {
 		"automatic_cluster_update_workspace":        makeSettingResource[settings.AutomaticClusterUpdateSetting, *databricks.WorkspaceClient](automaticClusterUpdateSetting),
 		"aibi_dashboard_embedding_access_policy":    makeSettingResource[settings.AibiDashboardEmbeddingAccessPolicySetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingAccessPolicySetting),
 		"aibi_dashboard_embedding_approved_domains": makeSettingResource[settings.AibiDashboardEmbeddingApprovedDomainsSetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingApprovedDomainsSetting),
+		"disable_legacy_access":                     makeSettingResource[settings.DisableLegacyAccess, *databricks.WorkspaceClient](disableLegacyAccess),
 	}
 }

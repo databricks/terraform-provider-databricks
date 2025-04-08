@@ -108,5 +108,4 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/permissions
       test_name: TestAccPermissions_App
       comment: Failure due to API timeouts in the permissions APIs.
-
-
+      

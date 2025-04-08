@@ -17,4 +17,4 @@
 
 ### Internal Changes
 
-* Add TestMwsAccGcpWorkspaces to flaky test ([#4624](https://github.com/databricks/terraform-provider-databricks/pull/4624)).
+* Add `TestMwsAccGcpWorkspaces` and `TestMwsAccGcpByovpcWorkspaces` to flaky test ([#4624](https://github.com/databricks/terraform-provider-databricks/pull/4624)).

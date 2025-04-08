@@ -28,5 +28,8 @@ ignored_tests:
       test_name: TestAccPermissions_InstancePool
       comment: Failure due to API timeouts in the permissions APIs in AWS.
     - package: github.com/databricks/terraform-provider-databricks/mws
-      test_name: TestMwsAccGcpWorkspaces
+      test_name: TestMwsAccGcpWorkspaces 
+      comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...
+    - package: github.com/databricks/terraform-provider-databricks/mws
+      test_name: TestMwsAccGcpByovpcWorkspaces
       comment: Failure due GCP infrastructure issues such as policy limit, VPC Quotas etc...

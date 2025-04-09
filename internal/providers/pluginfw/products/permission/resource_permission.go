@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -14,10 +13,11 @@ import (
 	"github.com/databricks/terraform-provider-databricks/common"
 	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
-	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+  "github.com/hashicorp/terraform-plugin-framework/path"
 )
 
 const (
@@ -25,9 +25,9 @@ const (
 )
 
 var (
-	apiPath string
-	//_ resource.Resource = &PermissionResource{}
-	//_ resource.ResourceWithConfigure = &PermissionResource{}
+	_ resource.Resource = &PermissionResource{}
+	_ resource.ResourceWithConfigure = &PermissionResource{}
+  _ validator.Object = &accessControlListValidator{}
 )
 
 func NewPermissionResource() resource.Resource {
@@ -65,75 +65,105 @@ func (r *PermissionResource) Metadata(ctx context.Context, req resource.Metadata
 type permissionResourceModel struct {
 	ObjectID          types.String                       `tfsdk:"object_id"`
 	ObjectType        types.String                       `tfsdk:"object_type"`
-	AccessControlList []permissionAccessControlListModel   `tfsdk:"access_control"`
+	AccessControlList permissionAccessControlModel       `tfsdk:"access_control"`
 	LastUpdated       types.String                       `tfsdk:"last_updated"`
 }
 
 // accessControlListModel is the same as iam.AccessControlRequest
 // was originally just called this way in entity.go
-type permissionAccessControlListModel struct {
+type permissionAccessControlModel struct {
 	ServicePrincipalId types.String `tfsdk:"service_principal_id"`
 	GroupName            types.String `tfsdk:"group_name"`
 	UserName             types.String `tfsdk:"user_name"`
 	PermissionLevel      types.String `tfsdk:"permission_level"`
 }
 
-func (permissionResourceModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-  attrs["object_id"] = attrs["object_id"].SetOptional().SetComputed()
-  attrs["object_type"] = attrs["object_type"].SetOptional().SetComputed()
-  attrs["access_control"] = attrs["access_control"].SetRequired().SetComputed()
+type accessControlListValidator struct {}
 
-  return attrs
+func (v accessControlListValidator) Description(ctx context.Context) string {
+	return "Only one of user_name, group_name, or service_principal_id may be set"
+}
+
+func (v accessControlListValidator) MarkdownDescription(ctx context.Context) string {
+        return v.Description(ctx)
 }
 
 
-func (permissionResourceModel) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
-  return map[string]reflect.Type{
-    "access_control" : reflect.TypeOf(permissionAccessControlListModel{}),
-  }
+func (v accessControlListValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+  var userName, groupName, spID types.String
+
+	// You must check for each field using its path
+	if diags := req.Config.GetAttribute(ctx, path.Root("access_control").AtName("user_name"), &userName); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+	if diags := req.Config.GetAttribute(ctx, path.Root("access_control").AtName("group_name"), &groupName); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+	if diags := req.Config.GetAttribute(ctx, path.Root("access_control").AtName("service_principal_id"), &spID); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	// Count how many are set
+	count := 0
+	if !userName.IsNull() && userName.ValueString() != "" {
+		count++
+	}
+	if !groupName.IsNull() && groupName.ValueString() != "" {
+		count++
+	}
+	if !spID.IsNull() && spID.ValueString() != "" {
+		count++
+	}
+
+	if count != 1 {
+		resp.Diagnostics.AddError(
+			"Invalid access control configuration",
+			"Exactly one of `user_name`, `group_name`, or `service_principal_id` must be set.",
+		)
+	}
 }
+
+
 
 func (r *PermissionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
         resp.Schema = schema.Schema{
                 Attributes: map[string]schema.Attribute{
                         "object_id": schema.StringAttribute{
-                                Computed: true,
-                                Optional: true,
+                                Required: true,
                         },
                         "object_type": schema.StringAttribute{
-                                Computed: true,
-                                Optional: true,
+                                Required: true,
                         },
                         "last_updated": schema.StringAttribute{
                                 Computed: true,
                         },
                 },
                 Blocks: map[string]schema.Block{
-                  "access_control": schema.SetNestedBlock{
-                    NestedObject: schema.NestedBlockObject{
-                        Attributes: map[string]schema.Attribute{
-                              "service_principal_id": schema.StringAttribute{
-                                      Computed: true,
-                                      Optional: true,
-                                      Description: "The service principal ID of the access control entry.",
-                              },
-                              "group_name": schema.StringAttribute{
-                                      Computed: true,
-                                      Optional: true,
-                                      Description: "The group name of the access control entry.",
-                              },
-                              "user_name": schema.StringAttribute{
-                                      Computed: true,
-                                      Optional: true,
-                                      Description: "The user name of the access control entry.",
-                              },
-                              "permission_level": schema.StringAttribute{
-                                      Computed: true,
-                                      Optional: true,
-                                      Description: "The permission level of the access control entry.",
-                              },
+                  "access_control": schema.SingleNestedBlock{
+                      Attributes: map[string]schema.Attribute{
+                            "service_principal_id": schema.StringAttribute{
+                                    Optional: true,
+                                    Description: "The service principal ID of the access control entry.",
+                            },
+                            "group_name": schema.StringAttribute{
+                                    Optional: true,
+                                    Description: "The group name of the access control entry.",
+                            },
+                            "user_name": schema.StringAttribute{
+                                    Optional: true,
+                                    Description: "The user name of the access control entry.",
+                            },
+                            "permission_level": schema.StringAttribute{
+                                    Optional: true,
+                                    Description: "The permission level of the access control entry.",
+                            },
                       },
-                    },
+                      Validators: []validator.Object{
+                        accessControlListValidator{},
+                      },
                   },
                 },
         }
@@ -159,23 +189,20 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+  
 	// generate API request from plan
-	var acls []iam.AccessControlRequest
-	for _, acl := range plan.AccessControlList {
-		acls = append(acls, iam.AccessControlRequest{
-			//ServicePrincipalName: strings.Trim(acl.ServicePrincipalId.String(), "\""),
-			GroupName:            strings.Trim(acl.GroupName.String(), "\""),
-			//UserName:             strings.Trim(acl.UserName.String(), "\""),
-			PermissionLevel:      iam.PermissionLevel(strings.Trim(acl.PermissionLevel.String(), "\"")),
-		})
-	}
+  var acl iam.AccessControlRequest
+  acl.ServicePrincipalName = strings.Trim(plan.AccessControlList.ServicePrincipalId.String(), "\"")
+  acl.GroupName = strings.Trim(plan.AccessControlList.GroupName.String(), "\"")
+  acl.UserName = strings.Trim(plan.AccessControlList.UserName.String(), "\"")
+  acl.PermissionLevel = iam.PermissionLevel(strings.Trim(plan.AccessControlList.PermissionLevel.String(), "\""))
 
 
 	// create the permission
 	permission, err := r.workspaceClient.Permissions.Update(ctx, iam.PermissionsRequest{
 		RequestObjectId:   plan.ObjectID.ValueString(),
 		RequestObjectType: plan.ObjectType.ValueString(),
-		AccessControlList: acls,
+		AccessControlList: []iam.AccessControlRequest{acl},
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -188,13 +215,11 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
   //Map response to to schema and populate Computed attribute values
   plan.ObjectID = types.StringValue(permission.ObjectId)
   plan.ObjectType = types.StringValue(permission.ObjectType)
-  for permissionAclIndex, permissionAcl := range permission.AccessControlList {
-          plan.AccessControlList[permissionAclIndex] = permissionAccessControlListModel{
-                ServicePrincipalId: types.StringValue(permissionAcl.ServicePrincipalName),
-                GroupName:            types.StringValue(permissionAcl.GroupName),
-                UserName:             types.StringValue(permissionAcl.UserName),
-                PermissionLevel:      types.StringValue(string(permissionAcl.AllPermissions[permissionAclIndex].PermissionLevel)),
-            }
+  plan.AccessControlList = permissionAccessControlModel{
+        ServicePrincipalId:   types.StringValue(permission.AccessControlList[0].ServicePrincipalName),
+        GroupName:            types.StringValue(permission.AccessControlList[0].GroupName),
+        UserName:             types.StringValue(permission.AccessControlList[0].UserName),
+        PermissionLevel:      types.StringValue(string(permission.AccessControlList[0].AllPermissions[0].PermissionLevel)),
   }
 
 
@@ -208,7 +233,6 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
   }
 }
 
-	//apiPath = fmt.Sprintf("/api/2.0/permissions/%s/%s", plan.ObjectType.ValueString(), plan.ObjectID.ValueString())
 
 func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
@@ -250,15 +274,12 @@ func (r *PermissionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	//Overwrite data with refreshed state
 	//TODO: parse getResponse to permissionResourceModel
-	state.AccessControlList = []permissionAccessControlListModel{}
-	for aclIndex, acl := range permissions.AccessControlList {
-		state.AccessControlList = append(state.AccessControlList, permissionAccessControlListModel{
-			ServicePrincipalId: types.StringValue(acl.ServicePrincipalName),
-			GroupName:            types.StringValue(acl.GroupName),
-			UserName:             types.StringValue(acl.UserName),
-			PermissionLevel:      types.StringValue(string(acl.AllPermissions[aclIndex].PermissionLevel)),
-    })
-  }
+  state.AccessControlList.UserName = types.StringValue(permissions.AccessControlList[0].UserName)
+  state.AccessControlList.GroupName = types.StringValue(permissions.AccessControlList[0].GroupName)
+  state.AccessControlList.ServicePrincipalId = types.StringValue(permissions.AccessControlList[0].ServicePrincipalName)
+  state.AccessControlList.PermissionLevel = types.StringValue(string(permissions.AccessControlList[0].AllPermissions[0].PermissionLevel))
+  state.ObjectID = types.StringValue(permissions.ObjectId)
+  state.ObjectType = types.StringValue(permissions.ObjectType)
 
 	//Set refreshed State
 	diags = resp.State.Set(ctx, &state)

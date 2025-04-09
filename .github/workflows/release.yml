@@ -3,7 +3,7 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - "*"
   merge_group:
     types: [checks_requested]
 
@@ -38,11 +38,16 @@ jobs:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
 
+      - name: Extract Release Notes
+        id: release_notes
+        run: |
+          git for-each-ref --format='%(body)' ${{ github.ref }} > release_notes.md
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: ~> v2
-          args: release --clean ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' || '' }}
+          args: release --clean --release-notes=release_notes.md ${{ !startsWith(github.ref, 'refs/tags/v') && '--snapshot' || '' }}
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token

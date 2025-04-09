@@ -53,4 +53,4 @@ func TestConfigureDatabricksClient(t *testing.T) {
 			tc.validateResourceData(dc)
 		})
 	}
-} 
+}

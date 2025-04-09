@@ -6,6 +6,8 @@
 
 ### Bug Fixes
 
+ * Increase the default HTTP timeout to 65 seconds.
+
 ### Documentation
 
  * Document `user_api_scopes` in `databricks_app` resource and data sources ([#4614](https://github.com/databricks/terraform-provider-databricks/pull/4614))

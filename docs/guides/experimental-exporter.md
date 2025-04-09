@@ -131,6 +131,7 @@ Services could be specified in combination with predefined aliases (`all` - for 
 * `mlflow-webhooks` - **listing** [databricks_mlflow_webhook](../resources/mlflow_webhook.md).
 * `model-serving` - **listing** [databricks_model_serving](../resources/model_serving.md).
 * `mounts` - **listing** works only in combination with `-mounts` command-line option.
+* `nccs` - **listing** [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) and [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md).  **Note** we can't export [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) because of the missing API.
 * `notebooks` - **listing** [databricks_notebook](../resources/notebook.md).
 * `policies` - **listing** [databricks_cluster_policy](../resources/cluster_policy).
 * `pools` - **listing** [instance pools](../resources/instance_pool.md).
@@ -209,6 +210,9 @@ Exporter aims to generate HCL code for most of the resources within the Databric
 | [databricks_mlflow_model](../resources/mlflow_model.md) | No | No | No | No |
 | [databricks_mlflow_webhook](../resources/mlflow_webhook.md) | Yes | Yes | Yes | No |
 | [databricks_model_serving](../resources/model_serving) | Yes | Yes | Yes | No |
+| [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) | Yes | Yes | No | Yes |
+| [databricks_mws_ncc_binding](../resources/mws_ncc_binding.md) | No | No | No | No |
+| [databricks_mws_ncc_private_endpoint_rule](../resources/mws_ncc_private_endpoint_rule.md) | Yes | No | No | Yes |
 | [databricks_mws_permission_assignment](../resources/mws_permission_assignment.md) | Yes | No | No | Yes |
 | [databricks_notebook](../resources/notebook.md) | Yes | Yes | Yes | No |
 | [databricks_notification_destination](../resources/notification_destination.md) | Yes | No | Yes\*\* | No |

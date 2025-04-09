@@ -50,8 +50,11 @@ func readSecretScope(ctx context.Context, w *databricks.WorkspaceClient, scopeNa
 		}
 
 	}
-	return secretScope, apierr.NotFound(
-		fmt.Sprintf("no Secret Scope found with scope name %s", scopeName))
+	return secretScope, &apierr.APIError{
+		ErrorCode:  "NOT_FOUND",
+		StatusCode: 404,
+		Message:    fmt.Sprintf("no Secret Scope found with scope name %s", scopeName),
+	}
 }
 
 var validScope = validation.StringMatch(regexp.MustCompile(`^[\w\.@_/-]{1,128}$`),

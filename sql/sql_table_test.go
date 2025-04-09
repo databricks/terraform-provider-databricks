@@ -326,6 +326,38 @@ func TestUcAccResourceSqlTable_Liquid(t *testing.T) {
 			cluster_keys = ["id", "name"]			
 			comment = "this table is managed by terraform..."
 		}`,
+	}, acceptance.Step{
+		Template: `
+		resource "databricks_schema" "this" {
+			name         = "{var.STICKY_RANDOM}"
+			catalog_name = "main"
+		}
+
+		resource "databricks_sql_table" "this" {
+			name               = "bar"
+			catalog_name       = "main"
+			schema_name        = databricks_schema.this.name
+			table_type         = "MANAGED"
+			warehouse_id       = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			properties         = {
+				them      = "that"
+				something = "else"
+			}
+			options         = {
+				this      = "blue"
+				that      = "green"
+			}
+			column {
+				name      = "id"
+				type      = "int"
+			}
+			column {
+				name      = "name"
+				type      = "varchar(64)"
+			}
+			cluster_keys = ["auto"]			
+			comment = "this table is managed by terraform..."
+		}`,
 	})
 }
 

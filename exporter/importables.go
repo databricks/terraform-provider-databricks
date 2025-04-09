@@ -848,7 +848,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "experiment_id", Resource: "databricks_mlflow_experiment"},
 			{Path: "repo_id", Resource: "databricks_repo"},
 			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
-			{Path: "serving_endpoint_id", Resource: "databricks_serving_endpoint", Match: "serving_endpoint_id"},
+			{Path: "serving_endpoint_id", Resource: "databricks_model_serving", Match: "serving_endpoint_id"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
 			{Path: "directory_id", Resource: "databricks_directory", Match: "object_id"},
 			{Path: "notebook_id", Resource: "databricks_notebook", Match: "object_id"},
@@ -1039,12 +1039,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Depends: []reference{
-			{Path: "s3_bucket_name", Resource: "aws_s3_bucket", Match: "bucket"}, // this should be changed somehow & avoid clashes with GCS bucket_name
 			{Path: "instance_profile", Resource: "databricks_instance_profile"},
 			{Path: "cluster_id", Resource: "databricks_cluster"},
-			{Path: "storage_account_name", Resource: "azurerm_storage_account", Match: "name"}, // similarly for WASBS vs ABFSS
-			{Path: "container_name", Resource: "azurerm_storage_container", Match: "name"},
-			{Path: "storage_resource_name", Resource: "azurerm_data_lake_store", Match: "name"},
 		},
 	},
 	"databricks_global_init_script": {
@@ -2689,6 +2685,54 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "endpoint_name", Resource: "databricks_vector_search_endpoint"},
 			{Path: "delta_sync_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
 			{Path: "direct_access_index_spec.embedding_source_columns.embedding_model_endpoint_name", Resource: "databricks_model_serving"},
+		},
+	},
+	"databricks_mws_network_connectivity_config": {
+		AccountLevel: true,
+		Service:      "nccs",
+		List: func(ic *importContext) error {
+			updatedSinceMs := ic.getUpdatedSinceMs()
+			it := ic.accountClient.NetworkConnectivity.ListNetworkConnectivityConfigurations(ic.Context,
+				settings.ListNetworkConnectivityConfigurationsRequest{})
+			for it.HasNext(ic.Context) {
+				nc, err := it.Next(ic.Context)
+				if err != nil {
+					return err
+				}
+				if ic.incremental && nc.UpdatedTime < updatedSinceMs {
+					log.Printf("[DEBUG] skipping %s that was modified at %d (last active=%d)",
+						fmt.Sprintf("network connectivity config '%s'", nc.Name), nc.UpdatedTime, updatedSinceMs)
+					continue
+				}
+				// TODO: technically we can create data directly from the API response
+				ic.Emit(&resource{
+					Resource: "databricks_mws_network_connectivity_config",
+					ID:       nc.AccountId + "/" + nc.NetworkConnectivityConfigId,
+					Name:     nc.Name,
+				})
+				if nc.EgressConfig.TargetRules != nil {
+					for _, rule := range nc.EgressConfig.TargetRules.AzurePrivateEndpointRules {
+						// TODO: technically we can create data directly from the API response
+						resourceId := strings.ReplaceAll(rule.ResourceId, "/subscriptions/", "")
+						resourceId = strings.ReplaceAll(resourceId, "/resourceGroups/", "_")
+						resourceId = strings.ReplaceAll(resourceId, "/providers/Microsoft", "_")
+						ic.Emit(&resource{
+							Resource: "databricks_mws_ncc_private_endpoint_rule",
+							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
+							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId.String(),
+						})
+					}
+				}
+			}
+			return nil
+		},
+	},
+	"databricks_mws_ncc_private_endpoint_rule": {
+		AccountLevel: true,
+		Service:      "nccs",
+		Depends: []reference{
+			{Path: "network_connectivity_config_id", Resource: "databricks_mws_network_connectivity_config",
+				Match: "network_connectivity_config_id"},
 		},
 	},
 }

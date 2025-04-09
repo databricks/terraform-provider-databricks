@@ -1,3 +1,4 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 // Package common contains the changes used by both internal/providers/sdkv2 and internal/providers/pluginfw packages.
 //
 // Note: This is different from internal/providers which contains the changes that *depends* on both:

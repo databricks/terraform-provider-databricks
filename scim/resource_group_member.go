@@ -122,7 +122,11 @@ func ResourceGroupMember() common.Resource {
 		ReadContext: func(ctx context.Context, groupID, memberID string, c *common.DatabricksClient) error {
 			members, err := globalGroupsCache.GetMembers(NewGroupsAPI(ctx, c), groupID)
 			if err == nil && !hasMember(members, memberID) {
-				return apierr.NotFound(fmt.Sprintf("Group has no member %s %d", memberID, len(members)))
+				return &apierr.APIError{
+					ErrorCode:  "NOT_FOUND",
+					StatusCode: 404,
+					Message:    "Group has no member",
+				}
 			}
 			return err
 		},

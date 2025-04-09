@@ -91,7 +91,9 @@ func ResourceWorkspaceBinding() common.Resource {
 				return fmt.Errorf("incorrect binding id: %s. Correct format: <workspace_id>|<securable_type>|<securable_name>", d.Id())
 			}
 			securableName := parts[2]
-			securableType := catalog.GetBindingsSecurableType(parts[1])
+			// Previously, users could specify "external-location" and "storage-credential" as the securable type.
+			// We need to convert them to "external_location" and "storage_credential" respectively.
+			securableType := catalog.GetBindingsSecurableType(strings.Replace(parts[1], "-", "_", -1))
 			workspaceId, err := strconv.ParseInt(parts[0], 10, 0)
 			if err != nil {
 				return fmt.Errorf("can't parse workspace_id: %w", err)
@@ -108,7 +110,11 @@ func ResourceWorkspaceBinding() common.Resource {
 					return common.StructToData(binding, workspaceBindingSchema, d)
 				}
 			}
-			return apierr.NotFound(fmt.Sprintf("%s has no binding to this workspace", securableName))
+			return &apierr.APIError{
+				ErrorCode:  "NOT_FOUND",
+				StatusCode: 404,
+				Message:    fmt.Sprintf("%s has no binding to this workspace", securableName),
+			}
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()

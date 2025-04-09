@@ -92,7 +92,6 @@ func (v accessControlListValidator) MarkdownDescription(ctx context.Context) str
 func (v accessControlListValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
   var userName, groupName, spID types.String
 
-	// You must check for each field using its path
 	if diags := req.Config.GetAttribute(ctx, path.Root("access_control").AtName("user_name"), &userName); diags.HasError() {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -188,14 +187,15 @@ func (r *PermissionResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
   
+        
+
 	// generate API request from plan
   var acl iam.AccessControlRequest
-  acl.ServicePrincipalName = strings.Trim(plan.AccessControlList.ServicePrincipalId.String(), "\"")
-  acl.GroupName = strings.Trim(plan.AccessControlList.GroupName.String(), "\"")
-  acl.UserName = strings.Trim(plan.AccessControlList.UserName.String(), "\"")
-  acl.PermissionLevel = iam.PermissionLevel(strings.Trim(plan.AccessControlList.PermissionLevel.String(), "\""))
+  acl.ServicePrincipalName = plan.AccessControlList.ServicePrincipalId.ValueString()
+  acl.UserName = plan.AccessControlList.UserName.ValueString()
+  acl.GroupName = plan.AccessControlList.GroupName.ValueString()
+  acl.PermissionLevel = iam.PermissionLevel(plan.AccessControlList.PermissionLevel.ValueString())
 
 
 	// create the permission

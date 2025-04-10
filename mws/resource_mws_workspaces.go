@@ -43,8 +43,7 @@ func verifyWorkspaceReachable(ctx context.Context, w *databricks.WorkspaceClient
 	return retries.New[struct{}](retries.WithRetryFunc(func(err error) bool {
 		var dnsError *net.DNSError
 		if errors.As(err, &dnsError) {
-			err = fmt.Errorf("workspace %s is not yet reachable: %s", w.Config.Host, dnsError)
-			log.Printf("[INFO] %s", err)
+			log.Printf("[INFO] workspace is not yet reachable: %s", dnsError)
 			// expected to retry on: dial tcp: lookup XXX: no such host
 			return true
 		}
@@ -195,6 +194,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			s["is_no_public_ip_enabled"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				return old != ""
 			}
+			s["is_no_public_ip_enabled"].Default = true
 
 			s["pricing_tier"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 

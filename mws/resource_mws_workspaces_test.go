@@ -154,29 +154,6 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 
 func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				Cloud: "gcp",
-				CloudResourceContainer: &provisioning.CloudResourceContainer{
-					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
-						ProjectId: "def",
-					},
-				},
-				Location:                "bcd",
-				PrivateAccessSettingsId: "pas_id_a",
-				NetworkId:               "net_id_a",
-				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-					SubnetCidr: "a",
-				},
-				WorkspaceName: "labdata",
-				CustomTags: map[string]string{
-					"SoldToCode": "1234",
-				},
-			}).Return(nil, &apierr.APIError{
-				ErrorCode: "INVALID_PARAMETER_VALUE",
-				Message:   "custom_tags are only allowed for AWS workspaces",
-			})
-		},
 		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
@@ -478,6 +455,7 @@ func TestResourceWorkspaceRead(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
 		Resource: ResourceMwsWorkspaces(),
 		Read:     true,

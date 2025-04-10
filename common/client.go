@@ -13,6 +13,7 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -54,7 +55,11 @@ type DatabricksClient struct {
 	// callback used to create API1.2 call wrapper, which simplifies unit testing
 	commandFactory        func(context.Context, *DatabricksClient) CommandExecutor
 	cachedWorkspaceClient *databricks.WorkspaceClient
+	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
+	cachedWorkspaceClients map[int64]*databricks.WorkspaceClient
 	cachedAccountClient   *databricks.AccountClient
+
+	// mu synchronizes access to all cached clients.
 	mu                    sync.Mutex
 }
 
@@ -88,6 +93,36 @@ func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.cachedWorkspaceClient = w
+}
+
+func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
+	if !c.Config.IsAccountClient() {
+		return nil, fmt.Errorf("provider must be configured at the account level when calling WorkspaceClientForWorkspace")
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.cachedWorkspaceClients == nil {
+		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
+	}
+	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
+		return client, nil
+	}
+	a, err := c.AccountClient()
+	if err != nil {
+		return nil, err
+	}
+	workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: workspaceId})
+	if err != nil {
+		return nil, err
+	}
+	w, err := a.GetWorkspaceClient(*workspace)
+	if err != nil {
+		return nil, err
+	}
+	w.CurrentUser = newCachedMe(w.CurrentUser)
+	w.Config.AzureResourceID = workspace.AzureResourceId()
+	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
+	return w, nil
 }
 
 // Set the cached account client.

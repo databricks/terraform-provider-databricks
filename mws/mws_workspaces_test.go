@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,19 +78,28 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
+type expectNotDestroyed struct {
+	addr string
+}
+
+func ExpectNotDestroyed(addr string) expectNotDestroyed {
+	return expectNotDestroyed{addr: addr}
+}
+
+func (e expectNotDestroyed) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	for _, resource := range req.Plan.ResourceChanges {
+		if resource.Address != e.addr {
+			continue
+		}
+		actions := resource.Change.Actions
+		if actions.DestroyBeforeCreate() || actions.CreateBeforeDestroy() || actions.Delete() {
+			resp.Error = fmt.Errorf("resource %s is marked for destruction", e.addr)
+			return
+		}
+	}
+}
+
 func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
-	baseTemplate := `
-		resource "databricks_mws_credentials" "this" {
-			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
-			credentials_name = "credentials-ws-{var.RANDOM}"
-			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
-		}
-		resource "databricks_mws_storage_configurations" "this" {
-			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
-			storage_configuration_name = "storage-ws-{var.RANDOM}"
-			bucket_name                = "{env.TEST_ROOT_BUCKET}"
-		}
-		`
 	tokenUpdateTemplate := func(token, customTags string) string {
 		tokenBlock := ``
 		if token != "" {
@@ -105,7 +115,17 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 				%s
 			}`, customTags)
 		}
-		return fmt.Sprintf(baseTemplate+`
+		return fmt.Sprintf(`
+		resource "databricks_mws_credentials" "this" {
+			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
+			credentials_name = "credentials-ws-{var.STICKY_RANDOM}"
+			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
+		}
+		resource "databricks_mws_storage_configurations" "this" {
+			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
+			storage_configuration_name = "storage-ws-{var.STICKY_RANDOM}"
+			bucket_name                = "{env.TEST_ROOT_BUCKET}"
+		}
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
 			workspace_name  = "terra-{var.STICKY_RANDOM}"
@@ -115,9 +135,7 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
 
 			%s
-			custom_tags = {
-				%s
-			}
+			%s
 		}`, tokenBlock, customTagsBlock)
 	}
 
@@ -129,7 +147,7 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 			}
 			a := databricks.Must(databricks.NewAccountClient())
 			ctx := context.Background()
-			workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: common.MustInt64(state.Primary.ID)})
+			workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: common.MustInt64(state.Primary.Attributes["workspace_id"])})
 			assert.NoError(t, err)
 
 			w, err := a.GetWorkspaceClient(*workspace)
@@ -145,7 +163,11 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 		tokens := w.Tokens.List(context.Background())
 		ctx := context.Background()
 		for tokens.HasNext(ctx) {
-			if token, err := tokens.Next(ctx); err != nil && token.TokenId == tokenId {
+			token, err := tokens.Next(ctx)
+			if err != nil {
+				return fmt.Errorf("error fetching tokens: %w", err)
+			}
+			if token.TokenId == tokenId {
 				return nil
 			}
 		}
@@ -159,6 +181,9 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 	}, acceptance.Step{
 		// Updating the comment causes the old token to be deleted and a new one to be created
 		Template: tokenUpdateTemplate(`comment = "test bar"`, ""),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 		Check: resource.ComposeAggregateTestCheckFunc(
 			checkTokenExists,
 			// Capture the token ID at the end of this step to verify it is not changed in future steps.
@@ -175,6 +200,9 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 	}, acceptance.Step{
 		// Modifying the tags doesn't change the token but does modify the workspace.
 		Template: tokenUpdateTemplate(`comment = "test bar"`, `"Key" = "Value"`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 		Check: func(s *terraform.State) error {
 			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
 			if !ok {
@@ -188,6 +216,9 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 	}, acceptance.Step{
 		// It is also possible to modify the token comment and tags at the same time.
 		Template: tokenUpdateTemplate(`comment = "test quux"`, `"Key" = "Value2"`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 		Check: func(s *terraform.State) error {
 			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
 			if !ok {

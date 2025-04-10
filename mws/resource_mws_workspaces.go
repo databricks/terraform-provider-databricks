@@ -30,11 +30,11 @@ const DefaultProvisionTimeout = 20 * time.Minute
 
 // Workspace is the object that contains all the information for deploying a workspace
 type Workspace struct {
-	*provisioning.Workspace
+	provisioning.Workspace
 	CustomerManagedKeyID string `json:"customer_managed_key_id,omitempty"` // just for compatibility, will be removed
+	GcpWorkspaceSa       string `json:"gcp_workspace_sa" tf:"computed"`
 	Token                *Token `json:"token,omitempty"`
 	WorkspaceURL         string `json:"workspace_url,omitempty" tf:"computed"`
-	GcpWorkspaceSa       string `json:"gcp_workspace_sa" tf:"computed"`
 }
 
 // wait for DNS caches to refresh, as sometimes we cannot make
@@ -286,7 +286,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err := verifyWorkspaceReachable(ctx, w); err != nil {
 				return err
 			}
-			workspaceConfig.Workspace = workspace
+			workspaceConfig.Workspace = *workspace
 			workspaceConfig.WorkspaceURL = fmt.Sprintf("https://%s", w.Config.CanonicalHostName())
 			if c.IsGcp() {
 				workspaceConfig.GcpWorkspaceSa = fmt.Sprintf("db-%d@prod-gcp-%s.iam.gserviceaccount.com", workspace.WorkspaceId, workspace.Location)
@@ -299,8 +299,11 @@ func ResourceMwsWorkspaces() common.Resource {
 					return err
 				}
 			}
+			if err := common.StructToData(workspaceConfig, workspaceSchema, d); err != nil {
+				return err
+			}
 			p.Pack(d)
-			return common.StructToData(workspaceConfig, workspaceSchema, d)
+			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			a, err := c.AccountClient()
@@ -325,7 +328,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			// Default the value of `is_no_public_ip_enabled` because it isn't part of the GET payload.
 			// The field is only used on creation and we therefore suppress all diffs.
 			workspace.IsNoPublicIpEnabled = true
-			workspaceConfig.Workspace = workspace
+			workspaceConfig.Workspace = *workspace
 			_, err = a.Workspaces.WaitGetWorkspaceRunning(ctx, workspace.WorkspaceId, d.Timeout(schema.TimeoutRead), nil)
 			if err != nil {
 				return err
@@ -350,6 +353,10 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.DataToStructPointer(d, workspaceSchema, &updateWorkspaceRequest)
 			var workspaceConfig Workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspaceConfig)
+			// WorkspaceId in UpdateWorkspaceRequest is a path parameter, thus tagged with `json:"-"`.
+			// This causes it not to be set in DataToStructPointer. Instead, the workspace ID can be
+			// retrieved from Workspace.
+			updateWorkspaceRequest.WorkspaceId = workspaceConfig.WorkspaceId
 			if customerManagedKeyId, ok := d.GetOk("customer_managed_key_id"); ok && updateWorkspaceRequest.ManagedServicesCustomerManagedKeyId == "" {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				updateWorkspaceRequest.ManagedServicesCustomerManagedKeyId = customerManagedKeyId.(string)
@@ -365,21 +372,21 @@ func ResourceMwsWorkspaces() common.Resource {
 				if err != nil {
 					return fmt.Errorf("%w: %w", err, explainWorkspaceFailure(ctx, a, workspace))
 				}
-				workspaceConfig.Workspace = workspace
+				workspaceConfig.Workspace = *workspace
 			}
 
 			// If the `token` field has been modified, update the token correspondingly.
 			if d.HasChange("token") {
-				w, err := a.GetWorkspaceClient(*workspaceConfig.Workspace)
+				w, err := a.GetWorkspaceClient(workspaceConfig.Workspace)
 				if err != nil {
 					return err
 				}
 
 				// If there was a token present in the config before, revoke it.
 				rawOld, _ := d.GetChange("token")
-				oldToken := rawOld.([]map[string]any)
-				if len(oldToken) > 0 {
-					raw := oldToken[0]
+				oldTokens := rawOld.([]any)
+				if len(oldTokens) > 0 {
+					raw := oldTokens[0].(map[string]any)
 					id := raw["token_id"].(string)
 					if err := removeToken(ctx, w, id); err != nil {
 						return err

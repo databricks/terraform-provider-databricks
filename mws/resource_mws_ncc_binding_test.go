@@ -2,30 +2,36 @@ package mws
 
 import (
 	"testing"
+	"time"
 
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
+
+var mockWorkspace = &provisioning.Workspace{
+	WorkspaceId:     123456789,
+	WorkspaceStatus: provisioning.WorkspaceStatusRunning,
+}
+
+var mockWaiter = &provisioning.WaitGetWorkspaceRunning[struct{}]{
+	WorkspaceId: 123456789,
+	Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
+		return mockWorkspace, nil
+	},
+}
 
 func TestResourceNccBindingCreate(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
-				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					NetworkConnectivityConfigId: "ncc_id",
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/accounts/abc/workspaces/123456789?",
-				Response: Workspace{
-					WorkspaceStatus: WorkspaceStatusRunning,
-					WorkspaceID:     123456789,
-				},
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
+				WorkspaceId:                 123456789,
+				NetworkConnectivityConfigId: "ncc_id",
+			}).Return(mockWaiter, nil)
+			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+				WorkspaceId: 123456789,
+			}).Return(mockWorkspace, nil)
 		},
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",
@@ -39,23 +45,14 @@ func TestResourceNccBindingCreate(t *testing.T) {
 
 func TestResourceNccBindingUpdate(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "PATCH",
-				Resource: "/api/2.0/accounts/abc/workspaces/123456789",
-				ExpectedRequest: provisioning.UpdateWorkspaceRequest{
-					NetworkConnectivityConfigId: "new_ncc_id",
-				},
-			},
-			{
-				Method:       "GET",
-				ReuseRequest: true,
-				Resource:     "/api/2.0/accounts/abc/workspaces/123456789?",
-				Response: Workspace{
-					WorkspaceStatus: WorkspaceStatusRunning,
-					WorkspaceID:     123456789,
-				},
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
+				WorkspaceId:                 123456789,
+				NetworkConnectivityConfigId: "new_ncc_id",
+			}).Return(mockWaiter, nil)
+			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+				WorkspaceId: 123456789,
+			}).Return(mockWorkspace, nil)
 		},
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",

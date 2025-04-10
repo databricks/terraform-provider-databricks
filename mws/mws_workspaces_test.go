@@ -10,14 +10,15 @@ import (
 
 	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/logger"
+	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/internal/acceptance"
 	"github.com/databricks/terraform-provider-databricks/internal/providers"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/sdkv2"
-	"github.com/databricks/terraform-provider-databricks/tokens"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -76,153 +77,128 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
-func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
-	acceptance.AccountLevel(t, acceptance.Step{
-		Template: `
+func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
+	baseTemplate := `
 		resource "databricks_mws_credentials" "this" {
 			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
 			credentials_name = "credentials-ws-{var.RANDOM}"
 			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
-		}
-		resource "databricks_mws_customer_managed_keys" "this" {
-			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-			aws_key_info {
-				key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
-				key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
-			}
-			use_cases = ["MANAGED_SERVICES"]
 		}
 		resource "databricks_mws_storage_configurations" "this" {
 			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
 			storage_configuration_name = "storage-ws-{var.RANDOM}"
 			bucket_name                = "{env.TEST_ROOT_BUCKET}"
 		}
-		resource "databricks_mws_networks" "this" {
-			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-			network_name = "network-ws-{var.RANDOM}"
-			vpc_id       = "{env.TEST_VPC_ID}"
-			subnet_ids   = [
-				"{env.TEST_SUBNET_PRIVATE}",
-				"{env.TEST_SUBNET_PRIVATE2}",
-			]
-			security_group_ids = [
-				"{env.TEST_SECURITY_GROUP}",
-			]
-		}			
+		`
+	tokenUpdateTemplate := func(token, customTags string) string {
+		tokenBlock := ``
+		if token != "" {
+			tokenBlock = fmt.Sprintf(`
+			token {
+				%s
+			}`, token)
+		}
+		customTagsBlock := ``
+		if customTags != "" {
+			customTagsBlock = fmt.Sprintf(`
+			custom_tags = {
+				%s
+			}`, customTags)
+		}
+		return fmt.Sprintf(baseTemplate+`
 		resource "databricks_mws_workspaces" "this" {
 			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
-			workspace_name  = "terra-{var.RANDOM}"
+			workspace_name  = "terra-{var.STICKY_RANDOM}"
 			aws_region      = "{env.AWS_REGION}"
 	
-			network_id = databricks_mws_networks.this.network_id
 			credentials_id = databricks_mws_credentials.this.credentials_id
 			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
-			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
 
-			token {
-				comment = "test foo"
+			%s
+			custom_tags = {
+				%s
 			}
-		}`,
-		Check: acceptance.ResourceCheckWithState("databricks_mws_workspaces.this",
-			func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
-				workspaceUrl, ok := state.Attributes["workspace_url"]
-				assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
+		}`, tokenBlock, customTagsBlock)
+	}
 
-				workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
-				assert.NoError(t, err)
+	checkWorkspace := func(f func(instanceState map[string]string, w *databricks.WorkspaceClient) error) func(*terraform.State) error {
+		return func(s *terraform.State) error {
+			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("resource not found in state")
+			}
+			a := databricks.Must(databricks.NewAccountClient())
+			ctx := context.Background()
+			workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: common.MustInt64(state.Primary.ID)})
+			assert.NoError(t, err)
 
-				tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
-				tokens, err := tokensAPI.List()
-				assert.NoError(t, err)
+			w, err := a.GetWorkspaceClient(*workspace)
+			assert.NoError(t, err)
 
-				foundFoo := false
-				foundBar := false
-				for _, token := range tokens {
-					if token.Comment == "test foo" {
-						foundFoo = true
-					}
-					if token.Comment == "test bar" {
-						foundBar = true
-					}
-				}
-				assert.True(t, foundFoo)
-				assert.False(t, foundBar)
+			return f(state.Primary.Attributes, w)
+		}
+	}
+
+	checkTokenExists := checkWorkspace(func(instanceState map[string]string, w *databricks.WorkspaceClient) error {
+		tokenId := instanceState["token.0.token_id"]
+		assert.NotEmpty(t, tokenId)
+		tokens := w.Tokens.List(context.Background())
+		ctx := context.Background()
+		for tokens.HasNext(ctx) {
+			if token, err := tokens.Next(ctx); err != nil && token.TokenId == tokenId {
 				return nil
-			}),
-	},
-		acceptance.Step{
-			Template: `
-		resource "databricks_mws_credentials" "this" {
-			account_id       = "{env.DATABRICKS_ACCOUNT_ID}"
-			credentials_name = "credentials-ws-{var.RANDOM}"
-			role_arn         = "{env.TEST_CROSSACCOUNT_ARN}"
-		}
-		resource "databricks_mws_customer_managed_keys" "this" {
-			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-			aws_key_info {
-				key_arn   = "{env.TEST_MANAGED_KMS_KEY_ARN}"
-				key_alias = "{env.TEST_MANAGED_KMS_KEY_ALIAS}"
 			}
-			use_cases = ["MANAGED_SERVICES"]
 		}
-		resource "databricks_mws_storage_configurations" "this" {
-			account_id                 = "{env.DATABRICKS_ACCOUNT_ID}"
-			storage_configuration_name = "storage-ws-{var.RANDOM}"
-			bucket_name                = "{env.TEST_ROOT_BUCKET}"
-		}
-		resource "databricks_mws_networks" "this" {
-			account_id   = "{env.DATABRICKS_ACCOUNT_ID}"
-			network_name = "network-ws-{var.RANDOM}"
-			vpc_id       = "{env.TEST_VPC_ID}"
-			subnet_ids   = [
-				"{env.TEST_SUBNET_PRIVATE}",
-				"{env.TEST_SUBNET_PRIVATE2}",
-			]
-			security_group_ids = [
-				"{env.TEST_SECURITY_GROUP}",
-			]
-		}			
-		resource "databricks_mws_workspaces" "this" {
-			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
-			workspace_name  = "terra-{var.RANDOM}"
-			aws_region      = "{env.AWS_REGION}"
-	
-			network_id = databricks_mws_networks.this.network_id
-			credentials_id = databricks_mws_credentials.this.credentials_id
-			storage_configuration_id = databricks_mws_storage_configurations.this.storage_configuration_id
-			managed_services_customer_managed_key_id = databricks_mws_customer_managed_keys.this.customer_managed_key_id
+		return fmt.Errorf("token %s not found", tokenId)
+	})
 
-			token {
-				comment = "test bar"
+	var oldTokenId string
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: tokenUpdateTemplate(`comment = "test foo"`, ""),
+		Check:    checkTokenExists,
+	}, acceptance.Step{
+		// Updating the comment causes the old token to be deleted and a new one to be created
+		Template: tokenUpdateTemplate(`comment = "test bar"`, ""),
+		Check: resource.ComposeAggregateTestCheckFunc(
+			checkTokenExists,
+			// Capture the token ID at the end of this step to verify it is not changed in future steps.
+			func(s *terraform.State) error {
+				state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+				if !ok {
+					return fmt.Errorf("resource not found in state")
+				}
+				instanceState := state.Primary.Attributes
+				oldTokenId = instanceState["token.0.token_id"]
+				return nil
+			},
+		),
+	}, acceptance.Step{
+		// Modifying the tags doesn't change the token but does modify the workspace.
+		Template: tokenUpdateTemplate(`comment = "test bar"`, `"Key" = "Value"`),
+		Check: func(s *terraform.State) error {
+			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("resource not found in state")
 			}
-		}`,
-			Check: acceptance.ResourceCheckWithState("databricks_mws_workspaces.this",
-				func(ctx context.Context, client *common.DatabricksClient, state *terraform.InstanceState) error {
-					workspaceUrl, ok := state.Attributes["workspace_url"]
-					assert.True(t, ok, "workspace_url is absent from databricks_mws_workspaces instance state")
-
-					workspaceClient, err := client.ClientForHost(ctx, workspaceUrl)
-					assert.NoError(t, err)
-
-					tokensAPI := tokens.NewTokensAPI(ctx, workspaceClient)
-					tokens, err := tokensAPI.List()
-					assert.NoError(t, err)
-
-					foundFoo := false
-					foundBar := false
-					for _, token := range tokens {
-						if token.Comment == "test foo" {
-							foundFoo = true
-						}
-						if token.Comment == "test bar" {
-							foundBar = true
-						}
-					}
-					assert.False(t, foundFoo)
-					assert.True(t, foundBar)
-					return nil
-				}),
-		})
+			instanceState := state.Primary.Attributes
+			assert.Equal(t, instanceState["custom_tags.Key"], "Value")
+			assert.Equal(t, instanceState["token.0.token_id"], oldTokenId)
+			return nil
+		},
+	}, acceptance.Step{
+		// It is also possible to modify the token comment and tags at the same time.
+		Template: tokenUpdateTemplate(`comment = "test quux"`, `"Key" = "Value2"`),
+		Check: func(s *terraform.State) error {
+			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
+			if !ok {
+				return fmt.Errorf("resource not found in state")
+			}
+			instanceState := state.Primary.Attributes
+			assert.Equal(t, instanceState["custom_tags.Key"], "Value2")
+			assert.NotEqual(t, instanceState["token.0.token_id"], oldTokenId)
+			return nil
+		},
+	})
 }
 
 func TestMwsAccGcpWorkspaces(t *testing.T) {

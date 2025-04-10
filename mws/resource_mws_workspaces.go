@@ -63,7 +63,7 @@ func explainWorkspaceFailure(ctx context.Context, a *databricks.AccountClient, w
 	}
 	network, err := a.Networks.Get(ctx, provisioning.GetNetworkRequest{NetworkId: workspace.NetworkId})
 	if err != nil {
-		return fmt.Errorf("%s; cannot read network: %w", errorBase, err)
+		return fmt.Errorf("%s; network error message: cannot read network: %w", errorBase, err)
 	}
 	var strBuffer bytes.Buffer
 	for _, networkHealth := range network.ErrorMessages {
@@ -119,21 +119,24 @@ func isInvalidClient(err error) bool {
 }
 
 func ensureTokenExists(ctx context.Context, w *databricks.WorkspaceClient, token *Token) error {
-	_, err := w.CurrentUser.Me(ctx)
-	// If we cannot authenticate to the workspace and we're using an in-house OAuth principal,
-	// log a warning but do not fail. This can happen if the provider is authenticated with a
-	// different principal than was used to create the workspace.
-	if isInvalidClient(err) {
-		tflog.Debug(ctx, fmt.Sprintf("unable to fetch token with ID %s from workspace using the provided service principal, continuing", token.TokenID))
-		return nil
+	tokens := w.Tokens.List(ctx)
+	for tokens.HasNext(ctx) {
+		t, err := tokens.Next(ctx)
+		// If we cannot authenticate to the workspace and we're using an in-house OAuth principal,
+		// log a warning but do not fail. This can happen if the provider is authenticated with a
+		// different principal than was used to create the workspace.
+		if isInvalidClient(err) {
+			tflog.Debug(ctx, fmt.Sprintf("unable to fetch token with ID %s from workspace using the provided service principal, continuing", token.TokenID))
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("cannot read token: %w", err)
+		}
+		if t.TokenId == token.TokenID {
+			return nil
+		}
 	}
-	if apierr.IsMissing(err) {
-		return createToken(ctx, w, token)
-	}
-	if err != nil {
-		return fmt.Errorf("cannot read token: %w", err)
-	}
-	return nil
+	return createToken(ctx, w, token)
 }
 
 func removeToken(ctx context.Context, w *databricks.WorkspaceClient, tokenID string) error {
@@ -270,7 +273,12 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			workspace, err := wait.GetWithTimeout(d.Timeout(schema.TimeoutCreate))
 			if err != nil {
-				err = fmt.Errorf("%w: %w", err, explainWorkspaceFailure(ctx, a, workspace))
+				workspace, getErr := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: wait.Response.WorkspaceId})
+				if getErr != nil {
+					err = fmt.Errorf("workspace creation failed: %w; failed to get workspace: %w", err, getErr)
+				} else {
+					err = fmt.Errorf("%w: %w", err, explainWorkspaceFailure(ctx, a, workspace))
+				}
 				log.Printf("[ERROR] Deleting failed workspace: %s", err)
 				if derr := a.Workspaces.Delete(ctx, provisioning.DeleteWorkspaceRequest{WorkspaceId: wait.Response.WorkspaceId}); derr != nil {
 					return fmt.Errorf("workspace creation failed: %w; failed workspace cleanup failed: %w", err, derr)
@@ -279,7 +287,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 
 			// Once the workspace is running, wait for the API to be available by polling the SCIM Me endpoint.
-			w, err := a.GetWorkspaceClient(*workspace)
+			w, err := c.WorkspaceClientForWorkspace(ctx, workspace.WorkspaceId)
 			if err != nil {
 				return err
 			}
@@ -287,7 +295,7 @@ func ResourceMwsWorkspaces() common.Resource {
 				return err
 			}
 			workspaceConfig.Workspace = *workspace
-			workspaceConfig.WorkspaceURL = fmt.Sprintf("https://%s", w.Config.CanonicalHostName())
+			workspaceConfig.WorkspaceURL = w.Config.CanonicalHostName()
 			if c.IsGcp() {
 				workspaceConfig.GcpWorkspaceSa = fmt.Sprintf("db-%d@prod-gcp-%s.iam.gserviceaccount.com", workspace.WorkspaceId, workspace.Location)
 			}
@@ -333,10 +341,11 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err != nil {
 				return err
 			}
-			w, err := a.GetWorkspaceClient(*workspace)
+			w, err := c.WorkspaceClientForWorkspace(ctx, workspace.WorkspaceId)
 			if err != nil {
 				return err
 			}
+			workspaceConfig.WorkspaceURL = w.Config.CanonicalHostName()
 			if workspaceConfig.Token != nil {
 				if err := ensureTokenExists(ctx, w, workspaceConfig.Token); err != nil {
 					return err
@@ -377,7 +386,7 @@ func ResourceMwsWorkspaces() common.Resource {
 
 			// If the `token` field has been modified, update the token correspondingly.
 			if d.HasChange("token") {
-				w, err := a.GetWorkspaceClient(workspaceConfig.Workspace)
+				w, err := c.WorkspaceClientForWorkspace(ctx, workspaceConfig.WorkspaceId)
 				if err != nil {
 					return err
 				}

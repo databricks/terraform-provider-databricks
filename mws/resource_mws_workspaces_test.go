@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/listing"
 	"github.com/databricks/databricks-sdk-go/service/iam"
@@ -19,6 +20,34 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+func mockScimMe(c *mocks.MockWorkspaceClient) {
+	c.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "me@hello.com"}, nil)
+}
+
+func setConfigHost(host string) func(*mocks.MockWorkspaceClient) {
+	return func(c *mocks.MockWorkspaceClient) {
+		c.WorkspaceClient.Config = &config.Config{
+			Host: host,
+		}
+	}
+}
+
+func setDefaultConfigHost(c *mocks.MockWorkspaceClient) {
+	c.WorkspaceClient.Config = &config.Config{
+		Host: "900150983cd24fb0.cloud.databricks.com",
+	}
+}
+
+func basicMockWorkspaceClients(t *testing.T, configs ...func(*mocks.MockWorkspaceClient)) func(map[int64]*mocks.MockWorkspaceClient) {
+	return func(m map[int64]*mocks.MockWorkspaceClient) {
+		c := mocks.NewMockWorkspaceClient(t)
+		for _, config := range configs {
+			config(c)
+		}
+		m[1234] = c
+	}
+}
 
 func TestResourceWorkspaceCreate(t *testing.T) {
 	// Define a mock workspace that can be reused
@@ -66,8 +95,10 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -114,14 +145,15 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				Cloud: "gcp",
 				CloudResourceContainer: &provisioning.CloudResourceContainer{
 					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
 						ProjectId: "def",
 					},
 				},
-				Location:  "bcd",
-				NetworkId: "net_id_a",
+				DeploymentName:      "900150983cd24fb0",
+				IsNoPublicIpEnabled: true,
+				Location:            "bcd",
+				NetworkId:           "net_id_a",
 				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
 					SubnetCidr: "a",
 				},
@@ -130,8 +162,10 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -206,12 +240,13 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				Cloud: "gcp",
 				CloudResourceContainer: &provisioning.CloudResourceContainer{
 					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
 						ProjectId: "def",
 					},
 				},
+				DeploymentName:          "900150983cd24fb0",
+				IsNoPublicIpEnabled:     true,
 				Location:                "bcd",
 				PrivateAccessSettingsId: "pas_id_a",
 				NetworkId:               "net_id_a",
@@ -223,8 +258,11 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -274,12 +312,13 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				Cloud: "gcp",
 				CloudResourceContainer: &provisioning.CloudResourceContainer{
 					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
 						ProjectId: "def",
 					},
 				},
+				DeploymentName:          "900150983cd24fb0",
+				IsNoPublicIpEnabled:     true,
 				Location:                "bcd",
 				PrivateAccessSettingsId: "pas_id_a",
 				NetworkId:               "net_id_a",
@@ -293,8 +332,10 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -358,8 +399,10 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -416,8 +459,10 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		State: map[string]any{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
@@ -457,10 +502,11 @@ func TestResourceWorkspaceRead(t *testing.T) {
 			}).Return(mockWorkspace, nil)
 			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
-		Read:     true,
-		New:      true,
-		ID:       "abc/1234",
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
+		Resource:                 ResourceMwsWorkspaces(),
+		Read:                     true,
+		New:                      true,
+		ID:                       "abc/1234",
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
@@ -499,7 +545,9 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setConfigHost("prefix-900150983cd24fb0.cloud.databricks.com")),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -597,16 +645,21 @@ func TestResourceWorkspaceUpdate(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                 1234,
-				CredentialsId:               "bcd",
-				NetworkId:                   "fgh",
-				StorageCustomerManagedKeyId: "def",
+				WorkspaceId:                         1234,
+				AwsRegion:                           "us-east-1",
+				ManagedServicesCustomerManagedKeyId: "def",
+				CredentialsId:                       "bcd",
+				NetworkId:                           "fgh",
+				StorageCustomerManagedKeyId:         "def",
+				StorageConfigurationId:              "ghi",
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
+		Resource:                 ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -702,19 +755,24 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:   1234,
-				CredentialsId: "bcd",
-				NetworkId:     "fgh",
+				WorkspaceId:                         1234,
+				AwsRegion:                           "us-east-1",
+				ManagedServicesCustomerManagedKeyId: "def",
+				StorageConfigurationId:              "ghi",
+				CredentialsId:                       "bcd",
+				NetworkId:                           "fgh",
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
+		Resource:                 ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
-			"credentials_id":           "bcd",
+			"credentials_id":           "old",
 			"customer_managed_key_id":  "def",
 			"deployment_name":          "900150983cd24fb0",
 			"is_no_public_ip_enabled":  "true",
@@ -745,10 +803,13 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                 1234,
-				CredentialsId:               "bcd",
-				NetworkId:                   "fgh",
-				StorageCustomerManagedKeyId: "def",
+				WorkspaceId:                         1234,
+				AwsRegion:                           "us-east-1",
+				ManagedServicesCustomerManagedKeyId: "def",
+				StorageConfigurationId:              "ghi",
+				CredentialsId:                       "bcd",
+				NetworkId:                           "fgh",
+				StorageCustomerManagedKeyId:         "def",
 			}).Return(nil, &apierr.APIError{
 				ErrorCode:  "INVALID_REQUEST",
 				Message:    "Internal error happened",
@@ -756,6 +817,19 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			})
 		},
 		Resource: ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "old",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"is_no_public_ip_enabled":                  "true",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+		},
 		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -768,9 +842,8 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             1234,
 		},
-		Update:      true,
-		RequiresNew: true,
-		ID:          "abc/1234",
+		Update: true,
+		ID:     "abc/1234",
 	}.ExpectError(t, "Internal error happened")
 }
 
@@ -822,8 +895,9 @@ func TestCreateFailsAndCleansUp(t *testing.T) {
 	// Create a mock waiter
 	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
 		WorkspaceId: 1234,
+		Response:    mockFailedWorkspace,
 		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockFailedWorkspace, nil
+			return nil, errors.New("failed to reach RUNNING, got FAILED")
 		},
 	}
 
@@ -891,7 +965,7 @@ func TestCreateFailsAndCleansUp(t *testing.T) {
 		},
 		Create: true,
 	}.Apply(t)
-	assert.ErrorContains(t, err, "Workspace failed to create: Always fails, network error message: error: CREDENTIALS;error_msg: Message;")
+	assert.ErrorContains(t, err, "workspace status message: Always fails, network error message: error: credentials;error_msg: Message;")
 }
 
 func TestWorkspace_verifyWorkspaceReachable(t *testing.T) {
@@ -955,7 +1029,7 @@ func TestEnsureTokenExists(t *testing.T) {
 	err := ensureTokenExists(context.Background(), mockClient.WorkspaceClient, token)
 	assert.NoError(t, err)
 	assert.Equal(t, token.TokenID, "new-id")
-	assert.Equal(t, token.TokenValue, "new-value")
+	assert.Equal(t, token.TokenValue, SensitiveString("new-value"))
 }
 
 func TestEnsureTokenExists_NoRecreate(t *testing.T) {
@@ -1003,7 +1077,7 @@ func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
 			NetworkId:              "abc",
 			WorkspaceStatusMessage: "🔥",
 		}
-		assert.EqualError(t, explainWorkspaceFailure(context.Background(), mockClient.AccountClient, ws), "workspace status message: 🔥, network error message: cannot read network: 🐜")
+		assert.EqualError(t, explainWorkspaceFailure(context.Background(), mockClient.AccountClient, ws), "workspace status message: 🔥; network error message: cannot read network: 🐜")
 	})
 }
 
@@ -1036,19 +1110,24 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			// Expect the Update call
 			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                 1234,
-				CredentialsId:               "bcd",
-				NetworkId:                   "fgh",
-				StorageCustomerManagedKeyId: "def",
-				PrivateAccessSettingsId:     "pas",
+				WorkspaceId:                         1234,
+				AwsRegion:                           "us-east-1",
+				ManagedServicesCustomerManagedKeyId: "def",
+				StorageConfigurationId:              "ghi",
+				CredentialsId:                       "bcd",
+				NetworkId:                           "fgh",
+				StorageCustomerManagedKeyId:         "def",
+				PrivateAccessSettingsId:             "pas",
 			}).Return(mockWaiter, nil)
 
 			// Expect the Get call to retrieve the updated workspace
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
+		Resource:                 ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -1146,22 +1225,25 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			// Expect the Create call
 			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				Cloud: "gcp",
 				CloudResourceContainer: &provisioning.CloudResourceContainer{
 					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
 						ProjectId: "def",
 					},
 				},
-				Location:      "bcd",
-				WorkspaceName: "labdata",
+				IsNoPublicIpEnabled: true,
+				DeploymentName:      "900150983cd24fb0",
+				Location:            "bcd",
+				WorkspaceName:       "labdata",
 			}).Return(mockWaiter, nil)
 
 			// Expect the Get call to retrieve the workspace
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
 			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
 		},
-		Resource: ResourceMwsWorkspaces(),
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
+		Resource:                 ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"

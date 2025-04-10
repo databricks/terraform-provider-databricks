@@ -1,12 +1,12 @@
 package mws
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -40,7 +40,7 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 func TestDataSourceMwsWorkspaces_Error(t *testing.T) {
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return(nil, assert.AnError)
+			a.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return(nil, errors.New("i'm a teapot"))
 		},
 		AccountID:   "abc",
 		Resource:    DataSourceMwsWorkspaces(),

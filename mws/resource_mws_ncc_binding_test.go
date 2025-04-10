@@ -29,9 +29,6 @@ func TestResourceNccBindingCreate(t *testing.T) {
 				WorkspaceId:                 123456789,
 				NetworkConnectivityConfigId: "ncc_id",
 			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 123456789,
-			}).Return(mockWorkspace, nil)
 		},
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",
@@ -50,9 +47,6 @@ func TestResourceNccBindingUpdate(t *testing.T) {
 				WorkspaceId:                 123456789,
 				NetworkConnectivityConfigId: "new_ncc_id",
 			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 123456789,
-			}).Return(mockWorkspace, nil)
 		},
 		Resource:  ResourceMwsNccBinding(),
 		AccountID: "abc",

@@ -219,6 +219,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "subnet_cidr").SetRequired()
 			common.CustomizeSchemaPath(s, "workspace_name").SetRequired()
+			common.CustomizeSchemaPath(s, "cloud_resource_container", "gcp").SetMinItems(1)
 			common.CustomizeSchemaPath(s, "cloud_resource_container", "gcp", "project_id").SetRequired()
 			for _, field := range []string{"authoritative_user_email", "authoritative_user_full_name", "customer_name"} {
 				common.CustomizeSchemaPath(s, "external_customer_info", field).SetRequired()

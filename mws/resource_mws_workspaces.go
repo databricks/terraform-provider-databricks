@@ -154,6 +154,7 @@ func removeToken(ctx context.Context, w *databricks.WorkspaceClient, tokenID str
 // ResourceMwsWorkspaces manages E2 workspaces
 func ResourceMwsWorkspaces() common.Resource {
 	var computedFields = map[string]struct{}{
+		"cloud":                    {},
 		"workspace_id":             {},
 		"workspace_url":            {},
 		"workspace_status":         {},
@@ -184,6 +185,7 @@ func ResourceMwsWorkspaces() common.Resource {
 				}
 			}
 			s["account_id"].Sensitive = true
+			common.CustomizeSchemaPath(s, "account_id").SetRequired()
 			s["deployment_name"].DiffSuppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 				if old == "" && new != "" {
 					return false
@@ -215,6 +217,12 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "subnet_cidr").SetRequired()
+			common.CustomizeSchemaPath(s, "workspace_name").SetRequired()
+			common.CustomizeSchemaPath(s, "cloud_resource_container", "gcp", "project_id").SetRequired()
+			for _, field := range []string{"authoritative_user_email", "authoritative_user_full_name", "customer_name"} {
+				common.CustomizeSchemaPath(s, "external_customer_info", field).SetRequired()
+			}
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(

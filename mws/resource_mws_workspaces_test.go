@@ -290,6 +290,7 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 		WorkspaceId:             1234,
 		WorkspaceStatus:         provisioning.WorkspaceStatusRunning,
 		WorkspaceName:           "labdata",
+		AccountId:               "abc",
 		DeploymentName:          "900150983cd24fb0",
 		Cloud:                   "gcp",
 		Location:                "bcd",

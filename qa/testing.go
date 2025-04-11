@@ -80,6 +80,8 @@ type ResourceFixture struct {
 
 	MockWorkspaceClientFunc func(*mocks.MockWorkspaceClient)
 
+	MockWorkspaceClientsFunc func(map[int64]*mocks.MockWorkspaceClient)
+
 	MockAccountClientFunc func(*mocks.MockAccountClient)
 
 	// The resource the unit test is testing.
@@ -203,10 +205,10 @@ func (f ResourceFixture) setDatabricksEnvironmentForTest(client *common.Databric
 }
 
 func (f ResourceFixture) validateMocks() error {
-	isMockConfigured := f.MockAccountClientFunc != nil || f.MockWorkspaceClientFunc != nil
+	isMockConfigured := f.MockAccountClientFunc != nil || f.MockWorkspaceClientFunc != nil || f.MockWorkspaceClientsFunc != nil
 	isFixtureConfigured := f.Fixtures != nil
 	if isFixtureConfigured && isMockConfigured {
-		return fmt.Errorf("either (MockWorkspaceClientFunc, MockAccountClientFunc) or Fixtures may be set, not both")
+		return fmt.Errorf("either (MockWorkspaceClientFunc, MockWorkspaceClientsFunc, MockAccountClientFunc) or Fixtures may be set, not both")
 	}
 	return nil
 }
@@ -230,9 +232,13 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 		return client, ss, err
 	}
 	mw := mocks.NewMockWorkspaceClient(t)
+	mws := map[int64]*mocks.MockWorkspaceClient{}
 	ma := mocks.NewMockAccountClient(t)
 	if f.MockWorkspaceClientFunc != nil {
 		f.MockWorkspaceClientFunc(mw)
+	}
+	if f.MockWorkspaceClientsFunc != nil {
+		f.MockWorkspaceClientsFunc(mws)
 	}
 	if f.MockAccountClientFunc != nil {
 		f.MockAccountClientFunc(ma)
@@ -244,6 +250,9 @@ func (f ResourceFixture) setupClient(t *testing.T) (*common.DatabricksClient, se
 	}
 	c.SetWorkspaceClient(mw.WorkspaceClient)
 	c.SetAccountClient(ma.AccountClient)
+	for workspaceId, client := range mws {
+		c.SetWorkspaceClientForWorkspace(workspaceId, client.WorkspaceClient)
+	}
 	c.Config.Credentials = testCredentialsProvider{token: token}
 	return c, server{
 		Close: func() {},

@@ -11,3 +11,5 @@
 ### Exporter
 
 ### Internal Changes
+
+* Refactor `databricks_mws_workspaces` resource and datasource, as well as `databricks_mws_ncc_binding`, to use the Go SDK ([#4633](https://github.com/databricks/terraform-provider-databricks/pull/4633)).

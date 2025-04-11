@@ -16,13 +16,17 @@ func DataSourceMwsWorkspaces() common.Resource {
 		if c.Config.AccountID == "" {
 			return fmt.Errorf("provider block is missing `account_id` property")
 		}
-		workspaces, err := NewWorkspacesAPI(ctx, c).List(c.Config.AccountID)
+		a, err := c.AccountClient()
+		if err != nil {
+			return err
+		}
+		workspaces, err := a.Workspaces.List(ctx)
 		if err != nil {
 			return err
 		}
 		data.Ids = map[string]int64{}
 		for _, v := range workspaces {
-			data.Ids[v.WorkspaceName] = v.WorkspaceID
+			data.Ids[v.WorkspaceName] = v.WorkspaceId
 		}
 		return nil
 	})

@@ -4,33 +4,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/databricks/terraform-provider-databricks/qa"
-
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/oauth2"
+	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestServicePrincipalSecretCreate(t *testing.T) {
 	expireTime := time.Now().Add(20 * time.Second).Format(time.RFC3339)
 	currentTime := time.Now().Format(time.RFC3339)
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "POST",
-				Resource: "/api/2.0/accounts/xyz/servicePrincipals/123/credentials/secrets",
-				ExpectedRequest: oauth2.CreateServicePrincipalSecretRequest{
-					ServicePrincipalId: 123,
-					Lifetime:           "20s",
-				},
-				Response: oauth2.CreateServicePrincipalSecretResponse{
-					Secret:     "qwe",
-					Id:         "003",
-					Status:     "ACTIVE",
-					ExpireTime: expireTime,
-					CreateTime: currentTime,
-					UpdateTime: currentTime,
-					SecretHash: "abc",
-				},
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
+			e.Create(mock.Anything, oauth2.CreateServicePrincipalSecretRequest{
+				ServicePrincipalId: 123,
+				Lifetime:           "20s",
+			}).Return(&oauth2.CreateServicePrincipalSecretResponse{
+				Secret:     "qwe",
+				Id:         "003",
+				Status:     "ACTIVE",
+				ExpireTime: expireTime,
+				CreateTime: currentTime,
+				UpdateTime: currentTime,
+				SecretHash: "abc",
+			}, nil)
 		},
 		Resource:  ResourceServicePrincipalSecret(),
 		Create:    true,
@@ -55,11 +52,12 @@ func TestServicePrincipalSecretCreate(t *testing.T) {
 
 func TestServicePrincipalSecretDelete(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "DELETE",
-				Resource: "/api/2.0/accounts/xyz/servicePrincipals/123/credentials/secrets/003?",
-			},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
+			e.Delete(mock.Anything, oauth2.DeleteServicePrincipalSecretRequest{
+				ServicePrincipalId: 123,
+				SecretId:           "003",
+			}).Return(nil)
 		},
 		Resource:  ResourceServicePrincipalSecret(),
 		ID:        "003",
@@ -73,20 +71,17 @@ func TestServicePrincipalSecretDelete(t *testing.T) {
 
 func TestServicePrincipalSecretRead(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/xyz/servicePrincipals/123/credentials/secrets?",
-				Response: oauth2.ListServicePrincipalSecretsResponse{
-					Secrets: []oauth2.SecretInfo{
-						{
-							Id:         "003",
-							SecretHash: "abc",
-							Status:     "ACTIVE",
-						},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
+			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
+				Secrets: []oauth2.SecretInfo{
+					{
+						Id:         "003",
+						SecretHash: "abc",
+						Status:     "ACTIVE",
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource:  ResourceServicePrincipalSecret(),
 		ID:        "003",
@@ -103,20 +98,17 @@ func TestServicePrincipalSecretRead(t *testing.T) {
 
 func TestServicePrincipalSecretReadRemoved(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/xyz/servicePrincipals/123/credentials/secrets?",
-				Response: oauth2.ListServicePrincipalSecretsResponse{
-					Secrets: []oauth2.SecretInfo{
-						{
-							Id:         "004",
-							SecretHash: "abc",
-							Status:     "ACTIVE",
-						},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			e := a.GetMockServicePrincipalSecretsAPI().EXPECT()
+			e.ListByServicePrincipalId(mock.Anything, int64(123)).Return(&oauth2.ListServicePrincipalSecretsResponse{
+				Secrets: []oauth2.SecretInfo{
+					{
+						Id:         "004",
+						SecretHash: "abc",
+						Status:     "ACTIVE",
 					},
 				},
-			},
+			}, nil)
 		},
 		Resource:  ResourceServicePrincipalSecret(),
 		ID:        "003",

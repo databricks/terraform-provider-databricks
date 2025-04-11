@@ -367,6 +367,11 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 	if cfg.RetryTimeoutSeconds == 0 {
 		cfg.RetryTimeoutSeconds = -1
 	}
+	// If not set, the default provider timeout is 65 seconds. Most APIs have a server-side timeout of 60 seconds.
+	// The additional 5 seconds is to account for network latency.
+	if cfg.HTTPTimeoutSeconds == 0 {
+		cfg.HTTPTimeoutSeconds = 65
+	}
 	if configCustomizer != nil {
 		err := configCustomizer(cfg)
 		if err != nil {

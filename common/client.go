@@ -123,7 +123,6 @@ func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, work
 		return nil, err
 	}
 	w.CurrentUser = newCachedMe(w.CurrentUser)
-	w.Config.AzureResourceID = workspace.AzureResourceId()
 	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
 	return w, nil
 }

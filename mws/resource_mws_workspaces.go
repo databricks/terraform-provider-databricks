@@ -170,6 +170,7 @@ func ResourceMwsWorkspaces() common.Resource {
 		"private_access_settings_id":               {},
 		"managed_services_customer_managed_key_id": {},
 		"custom_tags":                              {},
+		"token":                                    {},
 	}
 
 	workspaceSchema := common.StructToSchema(Workspace{},

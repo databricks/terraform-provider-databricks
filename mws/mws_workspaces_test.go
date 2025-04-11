@@ -78,27 +78,6 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
-type expectNotDestroyed struct {
-	addr string
-}
-
-func ExpectNotDestroyed(addr string) expectNotDestroyed {
-	return expectNotDestroyed{addr: addr}
-}
-
-func (e expectNotDestroyed) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
-	for _, resource := range req.Plan.ResourceChanges {
-		if resource.Address != e.addr {
-			continue
-		}
-		actions := resource.Change.Actions
-		if actions.DestroyBeforeCreate() || actions.CreateBeforeDestroy() || actions.Delete() {
-			resp.Error = fmt.Errorf("resource %s is marked for destruction", e.addr)
-			return
-		}
-	}
-}
-
 func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 	tokenUpdateTemplate := func(token, customTags string) string {
 		tokenBlock := ``
@@ -182,7 +161,7 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 		// Updating the comment causes the old token to be deleted and a new one to be created
 		Template: tokenUpdateTemplate(`comment = "test bar"`, ""),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
 		},
 		Check: resource.ComposeAggregateTestCheckFunc(
 			checkTokenExists,
@@ -201,7 +180,7 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 		// Modifying the tags doesn't change the token but does modify the workspace.
 		Template: tokenUpdateTemplate(`comment = "test bar"`, `"Key" = "Value"`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
 		},
 		Check: func(s *terraform.State) error {
 			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
@@ -217,7 +196,7 @@ func TestMwsAccWorkspaces_TokenUpdate(t *testing.T) {
 		// It is also possible to modify the token comment and tags at the same time.
 		Template: tokenUpdateTemplate(`comment = "test quux"`, `"Key" = "Value2"`),
 		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{ExpectNotDestroyed("databricks_mws_workspaces.this")},
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
 		},
 		Check: func(s *terraform.State) error {
 			state, ok := s.RootModule().Resources["databricks_mws_workspaces.this"]
@@ -327,6 +306,7 @@ func TestMwsAccGcpPscWorkspaces(t *testing.T) {
 }
 
 func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
+	acceptance.LoadDebugEnvIfRunsFromIDE(t, "account")
 	if !acceptance.IsAws(t) {
 		acceptance.Skipf(t)("TestMwsAccAwsChangeToServicePrincipal should only run on AWS")
 	}
@@ -442,17 +422,26 @@ func TestMwsAccAwsChangeToServicePrincipal(t *testing.T) {
 		// Tolerate existing token
 		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
 		ProtoV6ProviderFactories: providerFactory,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 	}, acceptance.Step{
 		// Allow the token to be removed
 		Template:                 workspaceTemplate(``) + servicePrincipal,
 		ProtoV6ProviderFactories: providerFactory,
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 	}, acceptance.Step{
 		// Fail when adding the token back
 		Template:                 workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
 		ProtoV6ProviderFactories: providerFactory,
 		ExpectError:              regexp.MustCompile(`cannot create token: the principal used by Databricks \(client ID .*\) is not authorized to create a token in this workspace`),
+		ConfigPlanChecks: resource.ConfigPlanChecks{
+			PreApply: []plancheck.PlanCheck{acceptance.ExpectNotDestroyed("databricks_mws_workspaces.this")},
+		},
 	}, acceptance.Step{
 		// Use the original provider for a final step to clean up the newly created service principal
-		Template: workspaceTemplate(``) + servicePrincipal,
+		Template: workspaceTemplate(`token { comment = "Test {var.STICKY_RANDOM}" }`) + servicePrincipal,
 	})
 }

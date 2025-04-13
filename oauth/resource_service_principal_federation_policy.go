@@ -2,26 +2,12 @@ package oauth
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/databricks/databricks-sdk-go/service/oauth2"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
-	"os"
 	"strings"
 )
-
-type ServicePrincipalFederationPolicyAPI struct {
-	client  *common.DatabricksClient
-	context context.Context
-}
-
-func (p ServicePrincipalFederationPolicyAPI) Delete(spnID string, spfpUID string) error {
-	path := fmt.Sprintf("/accounts/%s/servicePrincipals/%s/federationPolicies/%s", p.client.Config.AccountID, spnID, spfpUID)
-	err := p.client.Post(p.context, path, map[string]string{}, nil)
-	return common.IgnoreNotFoundError(err) // ignore not found error on delete, as it is idempotent
-}
 
 func ResourceServicePrincipalFederationPolicy() common.Resource {
 	s := map[string]*schema.Schema{
@@ -83,8 +69,6 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			},
 		},
 	}
-	f, _ := os.Create("/Users/abarkan/Documents/opensource/terraform-provider-databricks/aaa.txt")
-	//defer f.Close()
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -102,9 +86,6 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			if err != nil {
 				return err
 			}
-			out, err := json.Marshal(spfp)
-			f.WriteString(string(out) + "\n")
-
 			name := spfp.Name
 			d.SetId(name[strings.LastIndex(name, "/")+1:])
 			return common.StructToData(spfp, s, d)
@@ -127,9 +108,6 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			}
 			spfp, err := acc.ServicePrincipalFederationPolicy.GetByServicePrincipalIdAndPolicyId(ctx,
 				int64(d.Get("service_principal_id").(int)), d.Id())
-			out, err := json.Marshal(spfp)
-			f.WriteString(string(out) + "\n")
-			f.Close()
 			if err != nil {
 				err = common.IgnoreNotFoundError(err)
 				if err != nil {

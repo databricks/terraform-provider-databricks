@@ -4,6 +4,7 @@
 
 ### New Features and Improvements
 
+ * Mark `databricks_sql_dashaboard` as deprecated ([#4641](https://github.com/databricks/terraform-provider-databricks/pull/4641))
  * Add a new settings resource `databricks_disable_legacy_dbfs_setting` ([#4605](https://github.com/databricks/terraform-provider-databricks/pull/4605))
 
 ### Bug Fixes

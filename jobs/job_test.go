@@ -437,3 +437,55 @@ func TestAccPeriodicTrigger(t *testing.T) {
 		}),
 	})
 }
+
+func TestAccJobClusterPolicySparkVersion(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		data "databricks_current_user" "me" {}
+		data "databricks_spark_version" "latest" {}
+		data "databricks_node_type" "smallest" {
+			local_disk = true
+		}
+
+		resource "databricks_notebook" "this" {
+			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
+			language = "PYTHON"
+			content_base64 = base64encode(<<-EOT
+				# created from ${abspath(path.module)}
+				display(spark.range(10))
+				EOT
+			)
+		}
+
+		resource "databricks_cluster_policy" "this" {
+			name = "test-policy-{var.RANDOM}"
+			definition = jsonencode({
+				"spark_version": {
+					"type": "fixed",
+					"value": "14.3.x-scala2.12"
+				}
+			})
+		}
+
+		resource "databricks_job" "this" {
+			name = "test-job-{var.RANDOM}"
+
+			job_cluster {
+				job_cluster_key = "test-cluster"
+				new_cluster {
+					policy_id = databricks_cluster_policy.this.id
+					apply_policy_default_values = true
+				}
+			}
+
+			task {
+				task_key = "test-task"
+				job_cluster_key = "test-cluster"
+				notebook_task {
+					notebook_path = databricks_notebook.this.path
+				}
+			}
+		}
+`,
+	})
+}

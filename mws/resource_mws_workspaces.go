@@ -83,9 +83,9 @@ type Workspace struct {
 	WorkspaceName                       string                   `json:"workspace_name"`
 	DeploymentName                      string                   `json:"deployment_name,omitempty"`
 	AwsRegion                           string                   `json:"aws_region,omitempty"`               // required for AWS, not allowed for GCP
-	CredentialsID                       string                   `json:"credentials_id,omitempty"`           // required for AWS, not allowed for GCP
+	CredentialsID                       string                   `json:"credentials_id,omitempty"`           // not allowed for GCP
 	CustomerManagedKeyID                string                   `json:"customer_managed_key_id,omitempty"`  // just for compatibility, will be removed
-	StorageConfigurationID              string                   `json:"storage_configuration_id,omitempty"` // required for AWS, not allowed for GCP
+	StorageConfigurationID              string                   `json:"storage_configuration_id,omitempty"` // not allowed for GCP
 	ManagedServicesCustomerManagedKeyID string                   `json:"managed_services_customer_managed_key_id,omitempty"`
 	StorageCustomerManagedKeyID         string                   `json:"storage_customer_managed_key_id,omitempty"`
 	PricingTier                         string                   `json:"pricing_tier,omitempty" tf:"computed"`
@@ -104,6 +104,7 @@ type Workspace struct {
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
+	ComputeMode                         string                   `json:"compute_mode,omitempty"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -577,7 +578,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
+			if err := requireFields(c.IsAws(), d, "aws_region"); err != nil {
 				return err
 			}
 			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
@@ -946,6 +947,10 @@ func workspaceSchemaV2() cty.Type {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},
+            "compute_mode": {
+                Type:     schema.TypeString,
+                Optional: true,
+            },
 		},
 	}).CoreConfigSchema().ImpliedType()
 }

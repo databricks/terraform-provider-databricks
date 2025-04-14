@@ -28,8 +28,12 @@ import (
 // this may help with local DNS cache issues.
 const DefaultProvisionTimeout = 20 * time.Minute
 
-// Workspace is the object that contains all the information for deploying a workspace
-type Workspace struct {
+// workspaceReachableRequestTimeout is the amount of seconds to wait when polling the
+// newly created workspace's SCIM Me endpoint to check if the workspace is reachable.
+const workspaceReachableRequestTimeout = 10 * time.Second
+
+// workspace is the object that contains all the information for deploying a workspace
+type workspace struct {
 	provisioning.Workspace
 	CustomerManagedKeyID string `json:"customer_managed_key_id,omitempty"` // just for compatibility, will be removed
 	GcpWorkspaceSa       string `json:"gcp_workspace_sa" tf:"computed"`
@@ -49,7 +53,7 @@ func verifyWorkspaceReachable(ctx context.Context, w *databricks.WorkspaceClient
 		}
 		return false
 	})).Wait(ctx, func(ctx context.Context) error {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, workspaceReachableRequestTimeout)
 		defer cancel()
 		_, err := w.CurrentUser.Me(ctx)
 		return err
@@ -154,27 +158,27 @@ func removeToken(ctx context.Context, w *databricks.WorkspaceClient, tokenID str
 // ResourceMwsWorkspaces manages E2 workspaces
 func ResourceMwsWorkspaces() common.Resource {
 	var computedFields = map[string]struct{}{
-		"cloud":                    {},
-		"workspace_id":             {},
-		"workspace_url":            {},
-		"workspace_status":         {},
-		"workspace_status_message": {},
+		"azure_workspace_info":     {},
 		"creation_time":            {},
 		"gke_config":               {},
 		"pricing_tier":             {},
+		"workspace_id":             {},
+		"workspace_status":         {},
+		"workspace_status_message": {},
+		"workspace_url":            {},
 	}
 
 	var workspaceRunningUpdatesAllowed = map[string]struct{}{
 		"credentials_id":                           {},
-		"network_id":                               {},
-		"storage_customer_managed_key_id":          {},
-		"private_access_settings_id":               {},
-		"managed_services_customer_managed_key_id": {},
 		"custom_tags":                              {},
+		"managed_services_customer_managed_key_id": {},
+		"network_id":                               {},
+		"private_access_settings_id":               {},
+		"storage_customer_managed_key_id":          {},
 		"token":                                    {},
 	}
 
-	workspaceSchema := common.StructToSchema(Workspace{},
+	workspaceSchema := common.StructToSchema(workspace{},
 		func(s map[string]*schema.Schema) map[string]*schema.Schema {
 			for name, fieldSchema := range s {
 				if _, ok := computedFields[name]; ok {
@@ -258,7 +262,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			var createWorkspaceRequest provisioning.CreateWorkspaceRequest
 			common.DataToStructPointer(d, workspaceSchema, &createWorkspaceRequest)
-			var workspaceConfig Workspace
+			var workspaceConfig workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspaceConfig)
 
 			// Validate required fields by cloud
@@ -275,6 +279,9 @@ func ResourceMwsWorkspaces() common.Resource {
 				log.Print("[INFO] Using existing customer_managed_key_id as value for new managed_services_customer_managed_key_id")
 				createWorkspaceRequest.ManagedServicesCustomerManagedKeyId = customerManagedKeyId.(string)
 			}
+			// is_no_public_ip_enabled always needs to be serialized. It is true by default, but if it is disabled
+			// by a customer, it will be omitted by the default request serializer.
+			createWorkspaceRequest.ForceSendFields = append(createWorkspaceRequest.ForceSendFields, "IsNoPublicIpEnabled")
 
 			// Create the workspace. If creation fails, clean it up and return.
 			wait, err := a.Workspaces.Create(ctx, createWorkspaceRequest)
@@ -332,7 +339,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			if err != nil {
 				return err
 			}
-			var workspaceConfig Workspace
+			var workspaceConfig workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspaceConfig)
 			workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: common.MustInt64(workspaceID)})
 			if err != nil {
@@ -370,7 +377,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			}
 			var updateWorkspaceRequest provisioning.UpdateWorkspaceRequest
 			common.DataToStructPointer(d, workspaceSchema, &updateWorkspaceRequest)
-			var workspaceConfig Workspace
+			var workspaceConfig workspace
 			common.DataToStructPointer(d, workspaceSchema, &workspaceConfig)
 			// WorkspaceId in UpdateWorkspaceRequest is a path parameter, thus tagged with `json:"-"`.
 			// This causes it not to be set in DataToStructPointer. Instead, the workspace ID can be

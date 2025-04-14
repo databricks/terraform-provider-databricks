@@ -5,7 +5,7 @@ generate_schema() {
   >&2 make install 
   version=$(./terraform-provider-databricks version)
 
-  local TMPDIR=$(mktemp -d)
+  local TMPDIR=/tmp/tmp.jAFhRBnVE5
   >&2 echo "Generating provider schema in $TMPDIR..."
   >&2 pushd $TMPDIR
   cat > main.tf <<EOF

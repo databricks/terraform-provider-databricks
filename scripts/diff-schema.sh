@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xeo pipefail
+set -eo pipefail
 
 source scripts/libschema.sh
 
@@ -17,9 +17,9 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-NEW_SCHEMA=$(generate_schema | tail -n1)
+NEW_SCHEMA=$(generate_schema)
 checkout $BASE
-CURRENT_SCHEMA=$(generate_schema | tail -n1)
+CURRENT_SCHEMA=$(generate_schema)
 checkout $CURRENT_BRANCH
 
 set +e

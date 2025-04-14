@@ -314,6 +314,7 @@ func (ClusterSpec) CustomizeSchemaResourceSpecific(s *common.CustomizableSchema)
 		Optional: true,
 		Default:  60,
 	})
+	s.SchemaPath("spark_version").SetRequired()
 	return s
 }
 
@@ -356,7 +357,6 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("cluster_log_conf", "dbfs", "destination").SetRequired()
 	s.SchemaPath("cluster_log_conf", "s3", "destination").SetRequired()
 	s.SchemaPath("cluster_log_conf", "volumes", "destination").SetRequired()
-	s.SchemaPath("spark_version").SetOptional()
 	s.AddNewField("cluster_id", &schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,

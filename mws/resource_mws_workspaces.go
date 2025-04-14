@@ -169,13 +169,13 @@ func ResourceMwsWorkspaces() common.Resource {
 	}
 
 	var workspaceRunningUpdatesAllowed = map[string]struct{}{
-		"credentials_id":                           {},
-		"custom_tags":                              {},
+		"credentials_id": {},
+		"custom_tags":    {},
 		"managed_services_customer_managed_key_id": {},
-		"network_id":                               {},
-		"private_access_settings_id":               {},
-		"storage_customer_managed_key_id":          {},
-		"token":                                    {},
+		"network_id":                      {},
+		"private_access_settings_id":      {},
+		"storage_customer_managed_key_id": {},
+		"token":                           {},
 	}
 
 	workspaceSchema := common.StructToSchema(workspace{},

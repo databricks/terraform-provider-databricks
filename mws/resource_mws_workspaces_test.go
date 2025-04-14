@@ -91,6 +91,7 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 				CustomTags: map[string]string{
 					"SoldToCode": "1234",
 				},
+				ForceSendFields: []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -157,7 +158,8 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
 					SubnetCidr: "a",
 				},
-				WorkspaceName: "labdata",
+				WorkspaceName:   "labdata",
+				ForceSendFields: []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -253,7 +255,8 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
 					SubnetCidr: "a",
 				},
-				WorkspaceName: "labdata",
+				WorkspaceName:   "labdata",
+				ForceSendFields: []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -329,6 +332,7 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 				WorkspaceName:                       "labdata",
 				ManagedServicesCustomerManagedKeyId: "managed_services_cmk",
 				StorageCustomerManagedKeyId:         "storage_cmk",
+				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -396,6 +400,7 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 				NetworkId:                           "fgh",
 				ManagedServicesCustomerManagedKeyId: "def",
 				StorageCustomerManagedKeyId:         "def",
+				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -456,6 +461,7 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 				StorageConfigurationId:              "ghi",
 				NetworkId:                           "fgh",
 				ManagedServicesCustomerManagedKeyId: "def",
+				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
 				WorkspaceId: 1234,
@@ -926,6 +932,7 @@ func TestCreateFailsAndCleansUp(t *testing.T) {
 				NetworkId:                           "fgh",
 				ManagedServicesCustomerManagedKeyId: "def",
 				StorageCustomerManagedKeyId:         "def",
+				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 
 			// Expect the Get call to retrieve the failed workspace
@@ -1235,6 +1242,7 @@ func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
 				DeploymentName:      "900150983cd24fb0",
 				Location:            "bcd",
 				WorkspaceName:       "labdata",
+				ForceSendFields:     []string{"IsNoPublicIpEnabled"},
 			}).Return(mockWaiter, nil)
 
 			// Expect the Get call to retrieve the workspace

@@ -149,6 +149,10 @@ func removeToken(ctx context.Context, w *databricks.WorkspaceClient, tokenID str
 		tflog.Debug(ctx, fmt.Sprintf("unable to delete token with ID %s from workspace using the provided service principal, continuing", tokenID))
 		return nil
 	}
+	if apierr.IsMissing(err) {
+		tflog.Debug(ctx, fmt.Sprintf("token with ID %s not found, skipping deletion", tokenID))
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("cannot remove token: %w", err)
 	}

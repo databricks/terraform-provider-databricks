@@ -100,20 +100,20 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 		},
 		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
 		Resource:                 ResourceMwsWorkspaces(),
-		State: map[string]any{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"custom_tags": map[string]any{
-				"SoldToCode": "1234",
-			},
-		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		custom_tags = {
+			SoldToCode = "1234"
+		}
+		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -409,18 +409,18 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 		},
 		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
 		Resource:                 ResourceMwsWorkspaces(),
-		State: map[string]any{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  false,
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		is_no_public_ip_enabled = false
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -470,16 +470,16 @@ func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
 		},
 		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
 		Resource:                 ResourceMwsWorkspaces(),
-		State: map[string]any{
-			"account_id":               "abc",
-			"aws_region":               "us-east-1",
-			"credentials_id":           "bcd",
-			"customer_managed_key_id":  "def",
-			"deployment_name":          "900150983cd24fb0",
-			"workspace_name":           "labdata",
-			"network_id":               "fgh",
-			"storage_configuration_id": "ghi",
-		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		`,
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -716,20 +716,19 @@ func TestResourceWorkspaceUpdate_NotAllowed(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
-		State: map[string]any{
-			"account_id": "THIS_IS_CHANGING",
-
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  true,
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"workspace_id":                             1234,
-		},
+		HCL: `
+		account_id = "THIS_IS_CHANGING"
+		aws_region = "us-east-1"
+		credentials_id = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name = "labdata"
+		is_no_public_ip_enabled = true
+		network_id = "fgh"
+		storage_configuration_id = "ghi"
+		workspace_id = 1234
+		`,
 		Update: true,
 		ID:     "abc/1234",
 	}.ExpectError(t, "changes require new: account_id")
@@ -941,9 +940,7 @@ func TestCreateFailsAndCleansUp(t *testing.T) {
 			}).Return(mockFailedWorkspace, nil)
 
 			// Expect the Get call to retrieve the network with errors
-			a.GetMockNetworksAPI().EXPECT().Get(mock.Anything, provisioning.GetNetworkRequest{
-				NetworkId: "fgh",
-			}).Return(mockNetwork, nil)
+			a.GetMockNetworksAPI().EXPECT().Get(mock.Anything, provisioning.GetNetworkRequest{NetworkId: "fgh"}).Return(mockNetwork, nil)
 
 			// Expect the Delete call to clean up the failed workspace
 			a.GetMockWorkspacesAPI().EXPECT().Delete(mock.Anything, provisioning.DeleteWorkspaceRequest{
@@ -1149,22 +1146,22 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
-		State: map[string]any{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  true,
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"private_access_settings_id":               "pas",
-			"workspace_id":                             1234,
-		},
 		Update: true,
 		ID:     "abc/1234",
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		private_access_settings_id = "pas"
+		is_no_public_ip_enabled = true
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		workspace_id    = 1234
+		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
@@ -1282,4 +1279,275 @@ func TestSensitiveDataInLogs(t *testing.T) {
 	assert.NotContains(t, fmt.Sprintf("%v", tk), "sensitive")
 	assert.NotContains(t, fmt.Sprintf("%#v", tk), "sensitive")
 	assert.NotContains(t, fmt.Sprintf("%+v", tk), "sensitive")
+}
+
+func TestResourceWorkspaceAddToken(t *testing.T) {
+	// Define a mock workspace that can be reused
+	mockWorkspace := &provisioning.Workspace{
+		WorkspaceId:                         1234,
+		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
+		WorkspaceName:                       "labdata",
+		DeploymentName:                      "900150983cd24fb0",
+		AwsRegion:                           "us-east-1",
+		CredentialsId:                       "bcd",
+		StorageConfigurationId:              "ghi",
+		NetworkId:                           "fgh",
+		ManagedServicesCustomerManagedKeyId: "def",
+		StorageCustomerManagedKeyId:         "def",
+		AccountId:                           "abc",
+	}
+
+	addToken := func(m *mocks.MockWorkspaceClient) {
+		// Create a mock workspace client with token API expectations
+		mockTokensAPI := m.GetMockTokensAPI()
+
+		// Expect the list token call to return no existing tokens
+		mockTokensAPI.EXPECT().
+			List(mock.Anything).
+			Return(&listing.SliceIterator[settings.PublicTokenInfo]{})
+
+		// Expect the create token call for the new token
+		mockTokensAPI.EXPECT().
+			Create(mock.Anything, settings.CreateTokenRequest{
+				LifetimeSeconds: 3600,
+				Comment:         "New token comment",
+			}).
+			Return(&settings.CreateTokenResponse{
+				TokenValue: "new-token-value",
+				TokenInfo: &settings.PublicTokenInfo{
+					TokenId: "new-token-id",
+				},
+			}, nil)
+	}
+
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			// Expect the Get call to retrieve the workspace
+			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+				WorkspaceId: 1234,
+			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		},
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, addToken),
+		Resource:                 ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		is_no_public_ip_enabled = true
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		workspace_id    = 1234
+		token {
+			comment          = "New token comment"
+			lifetime_seconds = 3600
+		}
+		`,
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+
+	// Verify that the token was added to the state
+	token := d.Get("token").([]any)[0].(map[string]any)
+	assert.Equal(t, "new-token-id", token["token_id"])
+	assert.Equal(t, "new-token-value", token["token_value"])
+}
+
+func TestResourceWorkspaceUpdateToken(t *testing.T) {
+	// a helper function to set up token API mocks
+	updateToken := func(c *mocks.MockWorkspaceClient) {
+		mockTokensAPI := c.GetMockTokensAPI()
+
+		// Expect the list token call
+		mockTokensAPI.EXPECT().
+			List(mock.Anything).
+			Return(&listing.SliceIterator[settings.PublicTokenInfo]{
+				{
+					TokenId: "old-token-id",
+				},
+			})
+
+		// Expect the revoke token call for the old token
+		mockTokensAPI.EXPECT().
+			Delete(mock.Anything, settings.RevokeTokenRequest{TokenId: "old-token-id"}).
+			Return(nil)
+
+		// Expect the create token call for the new token
+		mockTokensAPI.EXPECT().
+			Create(mock.Anything, settings.CreateTokenRequest{
+				LifetimeSeconds: 3600,
+				Comment:         "New token comment",
+			}).
+			Return(&settings.CreateTokenResponse{
+				TokenValue: "new-token-value",
+				TokenInfo: &settings.PublicTokenInfo{
+					TokenId: "new-token-id",
+				},
+			}, nil)
+	}
+	// Define a mock workspace that can be reused
+	mockWorkspace := &provisioning.Workspace{
+		WorkspaceId:                         1234,
+		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
+		WorkspaceName:                       "labdata",
+		DeploymentName:                      "900150983cd24fb0",
+		AwsRegion:                           "us-east-1",
+		CredentialsId:                       "bcd",
+		StorageConfigurationId:              "ghi",
+		NetworkId:                           "fgh",
+		ManagedServicesCustomerManagedKeyId: "def",
+		StorageCustomerManagedKeyId:         "def",
+		AccountId:                           "abc",
+	}
+
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			// Expect the Get call to retrieve the workspace
+			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+				WorkspaceId: 1234,
+			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		},
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, updateToken),
+		Resource:                 ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+			"token.#":                                  "1",
+			"token.0.comment":                          "Old token comment",
+			"token.0.lifetime_seconds":                 "3600",
+			"token.0.token_id":                         "old-token-id",
+			"token.0.token_value":                      "old-token-value",
+		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		is_no_public_ip_enabled = true
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		workspace_id    = 1234
+		token {
+			comment          = "New token comment"
+			lifetime_seconds = 3600
+		}
+		`,
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
+
+	// Verify that the token was updated in the state
+	token := d.Get("token").([]any)[0].(map[string]any)
+	assert.Equal(t, "new-token-id", token["token_id"])
+	assert.Equal(t, "new-token-value", token["token_value"])
+}
+
+func TestResourceWorkspaceDeleteToken(t *testing.T) {
+	// Define a mock workspace that can be reused
+	mockWorkspace := &provisioning.Workspace{
+		WorkspaceId:                         1234,
+		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
+		WorkspaceName:                       "labdata",
+		DeploymentName:                      "900150983cd24fb0",
+		AwsRegion:                           "us-east-1",
+		CredentialsId:                       "bcd",
+		StorageConfigurationId:              "ghi",
+		NetworkId:                           "fgh",
+		ManagedServicesCustomerManagedKeyId: "def",
+		StorageCustomerManagedKeyId:         "def",
+		AccountId:                           "abc",
+	}
+
+	revokeToken := func(m *mocks.MockWorkspaceClient) {
+		// Create a mock workspace client with token API expectations
+		mockTokensAPI := m.GetMockTokensAPI()
+
+		// Expect the revoke token call for the old token
+		mockTokensAPI.EXPECT().
+			Delete(mock.Anything, settings.RevokeTokenRequest{TokenId: "old-token-id"}).
+			Return(nil)
+	}
+
+	d, err := qa.ResourceFixture{
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			// Expect the Get call to retrieve the workspace
+			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
+				WorkspaceId: 1234,
+			}).Return(mockWorkspace, nil)
+			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		},
+		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, revokeToken),
+		Resource:                 ResourceMwsWorkspaces(),
+		InstanceState: map[string]string{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  "true",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             "1234",
+			"token.#":                                  "1",
+			"token.0.comment":                          "Old token comment",
+			"token.0.lifetime_seconds":                 "3600",
+			"token.0.token_id":                         "old-token-id",
+			"token.0.token_value":                      "old-token-value",
+		},
+		HCL: `
+		account_id      = "abc"
+		aws_region      = "us-east-1"
+		credentials_id  = "bcd"
+		managed_services_customer_managed_key_id = "def"
+		storage_customer_managed_key_id = "def"
+		deployment_name = "900150983cd24fb0"
+		workspace_name  = "labdata"
+		is_no_public_ip_enabled = true
+		network_id      = "fgh"
+		storage_configuration_id = "ghi"
+		workspace_id    = 1234
+		`,
+		Update: true,
+		ID:     "abc/1234",
+	}.Apply(t)
+	assert.NoError(t, err)
+
+	// Verify that the token was removed from the state
+	assert.Len(t, d.Get("token"), 0)
 }

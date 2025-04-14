@@ -17,9 +17,9 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-NEW_SCHEMA=$(generate_schema)
+NEW_SCHEMA=$(generate_schema | tail -n1)
 checkout $BASE
-CURRENT_SCHEMA=$(generate_schema)
+CURRENT_SCHEMA=$(generate_schema | tail -n1)
 checkout $CURRENT_BRANCH
 
 set +e

@@ -5,7 +5,7 @@ generate_schema() {
   >&2 make install 
   version=$(./terraform-provider-databricks version)
 
-  local TMPDIR=/tmp/tmp.jAFhRBnVE5
+  local TMPDIR=$(mktemp -d)
   >&2 echo "Generating provider schema in $TMPDIR..."
   >&2 pushd $TMPDIR
   cat > main.tf <<EOF
@@ -19,7 +19,7 @@ terraform {
 }
 EOF
   >&2 terraform init
-  terraform providers schema -json > schema.json
+  terraform providers schema -json | tail -n1 > schema.json
   >&2 popd
   >&2 echo "Provider schema available in $TMPDIR/schema.json"
   echo "$TMPDIR/schema.json"

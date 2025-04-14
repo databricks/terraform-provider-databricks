@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 * `create_time` - UTC time when the secret was created.
 * `expire_time` - UTC time when the secret will expire. If the field is not present, the secret does not expire.
 * `secret_hash` - Secret Hash.
-* `status`  - Status of the secret (i.e., `ACTIVE`).
+* `status`  - Status of the secret (i.e., `ACTIVE` - see [REST API docs for full list](https://docs.databricks.com/api/account/serviceprincipalsecrets/list#secrets-status)).
 * `update_time` - UTC time when the secret was updated.
 
 ## Related Resources

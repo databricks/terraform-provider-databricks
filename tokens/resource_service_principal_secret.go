@@ -19,6 +19,10 @@ type ServicePrincipalSecret struct {
 	Lifetime           string `json:"lifetime,omitempty" tf:"computed,force_new"`
 }
 
+func createFailedToConvertServicePrincipalIdToNumericError(err error) error {
+	return fmt.Errorf("failed to convert service principal ID to numeric: %w", err)
+}
+
 func ResourceServicePrincipalSecret() common.Resource {
 	spnSecretSchema := common.StructToSchema(ServicePrincipalSecret{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
@@ -45,7 +49,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			spId := d.Get("service_principal_id").(string)
 			spIdNumeric, err := strconv.ParseInt(spId, 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to convert service principal ID to numeric: %w", err)
+				return createFailedToConvertServicePrincipalIdToNumericError(err)
 			}
 			lifetime := d.Get("lifetime").(string)
 			res, err := ac.ServicePrincipalSecrets.Create(ctx, oauth2.CreateServicePrincipalSecretRequest{
@@ -73,7 +77,7 @@ func ResourceServicePrincipalSecret() common.Resource {
 			spId := d.Get("service_principal_id").(string)
 			spIdNumeric, err := strconv.ParseInt(spId, 10, 64)
 			if err != nil {
-				return fmt.Errorf("failed to convert service principal ID to numeric: %w", err)
+				return createFailedToConvertServicePrincipalIdToNumericError(err)
 			}
 			secrets, err := ac.ServicePrincipalSecrets.ListByServicePrincipalId(ctx, spIdNumeric)
 			if err != nil {

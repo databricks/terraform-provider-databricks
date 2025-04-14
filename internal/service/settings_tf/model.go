@@ -4406,6 +4406,264 @@ func (o Empty) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type EnableExportNotebook struct {
+	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableExportNotebook) {
+}
+
+func (newState *EnableExportNotebook) SyncEffectiveFieldsDuringRead(existingState EnableExportNotebook) {
+}
+
+func (c EnableExportNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnableExportNotebook.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnableExportNotebook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnableExportNotebook
+// only implements ToObjectValue() and Type().
+func (o EnableExportNotebook) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EnableExportNotebook) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val":  BooleanMessage{}.Type(ctx),
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in EnableExportNotebook as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnableExportNotebook) GetBooleanVal(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in EnableExportNotebook.
+func (o *EnableExportNotebook) SetBooleanVal(ctx context.Context, v BooleanMessage) {
+	vs := v.ToObjectValue(ctx)
+	o.BooleanVal = vs
+}
+
+type EnableNotebookTableClipboard struct {
+	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableNotebookTableClipboard) {
+}
+
+func (newState *EnableNotebookTableClipboard) SyncEffectiveFieldsDuringRead(existingState EnableNotebookTableClipboard) {
+}
+
+func (c EnableNotebookTableClipboard) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnableNotebookTableClipboard.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnableNotebookTableClipboard) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnableNotebookTableClipboard
+// only implements ToObjectValue() and Type().
+func (o EnableNotebookTableClipboard) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EnableNotebookTableClipboard) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val":  BooleanMessage{}.Type(ctx),
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in EnableNotebookTableClipboard as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnableNotebookTableClipboard) GetBooleanVal(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in EnableNotebookTableClipboard.
+func (o *EnableNotebookTableClipboard) SetBooleanVal(ctx context.Context, v BooleanMessage) {
+	vs := v.ToObjectValue(ctx)
+	o.BooleanVal = vs
+}
+
+type EnableResultsDownloading struct {
+	BooleanVal types.Object `tfsdk:"boolean_val"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringCreateOrUpdate(plan EnableResultsDownloading) {
+}
+
+func (newState *EnableResultsDownloading) SyncEffectiveFieldsDuringRead(existingState EnableResultsDownloading) {
+}
+
+func (c EnableResultsDownloading) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EnableResultsDownloading.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EnableResultsDownloading) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EnableResultsDownloading
+// only implements ToObjectValue() and Type().
+func (o EnableResultsDownloading) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EnableResultsDownloading) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val":  BooleanMessage{}.Type(ctx),
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in EnableResultsDownloading as
+// a BooleanMessage value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EnableResultsDownloading) GetBooleanVal(ctx context.Context) (BooleanMessage, bool) {
+	var e BooleanMessage
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage
+	d := o.BooleanVal.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in EnableResultsDownloading.
+func (o *EnableResultsDownloading) SetBooleanVal(ctx context.Context, v BooleanMessage) {
+	vs := v.ToObjectValue(ctx)
+	o.BooleanVal = vs
+}
+
 // SHIELD feature: ESM
 type EnhancedSecurityMonitoring struct {
 	IsEnabled types.Bool `tfsdk:"is_enabled"`
@@ -7563,7 +7821,7 @@ func (newState *NccEgressConfig) SyncEffectiveFieldsDuringRead(existingState Ncc
 }
 
 func (c NccEgressConfig) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["default_rules"] = attrs["default_rules"].SetComputed()
+	attrs["default_rules"] = attrs["default_rules"].SetOptional()
 	attrs["target_rules"] = attrs["target_rules"].SetOptional()
 
 	return attrs
@@ -10444,6 +10702,306 @@ func (o *UpdateDisableLegacyFeaturesRequest) GetSetting(ctx context.Context) (Di
 
 // SetSetting sets the value of the Setting field in UpdateDisableLegacyFeaturesRequest.
 func (o *UpdateDisableLegacyFeaturesRequest) SetSetting(ctx context.Context, v DisableLegacyFeatures) {
+	vs := v.ToObjectValue(ctx)
+	o.Setting = vs
+}
+
+// Details required to update a setting.
+type UpdateEnableExportNotebookRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.Object `tfsdk:"setting"`
+}
+
+func (newState *UpdateEnableExportNotebookRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableExportNotebookRequest) {
+}
+
+func (newState *UpdateEnableExportNotebookRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableExportNotebookRequest) {
+}
+
+func (c UpdateEnableExportNotebookRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableExportNotebookRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateEnableExportNotebookRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(EnableExportNotebook{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEnableExportNotebookRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateEnableExportNotebookRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateEnableExportNotebookRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting":       EnableExportNotebook{}.Type(ctx),
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateEnableExportNotebookRequest as
+// a EnableExportNotebook value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEnableExportNotebookRequest) GetSetting(ctx context.Context) (EnableExportNotebook, bool) {
+	var e EnableExportNotebook
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []EnableExportNotebook
+	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateEnableExportNotebookRequest.
+func (o *UpdateEnableExportNotebookRequest) SetSetting(ctx context.Context, v EnableExportNotebook) {
+	vs := v.ToObjectValue(ctx)
+	o.Setting = vs
+}
+
+// Details required to update a setting.
+type UpdateEnableNotebookTableClipboardRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.Object `tfsdk:"setting"`
+}
+
+func (newState *UpdateEnableNotebookTableClipboardRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableNotebookTableClipboardRequest) {
+}
+
+func (newState *UpdateEnableNotebookTableClipboardRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableNotebookTableClipboardRequest) {
+}
+
+func (c UpdateEnableNotebookTableClipboardRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableNotebookTableClipboardRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateEnableNotebookTableClipboardRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(EnableNotebookTableClipboard{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEnableNotebookTableClipboardRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateEnableNotebookTableClipboardRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateEnableNotebookTableClipboardRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting":       EnableNotebookTableClipboard{}.Type(ctx),
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateEnableNotebookTableClipboardRequest as
+// a EnableNotebookTableClipboard value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEnableNotebookTableClipboardRequest) GetSetting(ctx context.Context) (EnableNotebookTableClipboard, bool) {
+	var e EnableNotebookTableClipboard
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []EnableNotebookTableClipboard
+	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateEnableNotebookTableClipboardRequest.
+func (o *UpdateEnableNotebookTableClipboardRequest) SetSetting(ctx context.Context, v EnableNotebookTableClipboard) {
+	vs := v.ToObjectValue(ctx)
+	o.Setting = vs
+}
+
+// Details required to update a setting.
+type UpdateEnableResultsDownloadingRequest struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.Object `tfsdk:"setting"`
+}
+
+func (newState *UpdateEnableResultsDownloadingRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateEnableResultsDownloadingRequest) {
+}
+
+func (newState *UpdateEnableResultsDownloadingRequest) SyncEffectiveFieldsDuringRead(existingState UpdateEnableResultsDownloadingRequest) {
+}
+
+func (c UpdateEnableResultsDownloadingRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateEnableResultsDownloadingRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateEnableResultsDownloadingRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(EnableResultsDownloading{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateEnableResultsDownloadingRequest
+// only implements ToObjectValue() and Type().
+func (o UpdateEnableResultsDownloadingRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateEnableResultsDownloadingRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting":       EnableResultsDownloading{}.Type(ctx),
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateEnableResultsDownloadingRequest as
+// a EnableResultsDownloading value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateEnableResultsDownloadingRequest) GetSetting(ctx context.Context) (EnableResultsDownloading, bool) {
+	var e EnableResultsDownloading
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []EnableResultsDownloading
+	d := o.Setting.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateEnableResultsDownloadingRequest.
+func (o *UpdateEnableResultsDownloadingRequest) SetSetting(ctx context.Context, v EnableResultsDownloading) {
 	vs := v.ToObjectValue(ctx)
 	o.Setting = vs
 }

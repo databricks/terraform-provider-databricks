@@ -54,13 +54,16 @@ type DatabricksClient struct {
 
 	// callback used to create API1.2 call wrapper, which simplifies unit testing
 	commandFactory func(context.Context, *DatabricksClient) CommandExecutor
+
 	// cachedWorkspaceClient is a cached workspace client authenticated to the workspace
 	// configured for the provider
 	cachedWorkspaceClient *databricks.WorkspaceClient
+
 	// cachedWorkspaceClients is a map of workspace clients for each workspace ID
 	// populated when fetching a WorkspaceClient for a specific workspace ID using
 	// a provider configured at the account level
 	cachedWorkspaceClients map[int64]*databricks.WorkspaceClient
+
 	// cachedAccountClient is a cached account client authenticated to the account
 	// configured for the provider
 	cachedAccountClient *databricks.AccountClient

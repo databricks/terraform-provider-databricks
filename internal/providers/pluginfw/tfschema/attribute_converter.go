@@ -1,3 +1,4 @@
+// Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 package tfschema
 
 // Blockable is an interface that can be implemented by an AttributeBuilder to convert it to a BlockBuilder.

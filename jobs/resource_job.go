@@ -80,27 +80,27 @@ const StorageModeDual StorageMode = `DUAL`
 const StorageModeImport StorageMode = `IMPORT`
 
 type PowerBiModel struct {
-	AuthenticationMethod 	AuthenticationMethod `json:"authentication_method,omitempty"`
-	ModelName 				string `json:"model_name,omitempty"`
-	OverwriteExisting 		bool `json:"overwrite_existing,omitempty"`
-	StorageMode 			StorageMode `json:"storage_mode,omitempty"`
-	WorkspaceName 			string `json:"workspace_name,omitempty"`
+	AuthenticationMethod AuthenticationMethod `json:"authentication_method,omitempty"`
+	ModelName            string               `json:"model_name,omitempty"`
+	OverwriteExisting    bool                 `json:"overwrite_existing,omitempty"`
+	StorageMode          StorageMode          `json:"storage_mode,omitempty"`
+	WorkspaceName        string               `json:"workspace_name,omitempty"`
 }
 
 type PowerBiTable struct {
-	Catalog 	string `json:"catalog,omitempty"`
-	Name 		string `json:"name,omitempty"`
-	Schema		string `json:"schema,omitempty"`
+	Catalog     string      `json:"catalog,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Schema      string      `json:"schema,omitempty"`
 	StorageMode StorageMode `json:"storage_mode,omitempty"`
 }
 
 // PowerBiTask contains the information for Power BI jobs
 type PowerBiTask struct {
-	ConnectionResourceName 	string `json:"connection_resource_name,omitempty"`
-	PowerBiModel 			*PowerBiModel `json:"power_bi_model,omitempty"`
-	RefreshAfterUpdate 		bool `json:"refresh_after_update,omitempty"`
-	Tables 					[]PowerBiTable `json:"tables,omitempty"`
-	WarehouseId 			string `json:"warehouse_id,omitempty"`
+	ConnectionResourceName string         `json:"connection_resource_name,omitempty"`
+	PowerBiModel           *PowerBiModel  `json:"power_bi_model,omitempty"`
+	RefreshAfterUpdate     bool           `json:"refresh_after_update,omitempty"`
+	Tables                 []PowerBiTable `json:"tables,omitempty"`
+	WarehouseId            string         `json:"warehouse_id,omitempty"`
 }
 
 type SqlQueryTask struct {

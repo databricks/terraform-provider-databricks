@@ -7,6 +7,8 @@
 ### New Features and Improvements
 
  * Add a new settings resource `databricks_disable_legacy_dbfs_setting` ([#4605](https://github.com/databricks/terraform-provider-databricks/pull/4605))
+ * Support for `lifetime` attribute in `databricks_service_principal_secret` resource ([#4633](https://github.com/databricks/terraform-provider-databricks/pull/4633)).
+ * Mark `databricks_sql_dashaboard` as deprecated ([#4641](https://github.com/databricks/terraform-provider-databricks/pull/4641))
 
 ### Bug Fixes
 

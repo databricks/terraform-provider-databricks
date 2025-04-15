@@ -289,6 +289,161 @@ func (o *ApproveTransitionRequestResponse_SdkV2) SetActivity(ctx context.Context
 	o.Activity = types.ListValueMust(t, vs)
 }
 
+type ArtifactCredentialInfo_SdkV2 struct {
+	// A collection of HTTP headers that should be specified when uploading to
+	// or downloading from the specified `signed_uri`.
+	Headers types.List `tfsdk:"headers"`
+	// The path, relative to the Run's artifact root location, of the artifact
+	// that can be accessed with the credential.
+	Path types.String `tfsdk:"path"`
+	// The ID of the MLflow Run containing the artifact that can be accessed
+	// with the credential.
+	RunId types.String `tfsdk:"run_id"`
+	// The signed URI credential that provides access to the artifact.
+	SignedUri types.String `tfsdk:"signed_uri"`
+	// The type of the signed credential URI (e.g., an AWS presigned URL or an
+	// Azure Shared Access Signature URI).
+	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *ArtifactCredentialInfo_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactCredentialInfo_SdkV2) {
+}
+
+func (newState *ArtifactCredentialInfo_SdkV2) SyncEffectiveFieldsDuringRead(existingState ArtifactCredentialInfo_SdkV2) {
+}
+
+func (c ArtifactCredentialInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["headers"] = attrs["headers"].SetOptional()
+	attrs["path"] = attrs["path"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
+	attrs["signed_uri"] = attrs["signed_uri"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ArtifactCredentialInfo.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ArtifactCredentialInfo_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"headers": reflect.TypeOf(ArtifactCredentialInfoHttpHeader_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ArtifactCredentialInfo_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ArtifactCredentialInfo_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"headers":    o.Headers,
+			"path":       o.Path,
+			"run_id":     o.RunId,
+			"signed_uri": o.SignedUri,
+			"type":       o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ArtifactCredentialInfo_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"headers": basetypes.ListType{
+				ElemType: ArtifactCredentialInfoHttpHeader_SdkV2{}.Type(ctx),
+			},
+			"path":       types.StringType,
+			"run_id":     types.StringType,
+			"signed_uri": types.StringType,
+			"type":       types.StringType,
+		},
+	}
+}
+
+// GetHeaders returns the value of the Headers field in ArtifactCredentialInfo_SdkV2 as
+// a slice of ArtifactCredentialInfoHttpHeader_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ArtifactCredentialInfo_SdkV2) GetHeaders(ctx context.Context) ([]ArtifactCredentialInfoHttpHeader_SdkV2, bool) {
+	if o.Headers.IsNull() || o.Headers.IsUnknown() {
+		return nil, false
+	}
+	var v []ArtifactCredentialInfoHttpHeader_SdkV2
+	d := o.Headers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetHeaders sets the value of the Headers field in ArtifactCredentialInfo_SdkV2.
+func (o *ArtifactCredentialInfo_SdkV2) SetHeaders(ctx context.Context, v []ArtifactCredentialInfoHttpHeader_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["headers"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Headers = types.ListValueMust(t, vs)
+}
+
+type ArtifactCredentialInfoHttpHeader_SdkV2 struct {
+	// The HTTP header name.
+	Name types.String `tfsdk:"name"`
+	// The HTTP header value.
+	Value types.String `tfsdk:"value"`
+}
+
+func (newState *ArtifactCredentialInfoHttpHeader_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ArtifactCredentialInfoHttpHeader_SdkV2) {
+}
+
+func (newState *ArtifactCredentialInfoHttpHeader_SdkV2) SyncEffectiveFieldsDuringRead(existingState ArtifactCredentialInfoHttpHeader_SdkV2) {
+}
+
+func (c ArtifactCredentialInfoHttpHeader_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ArtifactCredentialInfoHttpHeader.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ArtifactCredentialInfoHttpHeader_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ArtifactCredentialInfoHttpHeader_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ArtifactCredentialInfoHttpHeader_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":  o.Name,
+			"value": o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ArtifactCredentialInfoHttpHeader_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":  types.StringType,
+			"value": types.StringType,
+		},
+	}
+}
+
 // Comment details.
 type CommentObject_SdkV2 struct {
 	// Array of actions on the activity allowed for the current viewer.
@@ -659,56 +814,60 @@ func (o CreateExperimentResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateForecastingExperimentRequest_SdkV2 struct {
-	// Name of the column in the input training table used to customize the
-	// weight for each time series to calculate weighted metrics.
+	// The column in the training table used to customize weights for each time
+	// series.
 	CustomWeightsColumn types.String `tfsdk:"custom_weights_column"`
-	// The path to the created experiment. This is the path where the experiment
-	// will be stored in the workspace.
+	// The path in the workspace to store the created experiment.
 	ExperimentPath types.String `tfsdk:"experiment_path"`
-	// The granularity of the forecast. This defines the time interval between
-	// consecutive rows in the time series data. Possible values: '1 second', '1
-	// minute', '5 minutes', '10 minutes', '15 minutes', '30 minutes', 'Hourly',
-	// 'Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'.
+	// The time interval between consecutive rows in the time series data.
+	// Possible values include: '1 second', '1 minute', '5 minutes', '10
+	// minutes', '15 minutes', '30 minutes', 'Hourly', 'Daily', 'Weekly',
+	// 'Monthly', 'Quarterly', 'Yearly'.
 	ForecastGranularity types.String `tfsdk:"forecast_granularity"`
-	// The number of time steps into the future for which predictions should be
-	// made. This value represents a multiple of forecast_granularity
-	// determining how far ahead the model will forecast.
+	// The number of time steps into the future to make predictions, calculated
+	// as a multiple of forecast_granularity. This value represents how far
+	// ahead the model should forecast.
 	ForecastHorizon types.Int64 `tfsdk:"forecast_horizon"`
-	// Region code(s) to consider when automatically adding holiday features.
-	// When empty, no holiday features are added. Only supports 1 holiday region
-	// for now.
+	// The region code(s) to automatically add holiday features. Currently
+	// supports only one region.
 	HolidayRegions types.List `tfsdk:"holiday_regions"`
-	// The maximum duration in minutes for which the experiment is allowed to
-	// run. If the experiment exceeds this time limit it will be stopped
-	// automatically.
+	// Specifies the list of feature columns to include in model training. These
+	// columns must exist in the training data and be of type string, numerical,
+	// or boolean. If not specified, no additional features will be included.
+	// Note: Certain columns are automatically handled: - Automatically
+	// excluded: split_column, target_column, custom_weights_column. -
+	// Automatically included: time_column.
+	IncludeFeatures types.List `tfsdk:"include_features"`
+	// The maximum duration for the experiment in minutes. The experiment stops
+	// automatically if it exceeds this limit.
 	MaxRuntime types.Int64 `tfsdk:"max_runtime"`
-	// The three-level (fully qualified) path to a unity catalog table. This
-	// table path serves to store the predictions.
+	// The fully qualified path of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used to store predictions.
 	PredictionDataPath types.String `tfsdk:"prediction_data_path"`
 	// The evaluation metric used to optimize the forecasting model.
 	PrimaryMetric types.String `tfsdk:"primary_metric"`
-	// The three-level (fully qualified) path to a unity catalog model. This
-	// model path serves to store the best model.
+	// The fully qualified path of a Unity Catalog model, formatted as
+	// catalog_name.schema_name.model_name, used to store the best model.
 	RegisterTo types.String `tfsdk:"register_to"`
-	// Name of the column in the input training table used for custom data
-	// splits. The values in this column must be "train", "validate", or "test"
-	// to indicate which split each row belongs to.
+	// // The column in the training table used for custom data splits. Values
+	// must be 'train', 'validate', or 'test'.
 	SplitColumn types.String `tfsdk:"split_column"`
-	// Name of the column in the input training table that serves as the
-	// prediction target. The values in this column will be used as the ground
-	// truth for model training.
+	// The column in the input training table used as the prediction target for
+	// model training. The values in this column are used as the ground truth
+	// for model training.
 	TargetColumn types.String `tfsdk:"target_column"`
-	// Name of the column in the input training table that represents the
-	// timestamp of each row.
+	// The column in the input training table that represents each row's
+	// timestamp.
 	TimeColumn types.String `tfsdk:"time_column"`
-	// Name of the column in the input training table used to group the dataset
-	// to predict individual time series
+	// The column in the training table used to group the dataset for predicting
+	// individual time series.
 	TimeseriesIdentifierColumns types.List `tfsdk:"timeseries_identifier_columns"`
-	// The three-level (fully qualified) name of a unity catalog table. This
-	// table serves as the training data for the forecasting model.
+	// The fully qualified name of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used as training data for the
+	// forecasting model.
 	TrainDataPath types.String `tfsdk:"train_data_path"`
-	// The list of frameworks to include for model tuning. Possible values:
-	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list will include all supported
+	// List of frameworks to include for model tuning. Possible values are
+	// 'Prophet', 'ARIMA', 'DeepAR'. An empty list includes all supported
 	// frameworks.
 	TrainingFrameworks types.List `tfsdk:"training_frameworks"`
 }
@@ -725,6 +884,7 @@ func (c CreateForecastingExperimentRequest_SdkV2) ApplySchemaCustomizations(attr
 	attrs["forecast_granularity"] = attrs["forecast_granularity"].SetRequired()
 	attrs["forecast_horizon"] = attrs["forecast_horizon"].SetRequired()
 	attrs["holiday_regions"] = attrs["holiday_regions"].SetOptional()
+	attrs["include_features"] = attrs["include_features"].SetOptional()
 	attrs["max_runtime"] = attrs["max_runtime"].SetOptional()
 	attrs["prediction_data_path"] = attrs["prediction_data_path"].SetOptional()
 	attrs["primary_metric"] = attrs["primary_metric"].SetOptional()
@@ -749,6 +909,7 @@ func (c CreateForecastingExperimentRequest_SdkV2) ApplySchemaCustomizations(attr
 func (a CreateForecastingExperimentRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"holiday_regions":               reflect.TypeOf(types.String{}),
+		"include_features":              reflect.TypeOf(types.String{}),
 		"timeseries_identifier_columns": reflect.TypeOf(types.String{}),
 		"training_frameworks":           reflect.TypeOf(types.String{}),
 	}
@@ -766,6 +927,7 @@ func (o CreateForecastingExperimentRequest_SdkV2) ToObjectValue(ctx context.Cont
 			"forecast_granularity":          o.ForecastGranularity,
 			"forecast_horizon":              o.ForecastHorizon,
 			"holiday_regions":               o.HolidayRegions,
+			"include_features":              o.IncludeFeatures,
 			"max_runtime":                   o.MaxRuntime,
 			"prediction_data_path":          o.PredictionDataPath,
 			"primary_metric":                o.PrimaryMetric,
@@ -788,6 +950,9 @@ func (o CreateForecastingExperimentRequest_SdkV2) Type(ctx context.Context) attr
 			"forecast_granularity":  types.StringType,
 			"forecast_horizon":      types.Int64Type,
 			"holiday_regions": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_features": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 			"max_runtime":          types.Int64Type,
@@ -832,6 +997,32 @@ func (o *CreateForecastingExperimentRequest_SdkV2) SetHolidayRegions(ctx context
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["holiday_regions"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.HolidayRegions = types.ListValueMust(t, vs)
+}
+
+// GetIncludeFeatures returns the value of the IncludeFeatures field in CreateForecastingExperimentRequest_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateForecastingExperimentRequest_SdkV2) GetIncludeFeatures(ctx context.Context) ([]types.String, bool) {
+	if o.IncludeFeatures.IsNull() || o.IncludeFeatures.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IncludeFeatures.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeFeatures sets the value of the IncludeFeatures field in CreateForecastingExperimentRequest_SdkV2.
+func (o *CreateForecastingExperimentRequest_SdkV2) SetIncludeFeatures(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include_features"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.IncludeFeatures = types.ListValueMust(t, vs)
 }
 
 // GetTimeseriesIdentifierColumns returns the value of the TimeseriesIdentifierColumns field in CreateForecastingExperimentRequest_SdkV2 as
@@ -3593,11 +3784,11 @@ func (o ExperimentTag_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Metadata of a single artifact file or directory.
 type FileInfo_SdkV2 struct {
-	// Size in bytes. Unset for directories.
+	// The size in bytes of the file. Unset for directories.
 	FileSize types.Int64 `tfsdk:"file_size"`
 	// Whether the path is a directory.
 	IsDir types.Bool `tfsdk:"is_dir"`
-	// Path relative to the root artifact directory run.
+	// The path relative to the root artifact directory run.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -3745,6 +3936,238 @@ func (o GetByNameRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"experiment_name": types.StringType,
 		},
 	}
+}
+
+// Get credentials to download trace data
+type GetCredentialsForTraceDataDownloadRequest_SdkV2 struct {
+	// The ID of the trace to fetch artifact download credentials for.
+	RequestId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataDownloadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataDownloadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataDownloadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataDownloadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"request_id": o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataDownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"request_id": types.StringType,
+		},
+	}
+}
+
+type GetCredentialsForTraceDataDownloadResponse_SdkV2 struct {
+	// The artifact download credentials for the specified trace data.
+	CredentialInfo types.List `tfsdk:"credential_info"`
+}
+
+func (newState *GetCredentialsForTraceDataDownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsForTraceDataDownloadResponse_SdkV2) {
+}
+
+func (newState *GetCredentialsForTraceDataDownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCredentialsForTraceDataDownloadResponse_SdkV2) {
+}
+
+func (c GetCredentialsForTraceDataDownloadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_info"] = attrs["credential_info"].SetOptional()
+	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataDownloadResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataDownloadResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"credential_info": reflect.TypeOf(ArtifactCredentialInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataDownloadResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataDownloadResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_info": o.CredentialInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataDownloadResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_info": basetypes.ListType{
+				ElemType: ArtifactCredentialInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in GetCredentialsForTraceDataDownloadResponse_SdkV2 as
+// a ArtifactCredentialInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCredentialsForTraceDataDownloadResponse_SdkV2) GetCredentialInfo(ctx context.Context) (ArtifactCredentialInfo_SdkV2, bool) {
+	var e ArtifactCredentialInfo_SdkV2
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ArtifactCredentialInfo_SdkV2
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in GetCredentialsForTraceDataDownloadResponse_SdkV2.
+func (o *GetCredentialsForTraceDataDownloadResponse_SdkV2) SetCredentialInfo(ctx context.Context, v ArtifactCredentialInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
+}
+
+// Get credentials to upload trace data
+type GetCredentialsForTraceDataUploadRequest_SdkV2 struct {
+	// The ID of the trace to fetch artifact upload credentials for.
+	RequestId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataUploadRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataUploadRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataUploadRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataUploadRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"request_id": o.RequestId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataUploadRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"request_id": types.StringType,
+		},
+	}
+}
+
+type GetCredentialsForTraceDataUploadResponse_SdkV2 struct {
+	// The artifact upload credentials for the specified trace data.
+	CredentialInfo types.List `tfsdk:"credential_info"`
+}
+
+func (newState *GetCredentialsForTraceDataUploadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCredentialsForTraceDataUploadResponse_SdkV2) {
+}
+
+func (newState *GetCredentialsForTraceDataUploadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCredentialsForTraceDataUploadResponse_SdkV2) {
+}
+
+func (c GetCredentialsForTraceDataUploadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["credential_info"] = attrs["credential_info"].SetOptional()
+	attrs["credential_info"] = attrs["credential_info"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCredentialsForTraceDataUploadResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetCredentialsForTraceDataUploadResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"credential_info": reflect.TypeOf(ArtifactCredentialInfo_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetCredentialsForTraceDataUploadResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetCredentialsForTraceDataUploadResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"credential_info": o.CredentialInfo,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetCredentialsForTraceDataUploadResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"credential_info": basetypes.ListType{
+				ElemType: ArtifactCredentialInfo_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetCredentialInfo returns the value of the CredentialInfo field in GetCredentialsForTraceDataUploadResponse_SdkV2 as
+// a ArtifactCredentialInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetCredentialsForTraceDataUploadResponse_SdkV2) GetCredentialInfo(ctx context.Context) (ArtifactCredentialInfo_SdkV2, bool) {
+	var e ArtifactCredentialInfo_SdkV2
+	if o.CredentialInfo.IsNull() || o.CredentialInfo.IsUnknown() {
+		return e, false
+	}
+	var v []ArtifactCredentialInfo_SdkV2
+	d := o.CredentialInfo.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCredentialInfo sets the value of the CredentialInfo field in GetCredentialsForTraceDataUploadResponse_SdkV2.
+func (o *GetCredentialsForTraceDataUploadResponse_SdkV2) SetCredentialInfo(ctx context.Context, v ArtifactCredentialInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["credential_info"]
+	o.CredentialInfo = types.ListValueMust(t, vs)
 }
 
 type GetExperimentByNameResponse_SdkV2 struct {
@@ -5326,8 +5749,8 @@ func (o JobSpecWithoutSecret_SdkV2) Type(ctx context.Context) attr.Type {
 
 // List artifacts
 type ListArtifactsRequest_SdkV2 struct {
-	// Token indicating the page of artifact results to fetch. `page_token` is
-	// not supported when listing artifacts in UC Volumes. A maximum of 1000
+	// The token indicating the page of artifact results to fetch. `page_token`
+	// is not supported when listing artifacts in UC Volumes. A maximum of 1000
 	// artifacts will be retrieved for UC Volumes. Please call
 	// `/api/2.0/fs/directories{directory_path}` for listing artifacts in UC
 	// Volumes, which supports pagination. See [List directory contents | Files
@@ -5381,11 +5804,11 @@ func (o ListArtifactsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ListArtifactsResponse_SdkV2 struct {
-	// File location and metadata for artifacts.
+	// The file location and metadata for artifacts.
 	Files types.List `tfsdk:"files"`
-	// Token that can be used to retrieve the next page of artifact results
+	// The token that can be used to retrieve the next page of artifact results.
 	NextPageToken types.String `tfsdk:"next_page_token"`
-	// Root artifact directory for the run.
+	// The root artifact directory for the run.
 	RootUri types.String `tfsdk:"root_uri"`
 }
 
@@ -6193,6 +6616,8 @@ func (o LogBatchResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type LogInputs_SdkV2 struct {
 	// Dataset inputs
 	Datasets types.List `tfsdk:"datasets"`
+	// Model inputs
+	Models types.List `tfsdk:"models"`
 	// ID of the run to log under
 	RunId types.String `tfsdk:"run_id"`
 }
@@ -6205,6 +6630,7 @@ func (newState *LogInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState Log
 
 func (c LogInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["datasets"] = attrs["datasets"].SetOptional()
+	attrs["models"] = attrs["models"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetRequired()
 
 	return attrs
@@ -6220,6 +6646,7 @@ func (c LogInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a LogInputs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"datasets": reflect.TypeOf(DatasetInput_SdkV2{}),
+		"models":   reflect.TypeOf(ModelInput_SdkV2{}),
 	}
 }
 
@@ -6231,6 +6658,7 @@ func (o LogInputs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"datasets": o.Datasets,
+			"models":   o.Models,
 			"run_id":   o.RunId,
 		})
 }
@@ -6241,6 +6669,9 @@ func (o LogInputs_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"datasets": basetypes.ListType{
 				ElemType: DatasetInput_SdkV2{}.Type(ctx),
+			},
+			"models": basetypes.ListType{
+				ElemType: ModelInput_SdkV2{}.Type(ctx),
 			},
 			"run_id": types.StringType,
 		},
@@ -6271,6 +6702,32 @@ func (o *LogInputs_SdkV2) SetDatasets(ctx context.Context, v []DatasetInput_SdkV
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["datasets"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Datasets = types.ListValueMust(t, vs)
+}
+
+// GetModels returns the value of the Models field in LogInputs_SdkV2 as
+// a slice of ModelInput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LogInputs_SdkV2) GetModels(ctx context.Context) ([]ModelInput_SdkV2, bool) {
+	if o.Models.IsNull() || o.Models.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelInput_SdkV2
+	d := o.Models.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModels sets the value of the Models field in LogInputs_SdkV2.
+func (o *LogInputs_SdkV2) SetModels(ctx context.Context, v []ModelInput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["models"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Models = types.ListValueMust(t, vs)
 }
 
 type LogInputsResponse_SdkV2 struct {
@@ -6315,8 +6772,17 @@ func (o LogInputsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type LogMetric_SdkV2 struct {
+	// Dataset digest of the dataset associated with the metric, e.g. an md5
+	// hash of the dataset that uniquely identifies it within datasets of the
+	// same name.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// The name of the dataset associated with the metric. E.g.
+	// “my.uc.table@2” “nyc-taxi-dataset”, “fantastic-elk-3”
+	DatasetName types.String `tfsdk:"dataset_name"`
 	// Name of the metric.
 	Key types.String `tfsdk:"key"`
+	// ID of the logged model associated with the metric, if applicable
+	ModelId types.String `tfsdk:"model_id"`
 	// ID of the run under which to log the metric. Must be provided.
 	RunId types.String `tfsdk:"run_id"`
 	// [Deprecated, use `run_id` instead] ID of the run under which to log the
@@ -6337,7 +6803,10 @@ func (newState *LogMetric_SdkV2) SyncEffectiveFieldsDuringRead(existingState Log
 }
 
 func (c LogMetric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
 	attrs["key"] = attrs["key"].SetRequired()
+	attrs["model_id"] = attrs["model_id"].SetOptional()
 	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["run_uuid"] = attrs["run_uuid"].SetOptional()
 	attrs["step"] = attrs["step"].SetOptional()
@@ -6365,12 +6834,15 @@ func (o LogMetric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":       o.Key,
-			"run_id":    o.RunId,
-			"run_uuid":  o.RunUuid,
-			"step":      o.Step,
-			"timestamp": o.Timestamp,
-			"value":     o.Value,
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+			"key":            o.Key,
+			"model_id":       o.ModelId,
+			"run_id":         o.RunId,
+			"run_uuid":       o.RunUuid,
+			"step":           o.Step,
+			"timestamp":      o.Timestamp,
+			"value":          o.Value,
 		})
 }
 
@@ -6378,12 +6850,15 @@ func (o LogMetric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 func (o LogMetric_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":       types.StringType,
-			"run_id":    types.StringType,
-			"run_uuid":  types.StringType,
-			"step":      types.Int64Type,
-			"timestamp": types.Int64Type,
-			"value":     types.Float64Type,
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+			"key":            types.StringType,
+			"model_id":       types.StringType,
+			"run_id":         types.StringType,
+			"run_uuid":       types.StringType,
+			"step":           types.Int64Type,
+			"timestamp":      types.Int64Type,
+			"value":          types.Float64Type,
 		},
 	}
 }
@@ -6630,13 +7105,25 @@ func (o LogParamResponse_SdkV2) Type(ctx context.Context) attr.Type {
 
 // Metric associated with a run, represented as a key-value pair.
 type Metric_SdkV2 struct {
-	// Key identifying this metric.
+	// The dataset digest of the dataset associated with the metric, e.g. an md5
+	// hash of the dataset that uniquely identifies it within datasets of the
+	// same name.
+	DatasetDigest types.String `tfsdk:"dataset_digest"`
+	// The name of the dataset associated with the metric. E.g.
+	// “my.uc.table@2” “nyc-taxi-dataset”, “fantastic-elk-3”
+	DatasetName types.String `tfsdk:"dataset_name"`
+	// The key identifying the metric.
 	Key types.String `tfsdk:"key"`
-	// Step at which to log the metric.
+	// The ID of the logged model or registered model version associated with
+	// the metric, if applicable.
+	ModelId types.String `tfsdk:"model_id"`
+	// The ID of the run containing the metric.
+	RunId types.String `tfsdk:"run_id"`
+	// The step at which the metric was logged.
 	Step types.Int64 `tfsdk:"step"`
-	// The timestamp at which this metric was recorded.
+	// The timestamp at which the metric was recorded.
 	Timestamp types.Int64 `tfsdk:"timestamp"`
-	// Value associated with this metric.
+	// The value of the metric.
 	Value types.Float64 `tfsdk:"value"`
 }
 
@@ -6647,7 +7134,11 @@ func (newState *Metric_SdkV2) SyncEffectiveFieldsDuringRead(existingState Metric
 }
 
 func (c Metric_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dataset_digest"] = attrs["dataset_digest"].SetOptional()
+	attrs["dataset_name"] = attrs["dataset_name"].SetOptional()
 	attrs["key"] = attrs["key"].SetOptional()
+	attrs["model_id"] = attrs["model_id"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetOptional()
 	attrs["step"] = attrs["step"].SetOptional()
 	attrs["timestamp"] = attrs["timestamp"].SetOptional()
 	attrs["value"] = attrs["value"].SetOptional()
@@ -6673,10 +7164,14 @@ func (o Metric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"key":       o.Key,
-			"step":      o.Step,
-			"timestamp": o.Timestamp,
-			"value":     o.Value,
+			"dataset_digest": o.DatasetDigest,
+			"dataset_name":   o.DatasetName,
+			"key":            o.Key,
+			"model_id":       o.ModelId,
+			"run_id":         o.RunId,
+			"step":           o.Step,
+			"timestamp":      o.Timestamp,
+			"value":          o.Value,
 		})
 }
 
@@ -6684,10 +7179,14 @@ func (o Metric_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 func (o Metric_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"key":       types.StringType,
-			"step":      types.Int64Type,
-			"timestamp": types.Int64Type,
-			"value":     types.Float64Type,
+			"dataset_digest": types.StringType,
+			"dataset_name":   types.StringType,
+			"key":            types.StringType,
+			"model_id":       types.StringType,
+			"run_id":         types.StringType,
+			"step":           types.Int64Type,
+			"timestamp":      types.Int64Type,
+			"value":          types.Float64Type,
 		},
 	}
 }
@@ -6977,6 +7476,55 @@ func (o *ModelDatabricks_SdkV2) SetTags(ctx context.Context, v []ModelTag_SdkV2)
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
+}
+
+// Represents a LoggedModel or Registered Model Version input to a Run.
+type ModelInput_SdkV2 struct {
+	// The unique identifier of the model.
+	ModelId types.String `tfsdk:"model_id"`
+}
+
+func (newState *ModelInput_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ModelInput_SdkV2) {
+}
+
+func (newState *ModelInput_SdkV2) SyncEffectiveFieldsDuringRead(existingState ModelInput_SdkV2) {
+}
+
+func (c ModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_id"] = attrs["model_id"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ModelInput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ModelInput_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ModelInput_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ModelInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"model_id": o.ModelId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ModelInput_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"model_id": types.StringType,
+		},
+	}
 }
 
 type ModelTag_SdkV2 struct {
@@ -9085,6 +9633,11 @@ func (o RunInfo_SdkV2) Type(ctx context.Context) attr.Type {
 type RunInputs_SdkV2 struct {
 	// Run metrics.
 	DatasetInputs types.List `tfsdk:"dataset_inputs"`
+	// **NOTE**: Experimental: This API field may change or be removed in a
+	// future release without warning.
+	//
+	// Model inputs to the Run.
+	ModelInputs types.List `tfsdk:"model_inputs"`
 }
 
 func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RunInputs_SdkV2) {
@@ -9095,6 +9648,7 @@ func (newState *RunInputs_SdkV2) SyncEffectiveFieldsDuringRead(existingState Run
 
 func (c RunInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["dataset_inputs"] = attrs["dataset_inputs"].SetOptional()
+	attrs["model_inputs"] = attrs["model_inputs"].SetOptional()
 
 	return attrs
 }
@@ -9109,6 +9663,7 @@ func (c RunInputs_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a RunInputs_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"dataset_inputs": reflect.TypeOf(DatasetInput_SdkV2{}),
+		"model_inputs":   reflect.TypeOf(ModelInput_SdkV2{}),
 	}
 }
 
@@ -9120,6 +9675,7 @@ func (o RunInputs_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"dataset_inputs": o.DatasetInputs,
+			"model_inputs":   o.ModelInputs,
 		})
 }
 
@@ -9129,6 +9685,9 @@ func (o RunInputs_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"dataset_inputs": basetypes.ListType{
 				ElemType: DatasetInput_SdkV2{}.Type(ctx),
+			},
+			"model_inputs": basetypes.ListType{
+				ElemType: ModelInput_SdkV2{}.Type(ctx),
 			},
 		},
 	}
@@ -9158,6 +9717,32 @@ func (o *RunInputs_SdkV2) SetDatasetInputs(ctx context.Context, v []DatasetInput
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dataset_inputs"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.DatasetInputs = types.ListValueMust(t, vs)
+}
+
+// GetModelInputs returns the value of the ModelInputs field in RunInputs_SdkV2 as
+// a slice of ModelInput_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunInputs_SdkV2) GetModelInputs(ctx context.Context) ([]ModelInput_SdkV2, bool) {
+	if o.ModelInputs.IsNull() || o.ModelInputs.IsUnknown() {
+		return nil, false
+	}
+	var v []ModelInput_SdkV2
+	d := o.ModelInputs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetModelInputs sets the value of the ModelInputs field in RunInputs_SdkV2.
+func (o *RunInputs_SdkV2) SetModelInputs(ctx context.Context, v []ModelInput_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["model_inputs"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ModelInputs = types.ListValueMust(t, vs)
 }
 
 // Tag for a run.

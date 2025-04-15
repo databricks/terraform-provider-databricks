@@ -1531,9 +1531,9 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy to be applied to the serving endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
@@ -7150,9 +7150,9 @@ func (o ServerLogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy associated with the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
@@ -7532,9 +7532,9 @@ func (o *ServingEndpointAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 }
 
 type ServingEndpointDetailed_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy associated with the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`

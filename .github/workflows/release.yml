@@ -57,6 +57,8 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         with:
           version: ~> v2
+          # Arguments cannot reference environment variables, so we write the release notes
+          # to a well-known location and use that in the goreleaser command.
           args: release --clean --release-notes=/tmp/release-notes/release-notes.md
         env:
           # use GITHUB_TOKEN that is already available in secrets.GITHUB_TOKEN

@@ -3703,7 +3703,7 @@ func (c ShareInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["created_by"] = attrs["created_by"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
-	attrs["object"] = attrs["object"].SetComputed()
+	attrs["object"] = attrs["object"].SetOptional()
 	attrs["effective_owner"] = attrs["effective_owner"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["storage_location"] = attrs["storage_location"].SetComputed()

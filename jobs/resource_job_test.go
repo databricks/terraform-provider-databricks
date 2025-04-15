@@ -621,6 +621,130 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
+func TestResourceJobCreate_PowerBiTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: jobs.CreateJob{
+					Name: "power_bi_task_name",
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "power_bi_task_key",
+							PowerBiTask: &jobs.PowerBiTask{
+								ConnectionResourceName: "test-connection",
+								PowerBiModel: &jobs.PowerBiModel{
+									AuthenticationMethod: jobs.AuthenticationMethodOauth,
+									ModelName: "TestModel",
+									OverwriteExisting: true,
+									StorageMode: jobs.StorageModeDirectQuery,
+									WorkspaceName: "TestWorkspace",
+								},
+								RefreshAfterUpdate: true,
+								Tables: []jobs.PowerBiTable{
+									{
+										Catalog: "TestCatalog",
+										Name: "TestTable1",
+										Schema: "TestSchema",
+										StorageMode: jobs.StorageModeDirectQuery,
+									},
+									{
+										Catalog: "TestCatalog",
+										Name: "TestTable2",
+										Schema: "TestSchema",
+										StorageMode: jobs.StorageModeDual,
+									},
+								},
+								WarehouseId: "12345",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name: "power_bi_task_name",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "power_bi_task_key",
+								PowerBiTask: &jobs.PowerBiTask{
+									ConnectionResourceName: "test-connection",
+									PowerBiModel: &jobs.PowerBiModel{
+										AuthenticationMethod: jobs.AuthenticationMethodOauth,
+										ModelName: "TestModel",
+										OverwriteExisting: true,
+										StorageMode: jobs.StorageModeDirectQuery,
+										WorkspaceName: "TestWorkspace",
+									},
+									RefreshAfterUpdate: true,
+									Tables: []jobs.PowerBiTable{
+										{
+											Catalog: "TestCatalog",
+											Name: "TestTable1",
+											Schema: "TestSchema",
+											StorageMode: jobs.StorageModeDirectQuery,
+										},
+										{
+											Catalog: "TestCatalog",
+											Name: "TestTable2",
+											Schema: "TestSchema",
+											StorageMode: jobs.StorageModeDual,
+										},
+									},
+									WarehouseId: "12345",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "power_bi_task_name"
+		task {
+			task_key = "power_bi_task_key"
+			power_bi_task {
+				connection_resource_name = "test-connection"
+				power_bi_model {
+					authentication_method = "OAUTH"
+					model_name = "TestModel"
+					overwrite_existing = true
+					storage_mode = "DIRECT_QUERY"
+					workspace_name = "TestWorkspace"
+				}
+				refresh_after_update = true
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable1"
+					schema = "TestSchema"
+					storage_mode = "DIRECT_QUERY"
+				}
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable2"
+					schema = "TestSchema"
+					storage_mode = "DUAL"
+				}
+				warehouse_id = "12345"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

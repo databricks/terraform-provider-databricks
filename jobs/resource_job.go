@@ -65,44 +65,6 @@ type PipelineTask struct {
 	FullRefresh bool   `json:"full_refresh,omitempty"`
 }
 
-type AuthenticationMethod string
-
-const AuthenticationMethodOauth AuthenticationMethod = `OAUTH`
-
-const AuthenticationMethodPat AuthenticationMethod = `PAT`
-
-type StorageMode string
-
-const StorageModeDirectQuery StorageMode = `DIRECT_QUERY`
-
-const StorageModeDual StorageMode = `DUAL`
-
-const StorageModeImport StorageMode = `IMPORT`
-
-type PowerBiModel struct {
-	AuthenticationMethod AuthenticationMethod `json:"authentication_method,omitempty"`
-	ModelName            string               `json:"model_name,omitempty"`
-	OverwriteExisting    bool                 `json:"overwrite_existing,omitempty"`
-	StorageMode          StorageMode          `json:"storage_mode,omitempty"`
-	WorkspaceName        string               `json:"workspace_name,omitempty"`
-}
-
-type PowerBiTable struct {
-	Catalog     string      `json:"catalog,omitempty"`
-	Name        string      `json:"name,omitempty"`
-	Schema      string      `json:"schema,omitempty"`
-	StorageMode StorageMode `json:"storage_mode,omitempty"`
-}
-
-// PowerBiTask contains the information for Power BI jobs
-type PowerBiTask struct {
-	ConnectionResourceName string         `json:"connection_resource_name,omitempty"`
-	PowerBiModel           *PowerBiModel  `json:"power_bi_model,omitempty"`
-	RefreshAfterUpdate     bool           `json:"refresh_after_update,omitempty"`
-	Tables                 []PowerBiTable `json:"tables,omitempty"`
-	WarehouseId            string         `json:"warehouse_id,omitempty"`
-}
-
 type SqlQueryTask struct {
 	QueryID string `json:"query_id"`
 }
@@ -183,7 +145,7 @@ type ForEachNestedTask struct {
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PowerBiTask     *PowerBiTask        `json:"power_bi_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
@@ -265,7 +227,7 @@ type JobTaskSettings struct {
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
-	PowerBiTask     *PowerBiTask        `json:"power_bi_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`

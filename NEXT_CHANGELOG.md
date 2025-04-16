@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
 ### Bug Fixes
+* Bug fixed in `databricks_mws_workspaces` resource due to migration of resource to Go SDK
 
 ### Documentation
 

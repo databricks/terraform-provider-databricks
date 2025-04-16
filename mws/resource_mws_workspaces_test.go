@@ -2,118 +2,85 @@ package mws
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/databricks-sdk-go/experimental/mocks"
-	"github.com/databricks/databricks-sdk-go/listing"
-	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
-	"github.com/databricks/databricks-sdk-go/service/settings"
+	"github.com/databricks/terraform-provider-databricks/common"
+	"github.com/databricks/terraform-provider-databricks/tokens"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
-func mockScimMe(c *mocks.MockWorkspaceClient) {
-	c.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{UserName: "me@hello.com"}, nil)
-}
-
-func setConfigHost(host string) func(*mocks.MockWorkspaceClient) {
-	return func(c *mocks.MockWorkspaceClient) {
-		c.WorkspaceClient.Config = &config.Config{
-			Host: host,
-		}
-	}
-}
-
-func setDefaultConfigHost(c *mocks.MockWorkspaceClient) {
-	c.WorkspaceClient.Config = &config.Config{
-		Host: "900150983cd24fb0.cloud.databricks.com",
-	}
-}
-
-func basicMockWorkspaceClients(t *testing.T, configs ...func(*mocks.MockWorkspaceClient)) func(map[int64]*mocks.MockWorkspaceClient) {
-	return func(m map[int64]*mocks.MockWorkspaceClient) {
-		c := mocks.NewMockWorkspaceClient(t)
-		for _, config := range configs {
-			config(c)
-		}
-		m[1234] = c
-	}
-}
-
 func TestResourceWorkspaceCreate(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-		CustomTags: map[string]string{
-			"SoldToCode": "1234",
-		},
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				IsNoPublicIpEnabled:                 true,
-				WorkspaceName:                       "labdata",
-				DeploymentName:                      "900150983cd24fb0",
-				AwsRegion:                           "us-east-1",
-				CredentialsId:                       "bcd",
-				StorageConfigurationId:              "ghi",
-				NetworkId:                           "fgh",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageCustomerManagedKeyId:         "def",
-				CustomTags: map[string]string{
-					"SoldToCode": "1234",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: Workspace{
+					AccountID:                           "abc",
+					IsNoPublicIPEnabled:                 true,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
 				},
-				ForceSendFields: []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceID:                         1234,
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					AccountID:                           "abc",
+					CustomTags: map[string]string{
+						"SoldToCode": "1234",
+					},
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		custom_tags = {
-			SoldToCode = "1234"
-		}
-		`,
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"custom_tags": map[string]any{
+				"SoldToCode": "1234",
+			},
+		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -121,53 +88,50 @@ func TestResourceWorkspaceCreate(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcp(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:     1234,
-		WorkspaceStatus: provisioning.WorkspaceStatusRunning,
-		WorkspaceName:   "labdata",
-		DeploymentName:  "900150983cd24fb0",
-		AccountId:       "abc",
-		Cloud:           "gcp",
-		Location:        "bcd",
-		GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-			SubnetCidr: "a",
-		},
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				CloudResourceContainer: &provisioning.CloudResourceContainer{
-					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
-						ProjectId: "def",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
 					},
+					"location":   "bcd",
+					"network_id": "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name": "labdata",
 				},
-				DeploymentName:      "900150983cd24fb0",
-				IsNoPublicIpEnabled: true,
-				Location:            "bcd",
-				NetworkId:           "net_id_a",
-				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-					SubnetCidr: "a",
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
 				},
-				WorkspaceName:   "labdata",
-				ForceSendFields: []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					Location:        "bcd",
+					Cloud:           "gcp",
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -185,11 +149,56 @@ func TestResourceWorkspaceCreateGcp(t *testing.T) {
 		`,
 		Gcp:    true,
 		Create: true,
-	}.ApplyNoError(t)
+	}.ApplyAndExpectData(t, map[string]any{
+		"cloud":            "gcp",
+		"gcp_workspace_sa": "db-1234@prod-gcp-bcd.iam.gserviceaccount.com",
+	})
 }
 
 func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name": "labdata",
+					"custom_tags": map[string]any{
+						"SoldToCode": "1234",
+					},
+				},
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_PARAMETER_VALUE",
+					Message:   "custom_tags are only allowed for AWS workspaces",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
+		},
 		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
@@ -216,56 +225,49 @@ func TestResourceWorkspaceCreate_Error_Custom_tags(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:             1234,
-		WorkspaceStatus:         provisioning.WorkspaceStatusRunning,
-		WorkspaceName:           "labdata",
-		DeploymentName:          "900150983cd24fb0",
-		AccountId:               "abc",
-		Cloud:                   "gcp",
-		Location:                "bcd",
-		PrivateAccessSettingsId: "pas_id_a",
-		GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-			SubnetCidr: "a",
-		},
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				CloudResourceContainer: &provisioning.CloudResourceContainer{
-					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
-						ProjectId: "def",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
 					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name": "labdata",
 				},
-				DeploymentName:          "900150983cd24fb0",
-				IsNoPublicIpEnabled:     true,
-				Location:                "bcd",
-				PrivateAccessSettingsId: "pas_id_a",
-				NetworkId:               "net_id_a",
-				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-					SubnetCidr: "a",
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
 				},
-				WorkspaceName:   "labdata",
-				ForceSendFields: []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
-
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -288,59 +290,50 @@ func TestResourceWorkspaceCreateGcpPsc(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:             1234,
-		WorkspaceStatus:         provisioning.WorkspaceStatusRunning,
-		WorkspaceName:           "labdata",
-		AccountId:               "abc",
-		DeploymentName:          "900150983cd24fb0",
-		Cloud:                   "gcp",
-		Location:                "bcd",
-		PrivateAccessSettingsId: "pas_id_a",
-		GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-			SubnetCidr: "a",
-		},
-		ManagedServicesCustomerManagedKeyId: "managed_services_cmk",
-		StorageCustomerManagedKeyId:         "storage_cmk",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				CloudResourceContainer: &provisioning.CloudResourceContainer{
-					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
-						ProjectId: "def",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
 					},
+					"location":                   "bcd",
+					"private_access_settings_id": "pas_id_a",
+					"network_id":                 "net_id_a",
+					"gcp_managed_network_config": map[string]any{
+						"subnet_cidr": "a",
+					},
+					"workspace_name": "labdata",
+					"managed_services_customer_managed_key_id": "managed_services_cmk",
+					"storage_customer_managed_key_id":          "storage_cmk",
 				},
-				DeploymentName:          "900150983cd24fb0",
-				IsNoPublicIpEnabled:     true,
-				Location:                "bcd",
-				PrivateAccessSettingsId: "pas_id_a",
-				NetworkId:               "net_id_a",
-				GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-					SubnetCidr: "a",
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
 				},
-				WorkspaceName:                       "labdata",
-				ManagedServicesCustomerManagedKeyId: "managed_services_cmk",
-				StorageCustomerManagedKeyId:         "storage_cmk",
-				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -365,62 +358,61 @@ func TestResourceWorkspaceCreateGcpCmk(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				IsNoPublicIpEnabled:                 false,
-				WorkspaceName:                       "labdata",
-				DeploymentName:                      "900150983cd24fb0",
-				AwsRegion:                           "us-east-1",
-				CredentialsId:                       "bcd",
-				StorageConfigurationId:              "ghi",
-				NetworkId:                           "fgh",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageCustomerManagedKeyId:         "def",
-				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: Workspace{
+					AccountID:                           "abc",
+					IsNoPublicIPEnabled:                 false,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceID:                         1234,
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					AccountID:                           "abc",
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		is_no_public_ip_enabled = false
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		`,
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  false,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
@@ -428,92 +420,131 @@ func TestResourceWorkspaceCreateWithIsNoPublicIPEnabledFalse(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateLegacyConfig(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		AccountId:                           "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				IsNoPublicIpEnabled:                 true,
-				WorkspaceName:                       "labdata",
-				DeploymentName:                      "900150983cd24fb0",
-				AwsRegion:                           "us-east-1",
-				CredentialsId:                       "bcd",
-				StorageConfigurationId:              "ghi",
-				NetworkId:                           "fgh",
-				ManagedServicesCustomerManagedKeyId: "def",
-				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				ExpectedRequest: Workspace{
+					AccountID:                           "abc",
+					IsNoPublicIPEnabled:                 true,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceID:                         1234,
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					AccountID:                           "abc",
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		`,
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"account_id":               "abc",
+			"aws_region":               "us-east-1",
+			"credentials_id":           "bcd",
+			"customer_managed_key_id":  "def",
+			"deployment_name":          "900150983cd24fb0",
+			"workspace_name":           "labdata",
+			"network_id":               "fgh",
+			"storage_configuration_id": "ghi",
+		},
 		Create: true,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
-func TestResourceWorkspaceRead(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
+func TestResourceWorkspaceCreate_Error(t *testing.T) {
+	t.Skipf("Making this test skip until we can configure sleep timings for test purposes")
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
-		Resource:                 ResourceMwsWorkspaces(),
-		Read:                     true,
-		New:                      true,
-		ID:                       "abc/1234",
+		Resource: ResourceMwsWorkspaces(),
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+		},
+		Create: true,
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "", d.Id(), "Id should be empty for error creates")
+}
+
+func TestResourceWorkspaceRead(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:                           "abc",
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					WorkspaceID:                         1234,
+				},
+			},
+		},
+		Resource: ResourceMwsWorkspaces(),
+		Read:     true,
+		New:      true,
+		ID:       "abc/1234",
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should not be empty")
@@ -532,29 +563,27 @@ func TestResourceWorkspaceRead(t *testing.T) {
 }
 
 func TestResourceWorkspaceRead_Issue382(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "prefix-900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:                           "abc",
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "prefix-900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					WorkspaceID:                         1234,
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setConfigHost("prefix-900150983cd24fb0.cloud.databricks.com")),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -590,14 +619,16 @@ func TestResourceWorkspaceRead_Issue382(t *testing.T) {
 
 func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "NOT_FOUND",
-				Message:    "Item not found",
-				StatusCode: 404,
-			})
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: common.APIErrorBody{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Item not found",
+				},
+				Status: 404,
+			},
 		},
 		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
@@ -608,14 +639,16 @@ func TestResourceWorkspaceRead_NotFound(t *testing.T) {
 
 func TestResourceWorkspaceRead_Error(t *testing.T) {
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "INVALID_REQUEST",
-				Message:    "Internal error happened",
-				StatusCode: 400,
-			})
+		Fixtures: []qa.HTTPFixture{
+			{ // read log output for correct url...
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
 		},
 		Resource: ResourceMwsWorkspaces(),
 		Read:     true,
@@ -626,47 +659,37 @@ func TestResourceWorkspaceRead_Error(t *testing.T) {
 }
 
 func TestResourceWorkspaceUpdate(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[struct{}]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                         1234,
-				AwsRegion:                           "us-east-1",
-				ManagedServicesCustomerManagedKeyId: "def",
-				CredentialsId:                       "bcd",
-				NetworkId:                           "fgh",
-				StorageCustomerManagedKeyId:         "def",
-				StorageConfigurationId:              "ghi",
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"credentials_id":                  "bcd",
+					"network_id":                      "fgh",
+					"storage_customer_managed_key_id": "def",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					AccountID:                           "abc",
+					WorkspaceID:                         1234,
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -716,69 +739,60 @@ func TestResourceWorkspaceUpdate_NotAllowed(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
-		HCL: `
-		account_id = "THIS_IS_CHANGING"
-		aws_region = "us-east-1"
-		credentials_id = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name = "labdata"
-		is_no_public_ip_enabled = true
-		network_id = "fgh"
-		storage_configuration_id = "ghi"
-		workspace_id = 1234
-		`,
+		State: map[string]any{
+			"account_id": "THIS_IS_CHANGING",
+
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"workspace_id":                             1234,
+		},
 		Update: true,
 		ID:     "abc/1234",
 	}.ExpectError(t, "changes require new: account_id")
 }
 
 func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		IsNoPublicIpEnabled:                 true,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		AccountId:                           "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[struct{}]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                         1234,
-				AwsRegion:                           "us-east-1",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageConfigurationId:              "ghi",
-				CredentialsId:                       "bcd",
-				NetworkId:                           "fgh",
-			}).Return(mockWaiter, nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"credentials_id": "bcd",
+					"network_id":     "fgh",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					IsNoPublicIPEnabled:                 true,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					AccountID:                           "abc",
+					WorkspaceID:                         1234,
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":               "abc",
 			"aws_region":               "us-east-1",
-			"credentials_id":           "old",
+			"credentials_id":           "bcd",
 			"customer_managed_key_id":  "def",
 			"deployment_name":          "900150983cd24fb0",
 			"is_no_public_ip_enabled":  "true",
@@ -807,35 +821,18 @@ func TestResourceWorkspaceUpdateLegacyConfig(t *testing.T) {
 
 func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                         1234,
-				AwsRegion:                           "us-east-1",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageConfigurationId:              "ghi",
-				CredentialsId:                       "bcd",
-				NetworkId:                           "fgh",
-				StorageCustomerManagedKeyId:         "def",
-			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "INVALID_REQUEST",
-				Message:    "Internal error happened",
-				StatusCode: 400,
-			})
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
+			},
 		},
 		Resource: ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "old",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"is_no_public_ip_enabled":                  "true",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"workspace_id":                             "1234",
-		},
 		State: map[string]any{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -848,34 +845,37 @@ func TestResourceWorkspaceUpdate_Error(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             1234,
 		},
-		Update: true,
-		ID:     "abc/1234",
+		Update:      true,
+		RequiresNew: true,
+		ID:          "abc/1234",
 	}.ExpectError(t, "Internal error happened")
 }
 
 func TestResourceWorkspaceDelete(t *testing.T) {
-	// Define a mock workspace that can be reused for the first GET call
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceName:          "labdata",
-		WorkspaceStatus:        provisioning.WorkspaceStatusCancelling,
-		WorkspaceStatusMessage: "Things are being removed",
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().Delete(mock.Anything, provisioning.DeleteWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil)
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil).Once()
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "NOT_FOUND",
-				Message:    "Cannot find anything",
-				StatusCode: 404,
-			})
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceName:          "labdata",
+					WorkspaceStatus:        WorkspaceStatusCanceled,
+					WorkspaceStatusMessage: "Things are being removed",
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: common.APIErrorBody{
+					ErrorCode: "NOT_FOUND",
+					Message:   "Cannot find anything",
+				},
+				Status: 404,
+			},
 		},
 		Resource: ResourceMwsWorkspaces(),
 		Delete:   true,
@@ -885,254 +885,695 @@ func TestResourceWorkspaceDelete(t *testing.T) {
 	assert.Equal(t, "abc/1234", d.Id())
 }
 
-func TestCreateFailsAndCleansUp(t *testing.T) {
-	// Define a mock workspace that represents the failed state
-	mockFailedWorkspace := &provisioning.Workspace{
-		WorkspaceId:            1234,
-		WorkspaceStatus:        provisioning.WorkspaceStatusFailed,
-		WorkspaceStatusMessage: "Always fails",
-		WorkspaceName:          "labdata",
-		DeploymentName:         "900150983cd24fb0",
-		AwsRegion:              "us-east-1",
-		NetworkId:              "fgh",
-		AccountId:              "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Response:    mockFailedWorkspace,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return nil, errors.New("failed to reach RUNNING, got FAILED")
-		},
-	}
-
-	// Define a mock network with error messages
-	mockNetwork := &provisioning.Network{
-		NetworkId: "fgh",
-		ErrorMessages: []provisioning.NetworkHealth{
+func TestResourceWorkspaceDelete_Error(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
 			{
-				ErrorType:    provisioning.ErrorTypeCredentials,
-				ErrorMessage: "Message",
+				Method:   "DELETE",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				Response: common.APIErrorBody{
+					ErrorCode: "INVALID_REQUEST",
+					Message:   "Internal error happened",
+				},
+				Status: 400,
 			},
 		},
-	}
+		Resource: ResourceMwsWorkspaces(),
+		Delete:   true,
+		ID:       "abc/1234",
+	}.Apply(t)
+	qa.AssertErrorStartsWith(t, err, "Internal error happened")
+	assert.Equal(t, "abc/1234", d.Id())
+}
 
-	_, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Create call
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				IsNoPublicIpEnabled:                 true,
+func TestWaitForRunning(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			ExpectedRequest: Workspace{
+				AccountID:                           "abc",
+				IsNoPublicIPEnabled:                 true,
 				WorkspaceName:                       "labdata",
 				DeploymentName:                      "900150983cd24fb0",
 				AwsRegion:                           "us-east-1",
-				CredentialsId:                       "bcd",
-				StorageConfigurationId:              "ghi",
-				NetworkId:                           "fgh",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageCustomerManagedKeyId:         "def",
-				ForceSendFields:                     []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-
-			// Expect the Get call to retrieve the failed workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockFailedWorkspace, nil)
-
-			// Expect the Get call to retrieve the network with errors
-			a.GetMockNetworksAPI().EXPECT().Get(mock.Anything, provisioning.GetNetworkRequest{NetworkId: "fgh"}).Return(mockNetwork, nil)
-
-			// Expect the Delete call to clean up the failed workspace
-			a.GetMockWorkspacesAPI().EXPECT().Delete(mock.Anything, provisioning.DeleteWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil)
-
-			// Expect the final Get call to confirm the workspace is gone
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(nil, &apierr.APIError{
-				ErrorCode:  "NOT_FOUND",
-				Message:    "Item not found",
-				StatusCode: 404,
-			})
+				CredentialsID:                       "bcd",
+				StorageConfigurationID:              "ghi",
+				NetworkID:                           "fgh",
+				ManagedServicesCustomerManagedKeyID: "def",
+				StorageCustomerManagedKeyID:         "def",
+			},
+			Response: Workspace{
+				WorkspaceID:    1234,
+				AccountID:      "abc",
+				DeploymentName: "900150983cd24fb0",
+			},
 		},
-		Resource: ResourceMwsWorkspaces(),
-		State: map[string]any{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:                         1234,
+				WorkspaceStatus:                     WorkspaceStatusProvisioning,
+				WorkspaceName:                       "labdata",
+				DeploymentName:                      "900150983cd24fb0",
+				AwsRegion:                           "us-east-1",
+				CredentialsID:                       "bcd",
+				StorageConfigurationID:              "ghi",
+				NetworkID:                           "fgh",
+				ManagedServicesCustomerManagedKeyID: "def",
+				StorageCustomerManagedKeyID:         "def",
+				AccountID:                           "abc",
+			},
 		},
-		Create: true,
-	}.Apply(t)
-	assert.ErrorContains(t, err, "workspace status message: Always fails, network error message: error: credentials;error_msg: Message;")
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:                         1234,
+				WorkspaceStatus:                     WorkspaceStatusRunning,
+				WorkspaceName:                       "labdata",
+				DeploymentName:                      "900150983cd24fb0",
+				AwsRegion:                           "us-east-1",
+				CredentialsID:                       "bcd",
+				StorageConfigurationID:              "ghi",
+				NetworkID:                           "fgh",
+				ManagedServicesCustomerManagedKeyID: "def",
+				StorageCustomerManagedKeyID:         "def",
+				AccountID:                           "abc",
+			},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
+
+	err = NewWorkspacesAPI(context.Background(), client).Create(&Workspace{
+		AccountID:                           "abc",
+		IsNoPublicIPEnabled:                 true,
+		WorkspaceName:                       "labdata",
+		DeploymentName:                      "900150983cd24fb0",
+		AwsRegion:                           "us-east-1",
+		CredentialsID:                       "bcd",
+		StorageConfigurationID:              "ghi",
+		NetworkID:                           "fgh",
+		ManagedServicesCustomerManagedKeyID: "def",
+		StorageCustomerManagedKeyID:         "def",
+	}, DefaultProvisionTimeout)
+	require.NoError(t, err)
 }
 
-func TestWorkspace_verifyWorkspaceReachable(t *testing.T) {
-	// Create a mock client
-	mockClient := mocks.NewMockWorkspaceClient(t)
-
-	// Set up expectations for the first call (DNS error)
-	mockClient.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(nil, &net.OpError{
-		Op:  "dial",
-		Net: "tcp",
-		Err: &net.DNSError{
-			Name: "900150983cd24fb0.cloud.databricks.com",
-			Err:  "no such host",
+func TestCreateFailsAndCleansUp(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			ExpectedRequest: Workspace{
+				AccountID:                           "abc",
+				IsNoPublicIPEnabled:                 true,
+				WorkspaceName:                       "labdata",
+				DeploymentName:                      "900150983cd24fb0",
+				AwsRegion:                           "us-east-1",
+				CredentialsID:                       "bcd",
+				StorageConfigurationID:              "ghi",
+				NetworkID:                           "fgh",
+				ManagedServicesCustomerManagedKeyID: "def",
+				StorageCustomerManagedKeyID:         "def",
+			},
+			Response: Workspace{
+				WorkspaceID:    1234,
+				AccountID:      "abc",
+				DeploymentName: "900150983cd24fb0",
+			},
 		},
-	}).Once()
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Response: Workspace{
+				WorkspaceID:            1234,
+				WorkspaceStatus:        WorkspaceStatusFailed,
+				WorkspaceStatusMessage: "Always fails",
+				WorkspaceName:          "labdata",
+				DeploymentName:         "900150983cd24fb0",
+				AwsRegion:              "us-east-1",
+				NetworkID:              "fgh",
+				AccountID:              "abc",
+			},
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/networks/fgh",
+			Response: Network{
+				ErrorMessages: []NetworkHealth{
+					{"FAIL", "Message"},
+				},
+			},
+		},
+		{
+			Method:   "DELETE",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+		},
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces/1234",
+			Status:   404,
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
 
-	// Set up expectations for the second call (success)
-	mockClient.GetMockCurrentUserAPI().EXPECT().Me(mock.Anything).Return(&iam.User{
-		Id: "12345",
-	}, nil).Once()
+	err = NewWorkspacesAPI(context.Background(), client).Create(&Workspace{
+		AccountID:                           "abc",
+		IsNoPublicIPEnabled:                 true,
+		WorkspaceName:                       "labdata",
+		DeploymentName:                      "900150983cd24fb0",
+		AwsRegion:                           "us-east-1",
+		CredentialsID:                       "bcd",
+		StorageConfigurationID:              "ghi",
+		NetworkID:                           "fgh",
+		ManagedServicesCustomerManagedKeyID: "def",
+		StorageCustomerManagedKeyID:         "def",
+	}, DefaultProvisionTimeout)
+	require.EqualError(t, err, "Workspace failed to create: Always fails, network error message: error: FAIL;error_msg: Message;")
+}
 
-	// Create a context
-	ctx := context.Background()
+func TestListWorkspaces(t *testing.T) {
+	client, server, err := qa.HttpFixtureClient(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/accounts/abc/workspaces",
+			Response: []Workspace{},
+		},
+	})
+	require.NoError(t, err)
+	defer server.Close()
 
-	// Call the function with the mock client
-	err := verifyWorkspaceReachable(ctx, mockClient.WorkspaceClient)
+	l, err := NewWorkspacesAPI(context.Background(), client).List("abc")
+	require.NoError(t, err)
+	assert.Len(t, l, 0)
+}
 
-	// The function should retry and eventually succeed
-	assert.NoError(t, err)
+func TestWorkspace_WaitForResolve_Failure(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{},
+		func(ctx context.Context, client *common.DatabricksClient) {
+			a := NewWorkspacesAPI(ctx, client)
+			rerr := a.verifyWorkspaceReachable(Workspace{
+				WorkspaceURL: "https://900150983cd24fb0.cloud.databricks.com",
+			})
+			assert.NotNil(t, rerr)
+			assert.True(t, rerr.Retryable)
+		})
+}
+
+func TestWorkspace_WaitForResolve(t *testing.T) {
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Me",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// inner HTTP server is used for outer request for Accounts API
+		qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+			{
+				Method:       "GET",
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				ReuseRequest: true,
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: "RUNNING",
+					WorkspaceURL:    wsClient.Config.Host,
+				},
+			},
+		}, func(ctx context.Context, client *common.DatabricksClient) {
+			a := NewWorkspacesAPI(ctx, client)
+			err := a.WaitForRunning(Workspace{
+				AccountID:   "abc",
+				WorkspaceID: 1234,
+			}, 1*time.Second)
+			assert.NoError(t, err)
+		})
+	})
+}
+
+func updateWorkspaceScimFixture(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+	accountsAPI := []qa.HTTPFixture{
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/accounts/c/workspaces/0",
+		},
+	}
+	scimAPI := []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Me",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}
+	scimAPI = append(scimAPI, fixtures...)
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// a bit hacky, but the whole thing is more readable
+		accountsAPI[0].Response = Workspace{
+			WorkspaceStatus: "RUNNING",
+			WorkspaceURL:    wsClient.Config.Host,
+		}
+		state["workspace_url"] = wsClient.Config.Host
+		state["workspace_name"] = "b"
+		state["account_id"] = "c"
+		state["network_id"] = "d"
+		state["is_no_public_ip_enabled"] = "false"
+		qa.ResourceFixture{
+			Fixtures:      accountsAPI,
+			Resource:      ResourceMwsWorkspaces(),
+			InstanceState: state,
+			Update:        true,
+			ID:            "a",
+			HCL: hcl + `
+			workspace_name = "b"
+			account_id = "c",
+			network_id = "d"`,
+		}.Apply(t)
+	})
+}
+
+func updateWorkspaceScimFixtureWithPatch(t *testing.T, fixtures []qa.HTTPFixture, state map[string]string, hcl string) {
+	accountsAPI := []qa.HTTPFixture{
+		{
+			Method:   "PATCH",
+			Resource: "/api/2.0/accounts/c/workspaces/0",
+		},
+		{
+			Method:       "GET",
+			ReuseRequest: true,
+			Resource:     "/api/2.0/accounts/c/workspaces/0",
+		},
+	}
+	scimAPI := []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/preview/scim/v2/Me",
+			Response: `{}`, // we just need a JSON for this
+		},
+	}
+	scimAPI = append(scimAPI, fixtures...)
+	// outer HTTP server is used for inner request for "just created" workspace
+	qa.HTTPFixturesApply(t, scimAPI, func(ctx context.Context, wsClient *common.DatabricksClient) {
+		// a bit hacky, but the whole thing is more readable
+		accountsAPI[1].Response = Workspace{
+			WorkspaceStatus: "RUNNING",
+			WorkspaceURL:    wsClient.Config.Host,
+		}
+		state["workspace_url"] = wsClient.Config.Host
+		state["workspace_name"] = "b"
+		state["account_id"] = "c"
+		state["storage_customer_managed_key_id"] = "1234"
+		state["is_no_public_ip_enabled"] = "false"
+		qa.ResourceFixture{
+			Fixtures:      accountsAPI,
+			Resource:      ResourceMwsWorkspaces(),
+			InstanceState: state,
+			Update:        true,
+			ID:            "a",
+			HCL: hcl + `
+			workspace_name = "b"
+			account_id = "c",
+			storage_customer_managed_key_id = "1234"`,
+		}.Apply(t)
+	})
+}
+
+func TestUpdateWorkspace_AddToken(t *testing.T) {
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "Terraform PAT",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "sensitive",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "abcdef",
+				},
+			},
+		},
+	}, map[string]string{
+		// no token in state
+	}, `token {}`)
+}
+
+func TestUpdateWorkspace_AddTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "Terraform PAT",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "sensitive",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "abcdef",
+				},
+			},
+		},
+	}, map[string]string{
+		"network_id": "alpha",
+		// no token in state
+	}, `
+	network_id = "beta"
+	token {}
+	`)
+}
+
+func TestUpdateWorkspace_DeleteTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	}, `
+	network_id = "beta"
+	`)
+
+}
+
+func TestUpdateWorkspace_DeleteToken(t *testing.T) {
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+	}, ``)
+}
+
+func TestUpdateWorkspace_ReplaceTokenAndChangeNetworkId(t *testing.T) {
+	updateWorkspaceScimFixtureWithPatch(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "I am Batman!",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+		"network_id":               "alpha",
+	},
+		`
+	network_id = "beta"
+	token { 
+		comment = "I am Batman!"
+	}`)
+}
+
+func TestUpdateWorkspace_ReplaceToken(t *testing.T) {
+	updateWorkspaceScimFixture(t, []qa.HTTPFixture{
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/delete",
+			ExpectedRequest: map[string]any{
+				"token_id": "abcdef",
+			},
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 2.592e+06,
+				Comment:         "I am Batman!",
+			},
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, map[string]string{
+		"token.#":                  "1",
+		"token.0.comment":          "Terraform PAT",
+		"token.0.lifetime_seconds": "2592000",
+		"token.0.token_id":         "abcdef",
+		"token.0.token_value":      "sensitive",
+	}, `token { 
+		comment = "I am Batman!"
+	}`)
 }
 
 func TestEnsureTokenExists(t *testing.T) {
-	// Create a mock workspace client
-	mockClient := mocks.NewMockWorkspaceClient(t)
-	mockTokensAPI := mockClient.GetMockTokensAPI()
-
-	// Set up expectations for token list and create
-	mockTokensAPI.EXPECT().
-		List(mock.Anything).
-		Return(&listing.SliceIterator[settings.PublicTokenInfo]{}).
-		Times(1)
-
-	mockTokensAPI.EXPECT().
-		Create(mock.Anything, settings.CreateTokenRequest{
-			LifetimeSeconds: 3600,
-			Comment:         "test",
-		}).
-		Return(&settings.CreateTokenResponse{
-			TokenValue: "new-value",
-			TokenInfo: &settings.PublicTokenInfo{
-				TokenId: "new-id",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: `{}`, // we just need a JSON for this
+		},
+		{
+			Method:   "POST",
+			Resource: "/api/2.0/token/create",
+			ExpectedRequest: Token{
+				LifetimeSeconds: 3600,
+				Comment:         "test",
 			},
-		}, nil).
-		Times(1)
-
-	// Test the function
-	token := &Token{
-		LifetimeSeconds: 3600,
-		Comment:         "test",
-	}
-	err := ensureTokenExists(context.Background(), mockClient.WorkspaceClient, token)
-	assert.NoError(t, err)
-	assert.Equal(t, token.TokenID, "new-id")
-	assert.Equal(t, token.TokenValue, SensitiveString("new-value"))
+			Response: tokens.TokenResponse{
+				TokenValue: "new-value",
+				TokenInfo: &tokens.TokenInfo{
+					TokenID: "new-id",
+				},
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceMwsWorkspaces()
+		d := r.ToResource().TestResourceData()
+		d.Set("workspace_url", client.Config.Host)
+		d.Set("token", []any{
+			map[string]any{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "abcdef",
+			},
+		})
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		err := EnsureTokenExistsIfNeeded(wsApi, r.Schema, d)
+		assert.NoError(t, err)
+	})
 }
 
 func TestEnsureTokenExists_NoRecreate(t *testing.T) {
-	// Create a mock workspace client
-	mockClient := mocks.NewMockWorkspaceClient(t)
-	mockTokensAPI := mockClient.GetMockTokensAPI()
-
-	// Set up expectations for token list
-	mockTokensAPI.EXPECT().
-		List(mock.Anything).
-		Return(&listing.SliceIterator[settings.PublicTokenInfo]{
-			{
-				TokenId: "old-id",
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			Method:   "GET",
+			Resource: "/api/2.0/token/list",
+			Response: tokens.TokenList{
+				TokenInfos: []tokens.TokenInfo{
+					{
+						TokenID: "old-id",
+					},
+				},
 			},
-		}).
-		Times(1)
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		r := ResourceMwsWorkspaces()
+		d := r.ToResource().TestResourceData()
+		d.Set("workspace_url", client.Config.Host)
+		d.Set("token", []any{
+			map[string]any{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "old-id",
+			},
+		})
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		err := EnsureTokenExistsIfNeeded(wsApi, r.Schema, d)
+		assert.NoError(t, err)
+	})
+}
 
-	// Test the function
-	token := &Token{
-		LifetimeSeconds: 3600,
-		Comment:         "test",
-		TokenID:         "old-id",
+func TestWorkspaceTokenWrongAuthCornerCase(t *testing.T) {
+	client, err := client.New(&config.Config{})
+	if err != nil {
+		t.Fatal(err)
 	}
-	err := ensureTokenExists(context.Background(), mockClient.WorkspaceClient, token)
-	assert.NoError(t, err)
+	r := ResourceMwsWorkspaces()
+	d := r.ToResource().TestResourceData()
+	d.Set("workspace_url", client.Config.Host)
+	d.Set("token", []any{
+		map[string]any{
+			"lifetime_seconds": 3600,
+			"comment":          "test",
+			"token_id":         "old-id",
+		},
+	})
+
+	wsApi := NewWorkspacesAPI(context.Background(), &common.DatabricksClient{
+		DatabricksClient: client,
+	})
+
+	noAuth := "cannot authenticate parent client: " + common.NoAuth
+
+	assert.EqualError(t, CreateTokenIfNeeded(wsApi, r.Schema, d), noAuth, "create")
+	assert.EqualError(t, EnsureTokenExistsIfNeeded(wsApi, r.Schema, d), noAuth, "ensure")
+	assert.EqualError(t, removeTokenIfNeeded(wsApi, "x", d), noAuth, "remove")
+}
+
+func TestWorkspaceTokenHttpCornerCases(t *testing.T) {
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: apierr.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    "i'm a teapot",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+		r := ResourceMwsWorkspaces()
+		d := r.ToResource().TestResourceData()
+		d.Set("workspace_url", client.Config.Host)
+		d.Set("token", []any{
+			map[string]any{
+				"lifetime_seconds": 3600,
+				"comment":          "test",
+				"token_id":         "old-id",
+			},
+		})
+		for msg, err := range map[string]error{
+			"cannot create token: i'm a teapot": CreateTokenIfNeeded(wsApi, r.Schema, d),
+			"cannot read token: i'm a teapot":   EnsureTokenExistsIfNeeded(wsApi, r.Schema, d),
+			"cannot remove token: i'm a teapot": removeTokenIfNeeded(wsApi, "x", d),
+		} {
+			assert.EqualError(t, err, msg)
+		}
+	})
+}
+
+func TestGenerateWorkspaceHostname_CornerCases(t *testing.T) {
+	assert.Equal(t, "fallback.cloud.databricks.com",
+		generateWorkspaceHostname(&common.DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "$%^&*",
+				},
+			},
+		}, Workspace{
+			DeploymentName: "fallback",
+		}))
+	assert.Equal(t, "stuff.is.exaple.com",
+		generateWorkspaceHostname(&common.DatabricksClient{
+			DatabricksClient: &client.DatabricksClient{
+				Config: &config.Config{
+					Host: "https://this.is.exaple.com",
+				},
+			},
+		}, Workspace{
+			DeploymentName: "stuff",
+		}))
 }
 
 func TestExplainWorkspaceFailureCornerCase(t *testing.T) {
-	t.Run("no network ID", func(t *testing.T) {
-		assert.EqualError(t, explainWorkspaceFailure(context.Background(), nil, &provisioning.Workspace{
+	qa.HTTPFixturesApply(t, []qa.HTTPFixture{
+		{
+			MatchAny:     true,
+			ReuseRequest: true,
+			Status:       418,
+			Response: apierr.APIError{
+				ErrorCode:  "NONSENSE",
+				StatusCode: 418,
+				Message:    "🐜",
+			},
+		},
+	}, func(ctx context.Context, client *common.DatabricksClient) {
+		wsApi := NewWorkspacesAPI(context.Background(), client)
+
+		assert.EqualError(t, wsApi.explainWorkspaceFailure(Workspace{
 			WorkspaceStatusMessage: "🔥",
-		}), "workspace status message: 🔥")
-	})
+		}), "🔥")
 
-	t.Run("network error", func(t *testing.T) {
-		mockClient := mocks.NewMockAccountClient(t)
-		mockNetworksClient := mockClient.GetMockNetworksAPI()
-
-		mockNetworksClient.EXPECT().
-			Get(context.Background(), provisioning.GetNetworkRequest{NetworkId: "abc"}).
-			Return(nil, errors.New("🐜")).
-			Times(1)
-
-		ws := &provisioning.Workspace{
-			NetworkId:              "abc",
-			WorkspaceStatusMessage: "🔥",
-		}
-		assert.EqualError(t, explainWorkspaceFailure(context.Background(), mockClient.AccountClient, ws), "workspace status message: 🔥; network error message: cannot read network: 🐜")
+		assert.EqualError(t, wsApi.explainWorkspaceFailure(Workspace{
+			NetworkID: "abc",
+		}), "failed to start workspace. Cannot read network: 🐜")
 	})
 }
 
 func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		PrivateAccessSettingsId:             "pas",
-		AccountId:                           "abc",
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[struct{}]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Update call
-			a.GetMockWorkspacesAPI().EXPECT().Update(mock.Anything, provisioning.UpdateWorkspaceRequest{
-				WorkspaceId:                         1234,
-				AwsRegion:                           "us-east-1",
-				ManagedServicesCustomerManagedKeyId: "def",
-				StorageConfigurationId:              "ghi",
-				CredentialsId:                       "bcd",
-				NetworkId:                           "fgh",
-				StorageCustomerManagedKeyId:         "def",
-				PrivateAccessSettingsId:             "pas",
-			}).Return(mockWaiter, nil)
-
-			// Expect the Get call to retrieve the updated workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "PATCH",
+				Resource: "/api/2.0/accounts/abc/workspaces/1234",
+				ExpectedRequest: map[string]any{
+					"credentials_id":                  "bcd",
+					"network_id":                      "fgh",
+					"storage_customer_managed_key_id": "def",
+					"private_access_settings_id":      "pas",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					WorkspaceStatus:                     WorkspaceStatusRunning,
+					WorkspaceName:                       "labdata",
+					DeploymentName:                      "900150983cd24fb0",
+					AwsRegion:                           "us-east-1",
+					CredentialsID:                       "bcd",
+					StorageConfigurationID:              "ghi",
+					NetworkID:                           "fgh",
+					ManagedServicesCustomerManagedKeyID: "def",
+					StorageCustomerManagedKeyID:         "def",
+					PrivateAccessSettingsID:             "pas",
+					AccountID:                           "abc",
+					WorkspaceID:                         1234,
+				},
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		InstanceState: map[string]string{
 			"account_id":     "abc",
 			"aws_region":     "us-east-1",
@@ -1146,22 +1587,22 @@ func TestResourceWorkspaceUpdatePrivateAccessSettings(t *testing.T) {
 			"storage_configuration_id":                 "ghi",
 			"workspace_id":                             "1234",
 		},
+		State: map[string]any{
+			"account_id":     "abc",
+			"aws_region":     "us-east-1",
+			"credentials_id": "bcd",
+			"managed_services_customer_managed_key_id": "def",
+			"storage_customer_managed_key_id":          "def",
+			"deployment_name":                          "900150983cd24fb0",
+			"workspace_name":                           "labdata",
+			"is_no_public_ip_enabled":                  true,
+			"network_id":                               "fgh",
+			"storage_configuration_id":                 "ghi",
+			"private_access_settings_id":               "pas",
+			"workspace_id":                             1234,
+		},
 		Update: true,
 		ID:     "abc/1234",
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		private_access_settings_id = "pas"
-		is_no_public_ip_enabled = true
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		workspace_id    = 1234
-		`,
 	}.Apply(t)
 	assert.NoError(t, err)
 	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
@@ -1204,52 +1645,47 @@ func TestResourceWorkspaceRemovePAS_NotAllowed(t *testing.T) {
 }
 
 func TestResourceWorkspaceCreateGcpManagedVPC(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:     1234,
-		WorkspaceStatus: provisioning.WorkspaceStatusRunning,
-		WorkspaceName:   "labdata",
-		DeploymentName:  "900150983cd24fb0",
-		AccountId:       "abc",
-		Cloud:           "gcp",
-		Location:        "bcd",
-		GcpManagedNetworkConfig: &provisioning.GcpManagedNetworkConfig{
-			SubnetCidr: "a",
-		},
-	}
-
-	// Create a mock waiter
-	mockWaiter := &provisioning.WaitGetWorkspaceRunning[provisioning.Workspace]{
-		WorkspaceId: 1234,
-		Poll: func(d time.Duration, f func(*provisioning.Workspace)) (*provisioning.Workspace, error) {
-			return mockWorkspace, nil
-		},
-	}
-
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Create call
-			a.GetMockWorkspacesAPI().EXPECT().Create(mock.Anything, provisioning.CreateWorkspaceRequest{
-				CloudResourceContainer: &provisioning.CloudResourceContainer{
-					Gcp: &provisioning.CustomerFacingGcpCloudResourceContainer{
-						ProjectId: "def",
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+				// retreating to raw JSON, as certain fields don't work well together
+				ExpectedRequest: map[string]any{
+					"account_id": "abc",
+					"cloud":      "gcp",
+					"cloud_resource_container": map[string]any{
+						"gcp": map[string]any{
+							"project_id": "def",
+						},
+					},
+					"location":       "bcd",
+					"workspace_name": "labdata",
+				},
+				Response: Workspace{
+					WorkspaceID:    1234,
+					AccountID:      "abc",
+					DeploymentName: "900150983cd24fb0",
+					WorkspaceName:  "labdata",
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/accounts/abc/workspaces/1234",
+				Response: Workspace{
+					AccountID:       "abc",
+					WorkspaceID:     1234,
+					WorkspaceStatus: WorkspaceStatusRunning,
+					DeploymentName:  "900150983cd24fb0",
+					WorkspaceName:   "labdata",
+					GCPManagedNetworkConfig: &GCPManagedNetworkConfig{
+						SubnetCIDR: "a",
 					},
 				},
-				IsNoPublicIpEnabled: true,
-				DeploymentName:      "900150983cd24fb0",
-				Location:            "bcd",
-				WorkspaceName:       "labdata",
-				ForceSendFields:     []string{"IsNoPublicIpEnabled"},
-			}).Return(mockWaiter, nil)
-
-			// Expect the Get call to retrieve the workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
+			},
 		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, mockScimMe),
-		Resource:                 ResourceMwsWorkspaces(),
+		Resource: ResourceMwsWorkspaces(),
 		HCL: `
 		account_id      = "abc"
 		workspace_name  = "labdata"
@@ -1279,275 +1715,4 @@ func TestSensitiveDataInLogs(t *testing.T) {
 	assert.NotContains(t, fmt.Sprintf("%v", tk), "sensitive")
 	assert.NotContains(t, fmt.Sprintf("%#v", tk), "sensitive")
 	assert.NotContains(t, fmt.Sprintf("%+v", tk), "sensitive")
-}
-
-func TestResourceWorkspaceAddToken(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
-	addToken := func(m *mocks.MockWorkspaceClient) {
-		// Create a mock workspace client with token API expectations
-		mockTokensAPI := m.GetMockTokensAPI()
-
-		// Expect the list token call to return no existing tokens
-		mockTokensAPI.EXPECT().
-			List(mock.Anything).
-			Return(&listing.SliceIterator[settings.PublicTokenInfo]{})
-
-		// Expect the create token call for the new token
-		mockTokensAPI.EXPECT().
-			Create(mock.Anything, settings.CreateTokenRequest{
-				LifetimeSeconds: 3600,
-				Comment:         "New token comment",
-			}).
-			Return(&settings.CreateTokenResponse{
-				TokenValue: "new-token-value",
-				TokenInfo: &settings.PublicTokenInfo{
-					TokenId: "new-token-id",
-				},
-			}, nil)
-	}
-
-	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Get call to retrieve the workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
-		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, addToken),
-		Resource:                 ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  "true",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"workspace_id":                             "1234",
-		},
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		is_no_public_ip_enabled = true
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		workspace_id    = 1234
-		token {
-			comment          = "New token comment"
-			lifetime_seconds = 3600
-		}
-		`,
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
-
-	// Verify that the token was added to the state
-	token := d.Get("token").([]any)[0].(map[string]any)
-	assert.Equal(t, "new-token-id", token["token_id"])
-	assert.Equal(t, "new-token-value", token["token_value"])
-}
-
-func TestResourceWorkspaceUpdateToken(t *testing.T) {
-	// a helper function to set up token API mocks
-	updateToken := func(c *mocks.MockWorkspaceClient) {
-		mockTokensAPI := c.GetMockTokensAPI()
-
-		// Expect the list token call
-		mockTokensAPI.EXPECT().
-			List(mock.Anything).
-			Return(&listing.SliceIterator[settings.PublicTokenInfo]{
-				{
-					TokenId: "old-token-id",
-				},
-			})
-
-		// Expect the revoke token call for the old token
-		mockTokensAPI.EXPECT().
-			Delete(mock.Anything, settings.RevokeTokenRequest{TokenId: "old-token-id"}).
-			Return(nil)
-
-		// Expect the create token call for the new token
-		mockTokensAPI.EXPECT().
-			Create(mock.Anything, settings.CreateTokenRequest{
-				LifetimeSeconds: 3600,
-				Comment:         "New token comment",
-			}).
-			Return(&settings.CreateTokenResponse{
-				TokenValue: "new-token-value",
-				TokenInfo: &settings.PublicTokenInfo{
-					TokenId: "new-token-id",
-				},
-			}, nil)
-	}
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
-	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Get call to retrieve the workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
-		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, updateToken),
-		Resource:                 ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  "true",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"workspace_id":                             "1234",
-			"token.#":                                  "1",
-			"token.0.comment":                          "Old token comment",
-			"token.0.lifetime_seconds":                 "3600",
-			"token.0.token_id":                         "old-token-id",
-			"token.0.token_value":                      "old-token-value",
-		},
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		is_no_public_ip_enabled = true
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		workspace_id    = 1234
-		token {
-			comment          = "New token comment"
-			lifetime_seconds = 3600
-		}
-		`,
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err)
-	assert.Equal(t, "abc/1234", d.Id(), "Id should be the same as in reading")
-
-	// Verify that the token was updated in the state
-	token := d.Get("token").([]any)[0].(map[string]any)
-	assert.Equal(t, "new-token-id", token["token_id"])
-	assert.Equal(t, "new-token-value", token["token_value"])
-}
-
-func TestResourceWorkspaceDeleteToken(t *testing.T) {
-	// Define a mock workspace that can be reused
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:                         1234,
-		WorkspaceStatus:                     provisioning.WorkspaceStatusRunning,
-		WorkspaceName:                       "labdata",
-		DeploymentName:                      "900150983cd24fb0",
-		AwsRegion:                           "us-east-1",
-		CredentialsId:                       "bcd",
-		StorageConfigurationId:              "ghi",
-		NetworkId:                           "fgh",
-		ManagedServicesCustomerManagedKeyId: "def",
-		StorageCustomerManagedKeyId:         "def",
-		AccountId:                           "abc",
-	}
-
-	revokeToken := func(m *mocks.MockWorkspaceClient) {
-		// Create a mock workspace client with token API expectations
-		mockTokensAPI := m.GetMockTokensAPI()
-
-		// Expect the revoke token call for the old token
-		mockTokensAPI.EXPECT().
-			Delete(mock.Anything, settings.RevokeTokenRequest{TokenId: "old-token-id"}).
-			Return(nil)
-	}
-
-	d, err := qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			// Expect the Get call to retrieve the workspace
-			a.GetMockWorkspacesAPI().EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-				WorkspaceId: 1234,
-			}).Return(mockWorkspace, nil)
-			a.GetMockWorkspacesAPI().EXPECT().WaitGetWorkspaceRunning(mock.Anything, int64(1234), 20*time.Minute, mock.Anything).Return(mockWorkspace, nil)
-		},
-		MockWorkspaceClientsFunc: basicMockWorkspaceClients(t, setDefaultConfigHost, revokeToken),
-		Resource:                 ResourceMwsWorkspaces(),
-		InstanceState: map[string]string{
-			"account_id":     "abc",
-			"aws_region":     "us-east-1",
-			"credentials_id": "bcd",
-			"managed_services_customer_managed_key_id": "def",
-			"storage_customer_managed_key_id":          "def",
-			"deployment_name":                          "900150983cd24fb0",
-			"workspace_name":                           "labdata",
-			"is_no_public_ip_enabled":                  "true",
-			"network_id":                               "fgh",
-			"storage_configuration_id":                 "ghi",
-			"workspace_id":                             "1234",
-			"token.#":                                  "1",
-			"token.0.comment":                          "Old token comment",
-			"token.0.lifetime_seconds":                 "3600",
-			"token.0.token_id":                         "old-token-id",
-			"token.0.token_value":                      "old-token-value",
-		},
-		HCL: `
-		account_id      = "abc"
-		aws_region      = "us-east-1"
-		credentials_id  = "bcd"
-		managed_services_customer_managed_key_id = "def"
-		storage_customer_managed_key_id = "def"
-		deployment_name = "900150983cd24fb0"
-		workspace_name  = "labdata"
-		is_no_public_ip_enabled = true
-		network_id      = "fgh"
-		storage_configuration_id = "ghi"
-		workspace_id    = 1234
-		`,
-		Update: true,
-		ID:     "abc/1234",
-	}.Apply(t)
-	assert.NoError(t, err)
-
-	// Verify that the token was removed from the state
-	assert.Len(t, d.Get("token"), 0)
 }

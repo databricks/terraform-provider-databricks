@@ -13,7 +13,6 @@ import (
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -104,42 +103,6 @@ func (c *DatabricksClient) SetWorkspaceClient(w *databricks.WorkspaceClient) {
 	c.cachedWorkspaceClient = w
 }
 
-func (c *DatabricksClient) WorkspaceClientForWorkspace(ctx context.Context, workspaceId int64) (*databricks.WorkspaceClient, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.cachedWorkspaceClients == nil {
-		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
-	}
-	if client, ok := c.cachedWorkspaceClients[workspaceId]; ok {
-		return client, nil
-	}
-	a, err := c.accountClient()
-	if err != nil {
-		return nil, err
-	}
-	workspace, err := a.Workspaces.Get(ctx, provisioning.GetWorkspaceRequest{WorkspaceId: workspaceId})
-	if err != nil {
-		return nil, err
-	}
-	w, err := a.GetWorkspaceClient(*workspace)
-	if err != nil {
-		return nil, err
-	}
-	w.CurrentUser = newCachedMe(w.CurrentUser)
-	c.cachedWorkspaceClients[workspace.WorkspaceId] = w
-	return w, nil
-}
-
-// SetWorkspaceClientForWorkspace sets the cached workspace client for a specific workspace ID.
-func (c *DatabricksClient) SetWorkspaceClientForWorkspace(workspaceId int64, w *databricks.WorkspaceClient) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.cachedWorkspaceClients == nil {
-		c.cachedWorkspaceClients = make(map[int64]*databricks.WorkspaceClient)
-	}
-	c.cachedWorkspaceClients[workspaceId] = w
-}
-
 // Set the cached account client.
 func (c *DatabricksClient) SetAccountClient(a *databricks.AccountClient) {
 	c.mu.Lock()
@@ -174,12 +137,6 @@ func (c *DatabricksClient) GetAccountClient() (*databricks.AccountClient, diag.D
 func (c *DatabricksClient) AccountClient() (*databricks.AccountClient, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.accountClient()
-}
-
-// accountClient returns the Databricks Account client or an error if that fails.
-// The `mu` mutex must be held by the current goroutine when calling this method.
-func (c *DatabricksClient) accountClient() (*databricks.AccountClient, error) {
 	if c.cachedAccountClient != nil {
 		return c.cachedAccountClient, nil
 	}

@@ -2,21 +2,16 @@ package common
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
-	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/iam"
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -339,97 +334,4 @@ func TestCachedMe_Me_MakesSingleRequest(t *testing.T) {
 	cm.Me(context.Background())
 	cm.Me(context.Background())
 	assert.Equal(t, 1, mock.count)
-}
-
-func TestWorkspaceClientForWorkspace_WorkspaceDoesNotExist(t *testing.T) {
-	mockAcc := mocks.NewMockAccountClient(t)
-	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
-
-	// Setup the mock to return an error for non-existent workspace
-	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-		WorkspaceId: 12345,
-	}).Return(nil, fmt.Errorf("workspace not found"))
-
-	// Create a DatabricksClient with the mock account client
-	dc := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
-		},
-	}
-	dc.SetAccountClient(mockAcc.AccountClient)
-
-	// Call the method with a non-existent workspace ID
-	_, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-
-	// Verify the error
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "workspace not found")
-}
-
-func TestWorkspaceClientForWorkspace_WorkspaceExistsNotInCache(t *testing.T) {
-	mockAcc := mocks.NewMockAccountClient(t)
-	mockAcc.AccountClient.Config = &config.Config{
-		Token: "dapi123", // Instantiating WorkspaceClient attempts authentication, this allows Configure() to complete quickly.
-	}
-	mockWorkspacesAPI := mockAcc.GetMockWorkspacesAPI()
-
-	// Create a mock workspace
-	mockWorkspace := &provisioning.Workspace{
-		WorkspaceId:    12345,
-		WorkspaceName:  "test-workspace",
-		DeploymentName: "test-deployment",
-	}
-
-	// Setup the mock to return the workspace
-	mockWorkspacesAPI.EXPECT().Get(mock.Anything, provisioning.GetWorkspaceRequest{
-		WorkspaceId: 12345,
-	}).Return(mockWorkspace, nil)
-
-	// Create a DatabricksClient with the mock account client
-	dc := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
-		},
-	}
-	dc.SetAccountClient(mockAcc.AccountClient)
-
-	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-
-	// Verify no error and client is returned
-	assert.NoError(t, err)
-	assert.NotNil(t, workspaceClient)
-
-	// Verify the workspace client is configured correctly
-	assert.Equal(t, fmt.Sprintf("https://%s.cloud.databricks.com", mockWorkspace.DeploymentName), workspaceClient.Config.Host)
-
-	// Verify the client is cached
-	dc.mu.Lock()
-	cachedClient, exists := dc.cachedWorkspaceClients[12345]
-	dc.mu.Unlock()
-
-	assert.True(t, exists)
-	assert.Equal(t, workspaceClient, cachedClient)
-}
-
-func TestWorkspaceClientForWorkspace_WorkspaceExistsInCache(t *testing.T) {
-	// Create a mock workspace client
-	mockWorkspaceClient := &databricks.WorkspaceClient{}
-
-	// Create a DatabricksClient with the mock workspace client in cache
-	dc := &DatabricksClient{
-		DatabricksClient: &client.DatabricksClient{
-			Config: &config.Config{},
-		},
-	}
-
-	// Set the workspace client in cache
-	dc.SetWorkspaceClientForWorkspace(12345, mockWorkspaceClient)
-
-	// Call the method with the workspace ID
-	workspaceClient, err := dc.WorkspaceClientForWorkspace(context.Background(), 12345)
-
-	// Verify no error and the cached client is returned
-	assert.NoError(t, err)
-	assert.Equal(t, mockWorkspaceClient, workspaceClient)
 }

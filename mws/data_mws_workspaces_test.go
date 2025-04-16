@@ -1,28 +1,29 @@
 package mws
 
 import (
-	"errors"
 	"testing"
 
-	"github.com/databricks/databricks-sdk-go/experimental/mocks"
-	"github.com/databricks/databricks-sdk-go/service/provisioning"
 	"github.com/databricks/terraform-provider-databricks/qa"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceMwsWorkspaces(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return([]provisioning.Workspace{
-				{
-					WorkspaceName: "bcd",
-					WorkspaceId:   123,
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+
+				Response: []Workspace{
+					{
+						WorkspaceName: "bcd",
+						WorkspaceID:   123,
+					},
+					{
+						WorkspaceName: "def",
+						WorkspaceID:   456,
+					},
 				},
-				{
-					WorkspaceName: "def",
-					WorkspaceId:   456,
-				},
-			}, nil)
+			},
 		},
 		AccountID:   "abc",
 		Resource:    DataSourceMwsWorkspaces(),
@@ -37,12 +38,10 @@ func TestDataSourceMwsWorkspaces(t *testing.T) {
 	})
 }
 
-func TestDataSourceMwsWorkspaces_Error(t *testing.T) {
+func TestCatalogsData_Error(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return(nil, errors.New("i'm a teapot"))
-		},
 		AccountID:   "abc",
+		Fixtures:    qa.HTTPFailures,
 		Resource:    DataSourceMwsWorkspaces(),
 		Read:        true,
 		NonWritable: true,
@@ -52,8 +51,13 @@ func TestDataSourceMwsWorkspaces_Error(t *testing.T) {
 
 func TestDataSourceMwsWorkspaces_Empty(t *testing.T) {
 	qa.ResourceFixture{
-		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
-			a.GetMockWorkspacesAPI().EXPECT().List(mock.Anything).Return([]provisioning.Workspace{}, nil)
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/accounts/abc/workspaces",
+
+				Response: []Workspace{},
+			},
 		},
 		AccountID:   "abc",
 		Resource:    DataSourceMwsWorkspaces(),

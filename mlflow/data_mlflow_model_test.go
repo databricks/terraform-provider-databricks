@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/ml"
-	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestDataSourceModel(t *testing.T) {
@@ -25,20 +27,19 @@ func TestDataSourceModel(t *testing.T) {
 	}
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/mlflow/databricks/registered-models/get?name=%s", modelName),
-				Response: ml.GetModelResponse{RegisteredModelDatabricks: &model},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockModelRegistryAPI().EXPECT().
+				GetModel(mock.Anything, ml.GetModelRequest{
+					Name: modelName,
+				}).Return(&ml.GetModelResponse{
+				RegisteredModelDatabricks: &model,
+			}, nil)
 		},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceModel(),
 		ID:          ".",
-		HCL: fmt.Sprintf(`
-		name = "%s"
-		`, modelName),
+		HCL:         fmt.Sprintf(`name = "%s"`, modelName),
 	}.ApplyAndExpectData(t, map[string]interface{}{
 		"name":             modelName,
 		"user_id":          "me@databricks.com",
@@ -54,23 +55,19 @@ func TestDataSourceModelNotFound(t *testing.T) {
 	modelName := "databricks-model-non-existent"
 
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: fmt.Sprintf("/api/2.0/mlflow/databricks/registered-models/get?name=%s", modelName),
-				Status:   404,
-				Response: common.APIErrorBody{
-					ErrorCode: "RESOURCE_DOES_NOT_EXIST",
-					Message:   fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName),
-				},
-			},
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockModelRegistryAPI().EXPECT().
+				GetModel(mock.Anything, ml.GetModelRequest{
+					Name: modelName,
+				}).Return(nil, &apierr.APIError{
+				ErrorCode: "RESOURCE_DOES_NOT_EXIST",
+				Message:   fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName),
+			})
 		},
 		Read:        true,
 		NonWritable: true,
 		Resource:    DataSourceModel(),
 		ID:          ".",
-		HCL: fmt.Sprintf(`
-		name = "%s"
-		`, modelName),
+		HCL:         fmt.Sprintf(`name = "%s"`, modelName),
 	}.ExpectError(t, fmt.Sprintf("RegisteredModel '%s' does not exist. It might have been deleted.", modelName))
 }

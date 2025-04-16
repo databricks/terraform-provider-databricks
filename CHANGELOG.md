@@ -1,5 +1,11 @@
 # Version changelog
 
+## Release v1.74.0
+
+### Bug Fixes
+* Bug fixed in `databricks_mws_workspaces` resource due to migration of resource to Go SDK
+
+
 ## Release v1.73.0
 
 ### New Features and Improvements

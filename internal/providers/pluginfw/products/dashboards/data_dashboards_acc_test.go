@@ -27,7 +27,7 @@ func TestAccDashboardsDataSource(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: `
 			resource "databricks_dashboard" "dashboard" {
-				display_name         = "New Dashboard-{var.RANDOM}"
+				display_name         = "dashboard-{var.RANDOM}"
 				warehouse_id         = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
 				serialized_dashboard = "{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
 				embed_credentials    = false // Optional

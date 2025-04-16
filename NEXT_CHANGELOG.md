@@ -10,6 +10,6 @@
 
 ### Exporter
 
- * Correctly handle account-level identities when generating the code ([#4649](https://github.com/databricks/terraform-provider-databricks/pull/4649))
+ * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))
 
 ### Internal Changes

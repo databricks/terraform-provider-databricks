@@ -9023,6 +9023,11 @@ func (o *QueryFilter) SetWarehouseIds(ctx context.Context, v []types.String) {
 type QueryInfo struct {
 	// SQL Warehouse channel information at the time of query execution
 	ChannelUsed types.Object `tfsdk:"channel_used"`
+	// Client application that ran the statement. For example: Databricks SQL
+	// Editor, Tableau, and Power BI. This field is derived from information
+	// provided by client applications. While values are expected to remain
+	// static over time, this cannot be guaranteed.
+	ClientApplication types.String `tfsdk:"client_application"`
 	// Total execution time of the statement ( excluding result fetch time ).
 	Duration types.Int64 `tfsdk:"duration"`
 	// Alias for `warehouse_id`.
@@ -9084,6 +9089,7 @@ func (newState *QueryInfo) SyncEffectiveFieldsDuringRead(existingState QueryInfo
 
 func (c QueryInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["channel_used"] = attrs["channel_used"].SetOptional()
+	attrs["client_application"] = attrs["client_application"].SetOptional()
 	attrs["duration"] = attrs["duration"].SetOptional()
 	attrs["endpoint_id"] = attrs["endpoint_id"].SetOptional()
 	attrs["error_message"] = attrs["error_message"].SetOptional()
@@ -9133,6 +9139,7 @@ func (o QueryInfo) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"channel_used":          o.ChannelUsed,
+			"client_application":    o.ClientApplication,
 			"duration":              o.Duration,
 			"endpoint_id":           o.EndpointId,
 			"error_message":         o.ErrorMessage,
@@ -9163,6 +9170,7 @@ func (o QueryInfo) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"channel_used":          ChannelInfo{}.Type(ctx),
+			"client_application":    types.StringType,
 			"duration":              types.Int64Type,
 			"endpoint_id":           types.StringType,
 			"error_message":         types.StringType,

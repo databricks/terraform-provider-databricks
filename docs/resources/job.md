@@ -109,6 +109,9 @@ The resource supports the following arguments:
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 * `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
+* `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are: 
+  * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
+  * `STANDARD`: Enables cost-efficient execution of serverless workloads.
 
 ### task Configuration Block
 

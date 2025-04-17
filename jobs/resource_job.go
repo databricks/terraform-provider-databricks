@@ -1072,9 +1072,9 @@ func ResourceJob() common.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettingsResource
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {
@@ -1108,9 +1108,9 @@ func ResourceJob() common.Resource {
 			}
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettingsResource
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {

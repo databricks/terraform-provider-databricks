@@ -19,7 +19,7 @@ terraform {
 }
 EOF
   >&2 terraform init
-  terraform providers schema -json > schema.json
+  terraform providers schema -json | tail -n1 > schema.json
   >&2 popd
   >&2 echo "Provider schema available in $TMPDIR/schema.json"
   echo "$TMPDIR/schema.json"

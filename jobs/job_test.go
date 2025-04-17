@@ -446,7 +446,6 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 		data "databricks_node_type" "smallest" {
 			local_disk = true
 		}
-
 		resource "databricks_notebook" "this" {
 			path     = "${data.databricks_current_user.me.home}/Terraform{var.RANDOM}"
 			language = "PYTHON"
@@ -456,7 +455,6 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 				EOT
 			)
 		}
-
 		resource "databricks_cluster_policy" "this" {
 			name = "test-policy-{var.RANDOM}"
 			definition = jsonencode({
@@ -466,10 +464,8 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 				}
 			})
 		}
-
 		resource "databricks_job" "this" {
 			name = "test-job-{var.RANDOM}"
-
 			job_cluster {
 				job_cluster_key = "test-cluster"
 				new_cluster {
@@ -477,7 +473,6 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 					apply_policy_default_values = true
 				}
 			}
-
 			task {
 				task_key = "test-task"
 				job_cluster_key = "test-cluster"

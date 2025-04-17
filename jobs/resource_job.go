@@ -1072,7 +1072,7 @@ func ResourceJob() common.Resource {
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
+			var js JobSettingsResource
 			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
 			if js.isMultiTask() {
 				// Api 2.1
@@ -1095,6 +1095,9 @@ func ResourceJob() common.Resource {
 			} else {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
+				var js JobSettings
+				common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
 				jobsAPI := NewJobsAPI(ctx, c)
 				job, err := jobsAPI.Create(js)
 				if err != nil {

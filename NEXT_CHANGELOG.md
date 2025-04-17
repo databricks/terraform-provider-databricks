@@ -10,6 +10,8 @@
 
 ### Documentation
 
+ * Add more examples for `databricks_model_serving` ([#4658](https://github.com/databricks/terraform-provider-databricks/pull/4658))
+
 ### Exporter
 
  * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))

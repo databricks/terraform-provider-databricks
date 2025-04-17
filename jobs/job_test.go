@@ -460,7 +460,7 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 			definition = jsonencode({
 				"spark_version": {
 					"type": "fixed",
-					"value": "14.3.x-scala2.12"
+					"value": data.databricks_spark_version.latest.id
 				}
 			})
 		}
@@ -469,6 +469,17 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 			job_cluster {
 				job_cluster_key = "test-cluster"
 				new_cluster {
+					num_workers = 0
+					node_type_id = data.databricks_node_type.smallest.id
+					custom_tags = {
+						"ResourceClass" = "SingleNode"
+					}
+					spark_conf = {
+						"spark.databricks.cluster.profile" : "singleNode"
+						"spark.master" : "local[*,4]"
+					}
+
+					// Apply the cluster policy to the job cluster for the Spark version.
 					policy_id = databricks_cluster_policy.this.id
 					apply_policy_default_values = true
 				}
@@ -482,5 +493,8 @@ func TestAccJobClusterPolicySparkVersion(t *testing.T) {
 			}
 		}
 `,
+		// The configuration uses "apply_policy_default_values = true" to set the Spark version.
+		// This means permanent drift will occur for the values sourced from the policy.
+		ExpectNonEmptyPlan: true,
 	})
 }

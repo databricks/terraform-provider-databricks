@@ -145,6 +145,7 @@ type ForEachNestedTask struct {
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
@@ -226,6 +227,7 @@ type JobTaskSettings struct {
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`

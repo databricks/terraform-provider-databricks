@@ -9,6 +9,8 @@ This resource allows you to manage [Model Serving](https://docs.databricks.com/m
 
 ## Example Usage
 
+Creating a CPU serving endpoint
+
 ```hcl
 resource "databricks_model_serving" "this" {
   name = "ads-serving-endpoint"
@@ -41,6 +43,78 @@ resource "databricks_model_serving" "this" {
 }
 ```
 
+Creating a Foundation Model endpoint
+
+```hcl
+resource "databricks_model_serving" "llama" {
+  name = "llama_3_2_3b_instruct"
+  ai_gateway {
+    usage_tracking_config {
+      enabled = true
+    }
+  }
+  config {
+    served_entities {
+      name                       = "meta_llama_v3_2_3b_instruct-3"
+      entity_name                = "system.ai.llama_v3_2_3b_instruct"
+      entity_version             = "2"
+      scale_to_zero_enabled      = true
+      max_provisioned_throughput = 44000
+    }
+  }
+}
+```
+
+Creating an External Model endpoint
+
+```hcl
+resource "databricks_model_serving" "gpt_4o" {
+  name = "gpt-4o-mini"
+  ai_gateway {
+    usage_tracking_config {
+      enabled = true
+    }
+    rate_limits {
+      calls = 10
+      key = "endpoint"
+      renewal_period = "minute"
+    }
+    inference_table_config {
+      enabled = true
+      table_name_prefix = "gpt-4o-mini"
+      catalog_name = "ml"
+      schema_name = "ai_gateway"
+    }
+    guardrails {
+      input {
+        invalid_keywords = ["SuperSecretProject"]
+        pii {
+          behavior = "BLOCK"
+        }
+      }
+      output {
+        pii {
+          behavior = "BLOCK"
+        }
+      }
+    }
+  }
+  config {
+    served_entities {
+      name = "gpt-4o-mini"
+      external_model {
+        name     = "gpt-4o-mini"
+        provider = "openai"
+        task     = "llm/v1/chat"
+        openai_config {
+          openai_api_key = "{{secrets/llm_scope/openai_api_key}}"
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -67,7 +141,7 @@ The following arguments are supported:
   * `config` - The config for the external model, which must match the provider. *Note that API keys could be provided either as a reference to the Databricks Secret (parameters without `_plaintext` suffix) or in plain text (parameters with `_plaintext` suffix)!*
     * `ai21labs_config` - AI21Labs Config
       * `ai21labs_api_key` - The Databricks secret key reference for an AI21Labs API key.
-      * `ai21labs_api_key_plaintext` - An AI21 Labs API key provided as a plaintext string. 
+      * `ai21labs_api_key_plaintext` - An AI21 Labs API key provided as a plaintext string.
     * `anthropic_config` - Anthropic Config
       * `anthropic_api_key` - The Databricks secret key reference for an Anthropic API key.
       * `anthropic_api_key_plaintext` - The Anthropic API key provided as a plaintext string.
@@ -108,7 +182,7 @@ The following arguments are supported:
       * `microsoft_entra_client_secret` - The Databricks secret key reference for a client secret used for Microsoft Entra ID authentication.
       * `microsoft_entra_client_secret_plaintext` - The client secret used for Microsoft Entra ID authentication provided as a plaintext string.
       * `microsoft_entra_tenant_id` - This field is only required for Azure AD OpenAI and is the Microsoft Entra Tenant ID.
-      * `openai_api_base` - This is the base URL for the OpenAI API (default: "https://api.openai.com/v1"). For Azure OpenAI, this field is required and is the base URL for the Azure OpenAI API service provided by Azure.
+      * `openai_api_base` - This is the base URL for the OpenAI API (default: "<https://api.openai.com/v1>"). For Azure OpenAI, this field is required and is the base URL for the Azure OpenAI API service provided by Azure.
       * `openai_api_version` - This is an optional field to specify the OpenAI API version. For Azure OpenAI, this field is required and is the version of the Azure OpenAI service to utilize, specified by a date.
       * `openai_organization` - This is an optional field to specify the organization in OpenAI or Azure OpenAI.
       * `openai_deployment_name` - This field is only required for Azure OpenAI and is the name of the deployment resource for the Azure OpenAI service.
@@ -172,7 +246,7 @@ The following arguments are supported:
     * `valid_topics` - The list of allowed topics. Given a chat request, this guardrail flags the request if its topic is not in the allowed topics.
     * `safety` - the boolean flag that indicates whether the safety filter is enabled.
     * `pii` - Block with configuration for guardrail PII filter:
-      * `behavior` - a string that describes the behavior for PII filter. Currently only `BLOCK` value is supported. 
+      * `behavior` - a string that describes the behavior for PII filter. Currently only `BLOCK` value is supported.
   * `output` - A block with configuration for output guardrail filters.  Has the same structure as `input` block.
 * `rate_limits` - (Optional) Block describing rate limits for AI gateway. For details see the description of `rate_limits` block above.
 * `usage_tracking_config` - (Optional) Block with configuration for payload logging using inference tables. For details see the description of `auto_capture_config` block above.
@@ -219,5 +293,3 @@ The following resources are often used in the same context:
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
 * [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
-
-

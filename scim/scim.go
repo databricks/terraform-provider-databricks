@@ -102,6 +102,12 @@ func addEntitlementsToSchema(s map[string]*schema.Schema) {
 	}
 }
 
+// ResourceMeta is a struct that contains the meta information about the SCIM group
+type ResourceMeta struct {
+	// ResourceType is the type of the resource: "Group" or "WorkspaceGroup"
+	ResourceType string `json:"resourceType,omitempty"`
+}
+
 // Group contains information about the SCIM group
 type Group struct {
 	ID           string         `json:"id,omitempty"`
@@ -112,6 +118,7 @@ type Group struct {
 	Roles        []ComplexValue `json:"roles,omitempty"`
 	Entitlements entitlements   `json:"entitlements,omitempty"`
 	ExternalID   string         `json:"externalId,omitempty"`
+	Meta         *ResourceMeta  `json:"meta,omitempty" tf:"computed"`
 }
 
 // GroupList contains a list of groups fetched from a list api call from SCIM api

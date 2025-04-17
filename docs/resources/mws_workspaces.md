@@ -323,7 +323,6 @@ The following arguments are available:
 * `deployment_name` - (Optional) part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created.
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
-* `credentials_id` - (AWS only) ID of the workspace's credential configuration object.
 * `aws_region` - (AWS only) region of VPC.
 * `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
@@ -332,9 +331,7 @@ The following arguments are available:
 * `cloud_resource_container` - (GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:
   * `gcp` - A block that consists of the following field:
     * `project_id` - The Google Cloud project ID, which the workspace uses to instantiate cloud resources for your workspace.
-* `gcp_managed_network_config` - (GCP only) A block that describes the network configuration for workspaces with Databricks-managed networks.
-  * `subnet_cidr` - The IP range from which to allocate GKE cluster nodes. No bigger than `/9` and no smaller than `/29`.
-* `gke_config` - (GCP only, deprecated) A block that specifies GKE configuration for the Databricks workspace:
+* `gke_config` - (GCP only) A block that specifies GKE configuration for the Databricks workspace:
   * `connectivity_type`: Specifies the network connectivity types for the GKE nodes and the GKE master network. Possible values are: `PRIVATE_NODE_PUBLIC_MASTER`, `PUBLIC_NODE_PUBLIC_MASTER`.
   * `master_ip_range`: The IP range from which to allocate GKE cluster master resources. This field will be ignored if GKE private cluster is not enabled. It must be exactly as big as `/28`.
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
@@ -354,25 +351,24 @@ You can specify a `token` block in the body of the workspace resource, so that T
 
 On AWS, the following arguments could be modified after the workspace is running:
 
-* `credentials_id`
-* `custom_tags`
-* `managed_services_customer_managed_key_id`
 * `network_id` - Modifying [networks on running workspaces](mws_networks.md#modifying-networks-on-running-workspaces-aws-only) would require three separate `terraform apply` steps.
-* `private_access_settings_id`
+* `credentials_id`
 * `storage_customer_managed_key_id`
+* `private_access_settings_id`
+* `custom_tags`
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - (String) Canonical unique identifier for the workspace, of the format `<account-id>/<workspace-id>`
-* `creation_time` - (Integer) time when workspace was created
-* `custom_tags` - (Map) Custom Tags (if present) added to workspace
-* `gcp_workspace_sa` - (String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`
 * `workspace_id` - (String) workspace id
 * `workspace_status_message` - (String) updates on workspace status
 * `workspace_status` - (String) workspace status
+* `creation_time` - (Integer) time when workspace was created
 * `workspace_url` - (String) URL of the workspace
+* `custom_tags` - (Map) Custom Tags (if present) added to workspace
+* `gcp_workspace_sa` - (String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`
 
 ## Timeouts
 

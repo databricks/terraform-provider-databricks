@@ -10,6 +10,8 @@
 
 ### Documentation
 
+ * Unify/reorganize notes in docs for resources/data sources ([#4657](https://github.com/databricks/terraform-provider-databricks/pull/4657))
+
 ### Exporter
 
  * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))

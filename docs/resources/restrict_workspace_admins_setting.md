@@ -4,9 +4,9 @@ subcategory: "Settings"
 
 # databricks_restrict_workspace_admins_setting Resource
 
--> This resource can only be used with a workspace-level provider!
-
 The `databricks_restrict_workspace_admins_setting` resource lets you control the capabilities of workspace admins.
+
+-> This resource can only be used with a workspace-level provider!
 
 With the status set to `ALLOW_ALL`, workspace admins can:
 

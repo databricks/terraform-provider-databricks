@@ -6,6 +6,8 @@ subcategory: "Unity Catalog"
 Retrieves details about [databricks_schema](../resources/schema.md) that was created by Terraform or manually. 
 A schema can be identified by its two-level (fully qualified) name (in the form of: `catalog_name`.`schema_name`) as input. This can be retrieved programmatically using [databricks_schemas](../data-sources/schemas.md) data source.
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 * Retrieve details of all schemas in in a _sandbox_ [databricks_catalog](../resources/catalog.md):

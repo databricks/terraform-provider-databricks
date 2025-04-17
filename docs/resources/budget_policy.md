@@ -7,7 +7,6 @@ Administrators can use budget policies to ensure that the correct tags appear au
 
 -> This resource can only be used with an account-level provider!
 
-
 ## Example Usage
 
 ```hcl

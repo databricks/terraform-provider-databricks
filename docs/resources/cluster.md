@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 This resource allows you to manage [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 -> In case of [`Cannot access cluster ####-######-####### that was terminated or unpinned more than 30 days ago`](https://github.com/databricks/terraform-provider-databricks/issues/1197#issuecomment-1069386670) errors, please upgrade to v0.5.5 or later. If for some reason you cannot upgrade the version of provider, then the other viable option to unblock the apply pipeline is [`terraform state rm path.to.databricks_cluster.resource`](https://www.terraform.io/cli/commands/state/rm) command.
 
 ```hcl

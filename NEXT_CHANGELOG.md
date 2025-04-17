@@ -11,6 +11,7 @@
 ### Documentation
 
  * Document `performance_target` in `databricks_job` ([#4651](https://github.com/databricks/terraform-provider-databricks/pull/4651))
+ * Add more examples for `databricks_model_serving` ([#4658](https://github.com/databricks/terraform-provider-databricks/pull/4658))
 
 ### Exporter
 

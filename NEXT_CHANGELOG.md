@@ -15,6 +15,7 @@
  * Add more examples for `databricks_model_serving` ([#4658](https://github.com/databricks/terraform-provider-databricks/pull/4658))
  * Document `on_streaming_backlog_exceeded` in email/webhook notifications in `databricks_job` ([#4660](https://github.com/databricks/terraform-provider-databricks/pull/4660))
  * Refresh `spark_python_task` option in `databricks_job` ([#4666](https://github.com/databricks/terraform-provider-databricks/pull/4666))
+ * Unify/reorganize notes in docs for resources/data sources ([#4657](https://github.com/databricks/terraform-provider-databricks/pull/4657))
 
 ### Exporter
 

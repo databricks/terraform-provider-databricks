@@ -1052,18 +1052,18 @@ func ResourceJob() common.Resource {
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			var js JobSettingsResource
-			common.DiffToStructPointer(d, jobsGoSdkSchema, &js)
+			var jsr JobSettingsResource
+			common.DiffToStructPointer(d, jobsGoSdkSchema, &jsr)
 			alwaysRunning := d.Get("always_running").(bool)
-			if alwaysRunning && js.MaxConcurrentRuns > 1 {
+			if alwaysRunning && jsr.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
 			controlRunState := d.Get("control_run_state").(bool)
 			if controlRunState {
-				if js.Continuous == nil {
+				if jsr.Continuous == nil {
 					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
 				}
-				if js.MaxConcurrentRuns > 1 {
+				if jsr.MaxConcurrentRuns > 1 {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}

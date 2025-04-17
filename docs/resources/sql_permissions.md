@@ -19,6 +19,8 @@ resource "databricks_cluster" "cluster_with_table_access_control" {
 }
 ```
 
+-> This resource can only be used with a workspace-level provider!
+
 It is required to define all permissions for a securable in a single resource, otherwise Terraform cannot guarantee config drift prevention.
 
 ## Example Usage

@@ -3,13 +3,11 @@ subcategory: "Unity Catalog"
 ---
 # databricks_system_schema Resource
 
--> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
+Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
 -> This resource can only be used with a workspace-level provider!
 
 -> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.
-
-Manages system tables enablement. System tables are a Databricks-hosted analytical store of your account’s operational data. System tables can be used for historical observability across your account. System tables must be enabled by an account admin.
 
 ## Example Usage
 

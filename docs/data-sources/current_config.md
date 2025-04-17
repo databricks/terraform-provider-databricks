@@ -5,6 +5,8 @@ subcategory: "Deployment"
 
 Retrieves information about the currently configured provider to make a decision, for example, add a dynamic block based on the specific cloud.
 
+-> This data source can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Create cloud-specific [databricks_storage_credential](../resources/storage_credential.md):

@@ -37,7 +37,7 @@ type BaseJob struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// Indicates if the job has more sub-resources (`tasks`, `job_clusters`)
+	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
 	// `expand_tasks=true`.
@@ -164,10 +164,14 @@ type BaseRun struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
-	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from the
-	// client-set performance_target depending on if the job was eligible to be
-	// cost-optimized.
+	// The actual performance target used by the serverless run during
+	// execution. This can differ from the client-set performance target on the
+	// request depending on whether the performance mode is supported by the job
+	// type.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
@@ -191,7 +195,7 @@ type BaseRun struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.Object `tfsdk:"git_source"`
-	// Indicates if the run has more sub-resources (`tasks`, `job_clusters`)
+	// Indicates if the run has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/getrun
 	// endpoint. It is only relevant for API 2.2 :method:jobs/listruns requests
 	// with `expand_tasks=true`.
@@ -1426,7 +1430,6 @@ func (o *ClusterSpec) SetNewCluster(ctx context.Context, v compute_tf.ClusterSpe
 	o.NewCluster = vs
 }
 
-// Next field: 4
 type ComputeConfig struct {
 	// IDof the GPU pool to use.
 	GpuNodePoolId types.String `tfsdk:"gpu_node_pool_id"`
@@ -1654,9 +1657,7 @@ type CreateJob struct {
 	Health types.Object `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings. If more than 100
-	// job clusters are available, you can paginate through them using
-	// :method:jobs/get.
+	// You must declare dependent libraries in task settings.
 	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
@@ -1679,8 +1680,13 @@ type CreateJob struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// PerformanceTarget defines how performant or cost efficient the execution
-	// of run on serverless should be.
+	// The performance mode on a serverless job. The performance target
+	// determines the level of compute performance or cost-efficiency for the
+	// run.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.Object `tfsdk:"queue"`
@@ -1699,10 +1705,13 @@ type CreateJob struct {
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
 	Tags types.Map `tfsdk:"tags"`
-	// A list of task specifications to be executed by this job. If more than
-	// 100 tasks are available, you can paginate through them using
-	// :method:jobs/get. Use the `next_page_token` field at the object root to
-	// determine if more results are available.
+	// A list of task specifications to be executed by this job. It supports up
+	// to 1000 elements in write endpoints (:method:jobs/create,
+	// :method:jobs/reset, :method:jobs/update, :method:jobs/submit). Read
+	// endpoints return only 100 tasks. If more than 100 tasks are available,
+	// you can paginate through them using :method:jobs/get. Use the
+	// `next_page_token` field at the object root to determine if more results
+	// are available.
 	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
@@ -2436,6 +2445,254 @@ func (o CronSchedule) Type(ctx context.Context) attr.Type {
 			"timezone_id":            types.StringType,
 		},
 	}
+}
+
+type DashboardPageSnapshot struct {
+	PageDisplayName types.String `tfsdk:"page_display_name"`
+
+	WidgetErrorDetails types.List `tfsdk:"widget_error_details"`
+}
+
+func (newState *DashboardPageSnapshot) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardPageSnapshot) {
+}
+
+func (newState *DashboardPageSnapshot) SyncEffectiveFieldsDuringRead(existingState DashboardPageSnapshot) {
+}
+
+func (c DashboardPageSnapshot) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_display_name"] = attrs["page_display_name"].SetOptional()
+	attrs["widget_error_details"] = attrs["widget_error_details"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardPageSnapshot.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DashboardPageSnapshot) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"widget_error_details": reflect.TypeOf(WidgetErrorDetail{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardPageSnapshot
+// only implements ToObjectValue() and Type().
+func (o DashboardPageSnapshot) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_display_name":    o.PageDisplayName,
+			"widget_error_details": o.WidgetErrorDetails,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DashboardPageSnapshot) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_display_name": types.StringType,
+			"widget_error_details": basetypes.ListType{
+				ElemType: WidgetErrorDetail{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetWidgetErrorDetails returns the value of the WidgetErrorDetails field in DashboardPageSnapshot as
+// a slice of WidgetErrorDetail values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardPageSnapshot) GetWidgetErrorDetails(ctx context.Context) ([]WidgetErrorDetail, bool) {
+	if o.WidgetErrorDetails.IsNull() || o.WidgetErrorDetails.IsUnknown() {
+		return nil, false
+	}
+	var v []WidgetErrorDetail
+	d := o.WidgetErrorDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetWidgetErrorDetails sets the value of the WidgetErrorDetails field in DashboardPageSnapshot.
+func (o *DashboardPageSnapshot) SetWidgetErrorDetails(ctx context.Context, v []WidgetErrorDetail) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["widget_error_details"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.WidgetErrorDetails = types.ListValueMust(t, vs)
+}
+
+// Configures the Lakeview Dashboard job task type.
+type DashboardTask struct {
+	DashboardId types.String `tfsdk:"dashboard_id"`
+
+	Subscription types.Object `tfsdk:"subscription"`
+	// The warehouse id to execute the dashboard with for the schedule
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (newState *DashboardTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardTask) {
+}
+
+func (newState *DashboardTask) SyncEffectiveFieldsDuringRead(existingState DashboardTask) {
+}
+
+func (c DashboardTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["dashboard_id"] = attrs["dashboard_id"].SetComputed()
+	attrs["subscription"] = attrs["subscription"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DashboardTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"subscription": reflect.TypeOf(Subscription{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardTask
+// only implements ToObjectValue() and Type().
+func (o DashboardTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_id": o.DashboardId,
+			"subscription": o.Subscription,
+			"warehouse_id": o.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DashboardTask) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_id": types.StringType,
+			"subscription": Subscription{}.Type(ctx),
+			"warehouse_id": types.StringType,
+		},
+	}
+}
+
+// GetSubscription returns the value of the Subscription field in DashboardTask as
+// a Subscription value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardTask) GetSubscription(ctx context.Context) (Subscription, bool) {
+	var e Subscription
+	if o.Subscription.IsNull() || o.Subscription.IsUnknown() {
+		return e, false
+	}
+	var v []Subscription
+	d := o.Subscription.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSubscription sets the value of the Subscription field in DashboardTask.
+func (o *DashboardTask) SetSubscription(ctx context.Context, v Subscription) {
+	vs := v.ToObjectValue(ctx)
+	o.Subscription = vs
+}
+
+type DashboardTaskOutput struct {
+	// Should only be populated for manual PDF download jobs.
+	PageSnapshots types.List `tfsdk:"page_snapshots"`
+}
+
+func (newState *DashboardTaskOutput) SyncEffectiveFieldsDuringCreateOrUpdate(plan DashboardTaskOutput) {
+}
+
+func (newState *DashboardTaskOutput) SyncEffectiveFieldsDuringRead(existingState DashboardTaskOutput) {
+}
+
+func (c DashboardTaskOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_snapshots"] = attrs["page_snapshots"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DashboardTaskOutput.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DashboardTaskOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"page_snapshots": reflect.TypeOf(DashboardPageSnapshot{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DashboardTaskOutput
+// only implements ToObjectValue() and Type().
+func (o DashboardTaskOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_snapshots": o.PageSnapshots,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DashboardTaskOutput) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_snapshots": basetypes.ListType{
+				ElemType: DashboardPageSnapshot{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPageSnapshots returns the value of the PageSnapshots field in DashboardTaskOutput as
+// a slice of DashboardPageSnapshot values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *DashboardTaskOutput) GetPageSnapshots(ctx context.Context) ([]DashboardPageSnapshot, bool) {
+	if o.PageSnapshots.IsNull() || o.PageSnapshots.IsUnknown() {
+		return nil, false
+	}
+	var v []DashboardPageSnapshot
+	d := o.PageSnapshots.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPageSnapshots sets the value of the PageSnapshots field in DashboardTaskOutput.
+func (o *DashboardTaskOutput) SetPageSnapshots(ctx context.Context, v []DashboardPageSnapshot) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["page_snapshots"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.PageSnapshots = types.ListValueMust(t, vs)
 }
 
 type DbtOutput struct {
@@ -3578,11 +3835,10 @@ func (o ForEachTaskTaskRunStats) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// Next field: 9
 type GenAiComputeTask struct {
 	// Command launcher to run the actual script, e.g. bash, python etc.
 	Command types.String `tfsdk:"command"`
-	// Next field: 4
+
 	Compute types.Object `tfsdk:"compute"`
 	// Runtime image
 	DlRuntimeImage types.String `tfsdk:"dl_runtime_image"`
@@ -3864,8 +4120,8 @@ type GetJobRequest struct {
 	// The canonical identifier of the job to retrieve information about. This
 	// field is required.
 	JobId types.Int64 `tfsdk:"-"`
-	// Use `next_page_token` returned from the previous GetJob to request the
-	// next page of the job's sub-resources.
+	// Use `next_page_token` returned from the previous GetJob response to
+	// request the next page of the job's array properties.
 	PageToken types.String `tfsdk:"-"`
 }
 
@@ -4072,8 +4328,8 @@ type GetRunRequest struct {
 	IncludeHistory types.Bool `tfsdk:"-"`
 	// Whether to include resolved parameter values in the response.
 	IncludeResolvedValues types.Bool `tfsdk:"-"`
-	// Use `next_page_token` returned from the previous GetRun to request the
-	// next page of the run's sub-resources.
+	// Use `next_page_token` returned from the previous GetRun response to
+	// request the next page of the run's array properties.
 	PageToken types.String `tfsdk:"-"`
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
@@ -4337,14 +4593,14 @@ type Job struct {
 	// based on accessible budget policies of the run_as identity on job
 	// creation or modification.
 	EffectiveBudgetPolicyId types.String `tfsdk:"effective_budget_policy_id"`
-	// Indicates if the job has more sub-resources (`tasks`, `job_clusters`)
+	// Indicates if the job has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/get endpoint.
 	// It is only relevant for API 2.2 :method:jobs/list requests with
 	// `expand_tasks=true`.
 	HasMore types.Bool `tfsdk:"has_more"`
 	// The canonical identifier for this job.
 	JobId types.Int64 `tfsdk:"job_id"`
-	// A token that can be used to list the next page of sub-resources.
+	// A token that can be used to list the next page of array properties.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// The email of an active workspace user or the application ID of a service
 	// principal that the job runs as. This value can be changed by setting the
@@ -5755,9 +6011,7 @@ type JobSettings struct {
 	Health types.Object `tfsdk:"health"`
 	// A list of job cluster specifications that can be shared and reused by
 	// tasks of this job. Libraries cannot be declared in a shared job cluster.
-	// You must declare dependent libraries in task settings. If more than 100
-	// job clusters are available, you can paginate through them using
-	// :method:jobs/get.
+	// You must declare dependent libraries in task settings.
 	JobClusters types.List `tfsdk:"job_cluster"`
 	// An optional maximum allowed number of concurrent runs of the job. Set
 	// this value if you want to be able to execute multiple runs of the same
@@ -5780,8 +6034,13 @@ type JobSettings struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// PerformanceTarget defines how performant or cost efficient the execution
-	// of run on serverless should be.
+	// The performance mode on a serverless job. The performance target
+	// determines the level of compute performance or cost-efficiency for the
+	// run.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// The queue settings of the job.
 	Queue types.Object `tfsdk:"queue"`
@@ -5800,10 +6059,13 @@ type JobSettings struct {
 	// limitations as cluster tags. A maximum of 25 tags can be added to the
 	// job.
 	Tags types.Map `tfsdk:"tags"`
-	// A list of task specifications to be executed by this job. If more than
-	// 100 tasks are available, you can paginate through them using
-	// :method:jobs/get. Use the `next_page_token` field at the object root to
-	// determine if more results are available.
+	// A list of task specifications to be executed by this job. It supports up
+	// to 1000 elements in write endpoints (:method:jobs/create,
+	// :method:jobs/reset, :method:jobs/update, :method:jobs/submit). Read
+	// endpoints return only 100 tasks. If more than 100 tasks are available,
+	// you can paginate through them using :method:jobs/get. Use the
+	// `next_page_token` field at the object root to determine if more results
+	// are available.
 	Tasks types.List `tfsdk:"task"`
 	// An optional timeout applied to each run of this job. A value of `0` means
 	// no timeout.
@@ -6753,9 +7015,9 @@ func (o ListJobComplianceRequest) Type(ctx context.Context) attr.Type {
 
 // List jobs
 type ListJobsRequest struct {
-	// Whether to include task and cluster details in the response. Note that in
-	// API 2.2, only the first 100 elements will be shown. Use :method:jobs/get
-	// to paginate through all tasks and clusters.
+	// Whether to include task and cluster details in the response. Note that
+	// only the first 100 elements will be shown. Use :method:jobs/get to
+	// paginate through all tasks and clusters.
 	ExpandTasks types.Bool `tfsdk:"-"`
 	// The number of jobs to return. This value must be greater than 0 and less
 	// or equal to 100. The default value is 20.
@@ -6918,9 +7180,9 @@ type ListRunsRequest struct {
 	// results; otherwise, lists both active and completed runs. This field
 	// cannot be `true` when active_only is `true`.
 	CompletedOnly types.Bool `tfsdk:"-"`
-	// Whether to include task and cluster details in the response. Note that in
-	// API 2.2, only the first 100 elements will be shown. Use
-	// :method:jobs/getrun to paginate through all tasks and clusters.
+	// Whether to include task and cluster details in the response. Note that
+	// only the first 100 elements will be shown. Use :method:jobs/getrun to
+	// paginate through all tasks and clusters.
 	ExpandTasks types.Bool `tfsdk:"-"`
 	// The job for which to list runs. If omitted, the Jobs service lists runs
 	// from all jobs.
@@ -7488,6 +7750,265 @@ func (o PipelineTask) Type(ctx context.Context) attr.Type {
 			"pipeline_id":  types.StringType,
 		},
 	}
+}
+
+type PowerBiModel struct {
+	// How the published Power BI model authenticates to Databricks
+	AuthenticationMethod types.String `tfsdk:"authentication_method"`
+	// The name of the Power BI model
+	ModelName types.String `tfsdk:"model_name"`
+	// Whether to overwrite existing Power BI models
+	OverwriteExisting types.Bool `tfsdk:"overwrite_existing"`
+	// The default storage mode of the Power BI model
+	StorageMode types.String `tfsdk:"storage_mode"`
+	// The name of the Power BI workspace of the model
+	WorkspaceName types.String `tfsdk:"workspace_name"`
+}
+
+func (newState *PowerBiModel) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiModel) {
+}
+
+func (newState *PowerBiModel) SyncEffectiveFieldsDuringRead(existingState PowerBiModel) {
+}
+
+func (c PowerBiModel) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["authentication_method"] = attrs["authentication_method"].SetOptional()
+	attrs["model_name"] = attrs["model_name"].SetOptional()
+	attrs["overwrite_existing"] = attrs["overwrite_existing"].SetOptional()
+	attrs["storage_mode"] = attrs["storage_mode"].SetOptional()
+	attrs["workspace_name"] = attrs["workspace_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PowerBiModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PowerBiModel) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiModel
+// only implements ToObjectValue() and Type().
+func (o PowerBiModel) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"authentication_method": o.AuthenticationMethod,
+			"model_name":            o.ModelName,
+			"overwrite_existing":    o.OverwriteExisting,
+			"storage_mode":          o.StorageMode,
+			"workspace_name":        o.WorkspaceName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PowerBiModel) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"authentication_method": types.StringType,
+			"model_name":            types.StringType,
+			"overwrite_existing":    types.BoolType,
+			"storage_mode":          types.StringType,
+			"workspace_name":        types.StringType,
+		},
+	}
+}
+
+type PowerBiTable struct {
+	// The catalog name in Databricks
+	Catalog types.String `tfsdk:"catalog"`
+	// The table name in Databricks
+	Name types.String `tfsdk:"name"`
+	// The schema name in Databricks
+	Schema types.String `tfsdk:"schema"`
+	// The Power BI storage mode of the table
+	StorageMode types.String `tfsdk:"storage_mode"`
+}
+
+func (newState *PowerBiTable) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiTable) {
+}
+
+func (newState *PowerBiTable) SyncEffectiveFieldsDuringRead(existingState PowerBiTable) {
+}
+
+func (c PowerBiTable) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+	attrs["storage_mode"] = attrs["storage_mode"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PowerBiTable.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PowerBiTable) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiTable
+// only implements ToObjectValue() and Type().
+func (o PowerBiTable) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog":      o.Catalog,
+			"name":         o.Name,
+			"schema":       o.Schema,
+			"storage_mode": o.StorageMode,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PowerBiTable) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog":      types.StringType,
+			"name":         types.StringType,
+			"schema":       types.StringType,
+			"storage_mode": types.StringType,
+		},
+	}
+}
+
+type PowerBiTask struct {
+	// The resource name of the UC connection to authenticate from Databricks to
+	// Power BI
+	ConnectionResourceName types.String `tfsdk:"connection_resource_name"`
+	// The semantic model to update
+	PowerBiModel types.Object `tfsdk:"power_bi_model"`
+	// Whether the model should be refreshed after the update
+	RefreshAfterUpdate types.Bool `tfsdk:"refresh_after_update"`
+	// The tables to be exported to Power BI
+	Tables types.List `tfsdk:"tables"`
+	// The SQL warehouse ID to use as the Power BI data source
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (newState *PowerBiTask) SyncEffectiveFieldsDuringCreateOrUpdate(plan PowerBiTask) {
+}
+
+func (newState *PowerBiTask) SyncEffectiveFieldsDuringRead(existingState PowerBiTask) {
+}
+
+func (c PowerBiTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["connection_resource_name"] = attrs["connection_resource_name"].SetOptional()
+	attrs["power_bi_model"] = attrs["power_bi_model"].SetOptional()
+	attrs["refresh_after_update"] = attrs["refresh_after_update"].SetOptional()
+	attrs["tables"] = attrs["tables"].SetOptional()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PowerBiTask.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PowerBiTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"power_bi_model": reflect.TypeOf(PowerBiModel{}),
+		"tables":         reflect.TypeOf(PowerBiTable{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PowerBiTask
+// only implements ToObjectValue() and Type().
+func (o PowerBiTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"connection_resource_name": o.ConnectionResourceName,
+			"power_bi_model":           o.PowerBiModel,
+			"refresh_after_update":     o.RefreshAfterUpdate,
+			"tables":                   o.Tables,
+			"warehouse_id":             o.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PowerBiTask) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"connection_resource_name": types.StringType,
+			"power_bi_model":           PowerBiModel{}.Type(ctx),
+			"refresh_after_update":     types.BoolType,
+			"tables": basetypes.ListType{
+				ElemType: PowerBiTable{}.Type(ctx),
+			},
+			"warehouse_id": types.StringType,
+		},
+	}
+}
+
+// GetPowerBiModel returns the value of the PowerBiModel field in PowerBiTask as
+// a PowerBiModel value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PowerBiTask) GetPowerBiModel(ctx context.Context) (PowerBiModel, bool) {
+	var e PowerBiModel
+	if o.PowerBiModel.IsNull() || o.PowerBiModel.IsUnknown() {
+		return e, false
+	}
+	var v []PowerBiModel
+	d := o.PowerBiModel.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPowerBiModel sets the value of the PowerBiModel field in PowerBiTask.
+func (o *PowerBiTask) SetPowerBiModel(ctx context.Context, v PowerBiModel) {
+	vs := v.ToObjectValue(ctx)
+	o.PowerBiModel = vs
+}
+
+// GetTables returns the value of the Tables field in PowerBiTask as
+// a slice of PowerBiTable values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PowerBiTask) GetTables(ctx context.Context) ([]PowerBiTable, bool) {
+	if o.Tables.IsNull() || o.Tables.IsUnknown() {
+		return nil, false
+	}
+	var v []PowerBiTable
+	d := o.Tables.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTables sets the value of the Tables field in PowerBiTask.
+func (o *PowerBiTask) SetTables(ctx context.Context, v []PowerBiTable) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tables"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tables = types.ListValueMust(t, vs)
 }
 
 type PythonWheelTask struct {
@@ -9529,10 +10050,14 @@ type Run struct {
 	CreatorUserName types.String `tfsdk:"creator_user_name"`
 	// Description of the run
 	Description types.String `tfsdk:"description"`
-	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from the
-	// client-set performance_target depending on if the job was eligible to be
-	// cost-optimized.
+	// The actual performance target used by the serverless run during
+	// execution. This can differ from the client-set performance target on the
+	// request depending on whether the performance mode is supported by the job
+	// type.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The time at which this run ended in epoch milliseconds (milliseconds
 	// since 1/1/1970 UTC). This field is set to 0 if the job is still running.
@@ -9556,7 +10081,7 @@ type Run struct {
 	// Note: dbt and SQL File tasks support only version-controlled sources. If
 	// dbt or SQL File tasks are used, `git_source` must be defined on the job.
 	GitSource types.Object `tfsdk:"git_source"`
-	// Indicates if the run has more sub-resources (`tasks`, `job_clusters`)
+	// Indicates if the run has more array properties (`tasks`, `job_clusters`)
 	// that are not shown. They can be accessed via :method:jobs/getrun
 	// endpoint. It is only relevant for API 2.2 :method:jobs/listruns requests
 	// with `expand_tasks=true`.
@@ -9579,7 +10104,7 @@ type Run struct {
 	// field is populated with the ID of the job run that the task run belongs
 	// to.
 	JobRunId types.Int64 `tfsdk:"job_run_id"`
-	// A token that can be used to list the next page of sub-resources.
+	// A token that can be used to list the next page of array properties.
 	NextPageToken types.String `tfsdk:"next_page_token"`
 	// A unique identifier for this job run. This is set to the same value as
 	// `run_id`.
@@ -10908,9 +11433,14 @@ type RunNow struct {
 	// A list of task keys to run inside of the job. If this field is not
 	// provided, all tasks in the job will be run.
 	Only types.List `tfsdk:"only"`
-	// PerformanceTarget defines how performant or cost efficient the execution
-	// of run on serverless compute should be. For RunNow, this performance
-	// target will override the target defined on the job-level.
+	// The performance mode on a serverless job. The performance target
+	// determines the level of compute performance or cost-efficiency for the
+	// run. This field overrides the performance target defined on the job
+	// level.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
@@ -11422,6 +11952,8 @@ func (o RunNowResponse) Type(ctx context.Context) attr.Type {
 type RunOutput struct {
 	// The output of a clean rooms notebook task, if available
 	CleanRoomsNotebookOutput types.Object `tfsdk:"clean_rooms_notebook_output"`
+	// The output of a dashboard task, if available
+	DashboardOutput types.Object `tfsdk:"dashboard_output"`
 	// The output of a dbt task, if available.
 	DbtOutput types.Object `tfsdk:"dbt_output"`
 	// An error message indicating why a task failed or why output is not
@@ -11468,6 +12000,7 @@ func (newState *RunOutput) SyncEffectiveFieldsDuringRead(existingState RunOutput
 
 func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_output"] = attrs["clean_rooms_notebook_output"].SetOptional()
+	attrs["dashboard_output"] = attrs["dashboard_output"].SetOptional()
 	attrs["dbt_output"] = attrs["dbt_output"].SetOptional()
 	attrs["error"] = attrs["error"].SetOptional()
 	attrs["error_trace"] = attrs["error_trace"].SetOptional()
@@ -11492,6 +12025,7 @@ func (c RunOutput) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 func (a RunOutput) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_output": reflect.TypeOf(CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}),
+		"dashboard_output":            reflect.TypeOf(DashboardTaskOutput{}),
 		"dbt_output":                  reflect.TypeOf(DbtOutput{}),
 		"metadata":                    reflect.TypeOf(Run{}),
 		"notebook_output":             reflect.TypeOf(NotebookOutput{}),
@@ -11508,6 +12042,7 @@ func (o RunOutput) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"clean_rooms_notebook_output": o.CleanRoomsNotebookOutput,
+			"dashboard_output":            o.DashboardOutput,
 			"dbt_output":                  o.DbtOutput,
 			"error":                       o.Error,
 			"error_trace":                 o.ErrorTrace,
@@ -11526,6 +12061,7 @@ func (o RunOutput) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_output": CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput{}.Type(ctx),
+			"dashboard_output":            DashboardTaskOutput{}.Type(ctx),
 			"dbt_output":                  DbtOutput{}.Type(ctx),
 			"error":                       types.StringType,
 			"error_trace":                 types.StringType,
@@ -11566,6 +12102,34 @@ func (o *RunOutput) GetCleanRoomsNotebookOutput(ctx context.Context) (CleanRooms
 func (o *RunOutput) SetCleanRoomsNotebookOutput(ctx context.Context, v CleanRoomsNotebookTaskCleanRoomsNotebookTaskOutput) {
 	vs := v.ToObjectValue(ctx)
 	o.CleanRoomsNotebookOutput = vs
+}
+
+// GetDashboardOutput returns the value of the DashboardOutput field in RunOutput as
+// a DashboardTaskOutput value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunOutput) GetDashboardOutput(ctx context.Context) (DashboardTaskOutput, bool) {
+	var e DashboardTaskOutput
+	if o.DashboardOutput.IsNull() || o.DashboardOutput.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTaskOutput
+	d := o.DashboardOutput.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardOutput sets the value of the DashboardOutput field in RunOutput.
+func (o *RunOutput) SetDashboardOutput(ctx context.Context, v DashboardTaskOutput) {
+	vs := v.ToObjectValue(ctx)
+	o.DashboardOutput = vs
 }
 
 // GetDbtOutput returns the value of the DbtOutput field in RunOutput as
@@ -12312,6 +12876,8 @@ type RunTask struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
+	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -12323,13 +12889,16 @@ type RunTask struct {
 	DependsOn types.List `tfsdk:"depends_on"`
 	// An optional description for this task.
 	Description types.String `tfsdk:"description"`
-	// Denotes whether or not the task was disabled by the user. Disabled tasks
-	// do not execute and are immediately skipped as soon as they are unblocked.
+	// Deprecated, field was never used in production.
 	Disabled types.Bool `tfsdk:"disabled"`
-	// effective_performance_target is the actual performance target used by the
-	// run during execution. effective_performance_target can differ from the
-	// client-set performance_target depending on if the job was eligible to be
-	// cost-optimized.
+	// The actual performance target used by the serverless run during
+	// execution. This can differ from the client-set performance target on the
+	// request depending on whether the performance mode is supported by the job
+	// type.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
 	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// An optional set of email addresses notified when the task run begins or
 	// completes. The default behavior is to not send any emails.
@@ -12357,7 +12926,7 @@ type RunTask struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.Object `tfsdk:"for_each_task"`
-	// Next field: 9
+
 	GenAiComputeTask types.Object `tfsdk:"gen_ai_compute_task"`
 	// An optional specification for a remote Git repository containing the
 	// source code used by tasks. Version-controlled source code is supported by
@@ -12386,6 +12955,9 @@ type RunTask struct {
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
 	PipelineTask types.Object `tfsdk:"pipeline_task"`
+	// The task triggers a Power BI semantic model update when the
+	// `power_bi_task` field is present.
+	PowerBiTask types.Object `tfsdk:"power_bi_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
@@ -12477,6 +13049,7 @@ func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["cleanup_duration"] = attrs["cleanup_duration"].SetOptional()
 	attrs["cluster_instance"] = attrs["cluster_instance"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
@@ -12496,6 +13069,7 @@ func (c RunTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBu
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["queue_duration"] = attrs["queue_duration"].SetOptional()
 	attrs["resolved_values"] = attrs["resolved_values"].SetOptional()
@@ -12531,6 +13105,7 @@ func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
 		"cluster_instance":          reflect.TypeOf(ClusterInstance{}),
 		"condition_task":            reflect.TypeOf(RunConditionTask{}),
+		"dashboard_task":            reflect.TypeOf(DashboardTask{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask{}),
 		"depends_on":                reflect.TypeOf(TaskDependency{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications{}),
@@ -12542,6 +13117,7 @@ func (a RunTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Ty
 		"notebook_task":             reflect.TypeOf(NotebookTask{}),
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask{}),
+		"power_bi_task":             reflect.TypeOf(PowerBiTask{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask{}),
 		"resolved_values":           reflect.TypeOf(ResolvedValues{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask{}),
@@ -12567,6 +13143,7 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"cleanup_duration":             o.CleanupDuration,
 			"cluster_instance":             o.ClusterInstance,
 			"condition_task":               o.ConditionTask,
+			"dashboard_task":               o.DashboardTask,
 			"dbt_task":                     o.DbtTask,
 			"depends_on":                   o.DependsOn,
 			"description":                  o.Description,
@@ -12586,6 +13163,7 @@ func (o RunTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notebook_task":                o.NotebookTask,
 			"notification_settings":        o.NotificationSettings,
 			"pipeline_task":                o.PipelineTask,
+			"power_bi_task":                o.PowerBiTask,
 			"python_wheel_task":            o.PythonWheelTask,
 			"queue_duration":               o.QueueDuration,
 			"resolved_values":              o.ResolvedValues,
@@ -12617,6 +13195,7 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 			"cleanup_duration":          types.Int64Type,
 			"cluster_instance":          ClusterInstance{}.Type(ctx),
 			"condition_task":            RunConditionTask{}.Type(ctx),
+			"dashboard_task":            DashboardTask{}.Type(ctx),
 			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
@@ -12640,6 +13219,7 @@ func (o RunTask) Type(ctx context.Context) attr.Type {
 			"notebook_task":         NotebookTask{}.Type(ctx),
 			"notification_settings": TaskNotificationSettings{}.Type(ctx),
 			"pipeline_task":         PipelineTask{}.Type(ctx),
+			"power_bi_task":         PowerBiTask{}.Type(ctx),
 			"python_wheel_task":     PythonWheelTask{}.Type(ctx),
 			"queue_duration":        types.Int64Type,
 			"resolved_values":       ResolvedValues{}.Type(ctx),
@@ -12745,6 +13325,34 @@ func (o *RunTask) GetConditionTask(ctx context.Context) (RunConditionTask, bool)
 func (o *RunTask) SetConditionTask(ctx context.Context, v RunConditionTask) {
 	vs := v.ToObjectValue(ctx)
 	o.ConditionTask = vs
+}
+
+// GetDashboardTask returns the value of the DashboardTask field in RunTask as
+// a DashboardTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
+	var e DashboardTask
+	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTask
+	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardTask sets the value of the DashboardTask field in RunTask.
+func (o *RunTask) SetDashboardTask(ctx context.Context, v DashboardTask) {
+	vs := v.ToObjectValue(ctx)
+	o.DashboardTask = vs
 }
 
 // GetDbtTask returns the value of the DbtTask field in RunTask as
@@ -13049,6 +13657,34 @@ func (o *RunTask) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 func (o *RunTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
 	vs := v.ToObjectValue(ctx)
 	o.PipelineTask = vs
+}
+
+// GetPowerBiTask returns the value of the PowerBiTask field in RunTask as
+// a PowerBiTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *RunTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
+	var e PowerBiTask
+	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+		return e, false
+	}
+	var v []PowerBiTask
+	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPowerBiTask sets the value of the PowerBiTask field in RunTask.
+func (o *RunTask) SetPowerBiTask(ctx context.Context, v PowerBiTask) {
+	vs := v.ToObjectValue(ctx)
+	o.PowerBiTask = vs
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in RunTask as
@@ -15324,6 +15960,8 @@ type SubmitTask struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
+	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -15350,7 +15988,7 @@ type SubmitTask struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.Object `tfsdk:"for_each_task"`
-	// Next field: 9
+
 	GenAiComputeTask types.Object `tfsdk:"gen_ai_compute_task"`
 	// An optional set of health rules that can be defined for this job.
 	Health types.Object `tfsdk:"health"`
@@ -15369,6 +16007,9 @@ type SubmitTask struct {
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
 	PipelineTask types.Object `tfsdk:"pipeline_task"`
+	// The task triggers a Power BI semantic model update when the
+	// `power_bi_task` field is present.
+	PowerBiTask types.Object `tfsdk:"power_bi_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
@@ -15429,6 +16070,7 @@ func (newState *SubmitTask) SyncEffectiveFieldsDuringRead(existingState SubmitTa
 func (c SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
@@ -15443,6 +16085,7 @@ func (c SubmitTask) ApplySchemaCustomizations(attrs map[string]tfschema.Attribut
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
 	attrs["run_job_task"] = attrs["run_job_task"].SetOptional()
@@ -15468,6 +16111,7 @@ func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
 		"condition_task":            reflect.TypeOf(ConditionTask{}),
+		"dashboard_task":            reflect.TypeOf(DashboardTask{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask{}),
 		"depends_on":                reflect.TypeOf(TaskDependency{}),
 		"email_notifications":       reflect.TypeOf(JobEmailNotifications{}),
@@ -15479,6 +16123,7 @@ func (a SubmitTask) GetComplexFieldTypes(ctx context.Context) map[string]reflect
 		"notebook_task":             reflect.TypeOf(NotebookTask{}),
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask{}),
+		"power_bi_task":             reflect.TypeOf(PowerBiTask{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask{}),
 		"spark_jar_task":            reflect.TypeOf(SparkJarTask{}),
@@ -15498,6 +16143,7 @@ func (o SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
 			"condition_task":            o.ConditionTask,
+			"dashboard_task":            o.DashboardTask,
 			"dbt_task":                  o.DbtTask,
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
@@ -15512,6 +16158,7 @@ func (o SubmitTask) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notebook_task":             o.NotebookTask,
 			"notification_settings":     o.NotificationSettings,
 			"pipeline_task":             o.PipelineTask,
+			"power_bi_task":             o.PowerBiTask,
 			"python_wheel_task":         o.PythonWheelTask,
 			"run_if":                    o.RunIf,
 			"run_job_task":              o.RunJobTask,
@@ -15531,6 +16178,7 @@ func (o SubmitTask) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
 			"condition_task":            ConditionTask{}.Type(ctx),
+			"dashboard_task":            DashboardTask{}.Type(ctx),
 			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
@@ -15549,6 +16197,7 @@ func (o SubmitTask) Type(ctx context.Context) attr.Type {
 			"notebook_task":         NotebookTask{}.Type(ctx),
 			"notification_settings": TaskNotificationSettings{}.Type(ctx),
 			"pipeline_task":         PipelineTask{}.Type(ctx),
+			"power_bi_task":         PowerBiTask{}.Type(ctx),
 			"python_wheel_task":     PythonWheelTask{}.Type(ctx),
 			"run_if":                types.StringType,
 			"run_job_task":          RunJobTask{}.Type(ctx),
@@ -15617,6 +16266,34 @@ func (o *SubmitTask) GetConditionTask(ctx context.Context) (ConditionTask, bool)
 func (o *SubmitTask) SetConditionTask(ctx context.Context, v ConditionTask) {
 	vs := v.ToObjectValue(ctx)
 	o.ConditionTask = vs
+}
+
+// GetDashboardTask returns the value of the DashboardTask field in SubmitTask as
+// a DashboardTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
+	var e DashboardTask
+	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTask
+	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardTask sets the value of the DashboardTask field in SubmitTask.
+func (o *SubmitTask) SetDashboardTask(ctx context.Context, v DashboardTask) {
+	vs := v.ToObjectValue(ctx)
+	o.DashboardTask = vs
 }
 
 // GetDbtTask returns the value of the DbtTask field in SubmitTask as
@@ -15923,6 +16600,34 @@ func (o *SubmitTask) SetPipelineTask(ctx context.Context, v PipelineTask) {
 	o.PipelineTask = vs
 }
 
+// GetPowerBiTask returns the value of the PowerBiTask field in SubmitTask as
+// a PowerBiTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *SubmitTask) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
+	var e PowerBiTask
+	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+		return e, false
+	}
+	var v []PowerBiTask
+	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPowerBiTask sets the value of the PowerBiTask field in SubmitTask.
+func (o *SubmitTask) SetPowerBiTask(ctx context.Context, v PowerBiTask) {
+	vs := v.ToObjectValue(ctx)
+	o.PowerBiTask = vs
+}
+
 // GetPythonWheelTask returns the value of the PythonWheelTask field in SubmitTask as
 // a PythonWheelTask value.
 // If the field is unknown or null, the boolean return value is false.
@@ -16119,6 +16824,147 @@ func (o *SubmitTask) SetWebhookNotifications(ctx context.Context, v WebhookNotif
 	o.WebhookNotifications = vs
 }
 
+type Subscription struct {
+	// Optional: Allows users to specify a custom subject line on the email sent
+	// to subscribers.
+	CustomSubject types.String `tfsdk:"custom_subject"`
+	// When true, the subscription will not send emails.
+	Paused types.Bool `tfsdk:"paused"`
+
+	Subscribers types.List `tfsdk:"subscribers"`
+}
+
+func (newState *Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan Subscription) {
+}
+
+func (newState *Subscription) SyncEffectiveFieldsDuringRead(existingState Subscription) {
+}
+
+func (c Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["custom_subject"] = attrs["custom_subject"].SetOptional()
+	attrs["paused"] = attrs["paused"].SetOptional()
+	attrs["subscribers"] = attrs["subscribers"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in Subscription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a Subscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"subscribers": reflect.TypeOf(SubscriptionSubscriber{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, Subscription
+// only implements ToObjectValue() and Type().
+func (o Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"custom_subject": o.CustomSubject,
+			"paused":         o.Paused,
+			"subscribers":    o.Subscribers,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o Subscription) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"custom_subject": types.StringType,
+			"paused":         types.BoolType,
+			"subscribers": basetypes.ListType{
+				ElemType: SubscriptionSubscriber{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSubscribers returns the value of the Subscribers field in Subscription as
+// a slice of SubscriptionSubscriber values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Subscription) GetSubscribers(ctx context.Context) ([]SubscriptionSubscriber, bool) {
+	if o.Subscribers.IsNull() || o.Subscribers.IsUnknown() {
+		return nil, false
+	}
+	var v []SubscriptionSubscriber
+	d := o.Subscribers.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscribers sets the value of the Subscribers field in Subscription.
+func (o *Subscription) SetSubscribers(ctx context.Context, v []SubscriptionSubscriber) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscribers"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Subscribers = types.ListValueMust(t, vs)
+}
+
+type SubscriptionSubscriber struct {
+	DestinationId types.String `tfsdk:"destination_id"`
+
+	UserName types.String `tfsdk:"user_name"`
+}
+
+func (newState *SubscriptionSubscriber) SyncEffectiveFieldsDuringCreateOrUpdate(plan SubscriptionSubscriber) {
+}
+
+func (newState *SubscriptionSubscriber) SyncEffectiveFieldsDuringRead(existingState SubscriptionSubscriber) {
+}
+
+func (c SubscriptionSubscriber) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetComputed()
+	attrs["user_name"] = attrs["user_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in SubscriptionSubscriber.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a SubscriptionSubscriber) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, SubscriptionSubscriber
+// only implements ToObjectValue() and Type().
+func (o SubscriptionSubscriber) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination_id": o.DestinationId,
+			"user_name":      o.UserName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o SubscriptionSubscriber) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination_id": types.StringType,
+			"user_name":      types.StringType,
+		},
+	}
+}
+
 type TableUpdateTriggerConfiguration struct {
 	// The table(s) condition based on which to trigger a job run.
 	Condition types.String `tfsdk:"condition"`
@@ -16229,6 +17075,8 @@ type Task struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
+	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
 	// a serverless or a pro SQL warehouse.
@@ -16258,7 +17106,7 @@ type Task struct {
 	// The task executes a nested task for every input provided when the
 	// `for_each_task` field is present.
 	ForEachTask types.Object `tfsdk:"for_each_task"`
-	// Next field: 9
+
 	GenAiComputeTask types.Object `tfsdk:"gen_ai_compute_task"`
 	// An optional set of health rules that can be defined for this job.
 	Health types.Object `tfsdk:"health"`
@@ -16289,6 +17137,9 @@ type Task struct {
 	// The task triggers a pipeline update when the `pipeline_task` field is
 	// present. Only pipelines configured to use triggered more are supported.
 	PipelineTask types.Object `tfsdk:"pipeline_task"`
+	// The task triggers a Power BI semantic model update when the
+	// `power_bi_task` field is present.
+	PowerBiTask types.Object `tfsdk:"power_bi_task"`
 	// The task runs a Python wheel when the `python_wheel_task` field is
 	// present.
 	PythonWheelTask types.Object `tfsdk:"python_wheel_task"`
@@ -16357,6 +17208,7 @@ func (newState *Task) SyncEffectiveFieldsDuringRead(existingState Task) {
 func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["clean_rooms_notebook_task"] = attrs["clean_rooms_notebook_task"].SetOptional()
 	attrs["condition_task"] = attrs["condition_task"].SetOptional()
+	attrs["dashboard_task"] = attrs["dashboard_task"].SetOptional()
 	attrs["dbt_task"] = attrs["dbt_task"].SetOptional()
 	attrs["depends_on"] = attrs["depends_on"].SetOptional()
 	attrs["description"] = attrs["description"].SetOptional()
@@ -16375,6 +17227,7 @@ func (c Task) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuild
 	attrs["notebook_task"] = attrs["notebook_task"].SetOptional()
 	attrs["notification_settings"] = attrs["notification_settings"].SetOptional()
 	attrs["pipeline_task"] = attrs["pipeline_task"].SetOptional()
+	attrs["power_bi_task"] = attrs["power_bi_task"].SetOptional()
 	attrs["python_wheel_task"] = attrs["python_wheel_task"].SetOptional()
 	attrs["retry_on_timeout"] = attrs["retry_on_timeout"].SetOptional()
 	attrs["run_if"] = attrs["run_if"].SetOptional()
@@ -16401,6 +17254,7 @@ func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 	return map[string]reflect.Type{
 		"clean_rooms_notebook_task": reflect.TypeOf(CleanRoomsNotebookTask{}),
 		"condition_task":            reflect.TypeOf(ConditionTask{}),
+		"dashboard_task":            reflect.TypeOf(DashboardTask{}),
 		"dbt_task":                  reflect.TypeOf(DbtTask{}),
 		"depends_on":                reflect.TypeOf(TaskDependency{}),
 		"email_notifications":       reflect.TypeOf(TaskEmailNotifications{}),
@@ -16412,6 +17266,7 @@ func (a Task) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type 
 		"notebook_task":             reflect.TypeOf(NotebookTask{}),
 		"notification_settings":     reflect.TypeOf(TaskNotificationSettings{}),
 		"pipeline_task":             reflect.TypeOf(PipelineTask{}),
+		"power_bi_task":             reflect.TypeOf(PowerBiTask{}),
 		"python_wheel_task":         reflect.TypeOf(PythonWheelTask{}),
 		"run_job_task":              reflect.TypeOf(RunJobTask{}),
 		"spark_jar_task":            reflect.TypeOf(SparkJarTask{}),
@@ -16431,6 +17286,7 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 		map[string]attr.Value{
 			"clean_rooms_notebook_task": o.CleanRoomsNotebookTask,
 			"condition_task":            o.ConditionTask,
+			"dashboard_task":            o.DashboardTask,
 			"dbt_task":                  o.DbtTask,
 			"depends_on":                o.DependsOn,
 			"description":               o.Description,
@@ -16449,6 +17305,7 @@ func (o Task) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notebook_task":             o.NotebookTask,
 			"notification_settings":     o.NotificationSettings,
 			"pipeline_task":             o.PipelineTask,
+			"power_bi_task":             o.PowerBiTask,
 			"python_wheel_task":         o.PythonWheelTask,
 			"retry_on_timeout":          o.RetryOnTimeout,
 			"run_if":                    o.RunIf,
@@ -16469,6 +17326,7 @@ func (o Task) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"clean_rooms_notebook_task": CleanRoomsNotebookTask{}.Type(ctx),
 			"condition_task":            ConditionTask{}.Type(ctx),
+			"dashboard_task":            DashboardTask{}.Type(ctx),
 			"dbt_task":                  DbtTask{}.Type(ctx),
 			"depends_on": basetypes.ListType{
 				ElemType: TaskDependency{}.Type(ctx),
@@ -16491,6 +17349,7 @@ func (o Task) Type(ctx context.Context) attr.Type {
 			"notebook_task":             NotebookTask{}.Type(ctx),
 			"notification_settings":     TaskNotificationSettings{}.Type(ctx),
 			"pipeline_task":             PipelineTask{}.Type(ctx),
+			"power_bi_task":             PowerBiTask{}.Type(ctx),
 			"python_wheel_task":         PythonWheelTask{}.Type(ctx),
 			"retry_on_timeout":          types.BoolType,
 			"run_if":                    types.StringType,
@@ -16560,6 +17419,34 @@ func (o *Task) GetConditionTask(ctx context.Context) (ConditionTask, bool) {
 func (o *Task) SetConditionTask(ctx context.Context, v ConditionTask) {
 	vs := v.ToObjectValue(ctx)
 	o.ConditionTask = vs
+}
+
+// GetDashboardTask returns the value of the DashboardTask field in Task as
+// a DashboardTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetDashboardTask(ctx context.Context) (DashboardTask, bool) {
+	var e DashboardTask
+	if o.DashboardTask.IsNull() || o.DashboardTask.IsUnknown() {
+		return e, false
+	}
+	var v []DashboardTask
+	d := o.DashboardTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetDashboardTask sets the value of the DashboardTask field in Task.
+func (o *Task) SetDashboardTask(ctx context.Context, v DashboardTask) {
+	vs := v.ToObjectValue(ctx)
+	o.DashboardTask = vs
 }
 
 // GetDbtTask returns the value of the DbtTask field in Task as
@@ -16864,6 +17751,34 @@ func (o *Task) GetPipelineTask(ctx context.Context) (PipelineTask, bool) {
 func (o *Task) SetPipelineTask(ctx context.Context, v PipelineTask) {
 	vs := v.ToObjectValue(ctx)
 	o.PipelineTask = vs
+}
+
+// GetPowerBiTask returns the value of the PowerBiTask field in Task as
+// a PowerBiTask value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Task) GetPowerBiTask(ctx context.Context) (PowerBiTask, bool) {
+	var e PowerBiTask
+	if o.PowerBiTask.IsNull() || o.PowerBiTask.IsUnknown() {
+		return e, false
+	}
+	var v []PowerBiTask
+	d := o.PowerBiTask.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPowerBiTask sets the value of the PowerBiTask field in Task.
+func (o *Task) SetPowerBiTask(ctx context.Context, v PowerBiTask) {
+	vs := v.ToObjectValue(ctx)
+	o.PowerBiTask = vs
 }
 
 // GetPythonWheelTask returns the value of the PythonWheelTask field in Task as
@@ -18254,4 +19169,51 @@ func (o *WebhookNotifications) SetOnSuccess(ctx context.Context, v []Webhook) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["on_success"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.OnSuccess = types.ListValueMust(t, vs)
+}
+
+type WidgetErrorDetail struct {
+	Message types.String `tfsdk:"message"`
+}
+
+func (newState *WidgetErrorDetail) SyncEffectiveFieldsDuringCreateOrUpdate(plan WidgetErrorDetail) {
+}
+
+func (newState *WidgetErrorDetail) SyncEffectiveFieldsDuringRead(existingState WidgetErrorDetail) {
+}
+
+func (c WidgetErrorDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["message"] = attrs["message"].SetComputed()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in WidgetErrorDetail.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a WidgetErrorDetail) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, WidgetErrorDetail
+// only implements ToObjectValue() and Type().
+func (o WidgetErrorDetail) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"message": o.Message,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o WidgetErrorDetail) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"message": types.StringType,
+		},
+	}
 }

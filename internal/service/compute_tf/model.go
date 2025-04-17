@@ -561,6 +561,17 @@ func (o CancelCommand) Type(ctx context.Context) attr.Type {
 type CancelResponse struct {
 }
 
+func (newState *CancelResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse) {
+}
+
+func (newState *CancelResponse) SyncEffectiveFieldsDuringRead(existingState CancelResponse) {
+}
+
+func (c CancelResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7034,6 +7045,17 @@ func (o DestroyContext) Type(ctx context.Context) attr.Type {
 type DestroyResponse struct {
 }
 
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse) {
+}
+
+func (newState *DestroyResponse) SyncEffectiveFieldsDuringRead(existingState DestroyResponse) {
+}
+
+func (c DestroyResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8620,6 +8642,9 @@ type Environment struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies types.List `tfsdk:"dependencies"`
+	// List of jar dependencies, should be string representing volume paths. For
+	// example: `/Volumes/path/to/test.jar`.
+	JarDependencies types.List `tfsdk:"jar_dependencies"`
 }
 
 func (newState *Environment) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment) {
@@ -8631,6 +8656,7 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["client"] = attrs["client"].SetRequired()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()
 
 	return attrs
 }
@@ -8644,7 +8670,8 @@ func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.Attribu
 // SDK values.
 func (a Environment) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dependencies": reflect.TypeOf(types.String{}),
+		"dependencies":     reflect.TypeOf(types.String{}),
+		"jar_dependencies": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8655,8 +8682,9 @@ func (o Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client":       o.Client,
-			"dependencies": o.Dependencies,
+			"client":           o.Client,
+			"dependencies":     o.Dependencies,
+			"jar_dependencies": o.JarDependencies,
 		})
 }
 
@@ -8666,6 +8694,9 @@ func (o Environment) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"client": types.StringType,
 			"dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"jar_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -8696,6 +8727,32 @@ func (o *Environment) SetDependencies(ctx context.Context, v []types.String) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dependencies"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Dependencies = types.ListValueMust(t, vs)
+}
+
+// GetJarDependencies returns the value of the JarDependencies field in Environment as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Environment) GetJarDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.JarDependencies.IsNull() || o.JarDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarDependencies sets the value of the JarDependencies field in Environment.
+func (o *Environment) SetJarDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.JarDependencies = types.ListValueMust(t, vs)
 }
 
 type EventDetails struct {

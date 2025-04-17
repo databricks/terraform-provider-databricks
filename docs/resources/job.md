@@ -122,6 +122,7 @@ This block describes individual tasks:
   * `for_each_task`
   * `notebook_task`
   * `pipeline_task`
+  * `power_bi_task`
   * `python_wheel_task`
   * `run_job_task`
   * `spark_jar_task`
@@ -199,6 +200,25 @@ You also need to include a `git_source` block to configure the repository that c
 * `full_refresh` - (Optional) (Bool) Specifies if there should be full refresh of the pipeline.
 
 -> The following configuration blocks are only supported inside a `task` block
+
+#### power_bi_task Configuration Block
+
+The `power_bi_task` triggers a Power BI semantic model update. 
+
+* `tables` (Required) (Array) The tables to be exported to Power BI. Block consists of following fields:
+  * `storage_mode` (Required) The Power BI storage mode of the table
+  * `catalog` (Required) The catalog name in Databricks
+  * `schema` (Required) The schema name in Databricks
+  * `name` (Optional) The table name in Databricks. If empty, all tables under the schema are selected.
+* `warehouse_id` (Required) The SQL warehouse ID to use as the Power BI data source
+* `power_bi_model` (Required) The semantic model to update. Block consists of following fields:
+  * `workspace_name` (Required) The name of the Power BI workspace of the model
+  * `model_name` (Required) The name of the Power BI model
+  * `storage_mode` (Required) The default storage mode of the Power BI model
+  * `authentication_method` (Required) How the published Power BI model authenticates to Databricks
+  * `overwrite_existing` (Optional) Whether to overwrite existing Power BI models. Default is false
+* `connection_resource_name` (Required) The resource name of the UC connection to authenticate from Databricks to Power BI
+* `refresh_after_update` (Optional) Whether the model should be refreshed after the update. Default is false
 
 #### python_wheel_task Configuration Block
 

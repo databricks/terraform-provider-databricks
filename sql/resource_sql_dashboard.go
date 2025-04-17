@@ -102,6 +102,7 @@ func ResourceSqlDashboard() common.Resource {
 		common.NoCustomize)
 
 	return common.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in the future. Please use the `databricks_dashboard` resource.",
 		Create: func(ctx context.Context, data *schema.ResourceData, c *common.DatabricksClient) error {
 			var d DashboardEntity
 			ad, err := d.toAPIObject(s, data)

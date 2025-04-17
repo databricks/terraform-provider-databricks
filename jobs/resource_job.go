@@ -336,10 +336,6 @@ type JobSettings struct {
 	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
-func (js *JobSettings) isMultiTask() bool {
-	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
-}
-
 func (js *JobSettings) sortTasksByKey() {
 	sort.Slice(js.Tasks, func(i, j int) bool {
 		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
@@ -1041,9 +1037,9 @@ var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
-		var js JobSettingsResource
-		common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-		if js.isMultiTask() {
+		var jsr JobSettingsResource
+		common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+		if jsr.isMultiTask() {
 			return context.WithValue(ctx, common.Api, common.API_2_1)
 		}
 		return ctx

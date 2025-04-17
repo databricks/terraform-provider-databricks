@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_registered_model Data Source
 
--> This resource can only be used with a workspace-level provider!
-
 This resource allows you to get information about [Model in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 

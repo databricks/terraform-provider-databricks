@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Workspace Files](https://docs.databricks.com/files/workspace.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 You can declare Terraform-managed workspace file by specifying `source` attribute of corresponding local file.

@@ -6,6 +6,8 @@ subcategory: "Unity Catalog"
 Retrieves details about [databricks_volume](../resources/volume.md) that was created by Terraform or manually. 
 A volume can be identified by its three-level (fully qualified) name (in the form of: `catalog_name`.`schema_name`.`volume_name`) as input. This can be retrieved programmatically using [databricks_volumes](../data-sources/volumes.md) data source.
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 * Retrieve details of all volumes in in a _things_ [databricks_schema](../resources/schema.md) of a  _sandbox_ [databricks_catalog](../resources/catalog.md):

@@ -906,7 +906,8 @@ func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
 }
 
 func fixWebhookNotifications(s map[string]*schema.Schema) {
-	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+	for _, n := range []string{"on_start", "on_failure", "on_success",
+		"on_duration_warning_threshold_exceeded", "on_streaming_backlog_exceeded"} {
 		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
 	}
 }

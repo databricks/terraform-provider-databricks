@@ -442,6 +442,7 @@ This block can be configured on both job and task levels for corresponding effec
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of emails to notify when any streaming backlog thresholds are exceeded for any stream.
 
 The following parameter is only available for the job level configuration.
 
@@ -455,6 +456,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of notification IDs to call when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of notification IDs to call when any streaming backlog thresholds are exceeded for any stream.
 
 Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
 

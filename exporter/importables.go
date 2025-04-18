@@ -2110,6 +2110,10 @@ var resourcesMap map[string]importable = map[string]importable{
 		WorkspaceLevel: true,
 		Service:        "uc-grants",
 		Import:         importUcGrants,
+		Ignore: func(ic *importContext, r *resource) bool {
+			return (r.Data.Get("grant.#").(int) == 0)
+		},
+
 		Depends: []reference{
 			{Path: "catalog", Resource: "databricks_catalog"},
 			{Path: "schema", Resource: "databricks_schema"},

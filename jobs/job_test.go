@@ -437,3 +437,28 @@ func TestAccPeriodicTrigger(t *testing.T) {
 		}),
 	})
 }
+
+func TestAccJobDashboardTask(t *testing.T) {
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_dashboard" "d1" {
+			display_name			= 	"Dashboard Task Test {var.RANDOM}"
+			warehouse_id			=	"{env.TEST_DEFAULT_WAREHOUSE_ID}"
+			parent_path				= 	"/Shared/provider-test"
+			serialized_dashboard	=	"{\"pages\":[{\"name\":\"new_name\",\"displayName\":\"New Page\"}]}"
+		}
+
+		resource "databricks_job" "this" {
+			name = "Dashboard Task Test {var.RANDOM}"
+
+			task {
+				task_key = "d"
+
+				dashboard_task {
+					dashboard_id = databricks_dashboard.d1.id
+					warehouse_id = "{env.TEST_DEFAULT_WAREHOUSE_ID}"
+				}
+			}
+		}`,
+	})
+}

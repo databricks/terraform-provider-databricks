@@ -121,6 +121,7 @@ This block describes individual tasks:
 * `*_task` - (Required) one of the specific task blocks described below:
   * `clean_rooms_notebook_task`
   * `condition_task`
+  * `dashboard_task`
   * `dbt_task`
   * `for_each_task`
   * `notebook_task`
@@ -169,6 +170,19 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 * `op` - The string specifying the operation used to compare operands.  Currently, following operators are supported: `EQUAL_TO`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`, `NOT_EQUAL`. (Check the [API docs](https://docs.databricks.com/api/workspace/jobs/create) for the latest information).
 
 This task does not require a cluster to execute and does not support retries or notifications.
+
+#### dashboard_task Configuration Block
+
+The `dashboard_task` refreshes a dashboard and sends a snapshot to subscribers.
+
+* `dashboard_id` (Required) The identifier of the dashboard to refresh
+* `subscription` (Optional) Represents a subscription configuration for scheduled dashboard snapshots.
+  * `custom_subject` (Optional) Allows users to specify a custom subject line on the email sent to subscribers.
+  * `paused` (Optional) When true, the subscription will not send emails.
+  * `subscribers` The list of subscribers to send the snapshot of the dashboard to.
+    * `destination_id` (Optional) A snapshot of the dashboard will be sent to the destination when the `destination_id` field is present.
+    * `user_name` (Optional) A snapshot of the dashboard will be sent to the user's email when the `user_name` field is present.
+* `warehouse_id` (Optional) The warehouse id to execute the dashboard with for the schedule. If not specified, will use the default warehouse of dashboard
 
 #### dbt_task Configuration Block
 

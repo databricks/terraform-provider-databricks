@@ -9,6 +9,8 @@
 
 ### Bug Fixes
 
+ * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
+
 ### Documentation
 
  * Document `performance_target` in `databricks_job` ([#4651](https://github.com/databricks/terraform-provider-databricks/pull/4651))

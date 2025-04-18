@@ -9,6 +9,8 @@
 
 ### Bug Fixes
 
+* Use latest etag for `access_control_rule_set` ([#4622](https://github.com/databricks/terraform-provider-databricks/pull/4622)).
+
 ### Documentation
 
  * Document `performance_target` in `databricks_job` ([#4651](https://github.com/databricks/terraform-provider-databricks/pull/4651))

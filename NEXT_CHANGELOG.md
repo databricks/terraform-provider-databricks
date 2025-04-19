@@ -16,6 +16,7 @@
 
 ### Exporter
 
+ * Emit files installed with `%pip install` in Python notebooks ([#4664](https://github.com/databricks/terraform-provider-databricks/pull/4664))
  * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))
 
 ### Internal Changes

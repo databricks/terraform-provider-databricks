@@ -2,6 +2,8 @@
 
 ## Release v1.75.0
 
+* Add a new resource `databricks_service_principal_federation_policy` ([#4635](https://github.com/databricks/terraform-provider-databricks/pull/4635))
+
 ### New Features and Improvements
 
  * Add support for `power_bi_task` in jobs ([#4647](https://github.com/databricks/terraform-provider-databricks/pull/4647))

@@ -497,3 +497,20 @@ func TestParsingServices(t *testing.T) {
 	assert.ElementsMatch(t, expectedServices, specificServices)
 
 }
+
+func TestAnalyzeNotebook(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,wsfiles,volumes,storage")
+	content := `
+		%pip install -U pandas /dbfs/tmp/mypkg.whl numpy==1.23.5
+		# %pip install -U pandas /dbfs/tmp/mypkg2.whl numpy==1.23.5
+		%pip install -U pandas /Volumes/default/main/tmp/mypkg3.whl numpy==1.23.5
+		%pip install -U pandas /Workspace/Shared/tmp/mypkg4.whl numpy==1.23.5
+
+	`
+	analyzeNotebook(ic, content)
+	assert.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /tmp/mypkg.whl)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/default/main/tmp/mypkg3.whl)"])
+	assert.True(t, ic.testEmits["databricks_workspace_file[<unknown>] (id: /Shared/tmp/mypkg4.whl)"])
+}

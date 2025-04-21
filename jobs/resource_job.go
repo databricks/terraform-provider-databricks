@@ -169,17 +169,13 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 		return
 	}
 
-	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
+		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {
 			return ns[i].Id < ns[j].Id
 		})
 	}
-
-	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
-		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
-	})
-
 }
 
 // CronSchedule contains the information for the quartz cron expression

@@ -19,6 +19,7 @@
 
  * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))
  * Add export of dashboard tasks in `datarbicks_job` ([#4665](https://github.com/databricks/terraform-provider-databricks/pull/4665))
+ * Add export of PowerBI tasks in `datarbicks_job` ([#4668](https://github.com/databricks/terraform-provider-databricks/pull/4668))
  * Add `Ignore` implementation for `databricks_grants` to fix issue with wrongly generated dependencies ([#4661](https://github.com/databricks/terraform-provider-databricks/pull/4650))
 
 ### Internal Changes

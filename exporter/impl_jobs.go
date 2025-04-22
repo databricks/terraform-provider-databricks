@@ -160,6 +160,16 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 				ID:       task.DbtTask.WarehouseId,
 			})
 		}
+		if task.DbtTask.Catalog != "" && task.DbtTask.Schema != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       task.DbtTask.Catalog,
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
+				ID:       task.DbtTask.Catalog + "." + task.DbtTask.Schema,
+			})
+		}
 		if task.DbtTask.Source == "WORKSPACE" {
 			directory := task.DbtTask.ProjectDirectory
 			if ic.isInRepoOrGitFolder(directory, true) {
@@ -402,6 +412,10 @@ var (
 		{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
 		{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
 		{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.dbt_task.catalog", Resource: "databricks_catalog"},
+		{Path: "task.dbt_task.schema", Resource: "databricks_schema", Match: "name",
+			IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema"),
+		},
 		{Path: "task.dashboard_task.dashboard_id", Resource: "databricks_dashboard"},
 		{Path: "task.dashboard_task.warehouse_id", Resource: "databricks_sql_endpoint"},
 		{Path: "task.power_bi_task.warehouse_id", Resource: "databricks_sql_endpoint"},

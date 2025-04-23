@@ -170,17 +170,13 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 		return
 	}
 
-	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
+		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {
 			return ns[i].Id < ns[j].Id
 		})
 	}
-
-	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
-		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
-	})
-
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -908,7 +904,8 @@ func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
 }
 
 func fixWebhookNotifications(s map[string]*schema.Schema) {
-	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+	for _, n := range []string{"on_start", "on_failure", "on_success",
+		"on_duration_warning_threshold_exceeded", "on_streaming_backlog_exceeded"} {
 		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
 	}
 }

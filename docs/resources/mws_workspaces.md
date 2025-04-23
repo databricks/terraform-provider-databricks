@@ -18,7 +18,7 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 ## Example Usage
 
-### Creating a serverless Databricks on AWS workspace
+### Creating a serverless workspace in AWS
 
 Creating a serverless workspace does not require any prerequisite resources. Simply specify `compute_mode = "SERVERLESS"` when creating the workspace.
 
@@ -31,7 +31,7 @@ resource "databricks_mws_workspaces" "serverless_workspace" {
 }
 ```
 
-### Creating a Databricks on AWS workspace
+### Creating a workspace on AWS
 
 ![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
@@ -98,7 +98,7 @@ output "databricks_token" {
 }
 ```
 
-### Creating a Databricks on AWS workspace with Databricks-Managed VPC
+### Creating a workspace on AWS with Databricks-Managed VPC
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 
@@ -222,7 +222,7 @@ output "databricks_token" {
 
 In order to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) please ensure that you have read and understood the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
 
-### Creating a Databricks on GCP workspace
+### Creating a workspace on GCP
 
 To get workspace running, you have to configure a network object:
 
@@ -283,7 +283,7 @@ output "databricks_token" {
 
 In order to create a [Databricks Workspace that leverages GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) please ensure that you have read and understood the [Enable Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
 
-#### Creating a Databricks on GCP workspace with Databricks-Managed VPC
+#### Creating a workspace on GCP with Databricks-Managed VPC
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 
@@ -337,8 +337,8 @@ The following arguments are available:
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
 * `aws_region` - (AWS only) region of VPC.
-* `storage_configuration_id` - (AWS only, Optional) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
-* `credentials_id` - (AWS only, Optional) `credentials_id` from [credentials](mws_credentials.md).
+* `storage_configuration_id` - (AWS only, Optional) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md). This must not be specified when `compute_mode` is set to `SERVERLESS`.
+* `credentials_id` - (AWS only, Optional) `credentials_id` from [credentials](mws_credentials.md). This must not be specified when `compute_mode` is set to `SERVERLESS`.
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
 * `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster Volumes.
 * `location` - (GCP only) region of the subnet.

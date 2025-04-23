@@ -151,6 +151,7 @@ type ForEachNestedTask struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -169,17 +170,13 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 		return
 	}
 
-	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
+		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {
 			return ns[i].Id < ns[j].Id
 		})
 	}
-
-	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
-		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
-	})
-
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -222,6 +219,7 @@ type JobTaskSettings struct {
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
@@ -906,7 +904,8 @@ func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
 }
 
 func fixWebhookNotifications(s map[string]*schema.Schema) {
-	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+	for _, n := range []string{"on_start", "on_failure", "on_success",
+		"on_duration_warning_threshold_exceeded", "on_streaming_backlog_exceeded"} {
 		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
 	}
 }

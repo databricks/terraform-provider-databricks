@@ -558,17 +558,6 @@ func ResourceMwsWorkspaces() common.Resource {
 		func(_ map[string]*schema.Schema) map[string]*schema.Schema {
 			return workspaceSchema
 		})
-	requireFields := func(onThisCloud bool, d *schema.ResourceData, fields ...string) error {
-		if !onThisCloud {
-			return nil
-		}
-		for _, fieldName := range fields {
-			if d.Get(fieldName) == workspaceSchema[fieldName].ZeroValue() {
-				return fmt.Errorf("%s is required", fieldName)
-			}
-		}
-		return nil
-	}
 	return common.Resource{
 		Schema:        workspaceSchema,
 		SchemaVersion: 3,
@@ -583,11 +572,22 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if err := requireFields(c.IsAws(), d, "aws_region"); err != nil {
-				return err
-			}
-			if err := requireFields(c.IsGcp(), d, "location"); err != nil {
-				return err
+			if c.IsAws() {
+				if _, ok := d.GetOk("aws_region"); !ok {
+					return fmt.Errorf("aws_region is required for AWS workspaces")
+				}
+				if d.Get("compute_mode") != "SERVERLESS" {
+					if _, ok := d.GetOk("credentials_id"); !ok {
+						return fmt.Errorf("credentials_id is required for non-serverless workspaces")
+					}
+					if _, ok := d.GetOk("storage_configuration_id"); !ok {
+						return fmt.Errorf("storage_configuration_id is required for non-serverless workspaces")
+					}
+				}
+			} else if c.IsGcp() {
+				if _, ok := d.GetOk("location"); !ok {
+					return fmt.Errorf("location is required for GCP workspaces")
+				}
 			}
 			if !c.IsAws() && workspace.CustomTags != nil {
 				return fmt.Errorf("custom_tags are only allowed for AWS workspaces")

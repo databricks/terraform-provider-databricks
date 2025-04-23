@@ -101,6 +101,35 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 			ic.emitWorkspaceFileOrRepo(task.SqlTask.File.Path)
 		}
 	}
+	if task.DashboardTask != nil {
+		ic.Emit(&resource{
+			Resource: "databricks_dashboard",
+			ID:       task.DashboardTask.DashboardId,
+		})
+		if task.DashboardTask.WarehouseId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_sql_endpoint",
+				ID:       task.DashboardTask.WarehouseId,
+			})
+		}
+		if task.DashboardTask.Subscription != nil {
+			for _, subscriber := range task.DashboardTask.Subscription.Subscribers {
+				if subscriber.DestinationId != "" {
+					ic.Emit(&resource{
+						Resource: "databricks_notification_destination",
+						ID:       subscriber.DestinationId,
+					})
+				}
+				if subscriber.UserName != "" {
+					ic.Emit(&resource{
+						Resource:  "databricks_user",
+						Attribute: "user_name",
+						Value:     subscriber.UserName,
+					})
+				}
+			}
+		}
+	}
 	if task.DbtTask != nil {
 		if task.DbtTask.WarehouseId != "" {
 			ic.Emit(&resource{

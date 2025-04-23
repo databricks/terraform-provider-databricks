@@ -151,6 +151,7 @@ type ForEachNestedTask struct {
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -222,6 +223,7 @@ type JobTaskSettings struct {
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`

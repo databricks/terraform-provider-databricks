@@ -109,7 +109,7 @@ The resource supports the following arguments:
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 * `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
-* `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are: 
+* `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are:
   * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
   * `STANDARD`: Enables cost-efficient execution of serverless workloads.
 
@@ -121,6 +121,7 @@ This block describes individual tasks:
 * `*_task` - (Required) one of the specific task blocks described below:
   * `clean_rooms_notebook_task`
   * `condition_task`
+  * `dashboard_task`
   * `dbt_task`
   * `for_each_task`
   * `notebook_task`
@@ -170,6 +171,19 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 
 This task does not require a cluster to execute and does not support retries or notifications.
 
+#### dashboard_task Configuration Block
+
+The `dashboard_task` refreshes a dashboard and sends a snapshot to subscribers.
+
+* `dashboard_id` (Required) The identifier of the dashboard to refresh
+* `subscription` (Optional) Represents a subscription configuration for scheduled dashboard snapshots.
+  * `custom_subject` (Optional) Allows users to specify a custom subject line on the email sent to subscribers.
+  * `paused` (Optional) When true, the subscription will not send emails.
+  * `subscribers` The list of subscribers to send the snapshot of the dashboard to.
+    * `destination_id` (Optional) A snapshot of the dashboard will be sent to the destination when the `destination_id` field is present.
+    * `user_name` (Optional) A snapshot of the dashboard will be sent to the user's email when the `user_name` field is present.
+* `warehouse_id` (Optional) The warehouse id to execute the dashboard with for the schedule. If not specified, will use the default warehouse of dashboard
+
 #### dbt_task Configuration Block
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
@@ -206,7 +220,7 @@ You also need to include a `git_source` block to configure the repository that c
 
 #### power_bi_task Configuration Block
 
-The `power_bi_task` triggers a Power BI semantic model update. 
+The `power_bi_task` triggers a Power BI semantic model update.
 
 * `tables` (Required) (Array) The tables to be exported to Power BI. Block consists of following fields:
   * `storage_mode` (Required) The Power BI storage mode of the table
@@ -242,8 +256,10 @@ The `power_bi_task` triggers a Power BI semantic model update.
 
 #### spark_python_task Configuration Block
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. For files stored in a remote repository, the path must be relative. This field is required.
-* `source` - (Optional) Location type of the Python file, can only be `GIT`. When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/`. For files stored in a remote repository, the path must be relative. This field is required.
+* `source` - (Optional) Location type of the Python file. When set to `WORKSPACE` or not specified, the file will be retrieved from the local Databricks workspace or cloud location (if the python_file has a URI format). When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+  * `WORKSPACE`: The Python file is located in a Databricks workspace or at a cloud filesystem URI.
+  * `GIT`: The Python file is located in a remote Git repository.
 * `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
 #### spark_submit_task Configuration Block

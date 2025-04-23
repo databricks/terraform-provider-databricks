@@ -1150,6 +1150,93 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 	assert.Equal(t, "18", d.Id())
 }
 
+func TestResourceJobCreate_DashboardTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: jobs.CreateJob{
+					Name:              "DashboardTask",
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "a",
+							DashboardTask: &jobs.DashboardTask{
+								Subscription: &jobs.Subscription{
+									Subscribers: []jobs.SubscriptionSubscriber{
+										{UserName: "user@domain.com"},
+										{DestinationId: "Test"},
+									},
+									Paused:        true,
+									CustomSubject: "\"custom subject\"",
+								},
+								WarehouseId: "\"dca3a0ba199040eb\"",
+								DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name: "DashboardTask",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "a",
+								DashboardTask: &jobs.DashboardTask{
+									Subscription: &jobs.Subscription{
+										Subscribers: []jobs.SubscriptionSubscriber{
+											{UserName: "user@domain.com"},
+											{DestinationId: "Test"},
+										},
+										Paused:        true,
+										CustomSubject: "\"custom subject\"",
+									},
+									WarehouseId: "\"dca3a0ba199040eb\"",
+									DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "DashboardTask"
+		task {
+		  task_key = "a"
+		  dashboard_task {
+			warehouse_id = "\"dca3a0ba199040eb\""
+			subscription {
+				subscribers {
+    				user_name = "user@domain.com"
+  				}
+				subscribers {
+					destination_id = "Test"
+				}
+				paused = true
+				custom_subject = "\"custom subject\""
+			}
+			dashboard_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

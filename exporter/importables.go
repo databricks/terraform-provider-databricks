@@ -1796,13 +1796,20 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
 		},
-		Ignore: generateIgnoreObjectWithEmptyAttributeValue("databricks_catalog", "name"),
+		Ignore: func(ic *importContext, r *resource) bool {
+			res := (r.Data != nil && (r.Data.Get("name").(string) == "" || r.Data.Get("name").(string) == "system"))
+			if res {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_catalog. id=%s", r.ID))
+			}
+			return res
+		},
 		Depends: []reference{
 			{Path: "connection_name", Resource: "databricks_connection", Match: "name"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
-		// TODO: convert `main` catalog into the data source as it's automatically created?
-		//   This will require addition of the databricks_catalog data source
 	},
 	"databricks_schema": {
 		WorkspaceLevel:  true,
@@ -1813,6 +1820,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		Depends: []reference{
 			{Path: "catalog_name", Resource: "databricks_catalog"},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_volume": {
@@ -1833,6 +1843,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				SkipDirectLookup:     true},
 			{Path: "storage_location", Resource: "databricks_external_location",
 				Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_sql_table": {
@@ -1857,6 +1870,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				SkipDirectLookup:     true},
 			{Path: "storage_location", Resource: "databricks_external_location",
 				Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_grants": {
@@ -1893,6 +1909,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldOmitField: shouldOmitWithIsolationMode,
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_credential": {
@@ -1903,6 +1922,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		ShouldOmitField: shouldOmitWithIsolationMode,
 		Depends: []reference{
 			{Path: "azure_service_principal.client_secret", Variable: true},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_external_location": {
@@ -1925,6 +1947,9 @@ var resourcesMap map[string]importable = map[string]importable{
 		},
 		Depends: []reference{
 			{Path: "credential_name", Resource: "databricks_storage_credential", Match: "name"},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_connection": {
@@ -1941,12 +1966,25 @@ var resourcesMap map[string]importable = map[string]importable{
 		List: listUcConnections,
 		// TODO: think what to do with the sensitive fields in the `options`?
 		Import: func(ic *importContext, r *resource) error {
-			// TODO: do we need to emit the owner See comment for the owner...
 			connectionName := r.Data.Get("name").(string)
 			ic.emitUCGrantsWithOwner("foreign_connection/"+connectionName, r)
 			return nil
 		},
+		Ignore: func(ic *importContext, r *resource) bool {
+			res := (r.Data.Get("connection_type").(string) == "ONLINE_CATALOG" &&
+				strings.HasPrefix(r.Data.Get("name").(string), "internal-") &&
+				r.Data.Get("owner").(string) == "System user")
+			if res {
+				ic.addIgnoredResource(fmt.Sprintf("databricks_connection. id=%s", r.ID))
+			}
+			return res
+		},
 		ShouldOmitField: shouldOmitForUnityCatalog,
+		Depends: []reference{
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
 	},
 	"databricks_share": {
 		WorkspaceLevel: true,
@@ -1966,7 +2004,6 @@ var resourcesMap map[string]importable = map[string]importable{
 			return nil
 		},
 		Import: func(ic *importContext, r *resource) error {
-			// TODO: do we need to emit the owner See comment for the owner...
 			var share tf_sharing.ShareInfo
 			s := ic.Resources["databricks_share"].Schema
 			common.DataToStructPointer(r.Data, s, &share)
@@ -2003,6 +2040,9 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "object.name", Resource: "databricks_registered_model", IsValidApproximation: isMatchignShareObject("MODEL")},
 			{Path: "object.name", Resource: "databricks_schema", IsValidApproximation: isMatchignShareObject("SCHEMA")},
 			{Path: "object.name", Resource: "databricks_sql_table", IsValidApproximation: isMatchignShareObject("TABLE")},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_recipient": {
@@ -2022,7 +2062,18 @@ var resourcesMap map[string]importable = map[string]importable{
 			}
 			return nil
 		},
-		// TODO: do we need to emit the owner See comment for the owner...
+		Import: func(ic *importContext, r *resource) error {
+			owner := r.Data.Get("owner").(string)
+			if owner != "" {
+				emitUserSpOrGroup(ic, owner)
+			}
+			return nil
+		},
+		Depends: []reference{
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		},
 		// TODO: emit variable for sharing_code ...
 		// TODO: add depends for sharing_code?
 	},
@@ -2052,8 +2103,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_schema",
 				ID:       schemaFullName,
 			})
-			// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
-			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -2073,6 +2122,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
 				SkipDirectLookup:     true},
 			{Path: "storage_root", Resource: "databricks_external_location", Match: "url", MatchType: MatchLongestPrefix},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_metastore": {
@@ -2087,6 +2139,11 @@ var resourcesMap map[string]importable = map[string]importable{
 				return true
 			}
 			return shouldOmitForUnityCatalog(ic, pathString, as, d)
+		},
+		Depends: []reference{
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_metastore_assignment": {
@@ -2343,7 +2400,6 @@ var resourcesMap map[string]importable = map[string]importable{
 				Resource: "databricks_sql_table",
 				ID:       r.Data.Get("spec.0.source_table_full_name").(string),
 			})
-			// TODO: emit owner? See comment in catalog resource
 			return nil
 		},
 		Ignore:          generateIgnoreObjectWithEmptyAttributeValue("databricks_online_table", "name"),
@@ -2354,6 +2410,9 @@ var resourcesMap map[string]importable = map[string]importable{
 				IsValidApproximation: createIsMatchingCatalogAndSchema("catalog_name", "schema_name"),
 				SkipDirectLookup:     true},
 			{Path: "spec.source_table_full_name", Resource: "databricks_sql_table"},
+			{Path: "owner", Resource: "databricks_service_principal", Match: "application_id"},
+			{Path: "owner", Resource: "databricks_group", Match: "display_name"},
+			{Path: "owner", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
 		},
 	},
 	"databricks_vector_search_endpoint": {

@@ -5,8 +5,6 @@ subcategory: "Deployment"
 
 Lists all [databricks_mws_workspaces](../resources/mws_workspaces.md) in Databricks Account.
 
--> [`account_id`](../index.md#account_id) provider configuration property is required for this resource to work.
-
 -> This data source can only be used with an account-level provider!
 
 ## Example Usage

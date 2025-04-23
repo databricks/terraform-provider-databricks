@@ -7,7 +7,7 @@ Retrieves a mapping of name to id of [databricks_metastore](../resources/metasto
 
 -> This data source can only be used with an account-level provider!
 
--> [`account_id`](../index.md#account_id) provider configuration property is required for this resource to work. Data resource will error in case of metastores with duplicate names. This data source is only available for users & service principals with account admin status
+~> Data resource will error in case of metastores with duplicate names.
 
 ## Example Usage
 

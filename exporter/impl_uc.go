@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -337,6 +338,10 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 	return owner, gr
 }
 
+var (
+	emailDomainRegex = regexp.MustCompile(`^.*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+\.?$`)
+)
+
 func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
 	if common.StringIsUUID(userOrSOrGroupPName) {
 		ic.Emit(&resource{
@@ -344,7 +349,7 @@ func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
 			Attribute: "application_id",
 			Value:     userOrSOrGroupPName,
 		})
-	} else if strings.Contains(userOrSOrGroupPName, "@") {
+	} else if emailDomainRegex.MatchString(userOrSOrGroupPName) {
 		ic.Emit(&resource{
 			Resource:  "databricks_user",
 			Attribute: "user_name",

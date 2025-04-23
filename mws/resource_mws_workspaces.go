@@ -106,6 +106,7 @@ type Workspace struct {
 	Location                            string                   `json:"location,omitempty"`
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
 	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
+	EffectiveComputeMode                string                   `json:"effective_compute_mode" tf:"computed"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -319,6 +320,10 @@ func (a WorkspacesAPI) Read(mwsAcctID, workspaceID string) (Workspace, error) {
 		host := generateWorkspaceHostname(a.client, mwsWorkspace)
 		mwsWorkspace.WorkspaceURL = fmt.Sprintf("https://%s", host)
 	}
+	// Set the effective compute mode to the compute mode
+	mwsWorkspace.EffectiveComputeMode = mwsWorkspace.ComputeMode
+	mwsWorkspace.ComputeMode = ""
+
 	return mwsWorkspace, err
 }
 

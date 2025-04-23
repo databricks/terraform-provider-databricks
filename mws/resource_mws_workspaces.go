@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -104,6 +105,7 @@ type Workspace struct {
 	Cloud                               string                   `json:"cloud,omitempty" tf:"computed"`
 	Location                            string                   `json:"location,omitempty"`
 	CustomTags                          map[string]string        `json:"custom_tags,omitempty"` // Optional for AWS, not allowed for GCP
+	ComputeMode                         string                   `json:"compute_mode,omitempty" tf:"force_new"`
 }
 
 // this type alias hack is required for Marshaller to work without an infinite loop
@@ -140,6 +142,9 @@ func (w *Workspace) MarshalJSON() ([]byte, error) {
 	}
 	if w.StorageCustomerManagedKeyID != "" {
 		workspaceCreationRequest["storage_customer_managed_key_id"] = w.StorageCustomerManagedKeyID
+	}
+	if w.ComputeMode != "" {
+		workspaceCreationRequest["compute_mode"] = w.ComputeMode
 	}
 	return json.Marshal(workspaceCreationRequest)
 }
@@ -546,6 +551,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			common.CustomizeSchemaPath(s, "gke_config").SetDeprecated(getGkeDeprecationMessage("gke_config", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_pod_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_pod_ip_range", docOptions))
 			common.CustomizeSchemaPath(s, "gcp_managed_network_config", "gke_cluster_service_ip_range").SetDeprecated(getGkeDeprecationMessage("gcp_managed_network_config.gke_cluster_service_ip_range", docOptions))
+			common.CustomizeSchemaPath(s, "compute_mode").SetValidateDiagFunc(validation.ToDiagFunc(validation.StringInSlice([]string{"SERVERLESS"}, false)))
 			return s
 		})
 	p := common.NewPairSeparatedID("account_id", "workspace_id", "/").Schema(
@@ -577,7 +583,7 @@ func ResourceMwsWorkspaces() common.Resource {
 			var workspace Workspace
 			workspacesAPI := NewWorkspacesAPI(ctx, c)
 			common.DataToStructPointer(d, workspaceSchema, &workspace)
-			if err := requireFields(c.IsAws(), d, "aws_region", "credentials_id", "storage_configuration_id"); err != nil {
+			if err := requireFields(c.IsAws(), d, "aws_region"); err != nil {
 				return err
 			}
 			if err := requireFields(c.IsGcp(), d, "location"); err != nil {

@@ -1,4 +1,4 @@
-package sql_test
+package access_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccTableACL(t *testing.T) {
+func TestAccSqlPermissions(t *testing.T) {
 	acceptance.LoadWorkspaceEnv(t)
 	tableName := qa.RandomName("table_acl_")
 	clusterId := acceptance.GetEnvOrSkipTest(t, "TEST_TABLE_ACL_CLUSTER_ID")

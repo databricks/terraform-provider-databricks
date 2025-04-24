@@ -287,13 +287,7 @@ func (ta *SqlPermissions) getOrCreateCluster(clustersAPI clusters.ClustersAPI) (
 			NodeTypeID:             nodeType,
 			AutoterminationMinutes: 10,
 			DataSecurityMode:       "LEGACY_TABLE_ACL",
-			SparkConf: map[string]string{
-				"spark.databricks.cluster.profile": "singleNode",
-				"spark.master":                     "local[*]",
-			},
-			CustomTags: map[string]string{
-				"ResourceClass": "SingleNode",
-			},
+			NumWorkers:             1,
 		})
 	if err != nil {
 		return "", err

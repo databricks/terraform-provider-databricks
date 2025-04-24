@@ -46,7 +46,6 @@ func TestAccTableACL(t *testing.T) {
 				principal = "users"
 				privileges = ["SELECT"]
 			}
-			cluster_id = "` + clusterId + `"
 		}`,
 	})
 }

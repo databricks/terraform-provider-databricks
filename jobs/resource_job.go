@@ -334,10 +334,6 @@ type JobSettings struct {
 	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
 }
 
-func (js *JobSettings) isMultiTask() bool {
-	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
-}
-
 func (js *JobSettings) sortTasksByKey() {
 	sort.Slice(js.Tasks, func(i, j int) bool {
 		return js.Tasks[i].TaskKey < js.Tasks[j].TaskKey
@@ -1040,9 +1036,9 @@ var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
-		var js JobSettingsResource
-		common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-		if js.isMultiTask() {
+		var jsr JobSettingsResource
+		common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+		if jsr.isMultiTask() {
 			return context.WithValue(ctx, common.Api, common.API_2_1)
 		}
 		return ctx
@@ -1055,27 +1051,27 @@ func ResourceJob() common.Resource {
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			var js JobSettingsResource
-			common.DiffToStructPointer(d, jobsGoSdkSchema, &js)
+			var jsr JobSettingsResource
+			common.DiffToStructPointer(d, jobsGoSdkSchema, &jsr)
 			alwaysRunning := d.Get("always_running").(bool)
-			if alwaysRunning && js.MaxConcurrentRuns > 1 {
+			if alwaysRunning && jsr.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
 			controlRunState := d.Get("control_run_state").(bool)
 			if controlRunState {
-				if js.Continuous == nil {
+				if jsr.Continuous == nil {
 					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
 				}
-				if js.MaxConcurrentRuns > 1 {
+				if jsr.MaxConcurrentRuns > 1 {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {
@@ -1096,6 +1092,9 @@ func ResourceJob() common.Resource {
 			} else {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
+				var js JobSettings
+				common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
 				jobsAPI := NewJobsAPI(ctx, c)
 				job, err := jobsAPI.Create(js)
 				if err != nil {
@@ -1106,9 +1105,9 @@ func ResourceJob() common.Resource {
 			}
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettingsResource
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {

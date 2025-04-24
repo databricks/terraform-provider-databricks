@@ -7,7 +7,8 @@
  * Add support for `power_bi_task` in jobs ([#4647](https://github.com/databricks/terraform-provider-databricks/pull/4647))
  * Add support for `dashboard_task` in jobs ([#4646](https://github.com/databricks/terraform-provider-databricks/pull/4646))
  * Add `compute_mode` to `databricks_mws_workspaces` to support creating serverless workspaces ([#4670](https://github.com/databricks/terraform-provider-databricks/pull/4670)).
-
+ * Make `spark_version` optional in the context of jobs such that a cluster policy can provide a default value ([#4643](https://github.com/databricks/terraform-provider-databricks/pull/4643))
+ 
 ### Bug Fixes
 
 ### Documentation

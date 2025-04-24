@@ -267,7 +267,7 @@ func (ta *SqlPermissions) initCluster(ctx context.Context, d *schema.ResourceDat
 		return
 	}
 	if v, ok := clusterInfo.SparkConf["spark.databricks.acl.dfAclsEnabled"]; (!ok || v != "true") && clusterInfo.DataSecurityMode != "USER_ISOLATION" && clusterInfo.DataSecurityMode != "LEGACY_TABLE_ACL" {
-		err = fmt.Errorf("cluster_id: pecified cluster does not support setting Table ACL: %s (%s)",
+		err = fmt.Errorf("cluster_id: specified cluster does not support setting Table ACL: %s (%s)",
 			clusterInfo.ClusterName, clusterInfo.ClusterID)
 		return
 	}

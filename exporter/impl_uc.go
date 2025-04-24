@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -35,6 +36,8 @@ func listUcCatalogs(ic *importContext) error {
 				}, v.Name, v.UpdatedAt, fmt.Sprintf("catalog '%s'", v.Name))
 			}
 		default:
+			// TODO: remove this skipping - we need to emit grants for all catalogs, but
+			// we need to convert these catalog types to data sources
 			log.Printf("[INFO] Skipping catalog %s of type %s", v.Name, v.CatalogType)
 		}
 	}
@@ -46,13 +49,13 @@ func importUcCatalog(ic *importContext, r *resource) error {
 	s := ic.Resources["databricks_catalog"].Schema
 	common.DataToStructPointer(r.Data, s, &cat)
 
+	// TODO: convert `main` catalog into the data source as it's automatically created?
 	// Emit: UC Connection, List schemas, Catalog grants, ...
 	owner, catalogGrantsResource := ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
 	dependsOn := []*resource{}
 	if owner != "" && owner != ic.meUserName {
 		dependsOn = append(dependsOn, catalogGrantsResource)
 	}
-	// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
 	if cat.ConnectionName != "" {
 		ic.Emit(&resource{
 			Resource: "databricks_connection",
@@ -99,10 +102,6 @@ func importUcSchema(ic *importContext, r *resource) error {
 		Resource: "databricks_catalog",
 		ID:       catalogName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "catalog/" + catalogName})
-
-	// TODO: somehow add depends on catalog's grant...
-	// TODO: emit owner? See comment in catalog resource
 	if ic.isServiceInListing("uc-models") {
 		it := ic.workspaceClient.RegisteredModels.List(ic.Context,
 			catalog.ListRegisteredModelsRequest{
@@ -200,8 +199,6 @@ func importUcVolume(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
-	// TODO: emit owner? See comment in catalog resource
 	return nil
 }
 
@@ -334,10 +331,37 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 		if ok {
 			gr.AddExtraData("owner", ownerRaw)
 			owner = ownerRaw.(string)
+			emitUserSpOrGroup(ic, owner)
 		}
 	}
 	ic.Emit(gr)
 	return owner, gr
+}
+
+var (
+	emailDomainRegex = regexp.MustCompile(`^.*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+\.?$`)
+)
+
+func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
+	if common.StringIsUUID(userOrSOrGroupPName) {
+		ic.Emit(&resource{
+			Resource:  "databricks_service_principal",
+			Attribute: "application_id",
+			Value:     userOrSOrGroupPName,
+		})
+	} else if emailDomainRegex.MatchString(userOrSOrGroupPName) {
+		ic.Emit(&resource{
+			Resource:  "databricks_user",
+			Attribute: "user_name",
+			Value:     userOrSOrGroupPName,
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource:  "databricks_group",
+			Attribute: "display_name",
+			Value:     userOrSOrGroupPName,
+		})
+	}
 }
 
 func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -539,7 +563,6 @@ func listUcMetastores(ic *importContext) error {
 
 func importUcMetastores(ic *importContext, r *resource) error {
 	ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
-	// TODO: emit owner? See comment in catalog resource
 	if ic.accountLevel {
 		// emit metastore assignments
 		assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
@@ -656,7 +679,5 @@ func importSqlTable(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
-	// TODO: emit owner? See comment in catalog resource
 	return nil
 }

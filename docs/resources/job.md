@@ -109,6 +109,9 @@ The resource supports the following arguments:
 * `tags` - (Optional) An optional map of the tags associated with the job. See [tags Configuration Map](#tags-configuration-map)
 * `budget_policy_id` - (Optional) The ID of the user-specified budget policy to use for this job. If not specified, a default budget policy may be applied when creating or modifying the job.
 * `edit_mode` - (Optional) If `"UI_LOCKED"`, the user interface for the job will be locked. If `"EDITABLE"` (the default), the user interface will be editable.
+* `performance_target` - (Optional) The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are:
+  * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance.
+  * `STANDARD`: Enables cost-efficient execution of serverless workloads.
 
 ### task Configuration Block
 
@@ -118,10 +121,12 @@ This block describes individual tasks:
 * `*_task` - (Required) one of the specific task blocks described below:
   * `clean_rooms_notebook_task`
   * `condition_task`
+  * `dashboard_task`
   * `dbt_task`
   * `for_each_task`
   * `notebook_task`
   * `pipeline_task`
+  * `power_bi_task`
   * `python_wheel_task`
   * `run_job_task`
   * `spark_jar_task`
@@ -166,6 +171,19 @@ The `condition_task` specifies a condition with an outcome that can be used to c
 
 This task does not require a cluster to execute and does not support retries or notifications.
 
+#### dashboard_task Configuration Block
+
+The `dashboard_task` refreshes a dashboard and sends a snapshot to subscribers.
+
+* `dashboard_id` (Required) The identifier of the dashboard to refresh
+* `subscription` (Optional) Represents a subscription configuration for scheduled dashboard snapshots.
+  * `custom_subject` (Optional) Allows users to specify a custom subject line on the email sent to subscribers.
+  * `paused` (Optional) When true, the subscription will not send emails.
+  * `subscribers` The list of subscribers to send the snapshot of the dashboard to.
+    * `destination_id` (Optional) A snapshot of the dashboard will be sent to the destination when the `destination_id` field is present.
+    * `user_name` (Optional) A snapshot of the dashboard will be sent to the user's email when the `user_name` field is present.
+* `warehouse_id` (Optional) The warehouse id to execute the dashboard with for the schedule. If not specified, will use the default warehouse of dashboard
+
 #### dbt_task Configuration Block
 
 * `commands` - (Required) (Array) Series of dbt commands to execute in sequence. Every command must start with "dbt".
@@ -200,6 +218,25 @@ You also need to include a `git_source` block to configure the repository that c
 
 -> The following configuration blocks are only supported inside a `task` block
 
+#### power_bi_task Configuration Block
+
+The `power_bi_task` triggers a Power BI semantic model update.
+
+* `tables` (Required) (Array) The tables to be exported to Power BI. Block consists of following fields:
+  * `storage_mode` (Required) The Power BI storage mode of the table
+  * `catalog` (Required) The catalog name in Databricks
+  * `schema` (Required) The schema name in Databricks
+  * `name` (Optional) The table name in Databricks. If empty, all tables under the schema are selected.
+* `warehouse_id` (Required) The SQL warehouse ID to use as the Power BI data source
+* `power_bi_model` (Required) The semantic model to update. Block consists of following fields:
+  * `workspace_name` (Required) The name of the Power BI workspace of the model
+  * `model_name` (Required) The name of the Power BI model
+  * `storage_mode` (Required) The default storage mode of the Power BI model
+  * `authentication_method` (Required) How the published Power BI model authenticates to Databricks
+  * `overwrite_existing` (Optional) Whether to overwrite existing Power BI models. Default is false
+* `connection_resource_name` (Required) The resource name of the UC connection to authenticate from Databricks to Power BI
+* `refresh_after_update` (Optional) Whether the model should be refreshed after the update. Default is false
+
 #### python_wheel_task Configuration Block
 
 * `entry_point` - (Optional) Python function as entry point for the task
@@ -219,8 +256,10 @@ You also need to include a `git_source` block to configure the repository that c
 
 #### spark_python_task Configuration Block
 
-* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/Repos`. For files stored in a remote repository, the path must be relative. This field is required.
-* `source` - (Optional) Location type of the Python file, can only be `GIT`. When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+* `python_file` - (Required) The URI of the Python file to be executed. [databricks_dbfs_file](dbfs_file.md#path), cloud file URIs (e.g. `s3:/`, `abfss:/`, `gs:/`), workspace paths and remote repository are supported. For Python files stored in the Databricks workspace, the path must be absolute and begin with `/`. For files stored in a remote repository, the path must be relative. This field is required.
+* `source` - (Optional) Location type of the Python file. When set to `WORKSPACE` or not specified, the file will be retrieved from the local Databricks workspace or cloud location (if the python_file has a URI format). When set to `GIT`, the Python file will be retrieved from a Git repository defined in `git_source`.
+  * `WORKSPACE`: The Python file is located in a Databricks workspace or at a cloud filesystem URI.
+  * `GIT`: The Python file is located in a remote Git repository.
 * `parameters` - (Optional) (List) Command line parameters passed to the Python file.
 
 #### spark_submit_task Configuration Block
@@ -419,6 +458,7 @@ This block can be configured on both job and task levels for corresponding effec
 * `on_success` - (Optional) (List) list of emails to notify when the run completes successfully.
 * `on_failure` - (Optional) (List) list of emails to notify when the run fails.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of emails to notify when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of emails to notify when any streaming backlog thresholds are exceeded for any stream.
 
 The following parameter is only available for the job level configuration.
 
@@ -432,6 +472,7 @@ Each entry in `webhook_notification` block takes a list `webhook` blocks. The fi
 * `on_success` - (Optional) (List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified.
 * `on_failure` - (Optional) (List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified.
 * `on_duration_warning_threshold_exceeded` - (Optional) (List) list of notification IDs to call when the duration of a run exceeds the threshold specified by the `RUN_DURATION_SECONDS` metric in the `health` block.
+* `on_streaming_backlog_exceeded` - (Optional) (List) list of notification IDs to call when any streaming backlog thresholds are exceeded for any stream.
 
 Note that the `id` is not to be confused with the name of the alert destination. The `id` can be retrieved through the API or the URL of Databricks UI `https://<workspace host>/sql/destinations/<notification id>?o=<workspace id>`
 

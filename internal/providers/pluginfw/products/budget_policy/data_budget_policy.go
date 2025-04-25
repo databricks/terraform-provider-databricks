@@ -7,8 +7,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/apierr"
 	"github.com/databricks/databricks-sdk-go/service/billing"
-	"github.com/databricks/terraform-provider-databricks/common"
-	pluginfwcommon "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/common"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
@@ -26,11 +25,11 @@ func DataSourceBudgetPolicy() datasource.DataSource {
 }
 
 type BudgetPolicyDataSource struct {
-	Client *common.DatabricksClient
+	Client *autogen.DatabricksClient
 }
 
 func (r *BudgetPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = pluginfwcommon.GetDatabricksProductionName(dataSourceName)
+	resp.TypeName = autogen.GetDatabricksProductionName(dataSourceName)
 }
 
 func (r *BudgetPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -43,9 +42,7 @@ func (r *BudgetPolicyDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (r *BudgetPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if r.Client == nil {
-		r.Client = pluginfwcommon.ConfigureDataSource(req, resp)
-	}
+	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
 func (r *BudgetPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

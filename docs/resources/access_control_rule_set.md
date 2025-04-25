@@ -9,6 +9,7 @@ subcategory: "Security"
 This resource allows you to manage access rules on Databricks account level resources. For convenience we allow accessing this resource through the Databricks account and workspace.
 
 -> Currently, we only support managing access rules on specific object resources (service principal, group, budget policies and account) through `databricks_access_control_rule_set`.
+
 !> `databricks_access_control_rule_set` cannot be used to manage access rules for resources supported by [databricks_permissions](permissions.md). Refer to its documentation for more information.
 
 ~> This resource is _authoritative_ for permissions on objects. Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset.

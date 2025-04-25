@@ -1872,6 +1872,7 @@ func TestResourceSqlTable_Diff_ExistingResource(t *testing.T) {
 			instanceState["cluster_id"] = "test-1234"
 			instanceState["column.#"] = "0"
 			instanceState["owner"] = "testuser"
+			instanceState["partitions.#"] = "0"
 
 			expectedDiff := testCase.expectedDiff
 			if expectedDiff == nil {

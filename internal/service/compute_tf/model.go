@@ -8144,6 +8144,10 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -8165,6 +8169,7 @@ func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 
 	return attrs
@@ -8179,7 +8184,8 @@ func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
 	}
 }
 
@@ -8196,6 +8202,7 @@ func (o EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 		})
 }
@@ -8212,6 +8219,7 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 		},
 	}
@@ -8241,6 +8249,34 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
+func (o *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 type EditInstancePoolResponse struct {
@@ -10050,6 +10086,10 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -10090,6 +10130,7 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -10115,6 +10156,7 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -10141,6 +10183,7 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -10170,6 +10213,7 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -10346,6 +10390,34 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
+func (o *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -12158,6 +12230,10 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -12198,6 +12274,7 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -12223,6 +12300,7 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -12249,6 +12327,7 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -12278,6 +12357,7 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -12454,6 +12534,34 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
+func (o *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -15381,6 +15489,50 @@ func (o *NodeType) GetNodeInstanceType(ctx context.Context) (NodeInstanceType, b
 func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) {
 	vs := v.ToObjectValue(ctx)
 	o.NodeInstanceType = vs
+}
+
+// For Fleet-V2 using classic clusters, this object contains the information
+// about the alternate node type ids to use when attempting to launch a cluster.
+// It can be used with both the driver and worker node types.
+type NodeTypeFlexibility struct {
+}
+
+func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility) {
+}
+
+func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringRead(existingState NodeTypeFlexibility) {
+}
+
+func (c NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
+// only implements ToObjectValue() and Type().
+func (o NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
 }
 
 // Error message of a failed pending instances

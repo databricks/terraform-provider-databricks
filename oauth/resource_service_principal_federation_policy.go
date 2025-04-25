@@ -133,6 +133,9 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 					ServicePrincipalId: int64(d.Get("service_principal_id").(int)),
 				},
 			)
+			if err != nil {
+				return err
+			}
 			return common.StructToData(spfp, s, d)
 		},
 	}

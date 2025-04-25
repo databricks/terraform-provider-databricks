@@ -50,7 +50,7 @@ type SqlTableInfo struct {
 	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
-	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
+	Partitions            []string          `json:"partitions,omitempty" tf:"force_new,computed"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`

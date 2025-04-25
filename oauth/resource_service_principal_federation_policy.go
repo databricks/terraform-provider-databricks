@@ -113,7 +113,7 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 				if err != nil {
 					return err
 				}
-				log.Printf("[INFO] service principal federation policie with id %s not found, recreating it", d.Id())
+				log.Printf("[INFO] service principal federation policy with id %s not found, recreating it", d.Id())
 				d.SetId("")
 				return nil
 			}

@@ -242,6 +242,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_secret_scope":                        secrets.ResourceSecretScope().ToResource(),
 		"databricks_secret_acl":                          secrets.ResourceSecretACL().ToResource(),
 		"databricks_service_principal":                   scim.ResourceServicePrincipal().ToResource(),
+		"databricks_service_principal_federation_policy": oauth.ResourceServicePrincipalFederationPolicy().ToResource(),
 		"databricks_service_principal_role":              aws.ResourceServicePrincipalRole().ToResource(),
 		"databricks_service_principal_secret":            tokens.ResourceServicePrincipalSecret().ToResource(),
 		"databricks_share":                               sharing.ResourceShare().ToResource(),
@@ -267,7 +268,6 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_workspace_binding":                   catalog.ResourceWorkspaceBinding().ToResource(),
 		"databricks_workspace_conf":                      workspace.ResourceWorkspaceConf().ToResource(),
 		"databricks_workspace_file":                      workspace.ResourceWorkspaceFile().ToResource(),
-		"databricks_service_principal_federation_policy": oauth.ResourceServicePrincipalFederationPolicy().ToResource(),
 	}
 
 	// Remove the resources and data sources that are being migrated to plugin framework

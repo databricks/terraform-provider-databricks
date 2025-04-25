@@ -11,7 +11,22 @@ This resource allows you to set up [workspaces on AWS](https://docs.databricks.c
 
 ## Example Usage
 
-### Creating a Databricks on AWS workspace
+### Creating a serverless workspace in AWS
+
+Creating a serverless workspace does not require any prerequisite resources. Simply specify `compute_mode = "SERVERLESS"` when creating the workspace. Serverless workspaces must not include `credentials_id` or `storage_configuration_id`.
+
+To use serverless workspaces, you must enroll in the [Default Storage preview](https://docs.databricks.com/aws/en/storage/express-storage).
+
+```hcl
+resource "databricks_mws_workspaces" "serverless_workspace" {
+  account_id     = "" # Your Databricks account ID
+  workspace_name = "serverless-workspace"
+  aws_region     = "us-east-1"
+  compute_mode   = "SERVERLESS"
+}
+```
+
+### Creating a workspace on AWS
 
 ![Simplest multiworkspace](https://raw.githubusercontent.com/databricks/terraform-provider-databricks/main/docs/simplest-multiworkspace.png)
 
@@ -78,11 +93,11 @@ output "databricks_token" {
 }
 ```
 
-### Creating a Databricks on AWS workspace with Databricks-Managed VPC
+### Creating a workspace on AWS with Databricks-Managed VPC
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 
-By default, Databricks creates a VPC in your AWS account for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](mws_networks.md) so that you can configure it according to your organization’s enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC. Please see the difference described through IAM policy actions [on this page](https://docs.databricks.com/administration-guide/account-api/iam-role.html).
+By default, Databricks creates a VPC in your AWS account for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](mws_networks.md) so that you can configure it according to your organization's enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC. Please see the difference described through IAM policy actions [on this page](https://docs.databricks.com/administration-guide/account-api/iam-role.html).
 
 ```hcl
 variable "databricks_account_id" {
@@ -202,7 +217,7 @@ output "databricks_token" {
 
 In order to create a [Databricks Workspace that leverages AWS PrivateLink](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) please ensure that you have read and understood the [Enable Private Link](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
 
-### Creating a Databricks on GCP workspace
+### Creating a workspace on GCP
 
 To get workspace running, you have to configure a network object:
 
@@ -263,11 +278,11 @@ output "databricks_token" {
 
 In order to create a [Databricks Workspace that leverages GCP Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) please ensure that you have read and understood the [Enable Private Service Connect](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/private-service-connect.html) documentation and then customise the example above with the relevant examples from [mws_vpc_endpoint](mws_vpc_endpoint.md), [mws_private_access_settings](mws_private_access_settings.md) and [mws_networks](mws_networks.md).
 
-#### Creating a Databricks on GCP workspace with Databricks-Managed VPC
+#### Creating a workspace on GCP with Databricks-Managed VPC
 
 ![VPCs](https://docs.databricks.com/_images/customer-managed-vpc.png)
 
-By default, Databricks creates a VPC in your GCP project for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](mws_networks.md) so that you can configure it according to your organization’s enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC.
+By default, Databricks creates a VPC in your GCP project for each workspace. Databricks uses it for running clusters in the workspace. Optionally, you can use your VPC for the workspace, using the feature customer-managed VPC. Databricks recommends that you provide your VPC with [databricks_mws_networks](mws_networks.md) so that you can configure it according to your organization's enterprise cloud standards while still conforming to Databricks requirements. You cannot migrate an existing workspace to your VPC.
 
 ```hcl
 variable "databricks_account_id" {
@@ -317,7 +332,8 @@ The following arguments are available:
 * `workspace_name` - name of the workspace, will appear on UI.
 * `network_id` - (Optional) `network_id` from [networks](mws_networks.md).
 * `aws_region` - (AWS only) region of VPC.
-* `storage_configuration_id` - (AWS only)`storage_configuration_id` from [storage configuration](mws_storage_configurations.md).
+* `storage_configuration_id` - (AWS only, Optional) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md). This must not be specified when `compute_mode` is set to `SERVERLESS`.
+* `credentials_id` - (AWS only, Optional) `credentials_id` from [credentials](mws_credentials.md). This must not be specified when `compute_mode` is set to `SERVERLESS`.
 * `managed_services_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane.
 * `storage_customer_managed_key_id` - (Optional) `customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster Volumes.
 * `location` - (GCP only) region of the subnet.
@@ -330,6 +346,7 @@ The following arguments are available:
 * `private_access_settings_id` - (Optional) Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account.
 * `custom_tags` - (Optional / AWS only) - The custom tags key-value pairing that is attached to this workspace. These tags will be applied to clusters automatically in addition to any `default_tags` or `custom_tags` on a cluster level. Please note it can take up to an hour for custom_tags to be set due to scheduling on Control Plane. After custom tags are applied, they can be modified however they can never be completely removed.
 * `pricing_tier` - (Optional) - The pricing tier of the workspace.
+* `compute_mode` - (Optional) - The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace.
 
 ### token block
 
@@ -362,6 +379,7 @@ In addition to all arguments above, the following attributes are exported:
 * `workspace_url` - (String) URL of the workspace
 * `custom_tags` - (Map) Custom Tags (if present) added to workspace
 * `gcp_workspace_sa` - (String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`
+* `effective_compute_mode` - (String) The effective compute mode for the workspace. This is either `SERVERLESS` for serverless workspaces or `HYBRID` for classic workspaces.
 
 ## Timeouts
 

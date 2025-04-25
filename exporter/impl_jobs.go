@@ -130,11 +130,44 @@ func importTask(ic *importContext, task sdk_jobs.Task, jobName, rID string) {
 			}
 		}
 	}
+	if task.PowerBiTask != nil {
+		if task.PowerBiTask.WarehouseId != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_sql_endpoint",
+				ID:       task.PowerBiTask.WarehouseId,
+			})
+		}
+		if task.PowerBiTask.ConnectionResourceName != "" && ic.currentMetastore != nil {
+			ic.Emit(&resource{
+				Resource: "databricks_connection",
+				ID:       ic.currentMetastore.MetastoreId + "|" + task.PowerBiTask.ConnectionResourceName,
+			})
+		}
+		for _, table := range task.PowerBiTask.Tables {
+			if table.Catalog != "" && table.Schema != "" && table.Name != "" {
+				ic.Emit(&resource{
+					Resource: "databricks_sql_table",
+					ID:       table.Catalog + "." + table.Schema + "." + table.Name,
+				})
+			}
+		}
+
+	}
 	if task.DbtTask != nil {
 		if task.DbtTask.WarehouseId != "" {
 			ic.Emit(&resource{
 				Resource: "databricks_sql_endpoint",
 				ID:       task.DbtTask.WarehouseId,
+			})
+		}
+		if task.DbtTask.Catalog != "" && task.DbtTask.Schema != "" {
+			ic.Emit(&resource{
+				Resource: "databricks_catalog",
+				ID:       task.DbtTask.Catalog,
+			})
+			ic.Emit(&resource{
+				Resource: "databricks_schema",
+				ID:       task.DbtTask.Catalog + "." + task.DbtTask.Schema,
 			})
 		}
 		if task.DbtTask.Source == "WORKSPACE" {
@@ -212,6 +245,14 @@ func importJob(ic *importContext, r *resource) error {
 				Resource:  "databricks_service_principal",
 				Attribute: "application_id",
 				Value:     job.RunAs.ServicePrincipalName,
+			})
+		}
+	}
+	if job.Trigger != nil && job.Trigger.TableUpdate != nil {
+		for _, table := range job.Trigger.TableUpdate.TableNames {
+			ic.Emit(&resource{
+				Resource: "databricks_sql_table",
+				ID:       table,
 			})
 		}
 	}
@@ -356,4 +397,175 @@ func (ic *importContext) emitJobsDestinationNotifications(notifications []sdk_jo
 			ID:       notification.Id,
 		})
 	}
+}
+
+var (
+	// This is the list of dependencies that are needed for a job. It doesn't include the dependencies for for_each_task
+	// as it will be added by createJobDependencies function.
+	baseJobDependencies = []reference{
+		{Path: "job_cluster.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
+		{Path: "job_cluster.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "job_cluster.new_cluster.init_scripts.volumes.destination", Resource: "databricks_file"},
+		{Path: "job_cluster.new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
+		{Path: "job_cluster.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+		{Path: "job_cluster.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
+		{Path: "job_cluster.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+		{Path: "run_as.service_principal_name", Resource: "databricks_service_principal", Match: "application_id"},
+		{Path: "task.dbt_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.dbt_task.catalog", Resource: "databricks_catalog"},
+		{Path: "task.dbt_task.schema", Resource: "databricks_schema", Match: "name",
+			IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema"),
+		},
+		{Path: "task.dashboard_task.dashboard_id", Resource: "databricks_dashboard"},
+		{Path: "task.dashboard_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.power_bi_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.power_bi_task.connection_resource_name", Resource: "databricks_connection", Match: "name"},
+		{Path: "task.power_bi_task.tables.catalog", Resource: "databricks_catalog"},
+		{Path: "task.power_bi_task.tables.schema", Resource: "databricks_schema", Match: "name",
+			IsValidApproximation: createIsMatchingCatalogAndSchema("catalog", "schema"),
+		},
+		{Path: "task.power_bi_task.tables.name", Resource: "databricks_sql_table", Match: "name",
+			IsValidApproximation: createIsMatchingCatalogAndSchemaAndTable("catalog", "schema", "name")},
+		{Path: "task.existing_cluster_id", Resource: "databricks_cluster"},
+		{Path: "task.library.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.library.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.library.jar", Resource: "databricks_file"},
+		{Path: "task.library.jar", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.library.whl", Resource: "databricks_file"},
+		{Path: "task.library.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.library.requirements", Resource: "databricks_file"},
+		{Path: "task.library.requirements", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.new_cluster.aws_attributes.instance_profile_arn", Resource: "databricks_instance_profile"},
+		{Path: "task.new_cluster.init_scripts.dbfs.destination", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.new_cluster.init_scripts.volumes.destination", Resource: "databricks_file"},
+		{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_workspace_file"},
+		{Path: "task.new_cluster.instance_pool_id", Resource: "databricks_instance_pool"},
+		{Path: "task.new_cluster.driver_instance_pool_id", Resource: "databricks_instance_pool"},
+		{Path: "task.new_cluster.policy_id", Resource: "databricks_cluster_policy"},
+		{Path: "task.notebook_task.base_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.notebook_task.base_parameters", Resource: "databricks_file"},
+		{Path: "task.notebook_task.base_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook"},
+		{Path: "task.notebook_task.notebook_path", Resource: "databricks_notebook", Match: "workspace_path"},
+		{Path: "task.notebook_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.pipeline_task.pipeline_id", Resource: "databricks_pipeline"},
+		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_file"},
+		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.python_wheel_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.python_wheel_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.run_job_task.job_id", Resource: "databricks_job"},
+		{Path: "task.run_job_task.job_parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.run_job_task.job_parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.spark_jar_task.jar_uri", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_jar_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_jar_task.parameters", Resource: "databricks_file"},
+		{Path: "task.spark_jar_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.spark_python_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_python_task.python_file", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "task.spark_python_task.python_file", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.spark_submit_task.parameters", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
+		{Path: "task.spark_submit_task.parameters", Resource: "databricks_file"},
+		{Path: "task.spark_submit_task.parameters", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "task.sql_task.file.path", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "path"},
+		{Path: "task.dbt_task.project_directory", Resource: "databricks_directory", Match: "workspace_path"},
+		{Path: "task.sql_task.alert.alert_id", Resource: "databricks_alert"},
+		{Path: "task.sql_task.alert.subscriptions.destination_id", Resource: "databricks_notification_destination"},
+		{Path: "task.sql_task.dashboard.dashboard_id", Resource: "databricks_sql_dashboard"},
+		{Path: "task.sql_task.query.query_id", Resource: "databricks_query"},
+		{Path: "task.sql_task.warehouse_id", Resource: "databricks_sql_endpoint"},
+		{Path: "task.webhook_notifications.on_duration_warning_threshold_exceeded.id",
+			Resource: "databricks_notification_destination"},
+		{Path: "task.webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+		{Path: "task.webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+		{Path: "task.webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+		{Path: "task.webhook_notifications.on_streaming_backlog_exceeded.id", Resource: "databricks_notification_destination"},
+		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "workspace_path"},
+		{Path: "parameter.default", Resource: "databricks_workspace_file", Match: "path"},
+		{Path: "parameter.default", Resource: "databricks_file", Match: "path"},
+		{Path: "webhook_notifications.on_duration_warning_threshold_exceeded.id",
+			Resource: "databricks_notification_destination"},
+		{Path: "webhook_notifications.on_failure.id", Resource: "databricks_notification_destination"},
+		{Path: "webhook_notifications.on_start.id", Resource: "databricks_notification_destination"},
+		{Path: "webhook_notifications.on_success.id", Resource: "databricks_notification_destination"},
+		{Path: "webhook_notifications.on_streaming_backlog_exceeded.id",
+			Resource: "databricks_notification_destination"},
+		{Path: "trigger.table_update.table_names", Resource: "databricks_sql_table"},
+		{Path: "trigger.file_arrival.url", Resource: "databricks_external_location",
+			Match: "url", MatchType: MatchLongestPrefix},
+		{Path: "task.sql_task.alert.subscriptions.user_name",
+			Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "task.email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "task.email_notifications.on_failure", Resource: "databricks_user", Match: "user_name",
+			MatchType: MatchCaseInsensitive},
+		{Path: "task.email_notifications.on_start", Resource: "databricks_user", Match: "user_name",
+			MatchType: MatchCaseInsensitive},
+		{Path: "task.email_notifications.on_success", Resource: "databricks_user", Match: "user_name",
+			MatchType: MatchCaseInsensitive},
+		{Path: "task.email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "run_as.user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "email_notifications.on_duration_warning_threshold_exceeded", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "email_notifications.on_failure", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "email_notifications.on_start", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "email_notifications.on_success", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "email_notifications.on_streaming_backlog_exceeded", Resource: "databricks_user",
+			Match: "user_name", MatchType: MatchCaseInsensitive},
+		{Path: "task.library.whl", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.new_cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.notebook_task.base_parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.notebook_task.notebook_path", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.python_wheel_task.named_parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.python_wheel_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.run_job_task.job_parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.spark_python_task.python_file", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.spark_jar_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "task.spark_submit_task.parameters", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "job_cluster.new_cluster.init_scripts.workspace.destination",
+			Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+		{Path: "job_cluster.new_cluster.init_scripts.workspace.destination",
+			Resource: "databricks_repo", Match: "path"},
+		{Path: "parameter.default", Resource: "databricks_repo", Match: "workspace_path",
+			MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
+	}
+)
+
+func createJobDependencies() []reference {
+	dependencies := make([]reference, 0, 2*len(baseJobDependencies))
+	for _, dep := range baseJobDependencies {
+		dependencies = append(dependencies, dep)
+		if strings.HasPrefix(dep.Path, "task.") {
+			new_dep := dep
+			new_dep.Path = "task.for_each_task." + dep.Path
+			dependencies = append(dependencies, new_dep)
+		}
+	}
+	return dependencies
 }

@@ -3,14 +3,13 @@ subcategory: "Security"
 ---
 # databricks_sql_permissions Resource
 
--> Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides a better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. On workspaces with Unity Catalog enabled, you may run into errors such as `Error: cannot create sql permissions: cannot read current grants: For unity catalog, please specify the catalog name explicitly. E.g. SHOW GRANT ``your.address@email.com`` ON CATALOG main`. This happens if your `default_catalog_name` was set to a UC catalog instead of `hive_metastore`. The workaround is to re-assign the metastore again with the default catalog set to be `hive_metastore`. See [databricks_metastore_assignment](metastore_assignment.md).
+-> Please switch to [databricks_grants](grants.md) with Unity Catalog to manage data access, which provides a better and faster way for managing data security. `databricks_grants` resource *doesn't require a technical cluster to perform operations*. On workspaces with Unity Catalog enabled, you may run into errors such as `Error: cannot create sql permissions: cannot read current grants: For unity catalog, please specify the catalog name explicitly. E.g. SHOW GRANT ``your.address@email.com`` ON CATALOG main`. This happens if your `default_catalog_name` was set to a UC catalog instead of `hive_metastore`. The workaround is to re-assign the metastore again with the default catalog set to `hive_metastore`. See [databricks_metastore_assignment](metastore_assignment.md).
 
-This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick `Access Control` tab, click on `Enable` button in `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
+This resource manages data object access control lists in Databricks workspaces for things like tables, views, databases, and [more](https://docs.databricks.com/security/access-control/table-acls/object-privileges.html). In order to enable Table Access control, you have to login to the workspace as administrator, go to `Admin Console`, pick the `Access Control` tab, click on the `Enable` button in the `Table Access Control` section, and click `Confirm`. The security guarantees of table access control **will only be effective if cluster access control is also turned on**. Please make sure that no users can create clusters in your workspace and all [databricks_cluster](cluster.md) have approximately the following configuration:
 
 ```hcl
 resource "databricks_cluster" "cluster_with_table_access_control" {
   // ...
-
   spark_conf = {
     "spark.databricks.acl.dfAclsEnabled" : "true",
     "spark.databricks.repl.allowedLanguages" : "python,sql",
@@ -36,10 +35,12 @@ The following resource definition will enforce access control on a table by exec
 resource "databricks_sql_permissions" "foo_table" {
   table = "foo"
 
+
   privilege_assignments {
     principal  = "serge@example.com"
     privileges = ["SELECT", "MODIFY"]
   }
+
 
   privilege_assignments {
     principal  = "special group"
@@ -50,7 +51,7 @@ resource "databricks_sql_permissions" "foo_table" {
 
 ## Argument Reference
 
-* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate access mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a single-node TACL cluster named `terraform-table-acl` is automatically created.
+* `cluster_id` - (Optional) Id of an existing [databricks_cluster](cluster.md), where the appropriate `GRANT`/`REVOKE` commands are executed. This cluster must have the appropriate data security mode (`USER_ISOLATION` or `LEGACY_TABLE_ACL` specified). If no `cluster_id` is specified, a TACL-enabled cluster with the name `terraform-table-acl` is automatically created.
 
 ```hcl
 resource "databricks_sql_permissions" "foo_table" {
@@ -61,12 +62,12 @@ resource "databricks_sql_permissions" "foo_table" {
 
 The following arguments are available to specify the data object you need to enforce access controls on. You must specify only one of those arguments (except for `table` and `view`), otherwise resource creation will fail.
 
-* `database` - Name of the database. Has default value of `default`.
-* `table` - Name of the table. Can be combined with `database`.
-* `view` - Name of the view. Can be combined with `database`.
+* `database` - Name of the database. Has a default value of `default`.
+* `table` - Name of the table. Can be combined with the `database`.
+* `view` - Name of the view. Can be combined with the `database`.
 * `catalog` - (Boolean) If this access control for the entire catalog. Defaults to `false`.
 * `any_file` - (Boolean) If this access control for reading/writing any file. Defaults to `false`.
-* `anonymous_function` - (Boolean) If this access control for using anonymous function. Defaults to `false`.
+* `anonymous_function` - (Boolean) If this access control for using an anonymous function. Defaults to `false`.
 
 ### `privilege_assignments` blocks
 
@@ -83,15 +84,15 @@ You must specify one or many `privilege_assignments` configuration blocks to dec
 * `USAGE` - do not give any abilities, but is an additional requirement to perform any action on a database object.
 * `READ_METADATA` - gives the ability to view an object and its metadata.
 * `CREATE_NAMED_FUNCTION` - gives the ability to create a named UDF in an existing catalog or database.
-* `MODIFY_CLASSPATH` - gives the ability to add files to the Spark class path.
+* `MODIFY_CLASSPATH` - gives the ability to add files to the Spark classpath.
 
--> Even though the value `ALL PRIVILEGES` is mentioned in Table ACL documentation, it's not recommended to use it from terraform, as it may result in unnecessary state updates.
+-> Even though the value `ALL PRIVILEGES` is mentioned in Table ACL documentation, it's not recommended to use it from Terraform, as it may result in unnecessary state updates.
 
 ## Import
 
 The resource can be imported using a synthetic identifier. Examples of valid synthetic identifiers are:
 
-* `table/default.foo` - table `foo` in a `default` database. Database is always mandatory.
+* `table/default.foo` - table `foo` in a `default` database. The `database` is always mandatory.
 * `view/bar.foo` - view `foo` in `bar` database.
 * `database/bar` - `bar` database.
 * `catalog/` - entire catalog. `/` suffix is mandatory.

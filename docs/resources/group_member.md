@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach [users](user.md), [service_principal](service_principal.md), and [groups](group.md) as group members.
 
+-> This resource can be used with an account or workspace-level provider.
+
 To attach members to groups in the Databricks account, the provider must be configured with `host = "https://accounts.cloud.databricks.com"` on AWS deployments or `host = "https://accounts.azuredatabricks.net"` and authenticate using [AAD tokens](https://registry.terraform.io/providers/databricks/databricks/latest/docs#special-configurations-for-azure) on Azure deployments
 
 ## Example Usage

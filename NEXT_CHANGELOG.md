@@ -1,26 +1,19 @@
 # NEXT CHANGELOG
 
-## Release v1.75.0
+## Release v1.76.0
 
 * Add a new resource `databricks_service_principal_federation_policy` ([#4635](https://github.com/databricks/terraform-provider-databricks/pull/4635))
 
 ### New Features and Improvements
 
- * Add support for `power_bi_task` in jobs ([#4647](https://github.com/databricks/terraform-provider-databricks/pull/4647))
- * Add support for `dashboard_task` in jobs ([#4646](https://github.com/databricks/terraform-provider-databricks/pull/4646))
-
 ### Bug Fixes
+
+ * Fix automatic cluster creation for `databricks_sql_permissions` ([#4141](https://github.com/databricks/terraform-provider-databricks/pull/4141))
 
 ### Documentation
 
- * Document `performance_target` in `databricks_job` ([#4651](https://github.com/databricks/terraform-provider-databricks/pull/4651))
- * Add more examples for `databricks_model_serving` ([#4658](https://github.com/databricks/terraform-provider-databricks/pull/4658))
- * Refresh `spark_python_task` option in `databricks_job` ([#4666](https://github.com/databricks/terraform-provider-databricks/pull/4666))
+ * Unify/reorganize notes in docs for resources/data sources ([#4657](https://github.com/databricks/terraform-provider-databricks/pull/4657))
 
 ### Exporter
-
- * Correctly handle account-level identities when generating the code ([#4650](https://github.com/databricks/terraform-provider-databricks/pull/4650))
- * Add export of dashboard tasks in `datarbicks_job` ([#4665](https://github.com/databricks/terraform-provider-databricks/pull/4665))
- * Add `Ignore` implementation for `databricks_grants` to fix issue with wrongly generated dependencies ([#4661](https://github.com/databricks/terraform-provider-databricks/pull/4650))
 
 ### Internal Changes

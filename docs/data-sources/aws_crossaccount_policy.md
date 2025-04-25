@@ -3,9 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_aws_crossaccount_policy Data Source
 
--> **Note** This data source can only be used with an account-level provider!
-
 This data source constructs necessary AWS cross-account policy for you, which is based on [official documentation](https://docs.databricks.com/administration-guide/account-api/iam-role.html#language-Your%C2%A0VPC,%C2%A0default).
+
+-> This data source can be used with an account or workspace-level provider.
 
 ## Example Usage
 

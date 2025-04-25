@@ -683,7 +683,7 @@ func (o CleanRoomAssetForeignTableLocalDetails_SdkV2) Type(ctx context.Context) 
 }
 
 type CleanRoomAssetNotebook_SdkV2 struct {
-	// Server generated checksum that represents the notebook version.
+	// Server generated etag that represents the notebook version.
 	Etag types.String `tfsdk:"etag"`
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.

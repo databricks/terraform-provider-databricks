@@ -1480,7 +1480,7 @@ type GenieGenerateDownloadFullQueryResultRequest struct {
 	ConversationId types.String `tfsdk:"-"`
 	// Message ID
 	MessageId types.String `tfsdk:"-"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
 }
 
@@ -1628,7 +1628,7 @@ type GenieGetDownloadFullQueryResultRequest struct {
 	DownloadId types.String `tfsdk:"-"`
 	// Message ID
 	MessageId types.String `tfsdk:"-"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
 }
 
@@ -2384,7 +2384,7 @@ func (o GenieResultMetadata) Type(ctx context.Context) attr.Type {
 type GenieSpace struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
 	// Title of the Genie Space
 	Title types.String `tfsdk:"title"`

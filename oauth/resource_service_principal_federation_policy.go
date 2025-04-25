@@ -24,7 +24,7 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
-			//Computed: true,
+			Computed: true,
 		},
 		"uid": {
 			Type:     schema.TypeString,
@@ -86,8 +86,8 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			if err != nil {
 				return err
 			}
-			name := spfp.Name
-			d.SetId(name[strings.LastIndex(name, "/")+1:])
+			d.Set("name", spfp.Name)
+			d.SetId(spfp.Uid)
 			return common.StructToData(spfp, s, d)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -98,7 +98,7 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			return acc.ServicePrincipalFederationPolicy.DeleteByServicePrincipalIdAndPolicyId(
 				ctx,
 				int64(d.Get("service_principal_id").(int)),
-				d.Id(),
+				getLastPartOfName(d),
 			)
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -107,13 +107,13 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 				return err
 			}
 			spfp, err := acc.ServicePrincipalFederationPolicy.GetByServicePrincipalIdAndPolicyId(ctx,
-				int64(d.Get("service_principal_id").(int)), d.Id())
+				int64(d.Get("service_principal_id").(int)), getLastPartOfName(d))
 			if err != nil {
 				err = common.IgnoreNotFoundError(err)
 				if err != nil {
 					return err
 				}
-				log.Printf("[INFO] service principal federation policy with id %s not found, recreating it", d.Id())
+				log.Printf("[INFO] service principal federation policy with id %s not found, recreating it", getLastPartOfName(d))
 				d.SetId("")
 				return nil
 			}
@@ -129,12 +129,16 @@ func ResourceServicePrincipalFederationPolicy() common.Resource {
 			spfp, err := acc.ServicePrincipalFederationPolicy.Update(ctx,
 				oauth2.UpdateServicePrincipalFederationPolicyRequest{
 					Policy:             &federationPolicy,
-					PolicyId:           d.Id(),
+					PolicyId:           getLastPartOfName(d),
 					ServicePrincipalId: int64(d.Get("service_principal_id").(int)),
 				},
 			)
 			return common.StructToData(spfp, s, d)
 		},
 	}
+}
 
+func getLastPartOfName(d *schema.ResourceData) string {
+	name := d.Get("name").(string)
+	return name[strings.LastIndex(name, "/")+1:]
 }

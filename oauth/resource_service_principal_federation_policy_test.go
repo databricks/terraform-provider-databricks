@@ -11,11 +11,14 @@ import (
 
 func TestResourceServicePrincipalFederationPolicyUpdate(t *testing.T) {
 	spid := 44
+	spFpId := "ertyuio1"
+	accountId := "account_id."
+	name := fmt.Sprintf("accounts/%s/servicePrincipals/%d/federationPolicies/%s", accountId, spid, spFpId)
 	id := "07cc67f4-45d6-494b-adac-09b5cbc7e2b5"
 	structProvider := func() oauth2.FederationPolicy {
 		return oauth2.FederationPolicy{
 			Description: "My federation policy description.",
-			Name:        "Federation Policy Name",
+			Name:        name,
 			OidcPolicy: &oauth2.OidcFederationPolicy{
 				Audiences:    []string{"databricks"},
 				Issuer:       "https://myidp.example.com/oidc",
@@ -36,25 +39,25 @@ func TestResourceServicePrincipalFederationPolicyUpdate(t *testing.T) {
 			api.EXPECT().Update(
 				mock.Anything,
 				oauth2.UpdateServicePrincipalFederationPolicyRequest{
-					PolicyId:           id,
+					PolicyId:           spFpId,
 					Policy:             &input,
 					ServicePrincipalId: int64(spid),
 				}).Return(&returnValue, nil)
-			api.EXPECT().GetByServicePrincipalIdAndPolicyId(mock.Anything, int64(spid), id).Return(
+			api.EXPECT().GetByServicePrincipalIdAndPolicyId(mock.Anything, int64(spid), spFpId).Return(
 				&returnValue, nil)
 		},
 		Resource:  ResourceServicePrincipalFederationPolicy(),
 		Update:    true,
-		AccountID: "account_id",
+		AccountID: accountId,
 		ID:        id,
 		InstanceState: map[string]string{
 			"service_principal_id": "44",
-			"name":                 "Federation Policy Name",
+			"name":                 name,
 		},
-		HCL: `
+		HCL: fmt.Sprintf(`
 			description =           "My federation policy description."
-			name =                 "Federation Policy Name"
-			service_principal_id = 44
+			name =                 "%s"
+			service_principal_id = %d
 			oidc_policy  {
 				issuer = "https://myidp.example.com/oidc"
 				audiences = ["databricks"]
@@ -63,11 +66,11 @@ func TestResourceServicePrincipalFederationPolicyUpdate(t *testing.T) {
 				"jwks_uri" = "string"
 				"jwks_json" = "string"
 			}
-		`,
+		`, name, spid),
 	}.ApplyAndExpectData(t, map[string]any{
 		"service_principal_id": spid,
 		"description":          "My federation policy description.",
-		"name":                 "Federation Policy Name",
+		"name":                 name,
 		"oidc_policy": []interface{}{
 			map[string]any{
 				"audiences":     []interface{}{"newvalue"},
@@ -196,7 +199,10 @@ func TestResourceServicePrincipalFederationPolicyCreate(t *testing.T) {
 
 func TestResourceServicePrincipalFederationPolicyRead(t *testing.T) {
 	id := "07cc67f4-45d6-494b-adac-09b5cbc7e2b5"
+	accountId := "account_id."
 	spid := 42
+	spFpId := "ertyuio1"
+	name := fmt.Sprintf("accounts/%s/servicePrincipals/%d/federationPolicies/%s", accountId, spid, spFpId)
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			fp := &oauth2.FederationPolicy{
@@ -204,7 +210,7 @@ func TestResourceServicePrincipalFederationPolicyRead(t *testing.T) {
 				UpdateTime:  "2019-08-24T14:15:22Z",
 				CreateTime:  "2019-08-24T14:15:22Z",
 				Description: "My federation policy description.",
-				Name:        "Federation Policy Name",
+				Name:        name,
 				OidcPolicy: &oauth2.OidcFederationPolicy{
 					Audiences:    []string{"databricks"},
 					Issuer:       "https://myidp.example.com/oidc",
@@ -214,28 +220,28 @@ func TestResourceServicePrincipalFederationPolicyRead(t *testing.T) {
 					SubjectClaim: "sub",
 				},
 			}
-			m.GetMockServicePrincipalFederationPolicyAPI().EXPECT().GetByServicePrincipalIdAndPolicyId(mock.Anything, int64(spid), id).Return(
+			m.GetMockServicePrincipalFederationPolicyAPI().EXPECT().GetByServicePrincipalIdAndPolicyId(mock.Anything, int64(spid), spFpId).Return(
 				fp, nil)
 		},
 		Resource:  ResourceServicePrincipalFederationPolicy(),
 		Read:      true,
 		New:       true,
-		AccountID: "account_id",
+		AccountID: accountId,
 		ID:        id,
-		HCL: `
+		HCL: fmt.Sprintf(`
 			description =           "My federation policy description."
-			name =                 "Federation Policy Name"
+			name =                 "%s"
 			service_principal_id = 42
 			oidc_policy  {
 				issuer = "https://myidp.example.com/oidc"
 				audiences = ["databricks"]
 				subject= "subject"
 			}
-		`,
+		`, name),
 	}.ApplyAndExpectData(t, map[string]any{
 		"service_principal_id": spid,
 		"description":          "My federation policy description.",
-		"name":                 "Federation Policy Name",
+		"name":                 name,
 		"oidc_policy": []interface{}{
 			map[string]any{
 				"audiences":     []interface{}{"databricks"},
@@ -251,27 +257,31 @@ func TestResourceServicePrincipalFederationPolicyRead(t *testing.T) {
 
 func TestResourceServicePrincipalFederationPolicyDelete(t *testing.T) {
 	id := "07cc67f4-45d6-494b-adac-09b5cbc7e2b5"
+	accountId := "account_id."
+	spid := 42
+	spFpId := "ertyuio1"
+	name := fmt.Sprintf("accounts/%s/servicePrincipals/%d/federationPolicies/%s", accountId, spid, spFpId)
 	qa.ResourceFixture{
 		MockAccountClientFunc: func(m *mocks.MockAccountClient) {
 			m.GetMockServicePrincipalFederationPolicyAPI().EXPECT().DeleteByServicePrincipalIdAndPolicyId(
 				mock.Anything,
 				int64(123),
-				id,
+				spFpId,
 			).Return(nil)
 		},
 		Resource:  ResourceServicePrincipalFederationPolicy(),
 		Delete:    true,
 		ID:        id,
 		AccountID: "account_id",
-		HCL: `
+		HCL: fmt.Sprintf(`
 			description =           "My federation policy description."
-			name =                 "Federation Policy Name"
+			name =                 "%s"
 			service_principal_id = 123
 			oidc_policy  {
 				issuer = "https://myidp.example.com/oidc"
 				audiences = ["databricks"]
 				subject= "subject"
 			}
-		`,
+		`, name),
 	}.ApplyNoError(t)
 }

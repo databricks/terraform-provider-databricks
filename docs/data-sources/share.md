@@ -5,6 +5,8 @@ subcategory: "Delta Sharing"
 
 Retrieves details about a [databricks_share](../resources/share.md) that were created by Terraform or manually.
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 Getting details of an existing share in the metastore

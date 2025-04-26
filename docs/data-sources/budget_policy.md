@@ -6,6 +6,10 @@ This data source can be used to get a single budget policy.
 
 -> **Note** This data source can only be used with an account-level provider!
 
+Custom tags used in arguments and attributes are a list of *CustomPolicyTag*, which contains the following values:
+* `key` - The key of the tag. - Must be unique among all custom tags of the same policy. Cannot be “budget-policy-name”, “budget-policy-id” or "budget-policy-resolution-result" as these tags are preserved.
+* `value` - The value of the tag. 
+
 ## Example Usage
 Referring to a budget policy by id:
 
@@ -29,5 +33,3 @@ An empty binding implies that this budget policy is open to any workspace in the
 - Must be unique among active policies.
 - Can contain only characters from the ISO 8859-1 (latin1) set.
 - Can't start with reserved keywords such as `databricks:default-policy`.
-
-### CustomPolicyTag

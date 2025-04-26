@@ -1,3 +1,6 @@
+---
+subcategory: "billing"
+---
 # databricks_budget_policy Resource
 Administrators can use budget policies to ensure that the correct tags appear automatically on serverless resources without depending on users to attach tags manually, allowing for customized cost reporting and chargebacks. 
 

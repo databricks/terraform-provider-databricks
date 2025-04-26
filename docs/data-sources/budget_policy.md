@@ -1,3 +1,6 @@
+---
+subcategory: "billing"
+---
 # databricks_budget_policy Data Source
 This data source can be used to get a single budget policy.
 

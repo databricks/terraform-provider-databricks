@@ -557,18 +557,18 @@ func TestAccPermissions_WorkspaceFile_Id(t *testing.T) {
 func TestAccPermissions_Repo_Id(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
-		resource "databricks_repo" "this" {
+		resource "databricks_git_folder" "this" {
 			url = "https://github.com/databricks/databricks-sdk-go.git"
 			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", groupPermissions("CAN_MANAGE", "CAN_READ")),
+		Template: template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", groupPermissions("CAN_MANAGE", "CAN_READ")),
 		Check: resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
 			func(s *terraform.State) error {
 				w := databricks.Must(databricks.NewWorkspaceClient())
-				repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
+				repoId := s.RootModule().Resources["databricks_git_folder.this"].Primary.ID
 				permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
 				assert.NoError(t, err)
 				group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
@@ -579,11 +579,11 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 			},
 		),
 	}, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
+		Template: template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
+		Template: template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, acceptance.Step{
-		Template:    template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_READ")),
+		Template:    template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for repo, allowed levels: CAN_MANAGE"),
 	})
 }
@@ -591,18 +591,18 @@ func TestAccPermissions_Repo_Id(t *testing.T) {
 func TestAccPermissions_Repo_Path(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
 	template := `
-		resource "databricks_repo" "this" {
+		resource "databricks_git_folder" "this" {
 			url = "https://github.com/databricks/databricks-sdk-go.git"
 			path = "/Repos/terraform-tests/databricks-sdk-go-{var.STICKY_RANDOM}"
 		}
 		`
 	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_path", "databricks_repo.this.path", groupPermissions("CAN_MANAGE", "CAN_RUN")),
+		Template: template + makePermissionsTestStage("repo_path", "databricks_git_folder.this.path", groupPermissions("CAN_MANAGE", "CAN_RUN")),
 		Check: resource.ComposeTestCheckFunc(
 			resource.TestCheckResourceAttr("databricks_permissions.this", "object_type", "repo"),
 			func(s *terraform.State) error {
 				w := databricks.Must(databricks.NewWorkspaceClient())
-				repoId := s.RootModule().Resources["databricks_repo.this"].Primary.ID
+				repoId := s.RootModule().Resources["databricks_git_folder.this"].Primary.ID
 				permissions, err := w.Permissions.GetByRequestObjectTypeAndRequestObjectId(context.Background(), "repos", repoId)
 				assert.NoError(t, err)
 				group1Name := s.RootModule().Resources["databricks_group._0"].Primary.Attributes["display_name"]
@@ -613,11 +613,11 @@ func TestAccPermissions_Repo_Path(t *testing.T) {
 			},
 		),
 	}, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
+		Template: template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, acceptance.Step{
-		Template: template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
+		Template: template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", allPrincipalPermissions("CAN_READ", "CAN_MANAGE", "CAN_RUN", "CAN_EDIT")),
 	}, acceptance.Step{
-		Template:    template + makePermissionsTestStage("repo_id", "databricks_repo.this.id", currentPrincipalPermission(t, "CAN_READ")),
+		Template:    template + makePermissionsTestStage("repo_id", "databricks_git_folder.this.id", currentPrincipalPermission(t, "CAN_READ")),
 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for repo, allowed levels: CAN_MANAGE"),
 	})
 }

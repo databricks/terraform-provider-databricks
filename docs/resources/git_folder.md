@@ -1,7 +1,7 @@
 ---
 subcategory: "Workspace"
 ---
-# databricks_repo Resource
+# databricks_git_folder Resource
 
 This resource allows you to manage [Databricks Git folders](https://docs.databricks.com/en/repos/index.html) (formerly known as Databricks Repos).
 
@@ -15,7 +15,7 @@ You can declare Terraform-managed Git folder by specifying `url` attribute of Gi
 
 
 ```hcl
-resource "databricks_repo" "nutter_in_home" {
+resource "databricks_git_folder" "nutter_in_home" {
   url = "https://github.com/user/demo.git"
 }
 ```
@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 The resource can be imported using the Git folder ID (obtained via UI or using API)
 
 ```bash
-$ terraform import databricks_repo.this repo_id
+$ terraform import databricks_git_folder.this repo_id
 ```
 
 ## Related Resources

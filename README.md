@@ -65,7 +65,7 @@
 | [databricks_pipeline](docs/resources/pipeline.md)
 | [databricks_pipelines](docs/data-sources/pipelines.md) data
 | [databricks_quality_monitor](docs/resources/quality_monitor.md)
-| [databricks_repo](docs/resources/repo.md)
+| [databricks_git_folder](docs/resources/git_folder.md)
 | [databricks_schema](docs/resources/schema.md)
 | [databricks_schemas](docs/data-sources/schema.md) data
 | [databricks_secret](docs/resources/secret.md)

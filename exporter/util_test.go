@@ -261,7 +261,7 @@ func TestEmitNotebookOrRepo(t *testing.T) {
 		ic.enableServices("repos")
 		ic.emitNotebookOrRepo("/Repos/user@domain.com/repo/abc")
 		assert.True(t, len(ic.testEmits) == 1)
-		assert.True(t, ic.testEmits["databricks_repo[<unknown>] (path: /Repos/user@domain.com/repo)"])
+		assert.True(t, ic.testEmits["databricks_git_folder[<unknown>] (path: /Repos/user@domain.com/repo)"])
 	})
 }
 

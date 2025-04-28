@@ -481,7 +481,7 @@ resource "databricks_permissions" "folder_usage_by_id" {
 
 ## Repos usage
 
-Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html) for [databricks_repo](repo.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
+Valid [permission levels](https://docs.databricks.com/security/access-control/workspace-acl.html) for [databricks_git_folder](git_folder.md) are: `CAN_READ`, `CAN_RUN`, `CAN_EDIT`, and `CAN_MANAGE`.
 
 ```hcl
 resource "databricks_group" "auto" {
@@ -492,12 +492,12 @@ resource "databricks_group" "eng" {
   display_name = "Engineering"
 }
 
-resource "databricks_repo" "this" {
+resource "databricks_git_folder" "this" {
   url = "https://github.com/user/demo.git"
 }
 
 resource "databricks_permissions" "repo_usage" {
-  repo_id = databricks_repo.this.id
+  repo_id = databricks_git_folder.this.id
 
   access_control {
     group_name       = "users"
@@ -947,7 +947,7 @@ Exactly one of the following arguments is required:
 - `notebook_path` - path of notebook
 - `directory_id` - [directory](notebook.md) id
 - `directory_path` - path of directory
-- `repo_id` - [repo](repo.md) id
+- `repo_id` - [repo](git_folder.md) id
 - `repo_path` - path of databricks repo directory(`/Repos/<username>/...`)
 - `experiment_id` - [MLflow experiment](mlflow_experiment.md) id
 - `registered_model_id` - [MLflow registered model](mlflow_model.md) id

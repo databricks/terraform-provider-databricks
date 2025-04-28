@@ -32,7 +32,7 @@ func (ic *importContext) emitRepoByPath(path string) {
 	parts := strings.SplitN(path, "/", 5)
 	if len(parts) >= 4 {
 		ic.Emit(&resource{
-			Resource:  "databricks_repo",
+			Resource:  "databricks_git_folder",
 			Attribute: "path",
 			Value:     strings.Join(parts[:4], "/"),
 		})
@@ -70,7 +70,7 @@ func (ic *importContext) emitRepoOrGitFolder(path string, isDirectory bool) {
 		ic.emitRepoByPath(path)
 	} else if ok, repoId := ic.isInGitFolder(path, isDirectory); ok {
 		ic.Emit(&resource{
-			Resource: "databricks_repo",
+			Resource: "databricks_git_folder",
 			ID:       strconv.FormatInt(repoId, 10),
 		})
 	} else {
@@ -124,7 +124,7 @@ func (ic *importContext) emitWorkspaceObject(objType, path string) {
 		ic.emitRepoByPath(path)
 	} else if ok, repoId := ic.isInGitFolder(path, objType == "databricks_directory"); ok {
 		ic.Emit(&resource{
-			Resource: "databricks_repo",
+			Resource: "databricks_git_folder",
 			ID:       strconv.FormatInt(repoId, 10),
 		})
 	} else {

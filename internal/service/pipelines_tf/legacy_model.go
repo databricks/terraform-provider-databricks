@@ -768,6 +768,18 @@ type DeletePipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *DeletePipelineRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeletePipelineRequest_SdkV2) {
+}
+
+func (newState *DeletePipelineRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeletePipelineRequest_SdkV2) {
+}
+
+func (c DeletePipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeletePipelineRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1745,6 +1757,18 @@ type GetPipelinePermissionLevelsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionLevelsRequest_SdkV2) {
+}
+
+func (newState *GetPipelinePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetPipelinePermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1860,6 +1884,18 @@ type GetPipelinePermissionsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelinePermissionsRequest_SdkV2) {
+}
+
+func (newState *GetPipelinePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelinePermissionsRequest_SdkV2) {
+}
+
+func (c GetPipelinePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelinePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1894,6 +1930,18 @@ func (o GetPipelinePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type
 // Get a pipeline
 type GetPipelineRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *GetPipelineRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPipelineRequest_SdkV2) {
+}
+
+func (newState *GetPipelineRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPipelineRequest_SdkV2) {
+}
+
+func (c GetPipelineRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPipelineRequest.
@@ -2098,6 +2146,19 @@ type GetUpdateRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 	// The ID of the update.
 	UpdateId types.String `tfsdk:"-"`
+}
+
+func (newState *GetUpdateRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetUpdateRequest_SdkV2) {
+}
+
+func (newState *GetUpdateRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetUpdateRequest_SdkV2) {
+}
+
+func (c GetUpdateRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["update_id"] = attrs["update_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetUpdateRequest.
@@ -2593,6 +2654,22 @@ type ListPipelineEventsRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelineEventsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelineEventsRequest_SdkV2) {
+}
+
+func (newState *ListPipelineEventsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelineEventsRequest_SdkV2) {
+}
+
+func (c ListPipelineEventsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelineEventsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2775,6 +2852,21 @@ type ListPipelinesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListPipelinesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPipelinesRequest_SdkV2) {
+}
+
+func (newState *ListPipelinesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPipelinesRequest_SdkV2) {
+}
+
+func (c ListPipelinesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["order_by"] = attrs["order_by"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPipelinesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2935,6 +3027,21 @@ type ListUpdatesRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 	// If present, returns updates until and including this update_id.
 	UntilUpdateId types.String `tfsdk:"-"`
+}
+
+func (newState *ListUpdatesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListUpdatesRequest_SdkV2) {
+}
+
+func (newState *ListUpdatesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListUpdatesRequest_SdkV2) {
+}
+
+func (c ListUpdatesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+	attrs["until_update_id"] = attrs["until_update_id"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListUpdatesRequest.
@@ -6368,6 +6475,18 @@ func (o StopPipelineResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Stop a pipeline
 type StopRequest_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
+}
+
+func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest_SdkV2) {
+}
+
+func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopRequest_SdkV2) {
+}
+
+func (c StopRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.

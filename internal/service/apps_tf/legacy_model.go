@@ -1643,6 +1643,20 @@ type CreateAppDeploymentRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+func (newState *CreateAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppDeploymentRequest_SdkV2) {
+}
+
+func (newState *CreateAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAppDeploymentRequest_SdkV2) {
+}
+
+func (c CreateAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_deployment"] = attrs["app_deployment"].SetRequired()
+	attrs["app_deployment"] = attrs["app_deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppDeploymentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1711,6 +1725,20 @@ type CreateAppRequest_SdkV2 struct {
 	App types.List `tfsdk:"app"`
 	// If true, the app will not be started after creation.
 	NoCompute types.Bool `tfsdk:"-"`
+}
+
+func (newState *CreateAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAppRequest_SdkV2) {
+}
+
+func (newState *CreateAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAppRequest_SdkV2) {
+}
+
+func (c CreateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetRequired()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["no_compute"] = attrs["no_compute"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAppRequest.
@@ -1782,6 +1810,18 @@ type DeleteAppRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAppRequest_SdkV2) {
+}
+
+func (newState *DeleteAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAppRequest_SdkV2) {
+}
+
+func (c DeleteAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAppRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1821,6 +1861,19 @@ type GetAppDeploymentRequest_SdkV2 struct {
 	DeploymentId types.String `tfsdk:"-"`
 }
 
+func (newState *GetAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppDeploymentRequest_SdkV2) {
+}
+
+func (newState *GetAppDeploymentRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppDeploymentRequest_SdkV2) {
+}
+
+func (c GetAppDeploymentRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+	attrs["deployment_id"] = attrs["deployment_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppDeploymentRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1858,6 +1911,18 @@ func (o GetAppDeploymentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetAppPermissionLevelsRequest_SdkV2 struct {
 	// The app for which to get or manage permissions.
 	AppName types.String `tfsdk:"-"`
+}
+
+func (newState *GetAppPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionLevelsRequest_SdkV2) {
+}
+
+func (newState *GetAppPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetAppPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionLevelsRequest.
@@ -1975,6 +2040,18 @@ type GetAppPermissionsRequest_SdkV2 struct {
 	AppName types.String `tfsdk:"-"`
 }
 
+func (newState *GetAppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppPermissionsRequest_SdkV2) {
+}
+
+func (newState *GetAppPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppPermissionsRequest_SdkV2) {
+}
+
+func (c GetAppPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2010,6 +2087,18 @@ func (o GetAppPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetAppRequest_SdkV2 struct {
 	// The name of the app.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *GetAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAppRequest_SdkV2) {
+}
+
+func (newState *GetAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAppRequest_SdkV2) {
+}
+
+func (c GetAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAppRequest.
@@ -2052,6 +2141,20 @@ type ListAppDeploymentsRequest_SdkV2 struct {
 	// Pagination token to go to the next page of apps. Requests first page if
 	// absent.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListAppDeploymentsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppDeploymentsRequest_SdkV2) {
+}
+
+func (newState *ListAppDeploymentsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppDeploymentsRequest_SdkV2) {
+}
+
+func (c ListAppDeploymentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app_name"] = attrs["app_name"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppDeploymentsRequest.
@@ -2179,6 +2282,19 @@ type ListAppsRequest_SdkV2 struct {
 	// Pagination token to go to the next page of apps. Requests first page if
 	// absent.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListAppsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAppsRequest_SdkV2) {
+}
+
+func (newState *ListAppsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAppsRequest_SdkV2) {
+}
+
+func (c ListAppsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAppsRequest.
@@ -2398,6 +2514,20 @@ type UpdateAppRequest_SdkV2 struct {
 	// The name of the app. The name must contain only lowercase alphanumeric
 	// characters and hyphens. It must be unique within the workspace.
 	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateAppRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAppRequest_SdkV2) {
+}
+
+func (newState *UpdateAppRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAppRequest_SdkV2) {
+}
+
+func (c UpdateAppRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["app"] = attrs["app"].SetRequired()
+	attrs["app"] = attrs["app"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAppRequest.

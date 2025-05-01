@@ -158,6 +158,18 @@ type BatchGetListingsRequest_SdkV2 struct {
 	Ids types.List `tfsdk:"-"`
 }
 
+func (newState *BatchGetListingsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetListingsRequest_SdkV2) {
+}
+
+func (newState *BatchGetListingsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState BatchGetListingsRequest_SdkV2) {
+}
+
+func (c BatchGetListingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ids"] = attrs["ids"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetListingsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -299,6 +311,18 @@ func (o *BatchGetListingsResponse_SdkV2) SetListings(ctx context.Context, v []Li
 // Get one batch of providers. One may specify up to 50 IDs per request.
 type BatchGetProvidersRequest_SdkV2 struct {
 	Ids types.List `tfsdk:"-"`
+}
+
+func (newState *BatchGetProvidersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BatchGetProvidersRequest_SdkV2) {
+}
+
+func (newState *BatchGetProvidersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState BatchGetProvidersRequest_SdkV2) {
+}
+
+func (c BatchGetProvidersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ids"] = attrs["ids"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BatchGetProvidersRequest.
@@ -1582,6 +1606,18 @@ type DeleteExchangeFilterRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeFilterRequest_SdkV2) {
+}
+
+func (newState *DeleteExchangeFilterRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeFilterRequest_SdkV2) {
+}
+
+func (c DeleteExchangeFilterRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeFilterRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1659,6 +1695,18 @@ type DeleteExchangeRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteExchangeRequest_SdkV2) {
+}
+
+func (newState *DeleteExchangeRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteExchangeRequest_SdkV2) {
+}
+
+func (c DeleteExchangeRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteExchangeRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1734,6 +1782,18 @@ func (o DeleteExchangeResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete a file
 type DeleteFileRequest_SdkV2 struct {
 	FileId types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteFileRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteFileRequest_SdkV2) {
+}
+
+func (newState *DeleteFileRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteFileRequest_SdkV2) {
+}
+
+func (c DeleteFileRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_id"] = attrs["file_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFileRequest.
@@ -1815,6 +1875,19 @@ type DeleteInstallationRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteInstallationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteInstallationRequest_SdkV2) {
+}
+
+func (newState *DeleteInstallationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteInstallationRequest_SdkV2) {
+}
+
+func (c DeleteInstallationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["installation_id"] = attrs["installation_id"].SetRequired()
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteInstallationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1894,6 +1967,18 @@ type DeleteListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteListingRequest_SdkV2) {
+}
+
+func (newState *DeleteListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteListingRequest_SdkV2) {
+}
+
+func (c DeleteListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1969,6 +2054,18 @@ func (o DeleteListingResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete provider
 type DeleteProviderRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest_SdkV2) {
+}
+
+func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest_SdkV2) {
+}
+
+func (c DeleteProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderRequest.
@@ -2534,6 +2631,18 @@ type GetExchangeRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetExchangeRequest_SdkV2) {
+}
+
+func (newState *GetExchangeRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetExchangeRequest_SdkV2) {
+}
+
+func (c GetExchangeRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetExchangeRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2646,6 +2755,18 @@ func (o *GetExchangeResponse_SdkV2) SetExchange(ctx context.Context, v Exchange_
 // Get a file
 type GetFileRequest_SdkV2 struct {
 	FileId types.String `tfsdk:"-"`
+}
+
+func (newState *GetFileRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetFileRequest_SdkV2) {
+}
+
+func (newState *GetFileRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetFileRequest_SdkV2) {
+}
+
+func (c GetFileRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_id"] = attrs["file_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFileRequest.
@@ -2814,6 +2935,20 @@ type GetListingContentMetadataRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *GetListingContentMetadataRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingContentMetadataRequest_SdkV2) {
+}
+
+func (newState *GetListingContentMetadataRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingContentMetadataRequest_SdkV2) {
+}
+
+func (c GetListingContentMetadataRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingContentMetadataRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2936,6 +3071,18 @@ type GetListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *GetListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingRequest_SdkV2) {
+}
+
+func (newState *GetListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingRequest_SdkV2) {
+}
+
+func (c GetListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3050,6 +3197,19 @@ type GetListingsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *GetListingsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetListingsRequest_SdkV2) {
+}
+
+func (newState *GetListingsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetListingsRequest_SdkV2) {
+}
+
+func (c GetListingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetListingsRequest.
@@ -3172,6 +3332,18 @@ type GetPersonalizationRequestRequest_SdkV2 struct {
 	ListingId types.String `tfsdk:"-"`
 }
 
+func (newState *GetPersonalizationRequestRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPersonalizationRequestRequest_SdkV2) {
+}
+
+func (newState *GetPersonalizationRequestRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPersonalizationRequestRequest_SdkV2) {
+}
+
+func (c GetPersonalizationRequestRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPersonalizationRequestRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3283,6 +3455,18 @@ func (o *GetPersonalizationRequestResponse_SdkV2) SetPersonalizationRequests(ctx
 // Get a provider
 type GetProviderRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
+}
+
+func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest_SdkV2) {
+}
+
+func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest_SdkV2) {
+}
+
+func (c GetProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderRequest.
@@ -3646,6 +3830,19 @@ type ListAllInstallationsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListAllInstallationsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllInstallationsRequest_SdkV2) {
+}
+
+func (newState *ListAllInstallationsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAllInstallationsRequest_SdkV2) {
+}
+
+func (c ListAllInstallationsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllInstallationsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3766,6 +3963,19 @@ type ListAllPersonalizationRequestsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListAllPersonalizationRequestsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAllPersonalizationRequestsRequest_SdkV2) {
+}
+
+func (newState *ListAllPersonalizationRequestsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAllPersonalizationRequestsRequest_SdkV2) {
+}
+
+func (c ListAllPersonalizationRequestsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAllPersonalizationRequestsRequest.
@@ -3890,6 +4100,20 @@ type ListExchangeFiltersRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListExchangeFiltersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangeFiltersRequest_SdkV2) {
+}
+
+func (newState *ListExchangeFiltersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangeFiltersRequest_SdkV2) {
+}
+
+func (c ListExchangeFiltersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangeFiltersRequest.
@@ -4018,6 +4242,20 @@ type ListExchangesForListingRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExchangesForListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesForListingRequest_SdkV2) {
+}
+
+func (newState *ListExchangesForListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangesForListingRequest_SdkV2) {
+}
+
+func (c ListExchangesForListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesForListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4142,6 +4380,19 @@ type ListExchangesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListExchangesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListExchangesRequest_SdkV2) {
+}
+
+func (newState *ListExchangesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListExchangesRequest_SdkV2) {
+}
+
+func (c ListExchangesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListExchangesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4264,6 +4515,21 @@ type ListFilesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListFilesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFilesRequest_SdkV2) {
+}
+
+func (newState *ListFilesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFilesRequest_SdkV2) {
+}
+
+func (c ListFilesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["file_parent"] = attrs["file_parent"].SetRequired()
+	attrs["file_parent"] = attrs["file_parent"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFilesRequest.
@@ -4422,6 +4688,20 @@ type ListFulfillmentsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListFulfillmentsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFulfillmentsRequest_SdkV2) {
+}
+
+func (newState *ListFulfillmentsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFulfillmentsRequest_SdkV2) {
+}
+
+func (c ListFulfillmentsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFulfillmentsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4548,6 +4828,20 @@ type ListInstallationsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *ListInstallationsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListInstallationsRequest_SdkV2) {
+}
+
+func (newState *ListInstallationsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListInstallationsRequest_SdkV2) {
+}
+
+func (c ListInstallationsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["listing_id"] = attrs["listing_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListInstallationsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4672,6 +4966,20 @@ type ListListingsForExchangeRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListListingsForExchangeRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsForExchangeRequest_SdkV2) {
+}
+
+func (newState *ListListingsForExchangeRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListListingsForExchangeRequest_SdkV2) {
+}
+
+func (c ListListingsForExchangeRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exchange_id"] = attrs["exchange_id"].SetRequired()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsForExchangeRequest.
@@ -4811,6 +5119,26 @@ type ListListingsRequest_SdkV2 struct {
 	ProviderIds types.List `tfsdk:"-"`
 	// Matches any of the following tags
 	Tags types.List `tfsdk:"-"`
+}
+
+func (newState *ListListingsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListListingsRequest_SdkV2) {
+}
+
+func (newState *ListListingsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListListingsRequest_SdkV2) {
+}
+
+func (c ListListingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assets"] = attrs["assets"].SetOptional()
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["is_free"] = attrs["is_free"].SetOptional()
+	attrs["is_private_exchange"] = attrs["is_private_exchange"].SetOptional()
+	attrs["is_staff_pick"] = attrs["is_staff_pick"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["provider_ids"] = attrs["provider_ids"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListListingsRequest.
@@ -5124,6 +5452,20 @@ type ListProvidersRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest_SdkV2) {
+}
+
+func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest_SdkV2) {
+}
+
+func (c ListProvidersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["is_featured"] = attrs["is_featured"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersRequest.
@@ -6692,6 +7034,18 @@ type RemoveExchangeForListingRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
+func (newState *RemoveExchangeForListingRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveExchangeForListingRequest_SdkV2) {
+}
+
+func (newState *RemoveExchangeForListingRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RemoveExchangeForListingRequest_SdkV2) {
+}
+
+func (c RemoveExchangeForListingRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["id"] = attrs["id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveExchangeForListingRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6885,6 +7239,25 @@ type SearchListingsRequest_SdkV2 struct {
 	ProviderIds types.List `tfsdk:"-"`
 	// Fuzzy matches query
 	Query types.String `tfsdk:"-"`
+}
+
+func (newState *SearchListingsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SearchListingsRequest_SdkV2) {
+}
+
+func (newState *SearchListingsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SearchListingsRequest_SdkV2) {
+}
+
+func (c SearchListingsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["assets"] = attrs["assets"].SetOptional()
+	attrs["categories"] = attrs["categories"].SetOptional()
+	attrs["is_free"] = attrs["is_free"].SetOptional()
+	attrs["is_private_exchange"] = attrs["is_private_exchange"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["provider_ids"] = attrs["provider_ids"].SetOptional()
+	attrs["query"] = attrs["query"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SearchListingsRequest.

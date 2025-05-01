@@ -108,5 +108,3 @@ tool (
 	gotest.tools/gotestsum
 	honnef.co/go/tools/cmd/staticcheck
 )
-
-replace github.com/databricks/databricks-sdk-go => ../databricks-sdk-go

@@ -833,6 +833,17 @@ func (o CancelAllRuns) Type(ctx context.Context) attr.Type {
 type CancelAllRunsResponse struct {
 }
 
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelAllRunsResponse) {
+}
+
+func (newState *CancelAllRunsResponse) SyncEffectiveFieldsDuringRead(existingState CancelAllRunsResponse) {
+}
+
+func (c CancelAllRunsResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelAllRunsResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -911,6 +922,17 @@ func (o CancelRun) Type(ctx context.Context) attr.Type {
 type CancelRunResponse struct {
 }
 
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelRunResponse) {
+}
+
+func (newState *CancelRunResponse) SyncEffectiveFieldsDuringRead(existingState CancelRunResponse) {
+}
+
+func (c CancelRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelRunResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -941,10 +963,12 @@ func (o CancelRunResponse) Type(ctx context.Context) attr.Type {
 // Stores the run state of the clean rooms notebook task.
 type CleanRoomTaskRunState struct {
 	// A value indicating the run's current lifecycle state. This field is
-	// always available in the response.
+	// always available in the response. Note: Additional states might be
+	// introduced in future releases.
 	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// A value indicating the run's result. This field is only available for
-	// terminal lifecycle states.
+	// terminal lifecycle states. Note: Additional states might be introduced in
+	// future releases.
 	ResultState types.String `tfsdk:"result_state"`
 }
 
@@ -1680,9 +1704,8 @@ type CreateJob struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// The performance mode on a serverless job. The performance target
-	// determines the level of compute performance or cost-efficiency for the
-	// run.
+	// The performance mode on a serverless job. This field determines the level
+	// of compute performance or cost-efficiency for the run.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -2531,10 +2554,13 @@ func (o *DashboardPageSnapshot) SetWidgetErrorDetails(ctx context.Context, v []W
 
 // Configures the Lakeview Dashboard job task type.
 type DashboardTask struct {
+	// The identifier of the dashboard to refresh.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-
+	// Optional: subscription configuration for sending the dashboard snapshot.
 	Subscription types.Object `tfsdk:"subscription"`
-	// The warehouse id to execute the dashboard with for the schedule
+	// Optional: The warehouse id to execute the dashboard with for the
+	// schedule. If not specified, the default warehouse of the dashboard will
+	// be used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -2960,6 +2986,17 @@ func (o DeleteJob) Type(ctx context.Context) attr.Type {
 type DeleteResponse struct {
 }
 
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse) {
+}
+
+func (newState *DeleteResponse) SyncEffectiveFieldsDuringRead(existingState DeleteResponse) {
+}
+
+func (c DeleteResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3036,6 +3073,17 @@ func (o DeleteRun) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteRunResponse struct {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRunResponse) {
+}
+
+func (newState *DeleteRunResponse) SyncEffectiveFieldsDuringRead(existingState DeleteRunResponse) {
+}
+
+func (c DeleteRunResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRunResponse.
@@ -3400,6 +3448,19 @@ type ExportRunRequest struct {
 	RunId types.Int64 `tfsdk:"-"`
 	// Which views to export (CODE, DASHBOARDS, or ALL). Defaults to CODE.
 	ViewsToExport types.String `tfsdk:"-"`
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportRunRequest) {
+}
+
+func (newState *ExportRunRequest) SyncEffectiveFieldsDuringRead(existingState ExportRunRequest) {
+}
+
+func (c ExportRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+	attrs["views_to_export"] = attrs["views_to_export"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportRunRequest.
@@ -3969,6 +4030,18 @@ type GetJobPermissionLevelsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionLevelsRequest) {
+}
+
+func (newState *GetJobPermissionLevelsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionLevelsRequest) {
+}
+
+func (c GetJobPermissionLevelsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4084,6 +4157,18 @@ type GetJobPermissionsRequest struct {
 	JobId types.String `tfsdk:"-"`
 }
 
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobPermissionsRequest) {
+}
+
+func (newState *GetJobPermissionsRequest) SyncEffectiveFieldsDuringRead(existingState GetJobPermissionsRequest) {
+}
+
+func (c GetJobPermissionsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4125,6 +4210,19 @@ type GetJobRequest struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetJobRequest) {
+}
+
+func (newState *GetJobRequest) SyncEffectiveFieldsDuringRead(existingState GetJobRequest) {
+}
+
+func (c GetJobRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetJobRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4162,6 +4260,18 @@ func (o GetJobRequest) Type(ctx context.Context) attr.Type {
 type GetPolicyComplianceRequest struct {
 	// The ID of the job whose compliance status you are requesting.
 	JobId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyComplianceRequest) {
+}
+
+func (newState *GetPolicyComplianceRequest) SyncEffectiveFieldsDuringRead(existingState GetPolicyComplianceRequest) {
+}
+
+func (c GetPolicyComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["job_id"] = attrs["job_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyComplianceRequest.
@@ -4291,6 +4401,18 @@ type GetRunOutputRequest struct {
 	RunId types.Int64 `tfsdk:"-"`
 }
 
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunOutputRequest) {
+}
+
+func (newState *GetRunOutputRequest) SyncEffectiveFieldsDuringRead(existingState GetRunOutputRequest) {
+}
+
+func (c GetRunOutputRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunOutputRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4334,6 +4456,21 @@ type GetRunRequest struct {
 	// The canonical identifier of the run for which to retrieve the metadata.
 	// This field is required.
 	RunId types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRunRequest) {
+}
+
+func (newState *GetRunRequest) SyncEffectiveFieldsDuringRead(existingState GetRunRequest) {
+}
+
+func (c GetRunRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include_history"] = attrs["include_history"].SetOptional()
+	attrs["include_resolved_values"] = attrs["include_resolved_values"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["run_id"] = attrs["run_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRunRequest.
@@ -5345,9 +5482,12 @@ func (o *JobEmailNotifications) SetOnSuccess(ctx context.Context, v []types.Stri
 type JobEnvironment struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
-	// The environment entity used to preserve serverless environment side panel
-	// and jobs' environment for non-notebook task. In this minimal environment
-	// spec, only pip dependencies are supported.
+	// The environment entity used to preserve serverless environment side
+	// panel, jobs' environment for non-notebook task, and DLT's environment for
+	// classic and serverless pipelines. (Note: DLT uses a copied version of the
+	// Environment proto below, at
+	// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
+	// this minimal environment spec, only pip dependencies are supported.
 	Spec types.Object `tfsdk:"spec"`
 }
 
@@ -6034,9 +6174,8 @@ type JobSettings struct {
 	NotificationSettings types.Object `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// The performance mode on a serverless job. The performance target
-	// determines the level of compute performance or cost-efficiency for the
-	// run.
+	// The performance mode on a serverless job. This field determines the level
+	// of compute performance or cost-efficiency for the run.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -6978,6 +7117,20 @@ type ListJobComplianceRequest struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobComplianceRequest) {
+}
+
+func (newState *ListJobComplianceRequest) SyncEffectiveFieldsDuringRead(existingState ListJobComplianceRequest) {
+}
+
+func (c ListJobComplianceRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7031,6 +7184,22 @@ type ListJobsRequest struct {
 	// Use `next_page_token` or `prev_page_token` returned from the previous
 	// request to list the next or previous page of jobs respectively.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListJobsRequest) {
+}
+
+func (newState *ListJobsRequest) SyncEffectiveFieldsDuringRead(existingState ListJobsRequest) {
+}
+
+func (c ListJobsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListJobsRequest.
@@ -7209,6 +7378,27 @@ type ListRunsRequest struct {
 	// timestamp in milliseconds. Can be combined with _start_time_from_ to
 	// filter by a time range.
 	StartTimeTo types.Int64 `tfsdk:"-"`
+}
+
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRunsRequest) {
+}
+
+func (newState *ListRunsRequest) SyncEffectiveFieldsDuringRead(existingState ListRunsRequest) {
+}
+
+func (c ListRunsRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["active_only"] = attrs["active_only"].SetOptional()
+	attrs["completed_only"] = attrs["completed_only"].SetOptional()
+	attrs["expand_tasks"] = attrs["expand_tasks"].SetOptional()
+	attrs["job_id"] = attrs["job_id"].SetOptional()
+	attrs["limit"] = attrs["limit"].SetOptional()
+	attrs["offset"] = attrs["offset"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["run_type"] = attrs["run_type"].SetOptional()
+	attrs["start_time_from"] = attrs["start_time_from"].SetOptional()
+	attrs["start_time_to"] = attrs["start_time_to"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRunsRequest.
@@ -8246,6 +8436,15 @@ func (o QueueSettings) Type(ctx context.Context) attr.Type {
 }
 
 type RepairHistoryItem struct {
+	// The actual performance target used by the serverless run during
+	// execution. This can differ from the client-set performance target on the
+	// request depending on whether the performance mode is supported by the job
+	// type.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
+	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The end time of the (repaired) run.
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The ID of the repair. Only returned for the items that represent a repair
@@ -8272,6 +8471,7 @@ func (newState *RepairHistoryItem) SyncEffectiveFieldsDuringRead(existingState R
 }
 
 func (c RepairHistoryItem) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
@@ -8305,13 +8505,14 @@ func (o RepairHistoryItem) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"end_time":     o.EndTime,
-			"id":           o.Id,
-			"start_time":   o.StartTime,
-			"state":        o.State,
-			"status":       o.Status,
-			"task_run_ids": o.TaskRunIds,
-			"type":         o.Type_,
+			"effective_performance_target": o.EffectivePerformanceTarget,
+			"end_time":                     o.EndTime,
+			"id":                           o.Id,
+			"start_time":                   o.StartTime,
+			"state":                        o.State,
+			"status":                       o.Status,
+			"task_run_ids":                 o.TaskRunIds,
+			"type":                         o.Type_,
 		})
 }
 
@@ -8319,11 +8520,12 @@ func (o RepairHistoryItem) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 func (o RepairHistoryItem) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"end_time":   types.Int64Type,
-			"id":         types.Int64Type,
-			"start_time": types.Int64Type,
-			"state":      RunState{}.Type(ctx),
-			"status":     RunStatus{}.Type(ctx),
+			"effective_performance_target": types.StringType,
+			"end_time":                     types.Int64Type,
+			"id":                           types.Int64Type,
+			"start_time":                   types.Int64Type,
+			"state":                        RunState{}.Type(ctx),
+			"status":                       RunStatus{}.Type(ctx),
 			"task_run_ids": basetypes.ListType{
 				ElemType: types.Int64Type,
 			},
@@ -8459,6 +8661,15 @@ type RepairRun struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams types.Map `tfsdk:"notebook_params"`
+	// The performance mode on a serverless job. The performance target
+	// determines the level of compute performance or cost-efficiency for the
+	// run. This field overrides the performance target defined on the job
+	// level.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.Object `tfsdk:"pipeline_params"`
 
@@ -8529,6 +8740,7 @@ func (c RepairRun) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
 	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
 	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
 	attrs["python_params"] = attrs["python_params"].SetOptional()
@@ -8576,6 +8788,7 @@ func (o RepairRun) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"job_parameters":         o.JobParameters,
 			"latest_repair_id":       o.LatestRepairId,
 			"notebook_params":        o.NotebookParams,
+			"performance_target":     o.PerformanceTarget,
 			"pipeline_params":        o.PipelineParams,
 			"python_named_params":    o.PythonNamedParams,
 			"python_params":          o.PythonParams,
@@ -8605,7 +8818,8 @@ func (o RepairRun) Type(ctx context.Context) attr.Type {
 			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"pipeline_params": PipelineParams{}.Type(ctx),
+			"performance_target": types.StringType,
+			"pipeline_params":    PipelineParams{}.Type(ctx),
 			"python_named_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
@@ -9028,6 +9242,17 @@ func (o *ResetJob) SetNewSettings(ctx context.Context, v JobSettings) {
 }
 
 type ResetResponse struct {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ResetResponse) {
+}
+
+func (newState *ResetResponse) SyncEffectiveFieldsDuringRead(existingState ResetResponse) {
+}
+
+func (c ResetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ResetResponse.
@@ -12657,12 +12882,14 @@ func (o *RunParameters) SetSqlParams(ctx context.Context, v map[string]types.Str
 // The current state of the run.
 type RunState struct {
 	// A value indicating the run's current lifecycle state. This field is
-	// always available in the response.
+	// always available in the response. Note: Additional states might be
+	// introduced in future releases.
 	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// The reason indicating why the run was queued.
 	QueueReason types.String `tfsdk:"queue_reason"`
 	// A value indicating the run's result. This field is only available for
-	// terminal lifecycle states.
+	// terminal lifecycle states. Note: Additional states might be introduced in
+	// future releases.
 	ResultState types.String `tfsdk:"result_state"`
 	// A descriptive message for the current state. This field is unstructured,
 	// and its exact format is subject to change.
@@ -12876,7 +13103,7 @@ type RunTask struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -15960,7 +16187,7 @@ type SubmitTask struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -16830,7 +17057,7 @@ type Subscription struct {
 	CustomSubject types.String `tfsdk:"custom_subject"`
 	// When true, the subscription will not send emails.
 	Paused types.Bool `tfsdk:"paused"`
-
+	// The list of subscribers to send the snapshot of the dashboard to.
 	Subscribers types.List `tfsdk:"subscribers"`
 }
 
@@ -16914,8 +17141,11 @@ func (o *Subscription) SetSubscribers(ctx context.Context, v []SubscriptionSubsc
 }
 
 type SubscriptionSubscriber struct {
+	// A snapshot of the dashboard will be sent to the destination when the
+	// `destination_id` field is present.
 	DestinationId types.String `tfsdk:"destination_id"`
-
+	// A snapshot of the dashboard will be sent to the user's email when the
+	// `user_name` field is present.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -17075,7 +17305,7 @@ type Task struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.Object `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.Object `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -18376,7 +18606,9 @@ type TerminationDetails struct {
 	// configuration. Refer to the state message for further details. *
 	// `CLOUD_FAILURE`: The run failed due to a cloud provider issue. Refer to
 	// the state message for further details. * `MAX_JOB_QUEUE_SIZE_EXCEEDED`:
-	// The run was skipped due to reaching the job level queue size limit.
+	// The run was skipped due to reaching the job level queue size limit. *
+	// `DISABLED`: The run was never executed because it was disabled explicitly
+	// by the user.
 	//
 	// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
 	Code types.String `tfsdk:"code"`
@@ -18807,6 +19039,17 @@ func (o *UpdateJob) SetNewSettings(ctx context.Context, v JobSettings) {
 }
 
 type UpdateResponse struct {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse) {
+}
+
+func (newState *UpdateResponse) SyncEffectiveFieldsDuringRead(existingState UpdateResponse) {
+}
+
+func (c UpdateResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.

@@ -25,8 +25,11 @@ func ResourceMwsNetworkConnectivityConfig() common.Resource {
 	return common.Resource{
 		Schema: s,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var create settings.CreateNetworkConnectivityConfigRequest
-			common.DataToStructPointer(d, s, &create)
+			var config settings.CreateNetworkConnectivityConfiguration
+			common.DataToStructPointer(d, s, &config)
+			create := settings.CreateNetworkConnectivityConfigRequest{
+				NetworkConnectivityConfig: config,
+			}
 			acc, err := c.AccountClient()
 			if err != nil {
 				return err

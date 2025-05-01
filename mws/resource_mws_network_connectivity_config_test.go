@@ -26,8 +26,10 @@ func TestResourceNccCreate(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
 			e.CreateNetworkConnectivityConfiguration(mock.Anything, settings.CreateNetworkConnectivityConfigRequest{
-				Name:   "ncc_name",
-				Region: "ar",
+				NetworkConnectivityConfig: settings.CreateNetworkConnectivityConfiguration{
+					Name:   "ncc_name",
+					Region: "ar",
+				},
 			}).Return(getTestNcc(), nil)
 			e.GetNetworkConnectivityConfigurationByNetworkConnectivityConfigId(mock.Anything, "ncc_id").Return(getTestNcc(), nil)
 		},
@@ -46,8 +48,10 @@ func TestResourceNccCreate_Error(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			e := a.GetMockNetworkConnectivityAPI().EXPECT()
 			e.CreateNetworkConnectivityConfiguration(mock.Anything, settings.CreateNetworkConnectivityConfigRequest{
-				Name:   "ncc_name",
-				Region: "ar",
+				NetworkConnectivityConfig: settings.CreateNetworkConnectivityConfiguration{
+					Name:   "ncc_name",
+					Region: "ar",
+				},
 			}).Return(nil, &apierr.APIError{Message: "error"})
 		},
 		Resource:  ResourceMwsNetworkConnectivityConfig(),

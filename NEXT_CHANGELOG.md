@@ -8,6 +8,8 @@
 
 ### Documentation
 
+ * Document minimum required Terraform version as 1.1.5 ().
+
 ### Exporter
 
 ### Internal Changes

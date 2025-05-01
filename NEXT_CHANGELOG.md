@@ -8,7 +8,7 @@
 
 ### Documentation
 
-* Updates docs/resources/storage_credential.md examples of creating databricks_grants resources that reference a storage_credential, from referencing credential by id to referencing credential by name.
+* Updates docs/resources/storage_credential.md examples of creating databricks_grants resources that reference a storage_credential, from referencing credential by id to referencing credential by name. ([#4684](https://github.com/databricks/terraform-provider-databricks/pull/4684)).
 
 ### Exporter
 

@@ -20,38 +20,38 @@ import (
 
 const dataSourcesName = "alerts_v2"
 
-var _ datasource.DataSourceWithConfigure = &AlertV2sDataSource{}
+var _ datasource.DataSourceWithConfigure = &AlertsV2DataSource{}
 
-func DataSourceAlertV2s() datasource.DataSource {
-	return &AlertV2sDataSource{}
+func DataSourceAlertsV2() datasource.DataSource {
+	return &AlertsV2DataSource{}
 }
 
-type AlertV2sList struct {
+type AlertsV2List struct {
 	sql_tf.ListAlertsV2Request
-	AlertsV2 types.List `tfsdk:"alerts_v2"`
+	AlertsV2 types.List `tfsdk:"results"`
 }
 
-func (c AlertV2sList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alerts_v2"] = attrs["alerts_v2"].SetComputed()
+func (c AlertsV2List) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["results"] = attrs["results"].SetComputed()
 	return attrs
 }
 
-func (AlertV2sList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
+func (AlertsV2List) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"alerts_v2": reflect.TypeOf(sql_tf.AlertV2{}),
+		"results": reflect.TypeOf(sql_tf.AlertV2{}),
 	}
 }
 
-type AlertV2sDataSource struct {
+type AlertsV2DataSource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *AlertV2sDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (r *AlertsV2DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(dataSourcesName)
 }
 
-func (r *AlertV2sDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertV2sList{}, nil)
+func (r *AlertsV2DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attrs, blocks := tfschema.DataSourceStructToSchemaMap(ctx, AlertsV2List{}, nil)
 	resp.Schema = schema.Schema{
 		Description: "Terraform schema for Databricks AlertV2",
 		Attributes:  attrs,
@@ -59,11 +59,11 @@ func (r *AlertV2sDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 	}
 }
 
-func (r *AlertV2sDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (r *AlertsV2DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	r.Client = autogen.ConfigureDataSource(req, resp)
 }
 
-func (r *AlertV2sDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (r *AlertsV2DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInDataSourceContext(ctx, dataSourcesName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -72,7 +72,7 @@ func (r *AlertV2sDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var config AlertV2sList
+	var config AlertsV2List
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -90,17 +90,17 @@ func (r *AlertV2sDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var alerts_v2 = []attr.Value{}
+	var results = []attr.Value{}
 	for _, item := range response {
 		var alert_v2 sql_tf.AlertV2
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &alert_v2)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		alerts_v2 = append(alerts_v2, alert_v2.ToObjectValue(ctx))
+		results = append(results, alert_v2.ToObjectValue(ctx))
 	}
 
-	var newState AlertV2sList
-	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), alerts_v2)
+	var newState AlertsV2List
+	newState.AlertsV2 = types.ListValueMust(sql_tf.AlertV2{}.Type(ctx), results)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

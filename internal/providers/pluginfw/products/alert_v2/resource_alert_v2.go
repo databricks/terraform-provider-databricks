@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package budget_policy
+package alert_v2
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/billing"
+	"github.com/databricks/databricks-sdk-go/service/sql"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/billing_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,61 +22,62 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-const resourceName = "budget_policy"
+const resourceName = "alert_v2"
 
-var _ resource.ResourceWithConfigure = &BudgetPolicyResource{}
+var _ resource.ResourceWithConfigure = &AlertV2Resource{}
 
-func ResourceBudgetPolicy() resource.Resource {
-	return &BudgetPolicyResource{}
+func ResourceAlertV2() resource.Resource {
+	return &AlertV2Resource{}
 }
 
-type BudgetPolicyResource struct {
+type AlertV2Resource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *BudgetPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *BudgetPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, billing_tf.BudgetPolicy{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "policy_id")
+func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, sql_tf.AlertV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "id")
 		return c
 	})
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks budget_policy",
+		Description: "Terraform schema for Databricks alert_v2",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *BudgetPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *BudgetPolicyResource) update(ctx context.Context, plan billing_tf.BudgetPolicy, diags *diag.Diagnostics, state *tfsdk.State) {
-	client, clientDiags := r.Client.GetAccountClient()
+func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
+	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
 	}
 
-	var budget_policy billing.BudgetPolicy
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
+	var alert_v2 sql.AlertV2
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
 	if diags.HasError() {
 		return
 	}
 
-	var updateRequest = billing.UpdateBudgetPolicyRequest{Policy: budget_policy}
-	updateRequest.PolicyId = plan.PolicyId.ValueString()
+	var updateRequest = sql.UpdateAlertV2Request{Alert: &alert_v2}
+	updateRequest.Id = plan.Id.ValueString()
+	updateRequest.UpdateMask = "create_time,custom_description,custom_summary,display_name,evaluation,id,lifecycle_state,owner_user_name,parent_path,query_text,run_as_user_name,schedule,update_time,warehouse_id"
 
-	response, err := client.BudgetPolicy.Update(ctx, updateRequest)
+	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update budget_policy", err.Error())
+		diags.AddError("failed to update alert_v2", err.Error())
 		return
 	}
 
-	var newState billing_tf.BudgetPolicy
+	var newState sql_tf.AlertV2
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -86,34 +87,34 @@ func (r *BudgetPolicyResource) update(ctx context.Context, plan billing_tf.Budge
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetAccountClient()
+	client, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var plan billing_tf.BudgetPolicy
+	var plan sql_tf.AlertV2
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var budget_policy billing.BudgetPolicy
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &budget_policy)...)
+	var alert_v2 sql.AlertV2
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.BudgetPolicy.Create(ctx, billing.CreateBudgetPolicyRequest{Policy: &budget_policy})
+	response, err := client.AlertsV2.CreateAlert(ctx, sql.CreateAlertV2Request{Alert: &alert_v2})
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create budget_policy", err.Error())
+		resp.Diagnostics.AddError("failed to create alert_v2", err.Error())
 		return
 	}
 
-	var newState billing_tf.BudgetPolicy
+	var newState sql_tf.AlertV2
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -129,39 +130,39 @@ func (r *BudgetPolicyResource) Create(ctx context.Context, req resource.CreateRe
 	}
 }
 
-func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetAccountClient()
+	client, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var existingState billing_tf.BudgetPolicy
+	var existingState sql_tf.AlertV2
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest billing.GetBudgetPolicyRequest
+	var readRequest sql.GetAlertV2Request
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.BudgetPolicy.Get(ctx, readRequest)
+	response, err := client.AlertsV2.GetAlert(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get budget_policy", err.Error())
+		resp.Diagnostics.AddError("failed to get alert_v2", err.Error())
 		return
 	}
 
-	var newState billing_tf.BudgetPolicy
+	var newState sql_tf.AlertV2
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -172,10 +173,10 @@ func (r *BudgetPolicyResource) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *BudgetPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan billing_tf.BudgetPolicy
+	var plan sql_tf.AlertV2
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -184,50 +185,50 @@ func (r *BudgetPolicyResource) Update(ctx context.Context, req resource.UpdateRe
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *BudgetPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	client, diags := r.Client.GetAccountClient()
+	client, diags := r.Client.GetWorkspaceClient()
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var state billing_tf.BudgetPolicy
+	var state sql_tf.AlertV2
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest billing.DeleteBudgetPolicyRequest
+	var deleteRequest sql.TrashAlertV2Request
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := client.BudgetPolicy.Delete(ctx, deleteRequest)
+	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete budget_policy", err.Error())
+		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())
 		return
 	}
 }
 
-var _ resource.ResourceWithImportState = &BudgetPolicyResource{}
+var _ resource.ResourceWithImportState = &AlertV2Resource{}
 
-func (r *BudgetPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *AlertV2Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: policy_id. Got: %q",
+				"Expected import identifier with format: id. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	policyId := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("policy_id"), policyId)...)
+	id := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 }

@@ -107,6 +107,17 @@ func (o AddInstanceProfile_SdkV2) Type(ctx context.Context) attr.Type {
 type AddResponse_SdkV2 struct {
 }
 
+func (newState *AddResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse_SdkV2) {
+}
+
+func (newState *AddResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddResponse_SdkV2) {
+}
+
+func (c AddResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4720,6 +4731,18 @@ type ClusterStatus_SdkV2 struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *ClusterStatus_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ClusterStatus_SdkV2) {
+}
+
+func (newState *ClusterStatus_SdkV2) SyncEffectiveFieldsDuringRead(existingState ClusterStatus_SdkV2) {
+}
+
+func (c ClusterStatus_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ClusterStatus.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4821,6 +4844,20 @@ type CommandStatusRequest_SdkV2 struct {
 	CommandId types.String `tfsdk:"-"`
 
 	ContextId types.String `tfsdk:"-"`
+}
+
+func (newState *CommandStatusRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CommandStatusRequest_SdkV2) {
+}
+
+func (newState *CommandStatusRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CommandStatusRequest_SdkV2) {
+}
+
+func (c CommandStatusRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetRequired()
+	attrs["commandId"] = attrs["commandId"].SetRequired()
+	attrs["contextId"] = attrs["contextId"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CommandStatusRequest.
@@ -4951,6 +4988,19 @@ type ContextStatusRequest_SdkV2 struct {
 	ClusterId types.String `tfsdk:"-"`
 
 	ContextId types.String `tfsdk:"-"`
+}
+
+func (newState *ContextStatusRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ContextStatusRequest_SdkV2) {
+}
+
+func (newState *ContextStatusRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ContextStatusRequest_SdkV2) {
+}
+
+func (c ContextStatusRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["clusterId"] = attrs["clusterId"].SetRequired()
+	attrs["contextId"] = attrs["contextId"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ContextStatusRequest.
@@ -6785,6 +6835,18 @@ type DeleteGlobalInitScriptRequest_SdkV2 struct {
 	ScriptId types.String `tfsdk:"-"`
 }
 
+func (newState *DeleteGlobalInitScriptRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteGlobalInitScriptRequest_SdkV2) {
+}
+
+func (newState *DeleteGlobalInitScriptRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteGlobalInitScriptRequest_SdkV2) {
+}
+
+func (c DeleteGlobalInitScriptRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["script_id"] = attrs["script_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteGlobalInitScriptRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8198,6 +8260,10 @@ type EditInstancePool_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -8219,6 +8285,8 @@ func (c EditInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 
 	return attrs
@@ -8233,7 +8301,8 @@ func (c EditInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 // SDK values.
 func (a EditInstancePool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(types.String{}),
+		"custom_tags":           reflect.TypeOf(types.String{}),
+		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 	}
 }
 
@@ -8250,6 +8319,7 @@ func (o EditInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 		})
 }
@@ -8266,7 +8336,10 @@ func (o EditInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 		},
 	}
 }
@@ -8295,6 +8368,32 @@ func (o *EditInstancePool_SdkV2) SetCustomTags(ctx context.Context, v map[string
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditInstancePool_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool_SdkV2.
+func (o *EditInstancePool_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 type EditInstancePoolResponse_SdkV2 struct {
@@ -8514,6 +8613,17 @@ func (o EditPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type EditResponse_SdkV2 struct {
 }
 
+func (newState *EditResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse_SdkV2) {
+}
+
+func (newState *EditResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditResponse_SdkV2) {
+}
+
+func (c EditResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8680,9 +8790,12 @@ func (o *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 	o.Changes = types.ListValueMust(t, vs)
 }
 
-// The environment entity used to preserve serverless environment side panel and
-// jobs' environment for non-notebook task. In this minimal environment spec,
-// only pip dependencies are supported.
+// The environment entity used to preserve serverless environment side panel,
+// jobs' environment for non-notebook task, and DLT's environment for classic
+// and serverless pipelines. (Note: DLT uses a copied version of the Environment
+// proto below, at
+// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
+// this minimal environment spec, only pip dependencies are supported.
 type Environment_SdkV2 struct {
 	// Client version used by the environment The client is the user-facing
 	// environment of the runtime. Each client comes with a specific set of
@@ -9289,6 +9402,18 @@ type GetClusterComplianceRequest_SdkV2 struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterComplianceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterComplianceRequest_SdkV2) {
+}
+
+func (newState *GetClusterComplianceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterComplianceRequest_SdkV2) {
+}
+
+func (c GetClusterComplianceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterComplianceRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9414,6 +9539,18 @@ type GetClusterPermissionLevelsRequest_SdkV2 struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionLevelsRequest_SdkV2) {
+}
+
+func (newState *GetClusterPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetClusterPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPermissionLevelsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9529,6 +9666,18 @@ type GetClusterPermissionsRequest_SdkV2 struct {
 	ClusterId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPermissionsRequest_SdkV2) {
+}
+
+func (newState *GetClusterPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterPermissionsRequest_SdkV2) {
+}
+
+func (c GetClusterPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9564,6 +9713,18 @@ func (o GetClusterPermissionsRequest_SdkV2) Type(ctx context.Context) attr.Type 
 type GetClusterPolicyPermissionLevelsRequest_SdkV2 struct {
 	// The cluster policy for which to get or manage permissions.
 	ClusterPolicyId types.String `tfsdk:"-"`
+}
+
+func (newState *GetClusterPolicyPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionLevelsRequest_SdkV2) {
+}
+
+func (newState *GetClusterPolicyPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetClusterPolicyPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_policy_id"] = attrs["cluster_policy_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyPermissionLevelsRequest.
@@ -9681,6 +9842,18 @@ type GetClusterPolicyPermissionsRequest_SdkV2 struct {
 	ClusterPolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPolicyPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyPermissionsRequest_SdkV2) {
+}
+
+func (newState *GetClusterPolicyPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyPermissionsRequest_SdkV2) {
+}
+
+func (c GetClusterPolicyPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_policy_id"] = attrs["cluster_policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9718,6 +9891,18 @@ type GetClusterPolicyRequest_SdkV2 struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *GetClusterPolicyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterPolicyRequest_SdkV2) {
+}
+
+func (newState *GetClusterPolicyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterPolicyRequest_SdkV2) {
+}
+
+func (c GetClusterPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9753,6 +9938,18 @@ func (o GetClusterPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetClusterRequest_SdkV2 struct {
 	// The cluster about which to retrieve information.
 	ClusterId types.String `tfsdk:"-"`
+}
+
+func (newState *GetClusterRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetClusterRequest_SdkV2) {
+}
+
+func (newState *GetClusterRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetClusterRequest_SdkV2) {
+}
+
+func (c GetClusterRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["cluster_id"] = attrs["cluster_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetClusterRequest.
@@ -9795,15 +9992,29 @@ type GetEvents_SdkV2 struct {
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
 	EventTypes types.List `tfsdk:"event_types"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The offset in the result set. Defaults to 0 (no offset). When an offset
 	// is specified and the results are requested in descending order, the
 	// end_time field is required.
 	Offset types.Int64 `tfsdk:"offset"`
 	// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
 	Order types.String `tfsdk:"order"`
+	// The maximum number of events to include in a page of events. The server
+	// may further constrain the maximum number of results returned in a single
+	// page. If the page_size is empty or 0, the server will decide the number
+	// of results to be returned. The field has to be in the range [0,500]. If
+	// the value is outside the range, the server enforces 0 or 500.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// Use next_page_token or prev_page_token returned from the previous request
+	// to list the next or previous page of events respectively. If page_token
+	// is empty, the first page is returned.
+	PageToken types.String `tfsdk:"page_token"`
 	// The start time in epoch milliseconds. If empty, returns events starting
 	// from the beginning of time.
 	StartTime types.Int64 `tfsdk:"start_time"`
@@ -9822,6 +10033,8 @@ func (c GetEvents_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["limit"] = attrs["limit"].SetOptional()
 	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 
 	return attrs
@@ -9853,6 +10066,8 @@ func (o GetEvents_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"limit":       o.Limit,
 			"offset":      o.Offset,
 			"order":       o.Order,
+			"page_size":   o.PageSize,
+			"page_token":  o.PageToken,
 			"start_time":  o.StartTime,
 		})
 }
@@ -9869,6 +10084,8 @@ func (o GetEvents_SdkV2) Type(ctx context.Context) attr.Type {
 			"limit":      types.Int64Type,
 			"offset":     types.Int64Type,
 			"order":      types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 			"start_time": types.Int64Type,
 		},
 	}
@@ -9902,9 +10119,21 @@ func (o *GetEvents_SdkV2) SetEventTypes(ctx context.Context, v []types.String) {
 
 type GetEventsResponse_SdkV2 struct {
 	Events types.List `tfsdk:"events"`
+	// Deprecated: use next_page_token or prev_page_token instead.
+	//
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
 	NextPage types.List `tfsdk:"next_page"`
+	// This field represents the pagination token to retrieve the next page of
+	// results. If the value is "", it means no further results for the request.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// This field represents the pagination token to retrieve the previous page
+	// of results. If the value is "", it means no further results for the
+	// request.
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
+	// Deprecated: Returns 0 when request uses page_token. Will start returning
+	// zero when request uses offset/limit soon.
+	//
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count"`
@@ -9920,6 +10149,8 @@ func (c GetEventsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["events"] = attrs["events"].SetOptional()
 	attrs["next_page"] = attrs["next_page"].SetOptional()
 	attrs["next_page"] = attrs["next_page"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
 	attrs["total_count"] = attrs["total_count"].SetOptional()
 
 	return attrs
@@ -9946,9 +10177,11 @@ func (o GetEventsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"events":      o.Events,
-			"next_page":   o.NextPage,
-			"total_count": o.TotalCount,
+			"events":          o.Events,
+			"next_page":       o.NextPage,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+			"total_count":     o.TotalCount,
 		})
 }
 
@@ -9962,7 +10195,9 @@ func (o GetEventsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"next_page": basetypes.ListType{
 				ElemType: GetEvents_SdkV2{}.Type(ctx),
 			},
-			"total_count": types.Int64Type,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"total_count":     types.Int64Type,
 		},
 	}
 }
@@ -10023,6 +10258,18 @@ func (o *GetEventsResponse_SdkV2) SetNextPage(ctx context.Context, v GetEvents_S
 type GetGlobalInitScriptRequest_SdkV2 struct {
 	// The ID of the global init script.
 	ScriptId types.String `tfsdk:"-"`
+}
+
+func (newState *GetGlobalInitScriptRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetGlobalInitScriptRequest_SdkV2) {
+}
+
+func (newState *GetGlobalInitScriptRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetGlobalInitScriptRequest_SdkV2) {
+}
+
+func (c GetGlobalInitScriptRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["script_id"] = attrs["script_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetGlobalInitScriptRequest.
@@ -10111,6 +10358,10 @@ type GetInstancePool_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -10155,6 +10406,8 @@ func (c GetInstancePool_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -10182,6 +10435,7 @@ func (a GetInstancePool_SdkV2) GetComplexFieldTypes(ctx context.Context) map[str
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec_SdkV2{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes_SdkV2{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage_SdkV2{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats_SdkV2{}),
@@ -10208,6 +10462,7 @@ func (o GetInstancePool_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -10245,7 +10500,10 @@ func (o GetInstancePool_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage_SdkV2{}.Type(ctx),
 			},
@@ -10419,6 +10677,32 @@ func (o *GetInstancePool_SdkV2) SetGcpAttributes(ctx context.Context, v Instance
 	o.GcpAttributes = types.ListValueMust(t, vs)
 }
 
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetInstancePool_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool_SdkV2.
+func (o *GetInstancePool_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
+}
+
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool_SdkV2 as
 // a slice of DockerImage_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
@@ -10527,6 +10811,18 @@ func (o *GetInstancePool_SdkV2) SetStatus(ctx context.Context, v InstancePoolSta
 type GetInstancePoolPermissionLevelsRequest_SdkV2 struct {
 	// The instance pool for which to get or manage permissions.
 	InstancePoolId types.String `tfsdk:"-"`
+}
+
+func (newState *GetInstancePoolPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionLevelsRequest_SdkV2) {
+}
+
+func (newState *GetInstancePoolPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionLevelsRequest_SdkV2) {
+}
+
+func (c GetInstancePoolPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolPermissionLevelsRequest.
@@ -10644,6 +10940,18 @@ type GetInstancePoolPermissionsRequest_SdkV2 struct {
 	InstancePoolId types.String `tfsdk:"-"`
 }
 
+func (newState *GetInstancePoolPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolPermissionsRequest_SdkV2) {
+}
+
+func (newState *GetInstancePoolPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolPermissionsRequest_SdkV2) {
+}
+
+func (c GetInstancePoolPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10679,6 +10987,18 @@ func (o GetInstancePoolPermissionsRequest_SdkV2) Type(ctx context.Context) attr.
 type GetInstancePoolRequest_SdkV2 struct {
 	// The canonical unique identifier for the instance pool.
 	InstancePoolId types.String `tfsdk:"-"`
+}
+
+func (newState *GetInstancePoolRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetInstancePoolRequest_SdkV2) {
+}
+
+func (newState *GetInstancePoolRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetInstancePoolRequest_SdkV2) {
+}
+
+func (c GetInstancePoolRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["instance_pool_id"] = attrs["instance_pool_id"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetInstancePoolRequest.
@@ -10719,6 +11039,19 @@ type GetPolicyFamilyRequest_SdkV2 struct {
 	// The version number for the family to fetch. Defaults to the latest
 	// version.
 	Version types.Int64 `tfsdk:"-"`
+}
+
+func (newState *GetPolicyFamilyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPolicyFamilyRequest_SdkV2) {
+}
+
+func (newState *GetPolicyFamilyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetPolicyFamilyRequest_SdkV2) {
+}
+
+func (c GetPolicyFamilyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["policy_family_id"] = attrs["policy_family_id"].SetRequired()
+	attrs["version"] = attrs["version"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPolicyFamilyRequest.
@@ -12239,6 +12572,10 @@ type InstancePoolAndStats_SdkV2 struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.List `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -12283,6 +12620,8 @@ func (c InstancePoolAndStats_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -12310,6 +12649,7 @@ func (a InstancePoolAndStats_SdkV2) GetComplexFieldTypes(ctx context.Context) ma
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec_SdkV2{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes_SdkV2{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility_SdkV2{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage_SdkV2{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats_SdkV2{}),
@@ -12336,6 +12676,7 @@ func (o InstancePoolAndStats_SdkV2) ToObjectValue(ctx context.Context) basetypes
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -12373,7 +12714,10 @@ func (o InstancePoolAndStats_SdkV2) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_id":                          types.StringType,
+			"node_type_flexibility": basetypes.ListType{
+				ElemType: NodeTypeFlexibility_SdkV2{}.Type(ctx),
+			},
+			"node_type_id": types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage_SdkV2{}.Type(ctx),
 			},
@@ -12545,6 +12889,32 @@ func (o *InstancePoolAndStats_SdkV2) SetGcpAttributes(ctx context.Context, v Ins
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcp_attributes"]
 	o.GcpAttributes = types.ListValueMust(t, vs)
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats_SdkV2 as
+// a NodeTypeFlexibility_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InstancePoolAndStats_SdkV2) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility_SdkV2, bool) {
+	var e NodeTypeFlexibility_SdkV2
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility_SdkV2
+	d := o.NodeTypeFlexibility.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats_SdkV2.
+func (o *InstancePoolAndStats_SdkV2) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["node_type_flexibility"]
+	o.NodeTypeFlexibility = types.ListValueMust(t, vs)
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats_SdkV2 as
@@ -13878,6 +14248,20 @@ type ListClusterCompliancesRequest_SdkV2 struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
+func (newState *ListClusterCompliancesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterCompliancesRequest_SdkV2) {
+}
+
+func (newState *ListClusterCompliancesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListClusterCompliancesRequest_SdkV2) {
+}
+
+func (c ListClusterCompliancesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["policy_id"] = attrs["policy_id"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClusterCompliancesRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -14013,6 +14397,19 @@ type ListClusterPoliciesRequest_SdkV2 struct {
 	// The order in which the policies get listed. * `DESC` - Sort result list
 	// in descending order. * `ASC` - Sort result list in ascending order.
 	SortOrder types.String `tfsdk:"-"`
+}
+
+func (newState *ListClusterPoliciesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClusterPoliciesRequest_SdkV2) {
+}
+
+func (newState *ListClusterPoliciesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListClusterPoliciesRequest_SdkV2) {
+}
+
+func (c ListClusterPoliciesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["sort_column"] = attrs["sort_column"].SetOptional()
+	attrs["sort_order"] = attrs["sort_order"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClusterPoliciesRequest.
@@ -14183,6 +14580,23 @@ type ListClustersRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 	// Sort the list of clusters by a specific criteria.
 	SortBy types.List `tfsdk:"-"`
+}
+
+func (newState *ListClustersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListClustersRequest_SdkV2) {
+}
+
+func (newState *ListClustersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListClustersRequest_SdkV2) {
+}
+
+func (c ListClustersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["filter_by"] = attrs["filter_by"].SetOptional()
+	attrs["filter_by"] = attrs["filter_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].SetOptional()
+	attrs["sort_by"] = attrs["sort_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListClustersRequest.
@@ -14820,6 +15234,19 @@ type ListPolicyFamiliesRequest_SdkV2 struct {
 	MaxResults types.Int64 `tfsdk:"-"`
 	// A token that can be used to get the next page of results.
 	PageToken types.String `tfsdk:"-"`
+}
+
+func (newState *ListPolicyFamiliesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListPolicyFamiliesRequest_SdkV2) {
+}
+
+func (newState *ListPolicyFamiliesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListPolicyFamiliesRequest_SdkV2) {
+}
+
+func (c ListPolicyFamiliesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["max_results"] = attrs["max_results"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListPolicyFamiliesRequest.
@@ -15476,6 +15903,50 @@ func (o *NodeType_SdkV2) SetNodeInstanceType(ctx context.Context, v NodeInstance
 	o.NodeInstanceType = types.ListValueMust(t, vs)
 }
 
+// For Fleet-V2 using classic clusters, this object contains the information
+// about the alternate node type ids to use when attempting to launch a cluster.
+// It can be used with both the driver and worker node types.
+type NodeTypeFlexibility_SdkV2 struct {
+}
+
+func (newState *NodeTypeFlexibility_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility_SdkV2) {
+}
+
+func (newState *NodeTypeFlexibility_SdkV2) SyncEffectiveFieldsDuringRead(existingState NodeTypeFlexibility_SdkV2) {
+}
+
+func (c NodeTypeFlexibility_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a NodeTypeFlexibility_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility_SdkV2
+// only implements ToObjectValue() and Type().
+func (o NodeTypeFlexibility_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o NodeTypeFlexibility_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
 // Error message of a failed pending instances
 type PendingInstanceError_SdkV2 struct {
 	InstanceId types.String `tfsdk:"instance_id"`
@@ -16083,6 +16554,17 @@ func (o RemoveInstanceProfile_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RemoveResponse_SdkV2 struct {
+}
+
+func (newState *RemoveResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse_SdkV2) {
+}
+
+func (newState *RemoveResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RemoveResponse_SdkV2) {
+}
+
+func (c RemoveResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveResponse.

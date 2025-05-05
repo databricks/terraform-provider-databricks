@@ -317,7 +317,7 @@ func TestAccDashboardWithRemoteChange(t *testing.T) {
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
 				DashboardId: dashboard_id,
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DashboardId:         dashboard_id,
 					DisplayName:         display_name,
 					Etag:                etag,
@@ -424,7 +424,7 @@ func TestAccDashboardTestAll(t *testing.T) {
 			require.NoError(t, err)
 			_, err = w.Lakeview.Update(context.Background(), dashboards.UpdateDashboardRequest{
 				DashboardId: dashboard_id,
-				Dashboard: &dashboards.Dashboard{
+				Dashboard: dashboards.Dashboard{
 					DashboardId:         dashboard_id,
 					DisplayName:         display_name,
 					Etag:                etag,

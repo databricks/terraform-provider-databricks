@@ -54,7 +54,7 @@ func ResourceOnlineTable() common.Resource {
 			}
 			var table catalog.OnlineTable
 			common.DataToStructPointer(d, s, &table)
-			res, err := w.OnlineTables.Create(ctx, catalog.CreateOnlineTableRequest{Table: &table})
+			res, err := w.OnlineTables.Create(ctx, catalog.CreateOnlineTableRequest{Table: table})
 			if err != nil {
 				return err
 			}

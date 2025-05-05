@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to attach a role or [databricks_instance_profile](instance_profile.md) (AWS) to [databricks_user](user.md).
 
+-> This resource can be used with an account or workspace-level provider.
+
 ## Example Usage
 
 Adding AWS instance profile to a user

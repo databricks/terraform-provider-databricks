@@ -83,6 +83,6 @@ The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
+* [databricks_git_folder](git_folder.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

@@ -46,4 +46,4 @@ terraform import databricks_git_credential.this <git-credential-id>
 
 The following resources are often used in the same context:
 
-* [databricks_repo](repo.md) to manage Databricks Repos.
+* [databricks_git_folder](git_folder.md) to manage Databricks Repos.

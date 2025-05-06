@@ -148,4 +148,4 @@ The following resources are often used in the same context:
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_mount](mount.md) to [mount your cloud storage](https://docs.databricks.com/data/databricks-file-system.html#mount-object-storage-to-dbfs) on `dbfs:/mnt/name`.
 * [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
-* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
+* [databricks_git_folder](git_folder.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

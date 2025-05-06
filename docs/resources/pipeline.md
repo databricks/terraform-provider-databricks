@@ -14,7 +14,7 @@ resource "databricks_notebook" "dlt_demo" {
   #...
 }
 
-resource "databricks_repo" "dlt_demo" {
+resource "databricks_git_folder" "dlt_demo" {
   #...
 }
 
@@ -50,7 +50,7 @@ resource "databricks_pipeline" "this" {
 
   library {
     file {
-      path = "${databricks_repo.dlt_demo.path}/pipeline.sql"
+      path = "${databricks_git_folder.dlt_demo.path}/pipeline.sql"
     }
   }
 

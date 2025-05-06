@@ -235,7 +235,7 @@ func DatabricksProvider(opts ...SdkV2ProviderOption) *schema.Provider {
 		"databricks_query":                           sql.ResourceQuery().ToResource(),
 		"databricks_recipient":                       sharing.ResourceRecipient().ToResource(),
 		"databricks_registered_model":                catalog.ResourceRegisteredModel().ToResource(),
-		"databricks_repo":                            repos.ResourceRepo().ToResource(),
+		"databricks_git_folder":                            repos.ResourceRepo().ToResource(),
 		"databricks_schema":                          catalog.ResourceSchema().ToResource(),
 		"databricks_secret":                          secrets.ResourceSecret().ToResource(),
 		"databricks_secret_scope":                    secrets.ResourceSecretScope().ToResource(),

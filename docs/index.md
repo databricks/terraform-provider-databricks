@@ -19,7 +19,7 @@ Compute resources
 * Speedup job & cluster startup with [databricks_instance_pool](resources/instance_pool.md)
 * Customize clusters with [databricks_global_init_script](resources/global_init_script.md)
 * Manage few [databricks_notebook](resources/notebook.md), and even [list them](data-sources/notebook_paths.md)
-* Manage [databricks_repo](resources/repo.md)
+* Manage [databricks_git_folder](resources/git_folder.md)
 
 Storage
 

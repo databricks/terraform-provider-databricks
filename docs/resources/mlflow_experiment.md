@@ -63,4 +63,4 @@ The following resources are often used in the same context:
 * [databricks_mlflow_model](mlflow_model.md) to create models in the [workspace model registry](https://docs.databricks.com/en/mlflow/model-registry.html) in Databricks.
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
-* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
+* [databricks_git_folder](git_folder.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).

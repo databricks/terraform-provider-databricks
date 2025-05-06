@@ -87,7 +87,7 @@ The following resources are often used in the same context:
 * [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
 * [databricks_notebook_paths](../data-sources/notebook_paths.md) data to list notebooks in Databricks Workspace.
 * [databricks_pipeline](pipeline.md) to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
-* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
+* [databricks_git_folder](git_folder.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 * [databricks_secret](secret.md) to manage [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_acl](secret_acl.md) to manage access to [secrets](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.
 * [databricks_secret_scope](secret_scope.md) to create [secret scopes](https://docs.databricks.com/security/secrets/index.html#secrets-user-guide) in Databricks workspace.

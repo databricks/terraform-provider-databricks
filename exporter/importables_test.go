@@ -276,10 +276,10 @@ func TestRepoName(t *testing.T) {
 	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("12345")
 	// Repo without path
-	assert.Equal(t, "repo_12345", resourcesMap["databricks_repo"].Name(ic, d))
+	assert.Equal(t, "repo_12345", resourcesMap["databricks_git_folder"].Name(ic, d))
 	// Repo with path
 	d.Set("path", "/Repos/user/test")
-	assert.Equal(t, "user_test_12345", resourcesMap["databricks_repo"].Name(ic, d))
+	assert.Equal(t, "user_test_12345", resourcesMap["databricks_git_folder"].Name(ic, d))
 }
 
 func TestRepoIgnore(t *testing.T) {
@@ -289,11 +289,11 @@ func TestRepoIgnore(t *testing.T) {
 	d.Set("path", "/Repos/user/test")
 	r := &resource{ID: "12345", Data: d}
 	// Repo without URL
-	assert.True(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+	assert.True(t, resourcesMap["databricks_git_folder"].Ignore(ic, r))
 	assert.Equal(t, 1, len(ic.ignoredResources))
 	// Repo with URL
 	d.Set("url", "https://github.com/abc/abc.git")
-	assert.False(t, resourcesMap["databricks_repo"].Ignore(ic, r))
+	assert.False(t, resourcesMap["databricks_git_folder"].Ignore(ic, r))
 }
 
 func TestDLTIgnore(t *testing.T) {
@@ -709,17 +709,17 @@ func TestShouldOmitFoRepos(t *testing.T) {
 	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("1234")
 	d.Set("path", "/Repos/Test/repo")
-	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "path",
+	assert.False(t, resourcesMap["databricks_git_folder"].ShouldOmitField(nil, "path",
 		repos.ResourceRepo().Schema["path"], d))
-	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+	assert.True(t, resourcesMap["databricks_git_folder"].ShouldOmitField(nil, "branch",
 		repos.ResourceRepo().Schema["branch"], d))
-	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+	assert.True(t, resourcesMap["databricks_git_folder"].ShouldOmitField(nil, "tag",
 		repos.ResourceRepo().Schema["tag"], d))
 	d.Set("branch", "test")
-	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
+	assert.False(t, resourcesMap["databricks_git_folder"].ShouldOmitField(nil, "branch",
 		repos.ResourceRepo().Schema["branch"], d))
 	d.Set("tag", "v123")
-	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
+	assert.False(t, resourcesMap["databricks_git_folder"].ShouldOmitField(nil, "tag",
 		repos.ResourceRepo().Schema["tag"], d))
 }
 
@@ -1038,7 +1038,7 @@ func TestRepoListFails(t *testing.T) {
 		},
 	}, func(ctx context.Context, client *common.DatabricksClient) {
 		ic := importContextForTestWithClient(ctx, client)
-		err := resourcesMap["databricks_repo"].List(ic)
+		err := resourcesMap["databricks_git_folder"].List(ic)
 		assert.EqualError(t, err, "nope")
 	})
 }
@@ -1599,7 +1599,7 @@ func TestEmitFilesFromSlice(t *testing.T) {
 		assert.Equal(t, 3, len(ic.testEmits))
 		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
 		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
-		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
+		assert.Contains(t, ic.testEmits, "databricks_git_folder[<unknown>] (id: 1234)")
 	})
 }
 
@@ -1631,7 +1631,7 @@ func TestEmitFilesFromMap(t *testing.T) {
 		assert.Equal(t, 3, len(ic.testEmits))
 		assert.Contains(t, ic.testEmits, "databricks_dbfs_file[<unknown>] (id: dbfs:/FileStore/test.txt)")
 		assert.Contains(t, ic.testEmits, "databricks_workspace_file[<unknown>] (id: /Shared/test.txt)")
-		assert.Contains(t, ic.testEmits, "databricks_repo[<unknown>] (id: 1234)")
+		assert.Contains(t, ic.testEmits, "databricks_git_folder[<unknown>] (id: 1234)")
 	})
 }
 

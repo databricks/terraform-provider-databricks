@@ -309,15 +309,15 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "single_user_name", Resource: "databricks_service_principal", Match: "application_id"},
 			{Path: "single_user_name", Resource: "databricks_group", Match: "display_name"},
 			{Path: "single_user_name", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "library.jar", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "library.jar", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.whl", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "library.whl", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.egg", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "library.egg", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "init_scripts.workspace.destination", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+			{Path: "init_scripts.workspace.destination", Resource: "databricks_git_folder", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		List: listClusters,
@@ -483,11 +483,11 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "libraries.whl", Resource: "databricks_workspace_file", Match: "workspace_path"},
 			{Path: "libraries.egg", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "libraries.egg", Resource: "databricks_workspace_file", Match: "workspace_path"},
-			{Path: "libraries.whl", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "libraries.whl", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.egg", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "libraries.egg", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "libraries.jar", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "libraries.jar", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 		// TODO: implement a custom Body that will write with special formatting, where
@@ -601,7 +601,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "dashboard_id", Resource: "databricks_dashboard"},
 			{Path: "registered_model_id", Resource: "databricks_mlflow_model"},
 			{Path: "experiment_id", Resource: "databricks_mlflow_experiment"},
-			{Path: "repo_id", Resource: "databricks_repo"},
+			{Path: "repo_id", Resource: "databricks_git_folder"},
 			{Path: "vector_search_endpoint_id", Resource: "databricks_vector_search_endpoint", Match: "endpoint_id"},
 			{Path: "serving_endpoint_id", Resource: "databricks_model_serving", Match: "serving_endpoint_id"},
 			// TODO: can we fill _path component for it, and then match on user/SP home instead?
@@ -836,7 +836,7 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "source", File: true},
 		},
 	},
-	"databricks_repo": {
+	"databricks_git_folder": {
 		WorkspaceLevel: true,
 		Service:        "repos",
 		Name: func(ic *importContext, d *schema.ResourceData) string {
@@ -871,12 +871,12 @@ var resourcesMap map[string]importable = map[string]importable{
 				}
 				if repo.Url != "" {
 					ic.Emit(&resource{
-						Resource: "databricks_repo",
+						Resource: "databricks_git_folder",
 						ID:       strconv.FormatInt(repo.Id, 10),
 					})
 				} else {
-					log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", repo.Path)
-					ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", repo.Path))
+					log.Printf("[WARN] ignoring databricks_git_folder without Git provider. Path: %s", repo.Path)
+					ic.addIgnoredResource(fmt.Sprintf("databricks_git_folder. path=%s", repo.Path))
 				}
 				if i%50 == 0 {
 					log.Printf("[INFO] Scanned %d repos", i)
@@ -893,7 +893,7 @@ var resourcesMap map[string]importable = map[string]importable{
 				ic.emitUserOrServicePrincipalForPath(path, "/Users")
 			}
 			ic.emitPermissionsIfNotIgnored(r, fmt.Sprintf("/repos/%s", r.ID),
-				"repo_"+ic.Importables["databricks_repo"].Name(ic, r.Data))
+				"repo_"+ic.Importables["databricks_git_folder"].Name(ic, r.Data))
 			return nil
 		},
 		ShouldOmitField: func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -915,8 +915,8 @@ var resourcesMap map[string]importable = map[string]importable{
 			shouldIgnore := r.Data.Get("url").(string) == ""
 			if shouldIgnore {
 				path := r.Data.Get("path").(string)
-				log.Printf("[WARN] ignoring databricks_repo without Git provider. Path: %s", path)
-				ic.addIgnoredResource(fmt.Sprintf("databricks_repo. path=%s", r.Data.Get("path").(string)))
+				log.Printf("[WARN] ignoring databricks_git_folder without Git provider. Path: %s", path)
+				ic.addIgnoredResource(fmt.Sprintf("databricks_git_folder. path=%s", r.Data.Get("path").(string)))
 			}
 			return shouldIgnore
 		},
@@ -1400,19 +1400,19 @@ var resourcesMap map[string]importable = map[string]importable{
 			{Path: "library.jar", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "library.whl", Resource: "databricks_dbfs_file", Match: "dbfs_path"},
 			{Path: "notification.email_recipients", Resource: "databricks_user", Match: "user_name", MatchType: MatchCaseInsensitive},
-			{Path: "configuration", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "configuration", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "path",
+			{Path: "library.notebook.path", Resource: "databricks_git_folder", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.notebook.path", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "library.notebook.path", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.file.path", Resource: "databricks_repo", Match: "path",
+			{Path: "library.file.path", Resource: "databricks_git_folder", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "library.file.path", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "library.file.path", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "workspace_path",
+			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_git_folder", Match: "workspace_path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
-			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_repo", Match: "path",
+			{Path: "cluster.init_scripts.workspace.destination", Resource: "databricks_git_folder", Match: "path",
 				MatchType: MatchPrefix, SearchValueTransformFunc: appendEndingSlashToDirName},
 		},
 	},

@@ -69,7 +69,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags
 
 	var updateRequest = sql.UpdateAlertV2Request{Alert: &alert_v2}
 	updateRequest.Id = plan.Id.ValueString()
-	updateRequest.UpdateMask = "create_time,custom_description,custom_summary,display_name,evaluation,id,lifecycle_state,owner_user_name,parent_path,query_text,run_as_user_name,schedule,update_time,warehouse_id"
+	updateRequest.UpdateMask = "create_time,custom_description,custom_summary,display_name,evaluation,lifecycle_state,owner_user_name,parent_path,query_text,run_as_user_name,schedule,update_time,warehouse_id"
 
 	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
 	if err != nil {

@@ -1331,19 +1331,6 @@ type BuildLogsRequest_SdkV2 struct {
 	ServedModelName types.String `tfsdk:"-"`
 }
 
-func (newState *BuildLogsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsRequest_SdkV2) {
-}
-
-func (newState *BuildLogsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState BuildLogsRequest_SdkV2) {
-}
-
-func (c BuildLogsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2139,17 +2126,6 @@ func (o *DataframeSplitInput_SdkV2) SetIndex(ctx context.Context, v []types.Int6
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2180,18 +2156,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete a serving endpoint
 type DeleteServingEndpointRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteServingEndpointRequest_SdkV2) {
-}
-
-func (newState *DeleteServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteServingEndpointRequest_SdkV2) {
-}
-
-func (c DeleteServingEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServingEndpointRequest.
@@ -3205,18 +3169,6 @@ type ExportMetricsRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *ExportMetricsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsRequest_SdkV2) {
-}
-
-func (newState *ExportMetricsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExportMetricsRequest_SdkV2) {
-}
-
-func (c ExportMetricsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3250,18 +3202,6 @@ func (o ExportMetricsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ExportMetricsResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *ExportMetricsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsResponse_SdkV2) {
-}
-
-func (newState *ExportMetricsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExportMetricsResponse_SdkV2) {
-}
-
-func (c ExportMetricsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsResponse.
@@ -3932,18 +3872,6 @@ type GetOpenApiRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetOpenApiRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiRequest_SdkV2) {
-}
-
-func (newState *GetOpenApiRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetOpenApiRequest_SdkV2) {
-}
-
-func (c GetOpenApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3977,18 +3905,6 @@ func (o GetOpenApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetOpenApiResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *GetOpenApiResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiResponse_SdkV2) {
-}
-
-func (newState *GetOpenApiResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetOpenApiResponse_SdkV2) {
-}
-
-func (c GetOpenApiResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiResponse.
@@ -4026,18 +3942,6 @@ func (o GetOpenApiResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type GetServingEndpointPermissionLevelsRequest_SdkV2 struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
-}
-
-func (newState *GetServingEndpointPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsRequest_SdkV2) {
-}
-
-func (c GetServingEndpointPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsRequest.
@@ -4155,18 +4059,6 @@ type GetServingEndpointPermissionsRequest_SdkV2 struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
-func (newState *GetServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (c GetServingEndpointPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4202,18 +4094,6 @@ func (o GetServingEndpointPermissionsRequest_SdkV2) Type(ctx context.Context) at
 type GetServingEndpointRequest_SdkV2 struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointRequest_SdkV2) {
-}
-
-func (c GetServingEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointRequest.
@@ -4336,18 +4216,6 @@ type HttpRequestResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 }
 
-func (newState *HttpRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpRequestResponse_SdkV2) {
-}
-
-func (newState *HttpRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState HttpRequestResponse_SdkV2) {
-}
-
-func (c HttpRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4465,19 +4333,6 @@ type LogsRequest_SdkV2 struct {
 	// The name of the served model that logs will be retrieved for. This field
 	// is required.
 	ServedModelName types.String `tfsdk:"-"`
-}
-
-func (newState *LogsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogsRequest_SdkV2) {
-}
-
-func (newState *LogsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogsRequest_SdkV2) {
-}
-
-func (c LogsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogsRequest.

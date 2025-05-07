@@ -308,18 +308,6 @@ type DeleteProviderRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest_SdkV2) {
-}
-
-func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest_SdkV2) {
-}
-
-func (c DeleteProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -357,18 +345,6 @@ type DeleteRecipientRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRecipientRequest_SdkV2) {
-}
-
-func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest_SdkV2) {
-}
-
-func (c DeleteRecipientRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRecipientRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -403,17 +379,6 @@ func (o DeleteRecipientRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -445,18 +410,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteShareRequest_SdkV2 struct {
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteShareRequest_SdkV2) {
-}
-
-func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest_SdkV2) {
-}
-
-func (c DeleteShareRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteShareRequest.
@@ -1221,18 +1174,6 @@ type GetActivationUrlInfoRequest_SdkV2 struct {
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoRequest_SdkV2) {
-}
-
-func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest_SdkV2) {
-}
-
-func (c GetActivationUrlInfoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activation_url"] = attrs["activation_url"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetActivationUrlInfoRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1311,18 +1252,6 @@ type GetProviderRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest_SdkV2) {
-}
-
-func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest_SdkV2) {
-}
-
-func (c GetProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1358,18 +1287,6 @@ func (o GetProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetRecipientRequest_SdkV2 struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientRequest_SdkV2) {
-}
-
-func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest_SdkV2) {
-}
-
-func (c GetRecipientRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRecipientRequest.
@@ -1581,19 +1498,6 @@ type GetShareRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetShareRequest_SdkV2) {
-}
-
-func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetShareRequest_SdkV2) {
-}
-
-func (c GetShareRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["include_shared_data"] = attrs["include_shared_data"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetShareRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1719,23 +1623,6 @@ type ListProviderShareAssetsRequest_SdkV2 struct {
 	TableMaxResults types.Int64 `tfsdk:"-"`
 	// Maximum number of volumes to return.
 	VolumeMaxResults types.Int64 `tfsdk:"-"`
-}
-
-func (newState *ListProviderShareAssetsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderShareAssetsRequest_SdkV2) {
-}
-
-func (newState *ListProviderShareAssetsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProviderShareAssetsRequest_SdkV2) {
-}
-
-func (c ListProviderShareAssetsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["function_max_results"] = attrs["function_max_results"].SetOptional()
-	attrs["notebook_max_results"] = attrs["notebook_max_results"].SetOptional()
-	attrs["provider_name"] = attrs["provider_name"].SetRequired()
-	attrs["share_name"] = attrs["share_name"].SetRequired()
-	attrs["table_max_results"] = attrs["table_max_results"].SetOptional()
-	attrs["volume_max_results"] = attrs["volume_max_results"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProviderShareAssetsRequest.
@@ -2065,20 +1952,6 @@ type ListProvidersRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest_SdkV2) {
-}
-
-func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest_SdkV2) {
-}
-
-func (c ListProvidersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_provider_global_metastore_id"] = attrs["data_provider_global_metastore_id"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2218,20 +2091,6 @@ type ListRecipientsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsRequest_SdkV2) {
-}
-
-func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest_SdkV2) {
-}
-
-func (c ListRecipientsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRecipientsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2368,20 +2227,6 @@ type ListSharesRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesRequest_SdkV2) {
-}
-
-func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest_SdkV2) {
-}
-
-func (c ListSharesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSharesRequest.
@@ -3587,18 +3432,6 @@ type RetrieveTokenRequest_SdkV2 struct {
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenRequest_SdkV2) {
-}
-
-func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest_SdkV2) {
-}
-
-func (c RetrieveTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activation_url"] = attrs["activation_url"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RetrieveTokenRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3978,20 +3811,6 @@ type SharePermissionsRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharePermissionsRequest_SdkV2) {
-}
-
-func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest_SdkV2) {
-}
-
-func (c SharePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharePermissionsRequest.

@@ -1331,19 +1331,6 @@ type BuildLogsRequest_SdkV2 struct {
 	ServedModelName types.String `tfsdk:"-"`
 }
 
-func (newState *BuildLogsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BuildLogsRequest_SdkV2) {
-}
-
-func (newState *BuildLogsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState BuildLogsRequest_SdkV2) {
-}
-
-func (c BuildLogsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in BuildLogsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1541,6 +1528,167 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			"cohere_api_key_plaintext": types.StringType,
 		},
 	}
+}
+
+type CreatePtEndpointRequest_SdkV2 struct {
+	// The AI Gateway configuration for the serving endpoint.
+	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy associated with the endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// The core config of the serving endpoint.
+	Config types.List `tfsdk:"config"`
+	// The name of the serving endpoint. This field is required and must be
+	// unique across a Databricks workspace. An endpoint name can consist of
+	// alphanumeric characters, dashes, and underscores.
+	Name types.String `tfsdk:"name"`
+	// Tags to be attached to the serving endpoint and automatically propagated
+	// to billing logs.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePtEndpointRequest_SdkV2) {
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePtEndpointRequest_SdkV2) {
+}
+
+func (c CreatePtEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePtEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreatePtEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ai_gateway": reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":     reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+		"tags":       reflect.TypeOf(EndpointTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreatePtEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreatePtEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ai_gateway":       o.AiGateway,
+			"budget_policy_id": o.BudgetPolicyId,
+			"config":           o.Config,
+			"name":             o.Name,
+			"tags":             o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreatePtEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
+			},
+			"budget_policy_id": types.StringType,
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetAiGateway returns the value of the AiGateway field in CreatePtEndpointRequest_SdkV2 as
+// a AiGatewayConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetAiGateway(ctx context.Context) (AiGatewayConfig_SdkV2, bool) {
+	var e AiGatewayConfig_SdkV2
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig_SdkV2
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetAiGateway(ctx context.Context, v AiGatewayConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in CreatePtEndpointRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreatePtEndpointRequest_SdkV2 as
+// a slice of EndpointTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetTags(ctx context.Context) ([]EndpointTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetTags(ctx context.Context, v []EndpointTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
 }
 
 type CreateServingEndpoint_SdkV2 struct {
@@ -2139,17 +2287,6 @@ func (o *DataframeSplitInput_SdkV2) SetIndex(ctx context.Context, v []types.Int6
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2180,18 +2317,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete a serving endpoint
 type DeleteServingEndpointRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteServingEndpointRequest_SdkV2) {
-}
-
-func (newState *DeleteServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteServingEndpointRequest_SdkV2) {
-}
-
-func (c DeleteServingEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteServingEndpointRequest.
@@ -3205,18 +3330,6 @@ type ExportMetricsRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *ExportMetricsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsRequest_SdkV2) {
-}
-
-func (newState *ExportMetricsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExportMetricsRequest_SdkV2) {
-}
-
-func (c ExportMetricsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3250,18 +3363,6 @@ func (o ExportMetricsRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type ExportMetricsResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *ExportMetricsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ExportMetricsResponse_SdkV2) {
-}
-
-func (newState *ExportMetricsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ExportMetricsResponse_SdkV2) {
-}
-
-func (c ExportMetricsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ExportMetricsResponse.
@@ -3932,18 +4033,6 @@ type GetOpenApiRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetOpenApiRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiRequest_SdkV2) {
-}
-
-func (newState *GetOpenApiRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetOpenApiRequest_SdkV2) {
-}
-
-func (c GetOpenApiRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3977,18 +4066,6 @@ func (o GetOpenApiRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type GetOpenApiResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *GetOpenApiResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetOpenApiResponse_SdkV2) {
-}
-
-func (newState *GetOpenApiResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetOpenApiResponse_SdkV2) {
-}
-
-func (c GetOpenApiResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetOpenApiResponse.
@@ -4026,18 +4103,6 @@ func (o GetOpenApiResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type GetServingEndpointPermissionLevelsRequest_SdkV2 struct {
 	// The serving endpoint for which to get or manage permissions.
 	ServingEndpointId types.String `tfsdk:"-"`
-}
-
-func (newState *GetServingEndpointPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionLevelsRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointPermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionLevelsRequest_SdkV2) {
-}
-
-func (c GetServingEndpointPermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionLevelsRequest.
@@ -4155,18 +4220,6 @@ type GetServingEndpointPermissionsRequest_SdkV2 struct {
 	ServingEndpointId types.String `tfsdk:"-"`
 }
 
-func (newState *GetServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointPermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointPermissionsRequest_SdkV2) {
-}
-
-func (c GetServingEndpointPermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["serving_endpoint_id"] = attrs["serving_endpoint_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointPermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4202,18 +4255,6 @@ func (o GetServingEndpointPermissionsRequest_SdkV2) Type(ctx context.Context) at
 type GetServingEndpointRequest_SdkV2 struct {
 	// The name of the serving endpoint. This field is required.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetServingEndpointRequest_SdkV2) {
-}
-
-func (newState *GetServingEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetServingEndpointRequest_SdkV2) {
-}
-
-func (c GetServingEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetServingEndpointRequest.
@@ -4336,18 +4377,6 @@ type HttpRequestResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 }
 
-func (newState *HttpRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan HttpRequestResponse_SdkV2) {
-}
-
-func (newState *HttpRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState HttpRequestResponse_SdkV2) {
-}
-
-func (c HttpRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in HttpRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4465,19 +4494,6 @@ type LogsRequest_SdkV2 struct {
 	// The name of the served model that logs will be retrieved for. This field
 	// is required.
 	ServedModelName types.String `tfsdk:"-"`
-}
-
-func (newState *LogsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LogsRequest_SdkV2) {
-}
-
-func (newState *LogsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState LogsRequest_SdkV2) {
-}
-
-func (c LogsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["served_model_name"] = attrs["served_model_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in LogsRequest.
@@ -4952,6 +4968,190 @@ func (o PayloadTable_SdkV2) Type(ctx context.Context) attr.Type {
 			"name":           types.StringType,
 			"status":         types.StringType,
 			"status_message": types.StringType,
+		},
+	}
+}
+
+type PtEndpointCoreConfig_SdkV2 struct {
+	// The list of served entities under the serving endpoint config.
+	ServedEntities types.List `tfsdk:"served_entities"`
+
+	TrafficConfig types.List `tfsdk:"traffic_config"`
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
+}
+
+func (c PtEndpointCoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtEndpointCoreConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtEndpointCoreConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"served_entities": reflect.TypeOf(PtServedModel_SdkV2{}),
+		"traffic_config":  reflect.TypeOf(TrafficConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtEndpointCoreConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtEndpointCoreConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"served_entities": o.ServedEntities,
+			"traffic_config":  o.TrafficConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtEndpointCoreConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"served_entities": basetypes.ListType{
+				ElemType: PtServedModel_SdkV2{}.Type(ctx),
+			},
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetServedEntities returns the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2 as
+// a slice of PtServedModel_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetServedEntities(ctx context.Context) ([]PtServedModel_SdkV2, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []PtServedModel_SdkV2
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetServedEntities(ctx context.Context, v []PtServedModel_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2 as
+// a TrafficConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetTrafficConfig(ctx context.Context) (TrafficConfig_SdkV2, bool) {
+	var e TrafficConfig_SdkV2
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig_SdkV2
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetTrafficConfig(ctx context.Context, v TrafficConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
+}
+
+type PtServedModel_SdkV2 struct {
+	// The name of the entity to be served. The entity may be a model in the
+	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
+	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
+	// name of the object should be given in the form of
+	// **catalog_name.schema_name.model_name**.
+	EntityName types.String `tfsdk:"entity_name"`
+
+	EntityVersion types.String `tfsdk:"entity_version"`
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
+	Name types.String `tfsdk:"name"`
+	// The number of model units to be provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtServedModel_SdkV2) {
+}
+
+func (c PtServedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtServedModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtServedModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtServedModel_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtServedModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_name":             o.EntityName,
+			"entity_version":          o.EntityVersion,
+			"name":                    o.Name,
+			"provisioned_model_units": o.ProvisionedModelUnits,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtServedModel_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_name":             types.StringType,
+			"entity_version":          types.StringType,
+			"name":                    types.StringType,
+			"provisioned_model_units": types.Int64Type,
 		},
 	}
 }
@@ -8371,6 +8571,89 @@ func (o *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Routes = types.ListValueMust(t, vs)
+}
+
+type UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 struct {
+	Config types.List `tfsdk:"config"`
+	// The name of the pt endpoint to update. This field is required.
+	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (c UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvisionedThroughputEndpointConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"config": reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateProvisionedThroughputEndpointConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"config": o.Config,
+			"name":   o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetConfig returns the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
 }
 
 type V1ResponseChoiceElement_SdkV2 struct {

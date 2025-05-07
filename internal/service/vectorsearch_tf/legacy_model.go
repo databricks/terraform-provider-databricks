@@ -415,19 +415,6 @@ type DeleteDataVectorIndexRequest_SdkV2 struct {
 	PrimaryKeys types.List `tfsdk:"-"`
 }
 
-func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDataVectorIndexRequest_SdkV2) {
-}
-
-func (newState *DeleteDataVectorIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDataVectorIndexRequest_SdkV2) {
-}
-
-func (c DeleteDataVectorIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-	attrs["primary_keys"] = attrs["primary_keys"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDataVectorIndexRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -581,18 +568,6 @@ type DeleteEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteEndpointRequest_SdkV2) {
-}
-
-func (newState *DeleteEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteEndpointRequest_SdkV2) {
-}
-
-func (c DeleteEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -669,18 +644,6 @@ func (o DeleteEndpointResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteIndexRequest_SdkV2) {
-}
-
-func (newState *DeleteIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteIndexRequest_SdkV2) {
-}
-
-func (c DeleteIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteIndexRequest.
@@ -1510,18 +1473,6 @@ type GetEndpointRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 }
 
-func (newState *GetEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetEndpointRequest_SdkV2) {
-}
-
-func (newState *GetEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetEndpointRequest_SdkV2) {
-}
-
-func (c GetEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetEndpointRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1557,18 +1508,6 @@ func (o GetEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetIndexRequest_SdkV2 struct {
 	// Name of the index
 	IndexName types.String `tfsdk:"-"`
-}
-
-func (newState *GetIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetIndexRequest_SdkV2) {
-}
-
-func (newState *GetIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetIndexRequest_SdkV2) {
-}
-
-func (c GetIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetIndexRequest.
@@ -1692,18 +1631,6 @@ type ListEndpointsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListEndpointsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListEndpointsRequest_SdkV2) {
-}
-
-func (newState *ListEndpointsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListEndpointsRequest_SdkV2) {
-}
-
-func (c ListEndpointsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListEndpointsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1741,19 +1668,6 @@ type ListIndexesRequest_SdkV2 struct {
 	EndpointName types.String `tfsdk:"-"`
 	// Token for pagination
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListIndexesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListIndexesRequest_SdkV2) {
-}
-
-func (newState *ListIndexesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListIndexesRequest_SdkV2) {
-}
-
-func (c ListIndexesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["endpoint_name"] = attrs["endpoint_name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListIndexesRequest.
@@ -2611,7 +2525,7 @@ func (c ResultData_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (a ResultData_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"data_array": reflect.TypeOf(ListValue_SdkV2{}),
+		"data_array": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -2632,7 +2546,9 @@ func (o ResultData_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"data_array": basetypes.ListType{
-				ElemType: ListValue_SdkV2{}.Type(ctx),
+				ElemType: basetypes.ListType{
+					ElemType: types.StringType,
+				},
 			},
 			"row_count": types.Int64Type,
 		},
@@ -2640,13 +2556,13 @@ func (o ResultData_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 // GetDataArray returns the value of the DataArray field in ResultData_SdkV2 as
-// a slice of ListValue_SdkV2 values.
+// a slice of types.String values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ResultData_SdkV2) GetDataArray(ctx context.Context) ([]ListValue_SdkV2, bool) {
+func (o *ResultData_SdkV2) GetDataArray(ctx context.Context) ([]types.String, bool) {
 	if o.DataArray.IsNull() || o.DataArray.IsUnknown() {
 		return nil, false
 	}
-	var v []ListValue_SdkV2
+	var v []types.String
 	d := o.DataArray.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -2655,10 +2571,10 @@ func (o *ResultData_SdkV2) GetDataArray(ctx context.Context) ([]ListValue_SdkV2,
 }
 
 // SetDataArray sets the value of the DataArray field in ResultData_SdkV2.
-func (o *ResultData_SdkV2) SetDataArray(ctx context.Context, v []ListValue_SdkV2) {
+func (o *ResultData_SdkV2) SetDataArray(ctx context.Context, v []types.String) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
-		vs = append(vs, e.ToObjectValue(ctx))
+		vs = append(vs, e)
 	}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["data_array"]
 	t = t.(attr.TypeWithElementType).ElementType()
@@ -2982,18 +2898,6 @@ func (o *Struct_SdkV2) SetFields(ctx context.Context, v []MapStringValueEntry_Sd
 type SyncIndexRequest_SdkV2 struct {
 	// Name of the vector index to synchronize. Must be a Delta Sync Index.
 	IndexName types.String `tfsdk:"-"`
-}
-
-func (newState *SyncIndexRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SyncIndexRequest_SdkV2) {
-}
-
-func (newState *SyncIndexRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SyncIndexRequest_SdkV2) {
-}
-
-func (c SyncIndexRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["index_name"] = attrs["index_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SyncIndexRequest.

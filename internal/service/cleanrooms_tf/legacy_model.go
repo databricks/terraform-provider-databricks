@@ -1734,20 +1734,6 @@ type CreateCleanRoomAssetRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 }
 
-func (newState *CreateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomAssetRequest_SdkV2) {
-}
-
-func (newState *CreateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomAssetRequest_SdkV2) {
-}
-
-func (c CreateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["asset"] = attrs["asset"].SetRequired()
-	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomAssetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1817,20 +1803,6 @@ type CreateCleanRoomOutputCatalogRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 
 	OutputCatalog types.List `tfsdk:"output_catalog"`
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomOutputCatalogRequest_SdkV2) {
-}
-
-func (newState *CreateCleanRoomOutputCatalogRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomOutputCatalogRequest_SdkV2) {
-}
-
-func (c CreateCleanRoomOutputCatalogRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-	attrs["output_catalog"] = attrs["output_catalog"].SetRequired()
-	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomOutputCatalogRequest.
@@ -1979,19 +1951,6 @@ type CreateCleanRoomRequest_SdkV2 struct {
 	CleanRoom types.List `tfsdk:"clean_room"`
 }
 
-func (newState *CreateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCleanRoomRequest_SdkV2) {
-}
-
-func (newState *CreateCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCleanRoomRequest_SdkV2) {
-}
-
-func (c CreateCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room"] = attrs["clean_room"].SetRequired()
-	attrs["clean_room"] = attrs["clean_room"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2062,20 +2021,6 @@ type DeleteCleanRoomAssetRequest_SdkV2 struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomAssetRequest_SdkV2) {
-}
-
-func (newState *DeleteCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomAssetRequest_SdkV2) {
-}
-
-func (c DeleteCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["asset_full_name"] = attrs["asset_full_name"].SetRequired()
-	attrs["asset_type"] = attrs["asset_type"].SetRequired()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomAssetRequest.
@@ -2162,18 +2107,6 @@ type DeleteCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteCleanRoomRequest_SdkV2) {
-}
-
-func (newState *DeleteCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteCleanRoomRequest_SdkV2) {
-}
-
-func (c DeleteCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2206,17 +2139,6 @@ func (o DeleteCleanRoomRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteResponse_SdkV2 struct {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -2255,20 +2177,6 @@ type GetCleanRoomAssetRequest_SdkV2 struct {
 	AssetType types.String `tfsdk:"-"`
 	// Name of the clean room.
 	CleanRoomName types.String `tfsdk:"-"`
-}
-
-func (newState *GetCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomAssetRequest_SdkV2) {
-}
-
-func (newState *GetCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomAssetRequest_SdkV2) {
-}
-
-func (c GetCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["asset_full_name"] = attrs["asset_full_name"].SetRequired()
-	attrs["asset_type"] = attrs["asset_type"].SetRequired()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomAssetRequest.
@@ -2311,18 +2219,6 @@ type GetCleanRoomRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetCleanRoomRequest_SdkV2) {
-}
-
-func (newState *GetCleanRoomRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetCleanRoomRequest_SdkV2) {
-}
-
-func (c GetCleanRoomRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetCleanRoomRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2360,19 +2256,6 @@ type ListCleanRoomAssetsRequest_SdkV2 struct {
 	CleanRoomName types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListCleanRoomAssetsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomAssetsRequest_SdkV2) {
-}
-
-func (newState *ListCleanRoomAssetsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomAssetsRequest_SdkV2) {
-}
-
-func (c ListCleanRoomAssetsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomAssetsRequest.
@@ -2506,21 +2389,6 @@ type ListCleanRoomNotebookTaskRunsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
-}
-
-func (newState *ListCleanRoomNotebookTaskRunsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomNotebookTaskRunsRequest_SdkV2) {
-}
-
-func (c ListCleanRoomNotebookTaskRunsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomNotebookTaskRunsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2650,19 +2518,6 @@ type ListCleanRoomsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListCleanRoomsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListCleanRoomsRequest_SdkV2) {
-}
-
-func (newState *ListCleanRoomsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListCleanRoomsRequest_SdkV2) {
-}
-
-func (c ListCleanRoomsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListCleanRoomsRequest.
@@ -2798,22 +2653,6 @@ type UpdateCleanRoomAssetRequest_SdkV2 struct {
 	//
 	// For notebooks, the name is the notebook file name.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCleanRoomAssetRequest_SdkV2) {
-}
-
-func (newState *UpdateCleanRoomAssetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCleanRoomAssetRequest_SdkV2) {
-}
-
-func (c UpdateCleanRoomAssetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["asset"] = attrs["asset"].SetRequired()
-	attrs["asset"] = attrs["asset"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["asset_type"] = attrs["asset_type"].SetRequired()
-	attrs["clean_room_name"] = attrs["clean_room_name"].SetRequired()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCleanRoomAssetRequest.

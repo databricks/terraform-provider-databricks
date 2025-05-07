@@ -1630,18 +1630,6 @@ type DeleteBudgetConfigurationRequest_SdkV2 struct {
 	BudgetId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetConfigurationRequest_SdkV2) {
-}
-
-func (newState *DeleteBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetConfigurationRequest_SdkV2) {
-}
-
-func (c DeleteBudgetConfigurationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_id"] = attrs["budget_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteBudgetConfigurationRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1720,18 +1708,6 @@ type DeleteBudgetPolicyRequest_SdkV2 struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteBudgetPolicyRequest_SdkV2) {
-}
-
-func (newState *DeleteBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteBudgetPolicyRequest_SdkV2) {
-}
-
-func (c DeleteBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteBudgetPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1764,17 +1740,6 @@ func (o DeleteBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DeleteResponse_SdkV2 struct {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
@@ -1818,20 +1783,6 @@ type DownloadRequest_SdkV2 struct {
 	StartMonth types.String `tfsdk:"-"`
 }
 
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadRequest_SdkV2) {
-}
-
-func (newState *DownloadRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadRequest_SdkV2) {
-}
-
-func (c DownloadRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["end_month"] = attrs["end_month"].SetRequired()
-	attrs["personal_data"] = attrs["personal_data"].SetOptional()
-	attrs["start_month"] = attrs["start_month"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1869,18 +1820,6 @@ func (o DownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type DownloadResponse_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DownloadResponse_SdkV2) {
-}
-
-func (newState *DownloadResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DownloadResponse_SdkV2) {
-}
-
-func (c DownloadResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["contents"] = attrs["contents"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DownloadResponse.
@@ -1988,19 +1927,6 @@ type GetBillingUsageDashboardRequest_SdkV2 struct {
 	WorkspaceId types.Int64 `tfsdk:"-"`
 }
 
-func (newState *GetBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBillingUsageDashboardRequest_SdkV2) {
-}
-
-func (newState *GetBillingUsageDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBillingUsageDashboardRequest_SdkV2) {
-}
-
-func (c GetBillingUsageDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_type"] = attrs["dashboard_type"].SetOptional()
-	attrs["workspace_id"] = attrs["workspace_id"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBillingUsageDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2091,18 +2017,6 @@ func (o GetBillingUsageDashboardResponse_SdkV2) Type(ctx context.Context) attr.T
 type GetBudgetConfigurationRequest_SdkV2 struct {
 	// The budget configuration ID
 	BudgetId types.String `tfsdk:"-"`
-}
-
-func (newState *GetBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetConfigurationRequest_SdkV2) {
-}
-
-func (newState *GetBudgetConfigurationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBudgetConfigurationRequest_SdkV2) {
-}
-
-func (c GetBudgetConfigurationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_id"] = attrs["budget_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBudgetConfigurationRequest.
@@ -2220,18 +2134,6 @@ type GetBudgetPolicyRequest_SdkV2 struct {
 	PolicyId types.String `tfsdk:"-"`
 }
 
-func (newState *GetBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetBudgetPolicyRequest_SdkV2) {
-}
-
-func (newState *GetBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetBudgetPolicyRequest_SdkV2) {
-}
-
-func (c GetBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetBudgetPolicyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2267,18 +2169,6 @@ func (o GetBudgetPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetLogDeliveryRequest_SdkV2 struct {
 	// Databricks log delivery configuration ID
 	LogDeliveryConfigurationId types.String `tfsdk:"-"`
-}
-
-func (newState *GetLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetLogDeliveryRequest_SdkV2) {
-}
-
-func (newState *GetLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetLogDeliveryRequest_SdkV2) {
-}
-
-func (c GetLogDeliveryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["log_delivery_configuration_id"] = attrs["log_delivery_configuration_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLogDeliveryRequest.
@@ -2361,18 +2251,6 @@ type ListBudgetConfigurationsRequest_SdkV2 struct {
 	// This token can be used to retrieve the subsequent page. Requests first
 	// page if absent.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListBudgetConfigurationsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetConfigurationsRequest_SdkV2) {
-}
-
-func (newState *ListBudgetConfigurationsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListBudgetConfigurationsRequest_SdkV2) {
-}
-
-func (c ListBudgetConfigurationsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetConfigurationsRequest.
@@ -2507,23 +2385,6 @@ type ListBudgetPoliciesRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 	// The sort specification.
 	SortSpec types.List `tfsdk:"-"`
-}
-
-func (newState *ListBudgetPoliciesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListBudgetPoliciesRequest_SdkV2) {
-}
-
-func (newState *ListBudgetPoliciesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListBudgetPoliciesRequest_SdkV2) {
-}
-
-func (c ListBudgetPoliciesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["filter_by"] = attrs["filter_by"].SetOptional()
-	attrs["filter_by"] = attrs["filter_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-	attrs["sort_spec"] = attrs["sort_spec"].SetOptional()
-	attrs["sort_spec"] = attrs["sort_spec"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListBudgetPoliciesRequest.
@@ -2721,20 +2582,6 @@ type ListLogDeliveryRequest_SdkV2 struct {
 	Status types.String `tfsdk:"-"`
 	// Filter by storage configuration ID.
 	StorageConfigurationId types.String `tfsdk:"-"`
-}
-
-func (newState *ListLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListLogDeliveryRequest_SdkV2) {
-}
-
-func (newState *ListLogDeliveryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListLogDeliveryRequest_SdkV2) {
-}
-
-func (c ListLogDeliveryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["credentials_id"] = attrs["credentials_id"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-	attrs["storage_configuration_id"] = attrs["storage_configuration_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListLogDeliveryRequest.
@@ -3074,17 +2921,6 @@ func (o LogDeliveryStatus_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type PatchStatusResponse_SdkV2 struct {
-}
-
-func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PatchStatusResponse_SdkV2) {
-}
-
-func (newState *PatchStatusResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState PatchStatusResponse_SdkV2) {
-}
-
-func (c PatchStatusResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in PatchStatusResponse.
@@ -3473,22 +3309,6 @@ type UpdateBudgetPolicyRequest_SdkV2 struct {
 	// The Id of the policy. This field is generated by Databricks and globally
 	// unique.
 	PolicyId types.String `tfsdk:"-"`
-}
-
-func (newState *UpdateBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateBudgetPolicyRequest_SdkV2) {
-}
-
-func (newState *UpdateBudgetPolicyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateBudgetPolicyRequest_SdkV2) {
-}
-
-func (c UpdateBudgetPolicyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["limit_config"] = attrs["limit_config"].SetOptional()
-	attrs["limit_config"] = attrs["limit_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["policy"] = attrs["policy"].SetRequired()
-	attrs["policy"] = attrs["policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["policy_id"] = attrs["policy_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateBudgetPolicyRequest.

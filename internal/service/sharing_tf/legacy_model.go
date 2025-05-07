@@ -24,6 +24,77 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
+// Create recipient federation policy
+type CreateFederationPolicyRequest_SdkV2 struct {
+	Policy types.List `tfsdk:"policy"`
+	// Name of the recipient. This is the name of the recipient for which the
+	// policy is being created.
+	RecipientName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateFederationPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateFederationPolicyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policy": reflect.TypeOf(FederationPolicy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateFederationPolicyRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreateFederationPolicyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"policy":         o.Policy,
+			"recipient_name": o.RecipientName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateFederationPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"policy": basetypes.ListType{
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
+			},
+			"recipient_name": types.StringType,
+		},
+	}
+}
+
+// GetPolicy returns the value of the Policy field in CreateFederationPolicyRequest_SdkV2 as
+// a FederationPolicy_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateFederationPolicyRequest_SdkV2) GetPolicy(ctx context.Context) (FederationPolicy_SdkV2, bool) {
+	var e FederationPolicy_SdkV2
+	if o.Policy.IsNull() || o.Policy.IsUnknown() {
+		return e, false
+	}
+	var v []FederationPolicy_SdkV2
+	d := o.Policy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPolicy sets the value of the Policy field in CreateFederationPolicyRequest_SdkV2.
+func (o *CreateFederationPolicyRequest_SdkV2) SetPolicy(ctx context.Context, v FederationPolicy_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policy"]
+	o.Policy = types.ListValueMust(t, vs)
+}
+
 type CreateProvider_SdkV2 struct {
 	// The delta sharing authentication type.
 	AuthenticationType types.String `tfsdk:"authentication_type"`
@@ -302,22 +373,52 @@ func (o CreateShare_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Delete recipient federation policy
+type DeleteFederationPolicyRequest_SdkV2 struct {
+	// Name of the policy. This is the name of the policy to be deleted.
+	Name types.String `tfsdk:"-"`
+	// Name of the recipient. This is the name of the recipient for which the
+	// policy is being deleted.
+	RecipientName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteFederationPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteFederationPolicyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteFederationPolicyRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteFederationPolicyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":           o.Name,
+			"recipient_name": o.RecipientName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteFederationPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":           types.StringType,
+			"recipient_name": types.StringType,
+		},
+	}
+}
+
 // Delete a provider
 type DeleteProviderRequest_SdkV2 struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteProviderRequest_SdkV2) {
-}
-
-func (newState *DeleteProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteProviderRequest_SdkV2) {
-}
-
-func (c DeleteProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteProviderRequest.
@@ -357,18 +458,6 @@ type DeleteRecipientRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteRecipientRequest_SdkV2) {
-}
-
-func (newState *DeleteRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteRecipientRequest_SdkV2) {
-}
-
-func (c DeleteRecipientRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteRecipientRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -403,17 +492,6 @@ func (o DeleteRecipientRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -445,18 +523,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteShareRequest_SdkV2 struct {
 	// The name of the share.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteShareRequest_SdkV2) {
-}
-
-func (newState *DeleteShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteShareRequest_SdkV2) {
-}
-
-func (c DeleteShareRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteShareRequest.
@@ -1032,6 +1098,112 @@ func (o DeltaSharingTableDependency_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type FederationPolicy_SdkV2 struct {
+	// Description of the policy. This is a user-provided description.
+	Comment types.String `tfsdk:"comment"`
+	// System-generated timestamp indicating when the policy was created.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Unique, immutable system-generated identifier for the federation policy.
+	Id types.String `tfsdk:"id"`
+	// Name of the federation policy. A recipient can have multiple policies
+	// with different names.
+	Name types.String `tfsdk:"name"`
+	// Specifies the policy to use for validating OIDC claims in the federated
+	// tokens.
+	OidcPolicy types.List `tfsdk:"oidc_policy"`
+	// System-generated timestamp indicating when the policy was last updated.
+	UpdateTime types.String `tfsdk:"update_time"`
+}
+
+func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FederationPolicy_SdkV2) {
+}
+
+func (newState *FederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState FederationPolicy_SdkV2) {
+}
+
+func (c FederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["create_time"] = attrs["create_time"].SetOptional()
+	attrs["id"] = attrs["id"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["oidc_policy"] = attrs["oidc_policy"].SetOptional()
+	attrs["oidc_policy"] = attrs["oidc_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["update_time"] = attrs["update_time"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FederationPolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FederationPolicy_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"oidc_policy": reflect.TypeOf(OidcFederationPolicy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FederationPolicy_SdkV2
+// only implements ToObjectValue() and Type().
+func (o FederationPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":     o.Comment,
+			"create_time": o.CreateTime,
+			"id":          o.Id,
+			"name":        o.Name,
+			"oidc_policy": o.OidcPolicy,
+			"update_time": o.UpdateTime,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":     types.StringType,
+			"create_time": types.StringType,
+			"id":          types.StringType,
+			"name":        types.StringType,
+			"oidc_policy": basetypes.ListType{
+				ElemType: OidcFederationPolicy_SdkV2{}.Type(ctx),
+			},
+			"update_time": types.StringType,
+		},
+	}
+}
+
+// GetOidcPolicy returns the value of the OidcPolicy field in FederationPolicy_SdkV2 as
+// a OidcFederationPolicy_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *FederationPolicy_SdkV2) GetOidcPolicy(ctx context.Context) (OidcFederationPolicy_SdkV2, bool) {
+	var e OidcFederationPolicy_SdkV2
+	if o.OidcPolicy.IsNull() || o.OidcPolicy.IsUnknown() {
+		return e, false
+	}
+	var v []OidcFederationPolicy_SdkV2
+	d := o.OidcPolicy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetOidcPolicy sets the value of the OidcPolicy field in FederationPolicy_SdkV2.
+func (o *FederationPolicy_SdkV2) SetOidcPolicy(ctx context.Context, v OidcFederationPolicy_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["oidc_policy"]
+	o.OidcPolicy = types.ListValueMust(t, vs)
+}
+
 // Represents a parameter of a function. The same message is used for both input
 // and output columns.
 type FunctionParameterInfo_SdkV2 struct {
@@ -1221,18 +1393,6 @@ type GetActivationUrlInfoRequest_SdkV2 struct {
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetActivationUrlInfoRequest_SdkV2) {
-}
-
-func (newState *GetActivationUrlInfoRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetActivationUrlInfoRequest_SdkV2) {
-}
-
-func (c GetActivationUrlInfoRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activation_url"] = attrs["activation_url"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetActivationUrlInfoRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1305,22 +1465,52 @@ func (o GetActivationUrlInfoResponse_SdkV2) Type(ctx context.Context) attr.Type 
 	}
 }
 
+// Get recipient federation policy
+type GetFederationPolicyRequest_SdkV2 struct {
+	// Name of the policy. This is the name of the policy to be retrieved.
+	Name types.String `tfsdk:"-"`
+	// Name of the recipient. This is the name of the recipient for which the
+	// policy is being retrieved.
+	RecipientName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetFederationPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetFederationPolicyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetFederationPolicyRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetFederationPolicyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":           o.Name,
+			"recipient_name": o.RecipientName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetFederationPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":           types.StringType,
+			"recipient_name": types.StringType,
+		},
+	}
+}
+
 // Get a provider
 type GetProviderRequest_SdkV2 struct {
 	// Name of the provider.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetProviderRequest_SdkV2) {
-}
-
-func (newState *GetProviderRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetProviderRequest_SdkV2) {
-}
-
-func (c GetProviderRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetProviderRequest.
@@ -1358,18 +1548,6 @@ func (o GetProviderRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type GetRecipientRequest_SdkV2 struct {
 	// Name of the recipient.
 	Name types.String `tfsdk:"-"`
-}
-
-func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetRecipientRequest_SdkV2) {
-}
-
-func (newState *GetRecipientRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetRecipientRequest_SdkV2) {
-}
-
-func (c GetRecipientRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetRecipientRequest.
@@ -1581,19 +1759,6 @@ type GetShareRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 }
 
-func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetShareRequest_SdkV2) {
-}
-
-func (newState *GetShareRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetShareRequest_SdkV2) {
-}
-
-func (c GetShareRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["include_shared_data"] = attrs["include_shared_data"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetShareRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1705,6 +1870,133 @@ func (o *IpAccessList_SdkV2) SetAllowedIpAddresses(ctx context.Context, v []type
 	o.AllowedIpAddresses = types.ListValueMust(t, vs)
 }
 
+// List recipient federation policies
+type ListFederationPoliciesRequest_SdkV2 struct {
+	MaxResults types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+	// Name of the recipient. This is the name of the recipient for which the
+	// policies are being listed.
+	RecipientName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFederationPoliciesRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListFederationPoliciesRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListFederationPoliciesRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListFederationPoliciesRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"max_results":    o.MaxResults,
+			"page_token":     o.PageToken,
+			"recipient_name": o.RecipientName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListFederationPoliciesRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"max_results":    types.Int64Type,
+			"page_token":     types.StringType,
+			"recipient_name": types.StringType,
+		},
+	}
+}
+
+type ListFederationPoliciesResponse_SdkV2 struct {
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Policies types.List `tfsdk:"policies"`
+}
+
+func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListFederationPoliciesResponse_SdkV2) {
+}
+
+func (newState *ListFederationPoliciesResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListFederationPoliciesResponse_SdkV2) {
+}
+
+func (c ListFederationPoliciesResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["policies"] = attrs["policies"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListFederationPoliciesResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListFederationPoliciesResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policies": reflect.TypeOf(FederationPolicy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListFederationPoliciesResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ListFederationPoliciesResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"policies":        o.Policies,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListFederationPoliciesResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"policies": basetypes.ListType{
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetPolicies returns the value of the Policies field in ListFederationPoliciesResponse_SdkV2 as
+// a slice of FederationPolicy_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListFederationPoliciesResponse_SdkV2) GetPolicies(ctx context.Context) ([]FederationPolicy_SdkV2, bool) {
+	if o.Policies.IsNull() || o.Policies.IsUnknown() {
+		return nil, false
+	}
+	var v []FederationPolicy_SdkV2
+	d := o.Policies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetPolicies sets the value of the Policies field in ListFederationPoliciesResponse_SdkV2.
+func (o *ListFederationPoliciesResponse_SdkV2) SetPolicies(ctx context.Context, v []FederationPolicy_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Policies = types.ListValueMust(t, vs)
+}
+
 // List assets by provider share
 type ListProviderShareAssetsRequest_SdkV2 struct {
 	// Maximum number of functions to return.
@@ -1719,23 +2011,6 @@ type ListProviderShareAssetsRequest_SdkV2 struct {
 	TableMaxResults types.Int64 `tfsdk:"-"`
 	// Maximum number of volumes to return.
 	VolumeMaxResults types.Int64 `tfsdk:"-"`
-}
-
-func (newState *ListProviderShareAssetsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProviderShareAssetsRequest_SdkV2) {
-}
-
-func (newState *ListProviderShareAssetsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProviderShareAssetsRequest_SdkV2) {
-}
-
-func (c ListProviderShareAssetsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["function_max_results"] = attrs["function_max_results"].SetOptional()
-	attrs["notebook_max_results"] = attrs["notebook_max_results"].SetOptional()
-	attrs["provider_name"] = attrs["provider_name"].SetRequired()
-	attrs["share_name"] = attrs["share_name"].SetRequired()
-	attrs["table_max_results"] = attrs["table_max_results"].SetOptional()
-	attrs["volume_max_results"] = attrs["volume_max_results"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProviderShareAssetsRequest.
@@ -2065,20 +2340,6 @@ type ListProvidersRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListProvidersRequest_SdkV2) {
-}
-
-func (newState *ListProvidersRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListProvidersRequest_SdkV2) {
-}
-
-func (c ListProvidersRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_provider_global_metastore_id"] = attrs["data_provider_global_metastore_id"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListProvidersRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2218,20 +2479,6 @@ type ListRecipientsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListRecipientsRequest_SdkV2) {
-}
-
-func (newState *ListRecipientsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListRecipientsRequest_SdkV2) {
-}
-
-func (c ListRecipientsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["data_recipient_global_metastore_id"] = attrs["data_recipient_global_metastore_id"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListRecipientsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -2368,20 +2615,6 @@ type ListSharesRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListSharesRequest_SdkV2) {
-}
-
-func (newState *ListSharesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListSharesRequest_SdkV2) {
-}
-
-func (c ListSharesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListSharesRequest.
@@ -2605,6 +2838,121 @@ func (o *NotebookFile_SdkV2) SetTags(ctx context.Context, v []catalog_tf.TagKeyV
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
+}
+
+// Specifies the policy to use for validating OIDC claims in your federated
+// tokens from Delta Sharing Clients. Refer to
+// https://docs.databricks.com/en/delta-sharing/create-recipient-oidc-fed for
+// more details.
+type OidcFederationPolicy_SdkV2 struct {
+	// The allowed token audiences, as specified in the 'aud' claim of federated
+	// tokens. The audience identifier is intended to represent the recipient of
+	// the token. Can be any non-empty string value. As long as the audience in
+	// the token matches at least one audience in the policy,
+	Audiences types.List `tfsdk:"audiences"`
+	// The required token issuer, as specified in the 'iss' claim of federated
+	// tokens.
+	Issuer types.String `tfsdk:"issuer"`
+	// The required token subject, as specified in the subject claim of
+	// federated tokens. The value of subject claim identifies the identity of
+	// the user or machine that is accessing the resource. For example for Entra
+	// ID (AAD) - For U2M flow, when allowing a group of users to access a
+	// resource and the subject claim is `groups`, this must be the Object ID of
+	// the group in Entra ID - For U2M flow, when allowing a user to access a
+	// resource and the subject claim is `oid`, this must be the Object ID of
+	// the user in Entra Id. - For M2M flow, when allowing an OAuth App
+	// registered to access a resource and the subject claim is `azp`, this must
+	// be the client-id of the oauth app registered in Entra ID.
+	Subject types.String `tfsdk:"subject"`
+	// The claim that contains the subject of the token. Depending on the
+	// identity provider and the use case U2M or M2M, this can be different. For
+	// example for Entra ID (AAD) - For U2M flow, when allowing a group of users
+	// to access a resource, this must be `groups` - For U2M flow, when allowing
+	// a user to access a resource, this must be `oid` - For M2M flow, when
+	// allowing an OAuth App registered to access a resource, this must be `azp`
+	SubjectClaim types.String `tfsdk:"subject_claim"`
+}
+
+func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan OidcFederationPolicy_SdkV2) {
+}
+
+func (newState *OidcFederationPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState OidcFederationPolicy_SdkV2) {
+}
+
+func (c OidcFederationPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["audiences"] = attrs["audiences"].SetOptional()
+	attrs["issuer"] = attrs["issuer"].SetRequired()
+	attrs["subject"] = attrs["subject"].SetRequired()
+	attrs["subject_claim"] = attrs["subject_claim"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in OidcFederationPolicy.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a OidcFederationPolicy_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"audiences": reflect.TypeOf(types.String{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, OidcFederationPolicy_SdkV2
+// only implements ToObjectValue() and Type().
+func (o OidcFederationPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"audiences":     o.Audiences,
+			"issuer":        o.Issuer,
+			"subject":       o.Subject,
+			"subject_claim": o.SubjectClaim,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o OidcFederationPolicy_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"audiences": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"issuer":        types.StringType,
+			"subject":       types.StringType,
+			"subject_claim": types.StringType,
+		},
+	}
+}
+
+// GetAudiences returns the value of the Audiences field in OidcFederationPolicy_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *OidcFederationPolicy_SdkV2) GetAudiences(ctx context.Context) ([]types.String, bool) {
+	if o.Audiences.IsNull() || o.Audiences.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.Audiences.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAudiences sets the value of the Audiences field in OidcFederationPolicy_SdkV2.
+func (o *OidcFederationPolicy_SdkV2) SetAudiences(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["audiences"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Audiences = types.ListValueMust(t, vs)
 }
 
 type Partition_SdkV2 struct {
@@ -3587,18 +3935,6 @@ type RetrieveTokenRequest_SdkV2 struct {
 	ActivationUrl types.String `tfsdk:"-"`
 }
 
-func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RetrieveTokenRequest_SdkV2) {
-}
-
-func (newState *RetrieveTokenRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RetrieveTokenRequest_SdkV2) {
-}
-
-func (c RetrieveTokenRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["activation_url"] = attrs["activation_url"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RetrieveTokenRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -3978,20 +4314,6 @@ type SharePermissionsRequest_SdkV2 struct {
 	Name types.String `tfsdk:"-"`
 	// Opaque pagination token to go to next page based on previous query.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SharePermissionsRequest_SdkV2) {
-}
-
-func (newState *SharePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SharePermissionsRequest_SdkV2) {
-}
-
-func (c SharePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["name"] = attrs["name"].SetRequired()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SharePermissionsRequest.
@@ -4613,6 +4935,82 @@ func (o TableInternalAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 			"view_definition":         types.StringType,
 		},
 	}
+}
+
+// Update recipient federation policy
+type UpdateFederationPolicyRequest_SdkV2 struct {
+	// Name of the policy. This is the name of the current name of the policy.
+	Name types.String `tfsdk:"-"`
+
+	Policy types.List `tfsdk:"policy"`
+	// Name of the recipient. This is the name of the recipient for which the
+	// policy is being updated.
+	RecipientName types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateFederationPolicyRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateFederationPolicyRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"policy": reflect.TypeOf(FederationPolicy_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateFederationPolicyRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateFederationPolicyRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"name":           o.Name,
+			"policy":         o.Policy,
+			"recipient_name": o.RecipientName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateFederationPolicyRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name": types.StringType,
+			"policy": basetypes.ListType{
+				ElemType: FederationPolicy_SdkV2{}.Type(ctx),
+			},
+			"recipient_name": types.StringType,
+		},
+	}
+}
+
+// GetPolicy returns the value of the Policy field in UpdateFederationPolicyRequest_SdkV2 as
+// a FederationPolicy_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateFederationPolicyRequest_SdkV2) GetPolicy(ctx context.Context) (FederationPolicy_SdkV2, bool) {
+	var e FederationPolicy_SdkV2
+	if o.Policy.IsNull() || o.Policy.IsUnknown() {
+		return e, false
+	}
+	var v []FederationPolicy_SdkV2
+	d := o.Policy.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetPolicy sets the value of the Policy field in UpdateFederationPolicyRequest_SdkV2.
+func (o *UpdateFederationPolicyRequest_SdkV2) SetPolicy(ctx context.Context, v FederationPolicy_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["policy"]
+	o.Policy = types.ListValueMust(t, vs)
 }
 
 type UpdateProvider_SdkV2 struct {

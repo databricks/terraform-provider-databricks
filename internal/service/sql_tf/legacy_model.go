@@ -1687,18 +1687,6 @@ type CancelExecutionRequest_SdkV2 struct {
 	StatementId types.String `tfsdk:"-"`
 }
 
-func (newState *CancelExecutionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelExecutionRequest_SdkV2) {
-}
-
-func (newState *CancelExecutionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelExecutionRequest_SdkV2) {
-}
-
-func (c CancelExecutionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["statement_id"] = attrs["statement_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelExecutionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1731,17 +1719,6 @@ func (o CancelExecutionRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CancelExecutionResponse_SdkV2 struct {
-}
-
-func (newState *CancelExecutionResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelExecutionResponse_SdkV2) {
-}
-
-func (newState *CancelExecutionResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelExecutionResponse_SdkV2) {
-}
-
-func (c CancelExecutionResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelExecutionResponse.
@@ -2361,21 +2338,9 @@ func (o *CreateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
+// Create an alert
 type CreateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
-}
-
-func (newState *CreateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertV2Request_SdkV2) {
-}
-
-func (newState *CreateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAlertV2Request_SdkV2) {
-}
-
-func (c CreateAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
@@ -2700,22 +2665,6 @@ type CreateQueryVisualizationsLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"query_id"`
 	// The type of visualization: chart, table, pivot table, and so on.
 	Type_ types.String `tfsdk:"type"`
-}
-
-func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryVisualizationsLegacyRequest_SdkV2) {
-}
-
-func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateQueryVisualizationsLegacyRequest_SdkV2) {
-}
-
-func (c CreateQueryVisualizationsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["description"] = attrs["description"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
-	attrs["options"] = attrs["options"].SetRequired()
-	attrs["query_id"] = attrs["query_id"].SetRequired()
-	attrs["type"] = attrs["type"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryVisualizationsLegacyRequest.
@@ -4146,18 +4095,6 @@ type DeleteAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteAlertsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteAlertsLegacyRequest_SdkV2) {
-}
-
-func (newState *DeleteAlertsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteAlertsLegacyRequest_SdkV2) {
-}
-
-func (c DeleteAlertsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert_id"] = attrs["alert_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteAlertsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4192,18 +4129,6 @@ func (o DeleteAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Remove a dashboard
 type DeleteDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDashboardRequest_SdkV2) {
-}
-
-func (newState *DeleteDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardRequest_SdkV2) {
-}
-
-func (c DeleteDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardRequest.
@@ -4243,18 +4168,6 @@ type DeleteDashboardWidgetRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteDashboardWidgetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteDashboardWidgetRequest_SdkV2) {
-}
-
-func (newState *DeleteDashboardWidgetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteDashboardWidgetRequest_SdkV2) {
-}
-
-func (c DeleteDashboardWidgetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteDashboardWidgetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4289,18 +4202,6 @@ func (o DeleteDashboardWidgetRequest_SdkV2) Type(ctx context.Context) attr.Type 
 // Delete a query
 type DeleteQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteQueriesLegacyRequest_SdkV2) {
-}
-
-func (newState *DeleteQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteQueriesLegacyRequest_SdkV2) {
-}
-
-func (c DeleteQueriesLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["query_id"] = attrs["query_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQueriesLegacyRequest.
@@ -4340,18 +4241,6 @@ type DeleteQueryVisualizationsLegacyRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *DeleteQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteQueryVisualizationsLegacyRequest_SdkV2) {
-}
-
-func (newState *DeleteQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteQueryVisualizationsLegacyRequest_SdkV2) {
-}
-
-func (c DeleteQueryVisualizationsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteQueryVisualizationsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4386,17 +4275,6 @@ func (o DeleteQueryVisualizationsLegacyRequest_SdkV2) Type(ctx context.Context) 
 type DeleteResponse_SdkV2 struct {
 }
 
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
-}
-
-func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
-}
-
-func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -4427,18 +4305,6 @@ func (o DeleteResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Remove a visualization
 type DeleteVisualizationRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteVisualizationRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteVisualizationRequest_SdkV2) {
-}
-
-func (newState *DeleteVisualizationRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteVisualizationRequest_SdkV2) {
-}
-
-func (c DeleteVisualizationRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteVisualizationRequest.
@@ -4476,18 +4342,6 @@ func (o DeleteVisualizationRequest_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *DeleteWarehouseRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteWarehouseRequest_SdkV2) {
-}
-
-func (newState *DeleteWarehouseRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteWarehouseRequest_SdkV2) {
-}
-
-func (c DeleteWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteWarehouseRequest.
@@ -6183,18 +6037,6 @@ type GetAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *GetAlertRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAlertRequest_SdkV2) {
-}
-
-func (newState *GetAlertRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAlertRequest_SdkV2) {
-}
-
-func (c GetAlertRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6229,18 +6071,6 @@ func (o GetAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Get an alert
 type GetAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *GetAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAlertV2Request_SdkV2) {
-}
-
-func (newState *GetAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAlertV2Request_SdkV2) {
-}
-
-func (c GetAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertV2Request.
@@ -6279,18 +6109,6 @@ type GetAlertsLegacyRequest_SdkV2 struct {
 	AlertId types.String `tfsdk:"-"`
 }
 
-func (newState *GetAlertsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetAlertsLegacyRequest_SdkV2) {
-}
-
-func (newState *GetAlertsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetAlertsLegacyRequest_SdkV2) {
-}
-
-func (c GetAlertsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert_id"] = attrs["alert_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6325,18 +6143,6 @@ func (o GetAlertsLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Retrieve a definition
 type GetDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
-}
-
-func (newState *GetDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDashboardRequest_SdkV2) {
-}
-
-func (newState *GetDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetDashboardRequest_SdkV2) {
-}
-
-func (c GetDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDashboardRequest.
@@ -6378,19 +6184,6 @@ type GetDbsqlPermissionRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
-func (newState *GetDbsqlPermissionRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetDbsqlPermissionRequest_SdkV2) {
-}
-
-func (newState *GetDbsqlPermissionRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetDbsqlPermissionRequest_SdkV2) {
-}
-
-func (c GetDbsqlPermissionRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["objectId"] = attrs["objectId"].SetRequired()
-	attrs["objectType"] = attrs["objectType"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetDbsqlPermissionRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6429,18 +6222,6 @@ type GetQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
 
-func (newState *GetQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQueriesLegacyRequest_SdkV2) {
-}
-
-func (newState *GetQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetQueriesLegacyRequest_SdkV2) {
-}
-
-func (c GetQueriesLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["query_id"] = attrs["query_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQueriesLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6475,18 +6256,6 @@ func (o GetQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Get a query
 type GetQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *GetQueryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetQueryRequest_SdkV2) {
-}
-
-func (newState *GetQueryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetQueryRequest_SdkV2) {
-}
-
-func (c GetQueryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetQueryRequest.
@@ -6614,18 +6383,6 @@ type GetStatementRequest_SdkV2 struct {
 	StatementId types.String `tfsdk:"-"`
 }
 
-func (newState *GetStatementRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStatementRequest_SdkV2) {
-}
-
-func (newState *GetStatementRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetStatementRequest_SdkV2) {
-}
-
-func (c GetStatementRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["statement_id"] = attrs["statement_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatementRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6665,19 +6422,6 @@ type GetStatementResultChunkNRequest_SdkV2 struct {
 	StatementId types.String `tfsdk:"-"`
 }
 
-func (newState *GetStatementResultChunkNRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetStatementResultChunkNRequest_SdkV2) {
-}
-
-func (newState *GetStatementResultChunkNRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetStatementResultChunkNRequest_SdkV2) {
-}
-
-func (c GetStatementResultChunkNRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["chunk_index"] = attrs["chunk_index"].SetRequired()
-	attrs["statement_id"] = attrs["statement_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetStatementResultChunkNRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6715,18 +6459,6 @@ func (o GetStatementResultChunkNRequest_SdkV2) Type(ctx context.Context) attr.Ty
 type GetWarehousePermissionLevelsRequest_SdkV2 struct {
 	// The SQL warehouse for which to get or manage permissions.
 	WarehouseId types.String `tfsdk:"-"`
-}
-
-func (newState *GetWarehousePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehousePermissionLevelsRequest_SdkV2) {
-}
-
-func (newState *GetWarehousePermissionLevelsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionLevelsRequest_SdkV2) {
-}
-
-func (c GetWarehousePermissionLevelsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehousePermissionLevelsRequest.
@@ -6844,18 +6576,6 @@ type GetWarehousePermissionsRequest_SdkV2 struct {
 	WarehouseId types.String `tfsdk:"-"`
 }
 
-func (newState *GetWarehousePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehousePermissionsRequest_SdkV2) {
-}
-
-func (newState *GetWarehousePermissionsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWarehousePermissionsRequest_SdkV2) {
-}
-
-func (c GetWarehousePermissionsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehousePermissionsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6891,18 +6611,6 @@ func (o GetWarehousePermissionsRequest_SdkV2) Type(ctx context.Context) attr.Typ
 type GetWarehouseRequest_SdkV2 struct {
 	// Required. Id of the SQL warehouse.
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *GetWarehouseRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetWarehouseRequest_SdkV2) {
-}
-
-func (newState *GetWarehouseRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetWarehouseRequest_SdkV2) {
-}
-
-func (c GetWarehouseRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetWarehouseRequest.
@@ -8162,19 +7870,6 @@ type ListAlertsRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListAlertsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsRequest_SdkV2) {
-}
-
-func (newState *ListAlertsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsRequest_SdkV2) {
-}
-
-func (c ListAlertsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8454,19 +8149,6 @@ type ListAlertsV2Request_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListAlertsV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsV2Request_SdkV2) {
-}
-
-func (newState *ListAlertsV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsV2Request_SdkV2) {
-}
-
-func (c ListAlertsV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8528,7 +8210,7 @@ func (c ListAlertsV2Response_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a ListAlertsV2Response_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"results": reflect.TypeOf(ListAlertsV2ResponseAlert_SdkV2{}),
+		"results": reflect.TypeOf(AlertV2_SdkV2{}),
 	}
 }
 
@@ -8550,20 +8232,20 @@ func (o ListAlertsV2Response_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"next_page_token": types.StringType,
 			"results": basetypes.ListType{
-				ElemType: ListAlertsV2ResponseAlert_SdkV2{}.Type(ctx),
+				ElemType: AlertV2_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
 // GetResults returns the value of the Results field in ListAlertsV2Response_SdkV2 as
-// a slice of ListAlertsV2ResponseAlert_SdkV2 values.
+// a slice of AlertV2_SdkV2 values.
 // If the field is unknown or null, the boolean return value is false.
-func (o *ListAlertsV2Response_SdkV2) GetResults(ctx context.Context) ([]ListAlertsV2ResponseAlert_SdkV2, bool) {
+func (o *ListAlertsV2Response_SdkV2) GetResults(ctx context.Context) ([]AlertV2_SdkV2, bool) {
 	if o.Results.IsNull() || o.Results.IsUnknown() {
 		return nil, false
 	}
-	var v []ListAlertsV2ResponseAlert_SdkV2
+	var v []AlertV2_SdkV2
 	d := o.Results.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
@@ -8572,7 +8254,7 @@ func (o *ListAlertsV2Response_SdkV2) GetResults(ctx context.Context) ([]ListAler
 }
 
 // SetResults sets the value of the Results field in ListAlertsV2Response_SdkV2.
-func (o *ListAlertsV2Response_SdkV2) SetResults(ctx context.Context, v []ListAlertsV2ResponseAlert_SdkV2) {
+func (o *ListAlertsV2Response_SdkV2) SetResults(ctx context.Context, v []AlertV2_SdkV2) {
 	vs := make([]attr.Value, 0, len(v))
 	for _, e := range v {
 		vs = append(vs, e.ToObjectValue(ctx))
@@ -8580,177 +8262,6 @@ func (o *ListAlertsV2Response_SdkV2) SetResults(ctx context.Context, v []ListAle
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Results = types.ListValueMust(t, vs)
-}
-
-type ListAlertsV2ResponseAlert_SdkV2 struct {
-	// The timestamp indicating when the alert was created.
-	CreateTime types.String `tfsdk:"create_time"`
-	// Custom description for the alert. support mustache template.
-	CustomDescription types.String `tfsdk:"custom_description"`
-	// Custom summary for the alert. support mustache template.
-	CustomSummary types.String `tfsdk:"custom_summary"`
-	// The display name of the alert.
-	DisplayName types.String `tfsdk:"display_name"`
-
-	Evaluation types.List `tfsdk:"evaluation"`
-	// UUID identifying the alert.
-	Id types.String `tfsdk:"id"`
-	// Indicates whether the query is trashed.
-	LifecycleState types.String `tfsdk:"lifecycle_state"`
-	// The owner's username. This field is set to "Unavailable" if the user has
-	// been deleted.
-	OwnerUserName types.String `tfsdk:"owner_user_name"`
-	// Text of the query to be run.
-	QueryText types.String `tfsdk:"query_text"`
-	// The run as username. This field is set to "Unavailable" if the user has
-	// been deleted.
-	RunAsUserName types.String `tfsdk:"run_as_user_name"`
-
-	Schedule types.List `tfsdk:"schedule"`
-	// The timestamp indicating when the alert was updated.
-	UpdateTime types.String `tfsdk:"update_time"`
-	// ID of the SQL warehouse attached to the alert.
-	WarehouseId types.String `tfsdk:"warehouse_id"`
-}
-
-func (newState *ListAlertsV2ResponseAlert_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsV2ResponseAlert_SdkV2) {
-}
-
-func (newState *ListAlertsV2ResponseAlert_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListAlertsV2ResponseAlert_SdkV2) {
-}
-
-func (c ListAlertsV2ResponseAlert_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["create_time"] = attrs["create_time"].SetComputed()
-	attrs["custom_description"] = attrs["custom_description"].SetOptional()
-	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
-	attrs["display_name"] = attrs["display_name"].SetOptional()
-	attrs["evaluation"] = attrs["evaluation"].SetOptional()
-	attrs["evaluation"] = attrs["evaluation"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
-	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
-	attrs["query_text"] = attrs["query_text"].SetOptional()
-	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetComputed()
-	attrs["schedule"] = attrs["schedule"].SetOptional()
-	attrs["schedule"] = attrs["schedule"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["update_time"] = attrs["update_time"].SetComputed()
-	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsV2ResponseAlert.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a ListAlertsV2ResponseAlert_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{
-		"evaluation": reflect.TypeOf(AlertV2Evaluation_SdkV2{}),
-		"schedule":   reflect.TypeOf(CronSchedule_SdkV2{}),
-	}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAlertsV2ResponseAlert_SdkV2
-// only implements ToObjectValue() and Type().
-func (o ListAlertsV2ResponseAlert_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"create_time":        o.CreateTime,
-			"custom_description": o.CustomDescription,
-			"custom_summary":     o.CustomSummary,
-			"display_name":       o.DisplayName,
-			"evaluation":         o.Evaluation,
-			"id":                 o.Id,
-			"lifecycle_state":    o.LifecycleState,
-			"owner_user_name":    o.OwnerUserName,
-			"query_text":         o.QueryText,
-			"run_as_user_name":   o.RunAsUserName,
-			"schedule":           o.Schedule,
-			"update_time":        o.UpdateTime,
-			"warehouse_id":       o.WarehouseId,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o ListAlertsV2ResponseAlert_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"create_time":        types.StringType,
-			"custom_description": types.StringType,
-			"custom_summary":     types.StringType,
-			"display_name":       types.StringType,
-			"evaluation": basetypes.ListType{
-				ElemType: AlertV2Evaluation_SdkV2{}.Type(ctx),
-			},
-			"id":               types.StringType,
-			"lifecycle_state":  types.StringType,
-			"owner_user_name":  types.StringType,
-			"query_text":       types.StringType,
-			"run_as_user_name": types.StringType,
-			"schedule": basetypes.ListType{
-				ElemType: CronSchedule_SdkV2{}.Type(ctx),
-			},
-			"update_time":  types.StringType,
-			"warehouse_id": types.StringType,
-		},
-	}
-}
-
-// GetEvaluation returns the value of the Evaluation field in ListAlertsV2ResponseAlert_SdkV2 as
-// a AlertV2Evaluation_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListAlertsV2ResponseAlert_SdkV2) GetEvaluation(ctx context.Context) (AlertV2Evaluation_SdkV2, bool) {
-	var e AlertV2Evaluation_SdkV2
-	if o.Evaluation.IsNull() || o.Evaluation.IsUnknown() {
-		return e, false
-	}
-	var v []AlertV2Evaluation_SdkV2
-	d := o.Evaluation.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetEvaluation sets the value of the Evaluation field in ListAlertsV2ResponseAlert_SdkV2.
-func (o *ListAlertsV2ResponseAlert_SdkV2) SetEvaluation(ctx context.Context, v AlertV2Evaluation_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["evaluation"]
-	o.Evaluation = types.ListValueMust(t, vs)
-}
-
-// GetSchedule returns the value of the Schedule field in ListAlertsV2ResponseAlert_SdkV2 as
-// a CronSchedule_SdkV2 value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *ListAlertsV2ResponseAlert_SdkV2) GetSchedule(ctx context.Context) (CronSchedule_SdkV2, bool) {
-	var e CronSchedule_SdkV2
-	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
-		return e, false
-	}
-	var v []CronSchedule_SdkV2
-	d := o.Schedule.ElementsAs(ctx, &v, true)
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetSchedule sets the value of the Schedule field in ListAlertsV2ResponseAlert_SdkV2.
-func (o *ListAlertsV2ResponseAlert_SdkV2) SetSchedule(ctx context.Context, v CronSchedule_SdkV2) {
-	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["schedule"]
-	o.Schedule = types.ListValueMust(t, vs)
 }
 
 // Get dashboard objects
@@ -8763,21 +8274,6 @@ type ListDashboardsRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 	// Full text search term.
 	Q types.String `tfsdk:"-"`
-}
-
-func (newState *ListDashboardsRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListDashboardsRequest_SdkV2) {
-}
-
-func (newState *ListDashboardsRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListDashboardsRequest_SdkV2) {
-}
-
-func (c ListDashboardsRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["order"] = attrs["order"].SetOptional()
-	attrs["page"] = attrs["page"].SetOptional()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["q"] = attrs["q"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListDashboardsRequest.
@@ -8842,21 +8338,6 @@ type ListQueriesLegacyRequest_SdkV2 struct {
 	Q types.String `tfsdk:"-"`
 }
 
-func (newState *ListQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueriesLegacyRequest_SdkV2) {
-}
-
-func (newState *ListQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueriesLegacyRequest_SdkV2) {
-}
-
-func (c ListQueriesLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["order"] = attrs["order"].SetOptional()
-	attrs["page"] = attrs["page"].SetOptional()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["q"] = attrs["q"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueriesLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8899,19 +8380,6 @@ type ListQueriesRequest_SdkV2 struct {
 	PageSize types.Int64 `tfsdk:"-"`
 
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListQueriesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueriesRequest_SdkV2) {
-}
-
-func (newState *ListQueriesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueriesRequest_SdkV2) {
-}
-
-func (c ListQueriesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueriesRequest.
@@ -9050,22 +8518,6 @@ type ListQueryHistoryRequest_SdkV2 struct {
 	// example, the character '+' needs to be replaced by %2B. This field is
 	// optional.
 	PageToken types.String `tfsdk:"-"`
-}
-
-func (newState *ListQueryHistoryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListQueryHistoryRequest_SdkV2) {
-}
-
-func (newState *ListQueryHistoryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListQueryHistoryRequest_SdkV2) {
-}
-
-func (c ListQueryHistoryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["filter_by"] = attrs["filter_by"].SetOptional()
-	attrs["filter_by"] = attrs["filter_by"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["include_metrics"] = attrs["include_metrics"].SetOptional()
-	attrs["max_results"] = attrs["max_results"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListQueryHistoryRequest.
@@ -9503,20 +8955,6 @@ type ListVisualizationsForQueryRequest_SdkV2 struct {
 	PageToken types.String `tfsdk:"-"`
 }
 
-func (newState *ListVisualizationsForQueryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListVisualizationsForQueryRequest_SdkV2) {
-}
-
-func (newState *ListVisualizationsForQueryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListVisualizationsForQueryRequest_SdkV2) {
-}
-
-func (c ListVisualizationsForQueryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-	attrs["page_size"] = attrs["page_size"].SetOptional()
-	attrs["page_token"] = attrs["page_token"].SetOptional()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListVisualizationsForQueryRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -9639,18 +9077,6 @@ type ListWarehousesRequest_SdkV2 struct {
 	// Service Principal which will be used to fetch the list of warehouses. If
 	// not specified, the user from the session header is used.
 	RunAsUserId types.Int64 `tfsdk:"-"`
-}
-
-func (newState *ListWarehousesRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListWarehousesRequest_SdkV2) {
-}
-
-func (newState *ListWarehousesRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListWarehousesRequest_SdkV2) {
-}
-
-func (c ListWarehousesRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["run_as_user_id"] = attrs["run_as_user_id"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListWarehousesRequest.
@@ -11813,18 +11239,6 @@ type RestoreDashboardRequest_SdkV2 struct {
 	DashboardId types.String `tfsdk:"-"`
 }
 
-func (newState *RestoreDashboardRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreDashboardRequest_SdkV2) {
-}
-
-func (newState *RestoreDashboardRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreDashboardRequest_SdkV2) {
-}
-
-func (c RestoreDashboardRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["dashboard_id"] = attrs["dashboard_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreDashboardRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11861,18 +11275,6 @@ type RestoreQueriesLegacyRequest_SdkV2 struct {
 	QueryId types.String `tfsdk:"-"`
 }
 
-func (newState *RestoreQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreQueriesLegacyRequest_SdkV2) {
-}
-
-func (newState *RestoreQueriesLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreQueriesLegacyRequest_SdkV2) {
-}
-
-func (c RestoreQueriesLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["query_id"] = attrs["query_id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreQueriesLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11905,17 +11307,6 @@ func (o RestoreQueriesLegacyRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RestoreResponse_SdkV2 struct {
-}
-
-func (newState *RestoreResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RestoreResponse_SdkV2) {
-}
-
-func (newState *RestoreResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RestoreResponse_SdkV2) {
-}
-
-func (c RestoreResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RestoreResponse.
@@ -12381,20 +11772,6 @@ type SetRequest_SdkV2 struct {
 	ObjectId types.String `tfsdk:"-"`
 	// The type of object permission to set.
 	ObjectType types.String `tfsdk:"-"`
-}
-
-func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRequest_SdkV2) {
-}
-
-func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetRequest_SdkV2) {
-}
-
-func (c SetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
-	attrs["objectId"] = attrs["objectId"].SetRequired()
-	attrs["objectType"] = attrs["objectType"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRequest.
@@ -12870,18 +12247,6 @@ type StartRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *StartRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StartRequest_SdkV2) {
-}
-
-func (newState *StartRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StartRequest_SdkV2) {
-}
-
-func (c StartRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StartRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13272,18 +12637,6 @@ type StopRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan StopRequest_SdkV2) {
-}
-
-func (newState *StopRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState StopRequest_SdkV2) {
-}
-
-func (c StopRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in StopRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13650,21 +13003,6 @@ type TransferOwnershipRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
-func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransferOwnershipRequest_SdkV2) {
-}
-
-func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipRequest_SdkV2) {
-}
-
-func (c TransferOwnershipRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["new_owner"] = attrs["new_owner"].SetOptional()
-	attrs["objectId"] = attrs["objectId"].SetRequired()
-	attrs["objectId"] = attrs["objectId"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["objectType"] = attrs["objectType"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransferOwnershipRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13735,18 +13073,6 @@ type TrashAlertRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *TrashAlertRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashAlertRequest_SdkV2) {
-}
-
-func (newState *TrashAlertRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrashAlertRequest_SdkV2) {
-}
-
-func (c TrashAlertRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashAlertRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13783,18 +13109,6 @@ type TrashAlertV2Request_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
 }
 
-func (newState *TrashAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashAlertV2Request_SdkV2) {
-}
-
-func (newState *TrashAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrashAlertV2Request_SdkV2) {
-}
-
-func (c TrashAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
-}
-
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashAlertV2Request.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -13829,18 +13143,6 @@ func (o TrashAlertV2Request_SdkV2) Type(ctx context.Context) attr.Type {
 // Delete a query
 type TrashQueryRequest_SdkV2 struct {
 	Id types.String `tfsdk:"-"`
-}
-
-func (newState *TrashQueryRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TrashQueryRequest_SdkV2) {
-}
-
-func (newState *TrashQueryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TrashQueryRequest_SdkV2) {
-}
-
-func (c TrashQueryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["id"] = attrs["id"].SetRequired()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashQueryRequest.
@@ -14096,6 +13398,7 @@ func (o *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
+// Update an alert
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 	// UUID identifying the alert.
@@ -14111,22 +13414,7 @@ type UpdateAlertV2Request_SdkV2 struct {
 	// always explicitly list the fields being updated and avoid using `*`
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
-	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertV2Request_SdkV2) {
-}
-
-func (newState *UpdateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAlertV2Request_SdkV2) {
-}
-
-func (c UpdateAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
+	UpdateMask types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.
@@ -14452,17 +13740,6 @@ func (o *UpdateQueryRequestQuery_SdkV2) SetTags(ctx context.Context, v []types.S
 }
 
 type UpdateResponse_SdkV2 struct {
-}
-
-func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse_SdkV2) {
-}
-
-func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateResponse_SdkV2) {
-}
-
-func (c UpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.

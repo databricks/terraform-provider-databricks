@@ -4,9 +4,9 @@
 
 ### New Features and Improvements
 
-### Bug Fixes
+ * Add `databricks_disable_legacy_features_setting` account-level resource ([#4676](https://github.com/databricks/terraform-provider-databricks/pull/4676))
 
- * Add a new settings resource `databricks_disable_legacy_features_setting` ([#4676](https://github.com/databricks/terraform-provider-databricks/pull/4676))
+### Bug Fixes
 
 ### Documentation
 

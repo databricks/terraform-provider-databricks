@@ -8,6 +8,8 @@
 
 ### Documentation
 
+ * Document minimum required Terraform version as 1.1.5 ([#4683](https://github.com/databricks/terraform-provider-databricks/pull/4683)).
+
 ### Exporter
 
 ### Internal Changes

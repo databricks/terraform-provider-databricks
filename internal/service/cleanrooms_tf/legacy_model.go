@@ -23,6 +23,8 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -72,6 +74,7 @@ func (c CleanRoom_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["output_catalog"] = attrs["output_catalog"].SetComputed()
 	attrs["output_catalog"] = attrs["output_catalog"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["owner"] = attrs["owner"].SetOptional()
@@ -1115,9 +1118,11 @@ func (newState *CleanRoomCollaborator_SdkV2) SyncEffectiveFieldsDuringRead(exist
 
 func (c CleanRoomCollaborator_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetRequired()
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
+	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetOptional()
 	attrs["organization_name"] = attrs["organization_name"].SetComputed()
 
@@ -1400,14 +1405,18 @@ func (newState *CleanRoomRemoteDetail_SdkV2) SyncEffectiveFieldsDuringRead(exist
 func (c CleanRoomRemoteDetail_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
+	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["creator"] = attrs["creator"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
+	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["region"] = attrs["region"].SetOptional()
+	attrs["region"] = attrs["region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

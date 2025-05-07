@@ -4,6 +4,8 @@
 
 ### New Features and Improvements
 
+ * Update Databricks SDK to v0.68.0 ([#4694](https://github.com/databricks/terraform-provider-databricks/pull/4694)).
+
 ### Bug Fixes
 
 ### Documentation

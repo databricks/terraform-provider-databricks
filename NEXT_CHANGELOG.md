@@ -4,6 +4,7 @@
 
 ### New Features and Improvements
 
+ * Add `databricks_disable_legacy_features_setting` account-level resource ([#4676](https://github.com/databricks/terraform-provider-databricks/pull/4676))
  * Update Databricks SDK to v0.68.0 ([#4694](https://github.com/databricks/terraform-provider-databricks/pull/4694)).
 
 ### Bug Fixes

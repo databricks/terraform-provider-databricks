@@ -100,6 +100,8 @@ func ResourceAccessControlRuleSet() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Store empty etag in state as we will always use the latest etag
+			ruleSetUpdateReq.RuleSet.Etag = ""
 			err = common.StructToData(response, s, d)
 			if err != nil {
 				return err
@@ -110,7 +112,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			data, err := readFromWsOrAcc(ctx, c, iam.GetRuleSetRequest{
 				Name: d.Id(),
-				Etag: d.Get("etag").(string),
+				Etag: "",
 			})
 			if err != nil {
 				return err
@@ -121,11 +123,18 @@ func ResourceAccessControlRuleSet() common.Resource {
 			var ruleSetUpdateReq iam.UpdateRuleSetRequest
 			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
 			ruleSetUpdateReq.Name = ruleSetUpdateReq.RuleSet.Name
-			// etag should already be present
+			// Fetch the latest Etag
+			ruleSetResponse, err := fetchLatestEtagAndUpdateRuleSet(ctx, c, ruleSetUpdateReq)
+			if err != nil {
+				return err
+			}
+			ruleSetUpdateReq.RuleSet.Etag = ruleSetResponse.Etag
 			response, err := handleConflictAndUpdate(ctx, c, ruleSetUpdateReq)
 			if err != nil {
 				return err
 			}
+			// Storing empty etag in state as we will always use the latest etag
+			response.Etag = ""
 			err = common.StructToData(response, s, d)
 			if err != nil {
 				return err
@@ -134,12 +143,19 @@ func ResourceAccessControlRuleSet() common.Resource {
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var ruleSetUpdateReq iam.UpdateRuleSetRequest
+			common.DataToStructPointer(d, s, &ruleSetUpdateReq.RuleSet)
+			ruleSetUpdateReq.Name = d.Id()
+			ruleSetUpdateResponse, err := fetchLatestEtagAndUpdateRuleSet(ctx, c, ruleSetUpdateReq)
+			if err != nil {
+				return err
+			}
 			// we remove all grant rules. Account admins will still be able to update rule set
-			_, err := handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
+			_, err = handleConflictAndUpdate(ctx, c, iam.UpdateRuleSetRequest{
 				Name: d.Id(),
 				RuleSet: iam.RuleSetUpdateRequest{
 					Name: d.Id(),
-					Etag: d.Get("etag").(string),
+					Etag: ruleSetUpdateResponse.Etag,
 				},
 			})
 			if err != nil {

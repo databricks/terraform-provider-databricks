@@ -406,7 +406,7 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 This resource can be imported by Databricks account ID and workspace ID.
 
 ```sh
-terraform import databricks_mws_networks.this '<account_id>/<workspace_id>'
+terraform import databricks_mws_workspaces.this '<account_id>/<workspace_id>'
 ```
 
 ~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.

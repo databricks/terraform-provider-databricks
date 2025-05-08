@@ -8,7 +8,7 @@
 
 ### Documentation
 
-* Fix import documentation for `databricks_mws_workspaces`.
+* Fix import documentation for all resources ([#4699](https://github.com/databricks/terraform-provider-databricks/pull/4699/files)).
 
 ### Exporter
 

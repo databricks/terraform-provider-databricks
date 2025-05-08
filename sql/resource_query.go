@@ -100,7 +100,9 @@ func ResourceQuery() common.Resource {
 			var q queryCreateStruct
 			common.DataToStructPointer(d, s, &q)
 			apiQuery, err := w.Queries.Create(ctx, sql.CreateQueryRequest{
-				Query: &q.CreateQueryRequestQuery,
+				AutoResolveDisplayName: false,
+				Query:                  &q.CreateQueryRequestQuery,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 			})
 			if err != nil {
 				return err

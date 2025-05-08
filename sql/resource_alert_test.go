@@ -52,6 +52,7 @@ var (
     }
   }`
 	createAlertRequest = sql.CreateAlertRequest{
+		AutoResolveDisplayName: false,
 		Alert: &sql.CreateAlertRequestAlert{
 			QueryId:     "123456",
 			DisplayName: "TF new alert",
@@ -70,7 +71,9 @@ var (
 					},
 				},
 			},
-		}}
+		},
+		ForceSendFields: []string{"AutoResolveDisplayName"},
+	}
 )
 
 func TestAlertCreate(t *testing.T) {
@@ -104,13 +107,13 @@ func TestAlertCreate_BackendError(t *testing.T) {
 			e := w.GetMockAlertsAPI().EXPECT()
 			e.Create(mock.Anything, createAlertRequest).Return(nil, &apierr.APIError{
 				StatusCode: http.StatusBadRequest,
-				Message:    "bad payload",
+				Message:    "Node named 'TF new alert' already exists",
 			})
 		},
 		Resource: ResourceAlert(),
 		Create:   true,
 		HCL:      createHcl,
-	}.ExpectError(t, "bad payload")
+	}.ExpectError(t, "Node named 'TF new alert' already exists")
 }
 
 func TestAlertCreate_ErrorMultipleValues(t *testing.T) {

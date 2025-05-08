@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -140,11 +139,9 @@ func validateSchema() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"bucket_name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.StringMatch(
-				regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
-				"must contain only alphanumeric, underscore, and hyphen characters"),
+			Type:         schema.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringMatch(AwsBucketNameRegex, AwsBucketNameRegexError),
 		},
 		"role_name": {
 			Type:     schema.TypeString,

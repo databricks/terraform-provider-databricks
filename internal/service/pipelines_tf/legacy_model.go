@@ -890,7 +890,7 @@ type EditPipeline_SdkV2 struct {
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Unique identifier for this pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id"`
+	PipelineId types.String `tfsdk:"-"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
@@ -947,7 +947,7 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -1580,7 +1580,7 @@ func (o EventLogSpec_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type FileLibrary_SdkV2 struct {
-	// The absolute path of the file.
+	// The absolute path of the source code.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -2390,10 +2390,10 @@ func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDur
 
 func (c IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_id"] = attrs["connection_id"].SetOptional()
-	attrs["connection_name"] = attrs["connection_name"].SetOptional()
-	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetOptional()
+	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetRequired()
 	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
-	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetOptional()
+	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetRequired()
 
 	return attrs
 }
@@ -2589,7 +2589,7 @@ type ListPipelineEventsRequest_SdkV2 struct {
 	// with all fields in this request except max_results. An error is returned
 	// if any fields other than max_results are set when this field is set.
 	PageToken types.String `tfsdk:"-"`
-
+	// The pipeline to return events for.
 	PipelineId types.String `tfsdk:"-"`
 }
 
@@ -3106,7 +3106,7 @@ func (o ManualTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type NotebookLibrary_SdkV2 struct {
-	// The absolute path of the notebook.
+	// The absolute path of the source code.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -4130,7 +4130,7 @@ func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existing
 }
 
 func (c PipelineDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetRequired()
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
 	return attrs
@@ -5566,10 +5566,10 @@ func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Re
 }
 
 func (c ReportSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
-	attrs["source_url"] = attrs["source_url"].SetOptional()
+	attrs["source_url"] = attrs["source_url"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -5825,10 +5825,10 @@ func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sc
 }
 
 func (c SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
-	attrs["source_schema"] = attrs["source_schema"].SetOptional()
+	attrs["source_schema"] = attrs["source_schema"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -6140,6 +6140,7 @@ func (o StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type StartUpdate_SdkV2 struct {
+	// What triggered this update.
 	Cause types.String `tfsdk:"cause"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
@@ -6429,12 +6430,12 @@ func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Tab
 }
 
 func (c TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
 	attrs["source_schema"] = attrs["source_schema"].SetOptional()
-	attrs["source_table"] = attrs["source_table"].SetOptional()
+	attrs["source_table"] = attrs["source_table"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -6515,6 +6516,18 @@ func (o *TableSpec_SdkV2) SetTableConfiguration(ctx context.Context, v TableSpec
 }
 
 type TableSpecificConfig_SdkV2 struct {
+	// A list of column names to be excluded for the ingestion. When not
+	// specified, include_columns fully controls what columns to be ingested.
+	// When specified, all other columns including future ones will be
+	// automatically included for ingestion. This field in mutually exclusive
+	// with `include_columns`.
+	ExcludeColumns types.List `tfsdk:"exclude_columns"`
+	// A list of column names to be included for the ingestion. When not
+	// specified, all columns except ones in exclude_columns will be included.
+	// Future columns will be automatically included. When specified, all other
+	// future columns will be automatically excluded from ingestion. This field
+	// in mutually exclusive with `exclude_columns`.
+	IncludeColumns types.List `tfsdk:"include_columns"`
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
 	// If true, formula fields defined in the table are included in the
@@ -6535,6 +6548,8 @@ func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringRead(existin
 }
 
 func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
+	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
@@ -6552,8 +6567,10 @@ func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (a TableSpecificConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"primary_keys": reflect.TypeOf(types.String{}),
-		"sequence_by":  reflect.TypeOf(types.String{}),
+		"exclude_columns": reflect.TypeOf(types.String{}),
+		"include_columns": reflect.TypeOf(types.String{}),
+		"primary_keys":    reflect.TypeOf(types.String{}),
+		"sequence_by":     reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6564,6 +6581,8 @@ func (o TableSpecificConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"exclude_columns":                   o.ExcludeColumns,
+			"include_columns":                   o.IncludeColumns,
 			"primary_keys":                      o.PrimaryKeys,
 			"salesforce_include_formula_fields": o.SalesforceIncludeFormulaFields,
 			"scd_type":                          o.ScdType,
@@ -6575,6 +6594,12 @@ func (o TableSpecificConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (o TableSpecificConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"exclude_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -6585,6 +6610,58 @@ func (o TableSpecificConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExcludeColumns returns the value of the ExcludeColumns field in TableSpecificConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig_SdkV2) GetExcludeColumns(ctx context.Context) ([]types.String, bool) {
+	if o.ExcludeColumns.IsNull() || o.ExcludeColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExcludeColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExcludeColumns sets the value of the ExcludeColumns field in TableSpecificConfig_SdkV2.
+func (o *TableSpecificConfig_SdkV2) SetExcludeColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclude_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExcludeColumns = types.ListValueMust(t, vs)
+}
+
+// GetIncludeColumns returns the value of the IncludeColumns field in TableSpecificConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig_SdkV2) GetIncludeColumns(ctx context.Context) ([]types.String, bool) {
+	if o.IncludeColumns.IsNull() || o.IncludeColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IncludeColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeColumns sets the value of the IncludeColumns field in TableSpecificConfig_SdkV2.
+func (o *TableSpecificConfig_SdkV2) SetIncludeColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.IncludeColumns = types.ListValueMust(t, vs)
 }
 
 // GetPrimaryKeys returns the value of the PrimaryKeys field in TableSpecificConfig_SdkV2 as
@@ -6836,7 +6913,7 @@ func (o *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 
 type UpdateStateInfo_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
-
+	// The update state.
 	State types.String `tfsdk:"state"`
 
 	UpdateId types.String `tfsdk:"update_id"`

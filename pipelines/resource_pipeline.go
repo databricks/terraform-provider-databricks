@@ -274,7 +274,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetValidateFunc(validation.StringInSlice([]string{"pro", "core", "advanced"}, true))
 
 	// RequiredWith fields
-	s.SchemaPath("gateway_definition").SetRequiredWith([]string{"gateway_definition.0.gateway_storage_name", "gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema"})
 	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
 	return s

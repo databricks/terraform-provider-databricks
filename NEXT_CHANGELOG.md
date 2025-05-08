@@ -8,6 +8,8 @@
 
 ### Documentation
 
+* Fix import documentation for `databricks_mws_workspaces`.
+
 ### Exporter
 
 ### Internal Changes

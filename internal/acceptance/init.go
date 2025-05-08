@@ -315,6 +315,7 @@ func OidcConfigCustomizer(cfg *config.Config) error {
 		}
 		cfg.ActionsIDTokenRequestToken = string(bs)
 	}
+	cfg.AuthType = "github-oidc"
 	return nil
 }
 

@@ -286,7 +286,7 @@ terraform import databricks_model_serving.this <model-serving-endpoint-name>
 
 # databricks_model_serving_provisioned_throughput Resource
 
-This resource allows you to manage [Foundation Model provisioned throughput ](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
+This resource allows you to manage [Foundation Model provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
 

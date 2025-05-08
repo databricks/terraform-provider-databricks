@@ -301,19 +301,23 @@ func DefaultConfigCustomizer(cfg *config.Config) error {
 // The resulting values are written to a hard-coded location, which we read from if present to use OIDC.
 // It is not an error if these files are not present.
 func OidcConfigCustomizer(cfg *config.Config) error {
+	// This is a no-op for non-AWS and for non-UC AWS workspace environments because the OIDC auth is not supported.
+	if !slices.Contains([]string{"MWS", "ucws", "ucacct"}, os.Getenv("CLOUD_ENV")) {
+		return nil
+	}
 	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL"); err == nil {
 		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_URL")
 		if err != nil {
 			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_URL: %w", err)
 		}
-		cfg.ActionsIDTokenRequestURL = string(bs)
+		cfg.ActionsIDTokenRequestURL = strings.TrimSpace(string(bs))
 	}
 	if _, err := os.Stat("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN"); err == nil {
 		bs, err := os.ReadFile("/tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN")
 		if err != nil {
 			return fmt.Errorf("cannot read /tmp/ACTIONS_ID_TOKEN_REQUEST_TOKEN: %w", err)
 		}
-		cfg.ActionsIDTokenRequestToken = string(bs)
+		cfg.ActionsIDTokenRequestToken = strings.TrimSpace(string(bs))
 	}
 	cfg.AuthType = "github-oidc"
 	return nil

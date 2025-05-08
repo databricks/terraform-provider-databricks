@@ -1,7 +1,5 @@
 package aws
 
-import "regexp"
-
 var AwsConfig = map[string]map[string]string{
 	"aws": {
 		"accountId":            "414351767826",
@@ -25,6 +23,3 @@ var AwsConfig = map[string]map[string]string{
 
 var AwsPartitions = []string{"aws", "aws-us-gov", "aws-us-gov-dod"}
 var AwsPartitionsValidationError = "aws_partition must be either 'aws' or 'aws-us-gov' or 'aws-us-gov-dod'"
-
-var AwsBucketNameRegex = regexp.MustCompile(`^[0-9a-z][-0-9a-z\.]{1,61}[0-9a-z]$`)
-var AwsBucketNameRegexError = "must contain only alphanumeric, dot, and hyphen characters"

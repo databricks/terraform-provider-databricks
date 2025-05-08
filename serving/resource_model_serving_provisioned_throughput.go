@@ -11,39 +11,17 @@ import (
 )
 
 const (
-	defaultProvisionTimeout = 45 * time.Minute
-	deleteCallTimeout       = 10 * time.Second
+	defaultPtProvisionTimeout = 45 * time.Minute
 )
 
-func ResourceModelServing() common.Resource {
+func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
-		serving.CreateServingEndpoint{},
+		serving.CreatePtEndpointRequest{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
 			m["name"].ForceNew = true
-			// It is allowed for users to create a serving endpoint with or without a config. Removing a config
-			// from an existing model serving endpoint is a no-op (i.e. the config will remain in the state and
-			// the model serving endpoint will not be changed).
-			common.MustSchemaPath(m, "config").Computed = true
-			common.MustSchemaPath(m, "config", "served_models").ConflictsWith = []string{"config.served_entities"}
-			common.MustSchemaPath(m, "config", "served_entities").ConflictsWith = []string{"config.served_models"}
-
 			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
-			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").Computed = true
-			common.MustSchemaPath(m, "config", "auto_capture_config", "enabled").Computed = true
-			common.MustSchemaPath(m, "config", "auto_capture_config", "catalog_name").ForceNew = true
-			common.MustSchemaPath(m, "config", "auto_capture_config", "schema_name").ForceNew = true
-			common.MustSchemaPath(m, "config", "auto_capture_config", "table_name_prefix").ForceNew = true
-
-			common.MustSchemaPath(m, "config", "served_models", "name").Computed = true
-			common.MustSchemaPath(m, "config", "served_models", "workload_type").Computed = true
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Required = false
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
-			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
-			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Please use 'config.served_entities' instead of 'config.served_models'."
-
 			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
-			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Computed = true
-			common.MustSchemaPath(m, "config", "served_entities", "workload_type").Computed = true
+			common.MustSchemaPath(m, "config", "served_entities", "provisioned_model_units").Required = true
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
@@ -58,9 +36,9 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
-			var e serving.CreateServingEndpoint
+			var e serving.CreatePtEndpointRequest
 			common.DataToStructPointer(d, s, &e)
-			wait, err := w.ServingEndpoints.Create(ctx, e)
+			wait, err := w.ServingEndpoints.CreateProvisionedThroughputEndpoint(ctx, e)
 			if err != nil {
 				return err
 			}
@@ -112,11 +90,14 @@ func ResourceModelServing() common.Resource {
 			if err != nil {
 				return err
 			}
-			var e serving.CreateServingEndpoint
+			var e serving.CreatePtEndpointRequest
 			common.DataToStructPointer(d, s, &e)
 			if d.HasChange("config") {
-				e.Config.Name = e.Name
-				waiter, err := w.ServingEndpoints.UpdateConfig(ctx, *e.Config)
+				var updateRequest serving.UpdateProvisionedThroughputEndpointConfigRequest
+				updateRequest.Name = e.Name
+				updateRequest.Config = e.Config
+
+				waiter, err := w.ServingEndpoints.UpdateProvisionedThroughputEndpointConfig(ctx, updateRequest)
 				if err != nil {
 					return err
 				}
@@ -138,8 +119,8 @@ func ResourceModelServing() common.Resource {
 		Schema:         s,
 		SchemaVersion:  0,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(defaultProvisionTimeout),
-			Update: schema.DefaultTimeout(defaultProvisionTimeout),
+			Create: schema.DefaultTimeout(defaultPtProvisionTimeout),
+			Update: schema.DefaultTimeout(defaultPtProvisionTimeout),
 		},
 	}
 }

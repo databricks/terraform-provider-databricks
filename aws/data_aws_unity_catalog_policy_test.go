@@ -2,7 +2,6 @@ package aws
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/databricks/terraform-provider-databricks/qa"
@@ -17,13 +16,12 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
 		ID:          ".",
 		HCL: `
         aws_account_id = "123456789098"
-        bucket_name = "databricks-bucket.2"
+        bucket_name = "databricks-bucket"
         role_name = "databricks-role"
         kms_name = "databricks-kms"
         `,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "databricks-bucket.2-123456789098-databricks-role", d.Id())
 	j := d.Get("json").(string)
 	p := `{
           "Version": "2012-10-17",
@@ -41,8 +39,8 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
 		"s3:AbortMultipartUpload"
               ],
               "Resource": [
-                "arn:aws:s3:::databricks-bucket.2/*",
-                "arn:aws:s3:::databricks-bucket.2"
+                "arn:aws:s3:::databricks-bucket/*",
+                "arn:aws:s3:::databricks-bucket"
               ]
             },
             {
@@ -90,7 +88,7 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
                 "sqs:PurgeQueue"
               ],
               "Resource": [
-                "arn:aws:s3:::databricks-bucket.2",
+                "arn:aws:s3:::databricks-bucket",
                 "arn:aws:sqs:*:123456789098:csms-*",
                 "arn:aws:sns:*:123456789098:csms-*"
               ]
@@ -578,21 +576,6 @@ func TestDataAwsUnityCatalogPolicyPartionGovDoD(t *testing.T) {
           ]
         }`
 	compareJSON(t, j, p)
-}
-
-func TestDataAwsUnityCatalogPolicy_BucketNameInvalid(t *testing.T) {
-	qa.ResourceFixture{
-		Read:        true,
-		Resource:    DataAwsUnityCatalogPolicy(),
-		NonWritable: true,
-		ID:          ".",
-		HCL: `
-        aws_account_id = "123456789098"
-        bucket_name = "-databricks-bucket"
-        role_name = "databricks-role"
-        kms_name = "databricks-kms"
-        `,
-	}.ExpectError(t, fmt.Sprintf("invalid config supplied. [bucket_name] invalid value for bucket_name (%s)", AwsBucketNameRegexError))
 }
 
 func compareJSON(t *testing.T, json1 string, json2 string) {

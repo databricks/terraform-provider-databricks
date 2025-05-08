@@ -24,6 +24,12 @@ internal/providers/pluginfw/products/alert_v2/resource_alert_v2.go linguist-gene
 internal/providers/pluginfw/products/budget_policy/data_budget_policies.go linguist-generated=true
 internal/providers/pluginfw/products/budget_policy/data_budget_policy.go linguist-generated=true
 internal/providers/pluginfw/products/budget_policy/resource_budget_policy.go linguist-generated=true
+internal/providers/pluginfw/products/database_instance/data_database_instance.go linguist-generated=true
+internal/providers/pluginfw/products/database_instance/data_database_instances.go linguist-generated=true
+internal/providers/pluginfw/products/database_instance/resource_database_instance.go linguist-generated=true
+internal/providers/pluginfw/products/federation_policy/data_federation_policies.go linguist-generated=true
+internal/providers/pluginfw/products/federation_policy/data_federation_policy.go linguist-generated=true
+internal/providers/pluginfw/products/federation_policy/resource_federation_policy.go linguist-generated=true
 internal/providers/pluginfw/tfschema/attribute_builder.go linguist-generated=true
 internal/providers/pluginfw/tfschema/attribute_converter.go linguist-generated=true
 internal/providers/pluginfw/tfschema/base_schema_builder.go linguist-generated=true

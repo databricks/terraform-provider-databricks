@@ -5855,6 +5855,10 @@ type CreateInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
+	// For Fleet-pool V2, this object contains the information about the
+	// alternate node type ids to use when attempting to launch a cluster if the
+	// node type id is not available.
+	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -5887,6 +5891,7 @@ func (c CreateInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
+	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -5908,6 +5913,7 @@ func (a CreateInstancePool) GetComplexFieldTypes(ctx context.Context) map[string
 		"custom_tags":              reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
+		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 	}
@@ -5930,6 +5936,7 @@ func (o CreateInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
+			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -5952,6 +5959,7 @@ func (o CreateInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
+			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -6099,6 +6107,34 @@ func (o *CreateInstancePool) GetGcpAttributes(ctx context.Context) (InstancePool
 func (o *CreateInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
+}
+
+// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in CreateInstancePool as
+// a NodeTypeFlexibility value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
+	var e NodeTypeFlexibility
+	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
+		return e, false
+	}
+	var v []NodeTypeFlexibility
+	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in CreateInstancePool.
+func (o *CreateInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
+	vs := v.ToObjectValue(ctx)
+	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in CreateInstancePool as
@@ -8681,6 +8717,14 @@ type Environment struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies types.List `tfsdk:"dependencies"`
+	// We renamed `client` to `environment_version` in notebook exports. This
+	// field is meant solely so that imported notebooks with
+	// `environment_version` can be deserialized correctly, in a
+	// backwards-compatible way (i.e. if `client` is specified instead of
+	// `environment_version`, it will be deserialized correctly). Do NOT use
+	// this field for any other purpose, e.g. notebook storage. This field is
+	// not yet exposed to customers (e.g. in the jobs API).
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// List of jar dependencies, should be string representing volume paths. For
 	// example: `/Volumes/path/to/test.jar`.
 	JarDependencies types.List `tfsdk:"jar_dependencies"`
@@ -8695,6 +8739,7 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["client"] = attrs["client"].SetRequired()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()
 
 	return attrs
@@ -8721,9 +8766,10 @@ func (o Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client":           o.Client,
-			"dependencies":     o.Dependencies,
-			"jar_dependencies": o.JarDependencies,
+			"client":              o.Client,
+			"dependencies":        o.Dependencies,
+			"environment_version": o.EnvironmentVersion,
+			"jar_dependencies":    o.JarDependencies,
 		})
 }
 
@@ -8735,6 +8781,7 @@ func (o Environment) Type(ctx context.Context) attr.Type {
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"environment_version": types.StringType,
 			"jar_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},

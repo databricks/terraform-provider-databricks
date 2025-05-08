@@ -224,7 +224,7 @@ import {
 }
 ```
 
-Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_mws_networks.this '<account_id>/<network_id>'

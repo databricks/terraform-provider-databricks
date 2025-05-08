@@ -169,10 +169,6 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource instance profile can be imported using the ARN of it
 
-```bash
-terraform import databricks_instance_profile.this <instance-profile-arn>
-```
-
 ```hcl
 import {
   to = databricks_instance_profile.this

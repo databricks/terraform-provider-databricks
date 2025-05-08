@@ -108,16 +108,3 @@ The following resources are used in the same context:
 * [databricks_group](../data-sources/group.md) data to retrieve information about [databricks_group](group.md) members, entitlements and instance profiles.
 * [databricks_group_member](group_member.md) to attach [users](user.md) and [groups](group.md) as group members.
 * [databricks_mws_permission_assignment](mws_permission_assignment.md) to manage permission assignment from an account context
-
-```hcl
-import {
-  to = databricks_permission_assignment.this
-  id = "principal_id"
-}
-```
-
-Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
-
-```bash
-terraform import databricks_permission_assignment.this principal_id
-```

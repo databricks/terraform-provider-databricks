@@ -991,10 +991,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource permissions can be imported using the object id
+The resource permissions can be imported using the object id:
+
+```hcl
+import {
+  to = databricks_permissions.this
+  id = "/<object_type>/<object_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_permissions.this /<object type>/<object id>
+terraform import databricks_permissions.this /<object_type>/<object_id>
 ```
 
 ### Import Example
@@ -1018,20 +1027,6 @@ resource "databricks_permissions" "model_usage" {
 ```
 
 Import command:
-
 ```bash
 terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
-```
-
-```hcl
-import {
-  to = databricks_permissions.this
-  id = "/<object_type>/<object_id>"
-}
-```
-
-Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
-
-```bash
-terraform import databricks_permissions.this /<object_type>/<object_id>
 ```

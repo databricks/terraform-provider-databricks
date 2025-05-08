@@ -369,10 +369,6 @@ You can control Databricks General Permissions through [databricks_permissions](
 
 The resource can be imported using combination of securable type (`table`, `catalog`, `foreign_connection`, ...) and its name:
 
-```bash
-terraform import databricks_grants.this catalog/abc
-```
-
 ```hcl
 import {
   to = databricks_grants.this

@@ -139,7 +139,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource instance pool can be imported using it's id:
+The resource instance pool can be imported using its id:
 
 ```hcl
 import {

@@ -147,10 +147,6 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by `name`:
 
-```bash
-terraform import databricks_external_location.this <name>
-```
-
 ```hcl
 import {
   to = databricks_external_location.this

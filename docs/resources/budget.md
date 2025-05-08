@@ -90,10 +90,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by Databricks account ID and Budget.
+This resource can be imported by Databricks account ID and Budget:
 
-```sh
-terraform import databricks_budget.this '<account_id>|<budget_configuration_id>'
+```hcl
+import {
+  to = databricks_budget.this
+  id = "<account_id>|<budget_configuration_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_budget.this "<account_id>|<budget_configuration_id>"
 ```
 
 ## Related Resources

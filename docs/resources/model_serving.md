@@ -280,22 +280,6 @@ timeouts {
 
 The model serving resource can be imported using the name of the endpoint.
 
-```bash
-terraform import databricks_model_serving.this <model-serving-endpoint-name>
-```
-
-## Related Resources
-
-The following resources are often used in the same context:
-
-* [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
-* [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).
-* [databricks_mlflow_model](mlflow_model.md) to create models in the [workspace model registry](https://docs.databricks.com/en/mlflow/model-registry.html) in Databricks.
-* [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
-* [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
-* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
-
 ```hcl
 import {
   to = databricks_model_serving.this
@@ -308,6 +292,19 @@ Alternatively, when using `terraform` version 1.5 or earlier, import using the `
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
+
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).
+* [databricks_mlflow_model](mlflow_model.md) to create models in the [workspace model registry](https://docs.databricks.com/en/mlflow/model-registry.html) in Databricks.
+* [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
+* [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
+* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 
 ## Related Resources
 

@@ -93,6 +93,15 @@ In preparation for this operational scenario; you should be familiar with, and h
 
 You can import a `databricks_sql_visualization` resource with ID like the following:
 
+```hcl
+import {
+  to = databricks_sql_visualization.this
+  id = "<query-id>/<visualization-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_sql_visualization.this <query-id>/<visualization-id>
 ```

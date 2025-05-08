@@ -207,10 +207,19 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its full name.
+This resource can be imported by its full name:
+
+```hcl
+import {
+  to = databricks_sql_table.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
+terraform import databricks_sql_table.this "<catalog_name>.<schema_name>.<name>"
 ```
 
 ## Migration from `databricks_table`

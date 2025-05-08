@@ -52,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 You can import a `databricks_sql_dashboard` resource with ID like the following:
 
+```hcl
+import {
+  to = databricks_sql_dashboard.this
+  id = "<dashboard-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_sql_dashboard.this <dashboard-id>
+terraform import databricks_sql_dashboard.this "<dashboard-id>"
 ```
 
 ## Related Resources

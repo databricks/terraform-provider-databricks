@@ -42,6 +42,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by combination of workspace id and metastore id:
 
+```hcl
+import {
+  to = databricks_metastore_assignment.this
+  id = "<workspace_id>|<metastore_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_metastore_assignment.this '<workspace_id>|<metastore_id>'
+terraform import databricks_metastore_assignment.this "<workspace_id>|<metastore_id>"
 ```

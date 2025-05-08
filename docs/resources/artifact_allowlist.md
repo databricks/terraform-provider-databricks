@@ -60,7 +60,7 @@ import {
 Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_artifact_allowlist.this '<metastore_id>|<artifact_type>'
+terraform import databricks_artifact_allowlist.this "<metastore_id>|<artifact_type>"
 ```
 
 ## Related Resources

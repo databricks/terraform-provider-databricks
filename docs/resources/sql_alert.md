@@ -68,8 +68,17 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported using alert ID:
 
+```hcl
+import {
+  to = databricks_sql_alert.this
+  id = "<alert-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_sql_alert.this <alert-id>
+terraform import databricks_sql_alert.this "<alert-id>"
 ```
 
 ## Related Resources

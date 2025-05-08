@@ -121,10 +121,6 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by name:
 
-```bash
-terraform import databricks_storage_credential.this <name>
-```
-
 ```hcl
 import {
   to = databricks_storage_credential.this

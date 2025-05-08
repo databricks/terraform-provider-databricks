@@ -29,6 +29,15 @@ The resource supports the following arguments:
 
 This resource can be imported by predefined name `global`:
 
+```hcl
+import {
+  to = databricks_aibi_dashboard_embedding_access_policy_setting.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_aibi_dashboard_embedding_access_policy_setting.this global
 ```

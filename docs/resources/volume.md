@@ -100,7 +100,7 @@ This resource can be imported by `full_name` which is the 3-level Volume identif
 ```hcl
 import {
   to = databricks_volume.this
-  id = "<catalog_name>.<schema_name>.<volume_name>"
+  id = "<catalog_name>.<schema_name>.<name>"
 }
 ```
 

@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by the metastore id and schema name
+This resource can be imported by the metastore id and schema name:
 
 ```hcl
 import {

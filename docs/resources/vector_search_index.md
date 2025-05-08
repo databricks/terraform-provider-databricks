@@ -80,7 +80,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource can be imported using the name of the Mosaic AI Vector Search Index
+The resource can be imported using the name of the Mosaic AI Vector Search Index:
 
 ```hcl
 import {

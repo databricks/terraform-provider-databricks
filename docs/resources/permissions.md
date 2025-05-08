@@ -1026,12 +1026,12 @@ terraform import databricks_permissions.model_usage /registered-models/<register
 ```hcl
 import {
   to = databricks_permissions.this
-  id = "/<object type>/<object id>"
+  id = "/<object_type>/<object_id>"
 }
 ```
 
 Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_permissions.this /<object type>/<object id>
+terraform import databricks_permissions.this /<object_type>/<object_id>
 ```

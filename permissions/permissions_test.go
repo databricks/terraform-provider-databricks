@@ -680,7 +680,7 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	acceptance.WorkspaceLevel(t, acceptance.Step{
 		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", groupPermissions("CAN_USE")),
 	}, acceptance.Step{
-		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_USE", "CAN_MANAGE", "CAN_MONITOR")),
+		Template: sqlWarehouseTemplate + makePermissionsTestStage("sql_endpoint_id", "databricks_sql_endpoint.this.id", currentPrincipalPermission(t, "IS_OWNER"), allPrincipalPermissions("CAN_USE", "CAN_MANAGE", "CAN_MONITOR", "CAN_VIEW")),
 		// Note: ideally we could test making a new user/SP the owner of the warehouse, but the new user
 		// needs cluster creation permissions, and the SCIM API doesn't provide get-after-put consistency,
 		// so this would introduce flakiness.
@@ -718,21 +718,22 @@ func TestAccPermissions_SqlWarehouses(t *testing.T) {
 	})
 }
 
-func TestAccPermissions_SqlDashboard(t *testing.T) {
-	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
-	dashboardTemplate := `
-		resource "databricks_sql_dashboard" "this" {
-			name = "{var.STICKY_RANDOM}"
-		}`
-	acceptance.WorkspaceLevel(t, acceptance.Step{
-		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", groupPermissions("CAN_VIEW")),
-	}, acceptance.Step{
-		Template:    dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_VIEW")),
-		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for dashboard, allowed levels: CAN_MANAGE"),
-	}, acceptance.Step{
-		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_READ", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
-	})
-}
+// Legacy dashboards can no longer be created via the API. Tests for this resource are disabled.
+// func TestAccPermissions_SqlDashboard(t *testing.T) {
+// 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")
+// 	dashboardTemplate := `
+// 		resource "databricks_sql_dashboard" "this" {
+// 			name = "{var.STICKY_RANDOM}"
+// 		}`
+// 	acceptance.WorkspaceLevel(t, acceptance.Step{
+// 		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", groupPermissions("CAN_VIEW")),
+// 	}, acceptance.Step{
+// 		Template:    dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_VIEW")),
+// 		ExpectError: regexp.MustCompile("cannot remove management permissions for the current user for dashboard, allowed levels: CAN_MANAGE"),
+// 	}, acceptance.Step{
+// 		Template: dashboardTemplate + makePermissionsTestStage("sql_dashboard_id", "databricks_sql_dashboard.this.id", currentPrincipalPermission(t, "CAN_MANAGE"), allPrincipalPermissions("CAN_VIEW", "CAN_READ", "CAN_EDIT", "CAN_RUN", "CAN_MANAGE")),
+// 	})
+// }
 
 func TestAccPermissions_SqlAlert(t *testing.T) {
 	acceptance.LoadDebugEnvIfRunsFromIDE(t, "workspace")

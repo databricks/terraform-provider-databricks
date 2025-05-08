@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_online_table (Resource)
 
--> This resource can only be used on a Unity Catalog-enabled workspace!
-
 This resource allows you to create [Online Table](https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html) in Databricks.  An online table is a read-only copy of a Delta Table that is stored in row-oriented format optimized for online access. Online tables are fully serverless tables that auto-scale throughput capacity with the request load and provide low latency and high throughput access to data of any scale. Online tables are designed to work with Databricks Model Serving, Feature Serving, and retrieval-augmented generation (RAG) applications where they are used for fast data lookups.
+
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 

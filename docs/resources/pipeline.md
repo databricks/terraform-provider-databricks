@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -97,7 +99,10 @@ The following arguments are supported:
   * `gateway_storage_catalog` - Required, Immutable. The name of the catalog for the gateway pipeline's storage location.
   * `gateway_storage_name` - Required. The Unity Catalog-compatible naming for the gateway storage location. This is the destination to use for the data that is extracted by the gateway. Delta Live Tables system will automatically create the storage location under the catalog and schema.
   * `gateway_storage_schema` - Required, Immutable. The name of the schema for the gateway pipelines's storage location.
-
+* `event_log` - an optional block specifying a table where DLT Event Log will be stored.  Consists of the following fields:
+  * `name` - (Required) The table name the event log is published to in UC.
+  * `catalog` - (Optional, default to `catalog` defined on pipeline level) The UC catalog the event log is published under.
+  * `schema` - (Optional, default to `schema` defined on pipeline level) The UC schema the event log is published under.
 
 ### notification block
 

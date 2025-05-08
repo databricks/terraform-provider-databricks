@@ -4,15 +4,15 @@ subcategory: "Settings"
 
 # databricks_compliance_security_profile_workspace_setting Resource
 
--> This resource can only be used with a workspace-level provider!
+The `databricks_compliance_security_profile_workspace_setting` resource allows you to control whether to enable the 
+compliance security profile for the current workspace. Enabling it on a workspace is permanent. By default, it is 
+turned off. This setting can NOT be disabled once it is enabled.
 
 ~> This setting can NOT be disabled once it is enabled.
 
 ~> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace#compliance_security_profile_enabled-1) resource to configure this setting.
 
-The `databricks_compliance_security_profile_workspace_setting` resource allows you to control whether to enable the 
-compliance security profile for the current workspace. Enabling it on a workspace is permanent. By default, it is 
-turned off. This setting can NOT be disabled once it is enabled.
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 

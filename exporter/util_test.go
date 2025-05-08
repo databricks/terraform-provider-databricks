@@ -33,6 +33,18 @@ func TestImportClusterEmitsInitScripts(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /mnt/abc/test.sh)"])
 }
 
+func TestEitherString(t *testing.T) {
+	assert.Equal(t, "foo", eitherString("foo", "bar"))
+	assert.Equal(t, "bar", eitherString(nil, "bar"))
+	assert.Equal(t, "foo", eitherString("foo", ""))
+	assert.Equal(t, "a", eitherString("a", nil))
+	assert.Equal(t, "a", eitherString(nil, "a"))
+	assert.Equal(t, "", eitherString(nil, nil))
+	assert.Equal(t, "a", eitherString(1, "a"))
+	assert.Equal(t, "", eitherString(1, nil))
+	assert.Equal(t, "", eitherString(1, 1))
+}
+
 func TestAddAwsMounts(t *testing.T) {
 	ic := importContextForTest()
 	ic.mountMap = map[string]mount{}
@@ -484,4 +496,21 @@ func TestParsingServices(t *testing.T) {
 	expectedServices = []string{}
 	assert.ElementsMatch(t, expectedServices, specificServices)
 
+}
+
+func TestAnalyzeNotebook(t *testing.T) {
+	ic := importContextForTest()
+	ic.enableServices("notebooks,wsfiles,volumes,storage")
+	content := `
+		%pip install -U pandas /dbfs/tmp/mypkg.whl numpy==1.23.5
+		# %pip install -U pandas /dbfs/tmp/mypkg2.whl numpy==1.23.5
+		%pip install -U pandas /Volumes/default/main/tmp/mypkg3.whl numpy==1.23.5
+		%pip install -U pandas /Workspace/Shared/tmp/mypkg4.whl numpy==1.23.5
+
+	`
+	analyzeNotebook(ic, content)
+	assert.Equal(t, 3, len(ic.testEmits))
+	assert.True(t, ic.testEmits["databricks_dbfs_file[<unknown>] (id: /tmp/mypkg.whl)"])
+	assert.True(t, ic.testEmits["databricks_file[<unknown>] (id: /Volumes/default/main/tmp/mypkg3.whl)"])
+	assert.True(t, ic.testEmits["databricks_workspace_file[<unknown>] (id: /Shared/tmp/mypkg4.whl)"])
 }

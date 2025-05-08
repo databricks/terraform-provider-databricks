@@ -161,6 +161,26 @@ func TestResourceSqlTableCreateStatement_Liquid(t *testing.T) {
 	assert.Contains(t, stmt, "CLUSTER BY (`baz`,`bazz`)")
 }
 
+func TestResourceSqlTableCreateStatement_AutoLiquid(t *testing.T) {
+	ti := &SqlTableInfo{
+		Name:                  "bar",
+		CatalogName:           "main",
+		SchemaName:            "foo",
+		TableType:             "EXTERNAL",
+		DataSourceFormat:      "DELTA",
+		StorageLocation:       "s3://ext-main/foo/bar1",
+		StorageCredentialName: "somecred",
+		Comment:               "terraform managed",
+		ClusterKeys:           []string{"auto"},
+	}
+	stmt := ti.buildTableCreateStatement()
+	assert.Contains(t, stmt, "CREATE EXTERNAL TABLE `main`.`foo`.`bar`")
+	assert.Contains(t, stmt, "USING DELTA")
+	assert.Contains(t, stmt, "LOCATION 's3://ext-main/foo/bar1' WITH (CREDENTIAL `somecred`)")
+	assert.Contains(t, stmt, "COMMENT 'terraform managed'")
+	assert.Contains(t, stmt, "CLUSTER BY AUTO")
+}
+
 func TestResourceSqlTableSerializeProperties(t *testing.T) {
 	ti := &SqlTableInfo{
 		Properties: map[string]string{

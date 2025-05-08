@@ -145,11 +145,13 @@ type ForEachNestedTask struct {
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
 	RunJobTask      *RunJobTask         `json:"run_job_task,omitempty" tf:"group:task_type"`
 	ConditionTask   *jobs.ConditionTask `json:"condition_task,omitempty" tf:"group:task_type"`
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 
 	EmailNotifications     *jobs.TaskEmailNotifications   `json:"email_notifications,omitempty" tf:"suppress_diff"`
 	WebhookNotifications   *jobs.WebhookNotifications     `json:"webhook_notifications,omitempty" tf:"suppress_diff"`
@@ -168,17 +170,13 @@ func sortWebhookNotifications(wn *jobs.WebhookNotifications) {
 		return
 	}
 
-	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess}
+	notifs := [][]jobs.Webhook{wn.OnStart, wn.OnFailure, wn.OnSuccess,
+		wn.OnDurationWarningThresholdExceeded, wn.OnStreamingBacklogExceeded}
 	for _, ns := range notifs {
 		sort.Slice(ns, func(i, j int) bool {
 			return ns[i].Id < ns[j].Id
 		})
 	}
-
-	sort.Slice(wn.OnDurationWarningThresholdExceeded, func(i, j int) bool {
-		return wn.OnDurationWarningThresholdExceeded[i].Id < wn.OnDurationWarningThresholdExceeded[j].Id
-	})
-
 }
 
 // CronSchedule contains the information for the quartz cron expression
@@ -221,11 +219,13 @@ type JobTaskSettings struct {
 	JobClusterKey     string            `json:"job_cluster_key,omitempty" tf:"group:cluster_type"`
 	Libraries         []compute.Library `json:"libraries,omitempty" tf:"alias:library"`
 
+	DashboardTask   *jobs.DashboardTask `json:"dashboard_task,omitempty" tf:"group:task_type"`
 	NotebookTask    *NotebookTask       `json:"notebook_task,omitempty" tf:"group:task_type"`
 	SparkJarTask    *SparkJarTask       `json:"spark_jar_task,omitempty" tf:"group:task_type"`
 	SparkPythonTask *SparkPythonTask    `json:"spark_python_task,omitempty" tf:"group:task_type"`
 	SparkSubmitTask *SparkSubmitTask    `json:"spark_submit_task,omitempty" tf:"group:task_type"`
 	PipelineTask    *PipelineTask       `json:"pipeline_task,omitempty" tf:"group:task_type"`
+	PowerBiTask     *jobs.PowerBiTask   `json:"power_bi_task,omitempty" tf:"group:task_type"`
 	PythonWheelTask *PythonWheelTask    `json:"python_wheel_task,omitempty" tf:"group:task_type"`
 	SqlTask         *SqlTask            `json:"sql_task,omitempty" tf:"group:task_type"`
 	DbtTask         *DbtTask            `json:"dbt_task,omitempty" tf:"group:task_type"`
@@ -332,10 +332,6 @@ type JobSettings struct {
 	Parameters           []jobs.JobParameterDefinition `json:"parameters,omitempty" tf:"alias:parameter"`
 	Deployment           *jobs.JobDeployment           `json:"deployment,omitempty"`
 	EditMode             jobs.JobEditMode              `json:"edit_mode,omitempty"`
-}
-
-func (js *JobSettings) isMultiTask() bool {
-	return js.Format == "MULTI_TASK" || len(js.Tasks) > 0
 }
 
 func (js *JobSettings) sortTasksByKey() {
@@ -540,6 +536,7 @@ func (JobSettingsResource) CustomizeSchema(s *common.CustomizableSchema) *common
 	s.SchemaPath("name").SetDefault("Untitled")
 	s.SchemaPath("task", "dbt_task", "schema").SetDefault("default")
 	s.SchemaPath("task", "for_each_task", "task", "dbt_task", "schema").SetDefault("default")
+	s.SchemaPath("queue").SetSuppressDiff()
 
 	jobSettingsSchema(s.GetSchemaMap(), "")
 	jobSettingsSchema(common.MustSchemaMap(s.GetSchemaMap(), "task"), "task.0.")
@@ -903,7 +900,8 @@ func gitSourceSchema(s map[string]*schema.Schema, prefix string) {
 }
 
 func fixWebhookNotifications(s map[string]*schema.Schema) {
-	for _, n := range []string{"on_start", "on_failure", "on_success", "on_duration_warning_threshold_exceeded"} {
+	for _, n := range []string{"on_start", "on_failure", "on_success",
+		"on_duration_warning_threshold_exceeded", "on_streaming_backlog_exceeded"} {
 		common.MustSchemaPath(s, "webhook_notifications", n).DiffSuppressFunc = nil
 	}
 }
@@ -1038,9 +1036,9 @@ var jobsGoSdkSchema = common.StructToSchema(JobSettingsResource{}, nil)
 
 func ResourceJob() common.Resource {
 	getReadCtx := func(ctx context.Context, d *schema.ResourceData) context.Context {
-		var js JobSettingsResource
-		common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-		if js.isMultiTask() {
+		var jsr JobSettingsResource
+		common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+		if jsr.isMultiTask() {
 			return context.WithValue(ctx, common.Api, common.API_2_1)
 		}
 		return ctx
@@ -1053,27 +1051,27 @@ func ResourceJob() common.Resource {
 			Update: schema.DefaultTimeout(clusters.DefaultProvisionTimeout),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff) error {
-			var js JobSettingsResource
-			common.DiffToStructPointer(d, jobsGoSdkSchema, &js)
+			var jsr JobSettingsResource
+			common.DiffToStructPointer(d, jobsGoSdkSchema, &jsr)
 			alwaysRunning := d.Get("always_running").(bool)
-			if alwaysRunning && js.MaxConcurrentRuns > 1 {
+			if alwaysRunning && jsr.MaxConcurrentRuns > 1 {
 				return fmt.Errorf("`always_running` must be specified only with `max_concurrent_runs = 1`")
 			}
 			controlRunState := d.Get("control_run_state").(bool)
 			if controlRunState {
-				if js.Continuous == nil {
+				if jsr.Continuous == nil {
 					return fmt.Errorf("`control_run_state` must be specified only with `continuous`")
 				}
-				if js.MaxConcurrentRuns > 1 {
+				if jsr.MaxConcurrentRuns > 1 {
 					return fmt.Errorf("`control_run_state` must be specified only with `max_concurrent_runs = 1`")
 				}
 			}
 			return nil
 		},
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettings
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {
@@ -1094,6 +1092,9 @@ func ResourceJob() common.Resource {
 			} else {
 				// Api 2.0
 				// TODO: Deprecate and remove this code path
+				var js JobSettings
+				common.DataToStructPointer(d, jobsGoSdkSchema, &js)
+
 				jobsAPI := NewJobsAPI(ctx, c)
 				job, err := jobsAPI.Create(js)
 				if err != nil {
@@ -1104,9 +1105,9 @@ func ResourceJob() common.Resource {
 			}
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var js JobSettingsResource
-			common.DataToStructPointer(d, jobsGoSdkSchema, &js)
-			if js.isMultiTask() {
+			var jsr JobSettingsResource
+			common.DataToStructPointer(d, jobsGoSdkSchema, &jsr)
+			if jsr.isMultiTask() {
 				// Api 2.1
 				w, err := c.WorkspaceClient()
 				if err != nil {

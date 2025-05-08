@@ -22,6 +22,9 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/settings_tf"
 	"github.com/databricks/terraform-provider-databricks/internal/service/sharing_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -71,6 +74,7 @@ func (c CleanRoom) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["created_at"] = attrs["created_at"].SetComputed()
 	attrs["local_collaborator_alias"] = attrs["local_collaborator_alias"].SetComputed()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["output_catalog"] = attrs["output_catalog"].SetComputed()
 	attrs["owner"] = attrs["owner"].SetOptional()
 	attrs["remote_detailed_info"] = attrs["remote_detailed_info"].SetOptional()
@@ -672,7 +676,7 @@ func (o CleanRoomAssetForeignTableLocalDetails) Type(ctx context.Context) attr.T
 }
 
 type CleanRoomAssetNotebook struct {
-	// Server generated checksum that represents the notebook version.
+	// Server generated etag that represents the notebook version.
 	Etag types.String `tfsdk:"etag"`
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
@@ -1104,9 +1108,11 @@ func (newState *CleanRoomCollaborator) SyncEffectiveFieldsDuringRead(existingSta
 
 func (c CleanRoomCollaborator) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["collaborator_alias"] = attrs["collaborator_alias"].SetRequired()
+	attrs["collaborator_alias"] = attrs["collaborator_alias"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["display_name"] = attrs["display_name"].SetComputed()
 	attrs["global_metastore_id"] = attrs["global_metastore_id"].SetOptional()
 	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].SetOptional()
+	attrs["invite_recipient_email"] = attrs["invite_recipient_email"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["invite_recipient_workspace_id"] = attrs["invite_recipient_workspace_id"].SetOptional()
 	attrs["organization_name"] = attrs["organization_name"].SetComputed()
 
@@ -1387,11 +1393,15 @@ func (newState *CleanRoomRemoteDetail) SyncEffectiveFieldsDuringRead(existingSta
 func (c CleanRoomRemoteDetail) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["central_clean_room_id"] = attrs["central_clean_room_id"].SetComputed()
 	attrs["cloud_vendor"] = attrs["cloud_vendor"].SetOptional()
+	attrs["cloud_vendor"] = attrs["cloud_vendor"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["collaborators"] = attrs["collaborators"].SetOptional()
-	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetOptional()
+	attrs["collaborators"] = attrs["collaborators"].(tfschema.ListAttributeBuilder).AddPlanModifier(listplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
+	attrs["compliance_security_profile"] = attrs["compliance_security_profile"].SetComputed()
 	attrs["creator"] = attrs["creator"].SetComputed()
 	attrs["egress_network_policy"] = attrs["egress_network_policy"].SetOptional()
+	attrs["egress_network_policy"] = attrs["egress_network_policy"].(tfschema.SingleNestedAttributeBuilder).AddPlanModifier(objectplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["region"] = attrs["region"].SetOptional()
+	attrs["region"] = attrs["region"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 
 	return attrs
 }

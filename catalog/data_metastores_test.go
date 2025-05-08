@@ -3,35 +3,34 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestMetastoresDataContainsName(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.0/accounts/testaccount/metastores",
-				Response: catalog.ListMetastoresResponse{
-					Metastores: []catalog.MetastoreInfo{
-						{
-							Name:                      "a",
-							StorageRoot:               "abc",
-							DefaultDataAccessConfigId: "sth",
-							Owner:                     "John.Doe@example.com",
-							MetastoreId:               "abc",
-						},
-						{
-							Name:                      "b",
-							StorageRoot:               "dcw",
-							DefaultDataAccessConfigId: "sth",
-							Owner:                     "John.Doe@example.com",
-							MetastoreId:               "ded",
-						},
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockAccountMetastoresAPI().EXPECT().
+				ListAll(mock.Anything).
+				Return([]catalog.MetastoreInfo{
+					{
+						Name:                      "a",
+						StorageRoot:               "abc",
+						DefaultDataAccessConfigId: "sth",
+						Owner:                     "John.Doe@example.com",
+						MetastoreId:               "abc",
 					},
-				},
-			},
+					{
+						Name:                      "b",
+						StorageRoot:               "dcw",
+						DefaultDataAccessConfigId: "sth",
+						Owner:                     "John.Doe@example.com",
+						MetastoreId:               "ded",
+					},
+				}, nil)
 		},
 		Resource:    DataSourceMetastores(),
 		Read:        true,
@@ -45,11 +44,18 @@ func TestMetastoresDataContainsName(t *testing.T) {
 
 func TestMetastoresData_Error(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
+		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
+			a.GetMockAccountMetastoresAPI().EXPECT().
+				ListAll(mock.Anything).
+				Return(nil, &apierr.APIError{
+					ErrorCode: "BAD_REQUEST",
+					Message:   "Bad request: unable to list metastores",
+				})
+		},
 		Resource:    DataSourceMetastores(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
 		AccountID:   "_",
-	}.ExpectError(t, "i'm a teapot")
+	}.ExpectError(t, "Bad request: unable to list metastores")
 }

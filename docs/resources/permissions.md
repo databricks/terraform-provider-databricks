@@ -6,6 +6,8 @@ subcategory: "Security"
 
 This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspaces. It ensures that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
+-> This resource can only be used with a workspace-level provider!
+
 ~> This resource is _authoritative_ for permissions on objects. Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset.
 
 -> It is not possible to lower permissions for `admins`, so Databricks Terraform Provider removes those `access_control` blocks automatically.
@@ -722,7 +724,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have four possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE` and `IS_OWNER`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have five possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE`, `CAN_VIEW` and `IS_OWNER`:
 
 - The creator of a warehouse has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a warehouse would revert ownership to the creator.
 - A warehouse must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the warehouse. Nothing would change, per se, if the warehouse was created through Terraform.

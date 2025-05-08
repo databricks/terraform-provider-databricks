@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,7 +61,7 @@ func DataAwsBucketPolicy() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.SetId(strings.Replace(bucket, ".", "-", -1))
+			d.SetId(bucket)
 			// nolint
 			d.Set("json", string(policyJSON))
 			return nil

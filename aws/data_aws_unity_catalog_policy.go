@@ -124,7 +124,7 @@ func generateReadContext(ctx context.Context, d *schema.ResourceData, m *common.
 	if err != nil {
 		return err
 	}
-	d.SetId(fmt.Sprintf("%s-%s-%s", strings.Replace(bucket, ".", "-", -1), awsAccountId, roleName))
+	d.SetId(fmt.Sprintf("%s-%s-%s", bucket, awsAccountId, roleName))
 	err = d.Set("json", string(policyJSON))
 	if err != nil {
 		return err

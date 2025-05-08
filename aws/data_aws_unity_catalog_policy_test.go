@@ -23,7 +23,7 @@ func TestDataAwsUnityCatalogPolicy(t *testing.T) {
         `,
 	}.Apply(t)
 	assert.NoError(t, err)
-	assert.Equal(t, "databricks-bucket-2-123456789098-databricks-role", d.Id())
+	assert.Equal(t, "databricks-bucket.2-123456789098-databricks-role", d.Id())
 	j := d.Get("json").(string)
 	p := `{
           "Version": "2012-10-17",

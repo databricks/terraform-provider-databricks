@@ -69,7 +69,7 @@ func (r *DatabaseInstanceResource) update(ctx context.Context, plan catalog_tf.D
 
 	var updateRequest = catalog.UpdateDatabaseInstanceRequest{DatabaseInstance: database_instance}
 	updateRequest.Name = plan.Name.ValueString()
-	updateRequest.UpdateMask = "admin_password,admin_rolename,capacity,enable_readable_secondaries,node_count,pg_version,stopped"
+	updateRequest.UpdateMask = "admin_password,admin_rolename,capacity,enable_readable_secondaries,node_count,stopped"
 
 	response, err := client.DatabaseInstances.UpdateDatabaseInstance(ctx, updateRequest)
 	if err != nil {

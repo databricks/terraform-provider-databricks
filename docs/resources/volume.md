@@ -7,7 +7,7 @@ Volumes are Unity Catalog objects representing a logical volume of storage in a 
 
 -> This resource can only be used with a workspace-level provider!
 
-A volume resides in the third layer of Unity Catalog’s three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
+A volume resides in the third layer of Unity Catalog's three-level namespace. Volumes are siblings to tables, views, and other objects organized under a schema in Unity Catalog.
 
 A volume can be **managed** or **external**.
 
@@ -96,6 +96,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by `full_name` which is the 3-level Volume identifier: `<catalog>.<schema>.<name>`
+
+```hcl
+import {
+  to = databricks_volume.this
+  id = "<catalog_name>.<schema_name>.<volume_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_volume.this <catalog_name>.<schema_name>.<name>

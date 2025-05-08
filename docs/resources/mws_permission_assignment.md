@@ -86,6 +86,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource `databricks_mws_permission_assignment` can be imported using the workspace id and principal id
 
+```hcl
+import {
+  to = databricks_mws_permission_assignment.this
+  id = "workspace_id|principal_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_mws_permission_assignment.this "workspace_id|principal_id"
 ```

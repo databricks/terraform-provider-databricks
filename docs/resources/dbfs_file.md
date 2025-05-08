@@ -71,6 +71,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource dbfs file can be imported using the path of the file:
 
+```hcl
+import {
+  to = databricks_dbfs_file.this
+  id = "<path>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_dbfs_file.this <path>
 ```

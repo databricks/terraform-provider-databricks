@@ -61,6 +61,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The workspace file resource can be imported using workspace file path
 
+```hcl
+import {
+  to = databricks_workspace_file.this
+  id = "/path/to/file"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_workspace_file.this /path/to/file
 ```

@@ -124,3 +124,16 @@ This resource can be imported by name:
 ```bash
 terraform import databricks_storage_credential.this <name>
 ```
+
+```hcl
+import {
+  to = databricks_storage_credential.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_storage_credential.this <name>
+```

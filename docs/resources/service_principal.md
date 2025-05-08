@@ -123,6 +123,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource scim service principal can be imported using its id, for example `2345678901234567`. To get the service principal ID, call [Get service principals](https://docs.databricks.com/dev-tools/api/latest/scim/scim-sp.html#get-service-principals).
 
+```hcl
+import {
+  to = databricks_service_principal.me
+  id = "<service-principal-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_service_principal.me <service-principal-id>
 ```

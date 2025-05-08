@@ -50,6 +50,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by name:
 
+```hcl
+import {
+  to = databricks_artifact_allowlist.this
+  id = "<metastore_id>|<artifact_type>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_artifact_allowlist.this '<metastore_id>|<artifact_type>'
 ```

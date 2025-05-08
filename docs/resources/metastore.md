@@ -89,6 +89,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by ID:
 
+```hcl
+import {
+  to = databricks_metastore.this
+  id = "<id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_metastore.this <id>
 ```

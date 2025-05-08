@@ -41,6 +41,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource directory can be imported using directory path:
 
+```hcl
+import {
+  to = databricks_directory.this
+  id = "/path/to/directory"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_directory.this /path/to/directory
 ```

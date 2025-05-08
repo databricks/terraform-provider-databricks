@@ -414,8 +414,8 @@ import {
 
 Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
-```sh
-terraform import databricks_mws_workspaces.this '<account_id>/<workspace_id>'
+```bash
+terraform import databricks_mws_workspaces.this "<account_id>/<workspace_id>"
 ```
 
 ~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.

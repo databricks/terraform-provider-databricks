@@ -83,6 +83,15 @@ timeouts {
 
 You can import a `databricks_sql_endpoint` resource with ID like the following:
 
+```hcl
+import {
+  to = databricks_sql_endpoint.this
+  id = "<endpoint-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_sql_endpoint.this <endpoint-id>
 ```

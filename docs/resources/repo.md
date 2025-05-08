@@ -57,6 +57,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource can be imported using the Git folder ID (obtained via UI or using API)
 
+```hcl
+import {
+  to = databricks_repo.this
+  id = "repo_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 $ terraform import databricks_repo.this repo_id
 ```

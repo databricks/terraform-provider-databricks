@@ -54,6 +54,15 @@ In addition to all arguments above, the following attributes are exported:
 
 You can import a `databricks_group_member` resource with name `my_group_member` like the following:
 
+```hcl
+import {
+  to = databricks_group_member.my_group_member
+  id = "<group_id>|<member_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"
 ```

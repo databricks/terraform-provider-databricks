@@ -37,6 +37,15 @@ The resource supports the following arguments:
 
 This resource can be imported by predefined name `global`:
 
+```hcl
+import {
+  to = databricks_compliance_security_profile_workspace_setting.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_compliance_security_profile_workspace_setting.this global
 ```

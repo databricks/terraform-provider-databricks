@@ -372,3 +372,16 @@ The resource can be imported using combination of securable type (`table`, `cata
 ```bash
 terraform import databricks_grants.this catalog/abc
 ```
+
+```hcl
+import {
+  to = databricks_grants.this
+  id = "catalog/abc"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_grants.this catalog/abc
+```

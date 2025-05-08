@@ -26,9 +26,9 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 Use this resource to [configure VPC](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) & subnet for new workspaces within GCP. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.
 
-* Databricks must have access to a subnet in the same region as the workspace, of which IP range will be used to allocate your workspace’s GKE cluster nodes.
+* Databricks must have access to a subnet in the same region as the workspace, of which IP range will be used to allocate your workspace's GKE cluster nodes.
 * The subnet must have a netmask between /29 and /9.
-* Databricks must have access to 2 secondary IP ranges, one between /21 to /9 for workspace’s GKE cluster pods, and one between /27 to /16 for workspace’s GKE cluster services.
+* Databricks must have access to 2 secondary IP ranges, one between /21 to /9 for workspace's GKE cluster pods, and one between /27 to /16 for workspace's GKE cluster services.
 * Subnet must have outbound access to the public network using a [gcp_compute_router_nat](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) or other similar customer-managed appliance infrastructure.
 
 Please follow this [complete runnable example](../guides/gcp-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with `host="https://accounts.gcp.databricks.com/"`) and another for the workspace you've created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
@@ -216,6 +216,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by Databricks account ID and network ID.
+
+```hcl
+import {
+  to = databricks_mws_networks.this
+  id = "<account_id>/<network_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_mws_networks.this '<account_id>/<network_id>'

@@ -150,3 +150,16 @@ This resource can be imported by `name`:
 ```bash
 terraform import databricks_external_location.this <name>
 ```
+
+```hcl
+import {
+  to = databricks_external_location.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_external_location.this <name>
+```

@@ -117,6 +117,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The share resource can be imported using the name of the share.
 
+```hcl
+import {
+  to = databricks_share.this
+  id = "<share_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_share.this <share_name>
 ```

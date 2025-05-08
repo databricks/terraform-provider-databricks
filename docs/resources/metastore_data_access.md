@@ -69,6 +69,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by combination of metastore id and the data access name.
 
+```hcl
+import {
+  to = databricks_metastore_data_access.this
+  id = "<metastore_id>|<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_metastore_data_access.this '<metastore_id>|<name>'
+terraform import databricks_metastore_data_access.this "<metastore_id>|<name>"
 ```

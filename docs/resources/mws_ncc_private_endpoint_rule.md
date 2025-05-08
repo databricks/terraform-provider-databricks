@@ -58,8 +58,17 @@ The possible values are:
 
 This resource can be imported by Databricks account ID and Network Connectivity Config ID.
 
+```hcl
+import {
+  to = databricks_mws_ncc_private_endpoint_rule.this
+  id = "<network_connectivity_config_id>/<rule_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
 ```sh
-terraform import databricks_mws_ncc_private_endpoint_rule.rule <network_connectivity_config_id>/<rule_id>
+terraform import databricks_mws_ncc_private_endpoint_rule.this "<network_connectivity_config_id>/<rule_id>"
 ```
 
 ## Related Resources

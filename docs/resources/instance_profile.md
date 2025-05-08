@@ -172,3 +172,16 @@ The resource instance profile can be imported using the ARN of it
 ```bash
 terraform import databricks_instance_profile.this <instance-profile-arn>
 ```
+
+```hcl
+import {
+  to = databricks_instance_profile.this
+  id = "<instance-profile-arn>"
+}
+```
+
+Alternatively, when using `terraform` version 1.5 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_instance_profile.this <instance-profile-arn>
+```

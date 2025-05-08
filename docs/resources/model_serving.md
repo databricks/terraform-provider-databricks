@@ -3,7 +3,7 @@ subcategory: "Serving"
 ---
 # databricks_model_serving Resource
 
-This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks.
+This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks, including custom models, external models, and foundation models. For newer foundation models, including Llama 4, please use the [databricks_model_serving_provisioned_throughput](model_serving_provisioned_throughput.md) resource.
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -286,7 +286,7 @@ terraform import databricks_model_serving.this <model-serving-endpoint-name>
 
 # databricks_model_serving_provisioned_throughput Resource
 
-This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks.
+This resource allows you to manage [Foundation Model provisioned throughput ](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -316,8 +316,8 @@ resource "databricks_model_serving_provisioned_throughput" "llama" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the model serving endpoint. This field is required and must be unique across a workspace. An endpoint name can consist of alphanumeric characters, dashes, and underscores. NOTE: Changing this name will delete the existing endpoint and create a new endpoint with the updated name.
-* `config` - The model serving endpoint configuration. This is optional and can be added and modified after creation. If `config` was provided in a previous apply but is not provided in the current apply, no change to the model serving endpoint will occur. To recreate the model serving endpoint without the `config` block, the model serving endpoint must be destroyed and recreated.
-  * `served_entities` - A list of served entities for the endpoint to serve. A serving endpoint can have up to 10 served entities.
+* `config` - The model serving endpoint configuration.
+  * `served_entities` - A list of served entities for the endpoint to serve.
   * `traffic_config` - A single block represents the traffic split configuration amongst the served models.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
@@ -325,10 +325,10 @@ The following arguments are supported:
 
 ### served_entities Configuration Block
 
-* `name` - The name of a served entity. It must be unique across an endpoint. A served entity name can consist of alphanumeric characters, dashes, and underscores. If not specified for an external model, this field defaults to `external_model.name`, with '.' and ':' replaced with '-', and if not specified for other entities, it defaults to -.
-* `entity_name` - The name of the entity to be served. The entity may be a model in the Databricks Model Registry, a model in the Unity Catalog (UC), or a function of type `FEATURE_SPEC` in the UC. If it is a UC object, the full name of the object should be given in the form of `catalog_name.schema_name.model_name`.
+* `name` - The name of a served entity. It must be unique across an endpoint. A served entity name can consist of alphanumeric characters, dashes, and underscores. If not specified for an external model, this field will be created from the `entity_name` and `entity_version`
+* `entity_name` - The full path of the UC model to be served, given in the form of `catalog_name.schema_name.model_name`.
 * `entity_version` - The version of the model in UC to be served.
-* `provisioned_model_units` - The number of model units to be provisioned for the model.
+* `provisioned_model_units` - The number of model units to be provisioned.
 
 ### traffic_config Configuration Block
 
@@ -344,8 +344,6 @@ The following arguments are supported:
 
 ### ai_gateway Configuration Block
 
-* `fallback_config` - (Optional) block with configuration for traffic fallback which auto fallbacks to other served entities if the request to a served entity fails with certain error codes, to increase availability.
-  * `enabled` -  Whether to enable traffic fallback. When a served entity in the serving endpoint returns specific error codes (e.g. 500), the request will automatically be round-robin attempted with other served entities in the same endpoint, following the order of served entity list, until a successful response is returned.
 * `guardrails` - (Optional) Block with configuration for AI Guardrails to prevent unwanted data and unsafe data in requests and responses. Consists of the following attributes:
   * `input` - A block with configuration for input guardrail filters:
     * `invalid_keywords` - List of invalid keywords. AI guardrail uses keyword or string matching to decide if the keyword exists in the request or response content.
@@ -372,7 +370,7 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Timeouts
 
-The `timeouts` block allows you to specify `create` and `update` timeouts. The default right now is 45 minutes for both operations.
+The `timeouts` block allows you to specify `create` and `update` timeouts. The default right now is 10 minutes for both operations.
 
 ```hcl
 timeouts {

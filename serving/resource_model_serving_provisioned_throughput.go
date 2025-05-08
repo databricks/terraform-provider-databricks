@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultPtProvisionTimeout = 45 * time.Minute
+	defaultPtProvisionTimeout = 10 * time.Minute
 )
 
 func ResourceModelServingProvisionedThroughput() common.Resource {

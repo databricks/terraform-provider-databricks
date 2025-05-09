@@ -65,19 +65,6 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			if err != nil {
 				return err
 			}
-			if sOrig.Config == nil {
-				// If it is a new resource, then we only return ServedEntities
-				if endpoint.Config != nil {
-					endpoint.Config.ServedModels = nil
-				}
-			} else {
-				// If it is an existing resource, then have to set one of the responses to nil
-				if sOrig.Config.ServedModels == nil {
-					endpoint.Config.ServedModels = nil
-				} else if sOrig.Config.ServedEntities == nil {
-					endpoint.Config.ServedEntities = nil
-				}
-			}
 			err = common.StructToData(*endpoint, s, d)
 			if err != nil {
 				return err

@@ -57,6 +57,15 @@ Global init scripts are available only for administrators, so you can't change p
 
 The resource global init script can be imported using script ID:
 
+```hcl
+import {
+  to = databricks_global_init_script.this
+  id = "script_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_global_init_script.this script_id
 ```

@@ -118,8 +118,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource scim user can be imported using id:
 
+```hcl
+import {
+  to = databricks_user.this
+  id = "<user-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_user.me <user-id>
+terraform import databricks_user.this "<user-id>"
 ```
 
 ## Related Resources

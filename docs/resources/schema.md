@@ -53,8 +53,17 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by its full name:
 
+```hcl
+import {
+  to = databricks_schema.this
+  id = "<catalog_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_schema.this <catalog_name>.<name>
+terraform import databricks_schema.this "<catalog_name>.<name>"
 ```
 
 ## Related Resources

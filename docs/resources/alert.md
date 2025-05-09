@@ -203,6 +203,15 @@ resource "databricks_permissions" "alert_usage" {
 
 This resource can be imported using alert ID:
 
+```hcl
+import {
+  to = databricks_alert.this
+  id = "<alert-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_alert.this <alert-id>
 ```

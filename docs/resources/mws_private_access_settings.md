@@ -89,6 +89,15 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by Databricks account ID and private access settings ID.
 
+```hcl
+import {
+  to = databricks_mws_private_access_settings.this
+  id = "<account_id>/<private_access_settings_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```sh
 terraform import databricks_mws_private_access_settings.this '<account_id>/<private_access_settings_id>'
 ```

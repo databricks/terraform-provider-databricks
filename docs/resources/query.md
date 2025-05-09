@@ -184,6 +184,15 @@ resource "databricks_permissions" "query_usage" {
 
 This resource can be imported using query ID:
 
+```hcl
+import {
+  to = databricks_query.this
+  id = "<query-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_query.this <query-id>
 ```

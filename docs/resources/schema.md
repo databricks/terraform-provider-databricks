@@ -48,6 +48,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of this schema in form of `<catalog_name>.<name>`.
+* `schema_id` - UUID of the schema.
 
 ## Import
 

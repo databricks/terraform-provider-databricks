@@ -42,6 +42,15 @@ In addition to all the arguments above, the following attributes are exported:
 
 The resource can be imported using the name of the Mosaic AI Vector Search Endpoint
 
+```hcl
+import {
+  to = databricks_vector_search_endpoint.this
+  id = "<endpoint-name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_vector_search_endpoint.this <endpoint-name>
 ```

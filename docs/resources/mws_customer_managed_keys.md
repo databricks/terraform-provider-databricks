@@ -5,7 +5,7 @@ subcategory: "Deployment"
 
 This resource to configure KMS keys for new workspaces within AWS or GCP. This is to support the following features:
 
-* [Customer-managed keys for managed services](https://docs.databricks.com/security/keys/customer-managed-keys-managed-services-aws.html): Encrypt the workspace’s managed services data in the control plane, including notebooks, secrets, Databricks SQL queries, and Databricks SQL query history  with a CMK.
+* [Customer-managed keys for managed services](https://docs.databricks.com/security/keys/customer-managed-keys-managed-services-aws.html): Encrypt the workspace's managed services data in the control plane, including notebooks, secrets, Databricks SQL queries, and Databricks SQL query history  with a CMK.
 * [Customer-managed keys for workspace storage](https://docs.databricks.com/security/keys/customer-managed-keys-storage-aws.html): Encrypt the workspace's root S3 bucket and clusters' EBS volumes with a CMK.
 
 -> This resource can only be used with an account-level provider!
@@ -254,6 +254,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by Databricks account ID and customer managed key ID.
+
+```hcl
+import {
+  to = databricks_mws_customer_managed_keys.this
+  id = "<account_id>/<customer_managed_key_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_mws_customer_managed_keys.this '<account_id>/<customer_managed_key_id>'

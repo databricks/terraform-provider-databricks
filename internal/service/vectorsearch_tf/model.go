@@ -1698,11 +1698,6 @@ func (o ListIndexesRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
-// copied from proto3 / Google Well Known Types, source:
-// https://github.com/protocolbuffers/protobuf/blob/450d24ca820750c5db5112a6f0b0c2efb9758021/src/google/protobuf/struct.proto
-// `ListValue` is a wrapper around a repeated field of values.
-//
-// The JSON representation for `ListValue` is JSON array.
 type ListValue struct {
 	// Repeated field of dynamically typed values.
 	Values types.List `tfsdk:"values"`
@@ -2799,15 +2794,6 @@ func (o *ScanVectorIndexResponse) SetData(ctx context.Context, v []Struct) {
 	o.Data = types.ListValueMust(t, vs)
 }
 
-// copied from proto3 / Google Well Known Types, source:
-// https://github.com/protocolbuffers/protobuf/blob/450d24ca820750c5db5112a6f0b0c2efb9758021/src/google/protobuf/struct.proto
-// `Struct` represents a structured data value, consisting of fields which map
-// to dynamically typed values. In some languages, `Struct` might be supported
-// by a native representation. For example, in scripting languages like JS a
-// struct is represented as an object. The details of that representation are
-// described together with the proto support for the language.
-//
-// The JSON representation for `Struct` is JSON object.
 type Struct struct {
 	// Data entry, corresponding to a row in a vector index.
 	Fields types.List `tfsdk:"fields"`
@@ -3352,26 +3338,13 @@ func (o *UpsertDataVectorIndexResponse) SetResult(ctx context.Context, v UpsertD
 
 type Value struct {
 	BoolValue types.Bool `tfsdk:"bool_value"`
-	// copied from proto3 / Google Well Known Types, source:
-	// https://github.com/protocolbuffers/protobuf/blob/450d24ca820750c5db5112a6f0b0c2efb9758021/src/google/protobuf/struct.proto
-	// `ListValue` is a wrapper around a repeated field of values.
-	//
-	// The JSON representation for `ListValue` is JSON array.
+
 	ListValue types.Object `tfsdk:"list_value"`
 
 	NumberValue types.Float64 `tfsdk:"number_value"`
 
 	StringValue types.String `tfsdk:"string_value"`
-	// copied from proto3 / Google Well Known Types, source:
-	// https://github.com/protocolbuffers/protobuf/blob/450d24ca820750c5db5112a6f0b0c2efb9758021/src/google/protobuf/struct.proto
-	// `Struct` represents a structured data value, consisting of fields which
-	// map to dynamically typed values. In some languages, `Struct` might be
-	// supported by a native representation. For example, in scripting languages
-	// like JS a struct is represented as an object. The details of that
-	// representation are described together with the proto support for the
-	// language.
-	//
-	// The JSON representation for `Struct` is JSON object.
+
 	StructValue types.Object `tfsdk:"struct_value"`
 }
 

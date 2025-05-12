@@ -72,6 +72,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource notebook can be imported using notebook path
 
+```hcl
+import {
+  to = databricks_notebook.this
+  id = "/path/to/notebook"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_notebook.this /path/to/notebook
 ```

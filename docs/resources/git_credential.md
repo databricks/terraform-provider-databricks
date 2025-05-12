@@ -38,6 +38,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource cluster can be imported using ID of Git credential that could be obtained via REST API:
 
+```hcl
+import {
+  to = databricks_git_credential.this
+  id = "<git-credential-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_git_credential.this <git-credential-id>
 ```

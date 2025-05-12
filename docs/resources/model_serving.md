@@ -280,6 +280,15 @@ timeouts {
 
 The model serving resource can be imported using the name of the endpoint.
 
+```hcl
+import {
+  to = databricks_model_serving.this
+  id = "<model-serving-endpoint-name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```

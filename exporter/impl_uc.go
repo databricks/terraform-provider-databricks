@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
@@ -35,6 +36,8 @@ func listUcCatalogs(ic *importContext) error {
 				}, v.Name, v.UpdatedAt, fmt.Sprintf("catalog '%s'", v.Name))
 			}
 		default:
+			// TODO: remove this skipping - we need to emit grants for all catalogs, but
+			// we need to convert these catalog types to data sources
 			log.Printf("[INFO] Skipping catalog %s of type %s", v.Name, v.CatalogType)
 		}
 	}
@@ -46,13 +49,13 @@ func importUcCatalog(ic *importContext, r *resource) error {
 	s := ic.Resources["databricks_catalog"].Schema
 	common.DataToStructPointer(r.Data, s, &cat)
 
+	// TODO: convert `main` catalog into the data source as it's automatically created?
 	// Emit: UC Connection, List schemas, Catalog grants, ...
 	owner, catalogGrantsResource := ic.emitUCGrantsWithOwner("catalog/"+cat.Name, r)
 	dependsOn := []*resource{}
 	if owner != "" && owner != ic.meUserName {
 		dependsOn = append(dependsOn, catalogGrantsResource)
 	}
-	// TODO: emit owner?  Should we do this? Because it's a account-level identity... Create a separate function for that...
 	if cat.ConnectionName != "" {
 		ic.Emit(&resource{
 			Resource: "databricks_connection",
@@ -99,10 +102,6 @@ func importUcSchema(ic *importContext, r *resource) error {
 		Resource: "databricks_catalog",
 		ID:       catalogName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "catalog/" + catalogName})
-
-	// TODO: somehow add depends on catalog's grant...
-	// TODO: emit owner? See comment in catalog resource
 	if ic.isServiceInListing("uc-models") {
 		it := ic.workspaceClient.RegisteredModels.List(ic.Context,
 			catalog.ListRegisteredModelsRequest{
@@ -200,8 +199,6 @@ func importUcVolume(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
-	// TODO: emit owner? See comment in catalog resource
 	return nil
 }
 
@@ -334,10 +331,37 @@ func (ic *importContext) emitUCGrantsWithOwner(id string, parentResource *resour
 		if ok {
 			gr.AddExtraData("owner", ownerRaw)
 			owner = ownerRaw.(string)
+			emitUserSpOrGroup(ic, owner)
 		}
 	}
 	ic.Emit(gr)
 	return owner, gr
+}
+
+var (
+	emailDomainRegex = regexp.MustCompile(`^.*@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+\.?$`)
+)
+
+func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
+	if common.StringIsUUID(userOrSOrGroupPName) {
+		ic.Emit(&resource{
+			Resource:  "databricks_service_principal",
+			Attribute: "application_id",
+			Value:     userOrSOrGroupPName,
+		})
+	} else if emailDomainRegex.MatchString(userOrSOrGroupPName) {
+		ic.Emit(&resource{
+			Resource:  "databricks_user",
+			Attribute: "user_name",
+			Value:     userOrSOrGroupPName,
+		})
+	} else {
+		ic.Emit(&resource{
+			Resource:  "databricks_group",
+			Attribute: "display_name",
+			Value:     userOrSOrGroupPName,
+		})
+	}
 }
 
 func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
@@ -354,11 +378,17 @@ func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schem
 	return shouldOmitForUnityCatalog(ic, pathString, as, d)
 }
 
-func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource,
+	ra *resourceApproximation, origPath string) bool {
 	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
-		// catalog and schema names for the source resource
-		res_catalog_name := res.Data.Get(catalog_name_attr).(string)
-		res_schema_name := res.Data.Get(schema_name_attr).(string)
+		// catalog and schema names for the source resource. We need to copy the original catalog_name_attr
+		// to a new variable because we're going to modify it
+		new_catalog_name_attr := catalog_name_attr
+		if strings.HasSuffix(origPath, "."+schema_name_attr) {
+			new_catalog_name_attr = strings.TrimSuffix(origPath, schema_name_attr) + catalog_name_attr
+		}
+		res_catalog_name := res.Data.Get(new_catalog_name_attr).(string)
+		res_schema_name := res.Data.Get(origPath).(string)
 		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
 		if res_catalog_name == "" || res_schema_name == "" {
 			return false
@@ -372,6 +402,41 @@ func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string
 			return false
 		}
 		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name
+		return result
+
+	}
+}
+
+func createIsMatchingCatalogAndSchemaAndTable(catalog_name_attr, schema_name_attr, table_name_attr string) func(ic *importContext, res *resource,
+	ra *resourceApproximation, origPath string) bool {
+	return func(ic *importContext, res *resource, ra *resourceApproximation, origPath string) bool {
+		// catalog and schema names for the source resource. We need to copy the original catalog_name_attr
+		// to a new variable because we're going to modify it
+		new_catalog_name_attr := catalog_name_attr
+		new_schema_name_attr := schema_name_attr
+		if strings.HasSuffix(origPath, "."+table_name_attr) {
+			prefix := strings.TrimSuffix(origPath, table_name_attr)
+			new_catalog_name_attr = prefix + catalog_name_attr
+			new_schema_name_attr = prefix + schema_name_attr
+		}
+		res_catalog_name := res.Data.Get(new_catalog_name_attr).(string)
+		res_schema_name := res.Data.Get(new_schema_name_attr).(string)
+		res_table_name := res.Data.Get(origPath).(string)
+		// In some cases catalog or schema name could be empty, like, in non-UC DLT pipelines, so we need to skip it
+		if res_catalog_name == "" || res_schema_name == "" || res_table_name == "" {
+			return false
+		}
+		// catalog and schema names for target resource approximation
+		ra_catalog_name, cat_found := ra.Get("catalog_name")
+		ra_schema_name, schema_found := ra.Get("schema_name")
+		ra_table_name, table_found := ra.Get("name")
+		if !cat_found || !schema_found || !table_found {
+			log.Printf("[WARN] Can't find attributes in approximation: %s %s, catalog='%v' (found? %v) schema='%v' (found? %v) table='%v' (found? %v). Resource: %s, catalog='%s', schema='%s', table='%s'",
+				ra.Type, ra.Name, ra_catalog_name, cat_found, ra_schema_name, schema_found, ra_table_name,
+				table_found, res.Resource, res_catalog_name, res_schema_name, res_table_name)
+			return false
+		}
+		result := ra_catalog_name.(string) == res_catalog_name && ra_schema_name.(string) == res_schema_name && ra_table_name.(string) == res_table_name
 		return result
 
 	}
@@ -498,7 +563,6 @@ func listUcMetastores(ic *importContext) error {
 
 func importUcMetastores(ic *importContext, r *resource) error {
 	ic.emitUCGrantsWithOwner("metastore/"+r.ID, r)
-	// TODO: emit owner? See comment in catalog resource
 	if ic.accountLevel {
 		// emit metastore assignments
 		assignments, err := ic.accountClient.MetastoreAssignments.ListByMetastoreId(ic.Context, r.ID)
@@ -615,7 +679,5 @@ func importSqlTable(ic *importContext, r *resource) error {
 		Resource: "databricks_schema",
 		ID:       schemaFullName,
 	})
-	// r.AddDependsOn(&resource{Resource: "databricks_grants", ID: "schema/" + schemaFullName})
-	// TODO: emit owner? See comment in catalog resource
 	return nil
 }

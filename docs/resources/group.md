@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to manage both [account groups and workspace-local groups](https://docs.databricks.com/administration-guide/users-groups/groups.html). You can use the [databricks_group_member resource](group_member.md) to assign Databricks users, [service principals](service_principal.md) as well as other groups as members of the group. This is useful if you are using an application to sync users & groups with SCIM API.
 
+-> This resource can be used with an account or workspace-level provider.
+
 -> To assign an account level group to a workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
 -> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level groups.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level groups.
@@ -105,6 +107,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 You can import a `databricks_group` resource with the name `my_group` like the following:
+
+```hcl
+import {
+  to = databricks_group.my_group
+  id = "<group_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_group.my_group <group_id>

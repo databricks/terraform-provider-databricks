@@ -3,9 +3,9 @@ subcategory: "MLflow"
 ---
 # databricks_mlflow_models Data Source
 
--> **Note** This data source could be only used with workspace-level provider!
-
 Retrieves a list of [databricks_mlflow_model](../resources/mlflow_model.md) objects, that were created by Terraform or manually, so that special handling could be applied.
+
+-> This data source can only be used with a workspace-level provider!
 
 ## Example Usage
 

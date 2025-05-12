@@ -1531,9 +1531,9 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CreateServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy to be applied to the serving endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
@@ -6117,8 +6117,9 @@ type ServedEntityInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6317,8 +6318,9 @@ type ServedEntityOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6697,8 +6699,9 @@ type ServedModelInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6844,8 +6847,9 @@ type ServedModelOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -7150,9 +7154,9 @@ func (o ServerLogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy associated with the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
@@ -7532,9 +7536,9 @@ func (o *ServingEndpointAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 }
 
 type ServingEndpointDetailed_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
 	// The budget policy associated with the endpoint.
 	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`

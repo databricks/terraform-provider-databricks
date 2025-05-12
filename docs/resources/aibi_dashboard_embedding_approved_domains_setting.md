@@ -4,9 +4,9 @@ subcategory: "Settings"
 
 # databricks_aibi_dashboard_embedding_approved_domains_setting Resource
 
--> This resource can only be used with a workspace-level provider!
-
 The `databricks_aibi_dashboard_embedding_approved_domains_setting` resource allows you to specify the list of domains allowed for  [embedding of AI/BI Dashboards](https://learn.microsoft.com/en-us/azure/databricks/dashboards/admin/#manage-dashboard-embedding) into other sites.
+
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -35,6 +35,15 @@ The resource supports the following arguments:
 ## Import
 
 This resource can be imported by predefined name `global`:
+
+```hcl
+import {
+  to = databricks_aibi_dashboard_embedding_approved_domains_setting.this
+  id = "global"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_aibi_dashboard_embedding_approved_domains_setting.this global

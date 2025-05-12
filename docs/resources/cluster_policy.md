@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 This resource creates a [cluster](cluster.md) policy, which limits the ability to create clusters based on a set of rules. The policy rules limit the attributes or attribute values available for [cluster](cluster.md) creation. [cluster](cluster.md) policies have ACLs that limit their use to specific users and groups. Only admin users can create, edit, and delete policies. Admin users also have access to all policies.
 
+-> This resource can only be used with a workspace-level provider!
+
 Cluster policies let you:
 
 * Limit users to create clusters with prescribed settings.
@@ -162,6 +164,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource cluster policy can be imported using the policy id:
+
+```hcl
+import {
+  to = databricks_cluster_policy.this
+  id = "<cluster-policy-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_cluster_policy.this <cluster-policy-id>

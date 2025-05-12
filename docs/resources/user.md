@@ -5,6 +5,8 @@ subcategory: "Security"
 
 This resource allows you to manage [users in Databricks Workspace](https://docs.databricks.com/administration-guide/users-groups/users.html), [Databricks Account Console](https://accounts.cloud.databricks.com/) or [Azure Databricks Account Console](https://accounts.azuredatabricks.net). You can also [associate](group_member.md) Databricks users to [databricks_group](group.md). Upon user creation the user will receive a welcome email. You can also get information about caller identity using [databricks_current_user](../data-sources/current_user.md) data source.
 
+-> This resource can be used with an account or workspace-level provider.
+
 -> To assign account level users to workspace use [databricks_mws_permission_assignment](mws_permission_assignment.md).
 
 -> Entitlements, like, `allow_cluster_create`, `allow_instance_pool_create`, `databricks_sql_access`, `workspace_access` applicable only for workspace-level users.  Use [databricks_entitlements](entitlements.md) resource to assign entitlements inside a workspace to account-level users.
@@ -116,8 +118,17 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource scim user can be imported using id:
 
+```hcl
+import {
+  to = databricks_user.this
+  id = "<user-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_user.me <user-id>
+terraform import databricks_user.this "<user-id>"
 ```
 
 ## Related Resources

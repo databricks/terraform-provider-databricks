@@ -7,7 +7,6 @@ Administrators can use budget policies to ensure that the correct tags appear au
 
 -> This resource can only be used with an account-level provider!
 
-
 ## Example Usage
 
 ```hcl
@@ -29,7 +28,7 @@ The following arguments are available:
 
 ### custom_tags Configuration Block
 
-* `key` - The key of the tag. - Must be unique among all custom tags of the same policy. Cannot be “budget-policy-name”, “budget-policy-id” or "budget-policy-resolution-result" as these tags are preserved. 
+* `key` - The key of the tag. - Must be unique among all custom tags of the same policy. Cannot be "budget-policy-name", "budget-policy-id" or "budget-policy-resolution-result" as these tags are preserved. 
 * `value` - The value of the tag. 
 
 ## Attribute Reference
@@ -45,6 +44,15 @@ In addition to all arguments above, the following attribute is exported:
 ## Import
 
 This resource can be imported by ID.
+
+```hcl
+import {
+  to = databricks_budget_policy.this
+  id = "policy_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```sh
 terraform import databricks_budget_policy.this policy_id

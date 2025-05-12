@@ -76,6 +76,22 @@ func TestMwsAccWorkspaces(t *testing.T) {
 	})
 }
 
+func TestMwsAccWorkspaces_Serverless(t *testing.T) {
+	acceptance.LoadAccountEnv(t)
+	if !acceptance.IsAws(t) {
+		acceptance.Skipf(t)("TestMwsAccWorkspaces_Serverless is currently only supported on AWS")
+	}
+	acceptance.AccountLevel(t, acceptance.Step{
+		Template: `
+		resource "databricks_mws_workspaces" "this" {
+			account_id      = "{env.DATABRICKS_ACCOUNT_ID}"
+			workspace_name  = "terra-{var.RANDOM}"
+			aws_region      = "{env.AWS_REGION}"
+			compute_mode    = "SERVERLESS"
+		}`,
+	})
+}
+
 func TestMwsAccWorkspacesTokenUpdate(t *testing.T) {
 	acceptance.AccountLevel(t, acceptance.Step{
 		Template: `

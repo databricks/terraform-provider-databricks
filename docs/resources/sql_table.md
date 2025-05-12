@@ -9,6 +9,8 @@ A `databricks_sql_table` is contained within [databricks_schema](schema.md), and
 
 This resource creates and updates the Unity Catalog table/view by executing the necessary SQL queries on a special auto-terminating cluster it would create for this operation. You could also specify a SQL warehouse or cluster for the queries to be executed on.
 
+-> This resource can only be used with a workspace-level provider!
+
 ~> This resource doesn't handle complex cases of schema evolution due to the limitations of Terraform itself.  If you need to implement schema evolution it's recommended to use specialized tools, such as, [Liquibase](https://medium.com/dbsql-sme-engineering/advanced-schema-management-on-databricks-with-liquibase-1900e9f7b9c0) and [Flyway](https://medium.com/dbsql-sme-engineering/databricks-schema-management-with-flyway-527c4a9f5d67).
 
 ## Example Usage
@@ -205,10 +207,19 @@ In addition to all the arguments above, the following attributes are exported:
 
 ## Import
 
-This resource can be imported by its full name.
+This resource can be imported by its full name:
+
+```hcl
+import {
+  to = databricks_sql_table.this
+  id = "<catalog_name>.<schema_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_sql_table.this <catalog_name>.<schema_name>.<name>
+terraform import databricks_sql_table.this "<catalog_name>.<schema_name>.<name>"
 ```
 
 ## Migration from `databricks_table`

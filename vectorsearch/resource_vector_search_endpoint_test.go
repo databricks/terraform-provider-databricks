@@ -105,3 +105,41 @@ func TestVectorSearchEndpointCreateTimeoutError(t *testing.T) {
 	}.ExpectError(t, "timeout")
 
 }
+
+func TestVectorSearchEndpointUpdateBudgetPolicy(t *testing.T) {
+	qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockVectorSearchEndpointsAPI().EXPECT()
+			e.UpdateEndpointBudgetPolicy(mock.Anything, vectorsearch.PatchEndpointBudgetPolicyRequest{
+				EndpointName:   "abc",
+				BudgetPolicyId: "budget-123",
+			}).Return(&vectorsearch.PatchEndpointBudgetPolicyResponse{
+				EffectiveBudgetPolicyId: "budget-123",
+			}, nil)
+			e.GetEndpointByEndpointName(mock.Anything, "abc").Return(&vectorsearch.EndpointInfo{
+				Id:                      "1234-5678",
+				EffectiveBudgetPolicyId: "budget-123",
+				EndpointStatus:          &vectorsearch.EndpointStatus{State: "ONLINE"},
+				EndpointType:            "STANDARD",
+				Name:                    "abc",
+			}, nil)
+		},
+		Resource: ResourceVectorSearchEndpoint(),
+		Update:   true,
+		ID:       "abc",
+		InstanceState: map[string]string{
+			"endpoint_id":      "1234-5678",
+			"name":             "abc",
+			"endpoint_type":    "STANDARD",
+			"budget_policy_id": "budget-456",
+		},
+		HCL: `
+		name             = "abc"
+		endpoint_type    = "STANDARD"
+		budget_policy_id = "budget-123"
+		`,
+	}.ApplyAndExpectData(t, map[string]any{
+		"id":               "abc",
+		"budget_policy_id": "budget-123",
+	})
+}

@@ -4,7 +4,7 @@
 
 ### New Features and Improvements
 
- * Faster and more reliable schema deletion. It now uses schemas/delete call with force=true flag instead of manually listing and deleting all resources.
+ * Faster and more reliable schema deletion. It now uses schemas/delete call with force=true flag instead of manually listing and deleting all resources.  [#4705](https://github.com/databricks/terraform-provider-databricks/pull/4705)
 
 ### Bug Fixes
 

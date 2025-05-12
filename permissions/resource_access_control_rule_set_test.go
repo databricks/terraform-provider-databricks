@@ -140,47 +140,6 @@ func TestResourceRuleSetUpdate(t *testing.T) {
 				Response: iam.RuleSetResponse{
 					Name: testServicePrincipalRuleSetName,
 					Etag: "etagEx=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-					},
-				},
-			},
-			{
-				Method:   "PUT",
-				Resource: ruleSetApiPath,
-				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: testServicePrincipalRuleSetName,
-					RuleSet: iam.RuleSetUpdateRequest{
-						Name: testServicePrincipalRuleSetName,
-						Etag: "etagEx=",
-						GrantRules: []iam.GrantRule{
-							{
-								Principals: []string{"users/abc@example.com"},
-								Role:       "roles/servicePrincipal.manager",
-							},
-							{
-								Principals: []string{"groups/new_group"},
-								Role:       "roles/servicePrincipal.user",
-							},
-						},
-					},
-				},
-				Response: iam.RuleSetResponse{
-					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx2=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-						{
-							Principals: []string{"groups/new_group"},
-							Role:       "roles/servicePrincipal.user",
-						},
-					},
 				},
 			},
 			{
@@ -239,12 +198,21 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
+			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
 				ExpectedRequest: iam.UpdateRuleSetRequest{
 					Name: newName,
 					RuleSet: iam.RuleSetUpdateRequest{
 						Name: newName,
+						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
@@ -284,7 +252,7 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 		}`, newName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": newName,
-		"etag": "etagEx2=",
+		"etag": "",
 		"id":   newName,
 	})
 }
@@ -292,6 +260,14 @@ func TestResourceRuleSetUpdateName(t *testing.T) {
 func TestResourceRuleSetUpdateConflict(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "GET",
+				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
+				Response: iam.RuleSetResponse{
+					Name: testServicePrincipalRuleSetName,
+					Etag: "etagEx=",
+				},
+			},
 			{
 				Method:   "PUT",
 				Resource: ruleSetApiPath,
@@ -319,7 +295,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
 				Response: iam.RuleSetResponse{
 					Name: ruleSetApiPath,
-					Etag: "etagEx2=",
+					Etag: "etagEx=",
 					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"groups/testgroup"},
@@ -335,7 +311,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
 						Name: testServicePrincipalRuleSetName,
-						Etag: "etagEx2=",
+						Etag: "etagEx=",
 						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
@@ -346,7 +322,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 				},
 				Response: iam.RuleSetResponse{
 					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx3=",
+					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},
@@ -374,7 +350,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 		}`, testServicePrincipalRuleSetName),
 	}.ApplyAndExpectData(t, map[string]any{
 		"name": testServicePrincipalRuleSetName,
-		"etag": "etagEx3=",
+		"etag": "",
 		"id":   testServicePrincipalRuleSetName,
 	})
 }
@@ -392,41 +368,6 @@ func TestResourceRuleSetDelete(t *testing.T) {
 						{
 							Principals: []string{"users/abc@example.com"},
 							Role:       "roles/servicePrincipal.manager",
-						},
-					},
-				},
-			},
-			{
-				Method:   "PUT",
-				Resource: ruleSetApiPath,
-				ExpectedRequest: iam.UpdateRuleSetRequest{
-					Name: testServicePrincipalRuleSetName,
-					RuleSet: iam.RuleSetUpdateRequest{
-						Name: testServicePrincipalRuleSetName,
-						Etag: "etagEx=",
-						GrantRules: []iam.GrantRule{
-							{
-								Principals: []string{"users/abc@example.com"},
-								Role:       "roles/servicePrincipal.manager",
-							},
-							{
-								Principals: []string{"groups/new_group"},
-								Role:       "roles/servicePrincipal.user",
-							},
-						},
-					},
-				},
-				Response: iam.RuleSetResponse{
-					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx2=",
-					GrantRules: []iam.GrantRule{
-						{
-							Principals: []string{"users/abc@example.com"},
-							Role:       "roles/servicePrincipal.manager",
-						},
-						{
-							Principals: []string{"groups/new_group"},
-							Role:       "roles/servicePrincipal.user",
 						},
 					},
 				},

@@ -101,7 +101,7 @@ func ResourceAccessControlRuleSet() common.Resource {
 				return err
 			}
 			// Store empty etag in state as we will always use the latest etag
-			ruleSetUpdateReq.RuleSet.Etag = ""
+			response.Etag = ""
 			err = common.StructToData(response, s, d)
 			if err != nil {
 				return err
@@ -117,6 +117,8 @@ func ResourceAccessControlRuleSet() common.Resource {
 			if err != nil {
 				return err
 			}
+			// Store empty etag in state as we will always use the latest etag
+			data.Etag = ""
 			return common.StructToData(data, s, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

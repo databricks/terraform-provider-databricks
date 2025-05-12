@@ -1629,7 +1629,8 @@ type UploadRequest_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
-	// If true, an existing file will be overwritten.
+	// If true or unspecified, an existing file will be overwritten. If false,
+	// an error will be returned if the path points to an existing file.
 	Overwrite types.Bool `tfsdk:"-"`
 }
 

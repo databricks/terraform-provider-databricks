@@ -5,6 +5,8 @@ subcategory: "Deployment"
 
 This resource allows you to manage AWS EC2 instance profiles that users can launch [databricks_cluster](cluster.md) and access data, like [databricks_mount](mount.md). The following example demonstrates how to create an instance profile and create a cluster with it. When creating a new `databricks_instance_profile`, Databricks validates that it has sufficient permissions to launch instances with the instance profile. This validation uses AWS dry-run mode for the [AWS EC2 RunInstances API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 -> Please switch to [databricks_storage_credential](storage_credential.md) with Unity Catalog to manage storage credentials, which provides a better and faster way for managing credential security.
 
 ```hcl
@@ -166,6 +168,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource instance profile can be imported using the ARN of it
+
+```hcl
+import {
+  to = databricks_instance_profile.this
+  id = "<instance-profile-arn>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_instance_profile.this <instance-profile-arn>

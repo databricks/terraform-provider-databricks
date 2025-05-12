@@ -3,9 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_network_connectivity_configs Data Source
 
--> **Note** This data source can only be used with an account-level provider!
-
 Lists all [databricks_mws_network_connectivity_config](../resources/mws_network_connectivity_config.md) in Databricks Account.
+
+-> This data source can only be used with an account-level provider!
 
 ## Example Usage
 

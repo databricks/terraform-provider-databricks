@@ -5,6 +5,8 @@ subcategory: "Compute"
 
 Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -134,6 +136,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource job can be imported using the id of the pipeline
+
+```hcl
+import {
+  to = databricks_pipeline.this
+  id = "<pipeline-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_pipeline.this <pipeline-id>

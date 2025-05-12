@@ -775,9 +775,9 @@ func (newState *ArtifactAllowlistInfo) SyncEffectiveFieldsDuringRead(existingSta
 
 func (c ArtifactAllowlistInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetOptional()
-	attrs["created_at"] = attrs["created_at"].SetOptional()
-	attrs["created_by"] = attrs["created_by"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 
 	return attrs
 }
@@ -4471,7 +4471,12 @@ type CreateVolumeRequestContent struct {
 	SchemaName types.String `tfsdk:"schema_name"`
 	// The storage location on the cloud
 	StorageLocation types.String `tfsdk:"storage_location"`
-
+	// The type of the volume. An external volume is located in the specified
+	// external location. A managed volume is located in the default location
+	// which is specified by the parent schema, or the parent catalog, or the
+	// Metastore. [Learn more]
+	//
+	// [Learn more]: https://docs.databricks.com/aws/en/volumes/managed-vs-external
 	VolumeType types.String `tfsdk:"volume_type"`
 }
 
@@ -15323,6 +15328,12 @@ type SetArtifactAllowlist struct {
 	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
 	// The artifact type of the allowlist.
 	ArtifactType types.String `tfsdk:"-"`
+	// Time at which this artifact allowlist was set, in epoch milliseconds.
+	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Username of the user who set the artifact allowlist.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Unique identifier of parent metastore.
+	MetastoreId types.String `tfsdk:"metastore_id"`
 }
 
 func (newState *SetArtifactAllowlist) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetArtifactAllowlist) {
@@ -15334,6 +15345,9 @@ func (newState *SetArtifactAllowlist) SyncEffectiveFieldsDuringRead(existingStat
 func (c SetArtifactAllowlist) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetRequired()
 	attrs["artifact_type"] = attrs["artifact_type"].SetRequired()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 
 	return attrs
 }
@@ -15360,6 +15374,9 @@ func (o SetArtifactAllowlist) ToObjectValue(ctx context.Context) basetypes.Objec
 		map[string]attr.Value{
 			"artifact_matchers": o.ArtifactMatchers,
 			"artifact_type":     o.ArtifactType,
+			"created_at":        o.CreatedAt,
+			"created_by":        o.CreatedBy,
+			"metastore_id":      o.MetastoreId,
 		})
 }
 
@@ -15371,6 +15388,9 @@ func (o SetArtifactAllowlist) Type(ctx context.Context) attr.Type {
 				ElemType: ArtifactMatcher{}.Type(ctx),
 			},
 			"artifact_type": types.StringType,
+			"created_at":    types.Int64Type,
+			"created_by":    types.StringType,
+			"metastore_id":  types.StringType,
 		},
 	}
 }
@@ -19176,6 +19196,7 @@ func (o *UpdateWorkspaceBindingsParameters) SetRemove(ctx context.Context, v []W
 	o.Remove = types.ListValueMust(t, vs)
 }
 
+// Next ID: 17
 type ValidateCredentialRequest struct {
 	// The AWS IAM role configuration
 	AwsIamRole types.Object `tfsdk:"aws_iam_role"`
@@ -19847,7 +19868,12 @@ type VolumeInfo struct {
 	UpdatedBy types.String `tfsdk:"updated_by"`
 	// The unique identifier of the volume
 	VolumeId types.String `tfsdk:"volume_id"`
-
+	// The type of the volume. An external volume is located in the specified
+	// external location. A managed volume is located in the default location
+	// which is specified by the parent schema, or the parent catalog, or the
+	// Metastore. [Learn more]
+	//
+	// [Learn more]: https://docs.databricks.com/aws/en/volumes/managed-vs-external
 	VolumeType types.String `tfsdk:"volume_type"`
 }
 

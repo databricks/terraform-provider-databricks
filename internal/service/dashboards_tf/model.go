@@ -19,9 +19,157 @@ import (
 
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+type AuthorizationDetails struct {
+	// Represents downscoped permission rules with specific access rights. This
+	// field is specific to `workspace_rule_set` constraint.
+	GrantRules types.List `tfsdk:"grant_rules"`
+	// The acl path of the tree store resource resource.
+	ResourceLegacyAclPath types.String `tfsdk:"resource_legacy_acl_path"`
+	// The resource name to which the authorization rule applies. This field is
+	// specific to `workspace_rule_set` constraint. Format:
+	// `workspaces/{workspace_id}/dashboards/{dashboard_id}`
+	ResourceName types.String `tfsdk:"resource_name"`
+	// The type of authorization downscoping policy. Ex: `workspace_rule_set`
+	// defines access rules for a specific workspace resource
+	Type_ types.String `tfsdk:"type"`
+}
+
+func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetails) {
+}
+
+func (newState *AuthorizationDetails) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetails) {
+}
+
+func (c AuthorizationDetails) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
+	attrs["resource_legacy_acl_path"] = attrs["resource_legacy_acl_path"].SetOptional()
+	attrs["resource_name"] = attrs["resource_name"].SetOptional()
+	attrs["type"] = attrs["type"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AuthorizationDetails.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AuthorizationDetails) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"grant_rules": reflect.TypeOf(AuthorizationDetailsGrantRule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AuthorizationDetails
+// only implements ToObjectValue() and Type().
+func (o AuthorizationDetails) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"grant_rules":              o.GrantRules,
+			"resource_legacy_acl_path": o.ResourceLegacyAclPath,
+			"resource_name":            o.ResourceName,
+			"type":                     o.Type_,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AuthorizationDetails) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"grant_rules": basetypes.ListType{
+				ElemType: AuthorizationDetailsGrantRule{}.Type(ctx),
+			},
+			"resource_legacy_acl_path": types.StringType,
+			"resource_name":            types.StringType,
+			"type":                     types.StringType,
+		},
+	}
+}
+
+// GetGrantRules returns the value of the GrantRules field in AuthorizationDetails as
+// a slice of AuthorizationDetailsGrantRule values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AuthorizationDetails) GetGrantRules(ctx context.Context) ([]AuthorizationDetailsGrantRule, bool) {
+	if o.GrantRules.IsNull() || o.GrantRules.IsUnknown() {
+		return nil, false
+	}
+	var v []AuthorizationDetailsGrantRule
+	d := o.GrantRules.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetGrantRules sets the value of the GrantRules field in AuthorizationDetails.
+func (o *AuthorizationDetails) SetGrantRules(ctx context.Context, v []AuthorizationDetailsGrantRule) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["grant_rules"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.GrantRules = types.ListValueMust(t, vs)
+}
+
+type AuthorizationDetailsGrantRule struct {
+	// Permission sets for dashboard are defined in
+	// iam-common/rbac-common/permission-sets/definitions/TreeStoreBasePermissionSets
+	// Ex: `permissionSets/dashboard.runner`
+	PermissionSet types.String `tfsdk:"permission_set"`
+}
+
+func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringCreateOrUpdate(plan AuthorizationDetailsGrantRule) {
+}
+
+func (newState *AuthorizationDetailsGrantRule) SyncEffectiveFieldsDuringRead(existingState AuthorizationDetailsGrantRule) {
+}
+
+func (c AuthorizationDetailsGrantRule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["permission_set"] = attrs["permission_set"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AuthorizationDetailsGrantRule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AuthorizationDetailsGrantRule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AuthorizationDetailsGrantRule
+// only implements ToObjectValue() and Type().
+func (o AuthorizationDetailsGrantRule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"permission_set": o.PermissionSet,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AuthorizationDetailsGrantRule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"permission_set": types.StringType,
+		},
+	}
+}
 
 // Cancel the results for the a query for a published, embedded dashboard
 type CancelPublishedQueryExecutionRequest struct {
@@ -615,6 +763,7 @@ func (c Dashboard) ApplySchemaCustomizations(attrs map[string]tfschema.Attribute
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1333,7 +1482,7 @@ type GenieGenerateDownloadFullQueryResultRequest struct {
 	ConversationId types.String `tfsdk:"-"`
 	// Message ID
 	MessageId types.String `tfsdk:"-"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
 }
 
@@ -1375,13 +1524,9 @@ func (o GenieGenerateDownloadFullQueryResultRequest) Type(ctx context.Context) a
 }
 
 type GenieGenerateDownloadFullQueryResultResponse struct {
-	// Error message if Genie failed to download the result
-	Error types.String `tfsdk:"error"`
-	// Download result status
-	Status types.String `tfsdk:"status"`
-	// Transient Statement ID. Use this ID to track the download request in
-	// subsequent polling calls
-	TransientStatementId types.String `tfsdk:"transient_statement_id"`
+	// Download ID. Use this ID to track the download request in subsequent
+	// polling calls
+	DownloadId types.String `tfsdk:"download_id"`
 }
 
 func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGenerateDownloadFullQueryResultResponse) {
@@ -1391,9 +1536,7 @@ func (newState *GenieGenerateDownloadFullQueryResultResponse) SyncEffectiveField
 }
 
 func (c GenieGenerateDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["error"] = attrs["error"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-	attrs["transient_statement_id"] = attrs["transient_statement_id"].SetOptional()
+	attrs["download_id"] = attrs["download_id"].SetOptional()
 
 	return attrs
 }
@@ -1416,9 +1559,7 @@ func (o GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"error":                  o.Error,
-			"status":                 o.Status,
-			"transient_statement_id": o.TransientStatementId,
+			"download_id": o.DownloadId,
 		})
 }
 
@@ -1426,9 +1567,7 @@ func (o GenieGenerateDownloadFullQueryResultResponse) ToObjectValue(ctx context.
 func (o GenieGenerateDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"error":                  types.StringType,
-			"status":                 types.StringType,
-			"transient_statement_id": types.StringType,
+			"download_id": types.StringType,
 		},
 	}
 }
@@ -1478,6 +1617,139 @@ func (o GenieGetConversationMessageRequest) Type(ctx context.Context) attr.Type 
 			"space_id":        types.StringType,
 		},
 	}
+}
+
+// Get download full query result
+type GenieGetDownloadFullQueryResultRequest struct {
+	// Attachment ID
+	AttachmentId types.String `tfsdk:"-"`
+	// Conversation ID
+	ConversationId types.String `tfsdk:"-"`
+	// Download ID. This ID is provided by the [Generate Download
+	// endpoint](:method:genie/generateDownloadFullQueryResult)
+	DownloadId types.String `tfsdk:"-"`
+	// Message ID
+	MessageId types.String `tfsdk:"-"`
+	// Genie space ID
+	SpaceId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetDownloadFullQueryResultRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultRequest
+// only implements ToObjectValue() and Type().
+func (o GenieGetDownloadFullQueryResultRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"attachment_id":   o.AttachmentId,
+			"conversation_id": o.ConversationId,
+			"download_id":     o.DownloadId,
+			"message_id":      o.MessageId,
+			"space_id":        o.SpaceId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetDownloadFullQueryResultRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"attachment_id":   types.StringType,
+			"conversation_id": types.StringType,
+			"download_id":     types.StringType,
+			"message_id":      types.StringType,
+			"space_id":        types.StringType,
+		},
+	}
+}
+
+type GenieGetDownloadFullQueryResultResponse struct {
+	// SQL Statement Execution response. See [Get status, manifest, and result
+	// first chunk](:method:statementexecution/getstatement) for more details.
+	StatementResponse types.Object `tfsdk:"statement_response"`
+}
+
+func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GenieGetDownloadFullQueryResultResponse) {
+}
+
+func (newState *GenieGetDownloadFullQueryResultResponse) SyncEffectiveFieldsDuringRead(existingState GenieGetDownloadFullQueryResultResponse) {
+}
+
+func (c GenieGetDownloadFullQueryResultResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["statement_response"] = attrs["statement_response"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GenieGetDownloadFullQueryResultResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GenieGetDownloadFullQueryResultResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"statement_response": reflect.TypeOf(sql_tf.StatementResponse{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GenieGetDownloadFullQueryResultResponse
+// only implements ToObjectValue() and Type().
+func (o GenieGetDownloadFullQueryResultResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"statement_response": o.StatementResponse,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GenieGetDownloadFullQueryResultResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"statement_response": sql_tf.StatementResponse{}.Type(ctx),
+		},
+	}
+}
+
+// GetStatementResponse returns the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse as
+// a sql_tf.StatementResponse value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GenieGetDownloadFullQueryResultResponse) GetStatementResponse(ctx context.Context) (sql_tf.StatementResponse, bool) {
+	var e sql_tf.StatementResponse
+	if o.StatementResponse.IsNull() || o.StatementResponse.IsUnknown() {
+		return e, false
+	}
+	var v []sql_tf.StatementResponse
+	d := o.StatementResponse.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetStatementResponse sets the value of the StatementResponse field in GenieGetDownloadFullQueryResultResponse.
+func (o *GenieGetDownloadFullQueryResultResponse) SetStatementResponse(ctx context.Context, v sql_tf.StatementResponse) {
+	vs := v.ToObjectValue(ctx)
+	o.StatementResponse = vs
 }
 
 // Get message attachment SQL query result
@@ -2114,7 +2386,7 @@ func (o GenieResultMetadata) Type(ctx context.Context) attr.Type {
 type GenieSpace struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
 	// Title of the Genie Space
 	Title types.String `tfsdk:"title"`
@@ -2494,6 +2766,143 @@ func (o GetPublishedDashboardRequest) Type(ctx context.Context) attr.Type {
 			"dashboard_id": types.StringType,
 		},
 	}
+}
+
+// Read an information of a published dashboard to mint an OAuth token.
+type GetPublishedDashboardTokenInfoRequest struct {
+	// UUID identifying the published dashboard.
+	DashboardId types.String `tfsdk:"-"`
+	// Provided external value to be included in the custom claim.
+	ExternalValue types.String `tfsdk:"-"`
+	// Provided external viewer id to be included in the custom claim.
+	ExternalViewerId types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardTokenInfoRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPublishedDashboardTokenInfoRequest) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardTokenInfoRequest
+// only implements ToObjectValue() and Type().
+func (o GetPublishedDashboardTokenInfoRequest) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"dashboard_id":       o.DashboardId,
+			"external_value":     o.ExternalValue,
+			"external_viewer_id": o.ExternalViewerId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPublishedDashboardTokenInfoRequest) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"dashboard_id":       types.StringType,
+			"external_value":     types.StringType,
+			"external_viewer_id": types.StringType,
+		},
+	}
+}
+
+type GetPublishedDashboardTokenInfoResponse struct {
+	// Authorization constraints for accessing the published dashboard.
+	// Currently includes `workspace_rule_set` and could be enriched with
+	// `unity_catalog_privileges` before oAuth token generation.
+	AuthorizationDetails types.List `tfsdk:"authorization_details"`
+	// Custom claim generated from external_value and external_viewer_id.
+	// Format:
+	// `urn:aibi:external_data:<external_value>:<external_viewer_id>:<dashboard_id>`
+	CustomClaim types.String `tfsdk:"custom_claim"`
+	// Scope defining access permissions.
+	Scope types.String `tfsdk:"scope"`
+}
+
+func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetPublishedDashboardTokenInfoResponse) {
+}
+
+func (newState *GetPublishedDashboardTokenInfoResponse) SyncEffectiveFieldsDuringRead(existingState GetPublishedDashboardTokenInfoResponse) {
+}
+
+func (c GetPublishedDashboardTokenInfoResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["authorization_details"] = attrs["authorization_details"].SetOptional()
+	attrs["custom_claim"] = attrs["custom_claim"].SetOptional()
+	attrs["scope"] = attrs["scope"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetPublishedDashboardTokenInfoResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetPublishedDashboardTokenInfoResponse) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"authorization_details": reflect.TypeOf(AuthorizationDetails{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetPublishedDashboardTokenInfoResponse
+// only implements ToObjectValue() and Type().
+func (o GetPublishedDashboardTokenInfoResponse) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"authorization_details": o.AuthorizationDetails,
+			"custom_claim":          o.CustomClaim,
+			"scope":                 o.Scope,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetPublishedDashboardTokenInfoResponse) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"authorization_details": basetypes.ListType{
+				ElemType: AuthorizationDetails{}.Type(ctx),
+			},
+			"custom_claim": types.StringType,
+			"scope":        types.StringType,
+		},
+	}
+}
+
+// GetAuthorizationDetails returns the value of the AuthorizationDetails field in GetPublishedDashboardTokenInfoResponse as
+// a slice of AuthorizationDetails values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *GetPublishedDashboardTokenInfoResponse) GetAuthorizationDetails(ctx context.Context) ([]AuthorizationDetails, bool) {
+	if o.AuthorizationDetails.IsNull() || o.AuthorizationDetails.IsUnknown() {
+		return nil, false
+	}
+	var v []AuthorizationDetails
+	d := o.AuthorizationDetails.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetAuthorizationDetails sets the value of the AuthorizationDetails field in GetPublishedDashboardTokenInfoResponse.
+func (o *GetPublishedDashboardTokenInfoResponse) SetAuthorizationDetails(ctx context.Context, v []AuthorizationDetails) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["authorization_details"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.AuthorizationDetails = types.ListValueMust(t, vs)
 }
 
 // Get dashboard schedule

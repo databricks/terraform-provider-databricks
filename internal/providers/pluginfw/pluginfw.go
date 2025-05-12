@@ -160,6 +160,11 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 			cfg.AuthType = newer
 		}
 	}
+	// If not set, the default provider timeout is 65 seconds. Most APIs have a server-side timeout of 60 seconds.
+	// The additional 5 seconds is to account for network latency.
+	if cfg.HTTPTimeoutSeconds == 0 {
+		cfg.HTTPTimeoutSeconds = 65
+	}
 	if p.configCustomizer != nil {
 		err := p.configCustomizer(cfg)
 		if err != nil {

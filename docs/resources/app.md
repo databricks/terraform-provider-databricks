@@ -3,9 +3,11 @@ subcategory: "Apps"
 ---
 # databricks_app Resource
 
+[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer's Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
+
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
-[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer’s Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -103,7 +105,7 @@ import {
 }
 ```
 
-or using the `terraform` CLI:
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_app.this <app_name>

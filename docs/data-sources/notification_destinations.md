@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This data source allows you to retrieve information about [Notification Destinations](https://docs.databricks.com/api/workspace/notificationdestinations). Notification Destinations are used to send notifications for query alerts and jobs to external systems such as email, Slack, Microsoft Teams, PagerDuty, or generic webhooks. 
 
+-> This data source can only be used with a workspace-level provider!
+
 ## Example Usage
 
 

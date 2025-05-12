@@ -607,7 +607,7 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			// in the groups resource definition itself.
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Resource: "/api/2.0/preview/scim/v2/Groups/a?attributes=id,displayName,active,externalId,entitlements,groups,roles,members,meta",
 				Response: scim.Group{ID: "a", DisplayName: "admins",
 					Members: []scim.ComplexValue{
 						{Display: "test@test.com", Value: "123", Ref: "Users/123"},
@@ -619,12 +619,12 @@ func TestImportingUsersGroupsSecretScopes(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Resource: "/api/2.0/preview/scim/v2/Groups/b?attributes=id,displayName,active,externalId,entitlements,groups,roles,members,meta",
 				Response: scim.Group{ID: "b", DisplayName: "users"},
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=id,displayName,active,externalId,entitlements,groups,roles,members",
+				Resource: "/api/2.0/preview/scim/v2/Groups/c?attributes=id,displayName,active,externalId,entitlements,groups,roles,members,meta",
 				Response: scim.Group{ID: "c", DisplayName: "test",
 					Groups: []scim.ComplexValue{
 						{Display: "admins", Value: "a", Ref: "Groups/a", Type: "direct"},

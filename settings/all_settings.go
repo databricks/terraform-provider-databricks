@@ -23,5 +23,7 @@ func AllSettingsResources() map[string]common.Resource {
 		"aibi_dashboard_embedding_access_policy":    makeSettingResource[settings.AibiDashboardEmbeddingAccessPolicySetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingAccessPolicySetting),
 		"aibi_dashboard_embedding_approved_domains": makeSettingResource[settings.AibiDashboardEmbeddingApprovedDomainsSetting, *databricks.WorkspaceClient](aibiDashboardEmbeddingApprovedDomainsSetting),
 		"disable_legacy_access":                     makeSettingResource[settings.DisableLegacyAccess, *databricks.WorkspaceClient](disableLegacyAccess),
+		"disable_legacy_dbfs":                       makeSettingResource[settings.DisableLegacyDbfs, *databricks.WorkspaceClient](disableLegacyDbfs),
+		"disable_legacy_features":                   makeSettingResource[settings.DisableLegacyFeatures, *databricks.AccountClient](disableLegacyFeatures),
 	}
 }

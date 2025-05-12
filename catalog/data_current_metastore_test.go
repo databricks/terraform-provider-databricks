@@ -3,23 +3,24 @@ package catalog
 import (
 	"testing"
 
+	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/qa"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestCurrentMetastoreDataVerify(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures: []qa.HTTPFixture{
-			{
-				Method:   "GET",
-				Resource: "/api/2.1/unity-catalog/metastore_summary",
-				Response: catalog.GetMetastoreSummaryResponse{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().
+				Summary(mock.Anything).
+				Return(&catalog.GetMetastoreSummaryResponse{
 					Name:        "xyz",
 					MetastoreId: "abc",
 					Owner:       "pqr",
 					Cloud:       "aws",
-				},
-			},
+				}, nil)
 		},
 		Resource:    DataSourceCurrentMetastore(),
 		Read:        true,
@@ -35,10 +36,17 @@ func TestCurrentMetastoreDataVerify(t *testing.T) {
 
 func TestCurrentMetastoreDataError(t *testing.T) {
 	qa.ResourceFixture{
-		Fixtures:    qa.HTTPFailures,
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			w.GetMockMetastoresAPI().EXPECT().
+				Summary(mock.Anything).
+				Return(nil, &apierr.APIError{
+					ErrorCode: "BAD_REQUEST",
+					Message:   "Bad request: unable to get metastore summary",
+				})
+		},
 		Resource:    DataSourceCurrentMetastore(),
 		Read:        true,
 		NonWritable: true,
 		ID:          "_",
-	}.ExpectError(t, "i'm a teapot")
+	}.ExpectError(t, "Bad request: unable to get metastore summary")
 }

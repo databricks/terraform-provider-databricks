@@ -27,12 +27,15 @@ var (
   owner_user_name = "user@domain.com"
 `
 	createQueryRequest = sql.CreateQueryRequest{
+		AutoResolveDisplayName: false,
 		Query: &sql.CreateQueryRequestQuery{
 			WarehouseId: "123456",
 			QueryText:   "select 42 as value",
 			DisplayName: "TF new query",
 			ParentPath:  "/Shared/Querys",
-		}}
+		},
+		ForceSendFields: []string{"AutoResolveDisplayName"},
+	}
 )
 
 func TestQueryCreate(t *testing.T) {
@@ -66,13 +69,13 @@ func TestQueryCreate_Error(t *testing.T) {
 			e := w.GetMockQueriesAPI().EXPECT()
 			e.Create(mock.Anything, createQueryRequest).Return(nil, &apierr.APIError{
 				StatusCode: http.StatusBadRequest,
-				Message:    "bad payload",
+				Message:    "Node named 'TF new query' already exists",
 			})
 		},
 		Resource: ResourceQuery(),
 		Create:   true,
 		HCL:      createQueryHcl,
-	}.ExpectError(t, "bad payload")
+	}.ExpectError(t, "Node named 'TF new query' already exists")
 }
 
 func TestQueryRead_Import(t *testing.T) {

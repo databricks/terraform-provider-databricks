@@ -261,7 +261,7 @@ func TestUcAccModelServingProvisionedThroughputResource(t *testing.T) {
 				config {
 					served_entities {
 						name = "prod_model"
-						entity_name = "llama-4-maverick"
+						entity_name = "system.ai.llama-4-maverick"
 						entity_version = "1"
 						provisioned_model_units = 50
 					}

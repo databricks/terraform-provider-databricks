@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_schema Resource
 
--> This resource can only be used with a workspace-level provider!
-
 Within a metastore, Unity Catalog provides a 3-level namespace for organizing data: Catalogs, Databases (also called Schemas), and Tables / Views.
+
+-> This resource can only be used with a workspace-level provider!
 
 A `databricks_schema` is contained within [databricks_catalog](catalog.md) and can contain tables & views.
 
@@ -53,8 +53,17 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by its full name:
 
+```hcl
+import {
+  to = databricks_schema.this
+  id = "<catalog_name>.<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_schema.this <catalog_name>.<name>
+terraform import databricks_schema.this "<catalog_name>.<name>"
 ```
 
 ## Related Resources

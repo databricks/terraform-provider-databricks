@@ -3,16 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_workspaces resource
 
--> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`. We require all `databricks_mws_*` resources to be created within its own dedicated terraform module of your environment. Usually this module creates VPC and IAM roles as well. Code that creates workspaces and code that [manages workspaces](../guides/workspace-management.md) must be in separate terraform modules to avoid common confusion between `provider = databricks.mws` and `provider = databricks.created_workspace`. This is why we specify `databricks_host` and `databricks_token` outputs, that have to be used in the latter modules:
-
-```hcl
-provider "databricks" {
-  host  = module.ai.databricks_host
-  token = module.ai.databricks_token
-}
-```
-
 This resource allows you to set up [workspaces on AWS](https://docs.databricks.com/getting-started/overview.html#e2-architecture-1) or [workspaces on GCP](https://docs.gcp.databricks.com/administration-guide/account-settings-gcp/workspaces.html). Please follow this complete runnable example on [AWS](../guides/aws-workspace.md) or [GCP](../guides/gcp-workspace.md) with new VPC and new workspace setup.
+
+-> This resource can only be used with an account-level provider!
 
 -> On Azure you need to use [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace) resource to create Azure Databricks workspaces.
 
@@ -412,8 +405,17 @@ You can reset local DNS caches before provisioning new workspaces with one of th
 
 This resource can be imported by Databricks account ID and workspace ID.
 
-```sh
-terraform import databricks_mws_networks.this '<account_id>/<workspace_id>'
+```hcl
+import {
+  to = databricks_mws_workspaces.this
+  id = "<account_id>/<workspace_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_mws_workspaces.this "<account_id>/<workspace_id>"
 ```
 
 ~> Not all fields of `databricks_mws_workspaces` can be updated without causing the workspace to be recreated.

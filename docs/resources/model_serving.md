@@ -5,6 +5,8 @@ subcategory: "Serving"
 
 This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks.
 
+-> This resource can only be used with a workspace-level provider!
+
 -> If you replace `served_models` with `served_entities` in an existing serving endpoint, the serving endpoint will briefly go into an update state (~30 seconds) and increment the config version.
 
 ## Example Usage
@@ -278,9 +280,31 @@ timeouts {
 
 The model serving resource can be imported using the name of the endpoint.
 
+```hcl
+import {
+  to = databricks_model_serving.this
+  id = "<model-serving-endpoint-name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
+
+
+## Related Resources
+
+The following resources are often used in the same context:
+
+* [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
+* [End to end workspace management](../guides/workspace-management.md) guide.
+* [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).
+* [databricks_mlflow_model](mlflow_model.md) to create models in the [workspace model registry](https://docs.databricks.com/en/mlflow/model-registry.html) in Databricks.
+* [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).
+* [databricks_notebook](../data-sources/notebook.md) data to export a notebook from Databricks Workspace.
+* [databricks_repo](repo.md) to manage [Databricks Repos](https://docs.databricks.com/repos.html).
 
 ## Related Resources
 

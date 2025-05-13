@@ -69,7 +69,7 @@ func TestOnlineTableCreate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Table: &catalog.OnlineTable{
+				Table: catalog.OnlineTable{
 					Name: "main.default.online_table",
 					Spec: &catalog.OnlineTableSpec{
 						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
@@ -93,7 +93,7 @@ func TestOnlineTableCreate_ErrorImmediately(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Table: &catalog.OnlineTable{
+				Table: catalog.OnlineTable{
 					Name: "main.default.online_table",
 					Spec: &catalog.OnlineTableSpec{
 						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},
@@ -130,7 +130,7 @@ func TestOnlineTableCreate_ErrorInWait(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockOnlineTablesAPI().EXPECT()
 			e.Create(mock.Anything, catalog.CreateOnlineTableRequest{
-				Table: &catalog.OnlineTable{
+				Table: catalog.OnlineTable{
 					Name: "main.default.online_table",
 					Spec: &catalog.OnlineTableSpec{
 						RunTriggered:        &catalog.OnlineTableSpecTriggeredSchedulingPolicy{},

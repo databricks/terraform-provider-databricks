@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [global init scripts](https://docs.databricks.com/clusters/init-scripts.html#global-init-scripts), which are run on all [databricks_cluster](cluster.md#init_scripts) and [databricks_job](job.md#new_cluster).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 You can declare Terraform-managed global init script by specifying `source` attribute of corresponding local file.
@@ -54,6 +56,15 @@ Global init scripts are available only for administrators, so you can't change p
 ## Import
 
 The resource global init script can be imported using script ID:
+
+```hcl
+import {
+  to = databricks_global_init_script.this
+  id = "script_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_global_init_script.this script_id

@@ -951,10 +951,12 @@ func (o CancelRunResponse_SdkV2) Type(ctx context.Context) attr.Type {
 // Stores the run state of the clean rooms notebook task.
 type CleanRoomTaskRunState_SdkV2 struct {
 	// A value indicating the run's current lifecycle state. This field is
-	// always available in the response.
+	// always available in the response. Note: Additional states might be
+	// introduced in future releases.
 	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// A value indicating the run's result. This field is only available for
-	// terminal lifecycle states.
+	// terminal lifecycle states. Note: Additional states might be introduced in
+	// future releases.
 	ResultState types.String `tfsdk:"result_state"`
 }
 
@@ -1694,9 +1696,8 @@ type CreateJob_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// The performance mode on a serverless job. The performance target
-	// determines the level of compute performance or cost-efficiency for the
-	// run.
+	// The performance mode on a serverless job. This field determines the level
+	// of compute performance or cost-efficiency for the run.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -2556,10 +2557,13 @@ func (o *DashboardPageSnapshot_SdkV2) SetWidgetErrorDetails(ctx context.Context,
 
 // Configures the Lakeview Dashboard job task type.
 type DashboardTask_SdkV2 struct {
+	// The identifier of the dashboard to refresh.
 	DashboardId types.String `tfsdk:"dashboard_id"`
-
+	// Optional: subscription configuration for sending the dashboard snapshot.
 	Subscription types.List `tfsdk:"subscription"`
-	// The warehouse id to execute the dashboard with for the schedule
+	// Optional: The warehouse id to execute the dashboard with for the
+	// schedule. If not specified, the default warehouse of the dashboard will
+	// be used.
 	WarehouseId types.String `tfsdk:"warehouse_id"`
 }
 
@@ -5379,9 +5383,12 @@ func (o *JobEmailNotifications_SdkV2) SetOnSuccess(ctx context.Context, v []type
 type JobEnvironment_SdkV2 struct {
 	// The key of an environment. It has to be unique within a job.
 	EnvironmentKey types.String `tfsdk:"environment_key"`
-	// The environment entity used to preserve serverless environment side panel
-	// and jobs' environment for non-notebook task. In this minimal environment
-	// spec, only pip dependencies are supported.
+	// The environment entity used to preserve serverless environment side
+	// panel, jobs' environment for non-notebook task, and DLT's environment for
+	// classic and serverless pipelines. (Note: DLT uses a copied version of the
+	// Environment proto below, at
+	// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
+	// this minimal environment spec, only pip dependencies are supported.
 	Spec types.List `tfsdk:"spec"`
 }
 
@@ -6069,9 +6076,8 @@ type JobSettings_SdkV2 struct {
 	NotificationSettings types.List `tfsdk:"notification_settings"`
 	// Job-level parameter definitions
 	Parameters types.List `tfsdk:"parameter"`
-	// The performance mode on a serverless job. The performance target
-	// determines the level of compute performance or cost-efficiency for the
-	// run.
+	// The performance mode on a serverless job. This field determines the level
+	// of compute performance or cost-efficiency for the run.
 	//
 	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
 	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
@@ -8293,6 +8299,15 @@ func (o QueueSettings_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RepairHistoryItem_SdkV2 struct {
+	// The actual performance target used by the serverless run during
+	// execution. This can differ from the client-set performance target on the
+	// request depending on whether the performance mode is supported by the job
+	// type.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
+	EffectivePerformanceTarget types.String `tfsdk:"effective_performance_target"`
 	// The end time of the (repaired) run.
 	EndTime types.Int64 `tfsdk:"end_time"`
 	// The ID of the repair. Only returned for the items that represent a repair
@@ -8319,6 +8334,7 @@ func (newState *RepairHistoryItem_SdkV2) SyncEffectiveFieldsDuringRead(existingS
 }
 
 func (c RepairHistoryItem_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["effective_performance_target"] = attrs["effective_performance_target"].SetOptional()
 	attrs["end_time"] = attrs["end_time"].SetOptional()
 	attrs["id"] = attrs["id"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
@@ -8354,13 +8370,14 @@ func (o RepairHistoryItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"end_time":     o.EndTime,
-			"id":           o.Id,
-			"start_time":   o.StartTime,
-			"state":        o.State,
-			"status":       o.Status,
-			"task_run_ids": o.TaskRunIds,
-			"type":         o.Type_,
+			"effective_performance_target": o.EffectivePerformanceTarget,
+			"end_time":                     o.EndTime,
+			"id":                           o.Id,
+			"start_time":                   o.StartTime,
+			"state":                        o.State,
+			"status":                       o.Status,
+			"task_run_ids":                 o.TaskRunIds,
+			"type":                         o.Type_,
 		})
 }
 
@@ -8368,9 +8385,10 @@ func (o RepairHistoryItem_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 func (o RepairHistoryItem_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"end_time":   types.Int64Type,
-			"id":         types.Int64Type,
-			"start_time": types.Int64Type,
+			"effective_performance_target": types.StringType,
+			"end_time":                     types.Int64Type,
+			"id":                           types.Int64Type,
+			"start_time":                   types.Int64Type,
 			"state": basetypes.ListType{
 				ElemType: RunState_SdkV2{}.Type(ctx),
 			},
@@ -8508,6 +8526,15 @@ type RepairRun_SdkV2 struct {
 	// [Task parameter variables]: https://docs.databricks.com/jobs.html#parameter-variables
 	// [dbutils.widgets.get]: https://docs.databricks.com/dev-tools/databricks-utils.html
 	NotebookParams types.Map `tfsdk:"notebook_params"`
+	// The performance mode on a serverless job. The performance target
+	// determines the level of compute performance or cost-efficiency for the
+	// run. This field overrides the performance target defined on the job
+	// level.
+	//
+	// * `STANDARD`: Enables cost-efficient execution of serverless workloads. *
+	// `PERFORMANCE_OPTIMIZED`: Prioritizes fast startup and execution times
+	// through rapid scaling and optimized cluster performance.
+	PerformanceTarget types.String `tfsdk:"performance_target"`
 	// Controls whether the pipeline should perform a full refresh
 	PipelineParams types.List `tfsdk:"pipeline_params"`
 
@@ -8578,6 +8605,7 @@ func (c RepairRun_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["job_parameters"] = attrs["job_parameters"].SetOptional()
 	attrs["latest_repair_id"] = attrs["latest_repair_id"].SetOptional()
 	attrs["notebook_params"] = attrs["notebook_params"].SetOptional()
+	attrs["performance_target"] = attrs["performance_target"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].SetOptional()
 	attrs["pipeline_params"] = attrs["pipeline_params"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["python_named_params"] = attrs["python_named_params"].SetOptional()
@@ -8626,6 +8654,7 @@ func (o RepairRun_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"job_parameters":         o.JobParameters,
 			"latest_repair_id":       o.LatestRepairId,
 			"notebook_params":        o.NotebookParams,
+			"performance_target":     o.PerformanceTarget,
 			"pipeline_params":        o.PipelineParams,
 			"python_named_params":    o.PythonNamedParams,
 			"python_params":          o.PythonParams,
@@ -8655,6 +8684,7 @@ func (o RepairRun_SdkV2) Type(ctx context.Context) attr.Type {
 			"notebook_params": basetypes.MapType{
 				ElemType: types.StringType,
 			},
+			"performance_target": types.StringType,
 			"pipeline_params": basetypes.ListType{
 				ElemType: PipelineParams_SdkV2{}.Type(ctx),
 			},
@@ -12739,12 +12769,14 @@ func (o *RunParameters_SdkV2) SetSqlParams(ctx context.Context, v map[string]typ
 // The current state of the run.
 type RunState_SdkV2 struct {
 	// A value indicating the run's current lifecycle state. This field is
-	// always available in the response.
+	// always available in the response. Note: Additional states might be
+	// introduced in future releases.
 	LifeCycleState types.String `tfsdk:"life_cycle_state"`
 	// The reason indicating why the run was queued.
 	QueueReason types.String `tfsdk:"queue_reason"`
 	// A value indicating the run's result. This field is only available for
-	// terminal lifecycle states.
+	// terminal lifecycle states. Note: Additional states might be introduced in
+	// future releases.
 	ResultState types.String `tfsdk:"result_state"`
 	// A descriptive message for the current state. This field is unstructured,
 	// and its exact format is subject to change.
@@ -12960,7 +12992,7 @@ type RunTask_SdkV2 struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.List `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -16083,7 +16115,7 @@ type SubmitTask_SdkV2 struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.List `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -16973,7 +17005,7 @@ type Subscription_SdkV2 struct {
 	CustomSubject types.String `tfsdk:"custom_subject"`
 	// When true, the subscription will not send emails.
 	Paused types.Bool `tfsdk:"paused"`
-
+	// The list of subscribers to send the snapshot of the dashboard to.
 	Subscribers types.List `tfsdk:"subscribers"`
 }
 
@@ -17057,8 +17089,11 @@ func (o *Subscription_SdkV2) SetSubscribers(ctx context.Context, v []Subscriptio
 }
 
 type SubscriptionSubscriber_SdkV2 struct {
+	// A snapshot of the dashboard will be sent to the destination when the
+	// `destination_id` field is present.
 	DestinationId types.String `tfsdk:"destination_id"`
-
+	// A snapshot of the dashboard will be sent to the user's email when the
+	// `user_name` field is present.
 	UserName types.String `tfsdk:"user_name"`
 }
 
@@ -17218,7 +17253,7 @@ type Task_SdkV2 struct {
 	// task does not require a cluster to execute and does not support retries
 	// or notifications.
 	ConditionTask types.List `tfsdk:"condition_task"`
-	// The task runs a DashboardTask when the `dashboard_task` field is present.
+	// The task refreshes a dashboard and sends a snapshot to subscribers.
 	DashboardTask types.List `tfsdk:"dashboard_task"`
 	// The task runs one or more dbt commands when the `dbt_task` field is
 	// present. The dbt task requires both Databricks SQL and the ability to use
@@ -18539,7 +18574,9 @@ type TerminationDetails_SdkV2 struct {
 	// configuration. Refer to the state message for further details. *
 	// `CLOUD_FAILURE`: The run failed due to a cloud provider issue. Refer to
 	// the state message for further details. * `MAX_JOB_QUEUE_SIZE_EXCEEDED`:
-	// The run was skipped due to reaching the job level queue size limit.
+	// The run was skipped due to reaching the job level queue size limit. *
+	// `DISABLED`: The run was never executed because it was disabled explicitly
+	// by the user.
 	//
 	// [Link]: https://kb.databricks.com/en_US/notebooks/too-many-execution-contexts-are-open-right-now
 	Code types.String `tfsdk:"code"`

@@ -104,7 +104,7 @@ func (a *resourceApp) Create(ctx context.Context, req resource.CreateRequest, re
 		forceSendFields = append(forceSendFields, "NoCompute")
 	}
 	waiter, err := w.Apps.Create(ctx, apps.CreateAppRequest{
-		App:             &appGoSdk,
+		App:             appGoSdk,
 		NoCompute:       app.NoCompute.ValueBool(),
 		ForceSendFields: forceSendFields,
 	})
@@ -232,7 +232,7 @@ func (a *resourceApp) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: &appGoSdk, Name: app.Name.ValueString()})
+	response, err := w.Apps.Update(ctx, apps.UpdateAppRequest{App: appGoSdk, Name: app.Name.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to update app", err.Error())
 		return

@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Workspace Files](https://docs.databricks.com/files/workspace.html).
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 You can declare Terraform-managed workspace file by specifying `source` attribute of corresponding local file.
@@ -58,6 +60,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The workspace file resource can be imported using workspace file path
+
+```hcl
+import {
+  to = databricks_workspace_file.this
+  id = "/path/to/file"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_workspace_file.this /path/to/file

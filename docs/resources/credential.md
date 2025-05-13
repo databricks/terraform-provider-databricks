@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_credential Resource
 
--> This resource can only be used with a workspace-level provider.
-
 A credential represents an authentication and authorization mechanism for accessing services on your cloud tenant. Each credential is subject to Unity Catalog access-control policies that control which users and groups can access the credential.
+
+-> This resource can only be used with a workspace-level provider!
 
 The type of credential to be created is determined by the `purpose` field, which should be either `SERVICE` or `STORAGE`.
 The caller must be a metastore admin or have the metastore privilege `CREATE_STORAGE_CREDENTIAL` for storage credentials, or `CREATE_SERVICE_CREDENTIAL` for service credentials. The user who creates the credential can delegate ownership to another user or group to manage permissions on it
@@ -119,6 +119,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by name:
+
+```hcl
+import {
+  to = databricks_credential.this
+  id = "<name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_credential.this <name>

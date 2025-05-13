@@ -228,6 +228,19 @@ type ApproveTransitionRequestResponse_SdkV2 struct {
 	Activity types.List `tfsdk:"activity"`
 }
 
+func (newState *ApproveTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApproveTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *ApproveTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApproveTransitionRequestResponse_SdkV2) {
+}
+
+func (c ApproveTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity"] = attrs["activity"].SetOptional()
+	attrs["activity"] = attrs["activity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ApproveTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -611,6 +624,19 @@ type CreateCommentResponse_SdkV2 struct {
 	Comment types.List `tfsdk:"comment"`
 }
 
+func (newState *CreateCommentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateCommentResponse_SdkV2) {
+}
+
+func (newState *CreateCommentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateCommentResponse_SdkV2) {
+}
+
+func (c CreateCommentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["comment"] = attrs["comment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateCommentResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -828,6 +854,10 @@ type CreateForecastingExperimentRequest_SdkV2 struct {
 	// as a multiple of forecast_granularity. This value represents how far
 	// ahead the model should forecast.
 	ForecastHorizon types.Int64 `tfsdk:"forecast_horizon"`
+	// The fully qualified path of a Unity Catalog table, formatted as
+	// catalog_name.schema_name.table_name, used to store future feature data
+	// for predictions.
+	FutureFeatureDataPath types.String `tfsdk:"future_feature_data_path"`
 	// The region code(s) to automatically add holiday features. Currently
 	// supports only one region.
 	HolidayRegions types.List `tfsdk:"holiday_regions"`
@@ -862,7 +892,7 @@ type CreateForecastingExperimentRequest_SdkV2 struct {
 	// The column in the training table used to group the dataset for predicting
 	// individual time series.
 	TimeseriesIdentifierColumns types.List `tfsdk:"timeseries_identifier_columns"`
-	// The fully qualified name of a Unity Catalog table, formatted as
+	// The fully qualified path of a Unity Catalog table, formatted as
 	// catalog_name.schema_name.table_name, used as training data for the
 	// forecasting model.
 	TrainDataPath types.String `tfsdk:"train_data_path"`
@@ -883,6 +913,7 @@ func (c CreateForecastingExperimentRequest_SdkV2) ApplySchemaCustomizations(attr
 	attrs["experiment_path"] = attrs["experiment_path"].SetOptional()
 	attrs["forecast_granularity"] = attrs["forecast_granularity"].SetRequired()
 	attrs["forecast_horizon"] = attrs["forecast_horizon"].SetRequired()
+	attrs["future_feature_data_path"] = attrs["future_feature_data_path"].SetOptional()
 	attrs["holiday_regions"] = attrs["holiday_regions"].SetOptional()
 	attrs["include_features"] = attrs["include_features"].SetOptional()
 	attrs["max_runtime"] = attrs["max_runtime"].SetOptional()
@@ -926,6 +957,7 @@ func (o CreateForecastingExperimentRequest_SdkV2) ToObjectValue(ctx context.Cont
 			"experiment_path":               o.ExperimentPath,
 			"forecast_granularity":          o.ForecastGranularity,
 			"forecast_horizon":              o.ForecastHorizon,
+			"future_feature_data_path":      o.FutureFeatureDataPath,
 			"holiday_regions":               o.HolidayRegions,
 			"include_features":              o.IncludeFeatures,
 			"max_runtime":                   o.MaxRuntime,
@@ -945,10 +977,11 @@ func (o CreateForecastingExperimentRequest_SdkV2) ToObjectValue(ctx context.Cont
 func (o CreateForecastingExperimentRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"custom_weights_column": types.StringType,
-			"experiment_path":       types.StringType,
-			"forecast_granularity":  types.StringType,
-			"forecast_horizon":      types.Int64Type,
+			"custom_weights_column":    types.StringType,
+			"experiment_path":          types.StringType,
+			"forecast_granularity":     types.StringType,
+			"forecast_horizon":         types.Int64Type,
+			"future_feature_data_path": types.StringType,
 			"holiday_regions": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -1932,6 +1965,19 @@ type CreateTransitionRequestResponse_SdkV2 struct {
 	Request types.List `tfsdk:"request"`
 }
 
+func (newState *CreateTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *CreateTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateTransitionRequestResponse_SdkV2) {
+}
+
+func (c CreateTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["request"] = attrs["request"].SetOptional()
+	attrs["request"] = attrs["request"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1995,6 +2041,19 @@ func (o *CreateTransitionRequestResponse_SdkV2) SetRequest(ctx context.Context, 
 
 type CreateWebhookResponse_SdkV2 struct {
 	Webhook types.List `tfsdk:"webhook"`
+}
+
+func (newState *CreateWebhookResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateWebhookResponse_SdkV2) {
+}
+
+func (newState *CreateWebhookResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateWebhookResponse_SdkV2) {
+}
+
+func (c CreateWebhookResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["webhook"] = attrs["webhook"].SetOptional()
+	attrs["webhook"] = attrs["webhook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateWebhookResponse.
@@ -4902,6 +4961,19 @@ type GetModelResponse_SdkV2 struct {
 	RegisteredModelDatabricks types.List `tfsdk:"registered_model_databricks"`
 }
 
+func (newState *GetModelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetModelResponse_SdkV2) {
+}
+
+func (newState *GetModelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState GetModelResponse_SdkV2) {
+}
+
+func (c GetModelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["registered_model_databricks"] = attrs["registered_model_databricks"].SetOptional()
+	attrs["registered_model_databricks"] = attrs["registered_model_databricks"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetModelResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6277,6 +6349,18 @@ func (o ListTransitionRequestsRequest_SdkV2) Type(ctx context.Context) attr.Type
 type ListTransitionRequestsResponse_SdkV2 struct {
 	// Array of open transition requests.
 	Requests types.List `tfsdk:"requests"`
+}
+
+func (newState *ListTransitionRequestsResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListTransitionRequestsResponse_SdkV2) {
+}
+
+func (newState *ListTransitionRequestsResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState ListTransitionRequestsResponse_SdkV2) {
+}
+
+func (c ListTransitionRequestsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["requests"] = attrs["requests"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListTransitionRequestsResponse.
@@ -8753,6 +8837,19 @@ type RejectTransitionRequestResponse_SdkV2 struct {
 	Activity types.List `tfsdk:"activity"`
 }
 
+func (newState *RejectTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RejectTransitionRequestResponse_SdkV2) {
+}
+
+func (newState *RejectTransitionRequestResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RejectTransitionRequestResponse_SdkV2) {
+}
+
+func (c RejectTransitionRequestResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["activity"] = attrs["activity"].SetOptional()
+	attrs["activity"] = attrs["activity"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RejectTransitionRequestResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11084,6 +11181,19 @@ type TestRegistryWebhookResponse_SdkV2 struct {
 	Webhook types.List `tfsdk:"webhook"`
 }
 
+func (newState *TestRegistryWebhookResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TestRegistryWebhookResponse_SdkV2) {
+}
+
+func (newState *TestRegistryWebhookResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TestRegistryWebhookResponse_SdkV2) {
+}
+
+func (c TestRegistryWebhookResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["webhook"] = attrs["webhook"].SetOptional()
+	attrs["webhook"] = attrs["webhook"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TestRegistryWebhookResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11334,6 +11444,19 @@ type TransitionStageResponse_SdkV2 struct {
 	ModelVersion types.List `tfsdk:"model_version"`
 }
 
+func (newState *TransitionStageResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransitionStageResponse_SdkV2) {
+}
+
+func (newState *TransitionStageResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransitionStageResponse_SdkV2) {
+}
+
+func (c TransitionStageResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["model_version"] = attrs["model_version"].SetOptional()
+	attrs["model_version"] = attrs["model_version"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransitionStageResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11451,6 +11574,19 @@ func (o UpdateComment_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateCommentResponse_SdkV2 struct {
 	// Comment details.
 	Comment types.List `tfsdk:"comment"`
+}
+
+func (newState *UpdateCommentResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateCommentResponse_SdkV2) {
+}
+
+func (newState *UpdateCommentResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateCommentResponse_SdkV2) {
+}
+
+func (c UpdateCommentResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["comment"] = attrs["comment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateCommentResponse.

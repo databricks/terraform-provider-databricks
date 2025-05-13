@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Databricks Git folders](https://docs.databricks.com/en/repos/index.html) (formerly known as Databricks Repos).
 
+-> This resource can only be used with a workspace-level provider!
+
 -> To create a Git folder from a private repository you need to configure Git token as described in the [documentation](https://docs.databricks.com/en/repos/index.html#configure-your-git-integration-with-databricks).  To set this token you can use [databricks_git_credential](git_credential.md) resource.
 
 ## Example Usage
@@ -54,6 +56,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 The resource can be imported using the Git folder ID (obtained via UI or using API)
+
+```hcl
+import {
+  to = databricks_repo.this
+  id = "repo_id"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 $ terraform import databricks_repo.this repo_id

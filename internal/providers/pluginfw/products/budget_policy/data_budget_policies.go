@@ -28,17 +28,17 @@ func DataSourceBudgetPolicies() datasource.DataSource {
 
 type BudgetPoliciesList struct {
 	billing_tf.ListBudgetPoliciesRequest
-	BudgetPolicy types.List `tfsdk:"budget_policies"`
+	BudgetPolicy types.List `tfsdk:"policies"`
 }
 
 func (c BudgetPoliciesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["budget_policies"] = attrs["budget_policies"].SetComputed()
+	attrs["policies"] = attrs["policies"].SetComputed()
 	return attrs
 }
 
 func (BudgetPoliciesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"budget_policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
+		"policies": reflect.TypeOf(billing_tf.BudgetPolicy{}),
 	}
 }
 
@@ -90,17 +90,17 @@ func (r *BudgetPoliciesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var budget_policies = []attr.Value{}
+	var policies = []attr.Value{}
 	for _, item := range response {
 		var budget_policy billing_tf.BudgetPolicy
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &budget_policy)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		budget_policies = append(budget_policies, budget_policy.ToObjectValue(ctx))
+		policies = append(policies, budget_policy.ToObjectValue(ctx))
 	}
 
 	var newState BudgetPoliciesList
-	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), budget_policies)
+	newState.BudgetPolicy = types.ListValueMust(billing_tf.BudgetPolicy{}.Type(ctx), policies)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

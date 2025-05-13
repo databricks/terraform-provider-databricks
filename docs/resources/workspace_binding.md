@@ -3,9 +3,9 @@ subcategory: "Unity Catalog"
 ---
 # databricks_workspace_binding Resource
 
--> This resource can only be used with a workspace-level provider!
-
 If you use workspaces to isolate user data access, you may want to limit access to catalog, external locations or storage credentials from specific workspaces in your account, also known as workspace binding
+
+-> This resource can only be used with a workspace-level provider!
 
 By default, Databricks assigns the securable to all workspaces attached to the current metastore. By using `databricks_workspace_binding`, the securable will be unassigned from all workspaces and only assigned explicitly using this resource.
 
@@ -40,6 +40,15 @@ The following arguments are required:
 
 This resource can be imported by using combination of workspace ID, securable type and name:
 
-```sh
+```hcl
+import {
+  to = databricks_workspace_binding.this
+  id = "<workspace_id>|<securable_type>|<securable_name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
 terraform import databricks_workspace_binding.this "<workspace_id>|<securable_type>|<securable_name>"
 ```

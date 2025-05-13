@@ -891,6 +891,714 @@ func (o *AlertQuery) SetTags(ctx context.Context, v []types.String) {
 	o.Tags = types.ListValueMust(t, vs)
 }
 
+type AlertV2 struct {
+	// The timestamp indicating when the alert was created.
+	CreateTime types.String `tfsdk:"create_time"`
+	// Custom description for the alert. support mustache template.
+	CustomDescription types.String `tfsdk:"custom_description"`
+	// Custom summary for the alert. support mustache template.
+	CustomSummary types.String `tfsdk:"custom_summary"`
+	// The display name of the alert.
+	DisplayName types.String `tfsdk:"display_name"`
+
+	Evaluation types.Object `tfsdk:"evaluation"`
+	// UUID identifying the alert.
+	Id types.String `tfsdk:"id"`
+	// Indicates whether the query is trashed.
+	LifecycleState types.String `tfsdk:"lifecycle_state"`
+	// The owner's username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	OwnerUserName types.String `tfsdk:"owner_user_name"`
+	// The workspace path of the folder containing the alert. Can only be set on
+	// create, and cannot be updated.
+	ParentPath types.String `tfsdk:"parent_path"`
+	// Text of the query to be run.
+	QueryText types.String `tfsdk:"query_text"`
+	// The run as username. This field is set to "Unavailable" if the user has
+	// been deleted.
+	RunAsUserName types.String `tfsdk:"run_as_user_name"`
+
+	Schedule types.Object `tfsdk:"schedule"`
+	// The timestamp indicating when the alert was updated.
+	UpdateTime types.String `tfsdk:"update_time"`
+	// ID of the SQL warehouse attached to the alert.
+	WarehouseId types.String `tfsdk:"warehouse_id"`
+}
+
+func (newState *AlertV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2) {
+}
+
+func (newState *AlertV2) SyncEffectiveFieldsDuringRead(existingState AlertV2) {
+}
+
+func (c AlertV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["create_time"] = attrs["create_time"].SetComputed()
+	attrs["custom_description"] = attrs["custom_description"].SetOptional()
+	attrs["custom_summary"] = attrs["custom_summary"].SetOptional()
+	attrs["display_name"] = attrs["display_name"].SetOptional()
+	attrs["evaluation"] = attrs["evaluation"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
+	attrs["owner_user_name"] = attrs["owner_user_name"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].SetOptional()
+	attrs["query_text"] = attrs["query_text"].SetOptional()
+	attrs["run_as_user_name"] = attrs["run_as_user_name"].SetComputed()
+	attrs["schedule"] = attrs["schedule"].SetOptional()
+	attrs["update_time"] = attrs["update_time"].SetComputed()
+	attrs["warehouse_id"] = attrs["warehouse_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"evaluation": reflect.TypeOf(AlertV2Evaluation{}),
+		"schedule":   reflect.TypeOf(CronSchedule{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2
+// only implements ToObjectValue() and Type().
+func (o AlertV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"create_time":        o.CreateTime,
+			"custom_description": o.CustomDescription,
+			"custom_summary":     o.CustomSummary,
+			"display_name":       o.DisplayName,
+			"evaluation":         o.Evaluation,
+			"id":                 o.Id,
+			"lifecycle_state":    o.LifecycleState,
+			"owner_user_name":    o.OwnerUserName,
+			"parent_path":        o.ParentPath,
+			"query_text":         o.QueryText,
+			"run_as_user_name":   o.RunAsUserName,
+			"schedule":           o.Schedule,
+			"update_time":        o.UpdateTime,
+			"warehouse_id":       o.WarehouseId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"create_time":        types.StringType,
+			"custom_description": types.StringType,
+			"custom_summary":     types.StringType,
+			"display_name":       types.StringType,
+			"evaluation":         AlertV2Evaluation{}.Type(ctx),
+			"id":                 types.StringType,
+			"lifecycle_state":    types.StringType,
+			"owner_user_name":    types.StringType,
+			"parent_path":        types.StringType,
+			"query_text":         types.StringType,
+			"run_as_user_name":   types.StringType,
+			"schedule":           CronSchedule{}.Type(ctx),
+			"update_time":        types.StringType,
+			"warehouse_id":       types.StringType,
+		},
+	}
+}
+
+// GetEvaluation returns the value of the Evaluation field in AlertV2 as
+// a AlertV2Evaluation value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2) GetEvaluation(ctx context.Context) (AlertV2Evaluation, bool) {
+	var e AlertV2Evaluation
+	if o.Evaluation.IsNull() || o.Evaluation.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2Evaluation
+	d := o.Evaluation.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEvaluation sets the value of the Evaluation field in AlertV2.
+func (o *AlertV2) SetEvaluation(ctx context.Context, v AlertV2Evaluation) {
+	vs := v.ToObjectValue(ctx)
+	o.Evaluation = vs
+}
+
+// GetSchedule returns the value of the Schedule field in AlertV2 as
+// a CronSchedule value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2) GetSchedule(ctx context.Context) (CronSchedule, bool) {
+	var e CronSchedule
+	if o.Schedule.IsNull() || o.Schedule.IsUnknown() {
+		return e, false
+	}
+	var v []CronSchedule
+	d := o.Schedule.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSchedule sets the value of the Schedule field in AlertV2.
+func (o *AlertV2) SetSchedule(ctx context.Context, v CronSchedule) {
+	vs := v.ToObjectValue(ctx)
+	o.Schedule = vs
+}
+
+type AlertV2Evaluation struct {
+	// Operator used for comparison in alert evaluation.
+	ComparisonOperator types.String `tfsdk:"comparison_operator"`
+	// Alert state if result is empty.
+	EmptyResultState types.String `tfsdk:"empty_result_state"`
+	// Timestamp of the last evaluation.
+	LastEvaluatedAt types.String `tfsdk:"last_evaluated_at"`
+	// User or Notification Destination to notify when alert is triggered.
+	Notification types.Object `tfsdk:"notification"`
+	// Source column from result to use to evaluate alert
+	Source types.Object `tfsdk:"source"`
+	// Latest state of alert evaluation.
+	State types.String `tfsdk:"state"`
+	// Threshold to user for alert evaluation, can be a column or a value.
+	Threshold types.Object `tfsdk:"threshold"`
+}
+
+func (newState *AlertV2Evaluation) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Evaluation) {
+}
+
+func (newState *AlertV2Evaluation) SyncEffectiveFieldsDuringRead(existingState AlertV2Evaluation) {
+}
+
+func (c AlertV2Evaluation) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comparison_operator"] = attrs["comparison_operator"].SetOptional()
+	attrs["empty_result_state"] = attrs["empty_result_state"].SetOptional()
+	attrs["last_evaluated_at"] = attrs["last_evaluated_at"].SetComputed()
+	attrs["notification"] = attrs["notification"].SetOptional()
+	attrs["source"] = attrs["source"].SetOptional()
+	attrs["state"] = attrs["state"].SetComputed()
+	attrs["threshold"] = attrs["threshold"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2Evaluation.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2Evaluation) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"notification": reflect.TypeOf(AlertV2Notification{}),
+		"source":       reflect.TypeOf(AlertV2OperandColumn{}),
+		"threshold":    reflect.TypeOf(AlertV2Operand{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2Evaluation
+// only implements ToObjectValue() and Type().
+func (o AlertV2Evaluation) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comparison_operator": o.ComparisonOperator,
+			"empty_result_state":  o.EmptyResultState,
+			"last_evaluated_at":   o.LastEvaluatedAt,
+			"notification":        o.Notification,
+			"source":              o.Source,
+			"state":               o.State,
+			"threshold":           o.Threshold,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2Evaluation) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comparison_operator": types.StringType,
+			"empty_result_state":  types.StringType,
+			"last_evaluated_at":   types.StringType,
+			"notification":        AlertV2Notification{}.Type(ctx),
+			"source":              AlertV2OperandColumn{}.Type(ctx),
+			"state":               types.StringType,
+			"threshold":           AlertV2Operand{}.Type(ctx),
+		},
+	}
+}
+
+// GetNotification returns the value of the Notification field in AlertV2Evaluation as
+// a AlertV2Notification value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Evaluation) GetNotification(ctx context.Context) (AlertV2Notification, bool) {
+	var e AlertV2Notification
+	if o.Notification.IsNull() || o.Notification.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2Notification
+	d := o.Notification.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetNotification sets the value of the Notification field in AlertV2Evaluation.
+func (o *AlertV2Evaluation) SetNotification(ctx context.Context, v AlertV2Notification) {
+	vs := v.ToObjectValue(ctx)
+	o.Notification = vs
+}
+
+// GetSource returns the value of the Source field in AlertV2Evaluation as
+// a AlertV2OperandColumn value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Evaluation) GetSource(ctx context.Context) (AlertV2OperandColumn, bool) {
+	var e AlertV2OperandColumn
+	if o.Source.IsNull() || o.Source.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2OperandColumn
+	d := o.Source.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSource sets the value of the Source field in AlertV2Evaluation.
+func (o *AlertV2Evaluation) SetSource(ctx context.Context, v AlertV2OperandColumn) {
+	vs := v.ToObjectValue(ctx)
+	o.Source = vs
+}
+
+// GetThreshold returns the value of the Threshold field in AlertV2Evaluation as
+// a AlertV2Operand value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Evaluation) GetThreshold(ctx context.Context) (AlertV2Operand, bool) {
+	var e AlertV2Operand
+	if o.Threshold.IsNull() || o.Threshold.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2Operand
+	d := o.Threshold.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetThreshold sets the value of the Threshold field in AlertV2Evaluation.
+func (o *AlertV2Evaluation) SetThreshold(ctx context.Context, v AlertV2Operand) {
+	vs := v.ToObjectValue(ctx)
+	o.Threshold = vs
+}
+
+type AlertV2Notification struct {
+	// Whether to notify alert subscribers when alert returns back to normal.
+	NotifyOnOk types.Bool `tfsdk:"notify_on_ok"`
+	// Number of seconds an alert must wait after being triggered to rearm
+	// itself. After rearming, it can be triggered again. If 0 or not specified,
+	// the alert will not be triggered again.
+	RetriggerSeconds types.Int64 `tfsdk:"retrigger_seconds"`
+
+	Subscriptions types.List `tfsdk:"subscriptions"`
+}
+
+func (newState *AlertV2Notification) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Notification) {
+}
+
+func (newState *AlertV2Notification) SyncEffectiveFieldsDuringRead(existingState AlertV2Notification) {
+}
+
+func (c AlertV2Notification) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["notify_on_ok"] = attrs["notify_on_ok"].SetOptional()
+	attrs["retrigger_seconds"] = attrs["retrigger_seconds"].SetOptional()
+	attrs["subscriptions"] = attrs["subscriptions"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2Notification.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2Notification) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"subscriptions": reflect.TypeOf(AlertV2Subscription{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2Notification
+// only implements ToObjectValue() and Type().
+func (o AlertV2Notification) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"notify_on_ok":      o.NotifyOnOk,
+			"retrigger_seconds": o.RetriggerSeconds,
+			"subscriptions":     o.Subscriptions,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2Notification) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"notify_on_ok":      types.BoolType,
+			"retrigger_seconds": types.Int64Type,
+			"subscriptions": basetypes.ListType{
+				ElemType: AlertV2Subscription{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSubscriptions returns the value of the Subscriptions field in AlertV2Notification as
+// a slice of AlertV2Subscription values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Notification) GetSubscriptions(ctx context.Context) ([]AlertV2Subscription, bool) {
+	if o.Subscriptions.IsNull() || o.Subscriptions.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertV2Subscription
+	d := o.Subscriptions.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetSubscriptions sets the value of the Subscriptions field in AlertV2Notification.
+func (o *AlertV2Notification) SetSubscriptions(ctx context.Context, v []AlertV2Subscription) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["subscriptions"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Subscriptions = types.ListValueMust(t, vs)
+}
+
+type AlertV2Operand struct {
+	Column types.Object `tfsdk:"column"`
+
+	Value types.Object `tfsdk:"value"`
+}
+
+func (newState *AlertV2Operand) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Operand) {
+}
+
+func (newState *AlertV2Operand) SyncEffectiveFieldsDuringRead(existingState AlertV2Operand) {
+}
+
+func (c AlertV2Operand) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["column"] = attrs["column"].SetOptional()
+	attrs["value"] = attrs["value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2Operand.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2Operand) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"column": reflect.TypeOf(AlertV2OperandColumn{}),
+		"value":  reflect.TypeOf(AlertV2OperandValue{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2Operand
+// only implements ToObjectValue() and Type().
+func (o AlertV2Operand) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"column": o.Column,
+			"value":  o.Value,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2Operand) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"column": AlertV2OperandColumn{}.Type(ctx),
+			"value":  AlertV2OperandValue{}.Type(ctx),
+		},
+	}
+}
+
+// GetColumn returns the value of the Column field in AlertV2Operand as
+// a AlertV2OperandColumn value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Operand) GetColumn(ctx context.Context) (AlertV2OperandColumn, bool) {
+	var e AlertV2OperandColumn
+	if o.Column.IsNull() || o.Column.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2OperandColumn
+	d := o.Column.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetColumn sets the value of the Column field in AlertV2Operand.
+func (o *AlertV2Operand) SetColumn(ctx context.Context, v AlertV2OperandColumn) {
+	vs := v.ToObjectValue(ctx)
+	o.Column = vs
+}
+
+// GetValue returns the value of the Value field in AlertV2Operand as
+// a AlertV2OperandValue value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AlertV2Operand) GetValue(ctx context.Context) (AlertV2OperandValue, bool) {
+	var e AlertV2OperandValue
+	if o.Value.IsNull() || o.Value.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2OperandValue
+	d := o.Value.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetValue sets the value of the Value field in AlertV2Operand.
+func (o *AlertV2Operand) SetValue(ctx context.Context, v AlertV2OperandValue) {
+	vs := v.ToObjectValue(ctx)
+	o.Value = vs
+}
+
+type AlertV2OperandColumn struct {
+	Aggregation types.String `tfsdk:"aggregation"`
+
+	Display types.String `tfsdk:"display"`
+
+	Name types.String `tfsdk:"name"`
+}
+
+func (newState *AlertV2OperandColumn) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2OperandColumn) {
+}
+
+func (newState *AlertV2OperandColumn) SyncEffectiveFieldsDuringRead(existingState AlertV2OperandColumn) {
+}
+
+func (c AlertV2OperandColumn) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["aggregation"] = attrs["aggregation"].SetOptional()
+	attrs["display"] = attrs["display"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2OperandColumn.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2OperandColumn) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2OperandColumn
+// only implements ToObjectValue() and Type().
+func (o AlertV2OperandColumn) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"aggregation": o.Aggregation,
+			"display":     o.Display,
+			"name":        o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2OperandColumn) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"aggregation": types.StringType,
+			"display":     types.StringType,
+			"name":        types.StringType,
+		},
+	}
+}
+
+type AlertV2OperandValue struct {
+	BoolValue types.Bool `tfsdk:"bool_value"`
+
+	DoubleValue types.Float64 `tfsdk:"double_value"`
+
+	StringValue types.String `tfsdk:"string_value"`
+}
+
+func (newState *AlertV2OperandValue) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2OperandValue) {
+}
+
+func (newState *AlertV2OperandValue) SyncEffectiveFieldsDuringRead(existingState AlertV2OperandValue) {
+}
+
+func (c AlertV2OperandValue) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["bool_value"] = attrs["bool_value"].SetOptional()
+	attrs["double_value"] = attrs["double_value"].SetOptional()
+	attrs["string_value"] = attrs["string_value"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2OperandValue.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2OperandValue) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2OperandValue
+// only implements ToObjectValue() and Type().
+func (o AlertV2OperandValue) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"bool_value":   o.BoolValue,
+			"double_value": o.DoubleValue,
+			"string_value": o.StringValue,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2OperandValue) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bool_value":   types.BoolType,
+			"double_value": types.Float64Type,
+			"string_value": types.StringType,
+		},
+	}
+}
+
+type AlertV2Subscription struct {
+	DestinationId types.String `tfsdk:"destination_id"`
+
+	UserEmail types.String `tfsdk:"user_email"`
+}
+
+func (newState *AlertV2Subscription) SyncEffectiveFieldsDuringCreateOrUpdate(plan AlertV2Subscription) {
+}
+
+func (newState *AlertV2Subscription) SyncEffectiveFieldsDuringRead(existingState AlertV2Subscription) {
+}
+
+func (c AlertV2Subscription) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["destination_id"] = attrs["destination_id"].SetOptional()
+	attrs["user_email"] = attrs["user_email"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in AlertV2Subscription.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a AlertV2Subscription) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, AlertV2Subscription
+// only implements ToObjectValue() and Type().
+func (o AlertV2Subscription) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"destination_id": o.DestinationId,
+			"user_email":     o.UserEmail,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o AlertV2Subscription) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"destination_id": types.StringType,
+			"user_email":     types.StringType,
+		},
+	}
+}
+
 // Describes metadata for a particular chunk, within a result set; this
 // structure is used both within a manifest, and when fetching individual chunk
 // data or links.
@@ -1409,6 +2117,10 @@ func (o *CreateAlert) SetOptions(ctx context.Context, v AlertOptions) {
 
 type CreateAlertRequest struct {
 	Alert types.Object `tfsdk:"alert"`
+	// If true, automatically resolve alert display name conflicts. Otherwise,
+	// fail the request if the alert's display name conflicts with an existing
+	// alert's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
 }
 
 func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertRequest) {
@@ -1419,6 +2131,7 @@ func (newState *CreateAlertRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c CreateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 
 	return attrs
 }
@@ -1443,7 +2156,8 @@ func (o CreateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert": o.Alert,
+			"alert":                     o.Alert,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
 		})
 }
 
@@ -1451,7 +2165,8 @@ func (o CreateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateAlertRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert": CreateAlertRequestAlert{}.Type(ctx),
+			"alert":                     CreateAlertRequestAlert{}.Type(ctx),
+			"auto_resolve_display_name": types.BoolType,
 		},
 	}
 }
@@ -1606,7 +2321,89 @@ func (o *CreateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+type CreateAlertV2Request struct {
+	Alert types.Object `tfsdk:"alert"`
+}
+
+func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertV2Request) {
+}
+
+func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState CreateAlertV2Request) {
+}
+
+func (c CreateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreateAlertV2Request) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"alert": reflect.TypeOf(AlertV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreateAlertV2Request
+// only implements ToObjectValue() and Type().
+func (o CreateAlertV2Request) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alert": o.Alert,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreateAlertV2Request) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alert": AlertV2{}.Type(ctx),
+		},
+	}
+}
+
+// GetAlert returns the value of the Alert field in CreateAlertV2Request as
+// a AlertV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreateAlertV2Request) GetAlert(ctx context.Context) (AlertV2, bool) {
+	var e AlertV2
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2
+	d := o.Alert.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in CreateAlertV2Request.
+func (o *CreateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
+	vs := v.ToObjectValue(ctx)
+	o.Alert = vs
+}
+
 type CreateQueryRequest struct {
+	// If true, automatically resolve query display name conflicts. Otherwise,
+	// fail the request if the query's display name conflicts with an existing
+	// query's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
+
 	Query types.Object `tfsdk:"query"`
 }
 
@@ -1617,6 +2414,7 @@ func (newState *CreateQueryRequest) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 func (c CreateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 	attrs["query"] = attrs["query"].SetOptional()
 
 	return attrs
@@ -1642,7 +2440,8 @@ func (o CreateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"query": o.Query,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
+			"query":                     o.Query,
 		})
 }
 
@@ -1650,7 +2449,8 @@ func (o CreateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o CreateQueryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"query": CreateQueryRequestQuery{}.Type(ctx),
+			"auto_resolve_display_name": types.BoolType,
+			"query":                     CreateQueryRequestQuery{}.Type(ctx),
 		},
 	}
 }
@@ -2401,6 +3201,70 @@ func (o *CreateWidget) GetOptions(ctx context.Context) (WidgetOptions, bool) {
 func (o *CreateWidget) SetOptions(ctx context.Context, v WidgetOptions) {
 	vs := v.ToObjectValue(ctx)
 	o.Options = vs
+}
+
+type CronSchedule struct {
+	// Indicate whether this schedule is paused or not.
+	PauseStatus types.String `tfsdk:"pause_status"`
+	// A cron expression using quartz syntax that specifies the schedule for
+	// this pipeline. Should use the quartz format described here:
+	// http://www.quartz-scheduler.org/documentation/quartz-2.1.7/tutorials/tutorial-lesson-06.html
+	QuartzCronSchedule types.String `tfsdk:"quartz_cron_schedule"`
+	// A Java timezone id. The schedule will be resolved using this timezone.
+	// This will be combined with the quartz_cron_schedule to determine the
+	// schedule. See
+	// https://docs.databricks.com/sql/language-manual/sql-ref-syntax-aux-conf-mgmt-set-timezone.html
+	// for details.
+	TimezoneId types.String `tfsdk:"timezone_id"`
+}
+
+func (newState *CronSchedule) SyncEffectiveFieldsDuringCreateOrUpdate(plan CronSchedule) {
+}
+
+func (newState *CronSchedule) SyncEffectiveFieldsDuringRead(existingState CronSchedule) {
+}
+
+func (c CronSchedule) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["pause_status"] = attrs["pause_status"].SetOptional()
+	attrs["quartz_cron_schedule"] = attrs["quartz_cron_schedule"].SetOptional()
+	attrs["timezone_id"] = attrs["timezone_id"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CronSchedule.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CronSchedule) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CronSchedule
+// only implements ToObjectValue() and Type().
+func (o CronSchedule) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"pause_status":         o.PauseStatus,
+			"quartz_cron_schedule": o.QuartzCronSchedule,
+			"timezone_id":          o.TimezoneId,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CronSchedule) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"pause_status":         types.StringType,
+			"quartz_cron_schedule": types.StringType,
+			"timezone_id":          types.StringType,
+		},
+	}
 }
 
 // A JSON representing a dashboard containing widgets of visualizations and text
@@ -4134,7 +4998,7 @@ type EndpointInfo struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
-	// current number of active sessions for the warehouse
+	// Deprecated. current number of active sessions for the warehouse
 	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
 	// current number of clusters running for the service
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
@@ -5181,6 +6045,42 @@ func (o GetAlertRequest) Type(ctx context.Context) attr.Type {
 }
 
 // Get an alert
+type GetAlertV2Request struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetAlertV2Request.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetAlertV2Request) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetAlertV2Request
+// only implements ToObjectValue() and Type().
+func (o GetAlertV2Request) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetAlertV2Request) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
+// Get an alert
 type GetAlertsLegacyRequest struct {
 	AlertId types.String `tfsdk:"-"`
 }
@@ -5371,6 +6271,20 @@ type GetResponse struct {
 	ObjectId types.String `tfsdk:"object_id"`
 	// A singular noun object type.
 	ObjectType types.String `tfsdk:"object_type"`
+}
+
+func (newState *GetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan GetResponse) {
+}
+
+func (newState *GetResponse) SyncEffectiveFieldsDuringRead(existingState GetResponse) {
+}
+
+func (c GetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in GetResponse.
@@ -5762,7 +6676,7 @@ type GetWarehouseResponse struct {
 	// Supported values: - Must be unique within an org. - Must be less than 100
 	// characters.
 	Name types.String `tfsdk:"name"`
-	// current number of active sessions for the warehouse
+	// Deprecated. current number of active sessions for the warehouse
 	NumActiveSessions types.Int64 `tfsdk:"num_active_sessions"`
 	// current number of clusters running for the service
 	NumClusters types.Int64 `tfsdk:"num_clusters"`
@@ -7188,6 +8102,128 @@ func (o *ListAlertsResponseAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+// List alerts
+type ListAlertsV2Request struct {
+	PageSize types.Int64 `tfsdk:"-"`
+
+	PageToken types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsV2Request.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListAlertsV2Request) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAlertsV2Request
+// only implements ToObjectValue() and Type().
+func (o ListAlertsV2Request) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"page_size":  o.PageSize,
+			"page_token": o.PageToken,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListAlertsV2Request) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
+		},
+	}
+}
+
+type ListAlertsV2Response struct {
+	NextPageToken types.String `tfsdk:"next_page_token"`
+
+	Results types.List `tfsdk:"results"`
+}
+
+func (newState *ListAlertsV2Response) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListAlertsV2Response) {
+}
+
+func (newState *ListAlertsV2Response) SyncEffectiveFieldsDuringRead(existingState ListAlertsV2Response) {
+}
+
+func (c ListAlertsV2Response) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ListAlertsV2Response.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ListAlertsV2Response) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"results": reflect.TypeOf(AlertV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ListAlertsV2Response
+// only implements ToObjectValue() and Type().
+func (o ListAlertsV2Response) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"next_page_token": o.NextPageToken,
+			"results":         o.Results,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ListAlertsV2Response) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"next_page_token": types.StringType,
+			"results": basetypes.ListType{
+				ElemType: AlertV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetResults returns the value of the Results field in ListAlertsV2Response as
+// a slice of AlertV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ListAlertsV2Response) GetResults(ctx context.Context) ([]AlertV2, bool) {
+	if o.Results.IsNull() || o.Results.IsUnknown() {
+		return nil, false
+	}
+	var v []AlertV2
+	d := o.Results.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetResults sets the value of the Results field in ListAlertsV2Response.
+func (o *ListAlertsV2Response) SetResults(ctx context.Context, v []AlertV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["results"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Results = types.ListValueMust(t, vs)
+}
+
 // Get dashboard objects
 type ListDashboardsRequest struct {
 	// Name of dashboard attribute to order by.
@@ -7786,6 +8822,21 @@ type ListResponse struct {
 	PageSize types.Int64 `tfsdk:"page_size"`
 	// List of dashboards returned.
 	Results types.List `tfsdk:"results"`
+}
+
+func (newState *ListResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan ListResponse) {
+}
+
+func (newState *ListResponse) SyncEffectiveFieldsDuringRead(existingState ListResponse) {
+}
+
+func (c ListResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["count"] = attrs["count"].SetOptional()
+	attrs["page"] = attrs["page"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["results"] = attrs["results"].SetOptional()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in ListResponse.
@@ -10743,6 +11794,20 @@ type SetResponse struct {
 	ObjectType types.String `tfsdk:"object_type"`
 }
 
+func (newState *SetResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetResponse) {
+}
+
+func (newState *SetResponse) SyncEffectiveFieldsDuringRead(existingState SetResponse) {
+}
+
+func (c SetResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["object_id"] = attrs["object_id"].SetOptional()
+	attrs["object_type"] = attrs["object_type"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -11978,6 +13043,42 @@ func (o TrashAlertRequest) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Delete an alert
+type TrashAlertV2Request struct {
+	Id types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TrashAlertV2Request.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TrashAlertV2Request) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TrashAlertV2Request
+// only implements ToObjectValue() and Type().
+func (o TrashAlertV2Request) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"id": o.Id,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TrashAlertV2Request) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"id": types.StringType,
+		},
+	}
+}
+
 // Delete a query
 type TrashQueryRequest struct {
 	Id types.String `tfsdk:"-"`
@@ -12232,6 +13333,103 @@ func (o *UpdateAlertRequestAlert) GetCondition(ctx context.Context) (AlertCondit
 func (o *UpdateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondition) {
 	vs := v.ToObjectValue(ctx)
 	o.Condition = vs
+}
+
+type UpdateAlertV2Request struct {
+	Alert types.Object `tfsdk:"alert"`
+	// UUID identifying the alert.
+	Id types.String `tfsdk:"-"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	UpdateMask types.String `tfsdk:"update_mask"`
+}
+
+func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertV2Request) {
+}
+
+func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState UpdateAlertV2Request) {
+}
+
+func (c UpdateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["id"] = attrs["id"].SetComputed()
+	attrs["update_mask"] = attrs["update_mask"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateAlertV2Request) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"alert": reflect.TypeOf(AlertV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateAlertV2Request
+// only implements ToObjectValue() and Type().
+func (o UpdateAlertV2Request) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"alert":       o.Alert,
+			"id":          o.Id,
+			"update_mask": o.UpdateMask,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateAlertV2Request) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"alert":       AlertV2{}.Type(ctx),
+			"id":          types.StringType,
+			"update_mask": types.StringType,
+		},
+	}
+}
+
+// GetAlert returns the value of the Alert field in UpdateAlertV2Request as
+// a AlertV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateAlertV2Request) GetAlert(ctx context.Context) (AlertV2, bool) {
+	var e AlertV2
+	if o.Alert.IsNull() || o.Alert.IsUnknown() {
+		return e, false
+	}
+	var v []AlertV2
+	d := o.Alert.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAlert sets the value of the Alert field in UpdateAlertV2Request.
+func (o *UpdateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
+	vs := v.ToObjectValue(ctx)
+	o.Alert = vs
 }
 
 type UpdateQueryRequest struct {

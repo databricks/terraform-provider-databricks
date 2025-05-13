@@ -1,5 +1,32 @@
 # Version changelog
 
+## Release v1.77.0
+
+### New Features and Improvements
+
+ * Add `databricks_disable_legacy_features_setting` account-level resource ([#4676](https://github.com/databricks/terraform-provider-databricks/pull/4676))
+ * Update Databricks SDK to v0.68.0 ([#4694](https://github.com/databricks/terraform-provider-databricks/pull/4694)).
+
+### Documentation
+
+ * Document minimum required Terraform version as 1.1.5 ([#4683](https://github.com/databricks/terraform-provider-databricks/pull/4683)).
+
+
+## Release v1.76.0
+
+### New Features and Improvements
+
+ * Bump the Go SDK to v0.66.0 ([#4682](https://github.com/databricks/terraform-provider-databricks/pull/4682)).
+
+### Bug Fixes
+
+ * Fix automatic cluster creation for `databricks_sql_permissions` ([#4141](https://github.com/databricks/terraform-provider-databricks/pull/4141))
+
+### Documentation
+
+ * Unify/reorganize notes in docs for resources/data sources ([#4657](https://github.com/databricks/terraform-provider-databricks/pull/4657))
+
+
 ## Release v1.75.0
 
 ### New Features and Improvements

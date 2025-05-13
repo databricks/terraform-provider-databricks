@@ -3,9 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_storage_configurations Resource
 
--> Initialize provider with `alias = "mws"`, `host  = "https://accounts.cloud.databricks.com"` and use `provider = databricks.mws`
-
 This resource to configure root bucket new workspaces within AWS.
+
+-> This resource can only be used with an account-level provider!
 
 It is important to understand that this will require you to configure your provider separately for the multiple workspaces resources. This will point to <https://accounts.cloud.databricks.com> for the HOST and it will use basic auth as that is the only authentication method available for multiple workspaces api.
 
@@ -57,8 +57,17 @@ In addition to all arguments above, the following attributes are exported:
 
 This resource can be imported by Databricks account ID and storage configuration ID.
 
-```sh
-terraform import databricks_mws_storage_configurations.this '<account_id>/<storage_configuration_id>'
+```hcl
+import {
+  to = databricks_mws_storage_configurations.this
+  id = "<account_id>/<storage_configuration_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
+```bash
+terraform import databricks_mws_storage_configurations.this "<account_id>/<storage_configuration_id>"
 ```
 
 ~> This resource does not support updates. If your configuration does not match the existing resource,

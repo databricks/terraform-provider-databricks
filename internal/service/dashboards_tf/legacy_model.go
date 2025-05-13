@@ -20,6 +20,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -765,6 +766,7 @@ func (c Dashboard_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["lifecycle_state"] = attrs["lifecycle_state"].SetComputed()
 	attrs["parent_path"] = attrs["parent_path"].SetComputed()
+	attrs["parent_path"] = attrs["parent_path"].(tfschema.StringAttributeBuilder).AddPlanModifier(stringplanmodifier.RequiresReplace()).(tfschema.AttributeBuilder)
 	attrs["path"] = attrs["path"].SetComputed()
 	attrs["serialized_dashboard"] = attrs["serialized_dashboard"].SetOptional()
 	attrs["update_time"] = attrs["update_time"].SetComputed()
@@ -1485,7 +1487,7 @@ type GenieGenerateDownloadFullQueryResultRequest_SdkV2 struct {
 	ConversationId types.String `tfsdk:"-"`
 	// Message ID
 	MessageId types.String `tfsdk:"-"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
 }
 
@@ -1633,7 +1635,7 @@ type GenieGetDownloadFullQueryResultRequest_SdkV2 struct {
 	DownloadId types.String `tfsdk:"-"`
 	// Message ID
 	MessageId types.String `tfsdk:"-"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"-"`
 }
 
@@ -2394,7 +2396,7 @@ func (o GenieResultMetadata_SdkV2) Type(ctx context.Context) attr.Type {
 type GenieSpace_SdkV2 struct {
 	// Description of the Genie Space
 	Description types.String `tfsdk:"description"`
-	// Space ID
+	// Genie space ID
 	SpaceId types.String `tfsdk:"space_id"`
 	// Title of the Genie Space
 	Title types.String `tfsdk:"title"`

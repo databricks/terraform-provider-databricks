@@ -785,9 +785,9 @@ func (newState *ArtifactAllowlistInfo_SdkV2) SyncEffectiveFieldsDuringRead(exist
 
 func (c ArtifactAllowlistInfo_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetOptional()
-	attrs["created_at"] = attrs["created_at"].SetOptional()
-	attrs["created_by"] = attrs["created_by"].SetOptional()
-	attrs["metastore_id"] = attrs["metastore_id"].SetOptional()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 
 	return attrs
 }
@@ -15402,6 +15402,12 @@ type SetArtifactAllowlist_SdkV2 struct {
 	ArtifactMatchers types.List `tfsdk:"artifact_matchers"`
 	// The artifact type of the allowlist.
 	ArtifactType types.String `tfsdk:"-"`
+	// Time at which this artifact allowlist was set, in epoch milliseconds.
+	CreatedAt types.Int64 `tfsdk:"created_at"`
+	// Username of the user who set the artifact allowlist.
+	CreatedBy types.String `tfsdk:"created_by"`
+	// Unique identifier of parent metastore.
+	MetastoreId types.String `tfsdk:"metastore_id"`
 }
 
 func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetArtifactAllowlist_SdkV2) {
@@ -15413,6 +15419,9 @@ func (newState *SetArtifactAllowlist_SdkV2) SyncEffectiveFieldsDuringRead(existi
 func (c SetArtifactAllowlist_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["artifact_matchers"] = attrs["artifact_matchers"].SetRequired()
 	attrs["artifact_type"] = attrs["artifact_type"].SetRequired()
+	attrs["created_at"] = attrs["created_at"].SetComputed()
+	attrs["created_by"] = attrs["created_by"].SetComputed()
+	attrs["metastore_id"] = attrs["metastore_id"].SetComputed()
 
 	return attrs
 }
@@ -15439,6 +15448,9 @@ func (o SetArtifactAllowlist_SdkV2) ToObjectValue(ctx context.Context) basetypes
 		map[string]attr.Value{
 			"artifact_matchers": o.ArtifactMatchers,
 			"artifact_type":     o.ArtifactType,
+			"created_at":        o.CreatedAt,
+			"created_by":        o.CreatedBy,
+			"metastore_id":      o.MetastoreId,
 		})
 }
 
@@ -15450,6 +15462,9 @@ func (o SetArtifactAllowlist_SdkV2) Type(ctx context.Context) attr.Type {
 				ElemType: ArtifactMatcher_SdkV2{}.Type(ctx),
 			},
 			"artifact_type": types.StringType,
+			"created_at":    types.Int64Type,
+			"created_by":    types.StringType,
+			"metastore_id":  types.StringType,
 		},
 	}
 }

@@ -2501,7 +2501,7 @@ var resourcesMap map[string]importable = map[string]importable{
 						ic.Emit(&resource{
 							Resource: "databricks_mws_ncc_private_endpoint_rule",
 							ID:       nc.NetworkConnectivityConfigId + "/" + rule.RuleId,
-							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId.String(),
+							Name:     nc.Name + "_" + resourceId + "_" + rule.GroupId,
 						})
 					}
 				}

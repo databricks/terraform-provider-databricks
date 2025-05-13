@@ -255,14 +255,16 @@ func TestModelServingProvisionedThroughputRead(t *testing.T) {
 					Config: &serving.EndpointCoreConfigOutput{
 						ServedEntities: []serving.ServedEntityOutput{
 							{
-								Name:          "prod_model",
-								EntityName:    "ads1",
-								EntityVersion: "2",
+								Name:                  "prod_model",
+								EntityName:            "ads1",
+								EntityVersion:         "2",
+								ProvisionedModelUnits: 50,
 							},
 							{
-								Name:          "candidate_model",
-								EntityName:    "ads1",
-								EntityVersion: "4",
+								Name:                  "candidate_model",
+								EntityName:            "ads1",
+								EntityVersion:         "4",
+								ProvisionedModelUnits: 50,
 							},
 						},
 						TrafficConfig: &serving.TrafficConfig{

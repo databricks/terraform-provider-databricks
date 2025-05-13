@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"strings"
 
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -157,53 +156,7 @@ func ResourceSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			if force {
-				// delete all tables & views
-				tables, err := w.Tables.ListAll(ctx, catalog.ListTablesRequest{
-					CatalogName: strings.Split(name, ".")[0],
-					SchemaName:  strings.Split(name, ".")[1],
-				})
-				if err != nil {
-					return err
-				}
-				for _, t := range tables {
-					w.Tables.DeleteByFullName(ctx, t.FullName)
-				}
-				// delete all volumes
-				volumes, err := w.Volumes.ListAll(ctx, catalog.ListVolumesRequest{
-					CatalogName: strings.Split(name, ".")[0],
-					SchemaName:  strings.Split(name, ".")[1],
-				})
-				if err != nil {
-					return err
-				}
-				for _, v := range volumes {
-					w.Volumes.DeleteByName(ctx, v.FullName)
-				}
-				// delete all functions
-				functions, err := w.Functions.ListAll(ctx, catalog.ListFunctionsRequest{
-					CatalogName: strings.Split(name, ".")[0],
-					SchemaName:  strings.Split(name, ".")[1],
-				})
-				if err != nil {
-					return err
-				}
-				for _, f := range functions {
-					w.Functions.DeleteByName(ctx, f.FullName)
-				}
-				// delete all models
-				models, err := w.RegisteredModels.ListAll(ctx, catalog.ListRegisteredModelsRequest{
-					CatalogName: strings.Split(name, ".")[0],
-					SchemaName:  strings.Split(name, ".")[1],
-				})
-				if err != nil {
-					return err
-				}
-				for _, m := range models {
-					w.RegisteredModels.DeleteByFullName(ctx, m.FullName)
-				}
-			}
-			return w.Schemas.DeleteByFullName(ctx, name)
+			return w.Schemas.Delete(ctx, catalog.DeleteSchemaRequest{FullName: name, Force: force})
 		},
 	}
 }

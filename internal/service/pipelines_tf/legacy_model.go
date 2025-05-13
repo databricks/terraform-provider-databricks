@@ -2449,6 +2449,10 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// The type of the foreign source. The source type will be inferred from the
+	// source connection or ingestion gateway. This field is output only and
+	// will be ignored if provided.
+	SourceType types.String `tfsdk:"source_type"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
 	TableConfiguration types.List `tfsdk:"table_configuration"`
@@ -2464,6 +2468,7 @@ func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[s
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -2494,6 +2499,7 @@ func (o IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 			"connection_name":      o.ConnectionName,
 			"ingestion_gateway_id": o.IngestionGatewayId,
 			"objects":              o.Objects,
+			"source_type":          o.SourceType,
 			"table_configuration":  o.TableConfiguration,
 		})
 }
@@ -2507,6 +2513,7 @@ func (o IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
+			"source_type": types.StringType,
 			"table_configuration": basetypes.ListType{
 				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
@@ -3396,6 +3403,54 @@ func (o Origin_SdkV2) Type(ctx context.Context) attr.Type {
 			"table_id":             types.StringType,
 			"uc_resource_id":       types.StringType,
 			"update_id":            types.StringType,
+		},
+	}
+}
+
+type PathPattern_SdkV2 struct {
+	// The source code to include for pipelines
+	Include types.String `tfsdk:"include"`
+}
+
+func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PathPattern_SdkV2) {
+}
+
+func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringRead(existingState PathPattern_SdkV2) {
+}
+
+func (c PathPattern_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include"] = attrs["include"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PathPattern.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PathPattern_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PathPattern_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PathPattern_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"include": o.Include,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PathPattern_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"include": types.StringType,
 		},
 	}
 }
@@ -4352,6 +4407,10 @@ type PipelineLibrary_SdkV2 struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
 	File types.List `tfsdk:"file"`
+	// The unified field to include source codes. Each entry can be a notebook
+	// path, a file path, or a folder path that ends `/**`. This field cannot be
+	// used together with `notebook` or `file`.
+	Glob types.List `tfsdk:"glob"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar"`
 	// Specification of a maven library to be installed.
@@ -4372,6 +4431,8 @@ func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file"] = attrs["file"].SetOptional()
 	attrs["file"] = attrs["file"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["glob"] = attrs["glob"].SetOptional()
+	attrs["glob"] = attrs["glob"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["jar"] = attrs["jar"].SetOptional()
 	attrs["maven"] = attrs["maven"].SetOptional()
 	attrs["maven"] = attrs["maven"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4392,6 +4453,7 @@ func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 func (a PipelineLibrary_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file":     reflect.TypeOf(FileLibrary_SdkV2{}),
+		"glob":     reflect.TypeOf(PathPattern_SdkV2{}),
 		"maven":    reflect.TypeOf(compute_tf.MavenLibrary_SdkV2{}),
 		"notebook": reflect.TypeOf(NotebookLibrary_SdkV2{}),
 	}
@@ -4405,6 +4467,7 @@ func (o PipelineLibrary_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file":     o.File,
+			"glob":     o.Glob,
 			"jar":      o.Jar,
 			"maven":    o.Maven,
 			"notebook": o.Notebook,
@@ -4418,6 +4481,9 @@ func (o PipelineLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"file": basetypes.ListType{
 				ElemType: FileLibrary_SdkV2{}.Type(ctx),
+			},
+			"glob": basetypes.ListType{
+				ElemType: PathPattern_SdkV2{}.Type(ctx),
 			},
 			"jar": types.StringType,
 			"maven": basetypes.ListType{
@@ -4455,6 +4521,32 @@ func (o *PipelineLibrary_SdkV2) SetFile(ctx context.Context, v FileLibrary_SdkV2
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
 	o.File = types.ListValueMust(t, vs)
+}
+
+// GetGlob returns the value of the Glob field in PipelineLibrary_SdkV2 as
+// a PathPattern_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary_SdkV2) GetGlob(ctx context.Context) (PathPattern_SdkV2, bool) {
+	var e PathPattern_SdkV2
+	if o.Glob.IsNull() || o.Glob.IsUnknown() {
+		return e, false
+	}
+	var v []PathPattern_SdkV2
+	d := o.Glob.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGlob sets the value of the Glob field in PipelineLibrary_SdkV2.
+func (o *PipelineLibrary_SdkV2) SetGlob(ctx context.Context, v PathPattern_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["glob"]
+	o.Glob = types.ListValueMust(t, vs)
 }
 
 // GetMaven returns the value of the Maven field in PipelineLibrary_SdkV2 as

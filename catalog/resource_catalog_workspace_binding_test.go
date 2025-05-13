@@ -5,6 +5,7 @@ import (
 
 	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/terraform-provider-databricks/catalog/bindings"
 	"github.com/databricks/terraform-provider-databricks/qa"
 	"github.com/stretchr/testify/mock"
 )
@@ -27,8 +28,8 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 					},
 				},
 				SecurableName: "my_catalog",
-				SecurableType: catalog.UpdateBindingsSecurableTypeCatalog,
-			}).Return(&catalog.WorkspaceBindingsResponse{
+				SecurableType: string(bindings.BindingsSecurableTypeCatalog),
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
@@ -36,8 +37,8 @@ func TestCatalogWorkspaceBindings_Create(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, catalog.GetBindingsSecurableTypeCatalog, "my_catalog").
-				Return(&catalog.WorkspaceBindingsResponse{
+			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, string(bindings.BindingsSecurableTypeCatalog), "my_catalog").
+				Return(&catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
@@ -72,8 +73,8 @@ func TestCatalogWorkspaceBindingsReadOnly_Create(t *testing.T) {
 					},
 				},
 				SecurableName: "my_catalog",
-				SecurableType: catalog.UpdateBindingsSecurableTypeCatalog,
-			}).Return(&catalog.WorkspaceBindingsResponse{
+				SecurableType: string(bindings.BindingsSecurableTypeCatalog),
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -81,8 +82,8 @@ func TestCatalogWorkspaceBindingsReadOnly_Create(t *testing.T) {
 					},
 				},
 			}, nil)
-			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, catalog.GetBindingsSecurableTypeCatalog, "my_catalog").
-				Return(&catalog.WorkspaceBindingsResponse{
+			e.GetBindingsBySecurableTypeAndSecurableName(mock.Anything, "catalog", "my_catalog").
+				Return(&catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,
@@ -110,8 +111,8 @@ func TestCatalogWorkspaceBindingsReadImport(t *testing.T) {
 	qa.ResourceFixture{
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			w.GetMockWorkspaceBindingsAPI().EXPECT().
-				GetBindingsBySecurableTypeAndSecurableName(mock.Anything, catalog.GetBindingsSecurableTypeCatalog, "my_catalog").
-				Return(&catalog.WorkspaceBindingsResponse{
+				GetBindingsBySecurableTypeAndSecurableName(mock.Anything, string(bindings.BindingsSecurableTypeCatalog), "my_catalog").
+				Return(&catalog.GetWorkspaceBindingsResponse{
 					Bindings: []catalog.WorkspaceBinding{
 						{
 							BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadOnly,

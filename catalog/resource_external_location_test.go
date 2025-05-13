@@ -99,7 +99,7 @@ func TestCreateIsolatedExternalLocation(t *testing.T) {
 						BindingType: catalog.WorkspaceBindingBindingTypeBindingTypeReadWrite,
 					},
 				},
-			}).Return(&catalog.WorkspaceBindingsResponse{
+			}).Return(&catalog.UpdateWorkspaceBindingsResponse{
 				Bindings: []catalog.WorkspaceBinding{
 					{
 						WorkspaceId: int64(123456789101112),

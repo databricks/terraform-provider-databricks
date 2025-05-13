@@ -1469,15 +1469,15 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 				Schemas: []sdk_uc.SystemSchemaInfo{
 					{
 						Schema: "access",
-						State:  sdk_uc.SystemSchemaInfoStateEnableCompleted,
+						State:  "ENABLE_COMPLETED",
 					},
 					{
 						Schema: "information_schema",
-						State:  sdk_uc.SystemSchemaInfoStateEnableCompleted,
+						State:  "ENABLE_COMPLETED",
 					},
 					{
 						Schema: "marketplace",
-						State:  sdk_uc.SystemSchemaInfoStateAvailable,
+						State:  "available",
 					},
 				},
 			},
@@ -1849,7 +1849,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
-			Response: sdk_uc.WorkspaceBindingsResponse{
+			Response: sdk_uc.UpdateWorkspaceBindingsResponse{
 				Bindings: []sdk_uc.WorkspaceBinding{
 					{
 						BindingType: "BINDING_TYPE_READ",

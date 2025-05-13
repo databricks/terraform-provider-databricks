@@ -293,6 +293,7 @@ Alternatively, when using `terraform` version 1.4 or earlier, import using the `
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
 
+
 ## Related Resources
 
 The following resources are often used in the same context:

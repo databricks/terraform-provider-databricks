@@ -3,7 +3,7 @@ name: Integration Tests
 on:
 
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, reopened, synchronize]
 
   merge_group:
 

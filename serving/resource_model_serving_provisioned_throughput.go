@@ -24,6 +24,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			common.MustSchemaPath(m, "config", "served_entities", "provisioned_model_units").Required = true
 			common.MustSchemaPath(m, "config", "served_entities", "entity_name").Required = true
 			common.MustSchemaPath(m, "config", "served_entities", "entity_version").Required = true
+			common.MustSchemaPath(m, "config", "served_entities", "entity_version").Optional = false
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,

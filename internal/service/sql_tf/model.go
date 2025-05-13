@@ -2321,20 +2321,9 @@ func (o *CreateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+// Create an alert
 type CreateAlertV2Request struct {
 	Alert types.Object `tfsdk:"alert"`
-}
-
-func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertV2Request) {
-}
-
-func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState CreateAlertV2Request) {
-}
-
-func (c CreateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
@@ -13335,6 +13324,7 @@ func (o *UpdateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+// Update an alert
 type UpdateAlertV2Request struct {
 	Alert types.Object `tfsdk:"alert"`
 	// UUID identifying the alert.
@@ -13350,21 +13340,7 @@ type UpdateAlertV2Request struct {
 	// always explicitly list the fields being updated and avoid using `*`
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
-	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertV2Request) {
-}
-
-func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState UpdateAlertV2Request) {
-}
-
-func (c UpdateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
+	UpdateMask types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.

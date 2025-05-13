@@ -2338,21 +2338,9 @@ func (o *CreateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
+// Create an alert
 type CreateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
-}
-
-func (newState *CreateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertV2Request_SdkV2) {
-}
-
-func (newState *CreateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateAlertV2Request_SdkV2) {
-}
-
-func (c CreateAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
@@ -13410,6 +13398,7 @@ func (o *UpdateAlertRequestAlert_SdkV2) SetCondition(ctx context.Context, v Aler
 	o.Condition = types.ListValueMust(t, vs)
 }
 
+// Update an alert
 type UpdateAlertV2Request_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
 	// UUID identifying the alert.
@@ -13425,22 +13414,7 @@ type UpdateAlertV2Request_SdkV2 struct {
 	// always explicitly list the fields being updated and avoid using `*`
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
-	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertV2Request_SdkV2) {
-}
-
-func (newState *UpdateAlertV2Request_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateAlertV2Request_SdkV2) {
-}
-
-func (c UpdateAlertV2Request_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
+	UpdateMask types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.

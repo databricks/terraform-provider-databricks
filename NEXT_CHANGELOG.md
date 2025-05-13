@@ -11,3 +11,4 @@
 ### Exporter
 
 ### Internal Changes
+* Fixed documentation for budget_policy until it's fixed in proto [#4708](https://github.com/databricks/terraform-provider-databricks/pull/4708)

@@ -41,8 +41,8 @@ resource "databricks_group_member" "bb" {
 
 The following arguments are supported:
 
-* `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `member_id` - (Required) This is the id of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
+* `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
+* `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
 
 ## Attribute Reference
 

@@ -7,6 +7,7 @@ import (
 	"log"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ type SqlTableInfo struct {
 	TableType             string            `json:"table_type" tf:"force_new"`
 	DataSourceFormat      string            `json:"data_source_format,omitempty" tf:"force_new"`
 	ColumnInfos           []SqlColumnInfo   `json:"columns,omitempty" tf:"alias:column,computed"`
-	Partitions            []string          `json:"partitions,omitempty" tf:"force_new"`
+	Partitions            []string          `json:"partitions,omitempty" tf:"force_new,computed"`
 	ClusterKeys           []string          `json:"cluster_keys,omitempty"`
 	StorageLocation       string            `json:"storage_location,omitempty" tf:"suppress_diff"`
 	StorageCredentialName string            `json:"storage_credential_name,omitempty" tf:"force_new"`
@@ -675,6 +676,15 @@ func ResourceSqlTable() common.Resource {
 			if err != nil {
 				return err
 			}
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			partitionInfo, err := w.Tables.GetByFullName(ctx, d.Id())
+			if err != nil {
+				return err
+			}
+			partitionIndexes := map[int]string{}
 			for i := range ti.ColumnInfos {
 				c := &ti.ColumnInfos[i]
 				c.Identity, err = reconstructIdentity(c)
@@ -682,6 +692,26 @@ func ResourceSqlTable() common.Resource {
 					return err
 				}
 			}
+
+			for i := range partitionInfo.Columns {
+				c := &partitionInfo.Columns[i]
+				if slices.Contains(c.ForceSendFields, "PartitionIndex") {
+					partitionIndexes[c.PartitionIndex] = c.Name
+				}
+			}
+			indexes := []int{}
+			partitions := []string{}
+
+			for index := range partitionIndexes {
+				indexes = append(indexes, index)
+			}
+			sort.Ints(indexes)
+
+			for _, p := range indexes {
+				partitions = append(partitions, partitionIndexes[p])
+			}
+
+			d.Set("partitions", partitions)
 			return common.StructToData(ti, tableSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

@@ -295,7 +295,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 				Resource: getResourceName(testServicePrincipalRuleSetName, ""),
 				Response: iam.RuleSetResponse{
 					Name: ruleSetApiPath,
-					Etag: "etagEx=",
+					Etag: "etagEx2=",
 					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"groups/testgroup"},
@@ -311,7 +311,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 					Name: testServicePrincipalRuleSetName,
 					RuleSet: iam.RuleSetUpdateRequest{
 						Name: testServicePrincipalRuleSetName,
-						Etag: "etagEx=",
+						Etag: "etagEx2=",
 						GrantRules: []iam.GrantRule{
 							{
 								Principals: []string{"users/abc@example.com"},
@@ -322,7 +322,7 @@ func TestResourceRuleSetUpdateConflict(t *testing.T) {
 				},
 				Response: iam.RuleSetResponse{
 					Name: testServicePrincipalRuleSetName,
-					Etag: "etagEx2=",
+					Etag: "etagEx3=",
 					GrantRules: []iam.GrantRule{
 						{
 							Principals: []string{"users/abc@example.com"},

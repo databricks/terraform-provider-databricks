@@ -25,7 +25,10 @@ func ResourceSystemSchema() common.Resource {
 			Type:     schema.TypeBool,
 			Computed: true,
 		}
-		m["state"].Computed = true
+		m["state"] = &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		}
 		return m
 	})
 	pi := common.NewPairID("metastore_id", "schema").Schema(
@@ -106,9 +109,9 @@ func ResourceSystemSchema() common.Resource {
 						return err
 					}
 					// only track enabled/legacy schemas
-					if schema.State != catalog.SystemSchemaInfoStateEnableCompleted &&
-						schema.State != catalog.SystemSchemaInfoStateEnableInitialized &&
-						schema.State != catalog.SystemSchemaInfoStateUnavailable {
+					if schema.State != string(SystemSchemaInfoStateEnableCompleted) &&
+						schema.State != string(SystemSchemaInfoStateEnableInitialized) &&
+						schema.State != string(SystemSchemaInfoStateUnavailable) {
 						log.Printf("[WARN] %s is not enabled, ignoring it", schemaName)
 						d.SetId("")
 						return nil

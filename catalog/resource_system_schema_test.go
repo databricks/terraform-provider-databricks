@@ -42,11 +42,11 @@ func TestSystemSchemaCreate(t *testing.T) {
 					Schemas: []catalog.SystemSchemaInfo{
 						{
 							Schema: "access",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 						{
 							Schema: "billing",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 					},
 				},
@@ -105,11 +105,11 @@ func TestSystemSchemaCreateAlreadyEnabled(t *testing.T) {
 				Schemas: []catalog.SystemSchemaInfo{
 					{
 						Schema: "access",
-						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+						State:  string(SystemSchemaInfoStateEnableCompleted),
 					},
 					{
 						Schema: "billing",
-						State:  catalog.SystemSchemaInfoStateEnableCompleted,
+						State:  string(SystemSchemaInfoStateEnableCompleted),
 					},
 				},
 			}, nil)
@@ -158,11 +158,11 @@ func TestSystemSchemaUpdate(t *testing.T) {
 					Schemas: []catalog.SystemSchemaInfo{
 						{
 							Schema: "access",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 						{
 							Schema: "billing",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 					},
 				},
@@ -229,11 +229,11 @@ func TestSystemSchemaRead(t *testing.T) {
 					Schemas: []catalog.SystemSchemaInfo{
 						{
 							Schema: "access",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 						{
 							Schema: "billing",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 					},
 				},
@@ -244,7 +244,7 @@ func TestSystemSchemaRead(t *testing.T) {
 		ID:       "abc|access",
 	}.ApplyAndExpectData(t, map[string]any{
 		"schema": "access",
-		"state":  string(catalog.SystemSchemaInfoStateEnableCompleted),
+		"state":  string(SystemSchemaInfoStateEnableCompleted),
 	})
 }
 
@@ -293,11 +293,11 @@ func TestSystemSchemaRead_NotEnabled(t *testing.T) {
 					Schemas: []catalog.SystemSchemaInfo{
 						{
 							Schema: "access",
-							State:  catalog.SystemSchemaInfoStateAvailable,
+							State:  string(SystemSchemaInfoStateAvailable),
 						},
 						{
 							Schema: "billing",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 					},
 				},
@@ -329,7 +329,7 @@ func TestSystemSchemaRead_NotExists(t *testing.T) {
 					Schemas: []catalog.SystemSchemaInfo{
 						{
 							Schema: "billing",
-							State:  catalog.SystemSchemaInfoStateEnableCompleted,
+							State:  string(SystemSchemaInfoStateEnableCompleted),
 						},
 					},
 				},

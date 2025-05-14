@@ -1462,7 +1462,7 @@ func (newState *ComputeConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState
 }
 
 func (c ComputeConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["gpu_node_pool_id"] = attrs["gpu_node_pool_id"].SetRequired()
+	attrs["gpu_node_pool_id"] = attrs["gpu_node_pool_id"].SetOptional()
 	attrs["gpu_type"] = attrs["gpu_type"].SetOptional()
 	attrs["num_gpus"] = attrs["num_gpus"].SetRequired()
 
@@ -18534,19 +18534,20 @@ func (o TaskNotificationSettings_SdkV2) Type(ctx context.Context) attr.Type {
 type TerminationDetails_SdkV2 struct {
 	// The code indicates why the run was terminated. Additional codes might be
 	// introduced in future releases. * `SUCCESS`: The run was completed
-	// successfully. * `USER_CANCELED`: The run was successfully canceled during
-	// execution by a user. * `CANCELED`: The run was canceled during execution
-	// by the Databricks platform; for example, if the maximum run duration was
-	// exceeded. * `SKIPPED`: Run was never executed, for example, if the
-	// upstream task run failed, the dependency type condition was not met, or
-	// there were no material tasks to execute. * `INTERNAL_ERROR`: The run
-	// encountered an unexpected error. Refer to the state message for further
-	// details. * `DRIVER_ERROR`: The run encountered an error while
-	// communicating with the Spark Driver. * `CLUSTER_ERROR`: The run failed
-	// due to a cluster error. Refer to the state message for further details. *
-	// `REPOSITORY_CHECKOUT_FAILED`: Failed to complete the checkout due to an
-	// error when communicating with the third party service. *
-	// `INVALID_CLUSTER_REQUEST`: The run failed because it issued an invalid
+	// successfully. * `SUCCESS_WITH_FAILURES`: The run was completed
+	// successfully but some child runs failed. * `USER_CANCELED`: The run was
+	// successfully canceled during execution by a user. * `CANCELED`: The run
+	// was canceled during execution by the Databricks platform; for example, if
+	// the maximum run duration was exceeded. * `SKIPPED`: Run was never
+	// executed, for example, if the upstream task run failed, the dependency
+	// type condition was not met, or there were no material tasks to execute. *
+	// `INTERNAL_ERROR`: The run encountered an unexpected error. Refer to the
+	// state message for further details. * `DRIVER_ERROR`: The run encountered
+	// an error while communicating with the Spark Driver. * `CLUSTER_ERROR`:
+	// The run failed due to a cluster error. Refer to the state message for
+	// further details. * `REPOSITORY_CHECKOUT_FAILED`: Failed to complete the
+	// checkout due to an error when communicating with the third party service.
+	// * `INVALID_CLUSTER_REQUEST`: The run failed because it issued an invalid
 	// request to start the cluster. * `WORKSPACE_RUN_LIMIT_EXCEEDED`: The
 	// workspace has reached the quota for the maximum number of concurrent
 	// active runs. Consider scheduling the runs over a larger time frame. *

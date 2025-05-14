@@ -263,7 +263,7 @@ func TestUcAccModelServingProvisionedThroughputResource(t *testing.T) {
 						name = "prod_model"
 						entity_name = "system.ai.llama-4-maverick"
 						entity_version = "1"
-						provisioned_model_units = 54
+						provisioned_model_units = 50
 					}
 					traffic_config {
 						routes {

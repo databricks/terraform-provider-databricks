@@ -18,13 +18,12 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 	s := common.StructToSchema(
 		serving.CreatePtEndpointRequest{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			m["name"].ForceNew = true
-			common.MustSchemaPath(m, "config", "traffic_config").Computed = true
-			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
-			common.MustSchemaPath(m, "config", "served_entities", "provisioned_model_units").Required = true
-			common.MustSchemaPath(m, "config", "served_entities", "entity_name").Required = true
-			common.MustSchemaPath(m, "config", "served_entities", "entity_version").Required = true
-			common.MustSchemaPath(m, "config", "served_entities", "entity_version").Optional = false
+			common.CustomizeSchemaPath(m, "name").SetForceNew()
+			common.CustomizeSchemaPath(m, "config", "traffic_config").SetComputed()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "name").SetComputed()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "provisioned_model_units").SetRequired()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "entity_name").SetRequired()
+			common.CustomizeSchemaPath(m, "config", "served_entities", "entity_version").SetRequired()
 
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,

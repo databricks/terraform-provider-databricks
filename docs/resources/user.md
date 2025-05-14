@@ -109,14 +109,14 @@ The following arguments are available:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Canonical unique identifier for the user.
+* `id` - Canonical unique identifier for the user (SCIM ID).
 * `home` - Home folder of the user, e.g. `/Users/mr.foo@example.com`.
 * `repos` - Personal Repos location of the user, e.g. `/Repos/mr.foo@example.com`.
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `users/mr.foo@example.com`.
 
 ## Import
 
-The resource scim user can be imported using id:
+The resource scim user can be imported using its SCIM id:
 
 ```hcl
 import {

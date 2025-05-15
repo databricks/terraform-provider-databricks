@@ -233,20 +233,21 @@ These can be declared in the provider block or set in the environment variables 
 Workspace level provider:
 ```hcl
 provider "databricks" {
-  alias     = "workspace"
-  auth_type = "github-oidc" 
-  host      = var.workspace_host
-  client_id = var.client_id
+  alias       = "workspace"
+  auth_type   = "github-oidc" 
+  host        = var.workspace_host
+  client_id   = var.client_id
 }
 ```
 
 Account level provider:
 ```hcl
 provider "databricks" {
-  alias     = "account"
-  auth_type = "github-oidc" 
-  host      = var.account_host
-  client_id = var.client_id
+  alias       = "account"
+  auth_type   = "github-oidc" 
+  host        = var.account_host
+  client_id   = var.client_id
+  account_id  = var.account_id
 }
 ```
 Depending on how the WIF policy is configured, you might also have to provide the audience. This can be set in the provider block using the `audience` argument or in environment variable `DATABRICKS_TOKEN_AUDIENCE`. 

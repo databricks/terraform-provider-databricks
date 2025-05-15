@@ -169,16 +169,9 @@ func ResourceServicePrincipal() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("home", fmt.Sprintf("/Users/%s", sp.ApplicationID))
-			d.Set("repos", fmt.Sprintf("/Repos/%s", sp.ApplicationID))
+			setCommonUserFields(d, sp, sp.ApplicationID)
 			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
-			d.Set("external_id", sp.ExternalID)
-			d.Set("display_name", sp.DisplayName)
-			d.Set("active", sp.Active)
-			err = common.StructToData(sp, servicePrincipalSchema, d)
-			if err != nil {
-				return err
-			}
+			d.Set("application_id", sp.ApplicationID)
 			return sp.Entitlements.readIntoData(d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

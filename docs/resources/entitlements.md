@@ -76,6 +76,15 @@ The resource can be imported using a synthetic identifier. Examples of valid syn
 * `group/group_id` - group `group_id`.
 * `spn/spn_id` - service principal `spn_id`.
 
+```hcl
+import {
+  to = databricks_entitlements.me
+  id = "user/<user-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_entitlements.me user/<user-id>
 ```

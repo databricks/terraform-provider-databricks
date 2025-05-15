@@ -3291,6 +3291,104 @@ func (o DeleteIpAccessListRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Delete the enable partner powered AI features workspace setting
+type DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLlmProxyPartnerPoweredWorkspaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// The etag is returned.
+type DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"etag"`
+}
+
+func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) {
+}
+
+func (newState *DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) {
+}
+
+func (c DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["etag"] = attrs["etag"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteLlmProxyPartnerPoweredWorkspaceResponse.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2
+// only implements ToObjectValue() and Type().
+func (o DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o DeleteLlmProxyPartnerPoweredWorkspaceResponse_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 // Delete a network connectivity configuration
 type DeleteNetworkConnectivityConfigurationRequest_SdkV2 struct {
 	// Your Network Connectivity Configuration ID.
@@ -6391,6 +6489,135 @@ func (o *GetIpAccessListsResponse_SdkV2) SetIpAccessLists(ctx context.Context, v
 	o.IpAccessLists = types.ListValueMust(t, vs)
 }
 
+// Get the enable partner powered AI features account setting
+type GetLlmProxyPartnerPoweredAccountRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLlmProxyPartnerPoweredAccountRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLlmProxyPartnerPoweredAccountRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLlmProxyPartnerPoweredAccountRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLlmProxyPartnerPoweredAccountRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLlmProxyPartnerPoweredAccountRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// Get the enforcement status of partner powered AI features account setting
+type GetLlmProxyPartnerPoweredEnforceRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLlmProxyPartnerPoweredEnforceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLlmProxyPartnerPoweredEnforceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLlmProxyPartnerPoweredEnforceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLlmProxyPartnerPoweredEnforceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLlmProxyPartnerPoweredEnforceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
+// Get the enable partner powered AI features workspace setting
+type GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 struct {
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// delete pattern to perform setting deletions in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// DELETE request to identify the rule set version you are deleting.
+	Etag types.String `tfsdk:"-"`
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in GetLlmProxyPartnerPoweredWorkspaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"etag": o.Etag,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o GetLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"etag": types.StringType,
+		},
+	}
+}
+
 // Get a network connectivity configuration
 type GetNetworkConnectivityConfigurationRequest_SdkV2 struct {
 	// Your Network Connectivity Configuration ID.
@@ -7652,6 +7879,300 @@ func (o *ListTokensResponse_SdkV2) SetTokenInfos(ctx context.Context, v []TokenI
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["token_infos"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.TokenInfos = types.ListValueMust(t, vs)
+}
+
+type LlmProxyPartnerPoweredAccount_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *LlmProxyPartnerPoweredAccount_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredAccount_SdkV2) {
+}
+
+func (newState *LlmProxyPartnerPoweredAccount_SdkV2) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredAccount_SdkV2) {
+}
+
+func (c LlmProxyPartnerPoweredAccount_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetRequired()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LlmProxyPartnerPoweredAccount.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LlmProxyPartnerPoweredAccount_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LlmProxyPartnerPoweredAccount_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LlmProxyPartnerPoweredAccount_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LlmProxyPartnerPoweredAccount_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in LlmProxyPartnerPoweredAccount_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LlmProxyPartnerPoweredAccount_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := o.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredAccount_SdkV2.
+func (o *LlmProxyPartnerPoweredAccount_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	o.BooleanVal = types.ListValueMust(t, vs)
+}
+
+type LlmProxyPartnerPoweredEnforce_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *LlmProxyPartnerPoweredEnforce_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredEnforce_SdkV2) {
+}
+
+func (newState *LlmProxyPartnerPoweredEnforce_SdkV2) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredEnforce_SdkV2) {
+}
+
+func (c LlmProxyPartnerPoweredEnforce_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetRequired()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LlmProxyPartnerPoweredEnforce.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LlmProxyPartnerPoweredEnforce_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LlmProxyPartnerPoweredEnforce_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LlmProxyPartnerPoweredEnforce_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LlmProxyPartnerPoweredEnforce_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in LlmProxyPartnerPoweredEnforce_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LlmProxyPartnerPoweredEnforce_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := o.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredEnforce_SdkV2.
+func (o *LlmProxyPartnerPoweredEnforce_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	o.BooleanVal = types.ListValueMust(t, vs)
+}
+
+type LlmProxyPartnerPoweredWorkspace_SdkV2 struct {
+	BooleanVal types.List `tfsdk:"boolean_val"`
+	// etag used for versioning. The response is at least as fresh as the eTag
+	// provided. This is used for optimistic concurrency control as a way to
+	// help prevent simultaneous writes of a setting overwriting each other. It
+	// is strongly suggested that systems make use of the etag in the read ->
+	// update pattern to perform setting updates in order to avoid race
+	// conditions. That is, get an etag from a GET request, and pass it with the
+	// PATCH request to identify the setting version you are updating.
+	Etag types.String `tfsdk:"etag"`
+	// Name of the corresponding setting. This field is populated in the
+	// response, but it will not be respected even if it's set in the request
+	// body. The setting name in the path parameter will be respected instead.
+	// Setting name is required to be 'default' if the setting only has one
+	// instance per workspace.
+	SettingName types.String `tfsdk:"setting_name"`
+}
+
+func (newState *LlmProxyPartnerPoweredWorkspace_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan LlmProxyPartnerPoweredWorkspace_SdkV2) {
+}
+
+func (newState *LlmProxyPartnerPoweredWorkspace_SdkV2) SyncEffectiveFieldsDuringRead(existingState LlmProxyPartnerPoweredWorkspace_SdkV2) {
+}
+
+func (c LlmProxyPartnerPoweredWorkspace_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["boolean_val"] = attrs["boolean_val"].SetRequired()
+	attrs["boolean_val"] = attrs["boolean_val"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["setting_name"] = attrs["setting_name"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in LlmProxyPartnerPoweredWorkspace.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a LlmProxyPartnerPoweredWorkspace_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"boolean_val": reflect.TypeOf(BooleanMessage_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, LlmProxyPartnerPoweredWorkspace_SdkV2
+// only implements ToObjectValue() and Type().
+func (o LlmProxyPartnerPoweredWorkspace_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"boolean_val":  o.BooleanVal,
+			"etag":         o.Etag,
+			"setting_name": o.SettingName,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o LlmProxyPartnerPoweredWorkspace_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"boolean_val": basetypes.ListType{
+				ElemType: BooleanMessage_SdkV2{}.Type(ctx),
+			},
+			"etag":         types.StringType,
+			"setting_name": types.StringType,
+		},
+	}
+}
+
+// GetBooleanVal returns the value of the BooleanVal field in LlmProxyPartnerPoweredWorkspace_SdkV2 as
+// a BooleanMessage_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *LlmProxyPartnerPoweredWorkspace_SdkV2) GetBooleanVal(ctx context.Context) (BooleanMessage_SdkV2, bool) {
+	var e BooleanMessage_SdkV2
+	if o.BooleanVal.IsNull() || o.BooleanVal.IsUnknown() {
+		return e, false
+	}
+	var v []BooleanMessage_SdkV2
+	d := o.BooleanVal.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBooleanVal sets the value of the BooleanVal field in LlmProxyPartnerPoweredWorkspace_SdkV2.
+func (o *LlmProxyPartnerPoweredWorkspace_SdkV2) SetBooleanVal(ctx context.Context, v BooleanMessage_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["boolean_val"]
+	o.BooleanVal = types.ListValueMust(t, vs)
 }
 
 type MicrosoftTeamsConfig_SdkV2 struct {
@@ -11585,6 +12106,309 @@ func (o *UpdateIpAccessList_SdkV2) SetIpAddresses(ctx context.Context, v []types
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ip_addresses"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.IpAddresses = types.ListValueMust(t, vs)
+}
+
+// Details required to update a setting.
+type UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2 struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.List `tfsdk:"setting"`
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) {
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) {
+}
+
+func (c UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredAccountRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(LlmProxyPartnerPoweredAccount_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: LlmProxyPartnerPoweredAccount_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2 as
+// a LlmProxyPartnerPoweredAccount_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) GetSetting(ctx context.Context) (LlmProxyPartnerPoweredAccount_SdkV2, bool) {
+	var e LlmProxyPartnerPoweredAccount_SdkV2
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []LlmProxyPartnerPoweredAccount_SdkV2
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2.
+func (o *UpdateLlmProxyPartnerPoweredAccountRequest_SdkV2) SetSetting(ctx context.Context, v LlmProxyPartnerPoweredAccount_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
+// Details required to update a setting.
+type UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2 struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.List `tfsdk:"setting"`
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) {
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) {
+}
+
+func (c UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredEnforceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(LlmProxyPartnerPoweredEnforce_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: LlmProxyPartnerPoweredEnforce_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2 as
+// a LlmProxyPartnerPoweredEnforce_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) GetSetting(ctx context.Context) (LlmProxyPartnerPoweredEnforce_SdkV2, bool) {
+	var e LlmProxyPartnerPoweredEnforce_SdkV2
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []LlmProxyPartnerPoweredEnforce_SdkV2
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2.
+func (o *UpdateLlmProxyPartnerPoweredEnforceRequest_SdkV2) SetSetting(ctx context.Context, v LlmProxyPartnerPoweredEnforce_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
+}
+
+// Details required to update a setting.
+type UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 struct {
+	// This should always be set to true for Settings API. Added for AIP
+	// compliance.
+	AllowMissing types.Bool `tfsdk:"allow_missing"`
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
+	FieldMask types.String `tfsdk:"field_mask"`
+
+	Setting types.List `tfsdk:"setting"`
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) {
+}
+
+func (newState *UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) {
+}
+
+func (c UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["allow_missing"] = attrs["allow_missing"].SetRequired()
+	attrs["field_mask"] = attrs["field_mask"].SetRequired()
+	attrs["setting"] = attrs["setting"].SetRequired()
+	attrs["setting"] = attrs["setting"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateLlmProxyPartnerPoweredWorkspaceRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"setting": reflect.TypeOf(LlmProxyPartnerPoweredWorkspace_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"allow_missing": o.AllowMissing,
+			"field_mask":    o.FieldMask,
+			"setting":       o.Setting,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"allow_missing": types.BoolType,
+			"field_mask":    types.StringType,
+			"setting": basetypes.ListType{
+				ElemType: LlmProxyPartnerPoweredWorkspace_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetSetting returns the value of the Setting field in UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2 as
+// a LlmProxyPartnerPoweredWorkspace_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) GetSetting(ctx context.Context) (LlmProxyPartnerPoweredWorkspace_SdkV2, bool) {
+	var e LlmProxyPartnerPoweredWorkspace_SdkV2
+	if o.Setting.IsNull() || o.Setting.IsUnknown() {
+		return e, false
+	}
+	var v []LlmProxyPartnerPoweredWorkspace_SdkV2
+	d := o.Setting.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetSetting sets the value of the Setting field in UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2.
+func (o *UpdateLlmProxyPartnerPoweredWorkspaceRequest_SdkV2) SetSetting(ctx context.Context, v LlmProxyPartnerPoweredWorkspace_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["setting"]
+	o.Setting = types.ListValueMust(t, vs)
 }
 
 // Update a private endpoint rule

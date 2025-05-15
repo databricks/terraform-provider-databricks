@@ -50,6 +50,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The databricks_ip_access_list can be imported using id:
 
+```hcl
+import {
+  to = databricks_ip_access_list.this
+  id = "<list-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_ip_access_list.this <list-id>
 ```

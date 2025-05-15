@@ -137,6 +137,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource job can be imported using the id of the pipeline
 
+```hcl
+import {
+  to = databricks_pipeline.this
+  id = "<pipeline-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_pipeline.this <pipeline-id>
 ```

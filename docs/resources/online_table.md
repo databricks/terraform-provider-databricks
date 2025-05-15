@@ -55,6 +55,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource can be imported using the name of the Online Table:
 
+```hcl
+import {
+  to = databricks_online_table.this
+  id = "<endpoint-name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
-terraform import databricks_online_table.this <endpoint-name>
+terraform import databricks_online_table.this "<endpoint-name>"
 ```

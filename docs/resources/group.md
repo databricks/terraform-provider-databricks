@@ -101,12 +101,21 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` -  The id for the group object.
+* `id` - Canonical unique identifier for the group (SCIM ID).
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `groups/Some Group`.
 
 ## Import
 
-You can import a `databricks_group` resource with the name `my_group` like the following:
+You can import a `databricks_group` resource by its SCIM ID:
+
+```hcl
+import {
+  to = databricks_group.my_group
+  id = "<group_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_group.my_group <group_id>

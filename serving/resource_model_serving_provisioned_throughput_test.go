@@ -524,6 +524,135 @@ func TestModelServingProvisionedThroughputUpdate_Error(t *testing.T) {
 	}.ExpectError(t, "Internal error happened")
 }
 
+func TestModelServingProvisionedThroughputUpdate_Tags(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPatch,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint/tags",
+				ExpectedRequest: serving.PatchServingEndpointTags{
+					Name:    "test-endpoint",
+					AddTags: []serving.EndpointTag{{Key: "env", Value: "prod"}},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+					Tags: []serving.EndpointTag{{Key: "env", Value: "prod"}},
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServingProvisionedThroughput(),
+		Update:   true,
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name":                                   "test-endpoint",
+			"tags.#":                                 "1",
+			"tags.0.key":                             "env",
+			"tags.0.value":                           "prod",
+			"config.#":                               "1",
+			"config.0.served_entities.#":             "1",
+			"config.0.served_entities.0.name":        "prod_model",
+			"config.0.served_entities.0.entity_name": "ads1",
+			"config.0.served_entities.0.entity_version":          "2",
+			"config.0.served_entities.0.provisioned_model_units": "50",
+		},
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_entities {
+					name = "prod_model"
+					entity_name = "ads1"
+					entity_version = "2"
+					provisioned_model_units = 50
+				}
+			}
+			tags = [{ key = "env", value = "prod" }]
+		`,
+	}.ApplyNoError(t)
+}
+
+func TestModelServingProvisionedThroughputUpdate_AiGateway(t *testing.T) {
+	qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   http.MethodPut,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint/ai-gateway",
+				ExpectedRequest: serving.PutAiGatewayRequest{
+					Name: "test-endpoint",
+					Guardrails: &serving.AiGatewayGuardrails{
+						Input: &serving.AiGatewayGuardrailParameters{
+							Safety: true,
+						},
+					},
+				},
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+				},
+			},
+			{
+				Method:   http.MethodGet,
+				Resource: "/api/2.0/serving-endpoints/test-endpoint?",
+				Response: serving.ServingEndpointDetailed{
+					Name: "test-endpoint",
+					AiGateway: &serving.AiGatewayConfig{
+						Guardrails: &serving.AiGatewayGuardrails{
+							Input: &serving.AiGatewayGuardrailParameters{
+								Safety: true,
+							},
+						},
+					},
+					State: &serving.EndpointState{
+						ConfigUpdate: serving.EndpointStateConfigUpdateNotUpdating,
+					},
+				},
+			},
+		},
+		Resource: ResourceModelServingProvisionedThroughput(),
+		Update:   true,
+		ID:       "test-endpoint",
+		InstanceState: map[string]string{
+			"name":                              "test-endpoint",
+			"ai_gateway.#":                      "1",
+			"ai_gateway.0.guardrails.#":         "1",
+			"ai_gateway.0.guardrails.0.input.#": "1",
+			"ai_gateway.0.guardrails.0.input.0.safety": "true",
+			"config.#":                                           "1",
+			"config.0.served_entities.#":                         "1",
+			"config.0.served_entities.0.name":                    "prod_model",
+			"config.0.served_entities.0.entity_name":             "ads1",
+			"config.0.served_entities.0.entity_version":          "2",
+			"config.0.served_entities.0.provisioned_model_units": "50",
+		},
+		HCL: `
+			name = "test-endpoint"
+			config {
+				served_entities {
+					name = "prod_model"
+					entity_name = "ads1"
+					entity_version = "2"
+					provisioned_model_units = 50
+				}
+			}
+			ai_gateway {
+				guardrails {
+					input {
+						safety = true
+					}
+				}
+			}
+		`,
+	}.ApplyNoError(t)
+}
+
 func TestModelServingProvisionedThroughputDelete(t *testing.T) {
 	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{

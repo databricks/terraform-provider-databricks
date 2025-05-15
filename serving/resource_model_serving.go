@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/serving"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +15,62 @@ const (
 	DefaultProvisionTimeout = 45 * time.Minute
 	deleteCallTimeout       = 10 * time.Second
 )
+
+// updateTags updates the tags of the provided serving endpoint to the given tags. Any tags not present on the existing
+// endpoint will be removed, any tags absent on the endpoint will be added, existing tags will be updated, and unchanged
+// tags will remain as-is.
+func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string, newTags []serving.EndpointTag, d *schema.ResourceData) error {
+	currentEndpoint, err := w.ServingEndpoints.Get(ctx, serving.GetServingEndpointRequest{
+		Name: name,
+	})
+	oldTags := currentEndpoint.Tags
+	if err != nil {
+		return err
+	}
+	req := serving.PatchServingEndpointTags{
+		Name: name,
+	}
+	for _, newTag := range newTags {
+		found := false
+		for _, oldTag := range oldTags {
+			if oldTag.Key == newTag.Key && oldTag.Value == newTag.Value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.AddTags = append(req.AddTags, newTag)
+		}
+	}
+	for _, oldTag := range oldTags {
+		found := false
+		for _, newTag := range newTags {
+			if oldTag.Key == newTag.Key {
+				found = true
+				break
+			}
+		}
+		if !found {
+			req.DeleteTags = append(req.DeleteTags, oldTag.Key)
+		}
+	}
+	if _, err := w.ServingEndpoints.Patch(ctx, req); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Update the AI Gateway configuration for a model serving endpoint.
+func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name string, newAiGateway serving.AiGatewayConfig, d *schema.ResourceData) error {
+	_, err := w.ServingEndpoints.PutAiGateway(ctx, serving.PutAiGatewayRequest{
+		Name:                 name,
+		Guardrails:           newAiGateway.Guardrails,
+		InferenceTableConfig: newAiGateway.InferenceTableConfig,
+		RateLimits:           newAiGateway.RateLimits,
+		UsageTrackingConfig:  newAiGateway.UsageTrackingConfig,
+	})
+	return err
+}
 
 func ResourceModelServing() common.Resource {
 	s := common.StructToSchema(

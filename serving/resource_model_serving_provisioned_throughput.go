@@ -95,6 +95,16 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 					return err
 				}
 			}
+			if d.HasChange("tags") {
+				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
+					return err
+				}
+			}
+			if d.HasChange("ai_gateway") {
+				if err := updateAiGateway(ctx, w, e.Name, *e.AiGateway, d); err != nil {
+					return err
+				}
+			}
 			return nil
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {

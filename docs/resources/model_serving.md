@@ -128,7 +128,7 @@ The following arguments are supported:
   * `traffic_config` - A single block represents the traffic split configuration amongst the served models.
   * `auto_capture_config` - Configuration for Inference Tables which automatically logs requests and responses to Unity Catalog.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
-* `rate_limits` - A list of rate limit blocks to be applied to the serving endpoint. *Note: only external and foundation model endpoints are supported as of now.*
+* `rate_limits` - (Deprecated, use `ai_gateway` to manage rate limits) A list of rate limit blocks to be applied to the serving endpoint. *Note: only external and foundation model endpoints are supported as of now.*
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. *Note: only available for custom models.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.

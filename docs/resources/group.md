@@ -101,12 +101,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` -  The id for the group object.
+* `id` - Canonical unique identifier for the group (SCIM ID).
 * `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `groups/Some Group`.
 
 ## Import
 
-You can import a `databricks_group` resource with the name `my_group` like the following:
+You can import a `databricks_group` resource by its SCIM ID:
 
 ```hcl
 import {

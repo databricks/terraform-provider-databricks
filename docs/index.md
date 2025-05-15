@@ -225,7 +225,7 @@ resource "databricks_group" "cluster_admin" {
 * `client_id` - The `application_id` of the [Service Principal](resources/service_principal.md). Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
 * `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
 
-### Authenticating with GITHUB OIDC | Workload Identity Federation (WIF)
+### Authenticating with GITHUB OIDC 
 The arguments `host` and `client_id` are used for the authentication which maps to the `github-oidc` authentication type. 
 
 These can be declared in the provider block or set in the environment variables `DATABRICKS_HOST` and `DATABRICKS_CLIENT_ID` respectively. Example:
@@ -250,7 +250,7 @@ provider "databricks" {
   account_id  = var.account_id
 }
 ```
-Depending on how the WIF policy is configured, you might also have to provide the audience. This can be set in the provider block using the `audience` argument or in environment variable `DATABRICKS_TOKEN_AUDIENCE`. 
+
 
 ## Argument Reference
 
@@ -266,7 +266,6 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 `DEFAULT`.
 * `account_id` - (required for account-level operations) Account ID found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). **Note:  do NOT use in the workspace-level provider to avoid `...invalid Databricks Account configuration` errors**.
 * `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `github-oidc-azure`, `github-oidc` `google-credentials`, and `google-id`.
-* `audience` - (optional) When using Workload Identity Federation, the audience to specify when fetching an ID token from the ID token supplier.
 
 ## Special configurations for Azure
 

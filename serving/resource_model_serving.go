@@ -72,15 +72,6 @@ func updateTags(ctx context.Context, w *databricks.WorkspaceClient, name string,
 	return nil
 }
 
-// Update the rate limit configuration for a model serving endpoint.
-func updateRateLimits(ctx context.Context, w *databricks.WorkspaceClient, name string, newRateLimits []serving.RateLimit, d *schema.ResourceData) error {
-	_, err := w.ServingEndpoints.Put(ctx, serving.PutRequest{
-		Name:       name,
-		RateLimits: newRateLimits,
-	})
-	return err
-}
-
 // Update the AI Gateway configuration for a model serving endpoint.
 func updateAiGateway(ctx context.Context, w *databricks.WorkspaceClient, name string, newAiGateway serving.AiGatewayConfig, d *schema.ResourceData) error {
 	_, err := w.ServingEndpoints.PutAiGateway(ctx, serving.PutAiGatewayRequest{
@@ -118,6 +109,7 @@ func ResourceModelServing() common.Resource {
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Optional = true
 			common.MustSchemaPath(m, "config", "served_models", "scale_to_zero_enabled").Default = true
 			common.MustSchemaPath(m, "config", "served_models").Deprecated = "Please use 'config.served_entities' instead of 'config.served_models'."
+			common.MustSchemaPath(m, "rate_limits").Deprecated = "Please use AI Gateway to manage rate limits."
 
 			common.MustSchemaPath(m, "config", "served_entities", "name").Computed = true
 			common.MustSchemaPath(m, "config", "served_entities", "workload_size").Computed = true
@@ -202,11 +194,6 @@ func ResourceModelServing() common.Resource {
 			}
 			if d.HasChange("tags") {
 				if err := updateTags(ctx, w, e.Name, e.Tags, d); err != nil {
-					return err
-				}
-			}
-			if d.HasChange("rate_limits") {
-				if err := updateRateLimits(ctx, w, e.Name, e.RateLimits, d); err != nil {
 					return err
 				}
 			}

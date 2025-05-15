@@ -7,6 +7,7 @@
 ### Bug Fixes
 
 ### Documentation
+* Added documentation for GITHUB OIDC authentication type
 
 ### Exporter
 

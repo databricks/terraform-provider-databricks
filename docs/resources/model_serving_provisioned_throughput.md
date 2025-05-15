@@ -99,7 +99,16 @@ timeouts {
 
 ## Import
 
-The model serving provisioned throughput resource can be imported using the name of the endpoint.
+The model serving provisioned throughput resource can be imported using the name of the endpoint:
+
+```hcl
+import {
+  to = databricks_model_serving_provisioned_throughput.this
+  id = "<model-serving-endpoint-name>"
+}
+```
+
+Alternatively, when using Terraform version 1.4 or earlier, import using the terraform import command:
 
 ```bash
 terraform import databricks_model_serving_provisioned_throughput.this <model-serving-endpoint-name>
@@ -110,6 +119,7 @@ terraform import databricks_model_serving_provisioned_throughput.this <model-ser
 
 The following resources are often used in the same context:
 
+* [databricks_model_serving](model_serving.md) to create custom and external serving endpoints in Databricks.
 * [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).

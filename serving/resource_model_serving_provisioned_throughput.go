@@ -104,9 +104,7 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			}
 			return w.ServingEndpoints.DeleteByName(ctx, d.Id())
 		},
-		StateUpgraders: []schema.StateUpgrader{},
-		Schema:         s,
-		SchemaVersion:  0,
+		Schema: s,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(defaultPtProvisionTimeout),
 			Update: schema.DefaultTimeout(defaultPtProvisionTimeout),

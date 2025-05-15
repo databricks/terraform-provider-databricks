@@ -46,6 +46,18 @@ func TestAccModelServing(t *testing.T) {
 						}
 					}
 				}
+				tags {
+					key = "key1"
+					value = "value-should-not-change"
+				}
+				tags {
+					key = "key2"
+					value = "value-should-change"
+				}
+				tags {
+					key = "key3"
+					value = "should-be-deleted"
+				}
 			}
 
 			data "databricks_serving_endpoints" "all" {}
@@ -78,6 +90,18 @@ func TestAccModelServing(t *testing.T) {
 							traffic_percentage = 100
 						}
 					}
+				}
+				tags {
+					key = "key1"
+					value = "value-should-not-change"
+				}
+				tags {
+					key = "key2"
+					value = "value-should-change-to-something-new"
+				}
+				tags {
+					key = "key4"
+					value = "should-be-added"
 				}
 			}
 			data "databricks_serving_endpoints" "all" {}

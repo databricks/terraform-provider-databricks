@@ -25,6 +25,11 @@ func ResourceModelServingProvisionedThroughput() common.Resource {
 			common.CustomizeSchemaPath(m, "config", "served_entities", "entity_name").SetRequired()
 			common.CustomizeSchemaPath(m, "config", "served_entities", "entity_version").SetRequired()
 
+			common.CustomizeSchemaPath(m, "ai_gateway", "usage_tracking_config").SetOptional().SetComputed()
+			common.CustomizeSchemaPath(m, "ai_gateway", "usage_tracking_config", "enabled").SetOptional().SetComputed()
+			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii").SetOptional().SetComputed()
+			common.CustomizeSchemaPath(m, "ai_gateway", "guardrails", "input", "pii", "behavior").SetOptional().SetComputed()
+
 			m["serving_endpoint_id"] = &schema.Schema{
 				Computed: true,
 				Type:     schema.TypeString,

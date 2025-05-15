@@ -11,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const DefaultProvisionTimeout = 45 * time.Minute
-const deleteCallTimeout = 10 * time.Second
+const (
+	DefaultProvisionTimeout = 45 * time.Minute
+	deleteCallTimeout       = 10 * time.Second
+)
 
 // updateConfig updates the configuration of the provided serving endpoint to the provided config.
 func updateConfig(ctx context.Context, w *databricks.WorkspaceClient, name string, e *serving.EndpointCoreConfigInput, d *schema.ResourceData) error {

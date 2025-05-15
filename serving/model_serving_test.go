@@ -269,3 +269,88 @@ func TestAccModelServingExternalModel(t *testing.T) {
 		},
 	)
 }
+
+func TestUcAccModelServingProvisionedThroughputResource(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 50
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+	},
+		acceptance.Step{
+			Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 100
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+		},
+		acceptance.Step{
+			Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 100
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+				ai_gateway {
+					guardrails {
+						input {
+							safety = true
+						}
+					}
+				}
+				tags {
+					key = "env"
+					value = "prod"
+				}
+			}
+		`, name),
+		},
+	)
+}

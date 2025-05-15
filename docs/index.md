@@ -23,10 +23,8 @@ Compute resources
 
 Storage
 
-* Manage JAR, Wheel & Egg libraries through [databricks_dbfs_file](resources/dbfs_file.md)
-* List entries on DBFS with [databricks_dbfs_file_paths](data-sources/dbfs_file_paths.md) data source
-* Get contents of small files with [databricks_dbfs_file](data-sources/dbfs_file.md) data source
-* Mount storage with [databricks_mount](resources/mount.md) resource
+* Manage JAR & Wheel libraries through [databricks_volume](resources/volume.md) resource
+* Configure storage access with [databricks_external_location](resources/external_location.md) resource(requires [databricks_storage_credential](resources/storage_credential.md) resource)
 
 Security
 

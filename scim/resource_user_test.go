@@ -15,7 +15,7 @@ import (
 )
 
 func TestResourceUserRead(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -34,6 +34,7 @@ func TestResourceUserRead(t *testing.T) {
 							Value:   "9877",
 						},
 					},
+					ExternalID: "def",
 				},
 			},
 		},
@@ -41,15 +42,14 @@ func TestResourceUserRead(t *testing.T) {
 		New:      true,
 		Read:     true,
 		ID:       "abc",
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
-	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
-	assert.Equal(t, "users/me@example.com", d.Get("acl_principal_id"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": false,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+		"external_id":          "def",
+	})
 }
 
 func TestResourceUserRead_NotFound(t *testing.T) {
@@ -92,7 +92,7 @@ func TestResourceUserRead_Error(t *testing.T) {
 }
 
 func TestResourceUserCreate(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -145,18 +145,17 @@ func TestResourceUserCreate(t *testing.T) {
 		display_name = "Example user"
 		allow_cluster_create = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
-	assert.Equal(t, "/Users/me@example.com", d.Get("home"))
-	assert.Equal(t, "/Repos/me@example.com", d.Get("repos"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": true,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserCreateInactive(t *testing.T) {
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
@@ -210,12 +209,13 @@ func TestResourceUserCreateInactive(t *testing.T) {
 		allow_cluster_create = true
 		active = false
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Example user", d.Get("display_name"))
-	assert.Equal(t, true, d.Get("allow_cluster_create"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":         "Example user",
+		"user_name":            "me@example.com",
+		"allow_cluster_create": true,
+		"home":                 "/Users/me@example.com",
+		"repos":                "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserCreate_Error(t *testing.T) {
@@ -268,7 +268,7 @@ func TestResourceUserUpdate(t *testing.T) {
 			},
 		},
 	}
-	d, err := qa.ResourceFixture{
+	qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "GET",
@@ -327,13 +327,14 @@ func TestResourceUserUpdate(t *testing.T) {
 		allow_cluster_create = false
 		allow_instance_pool_create = true
 		`,
-	}.Apply(t)
-	require.NoError(t, err, err)
-	assert.Equal(t, "abc", d.Id(), "Id should not be empty")
-	assert.Equal(t, "me@example.com", d.Get("user_name"))
-	assert.Equal(t, "Changed Name", d.Get("display_name"))
-	assert.Equal(t, false, d.Get("allow_cluster_create"))
-	assert.Equal(t, true, d.Get("allow_instance_pool_create"))
+	}.ApplyAndExpectData(t, map[string]any{
+		"display_name":               "Changed Name",
+		"user_name":                  "me@example.com",
+		"allow_cluster_create":       false,
+		"allow_instance_pool_create": true,
+		"home":                       "/Users/me@example.com",
+		"repos":                      "/Repos/me@example.com",
+	})
 }
 
 func TestResourceUserUpdate_Error(t *testing.T) {

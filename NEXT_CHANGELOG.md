@@ -10,6 +10,7 @@
 ### Bug Fixes
 
  * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
+ * Fix reading of `external_id` for `databricks_service_principal` [#4712](https://github.com/databricks/terraform-provider-databricks/pull/4712)
 
 ### Documentation
 * Added documentation for GITHUB OIDC authentication type [#4717] (https://github.com/databricks/terraform-provider-databricks/pull/4717)

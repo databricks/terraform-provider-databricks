@@ -8,6 +8,7 @@
 * Replace DBFS with Unity Catalog resources in [index page](https://registry.terraform.io/providers/databricks/databricks/latest/docs) storage section [#4718](https://github.com/databricks/terraform-provider-databricks/pull/4718) 
 
 ### Bug Fixes
+ * Fix `databricks_cluster` drift when `is_single_node` is `true` ([#4360](https://github.com/databricks/terraform-provider-databricks/issues/4360)).
 
  * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
  * Fix reading of `external_id` for `databricks_service_principal` [#4712](https://github.com/databricks/terraform-provider-databricks/pull/4712)

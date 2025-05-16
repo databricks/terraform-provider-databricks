@@ -46,6 +46,18 @@ func TestAccModelServing(t *testing.T) {
 						}
 					}
 				}
+				tags {
+					key = "key1"
+					value = "value-should-not-change"
+				}
+				tags {
+					key = "key2"
+					value = "value-should-change"
+				}
+				tags {
+					key = "key3"
+					value = "should-be-deleted"
+				}
 			}
 
 			data "databricks_serving_endpoints" "all" {}
@@ -78,6 +90,18 @@ func TestAccModelServing(t *testing.T) {
 							traffic_percentage = 100
 						}
 					}
+				}
+				tags {
+					key = "key1"
+					value = "value-should-not-change"
+				}
+				tags {
+					key = "key2"
+					value = "value-should-change-to-something-new"
+				}
+				tags {
+					key = "key4"
+					value = "should-be-added"
 				}
 			}
 			data "databricks_serving_endpoints" "all" {}
@@ -242,6 +266,91 @@ func TestAccModelServingExternalModel(t *testing.T) {
 				}
 			}
 		`, scope_name, name),
+		},
+	)
+}
+
+func TestUcAccModelServingProvisionedThroughputResource(t *testing.T) {
+	acceptance.LoadWorkspaceEnv(t)
+	if acceptance.IsGcp(t) {
+		acceptance.Skipf(t)("not available on GCP")
+	}
+
+	name := fmt.Sprintf("terraform-test-model-serving-pt-%s",
+		acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	acceptance.WorkspaceLevel(t, acceptance.Step{
+		Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 50
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+	},
+		acceptance.Step{
+			Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 100
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+			}
+		`, name),
+		},
+		acceptance.Step{
+			Template: fmt.Sprintf(`
+			resource "databricks_model_serving_provisioned_throughput" "endpoint" {
+				name = "%s"
+				config {
+					served_entities {
+						name = "prod_model"
+						entity_name = "system.ai.llama-4-maverick"
+						entity_version = "1"
+						provisioned_model_units = 100
+					}
+					traffic_config {
+						routes {
+							served_model_name = "prod_model"
+							traffic_percentage = 100
+						}
+					}
+				}
+				ai_gateway {
+					guardrails {
+						input {
+							safety = true
+						}
+					}
+				}
+				tags {
+					key = "env"
+					value = "prod"
+				}
+			}
+		`, name),
 		},
 	)
 }

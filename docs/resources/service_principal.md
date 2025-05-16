@@ -114,14 +114,14 @@ The following arguments are available:
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - Canonical unique identifier for the service principal.
+- `id` - Canonical unique identifier for the service principal (SCIM ID).
 - `home` - Home folder of the service principal, e.g. `/Users/00000000-0000-0000-0000-000000000000`.
 - `repos` - Personal Repos location of the service principal, e.g. `/Repos/00000000-0000-0000-0000-000000000000`.
 - `acl_principal_id` - identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `servicePrincipals/00000000-0000-0000-0000-000000000000`.
 
 ## Import
 
-The resource scim service principal can be imported using its id, for example `2345678901234567`. To get the service principal ID, call [Get service principals](https://docs.databricks.com/dev-tools/api/latest/scim/scim-sp.html#get-service-principals).
+The resource scim service principal can be imported using its SCIM id, for example `2345678901234567`. To get the service principal ID, call [Get service principals](https://docs.databricks.com/dev-tools/api/latest/scim/scim-sp.html#get-service-principals).
 
 ```hcl
 import {

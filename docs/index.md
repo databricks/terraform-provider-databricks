@@ -225,6 +225,33 @@ resource "databricks_group" "cluster_admin" {
 * `client_id` - The `application_id` of the [Service Principal](resources/service_principal.md). Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_ID`.
 * `client_secret` - Secret of the service principal. Alternatively, you can provide this value as an environment variable `DATABRICKS_CLIENT_SECRET`.
 
+### Authenticating with GITHUB OIDC 
+The arguments `host` and `client_id` are used for the authentication which maps to the `github-oidc` authentication type. 
+
+These can be declared in the provider block or set in the environment variables `DATABRICKS_HOST` and `DATABRICKS_CLIENT_ID` respectively. Example:
+
+Workspace level provider:
+```hcl
+provider "databricks" {
+  alias       = "workspace"
+  auth_type   = "github-oidc" 
+  host        = var.workspace_host
+  client_id   = var.client_id
+}
+```
+
+Account level provider:
+```hcl
+provider "databricks" {
+  alias       = "account"
+  auth_type   = "github-oidc" 
+  host        = var.account_host
+  client_id   = var.client_id
+  account_id  = var.account_id
+}
+```
+
+
 ## Argument Reference
 
 -> **Note** If you experience technical difficulties with rolling out resources in this example, please make sure that [environment variables](#environment-variables) don't [conflict with other](#empty-provider-block) provider block attributes. When in doubt, please run `TF_LOG=DEBUG terraform apply` to enable [debug mode](https://www.terraform.io/docs/internals/debugging.html) through the [`TF_LOG`](https://www.terraform.io/docs/cli/config/environment-variables.html#tf_log) environment variable. Look specifically for `Explicit and implicit attributes` lines, that should indicate authentication attributes used.
@@ -238,7 +265,7 @@ Alternatively, you can provide this value as an environment variable `DATABRICKS
 * `profile` - (optional) Connection profile specified within ~/.databrickscfg. Please check [connection profiles section](https://docs.databricks.com/dev-tools/cli/index.html#connection-profiles) for more details. This field defaults to
 `DEFAULT`.
 * `account_id` - (required for account-level operations) Account ID found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/). Alternatively, you can provide this value as an environment variable `DATABRICKS_ACCOUNT_ID`. Only has effect when `host = "https://accounts.cloud.databricks.com/"`, and is currently used to provision account admins via [databricks_user](resources/user.md). **Note:  do NOT use in the workspace-level provider to avoid `...invalid Databricks Account configuration` errors**.
-* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `github-oidc-azure`, `google-credentials`, and `google-id`.
+* `auth_type` - (optional) enforce specific auth type to be used in very rare cases, where a single Terraform state manages Databricks workspaces on more than one cloud and `more than one authorization method configured` error is a false positive. Valid values are `pat`, `basic`, `oauth-m2m`, `azure-client-secret`, `azure-msi`, `azure-cli`, `github-oidc-azure`, `github-oidc`, `google-credentials`, and `google-id`.
 
 ## Special configurations for Azure
 

@@ -23,8 +23,8 @@ Compute resources
 
 Storage
 
-* Manage JAR & Wheel libraries through [databricks_volume](resources/volume.md) resource
-* Manage files that are stored in Databricks volumes through [databricks_file](resources/file.md) resource
+* Create Unity Catalog volumes to manage non-tabular data through [databricks_volume](resources/volume.md) resource
+* Manage JAR, Wheel libraries and other non-tabular files through [databricks_file](resources/file.md) resource
 * Configure storage access with [databricks_external_location](resources/external_location.md) resource (requires [databricks_storage_credential](resources/storage_credential.md))
 
 Security

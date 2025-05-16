@@ -311,7 +311,7 @@ func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, e
 	return relativeName, nil
 }
 
-func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, _ *resource) bool {
 	if as.Computed {
 		return true
 	} else if as.Default != nil && d.Get(pathString) == as.Default {

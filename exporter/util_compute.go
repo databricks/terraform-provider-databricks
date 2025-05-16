@@ -115,8 +115,9 @@ func (ic *importContext) getBuiltinPolicyFamilies() map[string]compute.PolicyFam
 	return ic.builtInPolicies
 }
 
-func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
-	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext, pathString string, as *schema.Schema,
+	d *schema.ResourceData, r *resource) bool {
+	return func(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 		prefix := ""
 		if regex != nil {
 			if res := regex.FindStringSubmatch(pathString); res != nil {
@@ -146,6 +147,6 @@ func makeShouldOmitFieldForCluster(regex *regexp.Regexp) func(ic *importContext,
 			return fmt.Sprintf("%v", d.Get(prefix+"spark_env_vars")) == "map[PYSPARK_PYTHON:/databricks/python3/bin/python3]"
 		}
 
-		return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+		return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 	}
 }

@@ -201,11 +201,11 @@ func (ic *importContext) getAllWorkspaceObjects(visitor func([]workspace.ObjectS
 	return ic.allWorkspaceObjects
 }
 
-func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitMd5Field(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "md5" { // `md5` is kind of computed, but not declared as it...
 		return true
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 }
 
 func workspaceObjectResouceName(ic *importContext, d *schema.ResourceData) string {

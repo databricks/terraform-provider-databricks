@@ -24,7 +24,8 @@ Compute resources
 Storage
 
 * Manage JAR & Wheel libraries through [databricks_volume](resources/volume.md) resource
-* Configure storage access with [databricks_external_location](resources/external_location.md) resource(requires [databricks_storage_credential](resources/storage_credential.md) resource)
+* Manage files that are stored in Databricks volumes through [databricks_file](resources/file.md) resource
+* Configure storage access with [databricks_external_location](resources/external_location.md) resource (requires [databricks_storage_credential](resources/storage_credential.md))
 
 Security
 

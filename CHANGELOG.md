@@ -1,5 +1,22 @@
 # Version changelog
 
+## Release v1.79.1
+
+### Bug Fixes
+
+ * Use latest etag for `access_control_rule_set` [4622](https://github.com/databricks/terraform-provider-databricks/pull/4622)
+
+### Documentation
+
+ * Explicitly mention SCIM ID in `databricks_group_member` docs [#4709](https://github.com/databricks/terraform-provider-databricks/pull/4709)
+
+
+## Release v1.79.0
+
+### Internal Changes
+* Fixed documentation for budget_policy until it's fixed in proto [#4708](https://github.com/databricks/terraform-provider-databricks/pull/4708)
+
+
 ## Release v1.78.0
 
 ### New Features and Improvements

@@ -6,7 +6,6 @@ package sdkv2
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"regexp"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/databricks/databricks-sdk-go/client"
 	"github.com/databricks/databricks-sdk-go/config"
 	"github.com/databricks/databricks-sdk-go/useragent"
 
@@ -27,10 +25,10 @@ import (
 	"github.com/databricks/terraform-provider-databricks/aws"
 	"github.com/databricks/terraform-provider-databricks/catalog"
 	"github.com/databricks/terraform-provider-databricks/clusters"
-	"github.com/databricks/terraform-provider-databricks/commands"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/databricks/terraform-provider-databricks/dashboards"
 	"github.com/databricks/terraform-provider-databricks/finops"
+	"github.com/databricks/terraform-provider-databricks/internal/providers/client"
 	providercommon "github.com/databricks/terraform-provider-databricks/internal/providers/common"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw"
 	"github.com/databricks/terraform-provider-databricks/jobs"
@@ -330,65 +328,22 @@ func providerSchema() map[string]*schema.Schema {
 func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, configCustomizer func(*config.Config) error) (any, diag.Diagnostics) {
 	cfg := &config.Config{}
 	attrsUsed := []string{}
-	authsUsed := map[string]bool{}
 	for _, attr := range config.ConfigAttributes {
 		if value, ok := d.GetOk(attr.Name); ok {
 			err := attr.Set(cfg, value)
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
-			if attr.Kind == reflect.String {
-				attrsUsed = append(attrsUsed, attr.Name)
-			}
-			if attr.Auth != "" {
-				authsUsed[attr.Auth] = true
-			}
+			attrsUsed = append(attrsUsed, attr.Name)
 		}
 	}
 	sort.Strings(attrsUsed)
-	tflog.Info(ctx, fmt.Sprintf("Explicit and implicit attributes: %s", strings.Join(attrsUsed, ", ")))
-	if cfg.AuthType != "" {
-		// mapping from previous Google authentication types
-		// and current authentication types from Databricks Go SDK
-		oldToNewerAuthType := map[string]string{
-			"google-creds":     "google-credentials",
-			"google-accounts":  "google-id",
-			"google-workspace": "google-id",
-		}
-		newer, ok := oldToNewerAuthType[cfg.AuthType]
-		if ok {
-			log.Printf("[INFO] Changing required auth_type from %s to %s", cfg.AuthType, newer)
-			cfg.AuthType = newer
-		}
-	}
-	cfg.EnsureResolved()
-	// Unless set explicitly, the provider will retry indefinitely until context is cancelled
-	// by either a timeout or interrupt.
-	if cfg.RetryTimeoutSeconds == 0 {
-		cfg.RetryTimeoutSeconds = -1
-	}
-	// If not set, the default provider timeout is 65 seconds. Most APIs have a server-side timeout of 60 seconds.
-	// The additional 5 seconds is to account for network latency.
-	if cfg.HTTPTimeoutSeconds == 0 {
-		cfg.HTTPTimeoutSeconds = 65
-	}
-	if configCustomizer != nil {
-		err := configCustomizer(cfg)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-	}
-	client, err := client.New(cfg)
+	tflog.Info(ctx, fmt.Sprintf("(sdkv2) Attributes configured from provider configuration: %s", strings.Join(attrsUsed, ", ")))
+	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, configCustomizer)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-	pc := &common.DatabricksClient{
-		DatabricksClient: client,
-	}
-	pc.WithCommandExecutor(func(ctx context.Context, client *common.DatabricksClient) common.CommandExecutor {
-		return commands.NewCommandsAPI(ctx, client)
-	})
-	return pc, nil
+	return databricksClient, nil
 }
 
 type UserAgentExtra struct {

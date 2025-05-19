@@ -1,6 +1,6 @@
 // Code generated from OpenAPI specs by Databricks SDK Generator. DO NOT EDIT.
 
-package alert_v2
+package database_instance
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
-	"github.com/databricks/databricks-sdk-go/service/sql"
+	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/sql_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,62 +22,62 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 )
 
-const resourceName = "alert_v2"
+const resourceName = "database_instance"
 
-var _ resource.ResourceWithConfigure = &AlertV2Resource{}
+var _ resource.ResourceWithConfigure = &DatabaseInstanceResource{}
 
-func ResourceAlertV2() resource.Resource {
-	return &AlertV2Resource{}
+func ResourceDatabaseInstance() resource.Resource {
+	return &DatabaseInstanceResource{}
 }
 
-type AlertV2Resource struct {
+type DatabaseInstanceResource struct {
 	Client *autogen.DatabricksClient
 }
 
-func (r *AlertV2Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *DatabaseInstanceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = autogen.GetDatabricksProductionName(resourceName)
 }
 
-func (r *AlertV2Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, sql_tf.AlertV2{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
-		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "id")
+func (r *DatabaseInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	attrs, blocks := tfschema.ResourceStructToSchemaMap(ctx, catalog_tf.DatabaseInstance{}, func(c tfschema.CustomizableSchema) tfschema.CustomizableSchema {
+		c.AddPlanModifier(stringplanmodifier.UseStateForUnknown(), "name")
 		return c
 	})
 	resp.Schema = schema.Schema{
-		Description: "Terraform schema for Databricks alert_v2",
+		Description: "Terraform schema for Databricks database_instance",
 		Attributes:  attrs,
 		Blocks:      blocks,
 	}
 }
 
-func (r *AlertV2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *DatabaseInstanceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	r.Client = autogen.ConfigureResource(req, resp)
 }
 
-func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags *diag.Diagnostics, state *tfsdk.State) {
+func (r *DatabaseInstanceResource) update(ctx context.Context, plan catalog_tf.DatabaseInstance, diags *diag.Diagnostics, state *tfsdk.State) {
 	client, clientDiags := r.Client.GetWorkspaceClient()
 	diags.Append(clientDiags...)
 	if diags.HasError() {
 		return
 	}
 
-	var alert_v2 sql.AlertV2
-	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
+	var database_instance catalog.DatabaseInstance
+	diags.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if diags.HasError() {
 		return
 	}
 
-	var updateRequest = sql.UpdateAlertV2Request{Alert: alert_v2}
-	updateRequest.Id = plan.Id.ValueString()
-	updateRequest.UpdateMask = "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,schedule,warehouse_id"
+	var updateRequest = catalog.UpdateDatabaseInstanceRequest{DatabaseInstance: database_instance}
+	updateRequest.Name = plan.Name.ValueString()
+	updateRequest.UpdateMask = "admin_password,admin_rolename,capacity,stopped"
 
-	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
+	response, err := client.DatabaseInstances.UpdateDatabaseInstance(ctx, updateRequest)
 	if err != nil {
-		diags.AddError("failed to update alert_v2", err.Error())
+		diags.AddError("failed to update database_instance", err.Error())
 		return
 	}
 
-	var newState sql_tf.AlertV2
+	var newState catalog_tf.DatabaseInstance
 	diags.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if diags.HasError() {
 		return
@@ -87,7 +87,7 @@ func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags
 	diags.Append(state.Set(ctx, newState)...)
 }
 
-func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *DatabaseInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -96,25 +96,25 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var plan sql_tf.AlertV2
+	var plan catalog_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var alert_v2 sql.AlertV2
-	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &alert_v2)...)
+	var database_instance catalog.DatabaseInstance
+	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, plan, &database_instance)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.AlertsV2.CreateAlert(ctx, sql.CreateAlertV2Request{Alert: alert_v2})
+	response, err := client.DatabaseInstances.CreateDatabaseInstance(ctx, catalog.CreateDatabaseInstanceRequest{DatabaseInstance: database_instance})
 	if err != nil {
-		resp.Diagnostics.AddError("failed to create alert_v2", err.Error())
+		resp.Diagnostics.AddError("failed to create database_instance", err.Error())
 		return
 	}
 
-	var newState sql_tf.AlertV2
+	var newState catalog_tf.DatabaseInstance
 
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 
@@ -130,7 +130,7 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 	}
 }
 
-func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *DatabaseInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -139,30 +139,30 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	var existingState sql_tf.AlertV2
+	var existingState catalog_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &existingState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var readRequest sql.GetAlertV2Request
+	var readRequest catalog.GetDatabaseInstanceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, existingState, &readRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.AlertsV2.GetAlert(ctx, readRequest)
+	response, err := client.DatabaseInstances.GetDatabaseInstance(ctx, readRequest)
 	if err != nil {
 		if apierr.IsMissing(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 
-		resp.Diagnostics.AddError("failed to get alert_v2", err.Error())
+		resp.Diagnostics.AddError("failed to get database_instance", err.Error())
 		return
 	}
 
-	var newState sql_tf.AlertV2
+	var newState catalog_tf.DatabaseInstance
 	resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, response, &newState)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -173,10 +173,10 @@ func (r *AlertV2Resource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }
 
-func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *DatabaseInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
-	var plan sql_tf.AlertV2
+	var plan catalog_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +185,7 @@ func (r *AlertV2Resource) Update(ctx context.Context, req resource.UpdateRequest
 	r.update(ctx, plan, &resp.Diagnostics, &resp.State)
 }
 
-func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *DatabaseInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx = pluginfwcontext.SetUserAgentInResourceContext(ctx, resourceName)
 
 	client, diags := r.Client.GetWorkspaceClient()
@@ -194,41 +194,41 @@ func (r *AlertV2Resource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	var state sql_tf.AlertV2
+	var state catalog_tf.DatabaseInstance
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var deleteRequest sql.TrashAlertV2Request
+	var deleteRequest catalog.DeleteDatabaseInstanceRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, state, &deleteRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	err := client.AlertsV2.TrashAlert(ctx, deleteRequest)
+	err := client.DatabaseInstances.DeleteDatabaseInstance(ctx, deleteRequest)
 	if err != nil && !apierr.IsMissing(err) {
-		resp.Diagnostics.AddError("failed to delete alert_v2", err.Error())
+		resp.Diagnostics.AddError("failed to delete database_instance", err.Error())
 		return
 	}
 }
 
-var _ resource.ResourceWithImportState = &AlertV2Resource{}
+var _ resource.ResourceWithImportState = &DatabaseInstanceResource{}
 
-func (r *AlertV2Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *DatabaseInstanceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 1 || parts[0] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
 			fmt.Sprintf(
-				"Expected import identifier with format: id. Got: %q",
+				"Expected import identifier with format: name. Got: %q",
 				req.ID,
 			),
 		)
 		return
 	}
 
-	id := parts[0]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
+	name := parts[0]
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }

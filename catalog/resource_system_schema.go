@@ -143,10 +143,18 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
+			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
 				MetastoreId: metastoreSummary.MetastoreId,
 				SchemaName:  schemaName,
 			})
+			if err != nil {
+				//ignore "<schema-name> system schema can only be disabled by Databricks" error
+				if !strings.Contains(err.Error(), "can only be disabled by Databricks") {
+					return err
+				}
+				log.Printf("[WARN] %s can be disabled only by Databricks, ignoring it", schemaName)
+			}
+			return nil
 		},
 	}
 }

@@ -99,7 +99,12 @@ func providerSchemaPluginFramework() schema.Schema {
 
 // setAttribute sets the attribute value in the SDK config corresponding to the attribute name in the provider configuration.
 // It returns true if the attribute was set, false if it was not set (because it was unknown or null), and a diag.Diagnostics object in case of error.
-func (p *DatabricksProviderPluginFramework) setAttribute(ctx context.Context, providerConfig tfsdk.Config, attr config.ConfigAttribute, cfg *config.Config) (bool, diag.Diagnostics) {
+func (p *DatabricksProviderPluginFramework) setAttribute(
+	ctx context.Context,
+	providerConfig tfsdk.Config,
+	attr config.ConfigAttribute,
+	cfg *config.Config,
+) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch attr.Kind {
 	case reflect.Bool:

@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccTableACL(t *testing.T) {
+	t.Skip("Skipping this test since users will be able to disable public DBFS root which is required for this test")
 	acceptance.LoadWorkspaceEnv(t)
 	tableName := qa.RandomName("table_acl_")
 	clusterId := acceptance.GetEnvOrSkipTest(t, "TEST_TABLE_ACL_CLUSTER_ID")

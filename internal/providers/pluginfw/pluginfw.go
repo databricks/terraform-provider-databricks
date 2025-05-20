@@ -163,8 +163,12 @@ func (p *DatabricksProviderPluginFramework) configureDatabricksClient(ctx contex
 			attrsUsed = append(attrsUsed, attr.Name)
 		}
 	}
-	sort.Strings(attrsUsed)
-	tflog.Info(ctx, fmt.Sprintf("(plugin framework) Attributes configured from provider configuration: %s", strings.Join(attrsUsed, ", ")))
+	if len(attrsUsed) > 0 {
+		sort.Strings(attrsUsed)
+		tflog.Info(ctx, fmt.Sprintf("(plugin framework) Attributes specified in provider configuration: %s", strings.Join(attrsUsed, ", ")))
+	} else {
+		tflog.Info(ctx, "(plugin framework) No attributes specified in provider configuration")
+	}
 	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, p.configCustomizer)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to configure Databricks client", err.Error())

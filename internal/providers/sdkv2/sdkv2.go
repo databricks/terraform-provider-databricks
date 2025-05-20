@@ -315,13 +315,7 @@ func providerSchema() map[string]*schema.Schema {
 			Sensitive: attr.Sensitive,
 		}
 		ps[attr.Name] = fieldSchema
-		if len(attr.EnvVars) > 0 {
-			fieldSchema.DefaultFunc = schema.MultiEnvDefaultFunc(attr.EnvVars, nil)
-		}
 	}
-	// TODO: check if still relevant
-	ps["rate_limit"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_RATE_LIMIT", 15)
-	ps["debug_truncate_bytes"].DefaultFunc = schema.EnvDefaultFunc("DATABRICKS_DEBUG_TRUNCATE_BYTES", 96)
 	return ps
 }
 
@@ -337,8 +331,12 @@ func ConfigureDatabricksClient(ctx context.Context, d *schema.ResourceData, conf
 			attrsUsed = append(attrsUsed, attr.Name)
 		}
 	}
-	sort.Strings(attrsUsed)
-	tflog.Info(ctx, fmt.Sprintf("(sdkv2) Attributes configured from provider configuration: %s", strings.Join(attrsUsed, ", ")))
+	if len(attrsUsed) > 0 {
+		sort.Strings(attrsUsed)
+		tflog.Info(ctx, fmt.Sprintf("(sdkv2) Attributes specified in provider configuration: %s", strings.Join(attrsUsed, ", ")))
+	} else {
+		tflog.Info(ctx, "(sdkv2) No attributes specified in provider configuration")
+	}
 	databricksClient, err := client.PrepareDatabricksClient(ctx, cfg, configCustomizer)
 	if err != nil {
 		return nil, diag.FromErr(err)

@@ -7,7 +7,7 @@ Manages system tables enablement. System tables are a Databricks-hosted analytic
 
 -> This resource can only be used with a workspace-level provider!
 
--> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.
+-> Certain system schemas (such as `billing`) may be auto-enabled once GA and should not be manually declared in Terraform configurations.  Certain schemas can't also be disabled completely.
 
 ## Example Usage
 

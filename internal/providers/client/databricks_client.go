@@ -11,6 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// PrepareDatabricksClient makes some common adjustments to the config that apply in all cases
+// and returns a ready-to-use Databricks client. This includes:
+// - mapping deprecated auth types to their newer counterparts
+// - ensuring the config is resolved
+// - setting a default retry timeout if not set
+// - setting a default HTTP timeout if not set
+//
+// TODO: this should be colocated with the definition of DatabricksClient in common/client.go, but
+// this isn't possible without introducing a circular dependency. Fixing this will require refactoring
+// DatabricksClient out of the common package.
 func PrepareDatabricksClient(ctx context.Context, cfg *config.Config, configCustomizer func(*config.Config) error) (*common.DatabricksClient, error) {
 	if cfg.AuthType != "" {
 		// mapping from previous Google authentication types

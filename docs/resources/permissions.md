@@ -6,6 +6,8 @@ subcategory: "Security"
 
 This resource allows you to generically manage [access control](https://docs.databricks.com/security/access-control/index.html) in Databricks workspaces. It ensures that only _admins_, _authenticated principal_ and those declared within `access_control` blocks would have specified access. It is not possible to remove management rights from _admins_ group.
 
+-> This resource can only be used with a workspace-level provider!
+
 ~> This resource is _authoritative_ for permissions on objects. Configuring this resource for an object will **OVERWRITE** any existing permissions of the same type unless imported, and changes made outside of Terraform will be reset.
 
 -> It is not possible to lower permissions for `admins`, so Databricks Terraform Provider removes those `access_control` blocks automatically.
@@ -671,7 +673,7 @@ resource "databricks_permissions" "vector_search_endpoint_usage" {
 
 ## Passwords usage
 
-By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users’ and API users’ ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
+By default on AWS deployments, all admin users can sign in to Databricks using either SSO or their username and password, and all API users can authenticate to the Databricks REST APIs using their username and password. As an admin, you [can limit](https://docs.databricks.com/administration-guide/users-groups/single-sign-on/index.html#optional-configure-password-access-control) admin users' and API users' ability to authenticate with their username and password by configuring `CAN_USE` permissions using password access control.
 
 ```hcl
 resource "databricks_group" "guests" {
@@ -722,7 +724,7 @@ resource "databricks_permissions" "token_usage" {
 
 ## SQL warehouse usage
 
-[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have four possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE` and `IS_OWNER`:
+[SQL warehouses](https://docs.databricks.com/sql/user/security/access-control/sql-endpoint-acl.html) have five possible permissions: `CAN_USE`, `CAN_MONITOR`, `CAN_MANAGE`, `CAN_VIEW` and `IS_OWNER`:
 
 - The creator of a warehouse has `IS_OWNER` permission. Destroying `databricks_permissions` resource for a warehouse would revert ownership to the creator.
 - A warehouse must have exactly one owner. If a resource is changed and no owner is specified, the currently authenticated principal would become the new owner of the warehouse. Nothing would change, per se, if the warehouse was created through Terraform.
@@ -989,10 +991,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource permissions can be imported using the object id
+The resource permissions can be imported using the object id:
+
+```hcl
+import {
+  to = databricks_permissions.this
+  id = "/<object_type>/<object_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_permissions.this /<object type>/<object id>
+terraform import databricks_permissions.this /<object_type>/<object_id>
 ```
 
 ### Import Example
@@ -1016,7 +1027,6 @@ resource "databricks_permissions" "model_usage" {
 ```
 
 Import command:
-
 ```bash
 terraform import databricks_permissions.model_usage /registered-models/<registered_model_id>
 ```

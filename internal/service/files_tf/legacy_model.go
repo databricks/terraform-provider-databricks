@@ -682,12 +682,13 @@ func (o DownloadRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DownloadResponse_SdkV2 struct {
+	// The length of the HTTP response body in bytes.
 	ContentLength types.Int64 `tfsdk:"-"`
 
 	ContentType types.String `tfsdk:"-"`
 
 	Contents types.Object `tfsdk:"-"`
-
+	// The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 
@@ -896,10 +897,11 @@ func (o GetMetadataRequest_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type GetMetadataResponse_SdkV2 struct {
+	// The length of the HTTP response body in bytes.
 	ContentLength types.Int64 `tfsdk:"-"`
 
 	ContentType types.String `tfsdk:"-"`
-
+	// The last modified time of the file in HTTP-date (RFC 7231) format.
 	LastModified types.String `tfsdk:"-"`
 }
 
@@ -1627,7 +1629,8 @@ type UploadRequest_SdkV2 struct {
 	Contents types.Object `tfsdk:"-"`
 	// The absolute path of the file.
 	FilePath types.String `tfsdk:"-"`
-	// If true, an existing file will be overwritten.
+	// If true or unspecified, an existing file will be overwritten. If false,
+	// an error will be returned if the path points to an existing file.
 	Overwrite types.Bool `tfsdk:"-"`
 }
 

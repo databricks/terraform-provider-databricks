@@ -134,6 +134,7 @@ func (o AddResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage location in Adls Gen2
 type Adlsgen2Info_SdkV2 struct {
 	// abfss destination, e.g.
 	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`.
@@ -240,6 +241,8 @@ func (o AutoScale_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Attributes set during cluster creation which are related to Amazon Web
+// Services.
 type AwsAttributes_SdkV2 struct {
 	// Availability type used for all subsequent nodes past the
 	// `first_on_demand` ones.
@@ -294,9 +297,6 @@ type AwsAttributes_SdkV2 struct {
 	// added to the Databricks environment by an account administrator.
 	//
 	// This feature may only be available to certain customer plans.
-	//
-	// If this field is ommitted, we will pull in the default from the conf if
-	// it exists.
 	InstanceProfileArn types.String `tfsdk:"instance_profile_arn"`
 	// The bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
@@ -308,10 +308,6 @@ type AwsAttributes_SdkV2 struct {
 	// instances whose bid price percentage matches this field will be
 	// considered. Note that, for safety, we enforce this field to be no more
 	// than 10000.
-	//
-	// The default value and documentation here should be kept consistent with
-	// CommonConf.defaultSpotBidPricePercent and
-	// CommonConf.maxSpotBidPricePercent.
 	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
@@ -321,8 +317,10 @@ type AwsAttributes_SdkV2 struct {
 	// optional field at cluster creation, and if not specified, a default zone
 	// will be used. If the zone specified is "auto", will try to place cluster
 	// in a zone with high availability, and will retry placement in a different
-	// AZ if there is not enough capacity. The list of available zones as well
-	// as the default value can be found by using the `List Zones` method.
+	// AZ if there is not enough capacity.
+	//
+	// The list of available zones as well as the default value can be found by
+	// using the `List Zones` method.
 	ZoneId types.String `tfsdk:"zone_id"`
 }
 
@@ -396,11 +394,11 @@ func (o AwsAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Attributes set during cluster creation which are related to Microsoft Azure.
 type AzureAttributes_SdkV2 struct {
 	// Availability type used for all subsequent nodes past the
-	// `first_on_demand` ones. Note: If `first_on_demand` is zero (which only
-	// happens on pool clusters), this availability type will be used for the
-	// entire cluster.
+	// `first_on_demand` ones. Note: If `first_on_demand` is zero, this
+	// availability type will be used for the entire cluster.
 	Availability types.String `tfsdk:"availability"`
 	// The first `first_on_demand` nodes of the cluster will be placed on
 	// on-demand instances. This value should be greater than 0, to make sure
@@ -565,6 +563,17 @@ func (o CancelCommand_SdkV2) Type(ctx context.Context) attr.Type {
 type CancelResponse_SdkV2 struct {
 }
 
+func (newState *CancelResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CancelResponse_SdkV2) {
+}
+
+func (newState *CancelResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CancelResponse_SdkV2) {
+}
+
+func (c CancelResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CancelResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -593,7 +602,6 @@ func (o CancelResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ChangeClusterOwner_SdkV2 struct {
-	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id"`
 	// New owner of the cluster_id after this RPC.
 	OwnerUsername types.String `tfsdk:"owner_username"`
@@ -788,6 +796,7 @@ func (o CloneCluster_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type CloudProviderNodeInfo_SdkV2 struct {
+	// Status as reported by the cloud provider
 	Status types.List `tfsdk:"status"`
 }
 
@@ -1025,6 +1034,8 @@ func (o *ClusterAccessControlResponse_SdkV2) SetAllPermissions(ctx context.Conte
 	o.AllPermissions = types.ListValueMust(t, vs)
 }
 
+// Common set of attributes set during cluster creation. These attributes cannot
+// be changed over the lifetime of a cluster.
 type ClusterAttributes_SdkV2 struct {
 	// Automatically terminates the cluster after it is inactive for this time
 	// in minutes. If not set, this cluster will not be automatically
@@ -1088,7 +1099,7 @@ type ClusterAttributes_SdkV2 struct {
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -1097,6 +1108,11 @@ type ClusterAttributes_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -1191,7 +1207,7 @@ type ClusterAttributes_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -1734,6 +1750,7 @@ func (o *ClusterCompliance_SdkV2) SetViolations(ctx context.Context, v map[strin
 	o.Violations = types.MapValueMust(t, vs)
 }
 
+// Describes all of the metadata about a single Spark cluster in Databricks.
 type ClusterDetails_SdkV2 struct {
 	// Parameters needed in order to automatically scale clusters up and down
 	// based on load. Note: autoscaling works best with DB runtime versions 3.0
@@ -1774,8 +1791,7 @@ type ClusterDetails_SdkV2 struct {
 	// not specified at creation, the cluster name will be an empty string.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Determines whether the cluster was created by a user through the UI,
-	// created by the Databricks Jobs Scheduler, or through an API request. This
-	// is the same as cluster_creator, but read only.
+	// created by the Databricks Jobs Scheduler, or through an API request.
 	ClusterSource types.String `tfsdk:"cluster_source"`
 	// Creator user name. The field won't be included in the response if the
 	// user has already been deleted.
@@ -1832,7 +1848,7 @@ type ClusterDetails_SdkV2 struct {
 	//
 	// - Name: <Databricks internal use>
 	DefaultTags types.Map `tfsdk:"default_tags"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// Node on which the Spark driver resides. The driver node contains the
 	// Spark master and the Databricks application that manages the per-notebook
@@ -1845,6 +1861,11 @@ type ClusterDetails_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -1954,10 +1975,9 @@ type ClusterDetails_SdkV2 struct {
 	// available Spark versions can be retrieved by using the
 	// :method:clusters/sparkVersions API call.
 	SparkVersion types.String `tfsdk:"spark_version"`
-	// `spec` contains a snapshot of the field values that were used to create
-	// or edit this cluster. The contents of `spec` can be used in the body of a
-	// create cluster request. This field might not be populated for older
-	// clusters. Note: not included in the response of the ListClusters API.
+	// The spec contains a snapshot of the latest user specified settings that
+	// were used to create/edit the cluster. Note: not included in the response
+	// of the ListClusters API.
 	Spec types.List `tfsdk:"spec"`
 	// SSH public key contents that will be added to each Spark node in this
 	// cluster. The corresponding private keys can be used to login with the
@@ -1983,7 +2003,7 @@ type ClusterDetails_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -2706,11 +2726,10 @@ func (o *ClusterDetails_SdkV2) SetWorkloadType(ctx context.Context, v WorkloadTy
 }
 
 type ClusterEvent_SdkV2 struct {
-	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id"`
-	// <needs content added>
+
 	DataPlaneEventDetails types.List `tfsdk:"data_plane_event_details"`
-	// <needs content added>
+
 	Details types.List `tfsdk:"details"`
 	// The timestamp when the event occurred, stored as the number of
 	// milliseconds since the Unix epoch. If not provided, this will be assigned
@@ -2919,6 +2938,7 @@ func (o *ClusterLibraryStatuses_SdkV2) SetLibraryStatuses(ctx context.Context, v
 	o.LibraryStatuses = types.ListValueMust(t, vs)
 }
 
+// Cluster log delivery config
 type ClusterLogConf_SdkV2 struct {
 	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
 	// "dbfs:/home/cluster_log" } }`
@@ -2929,7 +2949,7 @@ type ClusterLogConf_SdkV2 struct {
 	// the cluster iam role in `instance_profile_arn` has permission to write
 	// data to the s3 destination.
 	S3 types.List `tfsdk:"s3"`
-	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
+	// destination needs to be provided, e.g. `{ "volumes": { "destination":
 	// "/Volumes/catalog/schema/volume/cluster_log" } }`
 	Volumes types.List `tfsdk:"volumes"`
 }
@@ -4012,6 +4032,8 @@ func (o *ClusterSize_SdkV2) SetAutoscale(ctx context.Context, v AutoScale_SdkV2)
 	o.Autoscale = types.ListValueMust(t, vs)
 }
 
+// Contains a snapshot of the latest user specified settings that were used to
+// create/edit the cluster.
 type ClusterSpec_SdkV2 struct {
 	// When set to true, fixed and default values from the policy will be used
 	// for fields that are omitted. When set to false, only fixed values from
@@ -4083,7 +4105,7 @@ type ClusterSpec_SdkV2 struct {
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -4092,6 +4114,11 @@ type ClusterSpec_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -4197,7 +4224,7 @@ type ClusterSpec_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -5085,7 +5112,7 @@ type CreateCluster_SdkV2 struct {
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -5094,6 +5121,11 @@ type CreateCluster_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -5199,7 +5231,7 @@ type CreateCluster_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -6394,6 +6426,18 @@ type CreateResponse_SdkV2 struct {
 	ScriptId types.String `tfsdk:"script_id"`
 }
 
+func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateResponse_SdkV2) {
+}
+
+func (newState *CreateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateResponse_SdkV2) {
+}
+
+func (c CreateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["script_id"] = attrs["script_id"].SetOptional()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -6536,13 +6580,12 @@ func (o CustomPolicyTag_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DataPlaneEventDetails_SdkV2 struct {
-	// <needs content added>
 	EventType types.String `tfsdk:"event_type"`
-	// <needs content added>
+
 	ExecutorFailures types.Int64 `tfsdk:"executor_failures"`
-	// <needs content added>
+
 	HostId types.String `tfsdk:"host_id"`
-	// <needs content added>
+
 	Timestamp types.Int64 `tfsdk:"timestamp"`
 }
 
@@ -6598,6 +6641,7 @@ func (o DataPlaneEventDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage location in DBFS
 type DbfsStorageInfo_SdkV2 struct {
 	// dbfs destination, e.g. `dbfs:/my/path`
 	Destination types.String `tfsdk:"destination"`
@@ -6953,6 +6997,17 @@ func (o DeletePolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type DeleteResponse_SdkV2 struct {
 }
 
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DeleteResponse_SdkV2) {
+}
+
+func (newState *DeleteResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DeleteResponse_SdkV2) {
+}
+
+func (c DeleteResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DeleteResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7035,6 +7090,17 @@ func (o DestroyContext_SdkV2) Type(ctx context.Context) attr.Type {
 type DestroyResponse_SdkV2 struct {
 }
 
+func (newState *DestroyResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan DestroyResponse_SdkV2) {
+}
+
+func (newState *DestroyResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState DestroyResponse_SdkV2) {
+}
+
+func (c DestroyResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in DestroyResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -7062,6 +7128,10 @@ func (o DestroyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Describes the disks that are launched for each instance in the spark cluster.
+// For example, if the cluster has 3 instances, each instance is configured to
+// launch 2 disks, 100 GiB each, then Databricks will launch a total of 6 disks,
+// 100 GiB each, for this cluster.
 type DiskSpec_SdkV2 struct {
 	// The number of disks launched for each instance: - This feature is only
 	// enabled for supported node types. - Users can choose up to the limit of
@@ -7183,9 +7253,13 @@ func (o *DiskSpec_SdkV2) SetDiskType(ctx context.Context, v DiskType_SdkV2) {
 	o.DiskType = types.ListValueMust(t, vs)
 }
 
+// Describes the disk type.
 type DiskType_SdkV2 struct {
+	// All Azure Disk types that Databricks supports. See
+	// https://docs.microsoft.com/en-us/azure/storage/storage-about-disks-and-vhds-linux#types-of-disks
 	AzureDiskVolumeType types.String `tfsdk:"azure_disk_volume_type"`
-
+	// All EBS volume types that Databricks supports. See
+	// https://aws.amazon.com/ebs/details/ for details.
 	EbsVolumeType types.String `tfsdk:"ebs_volume_type"`
 }
 
@@ -7289,6 +7363,7 @@ func (o DockerBasicAuth_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type DockerImage_SdkV2 struct {
+	// Basic auth with username and password
 	BasicAuth types.List `tfsdk:"basic_auth"`
 	// URL of the docker image.
 	Url types.String `tfsdk:"url"`
@@ -7444,7 +7519,7 @@ type EditCluster_SdkV2 struct {
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -7453,6 +7528,11 @@ type EditCluster_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -7558,7 +7638,7 @@ type EditCluster_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -8600,9 +8680,12 @@ func (o *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 	o.Changes = types.ListValueMust(t, vs)
 }
 
-// The environment entity used to preserve serverless environment side panel and
-// jobs' environment for non-notebook task. In this minimal environment spec,
-// only pip dependencies are supported.
+// The environment entity used to preserve serverless environment side panel,
+// jobs' environment for non-notebook task, and DLT's environment for classic
+// and serverless pipelines. (Note: DLT uses a copied version of the Environment
+// proto below, at
+// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
+// this minimal environment spec, only pip dependencies are supported.
 type Environment_SdkV2 struct {
 	// Client version used by the environment The client is the user-facing
 	// environment of the runtime. Each client comes with a specific set of
@@ -8616,6 +8699,17 @@ type Environment_SdkV2 struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies types.List `tfsdk:"dependencies"`
+	// We renamed `client` to `environment_version` in notebook exports. This
+	// field is meant solely so that imported notebooks with
+	// `environment_version` can be deserialized correctly, in a
+	// backwards-compatible way (i.e. if `client` is specified instead of
+	// `environment_version`, it will be deserialized correctly). Do NOT use
+	// this field for any other purpose, e.g. notebook storage. This field is
+	// not yet exposed to customers (e.g. in the jobs API).
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
+	// List of jar dependencies, should be string representing volume paths. For
+	// example: `/Volumes/path/to/test.jar`.
+	JarDependencies types.List `tfsdk:"jar_dependencies"`
 }
 
 func (newState *Environment_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan Environment_SdkV2) {
@@ -8627,6 +8721,8 @@ func (newState *Environment_SdkV2) SyncEffectiveFieldsDuringRead(existingState E
 func (c Environment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["client"] = attrs["client"].SetRequired()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
+	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()
 
 	return attrs
 }
@@ -8640,7 +8736,8 @@ func (c Environment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.A
 // SDK values.
 func (a Environment_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"dependencies": reflect.TypeOf(types.String{}),
+		"dependencies":     reflect.TypeOf(types.String{}),
+		"jar_dependencies": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8651,8 +8748,10 @@ func (o Environment_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectVa
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client":       o.Client,
-			"dependencies": o.Dependencies,
+			"client":              o.Client,
+			"dependencies":        o.Dependencies,
+			"environment_version": o.EnvironmentVersion,
+			"jar_dependencies":    o.JarDependencies,
 		})
 }
 
@@ -8662,6 +8761,10 @@ func (o Environment_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"client": types.StringType,
 			"dependencies": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"environment_version": types.StringType,
+			"jar_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
 		},
@@ -8694,6 +8797,32 @@ func (o *Environment_SdkV2) SetDependencies(ctx context.Context, v []types.Strin
 	o.Dependencies = types.ListValueMust(t, vs)
 }
 
+// GetJarDependencies returns the value of the JarDependencies field in Environment_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *Environment_SdkV2) GetJarDependencies(ctx context.Context) ([]types.String, bool) {
+	if o.JarDependencies.IsNull() || o.JarDependencies.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.JarDependencies.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetJarDependencies sets the value of the JarDependencies field in Environment_SdkV2.
+func (o *Environment_SdkV2) SetJarDependencies(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["jar_dependencies"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.JarDependencies = types.ListValueMust(t, vs)
+}
+
 type EventDetails_SdkV2 struct {
 	// * For created clusters, the attributes of the cluster. * For edited
 	// clusters, the new attributes of the cluster.
@@ -8706,7 +8835,7 @@ type EventDetails_SdkV2 struct {
 	CurrentNumVcpus types.Int64 `tfsdk:"current_num_vcpus"`
 	// The current number of nodes in the cluster.
 	CurrentNumWorkers types.Int64 `tfsdk:"current_num_workers"`
-	// <needs content added>
+
 	DidNotExpandReason types.String `tfsdk:"did_not_expand_reason"`
 	// Current disk size in bytes
 	DiskSize types.Int64 `tfsdk:"disk_size"`
@@ -8715,7 +8844,7 @@ type EventDetails_SdkV2 struct {
 	// Whether or not a blocklisted node should be terminated. For
 	// ClusterEventType NODE_BLACKLISTED.
 	EnableTerminationForNodeBlocklisted types.Bool `tfsdk:"enable_termination_for_node_blocklisted"`
-	// <needs content added>
+
 	FreeSpace types.Int64 `tfsdk:"free_space"`
 	// List of global and cluster init scripts associated with this cluster
 	// event.
@@ -9026,12 +9155,13 @@ func (o *EventDetails_SdkV2) SetReason(ctx context.Context, v TerminationReason_
 	o.Reason = types.ListValueMust(t, vs)
 }
 
+// Attributes set during cluster creation which are related to GCP.
 type GcpAttributes_SdkV2 struct {
-	// This field determines whether the instance pool will contain preemptible
-	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
-	// if the former is unavailable.
+	// This field determines whether the spark executors will be scheduled to
+	// run on preemptible VMs, on-demand VMs, or preemptible VMs with a fallback
+	// to on-demand VMs if the former is unavailable.
 	Availability types.String `tfsdk:"availability"`
-	// boot disk size in GB
+	// Boot disk size in GB
 	BootDiskSize types.Int64 `tfsdk:"boot_disk_size"`
 	// If provided, the cluster will impersonate the google service account when
 	// accessing gcloud services (like GCS). The google service account must
@@ -9048,11 +9178,11 @@ type GcpAttributes_SdkV2 struct {
 	// This field determines whether the spark executors will be scheduled to
 	// run on preemptible VMs (when set to true) versus standard compute engine
 	// VMs (when set to false; default). Note: Soon to be deprecated, use the
-	// availability field instead.
+	// 'availability' field instead.
 	UsePreemptibleExecutors types.Bool `tfsdk:"use_preemptible_executors"`
 	// Identifier for the availability zone in which the cluster resides. This
 	// can be one of the following: - "HA" => High availability, spread nodes
-	// across availability zones for a Databricks deployment region [default] -
+	// across availability zones for a Databricks deployment region [default]. -
 	// "AUTO" => Databricks picks an availability zone to schedule the cluster
 	// on. - A GCP availability zone => Pick One of the available zones for
 	// (machine type + region) from
@@ -9118,6 +9248,7 @@ func (o GcpAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage location in Google Cloud Platform's GCS
 type GcsStorageInfo_SdkV2 struct {
 	// GCS destination/URI, e.g. `gs://my-bucket/some-prefix`
 	Destination types.String `tfsdk:"destination"`
@@ -9678,15 +9809,29 @@ type GetEvents_SdkV2 struct {
 	// An optional set of event types to filter on. If empty, all event types
 	// are returned.
 	EventTypes types.List `tfsdk:"event_types"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The maximum number of events to include in a page of events. Defaults to
 	// 50, and maximum allowed value is 500.
 	Limit types.Int64 `tfsdk:"limit"`
+	// Deprecated: use page_token in combination with page_size instead.
+	//
 	// The offset in the result set. Defaults to 0 (no offset). When an offset
 	// is specified and the results are requested in descending order, the
 	// end_time field is required.
 	Offset types.Int64 `tfsdk:"offset"`
 	// The order to list events in; either "ASC" or "DESC". Defaults to "DESC".
 	Order types.String `tfsdk:"order"`
+	// The maximum number of events to include in a page of events. The server
+	// may further constrain the maximum number of results returned in a single
+	// page. If the page_size is empty or 0, the server will decide the number
+	// of results to be returned. The field has to be in the range [0,500]. If
+	// the value is outside the range, the server enforces 0 or 500.
+	PageSize types.Int64 `tfsdk:"page_size"`
+	// Use next_page_token or prev_page_token returned from the previous request
+	// to list the next or previous page of events respectively. If page_token
+	// is empty, the first page is returned.
+	PageToken types.String `tfsdk:"page_token"`
 	// The start time in epoch milliseconds. If empty, returns events starting
 	// from the beginning of time.
 	StartTime types.Int64 `tfsdk:"start_time"`
@@ -9705,6 +9850,8 @@ func (c GetEvents_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["limit"] = attrs["limit"].SetOptional()
 	attrs["offset"] = attrs["offset"].SetOptional()
 	attrs["order"] = attrs["order"].SetOptional()
+	attrs["page_size"] = attrs["page_size"].SetOptional()
+	attrs["page_token"] = attrs["page_token"].SetOptional()
 	attrs["start_time"] = attrs["start_time"].SetOptional()
 
 	return attrs
@@ -9736,6 +9883,8 @@ func (o GetEvents_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"limit":       o.Limit,
 			"offset":      o.Offset,
 			"order":       o.Order,
+			"page_size":   o.PageSize,
+			"page_token":  o.PageToken,
 			"start_time":  o.StartTime,
 		})
 }
@@ -9752,6 +9901,8 @@ func (o GetEvents_SdkV2) Type(ctx context.Context) attr.Type {
 			"limit":      types.Int64Type,
 			"offset":     types.Int64Type,
 			"order":      types.StringType,
+			"page_size":  types.Int64Type,
+			"page_token": types.StringType,
 			"start_time": types.Int64Type,
 		},
 	}
@@ -9784,11 +9935,22 @@ func (o *GetEvents_SdkV2) SetEventTypes(ctx context.Context, v []types.String) {
 }
 
 type GetEventsResponse_SdkV2 struct {
-	// <content needs to be added>
 	Events types.List `tfsdk:"events"`
+	// Deprecated: use next_page_token or prev_page_token instead.
+	//
 	// The parameters required to retrieve the next page of events. Omitted if
 	// there are no more events to read.
 	NextPage types.List `tfsdk:"next_page"`
+	// This field represents the pagination token to retrieve the next page of
+	// results. If the value is "", it means no further results for the request.
+	NextPageToken types.String `tfsdk:"next_page_token"`
+	// This field represents the pagination token to retrieve the previous page
+	// of results. If the value is "", it means no further results for the
+	// request.
+	PrevPageToken types.String `tfsdk:"prev_page_token"`
+	// Deprecated: Returns 0 when request uses page_token. Will start returning
+	// zero when request uses offset/limit soon.
+	//
 	// The total number of events filtered by the start_time, end_time, and
 	// event_types.
 	TotalCount types.Int64 `tfsdk:"total_count"`
@@ -9804,6 +9966,8 @@ func (c GetEventsResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["events"] = attrs["events"].SetOptional()
 	attrs["next_page"] = attrs["next_page"].SetOptional()
 	attrs["next_page"] = attrs["next_page"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["next_page_token"] = attrs["next_page_token"].SetOptional()
+	attrs["prev_page_token"] = attrs["prev_page_token"].SetOptional()
 	attrs["total_count"] = attrs["total_count"].SetOptional()
 
 	return attrs
@@ -9830,9 +9994,11 @@ func (o GetEventsResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"events":      o.Events,
-			"next_page":   o.NextPage,
-			"total_count": o.TotalCount,
+			"events":          o.Events,
+			"next_page":       o.NextPage,
+			"next_page_token": o.NextPageToken,
+			"prev_page_token": o.PrevPageToken,
+			"total_count":     o.TotalCount,
 		})
 }
 
@@ -9846,7 +10012,9 @@ func (o GetEventsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			"next_page": basetypes.ListType{
 				ElemType: GetEvents_SdkV2{}.Type(ctx),
 			},
-			"total_count": types.Int64Type,
+			"next_page_token": types.StringType,
+			"prev_page_token": types.StringType,
+			"total_count":     types.Int64Type,
 		},
 	}
 }
@@ -9953,7 +10121,7 @@ type GetInstancePool_SdkV2 struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Tags that are added by Databricks regardless of any `custom_tags`,
+	// Tags that are added by Databricks regardless of any ``custom_tags``,
 	// including:
 	//
 	// - Vendor: Databricks
@@ -11046,11 +11214,16 @@ func (o GlobalInitScriptUpdateRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type InitScriptEventDetails_SdkV2 struct {
-	// The cluster scoped init scripts associated with this cluster event
+	// The cluster scoped init scripts associated with this cluster event.
 	Cluster types.List `tfsdk:"cluster"`
-	// The global init scripts associated with this cluster event
+	// The global init scripts associated with this cluster event.
 	Global types.List `tfsdk:"global"`
-	// The private ip address of the node where the init scripts were run.
+	// The private ip of the node we are reporting init script execution details
+	// for (we will select the execution details from only one node rather than
+	// reporting the execution details from every node to keep these event
+	// details small)
+	//
+	// This should only be defined for the INIT_SCRIPTS_FINISHED event
 	ReportedForNode types.String `tfsdk:"reported_for_node"`
 }
 
@@ -11162,89 +11335,31 @@ func (o *InitScriptEventDetails_SdkV2) SetGlobal(ctx context.Context, v []InitSc
 	o.Global = types.ListValueMust(t, vs)
 }
 
-type InitScriptExecutionDetails_SdkV2 struct {
-	// Addition details regarding errors.
-	ErrorMessage types.String `tfsdk:"error_message"`
-	// The duration of the script execution in seconds.
-	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds"`
-	// The current status of the script
-	Status types.String `tfsdk:"status"`
-}
-
-func (newState *InitScriptExecutionDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptExecutionDetails_SdkV2) {
-}
-
-func (newState *InitScriptExecutionDetails_SdkV2) SyncEffectiveFieldsDuringRead(existingState InitScriptExecutionDetails_SdkV2) {
-}
-
-func (c InitScriptExecutionDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["error_message"] = attrs["error_message"].SetOptional()
-	attrs["execution_duration_seconds"] = attrs["execution_duration_seconds"].SetOptional()
-	attrs["status"] = attrs["status"].SetOptional()
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in InitScriptExecutionDetails.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a InitScriptExecutionDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, InitScriptExecutionDetails_SdkV2
-// only implements ToObjectValue() and Type().
-func (o InitScriptExecutionDetails_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{
-			"error_message":              o.ErrorMessage,
-			"execution_duration_seconds": o.ExecutionDurationSeconds,
-			"status":                     o.Status,
-		})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o InitScriptExecutionDetails_SdkV2) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"error_message":              types.StringType,
-			"execution_duration_seconds": types.Int64Type,
-			"status":                     types.StringType,
-		},
-	}
-}
-
+// Config for an individual init script Next ID: 11
 type InitScriptInfo_SdkV2 struct {
-	// destination needs to be provided. e.g. `{ "abfss" : { "destination" :
-	// "abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>"
-	// } }
+	// destination needs to be provided, e.g.
+	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`
 	Abfss types.List `tfsdk:"abfss"`
-	// destination needs to be provided. e.g. `{ "dbfs" : { "destination" :
+	// destination needs to be provided. e.g. `{ "dbfs": { "destination" :
 	// "dbfs:/home/cluster_log" } }`
 	Dbfs types.List `tfsdk:"dbfs"`
-	// destination needs to be provided. e.g. `{ "file" : { "destination" :
+	// destination needs to be provided, e.g. `{ "file": { "destination":
 	// "file:/my/local/file.sh" } }`
 	File types.List `tfsdk:"file"`
-	// destination needs to be provided. e.g. `{ "gcs": { "destination":
+	// destination needs to be provided, e.g. `{ "gcs": { "destination":
 	// "gs://my-bucket/file.sh" } }`
 	Gcs types.List `tfsdk:"gcs"`
 	// destination and either the region or endpoint need to be provided. e.g.
-	// `{ "s3": { "destination" : "s3://cluster_log_bucket/prefix", "region" :
-	// "us-west-2" } }` Cluster iam role is used to access s3, please make sure
-	// the cluster iam role in `instance_profile_arn` has permission to write
-	// data to the s3 destination.
+	// `{ \"s3\": { \"destination\": \"s3://cluster_log_bucket/prefix\",
+	// \"region\": \"us-west-2\" } }` Cluster iam role is used to access s3,
+	// please make sure the cluster iam role in `instance_profile_arn` has
+	// permission to write data to the s3 destination.
 	S3 types.List `tfsdk:"s3"`
-	// destination needs to be provided. e.g. `{ "volumes" : { "destination" :
-	// "/Volumes/my-init.sh" } }`
+	// destination needs to be provided. e.g. `{ \"volumes\" : { \"destination\"
+	// : \"/Volumes/my-init.sh\" } }`
 	Volumes types.List `tfsdk:"volumes"`
-	// destination needs to be provided. e.g. `{ "workspace" : { "destination" :
-	// "/Users/user1@databricks.com/my-init.sh" } }`
+	// destination needs to be provided, e.g. `{ "workspace": { "destination":
+	// "/cluster-init-scripts/setup-datadog.sh" } }`
 	Workspace types.List `tfsdk:"workspace"`
 }
 
@@ -11521,10 +11636,38 @@ func (o *InitScriptInfo_SdkV2) SetWorkspace(ctx context.Context, v WorkspaceStor
 }
 
 type InitScriptInfoAndExecutionDetails_SdkV2 struct {
-	// Details about the script
-	ExecutionDetails types.List `tfsdk:"execution_details"`
-	// The script
-	Script types.List `tfsdk:"script"`
+	// destination needs to be provided, e.g.
+	// `abfss://<container-name>@<storage-account-name>.dfs.core.windows.net/<directory-name>`
+	Abfss types.List `tfsdk:"abfss"`
+	// destination needs to be provided. e.g. `{ "dbfs": { "destination" :
+	// "dbfs:/home/cluster_log" } }`
+	Dbfs types.List `tfsdk:"dbfs"`
+	// Additional details regarding errors (such as a file not found message if
+	// the status is FAILED_FETCH). This field should only be used to provide
+	// *additional* information to the status field, not duplicate it.
+	ErrorMessage types.String `tfsdk:"error_message"`
+	// The number duration of the script execution in seconds
+	ExecutionDurationSeconds types.Int64 `tfsdk:"execution_duration_seconds"`
+	// destination needs to be provided, e.g. `{ "file": { "destination":
+	// "file:/my/local/file.sh" } }`
+	File types.List `tfsdk:"file"`
+	// destination needs to be provided, e.g. `{ "gcs": { "destination":
+	// "gs://my-bucket/file.sh" } }`
+	Gcs types.List `tfsdk:"gcs"`
+	// destination and either the region or endpoint need to be provided. e.g.
+	// `{ \"s3\": { \"destination\": \"s3://cluster_log_bucket/prefix\",
+	// \"region\": \"us-west-2\" } }` Cluster iam role is used to access s3,
+	// please make sure the cluster iam role in `instance_profile_arn` has
+	// permission to write data to the s3 destination.
+	S3 types.List `tfsdk:"s3"`
+	// The current status of the script
+	Status types.String `tfsdk:"status"`
+	// destination needs to be provided. e.g. `{ \"volumes\" : { \"destination\"
+	// : \"/Volumes/my-init.sh\" } }`
+	Volumes types.List `tfsdk:"volumes"`
+	// destination needs to be provided, e.g. `{ "workspace": { "destination":
+	// "/cluster-init-scripts/setup-datadog.sh" } }`
+	Workspace types.List `tfsdk:"workspace"`
 }
 
 func (newState *InitScriptInfoAndExecutionDetails_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan InitScriptInfoAndExecutionDetails_SdkV2) {
@@ -11534,10 +11677,23 @@ func (newState *InitScriptInfoAndExecutionDetails_SdkV2) SyncEffectiveFieldsDuri
 }
 
 func (c InitScriptInfoAndExecutionDetails_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["execution_details"] = attrs["execution_details"].SetOptional()
-	attrs["execution_details"] = attrs["execution_details"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
-	attrs["script"] = attrs["script"].SetOptional()
-	attrs["script"] = attrs["script"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["abfss"] = attrs["abfss"].SetOptional()
+	attrs["abfss"] = attrs["abfss"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["dbfs"] = attrs["dbfs"].SetOptional()
+	attrs["dbfs"] = attrs["dbfs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["error_message"] = attrs["error_message"].SetOptional()
+	attrs["execution_duration_seconds"] = attrs["execution_duration_seconds"].SetOptional()
+	attrs["file"] = attrs["file"].SetOptional()
+	attrs["file"] = attrs["file"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["gcs"] = attrs["gcs"].SetOptional()
+	attrs["gcs"] = attrs["gcs"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["s3"] = attrs["s3"].SetOptional()
+	attrs["s3"] = attrs["s3"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["status"] = attrs["status"].SetOptional()
+	attrs["volumes"] = attrs["volumes"].SetOptional()
+	attrs["volumes"] = attrs["volumes"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["workspace"] = attrs["workspace"].SetOptional()
+	attrs["workspace"] = attrs["workspace"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
 	return attrs
 }
@@ -11551,8 +11707,13 @@ func (c InitScriptInfoAndExecutionDetails_SdkV2) ApplySchemaCustomizations(attrs
 // SDK values.
 func (a InitScriptInfoAndExecutionDetails_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"execution_details": reflect.TypeOf(InitScriptExecutionDetails_SdkV2{}),
-		"script":            reflect.TypeOf(InitScriptInfo_SdkV2{}),
+		"abfss":     reflect.TypeOf(Adlsgen2Info_SdkV2{}),
+		"dbfs":      reflect.TypeOf(DbfsStorageInfo_SdkV2{}),
+		"file":      reflect.TypeOf(LocalFileInfo_SdkV2{}),
+		"gcs":       reflect.TypeOf(GcsStorageInfo_SdkV2{}),
+		"s3":        reflect.TypeOf(S3StorageInfo_SdkV2{}),
+		"volumes":   reflect.TypeOf(VolumesStorageInfo_SdkV2{}),
+		"workspace": reflect.TypeOf(WorkspaceStorageInfo_SdkV2{}),
 	}
 }
 
@@ -11563,8 +11724,16 @@ func (o InitScriptInfoAndExecutionDetails_SdkV2) ToObjectValue(ctx context.Conte
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"execution_details": o.ExecutionDetails,
-			"script":            o.Script,
+			"abfss":                      o.Abfss,
+			"dbfs":                       o.Dbfs,
+			"error_message":              o.ErrorMessage,
+			"execution_duration_seconds": o.ExecutionDurationSeconds,
+			"file":                       o.File,
+			"gcs":                        o.Gcs,
+			"s3":                         o.S3,
+			"status":                     o.Status,
+			"volumes":                    o.Volumes,
+			"workspace":                  o.Workspace,
 		})
 }
 
@@ -11572,26 +11741,44 @@ func (o InitScriptInfoAndExecutionDetails_SdkV2) ToObjectValue(ctx context.Conte
 func (o InitScriptInfoAndExecutionDetails_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"execution_details": basetypes.ListType{
-				ElemType: InitScriptExecutionDetails_SdkV2{}.Type(ctx),
+			"abfss": basetypes.ListType{
+				ElemType: Adlsgen2Info_SdkV2{}.Type(ctx),
 			},
-			"script": basetypes.ListType{
-				ElemType: InitScriptInfo_SdkV2{}.Type(ctx),
+			"dbfs": basetypes.ListType{
+				ElemType: DbfsStorageInfo_SdkV2{}.Type(ctx),
+			},
+			"error_message":              types.StringType,
+			"execution_duration_seconds": types.Int64Type,
+			"file": basetypes.ListType{
+				ElemType: LocalFileInfo_SdkV2{}.Type(ctx),
+			},
+			"gcs": basetypes.ListType{
+				ElemType: GcsStorageInfo_SdkV2{}.Type(ctx),
+			},
+			"s3": basetypes.ListType{
+				ElemType: S3StorageInfo_SdkV2{}.Type(ctx),
+			},
+			"status": types.StringType,
+			"volumes": basetypes.ListType{
+				ElemType: VolumesStorageInfo_SdkV2{}.Type(ctx),
+			},
+			"workspace": basetypes.ListType{
+				ElemType: WorkspaceStorageInfo_SdkV2{}.Type(ctx),
 			},
 		},
 	}
 }
 
-// GetExecutionDetails returns the value of the ExecutionDetails field in InitScriptInfoAndExecutionDetails_SdkV2 as
-// a InitScriptExecutionDetails_SdkV2 value.
+// GetAbfss returns the value of the Abfss field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a Adlsgen2Info_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetExecutionDetails(ctx context.Context) (InitScriptExecutionDetails_SdkV2, bool) {
-	var e InitScriptExecutionDetails_SdkV2
-	if o.ExecutionDetails.IsNull() || o.ExecutionDetails.IsUnknown() {
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetAbfss(ctx context.Context) (Adlsgen2Info_SdkV2, bool) {
+	var e Adlsgen2Info_SdkV2
+	if o.Abfss.IsNull() || o.Abfss.IsUnknown() {
 		return e, false
 	}
-	var v []InitScriptExecutionDetails_SdkV2
-	d := o.ExecutionDetails.ElementsAs(ctx, &v, true)
+	var v []Adlsgen2Info_SdkV2
+	d := o.Abfss.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11601,23 +11788,23 @@ func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetExecutionDetails(ctx contex
 	return v[0], true
 }
 
-// SetExecutionDetails sets the value of the ExecutionDetails field in InitScriptInfoAndExecutionDetails_SdkV2.
-func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetExecutionDetails(ctx context.Context, v InitScriptExecutionDetails_SdkV2) {
+// SetAbfss sets the value of the Abfss field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetAbfss(ctx context.Context, v Adlsgen2Info_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["execution_details"]
-	o.ExecutionDetails = types.ListValueMust(t, vs)
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["abfss"]
+	o.Abfss = types.ListValueMust(t, vs)
 }
 
-// GetScript returns the value of the Script field in InitScriptInfoAndExecutionDetails_SdkV2 as
-// a InitScriptInfo_SdkV2 value.
+// GetDbfs returns the value of the Dbfs field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a DbfsStorageInfo_SdkV2 value.
 // If the field is unknown or null, the boolean return value is false.
-func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetScript(ctx context.Context) (InitScriptInfo_SdkV2, bool) {
-	var e InitScriptInfo_SdkV2
-	if o.Script.IsNull() || o.Script.IsUnknown() {
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetDbfs(ctx context.Context) (DbfsStorageInfo_SdkV2, bool) {
+	var e DbfsStorageInfo_SdkV2
+	if o.Dbfs.IsNull() || o.Dbfs.IsUnknown() {
 		return e, false
 	}
-	var v []InitScriptInfo_SdkV2
-	d := o.Script.ElementsAs(ctx, &v, true)
+	var v []DbfsStorageInfo_SdkV2
+	d := o.Dbfs.ElementsAs(ctx, &v, true)
 	if d.HasError() {
 		panic(pluginfwcommon.DiagToString(d))
 	}
@@ -11627,11 +11814,141 @@ func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetScript(ctx context.Context)
 	return v[0], true
 }
 
-// SetScript sets the value of the Script field in InitScriptInfoAndExecutionDetails_SdkV2.
-func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetScript(ctx context.Context, v InitScriptInfo_SdkV2) {
+// SetDbfs sets the value of the Dbfs field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetDbfs(ctx context.Context, v DbfsStorageInfo_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
-	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["script"]
-	o.Script = types.ListValueMust(t, vs)
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["dbfs"]
+	o.Dbfs = types.ListValueMust(t, vs)
+}
+
+// GetFile returns the value of the File field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a LocalFileInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetFile(ctx context.Context) (LocalFileInfo_SdkV2, bool) {
+	var e LocalFileInfo_SdkV2
+	if o.File.IsNull() || o.File.IsUnknown() {
+		return e, false
+	}
+	var v []LocalFileInfo_SdkV2
+	d := o.File.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFile sets the value of the File field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetFile(ctx context.Context, v LocalFileInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
+	o.File = types.ListValueMust(t, vs)
+}
+
+// GetGcs returns the value of the Gcs field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a GcsStorageInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetGcs(ctx context.Context) (GcsStorageInfo_SdkV2, bool) {
+	var e GcsStorageInfo_SdkV2
+	if o.Gcs.IsNull() || o.Gcs.IsUnknown() {
+		return e, false
+	}
+	var v []GcsStorageInfo_SdkV2
+	d := o.Gcs.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGcs sets the value of the Gcs field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetGcs(ctx context.Context, v GcsStorageInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["gcs"]
+	o.Gcs = types.ListValueMust(t, vs)
+}
+
+// GetS3 returns the value of the S3 field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a S3StorageInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetS3(ctx context.Context) (S3StorageInfo_SdkV2, bool) {
+	var e S3StorageInfo_SdkV2
+	if o.S3.IsNull() || o.S3.IsUnknown() {
+		return e, false
+	}
+	var v []S3StorageInfo_SdkV2
+	d := o.S3.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetS3 sets the value of the S3 field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetS3(ctx context.Context, v S3StorageInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["s3"]
+	o.S3 = types.ListValueMust(t, vs)
+}
+
+// GetVolumes returns the value of the Volumes field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a VolumesStorageInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetVolumes(ctx context.Context) (VolumesStorageInfo_SdkV2, bool) {
+	var e VolumesStorageInfo_SdkV2
+	if o.Volumes.IsNull() || o.Volumes.IsUnknown() {
+		return e, false
+	}
+	var v []VolumesStorageInfo_SdkV2
+	d := o.Volumes.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetVolumes sets the value of the Volumes field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetVolumes(ctx context.Context, v VolumesStorageInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["volumes"]
+	o.Volumes = types.ListValueMust(t, vs)
+}
+
+// GetWorkspace returns the value of the Workspace field in InitScriptInfoAndExecutionDetails_SdkV2 as
+// a WorkspaceStorageInfo_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) GetWorkspace(ctx context.Context) (WorkspaceStorageInfo_SdkV2, bool) {
+	var e WorkspaceStorageInfo_SdkV2
+	if o.Workspace.IsNull() || o.Workspace.IsUnknown() {
+		return e, false
+	}
+	var v []WorkspaceStorageInfo_SdkV2
+	d := o.Workspace.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetWorkspace sets the value of the Workspace field in InitScriptInfoAndExecutionDetails_SdkV2.
+func (o *InitScriptInfoAndExecutionDetails_SdkV2) SetWorkspace(ctx context.Context, v WorkspaceStorageInfo_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["workspace"]
+	o.Workspace = types.ListValueMust(t, vs)
 }
 
 type InstallLibraries_SdkV2 struct {
@@ -11932,7 +12249,7 @@ type InstancePoolAndStats_SdkV2 struct {
 	//
 	// - Currently, Databricks allows at most 45 custom tags
 	CustomTags types.Map `tfsdk:"custom_tags"`
-	// Tags that are added by Databricks regardless of any `custom_tags`,
+	// Tags that are added by Databricks regardless of any ``custom_tags``,
 	// including:
 	//
 	// - Vendor: Databricks
@@ -12386,11 +12703,10 @@ func (o *InstancePoolAndStats_SdkV2) SetStatus(ctx context.Context, v InstancePo
 	o.Status = types.ListValueMust(t, vs)
 }
 
+// Attributes set during instance pool creation which are related to Amazon Web
+// Services.
 type InstancePoolAwsAttributes_SdkV2 struct {
 	// Availability type used for the spot nodes.
-	//
-	// The default value is defined by
-	// InstancePoolConf.instancePoolDefaultAwsAvailability
 	Availability types.String `tfsdk:"availability"`
 	// Calculates the bid price for AWS spot instances, as a percentage of the
 	// corresponding instance type's on-demand price. For example, if this field
@@ -12402,10 +12718,6 @@ type InstancePoolAwsAttributes_SdkV2 struct {
 	// instances whose bid price percentage matches this field will be
 	// considered. Note that, for safety, we enforce this field to be no more
 	// than 10000.
-	//
-	// The default value and documentation here should be kept consistent with
-	// CommonConf.defaultSpotBidPricePercent and
-	// CommonConf.maxSpotBidPricePercent.
 	SpotBidPricePercent types.Int64 `tfsdk:"spot_bid_price_percent"`
 	// Identifier for the availability zone/datacenter in which the cluster
 	// resides. This string will be of a form like "us-west-2a". The provided
@@ -12467,14 +12779,16 @@ func (o InstancePoolAwsAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Attributes set during instance pool creation which are related to Azure.
 type InstancePoolAzureAttributes_SdkV2 struct {
-	// Shows the Availability type used for the spot nodes.
-	//
-	// The default value is defined by
-	// InstancePoolConf.instancePoolDefaultAzureAvailability
+	// Availability type used for the spot nodes.
 	Availability types.String `tfsdk:"availability"`
-	// The default value and documentation here should be kept consistent with
-	// CommonConf.defaultSpotBidMaxPrice.
+	// With variable pricing, you have option to set a max price, in US dollars
+	// (USD) For example, the value 2 would be a max price of $2.00 USD per
+	// hour. If you set the max price to be -1, the VM won't be evicted based on
+	// price. The price for the VM will be the current price for spot or the
+	// price for a standard VM, which ever is less, as long as there is capacity
+	// and quota available.
 	SpotBidMaxPrice types.Float64 `tfsdk:"spot_bid_max_price"`
 }
 
@@ -12524,6 +12838,7 @@ func (o InstancePoolAzureAttributes_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Attributes set during instance pool creation which are related to GCP.
 type InstancePoolGcpAttributes_SdkV2 struct {
 	// This field determines whether the instance pool will contain preemptible
 	// VMs, on-demand VMs, or preemptible VMs with a fallback to on-demand VMs
@@ -13519,8 +13834,8 @@ func (o *ListAllClusterLibraryStatusesResponse_SdkV2) SetStatuses(ctx context.Co
 }
 
 type ListAvailableZonesResponse_SdkV2 struct {
-	// The availability zone if no `zone_id` is provided in the cluster creation
-	// request.
+	// The availability zone if no ``zone_id`` is provided in the cluster
+	// creation request.
 	DefaultZone types.String `tfsdk:"default_zone"`
 	// The list of available zones (e.g., ['us-west-2c', 'us-east-2']).
 	Zones types.List `tfsdk:"zones"`
@@ -14019,7 +14334,6 @@ func (o *ListClustersRequest_SdkV2) SetSortBy(ctx context.Context, v ListCluster
 }
 
 type ListClustersResponse_SdkV2 struct {
-	// <needs content added>
 	Clusters types.List `tfsdk:"clusters"`
 	// This field represents the pagination token to retrieve the next page of
 	// results. If the value is "", it means no further results for the request.
@@ -14726,9 +15040,8 @@ func (o LocalFileInfo_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type LogAnalyticsInfo_SdkV2 struct {
-	// <needs content added>
 	LogAnalyticsPrimaryKey types.String `tfsdk:"log_analytics_primary_key"`
-	// <needs content added>
+
 	LogAnalyticsWorkspaceId types.String `tfsdk:"log_analytics_workspace_id"`
 }
 
@@ -14778,6 +15091,7 @@ func (o LogAnalyticsInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// The log delivery status
 type LogSyncStatus_SdkV2 struct {
 	// The timestamp of last attempt. If the last attempt fails,
 	// `last_exception` will contain the exception in the last attempt.
@@ -14926,15 +15240,21 @@ func (o *MavenLibrary_SdkV2) SetExclusions(ctx context.Context, v []types.String
 	o.Exclusions = types.ListValueMust(t, vs)
 }
 
+// This structure embodies the machine type that hosts spark containers Note:
+// this should be an internal data structure for now It is defined in proto in
+// case we want to send it over the wire in the future (which is likely)
 type NodeInstanceType_SdkV2 struct {
+	// Unique identifier across instance types
 	InstanceTypeId types.String `tfsdk:"instance_type_id"`
-
+	// Size of the individual local disks attached to this instance (i.e. per
+	// local disk).
 	LocalDiskSizeGb types.Int64 `tfsdk:"local_disk_size_gb"`
-
+	// Number of local disks that are present on this instance.
 	LocalDisks types.Int64 `tfsdk:"local_disks"`
-
+	// Size of the individual local nvme disks attached to this instance (i.e.
+	// per local disk).
 	LocalNvmeDiskSizeGb types.Int64 `tfsdk:"local_nvme_disk_size_gb"`
-
+	// Number of local nvme disks that are present on this instance.
 	LocalNvmeDisks types.Int64 `tfsdk:"local_nvme_disks"`
 }
 
@@ -14945,7 +15265,7 @@ func (newState *NodeInstanceType_SdkV2) SyncEffectiveFieldsDuringRead(existingSt
 }
 
 func (c NodeInstanceType_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["instance_type_id"] = attrs["instance_type_id"].SetOptional()
+	attrs["instance_type_id"] = attrs["instance_type_id"].SetRequired()
 	attrs["local_disk_size_gb"] = attrs["local_disk_size_gb"].SetOptional()
 	attrs["local_disks"] = attrs["local_disks"].SetOptional()
 	attrs["local_nvme_disk_size_gb"] = attrs["local_nvme_disk_size_gb"].SetOptional()
@@ -14993,11 +15313,16 @@ func (o NodeInstanceType_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A description of a Spark node type including both the dimensions of the node
+// and the instance type on which it will be hosted.
 type NodeType_SdkV2 struct {
+	// A descriptive category for this node type. Examples include "Memory
+	// Optimized" and "Compute Optimized".
 	Category types.String `tfsdk:"category"`
 	// A string description associated with this node type, e.g., "r3.xlarge".
 	Description types.String `tfsdk:"description"`
-
+	// An optional hint at the display order of node types in the UI. Within a
+	// node type category, lowest numbers come first.
 	DisplayOrder types.Int64 `tfsdk:"display_order"`
 	// An identifier for the type of hardware that this node runs on, e.g.,
 	// "r3.2xlarge" in AWS.
@@ -15008,17 +15333,17 @@ type NodeType_SdkV2 struct {
 	// AWS specific, whether this instance supports encryption in transit, used
 	// for hipaa and pci workloads.
 	IsEncryptedInTransit types.Bool `tfsdk:"is_encrypted_in_transit"`
-
+	// Whether this is an Arm-based instance.
 	IsGraviton types.Bool `tfsdk:"is_graviton"`
-
+	// Whether this node is hidden from presentation in the UI.
 	IsHidden types.Bool `tfsdk:"is_hidden"`
-
+	// Whether this node comes with IO cache enabled by default.
 	IsIoCacheEnabled types.Bool `tfsdk:"is_io_cache_enabled"`
 	// Memory (in MB) available for this node type.
 	MemoryMb types.Int64 `tfsdk:"memory_mb"`
-
+	// A collection of node type info reported by the cloud provider
 	NodeInfo types.List `tfsdk:"node_info"`
-
+	// The NodeInstanceType object corresponding to instance_type_id
 	NodeInstanceType types.List `tfsdk:"node_instance_type"`
 	// Unique identifier for this node type.
 	NodeTypeId types.String `tfsdk:"node_type_id"`
@@ -15026,21 +15351,20 @@ type NodeType_SdkV2 struct {
 	// fractional, e.g., 2.5 cores, if the the number of cores on a machine
 	// instance is not divisible by the number of Spark nodes on that machine.
 	NumCores types.Float64 `tfsdk:"num_cores"`
-
+	// Number of GPUs available for this node type.
 	NumGpus types.Int64 `tfsdk:"num_gpus"`
 
 	PhotonDriverCapable types.Bool `tfsdk:"photon_driver_capable"`
 
 	PhotonWorkerCapable types.Bool `tfsdk:"photon_worker_capable"`
-
+	// Whether this node type support cluster tags.
 	SupportClusterTags types.Bool `tfsdk:"support_cluster_tags"`
-
+	// Whether this node type support EBS volumes. EBS volumes is disabled for
+	// node types that we could place multiple corresponding containers on the
+	// same hosting instance.
 	SupportEbsVolumes types.Bool `tfsdk:"support_ebs_volumes"`
-
+	// Whether this node type supports port forwarding.
 	SupportPortForwarding types.Bool `tfsdk:"support_port_forwarding"`
-	// Indicates if this node type can be used for an instance pool or cluster
-	// with elastic disk enabled. This is true for most node types.
-	SupportsElasticDisk types.Bool `tfsdk:"supports_elastic_disk"`
 }
 
 func (newState *NodeType_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeType_SdkV2) {
@@ -15050,7 +15374,7 @@ func (newState *NodeType_SdkV2) SyncEffectiveFieldsDuringRead(existingState Node
 }
 
 func (c NodeType_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["category"] = attrs["category"].SetOptional()
+	attrs["category"] = attrs["category"].SetRequired()
 	attrs["description"] = attrs["description"].SetRequired()
 	attrs["display_order"] = attrs["display_order"].SetOptional()
 	attrs["instance_type_id"] = attrs["instance_type_id"].SetRequired()
@@ -15072,7 +15396,6 @@ func (c NodeType_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["support_cluster_tags"] = attrs["support_cluster_tags"].SetOptional()
 	attrs["support_ebs_volumes"] = attrs["support_ebs_volumes"].SetOptional()
 	attrs["support_port_forwarding"] = attrs["support_port_forwarding"].SetOptional()
-	attrs["supports_elastic_disk"] = attrs["supports_elastic_disk"].SetOptional()
 
 	return attrs
 }
@@ -15118,7 +15441,6 @@ func (o NodeType_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"support_cluster_tags":    o.SupportClusterTags,
 			"support_ebs_volumes":     o.SupportEbsVolumes,
 			"support_port_forwarding": o.SupportPortForwarding,
-			"supports_elastic_disk":   o.SupportsElasticDisk,
 		})
 }
 
@@ -15150,7 +15472,6 @@ func (o NodeType_SdkV2) Type(ctx context.Context) attr.Type {
 			"support_cluster_tags":    types.BoolType,
 			"support_ebs_volumes":     types.BoolType,
 			"support_port_forwarding": types.BoolType,
-			"supports_elastic_disk":   types.BoolType,
 		},
 	}
 }
@@ -15207,6 +15528,7 @@ func (o *NodeType_SdkV2) SetNodeInstanceType(ctx context.Context, v NodeInstance
 	o.NodeInstanceType = types.ListValueMust(t, vs)
 }
 
+// Error message of a failed pending instances
 type PendingInstanceError_SdkV2 struct {
 	InstanceId types.String `tfsdk:"instance_id"`
 
@@ -15349,7 +15671,6 @@ func (o PermanentDeleteClusterResponse_SdkV2) Type(ctx context.Context) attr.Typ
 }
 
 type PinCluster_SdkV2 struct {
-	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
@@ -15987,7 +16308,7 @@ func (o ResizeClusterResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type RestartCluster_SdkV2 struct {
 	// The cluster to be started.
 	ClusterId types.String `tfsdk:"cluster_id"`
-	// <needs content added>
+
 	RestartUser types.String `tfsdk:"restart_user"`
 }
 
@@ -16233,6 +16554,7 @@ func (o *Results_SdkV2) SetSchema(ctx context.Context, v []types.Object) {
 	o.Schema = types.ListValueMust(t, vs)
 }
 
+// A storage location in Amazon S3
 type S3StorageInfo_SdkV2 struct {
 	// (Optional) Set canned access control list for the logs, e.g.
 	// `bucket-owner-full-control`. If `canned_cal` is set, please make sure the
@@ -16327,6 +16649,7 @@ func (o S3StorageInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Describes a specific Spark driver or executor.
 type SparkNode_SdkV2 struct {
 	// The private IP address of the host instance.
 	HostPrivateIp types.String `tfsdk:"host_private_ip"`
@@ -16343,15 +16666,8 @@ type SparkNode_SdkV2 struct {
 	// Spark JDBC server on the driver node. To communicate with the JDBC
 	// server, traffic must be manually authorized by adding security group
 	// rules to the "worker-unmanaged" security group via the AWS console.
-	//
-	// Actually it's the public DNS address of the host instance.
 	PublicDns types.String `tfsdk:"public_dns"`
 	// The timestamp (in millisecond) when the Spark node is launched.
-	//
-	// The start_timestamp is set right before the container is being launched.
-	// The timestamp when the container is placed on the ResourceManager, before
-	// its launch and setup by the NodeDaemon. This timestamp is the same as the
-	// creation timestamp in the database.
 	StartTimestamp types.Int64 `tfsdk:"start_timestamp"`
 }
 
@@ -16447,6 +16763,7 @@ func (o *SparkNode_SdkV2) SetNodeAwsAttributes(ctx context.Context, v SparkNodeA
 	o.NodeAwsAttributes = types.ListValueMust(t, vs)
 }
 
+// Attributes specific to AWS for a Spark node.
 type SparkNodeAwsAttributes_SdkV2 struct {
 	// Whether this node is on an Amazon spot instance.
 	IsSpot types.Bool `tfsdk:"is_spot"`
@@ -16855,7 +17172,6 @@ func (o UninstallLibrariesResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type UnpinCluster_SdkV2 struct {
-	// <needs content added>
 	ClusterId types.String `tfsdk:"cluster_id"`
 }
 
@@ -16948,11 +17264,20 @@ type UpdateCluster_SdkV2 struct {
 	Cluster types.List `tfsdk:"cluster"`
 	// ID of the cluster.
 	ClusterId types.String `tfsdk:"cluster_id"`
-	// Specifies which fields of the cluster will be updated. This is required
-	// in the POST request. The update mask should be supplied as a single
-	// string. To specify multiple fields, separate them with commas (no
-	// spaces). To delete a field from a cluster configuration, add it to the
-	// `update_mask` string but omit it from the `cluster` object.
+	// Used to specify which cluster attributes and size fields to update. See
+	// https://google.aip.dev/161 for more details.
+	//
+	// The field mask must be a single string, with multiple fields separated by
+	// commas (no spaces). The field path is relative to the resource object,
+	// using a dot (`.`) to navigate sub-fields (e.g., `author.given_name`).
+	// Specification of elements in sequence or map fields is not allowed, as
+	// only the entire collection field can be specified. Field names must
+	// exactly match the resource field names.
+	//
+	// A field mask of `*` indicates full replacement. It’s recommended to
+	// always explicitly list the fields being updated and avoid using `*`
+	// wildcards, as it can lead to unintended results if the API changes in the
+	// future.
 	UpdateMask types.String `tfsdk:"update_mask"`
 }
 
@@ -17103,7 +17428,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// Passthrough on standard clusters. * `LEGACY_SINGLE_USER_STANDARD`: This
 	// mode provides a way that doesn’t have UC nor passthrough enabled.
 	DataSecurityMode types.String `tfsdk:"data_security_mode"`
-
+	// Custom docker image BYOC
 	DockerImage types.List `tfsdk:"docker_image"`
 	// The optional ID of the instance pool for the driver of the cluster
 	// belongs. The pool cluster uses the instance pool with id
@@ -17112,6 +17437,11 @@ type UpdateClusterResource_SdkV2 struct {
 	// The node type of the Spark driver. Note that this field is optional; if
 	// unset, the driver node type will be set as the same value as
 	// `node_type_id` defined above.
+	//
+	// This field, along with node_type_id, should not be set if
+	// virtual_cluster_size is set. If both driver_node_type_id, node_type_id,
+	// and virtual_cluster_size are specified, driver_node_type_id and
+	// node_type_id take precedence.
 	DriverNodeTypeId types.String `tfsdk:"driver_node_type_id"`
 	// Autoscaling Local Storage: when enabled, this cluster will dynamically
 	// acquire additional disk space when its Spark workers are running low on
@@ -17217,7 +17547,7 @@ type UpdateClusterResource_SdkV2 struct {
 	// this field `use_ml_runtime`, and whether `node_type_id` is gpu node or
 	// not.
 	UseMlRuntime types.Bool `tfsdk:"use_ml_runtime"`
-
+	// Cluster Attributes showing for clusters workload types.
 	WorkloadType types.List `tfsdk:"workload_type"`
 }
 
@@ -17748,6 +18078,17 @@ func (o UpdateClusterResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type UpdateResponse_SdkV2 struct {
 }
 
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateResponse_SdkV2) {
+}
+
+func (newState *UpdateResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateResponse_SdkV2) {
+}
+
+func (c UpdateResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17775,9 +18116,11 @@ func (o UpdateResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// A storage location back by UC Volumes.
 type VolumesStorageInfo_SdkV2 struct {
-	// Unity Catalog volumes file destination, e.g.
-	// `/Volumes/catalog/schema/volume/dir/file`
+	// UC Volumes destination, e.g.
+	// `/Volumes/catalog/schema/vol1/init-scripts/setup-datadog.sh` or
+	// `dbfs:/Volumes/catalog/schema/vol1/init-scripts/setup-datadog.sh`
 	Destination types.String `tfsdk:"destination"`
 }
 
@@ -17824,6 +18167,7 @@ func (o VolumesStorageInfo_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+// Cluster Attributes showing for clusters workload types.
 type WorkloadType_SdkV2 struct {
 	// defined what type of clients can use the cluster. E.g. Notebooks, Jobs
 	Clients types.List `tfsdk:"clients"`
@@ -17903,9 +18247,9 @@ func (o *WorkloadType_SdkV2) SetClients(ctx context.Context, v ClientsTypes_SdkV
 	o.Clients = types.ListValueMust(t, vs)
 }
 
+// A storage location in Workspace Filesystem (WSFS)
 type WorkspaceStorageInfo_SdkV2 struct {
-	// workspace files destination, e.g.
-	// `/Users/user1@databricks.com/my-init.sh`
+	// wsfs destination, e.g. `workspace:/cluster-init-scripts/setup-datadog.sh`
 	Destination types.String `tfsdk:"destination"`
 }
 

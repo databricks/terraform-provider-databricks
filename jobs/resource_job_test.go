@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/databricks/databricks-sdk-go/apierr"
+	"github.com/databricks/databricks-sdk-go/experimental/mocks"
 	"github.com/databricks/databricks-sdk-go/service/compute"
 	"github.com/databricks/databricks-sdk-go/service/jobs"
 	"github.com/databricks/terraform-provider-databricks/clusters"
@@ -15,6 +16,7 @@ import (
 	"github.com/databricks/terraform-provider-databricks/qa"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -150,7 +152,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "Featurizer",
 					Tasks: []JobTaskSettings{
@@ -196,6 +198,9 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					Health: &JobHealth{
 						Rules: []JobHealthRule{
@@ -213,7 +218,7 @@ func TestResourceJobCreate_MultiTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -297,7 +302,7 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "Featurizer",
 					Tasks: []JobTaskSettings{
@@ -354,6 +359,9 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					Health: &JobHealth{
 						Rules: []JobHealthRule{
@@ -371,7 +379,7 @@ func TestResourceJobCreate_TaskOrder(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -479,7 +487,7 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "ConditionTaskTesting",
 					Tasks: []JobTaskSettings{
@@ -492,6 +500,9 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 				},
 				Response: Job{
@@ -500,7 +511,7 @@ func TestResourceJobCreate_ConditionTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=231",
+				Resource: "/api/2.2/jobs/get?job_id=231",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -541,7 +552,7 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "Foreach-task-testing",
 					Tasks: []JobTaskSettings{
@@ -560,6 +571,9 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 				},
 				Response: Job{
@@ -568,7 +582,7 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -609,12 +623,129 @@ func TestResourceJobCreate_ForEachTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "789", d.Id())
 }
+func TestResourceJobCreate_PowerBiTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
+			e := w.GetMockJobsAPI().EXPECT()
+			e.Create(mock.Anything, jobs.CreateJob{
+				Name:              "power_bi_task_name",
+				MaxConcurrentRuns: 1,
+				Queue: &jobs.QueueSettings{
+					Enabled: false,
+				},
+				Tasks: []jobs.Task{
+					{
+						TaskKey: "power_bi_task_key",
+						PowerBiTask: &jobs.PowerBiTask{
+							ConnectionResourceName: "test-connection",
+							PowerBiModel: &jobs.PowerBiModel{
+								AuthenticationMethod: jobs.AuthenticationMethodOauth,
+								ModelName:            "TestModel",
+								OverwriteExisting:    true,
+								StorageMode:          jobs.StorageModeDirectQuery,
+								WorkspaceName:        "TestWorkspace",
+							},
+							RefreshAfterUpdate: true,
+							Tables: []jobs.PowerBiTable{
+								{
+									Catalog:     "TestCatalog",
+									Name:        "TestTable1",
+									Schema:      "TestSchema",
+									StorageMode: jobs.StorageModeDirectQuery,
+								},
+								{
+									Catalog:     "TestCatalog",
+									Name:        "TestTable2",
+									Schema:      "TestSchema",
+									StorageMode: jobs.StorageModeDual,
+								},
+							},
+							WarehouseId: "12345",
+						},
+					},
+				},
+			}).
+				Return(&jobs.CreateResponse{
+					JobId: 789,
+				}, nil)
+			e.GetByJobId(mock.Anything, int64(789)).Return(&jobs.Job{
+				JobId: 789,
+				Settings: &jobs.JobSettings{
+					Name: "power_bi_task_name",
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "power_bi_task_key",
+							PowerBiTask: &jobs.PowerBiTask{
+								ConnectionResourceName: "test-connection",
+								PowerBiModel: &jobs.PowerBiModel{
+									AuthenticationMethod: jobs.AuthenticationMethodOauth,
+									ModelName:            "TestModel",
+									OverwriteExisting:    true,
+									StorageMode:          jobs.StorageModeDirectQuery,
+									WorkspaceName:        "TestWorkspace",
+								},
+								RefreshAfterUpdate: true,
+								Tables: []jobs.PowerBiTable{
+									{
+										Catalog:     "TestCatalog",
+										Name:        "TestTable1",
+										Schema:      "TestSchema",
+										StorageMode: jobs.StorageModeDirectQuery,
+									},
+									{
+										Catalog:     "TestCatalog",
+										Name:        "TestTable2",
+										Schema:      "TestSchema",
+										StorageMode: jobs.StorageModeDual,
+									},
+								},
+								WarehouseId: "12345",
+							},
+						},
+					},
+				},
+			}, nil)
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "power_bi_task_name"
+		task {
+			task_key = "power_bi_task_key"
+			power_bi_task {
+				connection_resource_name = "test-connection"
+				power_bi_model {
+					authentication_method = "OAUTH"
+					model_name = "TestModel"
+					overwrite_existing = true
+					storage_mode = "DIRECT_QUERY"
+					workspace_name = "TestWorkspace"
+				}
+				refresh_after_update = true
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable1"
+					schema = "TestSchema"
+					storage_mode = "DIRECT_QUERY"
+				}
+				tables {
+					catalog = "TestCatalog"
+					name = "TestTable2"
+					schema = "TestSchema"
+					storage_mode = "DUAL"
+				}
+				warehouse_id = "12345"
+			}
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
 func TestResourceJobCreate_JobParameters(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "JobParameterTesting",
 					Tasks: []JobTaskSettings{
@@ -624,6 +755,9 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 						{
 							TaskKey: "b",
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					MaxConcurrentRuns: 1,
 					Parameters: []jobs.JobParameterDefinition{
@@ -643,7 +777,7 @@ func TestResourceJobCreate_JobParameters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=231",
+				Resource: "/api/2.2/jobs/get?job_id=231",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -700,7 +834,7 @@ func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name:              "JobParameterTesting",
 					MaxConcurrentRuns: 1,
@@ -708,6 +842,9 @@ func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
 						{
 							TaskKey: "a",
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					Parameters: []jobs.JobParameterDefinition{
 						{
@@ -722,7 +859,7 @@ func TestResourceJobCreate_JobParameters_EmptyDefault(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=231",
+				Resource: "/api/2.2/jobs/get?job_id=231",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -799,7 +936,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "JobClustered",
 					Tasks: []JobTaskSettings{
@@ -832,6 +969,9 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 					MaxConcurrentRuns: 1,
 					JobClusters: []JobCluster{
 						{
@@ -858,7 +998,7 @@ func TestResourceJobCreate_JobClusters(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=17",
+				Resource: "/api/2.2/jobs/get?job_id=17",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -939,7 +1079,7 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name: "JobEnvironments",
 					Tasks: []JobTaskSettings{
@@ -950,6 +1090,9 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 								NotebookPath: "/Stuff",
 							},
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					MaxConcurrentRuns: 1,
 					Environments: []jobs.JobEnvironment{
@@ -971,7 +1114,7 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=18",
+				Resource: "/api/2.2/jobs/get?job_id=18",
 				Response: Job{
 					// good enough for mock
 					Settings: &JobSettings{
@@ -1007,12 +1150,99 @@ func TestResourceJobCreate_JobCompute(t *testing.T) {
 	assert.Equal(t, "18", d.Id())
 }
 
+func TestResourceJobCreate_DashboardTask(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.2/jobs/create",
+				ExpectedRequest: jobs.CreateJob{
+					Name:              "DashboardTask",
+					MaxConcurrentRuns: 1,
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
+					Tasks: []jobs.Task{
+						{
+							TaskKey: "a",
+							DashboardTask: &jobs.DashboardTask{
+								Subscription: &jobs.Subscription{
+									Subscribers: []jobs.SubscriptionSubscriber{
+										{UserName: "user@domain.com"},
+										{DestinationId: "Test"},
+									},
+									Paused:        true,
+									CustomSubject: "\"custom subject\"",
+								},
+								WarehouseId: "\"dca3a0ba199040eb\"",
+								DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+							},
+						},
+					},
+				},
+				Response: Job{
+					JobID: 789,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.2/jobs/get?job_id=789",
+				Response: jobs.Job{
+					JobId: 789,
+					Settings: &jobs.JobSettings{
+						Name: "DashboardTask",
+						Tasks: []jobs.Task{
+							{
+								TaskKey: "a",
+								DashboardTask: &jobs.DashboardTask{
+									Subscription: &jobs.Subscription{
+										Subscribers: []jobs.SubscriptionSubscriber{
+											{UserName: "user@domain.com"},
+											{DestinationId: "Test"},
+										},
+										Paused:        true,
+										CustomSubject: "\"custom subject\"",
+									},
+									WarehouseId: "\"dca3a0ba199040eb\"",
+									DashboardId: "3cf91a42-6217-4f3c-a6f0-345d489051b9",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceJob(),
+		HCL: `name = "DashboardTask"
+		task {
+		  task_key = "a"
+		  dashboard_task {
+			warehouse_id = "\"dca3a0ba199040eb\""
+			subscription {
+				subscribers {
+    				user_name = "user@domain.com"
+  				}
+				subscribers {
+					destination_id = "Test"
+				}
+				paused = true
+				custom_subject = "\"custom subject\""
+			}
+			dashboard_id = "3cf91a42-6217-4f3c-a6f0-345d489051b9"
+		  }
+		}`,
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "789", d.Id())
+}
+
 func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: jobs.CreateJob{
 					Name:              "TF SQL task subscriptions",
 					MaxConcurrentRuns: 1,
@@ -1047,6 +1277,9 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 				},
 				Response: Job{
 					JobID: 789,
@@ -1054,7 +1287,7 @@ func TestResourceJobCreate_SqlSubscriptions(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: jobs.Job{
 					JobId: 789,
 					Settings: &jobs.JobSettings{
@@ -1143,7 +1376,7 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Name:              "TF RunJobTask Main Job",
 					MaxConcurrentRuns: 1,
@@ -1155,6 +1388,9 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 							},
 						},
 					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
+					},
 				},
 				Response: Job{
 					JobID: 123,
@@ -1162,7 +1398,7 @@ func TestResourceJobCreate_RunJobTask(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=123",
+				Resource: "/api/2.2/jobs/get?job_id=123",
 				Response: Job{
 					JobID: 123,
 					Settings: &JobSettings{
@@ -1897,7 +2133,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/create",
+				Resource: "/api/2.2/jobs/create",
 				ExpectedRequest: JobSettings{
 					Tasks: []JobTaskSettings{
 						{
@@ -1906,6 +2142,9 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 								NotebookPath: "/GitSourcedNotebook",
 							},
 						},
+					},
+					Queue: &jobs.QueueSettings{
+						Enabled: false,
 					},
 					Name:              "GitSourceJob",
 					MaxConcurrentRuns: 1,
@@ -1926,7 +2165,7 @@ func TestResourceJobCreateFromGitSource(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -2242,7 +2481,7 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
@@ -2278,7 +2517,7 @@ func TestResourceJobUpdate_RunIfSuppressesDiffIfAllSuccess(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -2341,7 +2580,7 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
@@ -2376,7 +2615,7 @@ func TestResourceJobUpdate_RunIfDoesNotSuppressIfNotAllSuccess(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					JobID: 789,
 					Settings: &JobSettings{
@@ -2437,7 +2676,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: jobs.ResetJob{
 					JobId: 789,
 					NewSettings: jobs.JobSettings{
@@ -2470,7 +2709,7 @@ func TestResourceJobUpdate_NodeTypeToInstancePool(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: jobs.Job{
 					JobId: 789,
 					Settings: &jobs.JobSettings{
@@ -2521,7 +2760,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: jobs.UpdateJob{
 					JobId: 789,
 					NewSettings: &jobs.JobSettings{
@@ -2552,7 +2791,7 @@ func TestResourceJobUpdate_InstancePoolToNodeType(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: jobs.Job{
 					JobId: 789,
 					Settings: &jobs.JobSettings{
@@ -2603,7 +2842,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/reset",
+				Resource: "/api/2.2/jobs/reset",
 				ExpectedRequest: UpdateJobRequest{
 					JobID: 789,
 					NewSettings: &JobSettings{
@@ -2626,7 +2865,7 @@ func TestResourceJobUpdate_Tasks(t *testing.T) {
 			},
 			{
 				Method:   "GET",
-				Resource: "/api/2.1/jobs/get?job_id=789",
+				Resource: "/api/2.2/jobs/get?job_id=789",
 				Response: Job{
 					Settings: &JobSettings{
 						Tasks: []JobTaskSettings{
@@ -2900,7 +3139,7 @@ func TestResourceJobDelete(t *testing.T) {
 		Fixtures: []qa.HTTPFixture{
 			{
 				Method:   "POST",
-				Resource: "/api/2.1/jobs/delete",
+				Resource: "/api/2.2/jobs/delete",
 				ExpectedRequest: map[string]int{
 					"job_id": 789,
 				},

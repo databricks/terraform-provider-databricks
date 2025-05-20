@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,6 +17,7 @@ func DataAwsBucketPolicy() common.Resource {
 			bucket := d.Get("bucket").(string)
 			awsPartition := d.Get("aws_partition").(string)
 			databricksAwsAccountId := AwsConfig[awsPartition]["accountId"]
+			awsNamespace := AwsConfig[awsPartition]["awsNamespace"]
 
 			if databricksAwsAccountId == "" {
 				databricksAwsAccountId = AwsConfig[awsPartition]["accountId"]
@@ -37,11 +37,11 @@ func DataAwsBucketPolicy() common.Resource {
 							"s3:GetBucketLocation",
 						},
 						Resources: []string{
-							fmt.Sprintf("arn:%s:s3:::%s/*", awsPartition, bucket),
-							fmt.Sprintf("arn:%s:s3:::%s", awsPartition, bucket),
+							fmt.Sprintf("arn:%s:s3:::%s/*", awsNamespace, bucket),
+							fmt.Sprintf("arn:%s:s3:::%s", awsNamespace, bucket),
 						},
 						Principal: map[string]string{
-							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsPartition, databricksAwsAccountId),
+							"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, databricksAwsAccountId),
 						},
 					},
 				},
@@ -87,11 +87,9 @@ func DataAwsBucketPolicy() common.Resource {
 				Optional: true,
 			},
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`^[0-9a-zA-Z_-]+$`),
-					"must contain only alphanumeric, underscore, and hyphen characters"),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(AwsBucketNameRegex, AwsBucketNameRegexError),
 			},
 			"json": {
 				Type:     schema.TypeString,

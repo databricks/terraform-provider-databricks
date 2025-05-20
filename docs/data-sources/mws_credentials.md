@@ -3,11 +3,9 @@ subcategory: "Deployment"
 ---
 # databricks_mws_credentials Data Source
 
--> **Note** If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Lists all [databricks_mws_credentials](../resources/mws_credentials.md) in Databricks Account.
 
--> **Note** [`account_id`](../index.md#account_id) provider configuration property is required for this resource to work.
+-> This data source can only be used with an account-level provider!
 
 ## Example Usage
 
@@ -28,7 +26,7 @@ output "all_mws_credentials" {
 
 ## Attribute Reference
 
--> **Note** This resource has an evolving interface, which may change in future versions of the provider.
+-> This resource has an evolving interface, which may change in future versions of the provider.
 
 This data source exports the following attributes:
 

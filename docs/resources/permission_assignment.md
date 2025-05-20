@@ -3,7 +3,9 @@ subcategory: "Security"
 ---
 # databricks_permission_assignment Resource
 
-These resources are invoked in the workspace context.
+This resource is used to assign account-level users, service principals and groups to a Databricks workspace.
+
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -83,10 +85,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The resource `databricks_permission_assignment` can be imported using the principal id
+The resource `databricks_permission_assignment` can be imported using the principal id:
+
+```hcl
+import {
+  to = databricks_permission_assignment.this
+  id = "<principal_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_permission_assignment.this principal_id
+terraform import databricks_permission_assignment.this "<principal_id>"
 ```
 
 ## Related Resources

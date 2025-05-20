@@ -213,21 +213,19 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
 	// Computed fields
-	s.SchemaPath("id").SetComputed()
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
 	s.SchemaPath("cluster", "enable_local_disk_encryption").SetComputed()
-	s.SchemaPath("url").SetComputed()
 
-	s.SchemaPath("state").SetComputed()
-	s.SchemaPath("latest_updates").SetComputed()
-	s.SchemaPath("last_modified").SetComputed()
-	s.SchemaPath("health").SetComputed()
-	s.SchemaPath("cause").SetComputed()
-	s.SchemaPath("cluster_id").SetComputed()
-	s.SchemaPath("creator_user_name").SetComputed()
-	s.SchemaPath("run_as").SetComputed()
-	s.SchemaPath("run_as_user_name").SetReadOnly()
+	for _, field := range []string{"id", "state", "latest_updates", "last_modified",
+		"health", "cause", "cluster_id", "creator_user_name", "run_as", "url", "run_as_user_name"} {
+		s.SchemaPath(field).SetComputed()
+	}
+
+	// customize event_log
+	s.SchemaPath("event_log", "name").SetRequired()
+	s.SchemaPath("event_log", "catalog").SetComputed()
+	s.SchemaPath("event_log", "schema").SetComputed()
 
 	// SuppressDiff fields
 	s.SchemaPath("edition").SetSuppressDiff()
@@ -276,7 +274,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetValidateFunc(validation.StringInSlice([]string{"pro", "core", "advanced"}, true))
 
 	// RequiredWith fields
-	s.SchemaPath("gateway_definition").SetRequiredWith([]string{"gateway_definition.0.gateway_storage_name", "gateway_definition.0.gateway_storage_catalog", "gateway_definition.0.gateway_storage_schema"})
 	s.SchemaPath("ingestion_definition").SetRequiredWith([]string{"ingestion_definition.0.objects"})
 
 	return s

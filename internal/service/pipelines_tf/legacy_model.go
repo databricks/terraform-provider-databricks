@@ -52,6 +52,8 @@ type CreatePipeline_SdkV2 struct {
 	DryRun types.Bool `tfsdk:"dry_run"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
@@ -59,7 +61,7 @@ type CreatePipeline_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -79,16 +81,15 @@ type CreatePipeline_SdkV2 struct {
 	// are specified, an error is thrown.
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -113,6 +114,8 @@ func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["dry_run"] = attrs["dry_run"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -150,6 +153,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -179,6 +183,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"development":           o.Development,
 			"dry_run":               o.DryRun,
 			"edition":               o.Edition,
+			"event_log":             o.EventLog,
 			"filters":               o.Filters,
 			"gateway_definition":    o.GatewayDefinition,
 			"id":                    o.Id,
@@ -218,6 +223,9 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"development": types.BoolType,
 			"dry_run":     types.BoolType,
 			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
@@ -329,6 +337,32 @@ func (o *CreatePipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDepl
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in CreatePipeline_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in CreatePipeline_SdkV2 as
@@ -832,6 +866,8 @@ type EditPipeline_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// If present, the last-modified time of the pipeline settings before the
 	// edit. If the settings were modified after that time, then the request
 	// will fail with a conflict.
@@ -843,7 +879,7 @@ type EditPipeline_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -854,7 +890,7 @@ type EditPipeline_SdkV2 struct {
 	// Whether Photon is enabled for this pipeline.
 	Photon types.Bool `tfsdk:"photon"`
 	// Unique identifier for this pipeline.
-	PipelineId types.String `tfsdk:"pipeline_id"`
+	PipelineId types.String `tfsdk:"-"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
@@ -865,16 +901,15 @@ type EditPipeline_SdkV2 struct {
 	// are specified, an error is thrown.
 	RunAs types.List `tfsdk:"run_as"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -898,6 +933,8 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["expected_last_modified"] = attrs["expected_last_modified"].SetOptional()
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -910,7 +947,7 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["name"] = attrs["name"].SetOptional()
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
-	attrs["pipeline_id"] = attrs["pipeline_id"].SetOptional()
+	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["run_as"] = attrs["run_as"].SetOptional()
@@ -937,6 +974,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -965,6 +1003,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":             o.Deployment,
 			"development":            o.Development,
 			"edition":                o.Edition,
+			"event_log":              o.EventLog,
 			"expected_last_modified": o.ExpectedLastModified,
 			"filters":                o.Filters,
 			"gateway_definition":     o.GatewayDefinition,
@@ -1003,8 +1042,11 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"deployment": basetypes.ListType{
 				ElemType: PipelineDeployment_SdkV2{}.Type(ctx),
 			},
-			"development":            types.BoolType,
-			"edition":                types.StringType,
+			"development": types.BoolType,
+			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"expected_last_modified": types.Int64Type,
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
@@ -1118,6 +1160,32 @@ func (o *EditPipeline_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in EditPipeline_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in EditPipeline_SdkV2 as
@@ -1452,8 +1520,67 @@ func (o *ErrorDetail_SdkV2) SetExceptions(ctx context.Context, v []SerializedExc
 	o.Exceptions = types.ListValueMust(t, vs)
 }
 
+// Configurable event log parameters.
+type EventLogSpec_SdkV2 struct {
+	// The UC catalog the event log is published under.
+	Catalog types.String `tfsdk:"catalog"`
+	// The name the event log is published to in UC.
+	Name types.String `tfsdk:"name"`
+	// The UC schema the event log is published under.
+	Schema types.String `tfsdk:"schema"`
+}
+
+func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EventLogSpec_SdkV2) {
+}
+
+func (newState *EventLogSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState EventLogSpec_SdkV2) {
+}
+
+func (c EventLogSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["catalog"] = attrs["catalog"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["schema"] = attrs["schema"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in EventLogSpec.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a EventLogSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, EventLogSpec_SdkV2
+// only implements ToObjectValue() and Type().
+func (o EventLogSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"catalog": o.Catalog,
+			"name":    o.Name,
+			"schema":  o.Schema,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o EventLogSpec_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"catalog": types.StringType,
+			"name":    types.StringType,
+			"schema":  types.StringType,
+		},
+	}
+}
+
 type FileLibrary_SdkV2 struct {
-	// The absolute path of the file.
+	// The absolute path of the source code.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -2263,10 +2390,10 @@ func (newState *IngestionGatewayPipelineDefinition_SdkV2) SyncEffectiveFieldsDur
 
 func (c IngestionGatewayPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["connection_id"] = attrs["connection_id"].SetOptional()
-	attrs["connection_name"] = attrs["connection_name"].SetOptional()
-	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetOptional()
+	attrs["connection_name"] = attrs["connection_name"].SetRequired()
+	attrs["gateway_storage_catalog"] = attrs["gateway_storage_catalog"].SetRequired()
 	attrs["gateway_storage_name"] = attrs["gateway_storage_name"].SetOptional()
-	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetOptional()
+	attrs["gateway_storage_schema"] = attrs["gateway_storage_schema"].SetRequired()
 
 	return attrs
 }
@@ -2322,6 +2449,10 @@ type IngestionPipelineDefinition_SdkV2 struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// The type of the foreign source. The source type will be inferred from the
+	// source connection or ingestion gateway. This field is output only and
+	// will be ignored if provided.
+	SourceType types.String `tfsdk:"source_type"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
 	TableConfiguration types.List `tfsdk:"table_configuration"`
@@ -2337,6 +2468,7 @@ func (c IngestionPipelineDefinition_SdkV2) ApplySchemaCustomizations(attrs map[s
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -2367,6 +2499,7 @@ func (o IngestionPipelineDefinition_SdkV2) ToObjectValue(ctx context.Context) ba
 			"connection_name":      o.ConnectionName,
 			"ingestion_gateway_id": o.IngestionGatewayId,
 			"objects":              o.Objects,
+			"source_type":          o.SourceType,
 			"table_configuration":  o.TableConfiguration,
 		})
 }
@@ -2380,6 +2513,7 @@ func (o IngestionPipelineDefinition_SdkV2) Type(ctx context.Context) attr.Type {
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig_SdkV2{}.Type(ctx),
 			},
+			"source_type": types.StringType,
 			"table_configuration": basetypes.ListType{
 				ElemType: TableSpecificConfig_SdkV2{}.Type(ctx),
 			},
@@ -2462,7 +2596,7 @@ type ListPipelineEventsRequest_SdkV2 struct {
 	// with all fields in this request except max_results. An error is returned
 	// if any fields other than max_results are set when this field is set.
 	PageToken types.String `tfsdk:"-"`
-
+	// The pipeline to return events for.
 	PipelineId types.String `tfsdk:"-"`
 }
 
@@ -2979,7 +3113,7 @@ func (o ManualTrigger_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type NotebookLibrary_SdkV2 struct {
-	// The absolute path of the notebook.
+	// The absolute path of the source code.
 	Path types.String `tfsdk:"path"`
 }
 
@@ -3269,6 +3403,54 @@ func (o Origin_SdkV2) Type(ctx context.Context) attr.Type {
 			"table_id":             types.StringType,
 			"uc_resource_id":       types.StringType,
 			"update_id":            types.StringType,
+		},
+	}
+}
+
+type PathPattern_SdkV2 struct {
+	// The source code to include for pipelines
+	Include types.String `tfsdk:"include"`
+}
+
+func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PathPattern_SdkV2) {
+}
+
+func (newState *PathPattern_SdkV2) SyncEffectiveFieldsDuringRead(existingState PathPattern_SdkV2) {
+}
+
+func (c PathPattern_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include"] = attrs["include"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PathPattern.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PathPattern_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PathPattern_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PathPattern_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"include": o.Include,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PathPattern_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"include": types.StringType,
 		},
 	}
 }
@@ -4003,7 +4185,7 @@ func (newState *PipelineDeployment_SdkV2) SyncEffectiveFieldsDuringRead(existing
 }
 
 func (c PipelineDeployment_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["kind"] = attrs["kind"].SetOptional()
+	attrs["kind"] = attrs["kind"].SetRequired()
 	attrs["metadata_file_path"] = attrs["metadata_file_path"].SetOptional()
 
 	return attrs
@@ -4225,6 +4407,10 @@ type PipelineLibrary_SdkV2 struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
 	File types.List `tfsdk:"file"`
+	// The unified field to include source codes. Each entry can be a notebook
+	// path, a file path, or a folder path that ends `/**`. This field cannot be
+	// used together with `notebook` or `file`.
+	Glob types.List `tfsdk:"glob"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar"`
 	// Specification of a maven library to be installed.
@@ -4245,6 +4431,8 @@ func (newState *PipelineLibrary_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file"] = attrs["file"].SetOptional()
 	attrs["file"] = attrs["file"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["glob"] = attrs["glob"].SetOptional()
+	attrs["glob"] = attrs["glob"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["jar"] = attrs["jar"].SetOptional()
 	attrs["maven"] = attrs["maven"].SetOptional()
 	attrs["maven"] = attrs["maven"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -4265,6 +4453,7 @@ func (c PipelineLibrary_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 func (a PipelineLibrary_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file":     reflect.TypeOf(FileLibrary_SdkV2{}),
+		"glob":     reflect.TypeOf(PathPattern_SdkV2{}),
 		"maven":    reflect.TypeOf(compute_tf.MavenLibrary_SdkV2{}),
 		"notebook": reflect.TypeOf(NotebookLibrary_SdkV2{}),
 	}
@@ -4278,6 +4467,7 @@ func (o PipelineLibrary_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file":     o.File,
+			"glob":     o.Glob,
 			"jar":      o.Jar,
 			"maven":    o.Maven,
 			"notebook": o.Notebook,
@@ -4291,6 +4481,9 @@ func (o PipelineLibrary_SdkV2) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"file": basetypes.ListType{
 				ElemType: FileLibrary_SdkV2{}.Type(ctx),
+			},
+			"glob": basetypes.ListType{
+				ElemType: PathPattern_SdkV2{}.Type(ctx),
 			},
 			"jar": types.StringType,
 			"maven": basetypes.ListType{
@@ -4328,6 +4521,32 @@ func (o *PipelineLibrary_SdkV2) SetFile(ctx context.Context, v FileLibrary_SdkV2
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["file"]
 	o.File = types.ListValueMust(t, vs)
+}
+
+// GetGlob returns the value of the Glob field in PipelineLibrary_SdkV2 as
+// a PathPattern_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary_SdkV2) GetGlob(ctx context.Context) (PathPattern_SdkV2, bool) {
+	var e PathPattern_SdkV2
+	if o.Glob.IsNull() || o.Glob.IsUnknown() {
+		return e, false
+	}
+	var v []PathPattern_SdkV2
+	d := o.Glob.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGlob sets the value of the Glob field in PipelineLibrary_SdkV2.
+func (o *PipelineLibrary_SdkV2) SetGlob(ctx context.Context, v PathPattern_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["glob"]
+	o.Glob = types.ListValueMust(t, vs)
 }
 
 // GetMaven returns the value of the Maven field in PipelineLibrary_SdkV2 as
@@ -4713,6 +4932,8 @@ type PipelineSpec_SdkV2 struct {
 	Development types.Bool `tfsdk:"development"`
 	// Pipeline product edition.
 	Edition types.String `tfsdk:"edition"`
+	// Event log configuration for this pipeline
+	EventLog types.List `tfsdk:"event_log"`
 	// Filters on which Pipeline packages to include in the deployed graph.
 	Filters types.List `tfsdk:"filters"`
 	// The definition of a gateway pipeline to support change data capture.
@@ -4720,7 +4941,7 @@ type PipelineSpec_SdkV2 struct {
 	// Unique identifier for this pipeline.
 	Id types.String `tfsdk:"id"`
 	// The configuration for a managed ingestion pipeline. These settings cannot
-	// be used with the 'libraries', 'target' or 'catalog' settings.
+	// be used with the 'libraries', 'schema', 'target', or 'catalog' settings.
 	IngestionDefinition types.List `tfsdk:"ingestion_definition"`
 	// Libraries or code needed by this deployment.
 	Libraries types.List `tfsdk:"libraries"`
@@ -4733,16 +4954,15 @@ type PipelineSpec_SdkV2 struct {
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
 	// The default schema (database) where tables are read from or published to.
-	// The presence of this field implies that the pipeline is in direct
-	// publishing mode.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
-	// Target schema (database) to add tables in this pipeline to. If not
-	// specified, no data is published to the Hive metastore or Unity Catalog.
-	// To publish to Unity Catalog, also specify `catalog`.
+	// Target schema (database) to add tables in this pipeline to. Exactly one
+	// of `schema` or `target` must be specified. To publish to Unity Catalog,
+	// also specify `catalog`. This legacy field is deprecated for pipeline
+	// creation in favor of the `schema` field.
 	Target types.String `tfsdk:"target"`
 	// Which pipeline trigger to use. Deprecated: Use `continuous` instead.
 	Trigger types.List `tfsdk:"trigger"`
@@ -4765,6 +4985,8 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["deployment"] = attrs["deployment"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["development"] = attrs["development"].SetOptional()
 	attrs["edition"] = attrs["edition"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].SetOptional()
+	attrs["event_log"] = attrs["event_log"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["filters"] = attrs["filters"].SetOptional()
 	attrs["filters"] = attrs["filters"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["gateway_definition"] = attrs["gateway_definition"].SetOptional()
@@ -4800,6 +5022,7 @@ func (a PipelineSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"clusters":             reflect.TypeOf(PipelineCluster_SdkV2{}),
 		"configuration":        reflect.TypeOf(types.String{}),
 		"deployment":           reflect.TypeOf(PipelineDeployment_SdkV2{}),
+		"event_log":            reflect.TypeOf(EventLogSpec_SdkV2{}),
 		"filters":              reflect.TypeOf(Filters_SdkV2{}),
 		"gateway_definition":   reflect.TypeOf(IngestionGatewayPipelineDefinition_SdkV2{}),
 		"ingestion_definition": reflect.TypeOf(IngestionPipelineDefinition_SdkV2{}),
@@ -4826,6 +5049,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"deployment":           o.Deployment,
 			"development":          o.Development,
 			"edition":              o.Edition,
+			"event_log":            o.EventLog,
 			"filters":              o.Filters,
 			"gateway_definition":   o.GatewayDefinition,
 			"id":                   o.Id,
@@ -4862,6 +5086,9 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"development": types.BoolType,
 			"edition":     types.StringType,
+			"event_log": basetypes.ListType{
+				ElemType: EventLogSpec_SdkV2{}.Type(ctx),
+			},
 			"filters": basetypes.ListType{
 				ElemType: Filters_SdkV2{}.Type(ctx),
 			},
@@ -4970,6 +5197,32 @@ func (o *PipelineSpec_SdkV2) SetDeployment(ctx context.Context, v PipelineDeploy
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["deployment"]
 	o.Deployment = types.ListValueMust(t, vs)
+}
+
+// GetEventLog returns the value of the EventLog field in PipelineSpec_SdkV2 as
+// a EventLogSpec_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec_SdkV2) GetEventLog(ctx context.Context) (EventLogSpec_SdkV2, bool) {
+	var e EventLogSpec_SdkV2
+	if o.EventLog.IsNull() || o.EventLog.IsUnknown() {
+		return e, false
+	}
+	var v []EventLogSpec_SdkV2
+	d := o.EventLog.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetEventLog sets the value of the EventLog field in PipelineSpec_SdkV2.
+func (o *PipelineSpec_SdkV2) SetEventLog(ctx context.Context, v EventLogSpec_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["event_log"]
+	o.EventLog = types.ListValueMust(t, vs)
 }
 
 // GetFilters returns the value of the Filters field in PipelineSpec_SdkV2 as
@@ -5405,10 +5658,10 @@ func (newState *ReportSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Re
 }
 
 func (c ReportSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
-	attrs["source_url"] = attrs["source_url"].SetOptional()
+	attrs["source_url"] = attrs["source_url"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -5664,10 +5917,10 @@ func (newState *SchemaSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Sc
 }
 
 func (c SchemaSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
-	attrs["source_schema"] = attrs["source_schema"].SetOptional()
+	attrs["source_schema"] = attrs["source_schema"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -5979,6 +6232,7 @@ func (o StackFrame_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type StartUpdate_SdkV2 struct {
+	// What triggered this update.
 	Cause types.String `tfsdk:"cause"`
 	// If true, this update will reset all tables before running.
 	FullRefresh types.Bool `tfsdk:"full_refresh"`
@@ -6268,12 +6522,12 @@ func (newState *TableSpec_SdkV2) SyncEffectiveFieldsDuringRead(existingState Tab
 }
 
 func (c TableSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["destination_catalog"] = attrs["destination_catalog"].SetOptional()
-	attrs["destination_schema"] = attrs["destination_schema"].SetOptional()
+	attrs["destination_catalog"] = attrs["destination_catalog"].SetRequired()
+	attrs["destination_schema"] = attrs["destination_schema"].SetRequired()
 	attrs["destination_table"] = attrs["destination_table"].SetOptional()
 	attrs["source_catalog"] = attrs["source_catalog"].SetOptional()
 	attrs["source_schema"] = attrs["source_schema"].SetOptional()
-	attrs["source_table"] = attrs["source_table"].SetOptional()
+	attrs["source_table"] = attrs["source_table"].SetRequired()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 	attrs["table_configuration"] = attrs["table_configuration"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 
@@ -6354,6 +6608,18 @@ func (o *TableSpec_SdkV2) SetTableConfiguration(ctx context.Context, v TableSpec
 }
 
 type TableSpecificConfig_SdkV2 struct {
+	// A list of column names to be excluded for the ingestion. When not
+	// specified, include_columns fully controls what columns to be ingested.
+	// When specified, all other columns including future ones will be
+	// automatically included for ingestion. This field in mutually exclusive
+	// with `include_columns`.
+	ExcludeColumns types.List `tfsdk:"exclude_columns"`
+	// A list of column names to be included for the ingestion. When not
+	// specified, all columns except ones in exclude_columns will be included.
+	// Future columns will be automatically included. When specified, all other
+	// future columns will be automatically excluded from ingestion. This field
+	// in mutually exclusive with `exclude_columns`.
+	IncludeColumns types.List `tfsdk:"include_columns"`
 	// The primary key of the table used to apply changes.
 	PrimaryKeys types.List `tfsdk:"primary_keys"`
 	// If true, formula fields defined in the table are included in the
@@ -6374,6 +6640,8 @@ func (newState *TableSpecificConfig_SdkV2) SyncEffectiveFieldsDuringRead(existin
 }
 
 func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["exclude_columns"] = attrs["exclude_columns"].SetOptional()
+	attrs["include_columns"] = attrs["include_columns"].SetOptional()
 	attrs["primary_keys"] = attrs["primary_keys"].SetOptional()
 	attrs["salesforce_include_formula_fields"] = attrs["salesforce_include_formula_fields"].SetOptional()
 	attrs["scd_type"] = attrs["scd_type"].SetOptional()
@@ -6391,8 +6659,10 @@ func (c TableSpecificConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (a TableSpecificConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"primary_keys": reflect.TypeOf(types.String{}),
-		"sequence_by":  reflect.TypeOf(types.String{}),
+		"exclude_columns": reflect.TypeOf(types.String{}),
+		"include_columns": reflect.TypeOf(types.String{}),
+		"primary_keys":    reflect.TypeOf(types.String{}),
+		"sequence_by":     reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -6403,6 +6673,8 @@ func (o TableSpecificConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"exclude_columns":                   o.ExcludeColumns,
+			"include_columns":                   o.IncludeColumns,
 			"primary_keys":                      o.PrimaryKeys,
 			"salesforce_include_formula_fields": o.SalesforceIncludeFormulaFields,
 			"scd_type":                          o.ScdType,
@@ -6414,6 +6686,12 @@ func (o TableSpecificConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (o TableSpecificConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"exclude_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
+			"include_columns": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 			"primary_keys": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -6424,6 +6702,58 @@ func (o TableSpecificConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetExcludeColumns returns the value of the ExcludeColumns field in TableSpecificConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig_SdkV2) GetExcludeColumns(ctx context.Context) ([]types.String, bool) {
+	if o.ExcludeColumns.IsNull() || o.ExcludeColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.ExcludeColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetExcludeColumns sets the value of the ExcludeColumns field in TableSpecificConfig_SdkV2.
+func (o *TableSpecificConfig_SdkV2) SetExcludeColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["exclude_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ExcludeColumns = types.ListValueMust(t, vs)
+}
+
+// GetIncludeColumns returns the value of the IncludeColumns field in TableSpecificConfig_SdkV2 as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TableSpecificConfig_SdkV2) GetIncludeColumns(ctx context.Context) ([]types.String, bool) {
+	if o.IncludeColumns.IsNull() || o.IncludeColumns.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.IncludeColumns.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetIncludeColumns sets the value of the IncludeColumns field in TableSpecificConfig_SdkV2.
+func (o *TableSpecificConfig_SdkV2) SetIncludeColumns(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["include_columns"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.IncludeColumns = types.ListValueMust(t, vs)
 }
 
 // GetPrimaryKeys returns the value of the PrimaryKeys field in TableSpecificConfig_SdkV2 as
@@ -6675,7 +7005,7 @@ func (o *UpdateInfo_SdkV2) SetRefreshSelection(ctx context.Context, v []types.St
 
 type UpdateStateInfo_SdkV2 struct {
 	CreationTime types.String `tfsdk:"creation_time"`
-
+	// The update state.
 	State types.String `tfsdk:"state"`
 
 	UpdateId types.String `tfsdk:"update_id"`

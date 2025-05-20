@@ -5,6 +5,8 @@ subcategory: "Databricks SQL"
 
 This resource allows you to manage [Databricks SQL Alerts](https://docs.databricks.com/en/sql/user/alerts/index.html).  It supersedes [databricks_sql_alert](sql_alert.md) resource - see migration guide below for more details.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 ```hcl
@@ -200,6 +202,15 @@ resource "databricks_permissions" "alert_usage" {
 ## Import
 
 This resource can be imported using alert ID:
+
+```hcl
+import {
+  to = databricks_alert.this
+  id = "<alert-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_alert.this <alert-id>

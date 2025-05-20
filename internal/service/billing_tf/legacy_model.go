@@ -695,6 +695,10 @@ func (o *BudgetConfigurationFilterWorkspaceIdClause_SdkV2) SetValues(ctx context
 
 // Contains the BudgetPolicy details.
 type BudgetPolicy_SdkV2 struct {
+	// List of workspaces that this budget policy will be exclusively bound to.
+	// An empty binding implies that this budget policy is open to any workspace
+	// in the account.
+	BindingWorkspaceIds types.List `tfsdk:"binding_workspace_ids"`
 	// A list of tags defined by the customer. At most 20 entries are allowed
 	// per policy.
 	CustomTags types.List `tfsdk:"custom_tags"`
@@ -702,7 +706,8 @@ type BudgetPolicy_SdkV2 struct {
 	// unique.
 	PolicyId types.String `tfsdk:"policy_id"`
 	// The name of the policy. - Must be unique among active policies. - Can
-	// contain only characters from the ISO 8859-1 (latin1) set.
+	// contain only characters from the ISO 8859-1 (latin1) set. - Can't start
+	// with reserved keywords such as `databricks:default-policy`.
 	PolicyName types.String `tfsdk:"policy_name"`
 }
 
@@ -713,6 +718,7 @@ func (newState *BudgetPolicy_SdkV2) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 func (c BudgetPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["binding_workspace_ids"] = attrs["binding_workspace_ids"].SetOptional()
 	attrs["custom_tags"] = attrs["custom_tags"].SetOptional()
 	attrs["policy_id"] = attrs["policy_id"].SetComputed()
 	attrs["policy_name"] = attrs["policy_name"].SetOptional()
@@ -729,7 +735,8 @@ func (c BudgetPolicy_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // SDK values.
 func (a BudgetPolicy_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags": reflect.TypeOf(compute_tf.CustomPolicyTag_SdkV2{}),
+		"binding_workspace_ids": reflect.TypeOf(types.Int64{}),
+		"custom_tags":           reflect.TypeOf(compute_tf.CustomPolicyTag_SdkV2{}),
 	}
 }
 
@@ -740,9 +747,10 @@ func (o BudgetPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"custom_tags": o.CustomTags,
-			"policy_id":   o.PolicyId,
-			"policy_name": o.PolicyName,
+			"binding_workspace_ids": o.BindingWorkspaceIds,
+			"custom_tags":           o.CustomTags,
+			"policy_id":             o.PolicyId,
+			"policy_name":           o.PolicyName,
 		})
 }
 
@@ -750,6 +758,9 @@ func (o BudgetPolicy_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o BudgetPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"binding_workspace_ids": basetypes.ListType{
+				ElemType: types.Int64Type,
+			},
 			"custom_tags": basetypes.ListType{
 				ElemType: compute_tf.CustomPolicyTag_SdkV2{}.Type(ctx),
 			},
@@ -757,6 +768,32 @@ func (o BudgetPolicy_SdkV2) Type(ctx context.Context) attr.Type {
 			"policy_name": types.StringType,
 		},
 	}
+}
+
+// GetBindingWorkspaceIds returns the value of the BindingWorkspaceIds field in BudgetPolicy_SdkV2 as
+// a slice of types.Int64 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *BudgetPolicy_SdkV2) GetBindingWorkspaceIds(ctx context.Context) ([]types.Int64, bool) {
+	if o.BindingWorkspaceIds.IsNull() || o.BindingWorkspaceIds.IsUnknown() {
+		return nil, false
+	}
+	var v []types.Int64
+	d := o.BindingWorkspaceIds.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetBindingWorkspaceIds sets the value of the BindingWorkspaceIds field in BudgetPolicy_SdkV2.
+func (o *BudgetPolicy_SdkV2) SetBindingWorkspaceIds(ctx context.Context, v []types.Int64) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["binding_workspace_ids"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.BindingWorkspaceIds = types.ListValueMust(t, vs)
 }
 
 // GetCustomTags returns the value of the CustomTags field in BudgetPolicy_SdkV2 as

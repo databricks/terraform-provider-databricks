@@ -5,6 +5,8 @@ subcategory: "Workspace"
 
 This resource allows you to manage [Notification Destinations](https://docs.databricks.com/api/workspace/notificationdestinations). Notification destinations are used to send notifications for query alerts and jobs to destinations outside of Databricks. Only workspace admins can create, update, and delete notification destinations.
 
+-> This resource can only be used with a workspace-level provider!
+
 ## Example Usage
 
 `Email` notification destination:
@@ -102,6 +104,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 This resource can be imported by notification ID:
+
+```hcl
+import {
+  to = databricks_notification_destination.this
+  id = "<notification-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_notification_destination.this <notification-id>

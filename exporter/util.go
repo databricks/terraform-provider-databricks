@@ -271,10 +271,14 @@ func (ic *importContext) getMountsThroughCluster(
 
 func eitherString(a any, b any) string {
 	if a != nil {
-		return a.(string)
+		if t, ok := a.(string); ok {
+			return t
+		}
 	}
 	if b != nil {
-		return b.(string)
+		if t, ok := b.(string); ok {
+			return t
+		}
 	}
 	return ""
 }
@@ -307,7 +311,7 @@ func (ic *importContext) saveFileIn(dir, name string, content []byte) (string, e
 	return relativeName, nil
 }
 
-func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func defaultShouldOmitFieldFunc(_ *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, _ *resource) bool {
 	if as.Computed {
 		return true
 	} else if as.Default != nil && d.Get(pathString) == as.Default {

@@ -3,9 +3,11 @@ subcategory: "Apps"
 ---
 # databricks_app Resource
 
+[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer's Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
+
 -> This feature is in [Public Preview](https://docs.databricks.com/release-notes/release-types.html).
 
-[Databricks Apps](https://docs.databricks.com/en/dev-tools/databricks-apps/index.html) run directly on a customer’s Databricks instance, integrate with their data, use and extend Databricks services, and enable users to interact through single sign-on. This resource creates the application but does not handle app deployment, which should be handled separately as part of your CI/CD pipeline.
+-> This resource can only be used with a workspace-level provider!
 
 ## Example Usage
 
@@ -44,8 +46,9 @@ The following arguments are required:
 
 * `name` - (Required) The name of the app. The name must contain only lowercase alphanumeric characters and hyphens. It must be unique within the workspace.
 * `description` - (Optional) The description of the app.
-* `budget_policy_id` - The optional Budget Policy ID set for this resource.
+* `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 * `resources` - (Optional) A list of resources that the app have access to.
+* `user_api_scopes` - (Optional) A list of api scopes granted to the user access token.
 
 ### resources Configuration Attribute
 
@@ -89,6 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 * `service_principal_name` - name of the app service principal
 * `default_source_code_path` - The default workspace file system path of the source code from which app deployment are created. This field tracks the workspace source code path of the last active deployment.
 * `effective_budget_policy_id` - The effective budget policy ID.
+* `effective_user_api_scopes` - A list of effective api scopes granted to the user access token.
 
 ## Import
 
@@ -101,7 +105,7 @@ import {
 }
 ```
 
-or using the `terraform` CLI:
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_app.this <app_name>

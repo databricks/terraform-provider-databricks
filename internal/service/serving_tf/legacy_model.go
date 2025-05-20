@@ -83,6 +83,10 @@ func (o Ai21LabsConfig_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type AiGatewayConfig_SdkV2 struct {
+	// Configuration for traffic fallback which auto fallbacks to other served
+	// entities if the request to a served entity fails with certain error
+	// codes, to increase availability.
+	FallbackConfig types.List `tfsdk:"fallback_config"`
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
 	Guardrails types.List `tfsdk:"guardrails"`
@@ -105,6 +109,8 @@ func (newState *AiGatewayConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fallback_config"] = attrs["fallback_config"].SetOptional()
+	attrs["fallback_config"] = attrs["fallback_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["guardrails"] = attrs["guardrails"].SetOptional()
 	attrs["guardrails"] = attrs["guardrails"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
@@ -125,6 +131,7 @@ func (c AiGatewayConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsche
 // SDK values.
 func (a AiGatewayConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"fallback_config":        reflect.TypeOf(FallbackConfig_SdkV2{}),
 		"guardrails":             reflect.TypeOf(AiGatewayGuardrails_SdkV2{}),
 		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig_SdkV2{}),
 		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit_SdkV2{}),
@@ -139,6 +146,7 @@ func (o AiGatewayConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"fallback_config":        o.FallbackConfig,
 			"guardrails":             o.Guardrails,
 			"inference_table_config": o.InferenceTableConfig,
 			"rate_limits":            o.RateLimits,
@@ -150,6 +158,9 @@ func (o AiGatewayConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 func (o AiGatewayConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"fallback_config": basetypes.ListType{
+				ElemType: FallbackConfig_SdkV2{}.Type(ctx),
+			},
 			"guardrails": basetypes.ListType{
 				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
@@ -164,6 +175,32 @@ func (o AiGatewayConfig_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFallbackConfig returns the value of the FallbackConfig field in AiGatewayConfig_SdkV2 as
+// a FallbackConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *AiGatewayConfig_SdkV2) GetFallbackConfig(ctx context.Context) (FallbackConfig_SdkV2, bool) {
+	var e FallbackConfig_SdkV2
+	if o.FallbackConfig.IsNull() || o.FallbackConfig.IsUnknown() {
+		return e, false
+	}
+	var v []FallbackConfig_SdkV2
+	d := o.FallbackConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFallbackConfig sets the value of the FallbackConfig field in AiGatewayConfig_SdkV2.
+func (o *AiGatewayConfig_SdkV2) SetFallbackConfig(ctx context.Context, v FallbackConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fallback_config"]
+	o.FallbackConfig = types.ListValueMust(t, vs)
 }
 
 // GetGuardrails returns the value of the Guardrails field in AiGatewayConfig_SdkV2 as
@@ -923,6 +960,66 @@ func (o AnthropicConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type ApiKeyAuth_SdkV2 struct {
+	// The name of the API key parameter used for authentication.
+	Key types.String `tfsdk:"key"`
+	// The Databricks secret key reference for an API Key. If you prefer to
+	// paste your token directly, see `value_plaintext`.
+	Value types.String `tfsdk:"value"`
+	// The API Key provided as a plaintext string. If you prefer to reference
+	// your token using Databricks Secrets, see `value`.
+	ValuePlaintext types.String `tfsdk:"value_plaintext"`
+}
+
+func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan ApiKeyAuth_SdkV2) {
+}
+
+func (newState *ApiKeyAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState ApiKeyAuth_SdkV2) {
+}
+
+func (c ApiKeyAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["key"] = attrs["key"].SetRequired()
+	attrs["value"] = attrs["value"].SetOptional()
+	attrs["value_plaintext"] = attrs["value_plaintext"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in ApiKeyAuth.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a ApiKeyAuth_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, ApiKeyAuth_SdkV2
+// only implements ToObjectValue() and Type().
+func (o ApiKeyAuth_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"key":             o.Key,
+			"value":           o.Value,
+			"value_plaintext": o.ValuePlaintext,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o ApiKeyAuth_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"key":             types.StringType,
+			"value":           types.StringType,
+			"value_plaintext": types.StringType,
+		},
+	}
+}
+
 type AutoCaptureConfigInput_SdkV2 struct {
 	// The name of the catalog in Unity Catalog. NOTE: On update, you cannot
 	// change the catalog name if the inference table is already enabled.
@@ -1169,6 +1266,61 @@ func (o *AutoCaptureState_SdkV2) SetPayloadTable(ctx context.Context, v PayloadT
 	o.PayloadTable = types.ListValueMust(t, vs)
 }
 
+type BearerTokenAuth_SdkV2 struct {
+	// The Databricks secret key reference for a token. If you prefer to paste
+	// your token directly, see `token_plaintext`.
+	Token types.String `tfsdk:"token"`
+	// The token provided as a plaintext string. If you prefer to reference your
+	// token using Databricks Secrets, see `token`.
+	TokenPlaintext types.String `tfsdk:"token_plaintext"`
+}
+
+func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan BearerTokenAuth_SdkV2) {
+}
+
+func (newState *BearerTokenAuth_SdkV2) SyncEffectiveFieldsDuringRead(existingState BearerTokenAuth_SdkV2) {
+}
+
+func (c BearerTokenAuth_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["token"] = attrs["token"].SetOptional()
+	attrs["token_plaintext"] = attrs["token_plaintext"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in BearerTokenAuth.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a BearerTokenAuth_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, BearerTokenAuth_SdkV2
+// only implements ToObjectValue() and Type().
+func (o BearerTokenAuth_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"token":           o.Token,
+			"token_plaintext": o.TokenPlaintext,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o BearerTokenAuth_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"token":           types.StringType,
+			"token_plaintext": types.StringType,
+		},
+	}
+}
+
 // Get build logs for a served model
 type BuildLogsRequest_SdkV2 struct {
 	// The name of the serving endpoint that the served model belongs to. This
@@ -1378,11 +1530,174 @@ func (o CohereConfig_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
-type CreateServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+type CreatePtEndpointRequest_SdkV2 struct {
+	// The AI Gateway configuration for the serving endpoint.
 	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy associated with the endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
+	// The core config of the serving endpoint.
+	Config types.List `tfsdk:"config"`
+	// The name of the serving endpoint. This field is required and must be
+	// unique across a Databricks workspace. An endpoint name can consist of
+	// alphanumeric characters, dashes, and underscores.
+	Name types.String `tfsdk:"name"`
+	// Tags to be attached to the serving endpoint and automatically propagated
+	// to billing logs.
+	Tags types.List `tfsdk:"tags"`
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreatePtEndpointRequest_SdkV2) {
+}
+
+func (newState *CreatePtEndpointRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreatePtEndpointRequest_SdkV2) {
+}
+
+func (c CreatePtEndpointRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
+	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+	attrs["tags"] = attrs["tags"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CreatePtEndpointRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CreatePtEndpointRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"ai_gateway": reflect.TypeOf(AiGatewayConfig_SdkV2{}),
+		"config":     reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+		"tags":       reflect.TypeOf(EndpointTag_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CreatePtEndpointRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CreatePtEndpointRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"ai_gateway":       o.AiGateway,
+			"budget_policy_id": o.BudgetPolicyId,
+			"config":           o.Config,
+			"name":             o.Name,
+			"tags":             o.Tags,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CreatePtEndpointRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ai_gateway": basetypes.ListType{
+				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
+			},
+			"budget_policy_id": types.StringType,
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+			"tags": basetypes.ListType{
+				ElemType: EndpointTag_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetAiGateway returns the value of the AiGateway field in CreatePtEndpointRequest_SdkV2 as
+// a AiGatewayConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetAiGateway(ctx context.Context) (AiGatewayConfig_SdkV2, bool) {
+	var e AiGatewayConfig_SdkV2
+	if o.AiGateway.IsNull() || o.AiGateway.IsUnknown() {
+		return e, false
+	}
+	var v []AiGatewayConfig_SdkV2
+	d := o.AiGateway.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetAiGateway sets the value of the AiGateway field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetAiGateway(ctx context.Context, v AiGatewayConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["ai_gateway"]
+	o.AiGateway = types.ListValueMust(t, vs)
+}
+
+// GetConfig returns the value of the Config field in CreatePtEndpointRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreatePtEndpointRequest_SdkV2 as
+// a slice of EndpointTag_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePtEndpointRequest_SdkV2) GetTags(ctx context.Context) ([]EndpointTag_SdkV2, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v []EndpointTag_SdkV2
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreatePtEndpointRequest_SdkV2.
+func (o *CreatePtEndpointRequest_SdkV2) SetTags(ctx context.Context, v []EndpointTag_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.ListValueMust(t, vs)
+}
+
+type CreateServingEndpoint_SdkV2 struct {
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
+	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy to be applied to the serving endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The core config of the serving endpoint.
 	Config types.List `tfsdk:"config"`
 	// The name of the serving endpoint. This field is required and must be
@@ -1408,6 +1723,7 @@ func (newState *CreateServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(exist
 func (c CreateServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
 	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["name"] = attrs["name"].SetRequired()
@@ -1441,12 +1757,13 @@ func (o CreateServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetype
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"ai_gateway":      o.AiGateway,
-			"config":          o.Config,
-			"name":            o.Name,
-			"rate_limits":     o.RateLimits,
-			"route_optimized": o.RouteOptimized,
-			"tags":            o.Tags,
+			"ai_gateway":       o.AiGateway,
+			"budget_policy_id": o.BudgetPolicyId,
+			"config":           o.Config,
+			"name":             o.Name,
+			"rate_limits":      o.RateLimits,
+			"route_optimized":  o.RouteOptimized,
+			"tags":             o.Tags,
 		})
 }
 
@@ -1457,6 +1774,7 @@ func (o CreateServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"ai_gateway": basetypes.ListType{
 				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
+			"budget_policy_id": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: EndpointCoreConfigInput_SdkV2{}.Type(ctx),
 			},
@@ -1574,6 +1892,128 @@ func (o *CreateServingEndpoint_SdkV2) SetTags(ctx context.Context, v []EndpointT
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Tags = types.ListValueMust(t, vs)
+}
+
+// Configs needed to create a custom provider model route.
+type CustomProviderConfig_SdkV2 struct {
+	// This is a field to provide API key authentication for the custom provider
+	// API. You can only specify one authentication method.
+	ApiKeyAuth types.List `tfsdk:"api_key_auth"`
+	// This is a field to provide bearer token authentication for the custom
+	// provider API. You can only specify one authentication method.
+	BearerTokenAuth types.List `tfsdk:"bearer_token_auth"`
+	// This is a field to provide the URL of the custom provider API.
+	CustomProviderUrl types.String `tfsdk:"custom_provider_url"`
+}
+
+func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CustomProviderConfig_SdkV2) {
+}
+
+func (newState *CustomProviderConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState CustomProviderConfig_SdkV2) {
+}
+
+func (c CustomProviderConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["api_key_auth"] = attrs["api_key_auth"].SetOptional()
+	attrs["api_key_auth"] = attrs["api_key_auth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["bearer_token_auth"] = attrs["bearer_token_auth"].SetOptional()
+	attrs["bearer_token_auth"] = attrs["bearer_token_auth"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["custom_provider_url"] = attrs["custom_provider_url"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CustomProviderConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CustomProviderConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"api_key_auth":      reflect.TypeOf(ApiKeyAuth_SdkV2{}),
+		"bearer_token_auth": reflect.TypeOf(BearerTokenAuth_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CustomProviderConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o CustomProviderConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"api_key_auth":        o.ApiKeyAuth,
+			"bearer_token_auth":   o.BearerTokenAuth,
+			"custom_provider_url": o.CustomProviderUrl,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CustomProviderConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"api_key_auth": basetypes.ListType{
+				ElemType: ApiKeyAuth_SdkV2{}.Type(ctx),
+			},
+			"bearer_token_auth": basetypes.ListType{
+				ElemType: BearerTokenAuth_SdkV2{}.Type(ctx),
+			},
+			"custom_provider_url": types.StringType,
+		},
+	}
+}
+
+// GetApiKeyAuth returns the value of the ApiKeyAuth field in CustomProviderConfig_SdkV2 as
+// a ApiKeyAuth_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomProviderConfig_SdkV2) GetApiKeyAuth(ctx context.Context) (ApiKeyAuth_SdkV2, bool) {
+	var e ApiKeyAuth_SdkV2
+	if o.ApiKeyAuth.IsNull() || o.ApiKeyAuth.IsUnknown() {
+		return e, false
+	}
+	var v []ApiKeyAuth_SdkV2
+	d := o.ApiKeyAuth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetApiKeyAuth sets the value of the ApiKeyAuth field in CustomProviderConfig_SdkV2.
+func (o *CustomProviderConfig_SdkV2) SetApiKeyAuth(ctx context.Context, v ApiKeyAuth_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["api_key_auth"]
+	o.ApiKeyAuth = types.ListValueMust(t, vs)
+}
+
+// GetBearerTokenAuth returns the value of the BearerTokenAuth field in CustomProviderConfig_SdkV2 as
+// a BearerTokenAuth_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CustomProviderConfig_SdkV2) GetBearerTokenAuth(ctx context.Context) (BearerTokenAuth_SdkV2, bool) {
+	var e BearerTokenAuth_SdkV2
+	if o.BearerTokenAuth.IsNull() || o.BearerTokenAuth.IsUnknown() {
+		return e, false
+	}
+	var v []BearerTokenAuth_SdkV2
+	d := o.BearerTokenAuth.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetBearerTokenAuth sets the value of the BearerTokenAuth field in CustomProviderConfig_SdkV2.
+func (o *CustomProviderConfig_SdkV2) SetBearerTokenAuth(ctx context.Context, v BearerTokenAuth_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["bearer_token_auth"]
+	o.BearerTokenAuth = types.ListValueMust(t, vs)
 }
 
 // Details necessary to query this object's API through the DataPlane APIs.
@@ -3041,6 +3481,8 @@ type ExternalModel_SdkV2 struct {
 	AnthropicConfig types.List `tfsdk:"anthropic_config"`
 	// Cohere Config. Only required if the provider is 'cohere'.
 	CohereConfig types.List `tfsdk:"cohere_config"`
+	// Custom Provider Config. Only required if the provider is 'custom'.
+	CustomProviderConfig types.List `tfsdk:"custom_provider_config"`
 	// Databricks Model Serving Config. Only required if the provider is
 	// 'databricks-model-serving'.
 	DatabricksModelServingConfig types.List `tfsdk:"databricks_model_serving_config"`
@@ -3077,6 +3519,8 @@ func (c ExternalModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema
 	attrs["anthropic_config"] = attrs["anthropic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["cohere_config"] = attrs["cohere_config"].SetOptional()
 	attrs["cohere_config"] = attrs["cohere_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["custom_provider_config"] = attrs["custom_provider_config"].SetOptional()
+	attrs["custom_provider_config"] = attrs["custom_provider_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["databricks_model_serving_config"] = attrs["databricks_model_serving_config"].SetOptional()
 	attrs["databricks_model_serving_config"] = attrs["databricks_model_serving_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["google_cloud_vertex_ai_config"] = attrs["google_cloud_vertex_ai_config"].SetOptional()
@@ -3105,6 +3549,7 @@ func (a ExternalModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[strin
 		"amazon_bedrock_config":           reflect.TypeOf(AmazonBedrockConfig_SdkV2{}),
 		"anthropic_config":                reflect.TypeOf(AnthropicConfig_SdkV2{}),
 		"cohere_config":                   reflect.TypeOf(CohereConfig_SdkV2{}),
+		"custom_provider_config":          reflect.TypeOf(CustomProviderConfig_SdkV2{}),
 		"databricks_model_serving_config": reflect.TypeOf(DatabricksModelServingConfig_SdkV2{}),
 		"google_cloud_vertex_ai_config":   reflect.TypeOf(GoogleCloudVertexAiConfig_SdkV2{}),
 		"openai_config":                   reflect.TypeOf(OpenAiConfig_SdkV2{}),
@@ -3123,6 +3568,7 @@ func (o ExternalModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.Object
 			"amazon_bedrock_config":           o.AmazonBedrockConfig,
 			"anthropic_config":                o.AnthropicConfig,
 			"cohere_config":                   o.CohereConfig,
+			"custom_provider_config":          o.CustomProviderConfig,
 			"databricks_model_serving_config": o.DatabricksModelServingConfig,
 			"google_cloud_vertex_ai_config":   o.GoogleCloudVertexAiConfig,
 			"name":                            o.Name,
@@ -3148,6 +3594,9 @@ func (o ExternalModel_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 			"cohere_config": basetypes.ListType{
 				ElemType: CohereConfig_SdkV2{}.Type(ctx),
+			},
+			"custom_provider_config": basetypes.ListType{
+				ElemType: CustomProviderConfig_SdkV2{}.Type(ctx),
 			},
 			"databricks_model_serving_config": basetypes.ListType{
 				ElemType: DatabricksModelServingConfig_SdkV2{}.Type(ctx),
@@ -3270,6 +3719,32 @@ func (o *ExternalModel_SdkV2) SetCohereConfig(ctx context.Context, v CohereConfi
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["cohere_config"]
 	o.CohereConfig = types.ListValueMust(t, vs)
+}
+
+// GetCustomProviderConfig returns the value of the CustomProviderConfig field in ExternalModel_SdkV2 as
+// a CustomProviderConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *ExternalModel_SdkV2) GetCustomProviderConfig(ctx context.Context) (CustomProviderConfig_SdkV2, bool) {
+	var e CustomProviderConfig_SdkV2
+	if o.CustomProviderConfig.IsNull() || o.CustomProviderConfig.IsUnknown() {
+		return e, false
+	}
+	var v []CustomProviderConfig_SdkV2
+	d := o.CustomProviderConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetCustomProviderConfig sets the value of the CustomProviderConfig field in ExternalModel_SdkV2.
+func (o *ExternalModel_SdkV2) SetCustomProviderConfig(ctx context.Context, v CustomProviderConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_provider_config"]
+	o.CustomProviderConfig = types.ListValueMust(t, vs)
 }
 
 // GetDatabricksModelServingConfig returns the value of the DatabricksModelServingConfig field in ExternalModel_SdkV2 as
@@ -3430,6 +3905,59 @@ func (o ExternalModelUsageElement_SdkV2) Type(ctx context.Context) attr.Type {
 			"completion_tokens": types.Int64Type,
 			"prompt_tokens":     types.Int64Type,
 			"total_tokens":      types.Int64Type,
+		},
+	}
+}
+
+type FallbackConfig_SdkV2 struct {
+	// Whether to enable traffic fallback. When a served entity in the serving
+	// endpoint returns specific error codes (e.g. 500), the request will
+	// automatically be round-robin attempted with other served entities in the
+	// same endpoint, following the order of served entity list, until a
+	// successful response is returned. If all attempts fail, return the last
+	// response with the error code.
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
+func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan FallbackConfig_SdkV2) {
+}
+
+func (newState *FallbackConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState FallbackConfig_SdkV2) {
+}
+
+func (c FallbackConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["enabled"] = attrs["enabled"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in FallbackConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a FallbackConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, FallbackConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o FallbackConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"enabled": o.Enabled,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o FallbackConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"enabled": types.BoolType,
 		},
 	}
 }
@@ -4444,7 +4972,195 @@ func (o PayloadTable_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type PtEndpointCoreConfig_SdkV2 struct {
+	// The list of served entities under the serving endpoint config.
+	ServedEntities types.List `tfsdk:"served_entities"`
+
+	TrafficConfig types.List `tfsdk:"traffic_config"`
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtEndpointCoreConfig_SdkV2) {
+}
+
+func (newState *PtEndpointCoreConfig_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtEndpointCoreConfig_SdkV2) {
+}
+
+func (c PtEndpointCoreConfig_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["served_entities"] = attrs["served_entities"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].SetOptional()
+	attrs["traffic_config"] = attrs["traffic_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtEndpointCoreConfig.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtEndpointCoreConfig_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"served_entities": reflect.TypeOf(PtServedModel_SdkV2{}),
+		"traffic_config":  reflect.TypeOf(TrafficConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtEndpointCoreConfig_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtEndpointCoreConfig_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"served_entities": o.ServedEntities,
+			"traffic_config":  o.TrafficConfig,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtEndpointCoreConfig_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"served_entities": basetypes.ListType{
+				ElemType: PtServedModel_SdkV2{}.Type(ctx),
+			},
+			"traffic_config": basetypes.ListType{
+				ElemType: TrafficConfig_SdkV2{}.Type(ctx),
+			},
+		},
+	}
+}
+
+// GetServedEntities returns the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2 as
+// a slice of PtServedModel_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetServedEntities(ctx context.Context) ([]PtServedModel_SdkV2, bool) {
+	if o.ServedEntities.IsNull() || o.ServedEntities.IsUnknown() {
+		return nil, false
+	}
+	var v []PtServedModel_SdkV2
+	d := o.ServedEntities.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetServedEntities sets the value of the ServedEntities field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetServedEntities(ctx context.Context, v []PtServedModel_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["served_entities"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.ServedEntities = types.ListValueMust(t, vs)
+}
+
+// GetTrafficConfig returns the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2 as
+// a TrafficConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PtEndpointCoreConfig_SdkV2) GetTrafficConfig(ctx context.Context) (TrafficConfig_SdkV2, bool) {
+	var e TrafficConfig_SdkV2
+	if o.TrafficConfig.IsNull() || o.TrafficConfig.IsUnknown() {
+		return e, false
+	}
+	var v []TrafficConfig_SdkV2
+	d := o.TrafficConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTrafficConfig sets the value of the TrafficConfig field in PtEndpointCoreConfig_SdkV2.
+func (o *PtEndpointCoreConfig_SdkV2) SetTrafficConfig(ctx context.Context, v TrafficConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["traffic_config"]
+	o.TrafficConfig = types.ListValueMust(t, vs)
+}
+
+type PtServedModel_SdkV2 struct {
+	// The name of the entity to be served. The entity may be a model in the
+	// Databricks Model Registry, a model in the Unity Catalog (UC), or a
+	// function of type FEATURE_SPEC in the UC. If it is a UC object, the full
+	// name of the object should be given in the form of
+	// **catalog_name.schema_name.model_name**.
+	EntityName types.String `tfsdk:"entity_name"`
+
+	EntityVersion types.String `tfsdk:"entity_version"`
+	// The name of a served entity. It must be unique across an endpoint. A
+	// served entity name can consist of alphanumeric characters, dashes, and
+	// underscores. If not specified for an external model, this field defaults
+	// to external_model.name, with '.' and ':' replaced with '-', and if not
+	// specified for other entities, it defaults to entity_name-entity_version.
+	Name types.String `tfsdk:"name"`
+	// The number of model units to be provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan PtServedModel_SdkV2) {
+}
+
+func (newState *PtServedModel_SdkV2) SyncEffectiveFieldsDuringRead(existingState PtServedModel_SdkV2) {
+}
+
+func (c PtServedModel_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entity_name"] = attrs["entity_name"].SetRequired()
+	attrs["entity_version"] = attrs["entity_version"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PtServedModel.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PtServedModel_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PtServedModel_SdkV2
+// only implements ToObjectValue() and Type().
+func (o PtServedModel_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entity_name":             o.EntityName,
+			"entity_version":          o.EntityVersion,
+			"name":                    o.Name,
+			"provisioned_model_units": o.ProvisionedModelUnits,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PtServedModel_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entity_name":             types.StringType,
+			"entity_version":          types.StringType,
+			"name":                    types.StringType,
+			"provisioned_model_units": types.Int64Type,
+		},
+	}
+}
+
 type PutAiGatewayRequest_SdkV2 struct {
+	// Configuration for traffic fallback which auto fallbacks to other served
+	// entities if the request to a served entity fails with certain error
+	// codes, to increase availability.
+	FallbackConfig types.List `tfsdk:"fallback_config"`
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
 	Guardrails types.List `tfsdk:"guardrails"`
@@ -4470,6 +5186,8 @@ func (newState *PutAiGatewayRequest_SdkV2) SyncEffectiveFieldsDuringRead(existin
 }
 
 func (c PutAiGatewayRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fallback_config"] = attrs["fallback_config"].SetOptional()
+	attrs["fallback_config"] = attrs["fallback_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["guardrails"] = attrs["guardrails"].SetOptional()
 	attrs["guardrails"] = attrs["guardrails"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
@@ -4491,6 +5209,7 @@ func (c PutAiGatewayRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tf
 // SDK values.
 func (a PutAiGatewayRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"fallback_config":        reflect.TypeOf(FallbackConfig_SdkV2{}),
 		"guardrails":             reflect.TypeOf(AiGatewayGuardrails_SdkV2{}),
 		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig_SdkV2{}),
 		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit_SdkV2{}),
@@ -4505,6 +5224,7 @@ func (o PutAiGatewayRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"fallback_config":        o.FallbackConfig,
 			"guardrails":             o.Guardrails,
 			"inference_table_config": o.InferenceTableConfig,
 			"name":                   o.Name,
@@ -4517,6 +5237,9 @@ func (o PutAiGatewayRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.
 func (o PutAiGatewayRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"fallback_config": basetypes.ListType{
+				ElemType: FallbackConfig_SdkV2{}.Type(ctx),
+			},
 			"guardrails": basetypes.ListType{
 				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
@@ -4532,6 +5255,32 @@ func (o PutAiGatewayRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFallbackConfig returns the value of the FallbackConfig field in PutAiGatewayRequest_SdkV2 as
+// a FallbackConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayRequest_SdkV2) GetFallbackConfig(ctx context.Context) (FallbackConfig_SdkV2, bool) {
+	var e FallbackConfig_SdkV2
+	if o.FallbackConfig.IsNull() || o.FallbackConfig.IsUnknown() {
+		return e, false
+	}
+	var v []FallbackConfig_SdkV2
+	d := o.FallbackConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFallbackConfig sets the value of the FallbackConfig field in PutAiGatewayRequest_SdkV2.
+func (o *PutAiGatewayRequest_SdkV2) SetFallbackConfig(ctx context.Context, v FallbackConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fallback_config"]
+	o.FallbackConfig = types.ListValueMust(t, vs)
 }
 
 // GetGuardrails returns the value of the Guardrails field in PutAiGatewayRequest_SdkV2 as
@@ -4639,6 +5388,10 @@ func (o *PutAiGatewayRequest_SdkV2) SetUsageTrackingConfig(ctx context.Context, 
 }
 
 type PutAiGatewayResponse_SdkV2 struct {
+	// Configuration for traffic fallback which auto fallbacks to other served
+	// entities if the request to a served entity fails with certain error
+	// codes, to increase availability.
+	FallbackConfig types.List `tfsdk:"fallback_config"`
 	// Configuration for AI Guardrails to prevent unwanted data and unsafe data
 	// in requests and responses.
 	Guardrails types.List `tfsdk:"guardrails"`
@@ -4661,6 +5414,8 @@ func (newState *PutAiGatewayResponse_SdkV2) SyncEffectiveFieldsDuringRead(existi
 }
 
 func (c PutAiGatewayResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["fallback_config"] = attrs["fallback_config"].SetOptional()
+	attrs["fallback_config"] = attrs["fallback_config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["guardrails"] = attrs["guardrails"].SetOptional()
 	attrs["guardrails"] = attrs["guardrails"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["inference_table_config"] = attrs["inference_table_config"].SetOptional()
@@ -4681,6 +5436,7 @@ func (c PutAiGatewayResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]t
 // SDK values.
 func (a PutAiGatewayResponse_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
+		"fallback_config":        reflect.TypeOf(FallbackConfig_SdkV2{}),
 		"guardrails":             reflect.TypeOf(AiGatewayGuardrails_SdkV2{}),
 		"inference_table_config": reflect.TypeOf(AiGatewayInferenceTableConfig_SdkV2{}),
 		"rate_limits":            reflect.TypeOf(AiGatewayRateLimit_SdkV2{}),
@@ -4695,6 +5451,7 @@ func (o PutAiGatewayResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
+			"fallback_config":        o.FallbackConfig,
 			"guardrails":             o.Guardrails,
 			"inference_table_config": o.InferenceTableConfig,
 			"rate_limits":            o.RateLimits,
@@ -4706,6 +5463,9 @@ func (o PutAiGatewayResponse_SdkV2) ToObjectValue(ctx context.Context) basetypes
 func (o PutAiGatewayResponse_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
+			"fallback_config": basetypes.ListType{
+				ElemType: FallbackConfig_SdkV2{}.Type(ctx),
+			},
 			"guardrails": basetypes.ListType{
 				ElemType: AiGatewayGuardrails_SdkV2{}.Type(ctx),
 			},
@@ -4720,6 +5480,32 @@ func (o PutAiGatewayResponse_SdkV2) Type(ctx context.Context) attr.Type {
 			},
 		},
 	}
+}
+
+// GetFallbackConfig returns the value of the FallbackConfig field in PutAiGatewayResponse_SdkV2 as
+// a FallbackConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PutAiGatewayResponse_SdkV2) GetFallbackConfig(ctx context.Context) (FallbackConfig_SdkV2, bool) {
+	var e FallbackConfig_SdkV2
+	if o.FallbackConfig.IsNull() || o.FallbackConfig.IsUnknown() {
+		return e, false
+	}
+	var v []FallbackConfig_SdkV2
+	d := o.FallbackConfig.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetFallbackConfig sets the value of the FallbackConfig field in PutAiGatewayResponse_SdkV2.
+func (o *PutAiGatewayResponse_SdkV2) SetFallbackConfig(ctx context.Context, v FallbackConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["fallback_config"]
+	o.FallbackConfig = types.ListValueMust(t, vs)
 }
 
 // GetGuardrails returns the value of the Guardrails field in PutAiGatewayResponse_SdkV2 as
@@ -5668,6 +6454,8 @@ type ServedEntityInput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -5676,8 +6464,9 @@ type ServedEntityInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -5705,6 +6494,7 @@ func (c ServedEntityInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
@@ -5741,6 +6531,7 @@ func (o ServedEntityInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 			"max_provisioned_throughput": o.MaxProvisionedThroughput,
 			"min_provisioned_throughput": o.MinProvisionedThroughput,
 			"name":                       o.Name,
+			"provisioned_model_units":    o.ProvisionedModelUnits,
 			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
 			"workload_size":              o.WorkloadSize,
 			"workload_type":              o.WorkloadType,
@@ -5763,6 +6554,7 @@ func (o ServedEntityInput_SdkV2) Type(ctx context.Context) attr.Type {
 			"max_provisioned_throughput": types.Int64Type,
 			"min_provisioned_throughput": types.Int64Type,
 			"name":                       types.StringType,
+			"provisioned_model_units":    types.Int64Type,
 			"scale_to_zero_enabled":      types.BoolType,
 			"workload_size":              types.StringType,
 			"workload_type":              types.StringType,
@@ -5866,6 +6658,8 @@ type ServedEntityOutput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -5876,8 +6670,9 @@ type ServedEntityOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -5909,6 +6704,7 @@ func (c ServedEntityOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfs
 	attrs["max_provisioned_throughput"] = attrs["max_provisioned_throughput"].SetOptional()
 	attrs["min_provisioned_throughput"] = attrs["min_provisioned_throughput"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5952,6 +6748,7 @@ func (o ServedEntityOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 			"max_provisioned_throughput": o.MaxProvisionedThroughput,
 			"min_provisioned_throughput": o.MinProvisionedThroughput,
 			"name":                       o.Name,
+			"provisioned_model_units":    o.ProvisionedModelUnits,
 			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
 			"state":                      o.State,
 			"workload_size":              o.WorkloadSize,
@@ -5980,6 +6777,7 @@ func (o ServedEntityOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"max_provisioned_throughput": types.Int64Type,
 			"min_provisioned_throughput": types.Int64Type,
 			"name":                       types.StringType,
+			"provisioned_model_units":    types.Int64Type,
 			"scale_to_zero_enabled":      types.BoolType,
 			"state": basetypes.ListType{
 				ElemType: ServedModelState_SdkV2{}.Type(ctx),
@@ -6248,6 +7046,8 @@ type ServedModelInput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6256,8 +7056,9 @@ type ServedModelInput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6283,6 +7084,7 @@ func (c ServedModelInput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsch
 	attrs["model_name"] = attrs["model_name"].SetRequired()
 	attrs["model_version"] = attrs["model_version"].SetRequired()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetRequired()
 	attrs["workload_size"] = attrs["workload_size"].SetOptional()
 	attrs["workload_type"] = attrs["workload_type"].SetOptional()
@@ -6317,6 +7119,7 @@ func (o ServedModelInput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obj
 			"model_name":                 o.ModelName,
 			"model_version":              o.ModelVersion,
 			"name":                       o.Name,
+			"provisioned_model_units":    o.ProvisionedModelUnits,
 			"scale_to_zero_enabled":      o.ScaleToZeroEnabled,
 			"workload_size":              o.WorkloadSize,
 			"workload_type":              o.WorkloadType,
@@ -6336,6 +7139,7 @@ func (o ServedModelInput_SdkV2) Type(ctx context.Context) attr.Type {
 			"model_name":                 types.StringType,
 			"model_version":              types.StringType,
 			"name":                       types.StringType,
+			"provisioned_model_units":    types.Int64Type,
 			"scale_to_zero_enabled":      types.BoolType,
 			"workload_size":              types.StringType,
 			"workload_type":              types.StringType,
@@ -6393,6 +7197,8 @@ type ServedModelOutput_SdkV2 struct {
 	// to external_model.name, with '.' and ':' replaced with '-', and if not
 	// specified for other entities, it defaults to entity_name-entity_version.
 	Name types.String `tfsdk:"name"`
+	// The number of model units provisioned.
+	ProvisionedModelUnits types.Int64 `tfsdk:"provisioned_model_units"`
 	// Whether the compute resources for the served entity should scale down to
 	// zero.
 	ScaleToZeroEnabled types.Bool `tfsdk:"scale_to_zero_enabled"`
@@ -6403,8 +7209,9 @@ type ServedModelOutput_SdkV2 struct {
 	// single unit of provisioned concurrency can process one request at a time.
 	// Valid workload sizes are "Small" (4 - 4 provisioned concurrency),
 	// "Medium" (8 - 16 provisioned concurrency), and "Large" (16 - 64
-	// provisioned concurrency). If scale-to-zero is enabled, the lower bound of
-	// the provisioned concurrency for each workload size is 0.
+	// provisioned concurrency). Additional custom workload sizes can also be
+	// used when available in the workspace. If scale-to-zero is enabled, the
+	// lower bound of the provisioned concurrency for each workload size is 0.
 	WorkloadSize types.String `tfsdk:"workload_size"`
 	// The workload type of the served entity. The workload type selects which
 	// type of compute to use in the endpoint. The default value for this
@@ -6430,6 +7237,7 @@ func (c ServedModelOutput_SdkV2) ApplySchemaCustomizations(attrs map[string]tfsc
 	attrs["model_name"] = attrs["model_name"].SetOptional()
 	attrs["model_version"] = attrs["model_version"].SetOptional()
 	attrs["name"] = attrs["name"].SetOptional()
+	attrs["provisioned_model_units"] = attrs["provisioned_model_units"].SetOptional()
 	attrs["scale_to_zero_enabled"] = attrs["scale_to_zero_enabled"].SetOptional()
 	attrs["state"] = attrs["state"].SetOptional()
 	attrs["state"] = attrs["state"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -6460,17 +7268,18 @@ func (o ServedModelOutput_SdkV2) ToObjectValue(ctx context.Context) basetypes.Ob
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"creation_timestamp":    o.CreationTimestamp,
-			"creator":               o.Creator,
-			"environment_vars":      o.EnvironmentVars,
-			"instance_profile_arn":  o.InstanceProfileArn,
-			"model_name":            o.ModelName,
-			"model_version":         o.ModelVersion,
-			"name":                  o.Name,
-			"scale_to_zero_enabled": o.ScaleToZeroEnabled,
-			"state":                 o.State,
-			"workload_size":         o.WorkloadSize,
-			"workload_type":         o.WorkloadType,
+			"creation_timestamp":      o.CreationTimestamp,
+			"creator":                 o.Creator,
+			"environment_vars":        o.EnvironmentVars,
+			"instance_profile_arn":    o.InstanceProfileArn,
+			"model_name":              o.ModelName,
+			"model_version":           o.ModelVersion,
+			"name":                    o.Name,
+			"provisioned_model_units": o.ProvisionedModelUnits,
+			"scale_to_zero_enabled":   o.ScaleToZeroEnabled,
+			"state":                   o.State,
+			"workload_size":           o.WorkloadSize,
+			"workload_type":           o.WorkloadType,
 		})
 }
 
@@ -6483,11 +7292,12 @@ func (o ServedModelOutput_SdkV2) Type(ctx context.Context) attr.Type {
 			"environment_vars": basetypes.MapType{
 				ElemType: types.StringType,
 			},
-			"instance_profile_arn":  types.StringType,
-			"model_name":            types.StringType,
-			"model_version":         types.StringType,
-			"name":                  types.StringType,
-			"scale_to_zero_enabled": types.BoolType,
+			"instance_profile_arn":    types.StringType,
+			"model_name":              types.StringType,
+			"model_version":           types.StringType,
+			"name":                    types.StringType,
+			"provisioned_model_units": types.Int64Type,
+			"scale_to_zero_enabled":   types.BoolType,
 			"state": basetypes.ListType{
 				ElemType: ServedModelState_SdkV2{}.Type(ctx),
 			},
@@ -6709,10 +7519,12 @@ func (o ServerLogsResponse_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type ServingEndpoint_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy associated with the endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The config that is currently being served by the endpoint.
 	Config types.List `tfsdk:"config"`
 	// The timestamp when the endpoint was created in Unix time.
@@ -6743,6 +7555,7 @@ func (newState *ServingEndpoint_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 func (c ServingEndpoint_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
 	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
@@ -6782,6 +7595,7 @@ func (o ServingEndpoint_SdkV2) ToObjectValue(ctx context.Context) basetypes.Obje
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"ai_gateway":             o.AiGateway,
+			"budget_policy_id":       o.BudgetPolicyId,
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
@@ -6801,6 +7615,7 @@ func (o ServingEndpoint_SdkV2) Type(ctx context.Context) attr.Type {
 			"ai_gateway": basetypes.ListType{
 				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
+			"budget_policy_id": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: EndpointCoreConfigSummary_SdkV2{}.Type(ctx),
 			},
@@ -7086,10 +7901,12 @@ func (o *ServingEndpointAccessControlResponse_SdkV2) SetAllPermissions(ctx conte
 }
 
 type ServingEndpointDetailed_SdkV2 struct {
-	// The AI Gateway configuration for the serving endpoint. NOTE: Only
-	// external model and provisioned throughput endpoints are currently
-	// supported.
+	// The AI Gateway configuration for the serving endpoint. NOTE: External
+	// model, provisioned throughput, and pay-per-token endpoints are fully
+	// supported; agent endpoints currently only support inference tables.
 	AiGateway types.List `tfsdk:"ai_gateway"`
+	// The budget policy associated with the endpoint.
+	BudgetPolicyId types.String `tfsdk:"budget_policy_id"`
 	// The config that is currently being served by the endpoint.
 	Config types.List `tfsdk:"config"`
 	// The timestamp when the endpoint was created in Unix time.
@@ -7131,6 +7948,7 @@ func (newState *ServingEndpointDetailed_SdkV2) SyncEffectiveFieldsDuringRead(exi
 func (c ServingEndpointDetailed_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["ai_gateway"] = attrs["ai_gateway"].SetOptional()
 	attrs["ai_gateway"] = attrs["ai_gateway"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["budget_policy_id"] = attrs["budget_policy_id"].SetOptional()
 	attrs["config"] = attrs["config"].SetOptional()
 	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["creation_timestamp"] = attrs["creation_timestamp"].SetOptional()
@@ -7179,6 +7997,7 @@ func (o ServingEndpointDetailed_SdkV2) ToObjectValue(ctx context.Context) basety
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"ai_gateway":             o.AiGateway,
+			"budget_policy_id":       o.BudgetPolicyId,
 			"config":                 o.Config,
 			"creation_timestamp":     o.CreationTimestamp,
 			"creator":                o.Creator,
@@ -7203,6 +8022,7 @@ func (o ServingEndpointDetailed_SdkV2) Type(ctx context.Context) attr.Type {
 			"ai_gateway": basetypes.ListType{
 				ElemType: AiGatewayConfig_SdkV2{}.Type(ctx),
 			},
+			"budget_policy_id": types.StringType,
 			"config": basetypes.ListType{
 				ElemType: EndpointCoreConfigOutput_SdkV2{}.Type(ctx),
 			},
@@ -7771,6 +8591,89 @@ func (o *TrafficConfig_SdkV2) SetRoutes(ctx context.Context, v []Route_SdkV2) {
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["routes"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.Routes = types.ListValueMust(t, vs)
+}
+
+type UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 struct {
+	Config types.List `tfsdk:"config"`
+	// The name of the pt endpoint to update. This field is required.
+	Name types.String `tfsdk:"-"`
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (newState *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) {
+}
+
+func (c UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["config"] = attrs["config"].SetRequired()
+	attrs["config"] = attrs["config"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["name"] = attrs["name"].SetRequired()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateProvisionedThroughputEndpointConfigRequest.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"config": reflect.TypeOf(PtEndpointCoreConfig_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, UpdateProvisionedThroughputEndpointConfigRequest_SdkV2
+// only implements ToObjectValue() and Type().
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"config": o.Config,
+			"name":   o.Name,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"config": basetypes.ListType{
+				ElemType: PtEndpointCoreConfig_SdkV2{}.Type(ctx),
+			},
+			"name": types.StringType,
+		},
+	}
+}
+
+// GetConfig returns the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2 as
+// a PtEndpointCoreConfig_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) GetConfig(ctx context.Context) (PtEndpointCoreConfig_SdkV2, bool) {
+	var e PtEndpointCoreConfig_SdkV2
+	if o.Config.IsNull() || o.Config.IsUnknown() {
+		return e, false
+	}
+	var v []PtEndpointCoreConfig_SdkV2
+	d := o.Config.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetConfig sets the value of the Config field in UpdateProvisionedThroughputEndpointConfigRequest_SdkV2.
+func (o *UpdateProvisionedThroughputEndpointConfigRequest_SdkV2) SetConfig(ctx context.Context, v PtEndpointCoreConfig_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["config"]
+	o.Config = types.ListValueMust(t, vs)
 }
 
 type V1ResponseChoiceElement_SdkV2 struct {

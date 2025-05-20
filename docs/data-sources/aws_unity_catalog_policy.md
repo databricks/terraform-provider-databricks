@@ -3,9 +3,11 @@ subcategory: "Deployment"
 ---
 # databricks_aws_unity_catalog_policy Data Source
 
--> **Note** This resource has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
-
 This data source constructs the necessary AWS Unity Catalog policy for you.
+
+-> This data source can be used with an account or workspace-level provider.
+
+-> This data source has an evolving API, which may change in future versions of the provider. Please always consult [latest documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws) in case of any questions.
 
 ## Example Usage
 
@@ -38,8 +40,8 @@ resource "aws_iam_role" "metastore_data_access" {
 ## Argument Reference
 
 * `aws_account_id` (Required) The Account ID of the current AWS account (not your Databricks account).
-* `aws_partition` - (Optional) AWS partition. The options are `aws` or `aws-us-gov`. Defaults to `aws`
-* `bucket_name` (Required) The name of the S3 bucket used as root storage location for [managed tables](https://docs.databricks.com/data-governance/unity-catalog/index.html#managed-table) in Unity Catalog.
+* `aws_partition` - (Optional) AWS partition. The options are `aws`, `aws-us-gov`, or `aws-us-gov-dod`. Defaults to `aws`
+* `bucket_name` (Required) The name of the S3 bucket used as root storage location for [managed tables](https://docs.databricks.com/data-governance/unity-catalog/index.html#managed-table) in Unity Catalog.  The name must follow the [S3 bucket naming rules](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 * `role_name` (Required) The name of the AWS IAM role that you created in the previous step in the [official documentation](https://docs.databricks.com/data-governance/unity-catalog/get-started.html#configure-a-storage-bucket-and-iam-role-in-aws).
 * `kms_name` (Optional) If encryption is enabled, provide the ARN of the KMS key that encrypts the S3 bucket contents. If encryption is disabled, do not provide this argument.
 

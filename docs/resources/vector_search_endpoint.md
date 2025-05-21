@@ -18,10 +18,11 @@ resource "databricks_vector_search_endpoint" "this" {
 
 ## Argument Reference
 
-The following arguments are supported (change of any parameter leads to recreation of the resource):
+The following arguments are supported:
 
-* `name` - (Required) Name of the Mosaic AI Vector Search Endpoint to create.
-* `endpoint_type` (Required) Type of Mosaic AI Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values).
+* `name` - (Required) Name of the Mosaic AI Vector Search Endpoint to create. (Change leads to recreation of the resource).
+* `endpoint_type` (Required) Type of Mosaic AI Vector Search Endpoint.  Currently only accepting single value: `STANDARD` (See [documentation](https://docs.databricks.com/api/workspace/vectorsearchendpoints/createendpoint) for the list of currently supported values). (Change leads to recreation of the resource).
+* `budget_policy_id` - (Optional) The Budget Policy ID set for this resource.
 
 ## Attribute Reference
 
@@ -32,6 +33,7 @@ In addition to all the arguments above, the following attributes are exported:
 * `creation_timestamp` - Timestamp of endpoint creation (milliseconds).
 * `last_updated_user` - User who last updated the endpoint.
 * `last_updated_timestamp` - Timestamp of the last update to the endpoint (milliseconds).
+* `effective_budget_policy_id` - The effective budget policy ID.
 * `endpoint_id` - Unique internal identifier of the endpoint (UUID).
 * `num_indexes` - Number of indexes on the endpoint.
 * `endpoint_status` - Object describing the current status of the endpoint consisting of the following fields:

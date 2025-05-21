@@ -4,6 +4,7 @@
 
 ### New Features and Improvements
 
+* Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
 * Allow to specify budget policy for `databricks_vector_search_endpoint` [#4707](https://github.com/databricks/terraform-provider-databricks/pull/4707)
 
 ### Bug Fixes

@@ -10,6 +10,8 @@
 
 ### Documentation
 
+ * Fix links to Delta Live Tables docs [#4732](https://github.com/databricks/terraform-provider-databricks/pull/4732)
+
 ### Exporter
 
 ### Internal Changes

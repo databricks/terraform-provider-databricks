@@ -2,9 +2,15 @@
 
 ## Release v1.81.0
 
+### Breaking Changes
+* Removed `access_point` argument for `databricks_external_location` resource [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+
 ### New Features and Improvements
 
 * Allow to specify budget policy for `databricks_vector_search_endpoint` [#4707](https://github.com/databricks/terraform-provider-databricks/pull/4707)
+* Added `account_network_policy` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+* Added `recipient_federation_policy` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+* Added `workspace_network_option` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
 
 ### Bug Fixes
 
@@ -20,3 +26,4 @@
 ### Exporter
 
 ### Internal Changes
+* Bump Go SDK to v0.70.0 [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)

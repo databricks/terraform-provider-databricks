@@ -21,14 +21,18 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			common.CustomizeSchemaPath(s, "name").SetRequired().SetForceNew()
 			common.CustomizeSchemaPath(s, "endpoint_type").SetRequired().SetForceNew()
 			delete(s, "id")
-			common.CustomizeSchemaPath(s, "creator").SetReadOnly()
-			common.CustomizeSchemaPath(s, "creation_timestamp").SetReadOnly()
-			common.CustomizeSchemaPath(s, "last_updated_timestamp").SetReadOnly()
-			common.CustomizeSchemaPath(s, "last_updated_user").SetReadOnly()
-			common.CustomizeSchemaPath(s, "endpoint_status").SetReadOnly()
-			common.CustomizeSchemaPath(s, "num_indexes").SetReadOnly()
+			delete(s, "custom_tags")
+			for _, field := range []string{"creator", "creation_timestamp", "last_updated_timestamp",
+				"last_updated_user", "endpoint_status", "num_indexes", "effective_budget_policy_id"} {
+				common.CustomizeSchemaPath(s, field).SetReadOnly()
+			}
 			common.CustomizeSchemaPath(s).AddNewField("endpoint_id", &schema.Schema{
 				Type:     schema.TypeString,
+				Computed: true,
+			})
+			common.CustomizeSchemaPath(s).AddNewField("budget_policy_id", &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			})
 
@@ -72,9 +76,27 @@ func ResourceVectorSearchEndpoint() common.Resource {
 			if err != nil {
 				return err
 			}
+			d.Set("budget_policy_id", endpoint.EffectiveBudgetPolicyId)
 			d.Set("endpoint_id", endpoint.Id)
 			return nil
 		},
+		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			w, err := c.WorkspaceClient()
+			if err != nil {
+				return err
+			}
+			if d.HasChange("budget_policy_id") {
+				_, err := w.VectorSearchEndpoints.UpdateEndpointBudgetPolicy(ctx, vectorsearch.PatchEndpointBudgetPolicyRequest{
+					EndpointName:   d.Id(),
+					BudgetPolicyId: d.Get("budget_policy_id").(string),
+				})
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			w, err := c.WorkspaceClient()
 			if err != nil {

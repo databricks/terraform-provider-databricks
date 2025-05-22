@@ -364,18 +364,18 @@ func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
 	}
 }
 
-func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "owner" {
 		return d.Get(pathString).(string) == ""
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 }
 
-func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "isolation_mode" {
 		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
 	}
-	return shouldOmitForUnityCatalog(ic, pathString, as, d)
+	return shouldOmitForUnityCatalog(ic, pathString, as, d, r)
 }
 
 func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource,
@@ -445,7 +445,7 @@ func createIsMatchingCatalogAndSchemaAndTable(catalog_name_attr, schema_name_att
 func (ic *importContext) emitWorkspaceBindings(securableType, securableName string) {
 	bindings, err := ic.workspaceClient.WorkspaceBindings.GetBindingsAll(ic.Context, catalog.GetBindingsRequest{
 		SecurableName: securableName,
-		SecurableType: catalog.GetBindingsSecurableType(securableType),
+		SecurableType: string(securableType),
 	})
 	if err != nil {
 		log.Printf("[ERROR] listing %s bindings for %s: %s", securableType, securableName, err.Error())
@@ -631,7 +631,7 @@ func listSystemSchemas(ic *importContext) error {
 		if v.Schema == "information_schema" || v.Schema == "__internal_logging" {
 			continue
 		}
-		if v.State == catalog.SystemSchemaInfoStateEnableCompleted || v.State == catalog.SystemSchemaInfoStateEnableInitialized {
+		if v.State == "ENABLE_COMPLETED" || v.State == "ENABLE_INITIALIZED" {
 			id := fmt.Sprintf("%s|%s", currentMetastore, v.Schema)
 			data := ic.Resources["databricks_system_schema"].Data(
 				&terraform.InstanceState{

@@ -13,7 +13,7 @@
 
 ### Documentation
 
- * Replaced `managed_policy_arns` with `aws_iam_role_policy_attachment` in AWS guides
+ * Replaced `managed_policy_arns` with `aws_iam_role_policy_attachment` in AWS guides ([#4737](https://github.com/databricks/terraform-provider-databricks/pull/4737)).
 
 ### Exporter
 

@@ -14,6 +14,7 @@
 
 ### Documentation
 
+ * Fix links to Delta Live Tables docs [#4732](https://github.com/databricks/terraform-provider-databricks/pull/4732)
  * Replaced `managed_policy_arns` with `aws_iam_role_policy_attachment` in AWS guides ([#4737](https://github.com/databricks/terraform-provider-databricks/pull/4737)).
 
 ### Exporter

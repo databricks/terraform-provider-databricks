@@ -99,6 +99,9 @@ func TestDataAwsUnityCatalogAssumeRolePolicyWithoutUcArn(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
                 }
               }
             }
@@ -148,6 +151,9 @@ func TestDataAwsUnityCatalogAssumeRolePolicyGovWithoutUcArn(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws-us-gov:iam::123456789098:role/databricks-role"
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
                 }
               }
             }
@@ -197,7 +203,10 @@ func TestDataAwsUnityCatalogAssumeRolePolicyGovDoDWithoutUcArn(t *testing.T) {
               "Condition": {
                 "ArnLike": {
                   "aws:PrincipalArn": "arn:aws-us-gov:iam::123456789098:role/databricks-role"
-                }
+                },
+                "StringEquals": {
+                  "sts:ExternalId": "12345"
+                }                
               }
             }
           ]

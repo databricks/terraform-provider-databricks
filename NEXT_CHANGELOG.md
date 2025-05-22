@@ -5,6 +5,7 @@
 ### New Features and Improvements
 
 * Allow to specify budget policy for `databricks_vector_search_endpoint` [#4707](https://github.com/databricks/terraform-provider-databricks/pull/4707)
+* Added `account_network_policy`, `recipient_federation_policy`, `workspace_network_option` resource and data source(s).
 
 ### Bug Fixes
 
@@ -19,3 +20,4 @@
 ### Exporter
 
 ### Internal Changes
+* Bump Go SDK to v0.70.0

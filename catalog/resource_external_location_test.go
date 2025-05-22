@@ -270,7 +270,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 		url = "s3://foo/bar"
 		credential_name = "bcd"
 		comment = "def"
-		access_point = "some_access_point"
 	    encryption_details {
           sse_encryption_details {
             algorithm     = "AWS_SSE_KMS"

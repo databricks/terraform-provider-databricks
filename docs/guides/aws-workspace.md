@@ -4,7 +4,7 @@ page_title: "Provisioning AWS Databricks workspace"
 
 # Provisioning AWS Databricks workspace
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform.
 

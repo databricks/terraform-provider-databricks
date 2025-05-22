@@ -233,7 +233,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
-					AccessPoint:    "some_access_point",
 					EncryptionDetails: &catalog.EncryptionDetails{
 						SseEncryptionDetails: &catalog.SseEncryptionDetails{
 							Algorithm:    "AWS_SSE_KMS",
@@ -246,7 +245,6 @@ func TestCreateExternalLocationWithAPAndEncryptionDetails(t *testing.T) {
 					Name:           "abc",
 					Url:            "s3://foo/bar",
 					CredentialName: "bcd",
-					AccessPoint:    "some_access_point",
 					EncryptionDetails: &catalog.EncryptionDetails{
 						SseEncryptionDetails: &catalog.SseEncryptionDetails{
 							Algorithm:    "AWS_SSE_KMS",

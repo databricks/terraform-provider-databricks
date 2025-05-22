@@ -265,7 +265,7 @@ func TestDatabricksClientConfigure_NonsenseAuth(t *testing.T) {
 				AuthType: "nonsense",
 			},
 		},
-	}, NoAuth)
+	}, "default auth: auth type \"nonsense\" not found")
 }
 
 func TestGetJWTProperty_AzureCLI_SP(t *testing.T) {

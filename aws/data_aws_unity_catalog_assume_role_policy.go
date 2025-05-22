@@ -53,6 +53,9 @@ func DataAwsUnityCatalogAssumeRolePolicy() common.Resource {
 						"ArnLike": {
 							"aws:PrincipalArn": fmt.Sprintf("arn:%s:iam::%s:role/%s", awsNamespace, data.AwsAccountId, data.RoleName),
 						},
+						"StringEquals": {
+							"sts:ExternalId": data.ExternalId,
+						},
 					},
 					Principal: map[string]string{
 						"AWS": fmt.Sprintf("arn:%s:iam::%s:root", awsNamespace, data.AwsAccountId),

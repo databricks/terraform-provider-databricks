@@ -10,8 +10,11 @@
 
  * Don't fail delete when `databricks_system_schema` can be disabled only by Databricks [#4727](https://github.com/databricks/terraform-provider-databricks/pull/4727)
  * Fix debug logging for attributes used to configure the provider ([#4728](https://github.com/databricks/terraform-provider-databricks/pull/4728)).
+ * Add missing external Id in trust relationship for `databricks_aws_unity_catalog_assume_role_policy` ([#4738](https://github.com/databricks/terraform-provider-databricks/pull/4738)).
 
 ### Documentation
+
+ * Replaced `managed_policy_arns` with `aws_iam_role_policy_attachment` in AWS guides ([#4737](https://github.com/databricks/terraform-provider-databricks/pull/4737)).
 
 ### Exporter
 

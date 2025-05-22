@@ -13,6 +13,8 @@
 
 ### Documentation
 
+ * Improve the landing page documentation to prioritize preferred authentication methods and provide better guidance on how to configure the `host` argument.
+
 ### Exporter
 
 ### Internal Changes

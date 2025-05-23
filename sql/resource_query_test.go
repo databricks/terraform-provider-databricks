@@ -128,8 +128,10 @@ func TestQueryUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockQueriesAPI().EXPECT()
 			e.Update(mock.Anything, sql.UpdateQueryRequest{
-				Id:         "7890",
-				UpdateMask: "display_name,query_text,warehouse_id,parameters,owner_user_name",
+				Id:                     "7890",
+				UpdateMask:             "display_name,query_text,warehouse_id,parameters,owner_user_name",
+				AutoResolveDisplayName: false,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 				Query: &sql.UpdateQueryRequestQuery{
 					WarehouseId:   "123456",
 					DisplayName:   "TF new query",

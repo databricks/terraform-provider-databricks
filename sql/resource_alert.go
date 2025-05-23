@@ -109,9 +109,11 @@ func ResourceAlert() common.Resource {
 			}
 			common.DataToStructPointer(d, s, &a)
 			_, err = w.Alerts.Update(ctx, sql.UpdateAlertRequest{
-				Alert:      &a,
-				Id:         d.Id(),
-				UpdateMask: updateMask,
+				Alert:                  &a,
+				Id:                     d.Id(),
+				UpdateMask:             updateMask,
+				AutoResolveDisplayName: false,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 			})
 			return err
 		},

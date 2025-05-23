@@ -194,8 +194,10 @@ func TestAlertUpdate(t *testing.T) {
 		MockWorkspaceClientFunc: func(w *mocks.MockWorkspaceClient) {
 			e := w.GetMockAlertsAPI().EXPECT()
 			e.Update(mock.Anything, sql.UpdateAlertRequest{
-				Id:         "7890",
-				UpdateMask: "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject,owner_user_name,notify_on_ok",
+				Id:                     "7890",
+				UpdateMask:             "display_name,query_id,seconds_to_retrigger,condition,custom_body,custom_subject,owner_user_name,notify_on_ok",
+				AutoResolveDisplayName: false,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 				Alert: &sql.UpdateAlertRequestAlert{
 					QueryId:       "123456",
 					DisplayName:   "TF new alert",

@@ -151,9 +151,11 @@ func ResourceQuery() common.Resource {
 				}
 			}
 			_, err = w.Queries.Update(ctx, sql.UpdateQueryRequest{
-				Query:      &q.UpdateQueryRequestQuery,
-				Id:         d.Id(),
-				UpdateMask: updateMask,
+				Query:                  &q.UpdateQueryRequestQuery,
+				Id:                     d.Id(),
+				UpdateMask:             updateMask,
+				AutoResolveDisplayName: false,
+				ForceSendFields:        []string{"AutoResolveDisplayName"},
 			})
 			return err
 		},

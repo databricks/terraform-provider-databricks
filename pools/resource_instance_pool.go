@@ -185,6 +185,7 @@ func ResourceInstancePool() common.Resource {
 		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.Default = 100
 		}
+		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = common.EqualFoldDiffSuppress
 
 		if v, err := common.SchemaPath(s, "azure_attributes", "availability"); err == nil {
 			v.Default = clusters.AzureAvailabilityOnDemand

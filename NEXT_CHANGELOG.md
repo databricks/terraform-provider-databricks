@@ -8,7 +8,7 @@
 
 ### Bug Fixes
 
- * Support updating `databricks_clusters` to Auto AZ [#4697](https://github.com/databricks/terraform-provider-databricks/pull/4697).
+ * Support updating `databricks_cluster` to Auto AZ [#4743](https://github.com/databricks/terraform-provider-databricks/pull/4743).
 
 ### Documentation
 

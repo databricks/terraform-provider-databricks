@@ -2,7 +2,6 @@ package pools
 
 import (
 	"context"
-	"strings"
 
 	"github.com/databricks/terraform-provider-databricks/clusters"
 	"github.com/databricks/terraform-provider-databricks/common"
@@ -185,9 +184,6 @@ func ResourceInstancePool() common.Resource {
 		}
 		if v, err := common.SchemaPath(s, "aws_attributes", "spot_bid_price_percent"); err == nil {
 			v.Default = 100
-		}
-		common.MustSchemaPath(s, "aws_attributes", "zone_id").DiffSuppressFunc = func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && strings.ToLower(newValue) == "auto"
 		}
 
 		if v, err := common.SchemaPath(s, "azure_attributes", "availability"); err == nil {

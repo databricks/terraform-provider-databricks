@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+ * Stop suppressing diff for `zone_id = "auto"` after backend fix [#4697](https://github.com/databricks/terraform-provider-databricks/pull/4697).
+
 ### Documentation
 
 ### Exporter

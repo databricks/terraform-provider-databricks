@@ -93,6 +93,7 @@ func awsClusterTemplate(availability string) string {
 			autotermination_minutes = 10
 			aws_attributes {
 				availability = "%s"
+				zone_id      = "auto"
 			}
 			custom_tags = {
 				"Owner" = "eng-dev-ecosystem-team@databricks.com"

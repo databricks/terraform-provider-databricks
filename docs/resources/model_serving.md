@@ -3,7 +3,7 @@ subcategory: "Serving"
 ---
 # databricks_model_serving Resource
 
-This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks.
+This resource allows you to manage [Model Serving](https://docs.databricks.com/machine-learning/model-serving/index.html) endpoints in Databricks, including custom models, external models, and foundation models. For newer foundation models, including Llama 4, please use the [databricks_model_serving_provisioned_throughput](model_serving_provisioned_throughput.md) resource.
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -128,7 +128,7 @@ The following arguments are supported:
   * `traffic_config` - A single block represents the traffic split configuration amongst the served models.
   * `auto_capture_config` - Configuration for Inference Tables which automatically logs requests and responses to Unity Catalog.
 * `tags` - Tags to be attached to the serving endpoint and automatically propagated to billing logs.
-* `rate_limits` - A list of rate limit blocks to be applied to the serving endpoint. *Note: only external and foundation model endpoints are supported as of now.*
+* `rate_limits` - (Deprecated, use `ai_gateway` to manage rate limits) A list of rate limit blocks to be applied to the serving endpoint. *Note: only external and foundation model endpoints are supported as of now.*
 * `ai_gateway` - (Optional) A block with AI Gateway configuration for the serving endpoint. *Note: only external model endpoints are supported as of now.*
 * `route_optimized` - (Optional) A boolean enabling route optimization for the endpoint. *Note: only available for custom models.*
 * `budget_policy_id` - (Optiona) The Budget Policy ID set for this serving endpoint.
@@ -280,14 +280,25 @@ timeouts {
 
 The model serving resource can be imported using the name of the endpoint.
 
+```hcl
+import {
+  to = databricks_model_serving.this
+  id = "<model-serving-endpoint-name>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_model_serving.this <model-serving-endpoint-name>
 ```
+
 
 ## Related Resources
 
 The following resources are often used in the same context:
 
+* [databricks_model_serving_provisioned_throughput](model_serving.md) to create [Foundation Model provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints in Databricks.
 * [databricks_registered_model](registered_model.md) to create [Models in Unity Catalog](https://docs.databricks.com/en/mlflow/models-in-uc.html) in Databricks.
 * [End to end workspace management](../guides/workspace-management.md) guide.
 * [databricks_directory](directory.md) to manage directories in [Databricks Workspace](https://docs.databricks.com/workspace/workspace-objects.html).

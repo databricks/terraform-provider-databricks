@@ -672,11 +672,21 @@ func TestSpnSearchSuccess(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
-			scim.ResourceServicePrincipal().Schema["application_id"], d))
+			scim.ResourceServicePrincipal().Schema["application_id"], d, r))
 		ic.Client.Config.Host = "https://abc.azuredatabricks.net"
+		// We shouldn't omit display_name for Databricks-managed SPs
+		assert.False(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
+			scim.ResourceServicePrincipal().Schema["display_name"], d, r))
+		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
+			scim.ResourceServicePrincipal().Schema["application_id"], d, r))
+		// We shouldn't omit application_id for Azure-managed SPs, but omit display_name
+		d.Set("external_id", "60622399-fd3f-4faf-8810-bf08b225cf3b")
+		assert.False(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "application_id",
+			scim.ResourceServicePrincipal().Schema["application_id"], d, r))
 		assert.True(t, resourcesMap["databricks_service_principal"].ShouldOmitField(ic, "display_name",
-			scim.ResourceServicePrincipal().Schema["display_name"], d))
+			scim.ResourceServicePrincipal().Schema["display_name"], d, r))
 
+		// test for different branches in Name function
 		// test for different branches in Name function
 		d2 := scim.ResourceServicePrincipal().ToResource().TestResourceData()
 		d2.SetId("123")
@@ -695,32 +705,42 @@ func TestShouldOmitForUsers(t *testing.T) {
 	d.SetId("user1")
 	d.Set("user_name", "user@domain.com")
 	d.Set("display_name", "")
+	r := &resource{
+		Attribute: "databricks_user",
+		Value:     "user@domain.com",
+		Data:      d,
+	}
 	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
-		scim.ResourceUser().Schema["application_id"], d))
+		scim.ResourceUser().Schema["display_name"], d, r))
 	d.Set("display_name", "user@domain.com")
 	assert.True(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
-		scim.ResourceUser().Schema["application_id"], d))
+		scim.ResourceUser().Schema["display_name"], d, r))
 	d.Set("display_name", "Some user")
 	assert.False(t, resourcesMap["databricks_user"].ShouldOmitField(nil, "display_name",
-		scim.ResourceUser().Schema["application_id"], d))
+		scim.ResourceUser().Schema["display_name"], d, r))
 }
 
 func TestShouldOmitFoRepos(t *testing.T) {
 	d := repos.ResourceRepo().ToResource().TestResourceData()
 	d.SetId("1234")
 	d.Set("path", "/Repos/Test/repo")
+	r := &resource{
+		Attribute: "databricks_repo",
+		Value:     "repo",
+		Data:      d,
+	}
 	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "path",
-		repos.ResourceRepo().Schema["path"], d))
+		repos.ResourceRepo().Schema["path"], d, r))
 	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
-		repos.ResourceRepo().Schema["branch"], d))
+		repos.ResourceRepo().Schema["branch"], d, r))
 	assert.True(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
-		repos.ResourceRepo().Schema["tag"], d))
+		repos.ResourceRepo().Schema["tag"], d, r))
 	d.Set("branch", "test")
 	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "branch",
-		repos.ResourceRepo().Schema["branch"], d))
+		repos.ResourceRepo().Schema["branch"], d, r))
 	d.Set("tag", "v123")
 	assert.False(t, resourcesMap["databricks_repo"].ShouldOmitField(nil, "tag",
-		repos.ResourceRepo().Schema["tag"], d))
+		repos.ResourceRepo().Schema["tag"], d, r))
 }
 
 func TestUserImportSkipNonDirectGroups(t *testing.T) {
@@ -1469,15 +1489,15 @@ func TestListSystemSchemasSuccess(t *testing.T) {
 				Schemas: []sdk_uc.SystemSchemaInfo{
 					{
 						Schema: "access",
-						State:  sdk_uc.SystemSchemaInfoStateEnableCompleted,
+						State:  "ENABLE_COMPLETED",
 					},
 					{
 						Schema: "information_schema",
-						State:  sdk_uc.SystemSchemaInfoStateEnableCompleted,
+						State:  "ENABLE_COMPLETED",
 					},
 					{
 						Schema: "marketplace",
-						State:  sdk_uc.SystemSchemaInfoStateAvailable,
+						State:  "available",
 					},
 				},
 			},
@@ -1849,7 +1869,7 @@ func TestImportIsolatedManagedCatalog(t *testing.T) {
 		{
 			Method:   "GET",
 			Resource: "/api/2.1/unity-catalog/bindings/catalog/ctest?",
-			Response: sdk_uc.WorkspaceBindingsResponse{
+			Response: sdk_uc.UpdateWorkspaceBindingsResponse{
 				Bindings: []sdk_uc.WorkspaceBinding{
 					{
 						BindingType: "BINDING_TYPE_READ",
@@ -2177,15 +2197,20 @@ func TestVolumes(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
 
 	//
+	r := &resource{
+		Attribute: "databricks_volume",
+		Value:     "dbc",
+		Data:      d,
+	}
 	shouldOmitFunc := resourcesMap["databricks_volume"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	scm := tf_uc.ResourceVolume().Schema
-	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
-	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d, r))
 	d.Set("volume_type", "MANAGED")
 	d.Set("storage_location", "s3://abc/")
-	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d))
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "volume_type", scm["volume_type"], d, r))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d, r))
 }
 
 func TestSqlTables(t *testing.T) {
@@ -2206,16 +2231,20 @@ func TestSqlTables(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
 
 	//
+	r := &resource{
+		Attribute: "databricks_sql_table",
+		Value:     "ttest",
+		Data:      d,
+	}
 	shouldOmitFunc := resourcesMap["databricks_sql_table"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	scm := tf_uc.ResourceSqlTable().Schema
-	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
-	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d, r))
 	d.Set("table_type", "MANAGED")
 	d.Set("storage_location", "s3://abc/")
-	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d))
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.False(t, shouldOmitFunc(nil, "table_type", scm["table_type"], d, r))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d, r))
 }
 
 func TestRegisteredModels(t *testing.T) {
@@ -2236,17 +2265,22 @@ func TestRegisteredModels(t *testing.T) {
 	assert.True(t, ic.testEmits["databricks_schema[<unknown>] (id: ctest.stest)"])
 
 	//
+	r := &resource{
+		Attribute: "databricks_registered_model",
+		Value:     "mtest",
+		Data:      d,
+	}
 	shouldOmitFunc := resourcesMap["databricks_registered_model"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	scm := tf_uc.ResourceRegisteredModel().Schema
-	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
+	assert.True(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d, r))
 	d.Set("storage_location", "s3://abc/")
-	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d))
-	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	assert.False(t, shouldOmitFunc(nil, "storage_location", scm["storage_location"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d, r))
 
 	ic.currentMetastore = currentMetastoreResponse
 	d.Set("storage_location", "s3://abc/"+currentMetastoreResponse.MetastoreId+"/models/123456")
-	assert.True(t, shouldOmitFunc(ic, "storage_location", scm["storage_location"], d))
+	assert.True(t, shouldOmitFunc(ic, "storage_location", scm["storage_location"], d, r))
 }
 
 func TestListShares(t *testing.T) {
@@ -2279,18 +2313,28 @@ func TestAuxUcFunctions(t *testing.T) {
 	d := tf_uc.ResourceMetastoreAssignment().ToResource().TestResourceData()
 	d.Set("workspace_id", 123)
 	assert.Equal(t, "ws_123", resourcesMap["databricks_metastore_assignment"].Name(nil, d))
+	r := &resource{
+		Attribute: "databricks_metastore_assignment",
+		Value:     "ws_123",
+		Data:      d,
+	}
 
 	shouldOmitFunc := resourcesMap["databricks_metastore_assignment"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	d.Set("default_catalog_name", "")
 
 	scm := tf_uc.ResourceMetastoreAssignment().Schema
-	assert.True(t, shouldOmitFunc(nil, "default_catalog_name", scm["default_catalog_name"], d))
-	assert.False(t, shouldOmitFunc(nil, "metastore_id", scm["metastore_id"], d))
+	assert.True(t, shouldOmitFunc(nil, "default_catalog_name", scm["default_catalog_name"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "metastore_id", scm["metastore_id"], d, r))
 
 	// Metastore
 	d = tf_uc.ResourceMetastore().ToResource().TestResourceData()
 	d.SetId("1234")
+	r = &resource{
+		Attribute: "databricks_metastore",
+		Value:     "1234",
+		Data:      d,
+	}
 	assert.Equal(t, "1234", resourcesMap["databricks_metastore"].Name(nil, d))
 	d.Set("name", "test")
 	assert.Equal(t, "test", resourcesMap["databricks_metastore"].Name(nil, d))
@@ -2298,11 +2342,11 @@ func TestAuxUcFunctions(t *testing.T) {
 	shouldOmitFunc = resourcesMap["databricks_metastore"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	scm = tf_uc.ResourceMetastore().Schema
-	assert.True(t, shouldOmitFunc(nil, "default_data_access_config_id", scm["default_data_access_config_id"], d))
-	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
+	assert.True(t, shouldOmitFunc(nil, "default_data_access_config_id", scm["default_data_access_config_id"], d, r))
+	assert.True(t, shouldOmitFunc(nil, "owner", scm["owner"], d, r))
 	d.Set("owner", "test")
-	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d))
-	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	assert.False(t, shouldOmitFunc(nil, "owner", scm["owner"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d, r))
 
 	// Connections
 	d = tf_uc.ResourceConnection().ToResource().TestResourceData()
@@ -2315,14 +2359,19 @@ func TestAuxUcFunctions(t *testing.T) {
 	// Catalogs
 	d = tf_uc.ResourceCatalog().ToResource().TestResourceData()
 	d.SetId("test")
+	r = &resource{
+		Attribute: "databricks_catalog",
+		Value:     "test",
+		Data:      d,
+	}
 	shouldOmitFunc = resourcesMap["databricks_catalog"].ShouldOmitField
 	require.NotNil(t, shouldOmitFunc)
 	scm = tf_uc.ResourceCatalog().Schema
 	d.Set("isolation_mode", "OPEN")
-	assert.True(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
+	assert.True(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d, r))
 	d.Set("isolation_mode", "ISOLATED")
-	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d))
-	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d))
+	assert.False(t, shouldOmitFunc(nil, "isolation_mode", scm["isolation_mode"], d, r))
+	assert.False(t, shouldOmitFunc(nil, "name", scm["name"], d, r))
 }
 
 func TestImportUcVolumeFile(t *testing.T) {
@@ -2353,11 +2402,16 @@ func TestImportUcVolumeFile(t *testing.T) {
 		assert.Equal(t, file_path, d.Get("path"))
 		assert.Equal(t, "uc_files/main/default/wheels/some.whl", d.Get("source"))
 		// Testing auxiliary functions
+		r := &resource{
+			Attribute: "databricks_file",
+			Value:     file_path,
+			Data:      d,
+		}
 		shouldOmitFunc := resourcesMap["databricks_file"].ShouldOmitField
 		require.NotNil(t, shouldOmitFunc)
 		scm := storage.ResourceFile().Schema
-		assert.True(t, shouldOmitFunc(ic, "md5", scm["md5"], d))
-		assert.False(t, shouldOmitFunc(ic, "path", scm["path"], d))
+		assert.True(t, shouldOmitFunc(ic, "md5", scm["md5"], d, r))
+		assert.False(t, shouldOmitFunc(ic, "path", scm["path"], d, r))
 
 		assert.Equal(t, "main/default/wheels/some.whl_f27badf8", resourcesMap["databricks_file"].Name(nil, d))
 	})
@@ -2694,12 +2748,17 @@ func TestNotificationDestinationShouldOmitField(t *testing.T) {
 
 	ic := importContextForTest()
 	schema := tf_settings.ResourceNotificationDestination().Schema
+	r := &resource{
+		Attribute: "databricks_notification_destination",
+		Value:     "test-notification",
+		Data:      d,
+	}
 
 	// URL should be omitted because url_set is false
 	assert.True(t, resourcesMap["databricks_notification_destination"].ShouldOmitField(
-		ic, "config.0.generic_webhook.0.url", schema["config"], d))
+		ic, "config.0.generic_webhook.0.url", schema["config"], d, r))
 
 	// Username should not be omitted because username_set is true
 	assert.False(t, resourcesMap["databricks_notification_destination"].ShouldOmitField(
-		ic, "config.0.generic_webhook.0.username", schema["config"], d))
+		ic, "config.0.generic_webhook.0.username", schema["config"], d, r))
 }

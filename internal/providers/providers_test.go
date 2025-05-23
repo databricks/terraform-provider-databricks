@@ -253,7 +253,7 @@ func TestConfig_AzureCliHost_Fail(t *testing.T) {
 			"HOME": p,
 			"FAIL": "yes",
 		},
-		assertError: "default auth: azure-cli: cannot get account info",
+		assertError: "default auth: cannot configure default credentials, please check https://docs.databricks.com/en/dev-tools/auth.html#databricks-client-unified-authentication to configure credentials for your preferred authentication method. Config: azure_workspace_resource_id=/subscriptions/a/resourceGroups/b/providers/Microsoft.Databricks/workspaces/c",
 	}.apply(t)
 }
 

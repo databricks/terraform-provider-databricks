@@ -72,6 +72,10 @@ type CreatePipeline struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -122,6 +126,7 @@ func (c CreatePipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
@@ -184,6 +189,7 @@ func (o CreatePipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"notifications":         o.Notifications,
 			"photon":                o.Photon,
 			"restart_window":        o.RestartWindow,
+			"root_path":             o.RootPath,
 			"run_as":                o.RunAs,
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
@@ -226,6 +232,7 @@ func (o CreatePipeline) Type(ctx context.Context) attr.Type {
 			},
 			"photon":         types.BoolType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
@@ -883,6 +890,10 @@ type EditPipeline struct {
 	PipelineId types.String `tfsdk:"-"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -934,6 +945,7 @@ func (c EditPipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
@@ -997,6 +1009,7 @@ func (o EditPipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"photon":                 o.Photon,
 			"pipeline_id":            o.PipelineId,
 			"restart_window":         o.RestartWindow,
+			"root_path":              o.RootPath,
 			"run_as":                 o.RunAs,
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
@@ -1040,6 +1053,7 @@ func (o EditPipeline) Type(ctx context.Context) attr.Type {
 			"photon":         types.BoolType,
 			"pipeline_id":    types.StringType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
@@ -2426,6 +2440,10 @@ type IngestionPipelineDefinition struct {
 	// Required. Settings specifying tables to replicate and the destination for
 	// the replicated tables.
 	Objects types.List `tfsdk:"objects"`
+	// The type of the foreign source. The source type will be inferred from the
+	// source connection or ingestion gateway. This field is output only and
+	// will be ignored if provided.
+	SourceType types.String `tfsdk:"source_type"`
 	// Configuration settings to control the ingestion of tables. These settings
 	// are applied to all tables in the pipeline.
 	TableConfiguration types.Object `tfsdk:"table_configuration"`
@@ -2441,6 +2459,7 @@ func (c IngestionPipelineDefinition) ApplySchemaCustomizations(attrs map[string]
 	attrs["connection_name"] = attrs["connection_name"].SetOptional()
 	attrs["ingestion_gateway_id"] = attrs["ingestion_gateway_id"].SetOptional()
 	attrs["objects"] = attrs["objects"].SetOptional()
+	attrs["source_type"] = attrs["source_type"].SetComputed()
 	attrs["table_configuration"] = attrs["table_configuration"].SetOptional()
 
 	return attrs
@@ -2470,6 +2489,7 @@ func (o IngestionPipelineDefinition) ToObjectValue(ctx context.Context) basetype
 			"connection_name":      o.ConnectionName,
 			"ingestion_gateway_id": o.IngestionGatewayId,
 			"objects":              o.Objects,
+			"source_type":          o.SourceType,
 			"table_configuration":  o.TableConfiguration,
 		})
 }
@@ -2483,6 +2503,7 @@ func (o IngestionPipelineDefinition) Type(ctx context.Context) attr.Type {
 			"objects": basetypes.ListType{
 				ElemType: IngestionConfig{}.Type(ctx),
 			},
+			"source_type":         types.StringType,
 			"table_configuration": TableSpecificConfig{}.Type(ctx),
 		},
 	}
@@ -3372,6 +3393,54 @@ func (o Origin) Type(ctx context.Context) attr.Type {
 			"table_id":             types.StringType,
 			"uc_resource_id":       types.StringType,
 			"update_id":            types.StringType,
+		},
+	}
+}
+
+type PathPattern struct {
+	// The source code to include for pipelines
+	Include types.String `tfsdk:"include"`
+}
+
+func (newState *PathPattern) SyncEffectiveFieldsDuringCreateOrUpdate(plan PathPattern) {
+}
+
+func (newState *PathPattern) SyncEffectiveFieldsDuringRead(existingState PathPattern) {
+}
+
+func (c PathPattern) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["include"] = attrs["include"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in PathPattern.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a PathPattern) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, PathPattern
+// only implements ToObjectValue() and Type().
+func (o PathPattern) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"include": o.Include,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o PathPattern) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"include": types.StringType,
 		},
 	}
 }
@@ -4320,6 +4389,10 @@ type PipelineLibrary struct {
 	// The path to a file that defines a pipeline and is stored in the
 	// Databricks Repos.
 	File types.Object `tfsdk:"file"`
+	// The unified field to include source codes. Each entry can be a notebook
+	// path, a file path, or a folder path that ends `/**`. This field cannot be
+	// used together with `notebook` or `file`.
+	Glob types.Object `tfsdk:"glob"`
 	// URI of the jar to be installed. Currently only DBFS is supported.
 	Jar types.String `tfsdk:"jar"`
 	// Specification of a maven library to be installed.
@@ -4339,6 +4412,7 @@ func (newState *PipelineLibrary) SyncEffectiveFieldsDuringRead(existingState Pip
 
 func (c PipelineLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["file"] = attrs["file"].SetOptional()
+	attrs["glob"] = attrs["glob"].SetOptional()
 	attrs["jar"] = attrs["jar"].SetOptional()
 	attrs["maven"] = attrs["maven"].SetOptional()
 	attrs["notebook"] = attrs["notebook"].SetOptional()
@@ -4357,6 +4431,7 @@ func (c PipelineLibrary) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 func (a PipelineLibrary) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
 		"file":     reflect.TypeOf(FileLibrary{}),
+		"glob":     reflect.TypeOf(PathPattern{}),
 		"maven":    reflect.TypeOf(compute_tf.MavenLibrary{}),
 		"notebook": reflect.TypeOf(NotebookLibrary{}),
 	}
@@ -4370,6 +4445,7 @@ func (o PipelineLibrary) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"file":     o.File,
+			"glob":     o.Glob,
 			"jar":      o.Jar,
 			"maven":    o.Maven,
 			"notebook": o.Notebook,
@@ -4382,6 +4458,7 @@ func (o PipelineLibrary) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"file":     FileLibrary{}.Type(ctx),
+			"glob":     PathPattern{}.Type(ctx),
 			"jar":      types.StringType,
 			"maven":    compute_tf.MavenLibrary{}.Type(ctx),
 			"notebook": NotebookLibrary{}.Type(ctx),
@@ -4416,6 +4493,34 @@ func (o *PipelineLibrary) GetFile(ctx context.Context) (FileLibrary, bool) {
 func (o *PipelineLibrary) SetFile(ctx context.Context, v FileLibrary) {
 	vs := v.ToObjectValue(ctx)
 	o.File = vs
+}
+
+// GetGlob returns the value of the Glob field in PipelineLibrary as
+// a PathPattern value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineLibrary) GetGlob(ctx context.Context) (PathPattern, bool) {
+	var e PathPattern
+	if o.Glob.IsNull() || o.Glob.IsUnknown() {
+		return e, false
+	}
+	var v []PathPattern
+	d := o.Glob.As(ctx, &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	})
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetGlob sets the value of the Glob field in PipelineLibrary.
+func (o *PipelineLibrary) SetGlob(ctx context.Context, v PathPattern) {
+	vs := v.ToObjectValue(ctx)
+	o.Glob = vs
 }
 
 // GetMaven returns the value of the Maven field in PipelineLibrary as
@@ -4826,6 +4931,10 @@ type PipelineSpec struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
@@ -4867,6 +4976,7 @@ func (c PipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
@@ -4925,6 +5035,7 @@ func (o PipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notifications":        o.Notifications,
 			"photon":               o.Photon,
 			"restart_window":       o.RestartWindow,
+			"root_path":            o.RootPath,
 			"schema":               o.Schema,
 			"serverless":           o.Serverless,
 			"storage":              o.Storage,
@@ -4964,6 +5075,7 @@ func (o PipelineSpec) Type(ctx context.Context) attr.Type {
 			},
 			"photon":         types.BoolType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
 			"storage":        types.StringType,

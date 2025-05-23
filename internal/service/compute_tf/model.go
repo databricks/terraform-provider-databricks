@@ -106,6 +106,17 @@ func (o AddInstanceProfile) Type(ctx context.Context) attr.Type {
 type AddResponse struct {
 }
 
+func (newState *AddResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse) {
+}
+
+func (newState *AddResponse) SyncEffectiveFieldsDuringRead(existingState AddResponse) {
+}
+
+func (c AddResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1056,7 +1067,9 @@ type ClusterAttributes struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -1780,7 +1793,9 @@ type ClusterDetails struct {
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Determines whether the cluster was created by a user through the UI,
 	// created by the Databricks Jobs Scheduler, or through an API request.
@@ -4039,7 +4054,9 @@ type ClusterSpec struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -5038,7 +5055,9 @@ type CreateCluster struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -7431,7 +7450,9 @@ type EditCluster struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -8144,10 +8165,6 @@ type EditInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For Fleet-pool V2, this object contains the information about the
-	// alternate node type ids to use when attempting to launch a cluster if the
-	// node type id is not available.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -8169,7 +8186,6 @@ func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetRequired()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetRequired()
 
 	return attrs
@@ -8184,8 +8200,7 @@ func (c EditInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.At
 // SDK values.
 func (a EditInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"custom_tags":           reflect.TypeOf(types.String{}),
-		"node_type_flexibility": reflect.TypeOf(NodeTypeFlexibility{}),
+		"custom_tags": reflect.TypeOf(types.String{}),
 	}
 }
 
@@ -8202,7 +8217,6 @@ func (o EditInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectVal
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 		})
 }
@@ -8219,7 +8233,6 @@ func (o EditInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 		},
 	}
@@ -8249,34 +8262,6 @@ func (o *EditInstancePool) SetCustomTags(ctx context.Context, v map[string]types
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["custom_tags"]
 	t = t.(attr.TypeWithElementType).ElementType()
 	o.CustomTags = types.MapValueMust(t, vs)
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in EditInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *EditInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in EditInstancePool.
-func (o *EditInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 type EditInstancePoolResponse struct {
@@ -8496,6 +8481,17 @@ func (o EditPolicyResponse) Type(ctx context.Context) attr.Type {
 type EditResponse struct {
 }
 
+func (newState *EditResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse) {
+}
+
+func (newState *EditResponse) SyncEffectiveFieldsDuringRead(existingState EditResponse) {
+}
+
+func (c EditResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8664,10 +8660,8 @@ func (o *EnforceClusterComplianceResponse) SetChanges(ctx context.Context, v []C
 
 // The environment entity used to preserve serverless environment side panel,
 // jobs' environment for non-notebook task, and DLT's environment for classic
-// and serverless pipelines. (Note: DLT uses a copied version of the Environment
-// proto below, at
-// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
-// this minimal environment spec, only pip dependencies are supported.
+// and serverless pipelines. In this minimal environment spec, only pip
+// dependencies are supported.
 type Environment struct {
 	// Client version used by the environment The client is the user-facing
 	// environment of the runtime. Each client comes with a specific set of
@@ -8681,6 +8675,14 @@ type Environment struct {
 	// project path>(WSFS or Volumes in Databricks), <vcs project url> E.g.
 	// dependencies: ["foo==0.0.1", "-r /Workspace/test/requirements.txt"]
 	Dependencies types.List `tfsdk:"dependencies"`
+	// We renamed `client` to `environment_version` in notebook exports. This
+	// field is meant solely so that imported notebooks with
+	// `environment_version` can be deserialized correctly, in a
+	// backwards-compatible way (i.e. if `client` is specified instead of
+	// `environment_version`, it will be deserialized correctly). Do NOT use
+	// this field for any other purpose, e.g. notebook storage. This field is
+	// not yet exposed to customers (e.g. in the jobs API).
+	EnvironmentVersion types.String `tfsdk:"environment_version"`
 	// List of jar dependencies, should be string representing volume paths. For
 	// example: `/Volumes/path/to/test.jar`.
 	JarDependencies types.List `tfsdk:"jar_dependencies"`
@@ -8695,6 +8697,7 @@ func (newState *Environment) SyncEffectiveFieldsDuringRead(existingState Environ
 func (c Environment) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["client"] = attrs["client"].SetRequired()
 	attrs["dependencies"] = attrs["dependencies"].SetOptional()
+	attrs["environment_version"] = attrs["environment_version"].SetOptional()
 	attrs["jar_dependencies"] = attrs["jar_dependencies"].SetOptional()
 
 	return attrs
@@ -8721,9 +8724,10 @@ func (o Environment) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"client":           o.Client,
-			"dependencies":     o.Dependencies,
-			"jar_dependencies": o.JarDependencies,
+			"client":              o.Client,
+			"dependencies":        o.Dependencies,
+			"environment_version": o.EnvironmentVersion,
+			"jar_dependencies":    o.JarDependencies,
 		})
 }
 
@@ -8735,6 +8739,7 @@ func (o Environment) Type(ctx context.Context) attr.Type {
 			"dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
+			"environment_version": types.StringType,
 			"jar_dependencies": basetypes.ListType{
 				ElemType: types.StringType,
 			},
@@ -10127,10 +10132,6 @@ type GetInstancePool struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For Fleet-pool V2, this object contains the information about the
-	// alternate node type ids to use when attempting to launch a cluster if the
-	// node type id is not available.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -10171,7 +10172,6 @@ func (c GetInstancePool) ApplySchemaCustomizations(attrs map[string]tfschema.Att
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -10197,7 +10197,6 @@ func (a GetInstancePool) GetComplexFieldTypes(ctx context.Context) map[string]re
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
-		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -10224,7 +10223,6 @@ func (o GetInstancePool) ToObjectValue(ctx context.Context) basetypes.ObjectValu
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -10254,7 +10252,6 @@ func (o GetInstancePool) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -10431,34 +10428,6 @@ func (o *GetInstancePool) GetGcpAttributes(ctx context.Context) (InstancePoolGcp
 func (o *GetInstancePool) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in GetInstancePool as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *GetInstancePool) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in GetInstancePool.
-func (o *GetInstancePool) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in GetInstancePool as
@@ -12271,10 +12240,6 @@ type InstancePoolAndStats struct {
 	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
 	// Minimum number of idle instances to keep in the instance pool
 	MinIdleInstances types.Int64 `tfsdk:"min_idle_instances"`
-	// For Fleet-pool V2, this object contains the information about the
-	// alternate node type ids to use when attempting to launch a cluster if the
-	// node type id is not available.
-	NodeTypeFlexibility types.Object `tfsdk:"node_type_flexibility"`
 	// This field encodes, through a single value, the resources available to
 	// each of the Spark nodes in this cluster. For example, the Spark nodes can
 	// be provisioned and optimized for memory or compute intensive workloads. A
@@ -12315,7 +12280,6 @@ func (c InstancePoolAndStats) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["instance_pool_name"] = attrs["instance_pool_name"].SetOptional()
 	attrs["max_capacity"] = attrs["max_capacity"].SetOptional()
 	attrs["min_idle_instances"] = attrs["min_idle_instances"].SetOptional()
-	attrs["node_type_flexibility"] = attrs["node_type_flexibility"].SetOptional()
 	attrs["node_type_id"] = attrs["node_type_id"].SetOptional()
 	attrs["preloaded_docker_images"] = attrs["preloaded_docker_images"].SetOptional()
 	attrs["preloaded_spark_versions"] = attrs["preloaded_spark_versions"].SetOptional()
@@ -12341,7 +12305,6 @@ func (a InstancePoolAndStats) GetComplexFieldTypes(ctx context.Context) map[stri
 		"default_tags":             reflect.TypeOf(types.String{}),
 		"disk_spec":                reflect.TypeOf(DiskSpec{}),
 		"gcp_attributes":           reflect.TypeOf(InstancePoolGcpAttributes{}),
-		"node_type_flexibility":    reflect.TypeOf(NodeTypeFlexibility{}),
 		"preloaded_docker_images":  reflect.TypeOf(DockerImage{}),
 		"preloaded_spark_versions": reflect.TypeOf(types.String{}),
 		"stats":                    reflect.TypeOf(InstancePoolStats{}),
@@ -12368,7 +12331,6 @@ func (o InstancePoolAndStats) ToObjectValue(ctx context.Context) basetypes.Objec
 			"instance_pool_name":                    o.InstancePoolName,
 			"max_capacity":                          o.MaxCapacity,
 			"min_idle_instances":                    o.MinIdleInstances,
-			"node_type_flexibility":                 o.NodeTypeFlexibility,
 			"node_type_id":                          o.NodeTypeId,
 			"preloaded_docker_images":               o.PreloadedDockerImages,
 			"preloaded_spark_versions":              o.PreloadedSparkVersions,
@@ -12398,7 +12360,6 @@ func (o InstancePoolAndStats) Type(ctx context.Context) attr.Type {
 			"instance_pool_name":                    types.StringType,
 			"max_capacity":                          types.Int64Type,
 			"min_idle_instances":                    types.Int64Type,
-			"node_type_flexibility":                 NodeTypeFlexibility{}.Type(ctx),
 			"node_type_id":                          types.StringType,
 			"preloaded_docker_images": basetypes.ListType{
 				ElemType: DockerImage{}.Type(ctx),
@@ -12575,34 +12536,6 @@ func (o *InstancePoolAndStats) GetGcpAttributes(ctx context.Context) (InstancePo
 func (o *InstancePoolAndStats) SetGcpAttributes(ctx context.Context, v InstancePoolGcpAttributes) {
 	vs := v.ToObjectValue(ctx)
 	o.GcpAttributes = vs
-}
-
-// GetNodeTypeFlexibility returns the value of the NodeTypeFlexibility field in InstancePoolAndStats as
-// a NodeTypeFlexibility value.
-// If the field is unknown or null, the boolean return value is false.
-func (o *InstancePoolAndStats) GetNodeTypeFlexibility(ctx context.Context) (NodeTypeFlexibility, bool) {
-	var e NodeTypeFlexibility
-	if o.NodeTypeFlexibility.IsNull() || o.NodeTypeFlexibility.IsUnknown() {
-		return e, false
-	}
-	var v []NodeTypeFlexibility
-	d := o.NodeTypeFlexibility.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if d.HasError() {
-		panic(pluginfwcommon.DiagToString(d))
-	}
-	if len(v) == 0 {
-		return e, false
-	}
-	return v[0], true
-}
-
-// SetNodeTypeFlexibility sets the value of the NodeTypeFlexibility field in InstancePoolAndStats.
-func (o *InstancePoolAndStats) SetNodeTypeFlexibility(ctx context.Context, v NodeTypeFlexibility) {
-	vs := v.ToObjectValue(ctx)
-	o.NodeTypeFlexibility = vs
 }
 
 // GetPreloadedDockerImages returns the value of the PreloadedDockerImages field in InstancePoolAndStats as
@@ -15532,50 +15465,6 @@ func (o *NodeType) SetNodeInstanceType(ctx context.Context, v NodeInstanceType) 
 	o.NodeInstanceType = vs
 }
 
-// For Fleet-V2 using classic clusters, this object contains the information
-// about the alternate node type ids to use when attempting to launch a cluster.
-// It can be used with both the driver and worker node types.
-type NodeTypeFlexibility struct {
-}
-
-func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringCreateOrUpdate(plan NodeTypeFlexibility) {
-}
-
-func (newState *NodeTypeFlexibility) SyncEffectiveFieldsDuringRead(existingState NodeTypeFlexibility) {
-}
-
-func (c NodeTypeFlexibility) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-
-	return attrs
-}
-
-// GetComplexFieldTypes returns a map of the types of elements in complex fields in NodeTypeFlexibility.
-// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
-// the type information of their elements in the Go type system. This function provides a way to
-// retrieve the type information of the elements in complex fields at runtime. The values of the map
-// are the reflected types of the contained elements. They must be either primitive values from the
-// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
-// SDK values.
-func (a NodeTypeFlexibility) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
-}
-
-// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
-// interfere with how the plugin framework retrieves and sets values in state. Thus, NodeTypeFlexibility
-// only implements ToObjectValue() and Type().
-func (o NodeTypeFlexibility) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
-	return types.ObjectValueMust(
-		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
-		map[string]attr.Value{})
-}
-
-// Type implements basetypes.ObjectValuable.
-func (o NodeTypeFlexibility) Type(ctx context.Context) attr.Type {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{},
-	}
-}
-
 // Error message of a failed pending instances
 type PendingInstanceError struct {
 	InstanceId types.String `tfsdk:"instance_id"`
@@ -16183,6 +16072,17 @@ func (o RemoveInstanceProfile) Type(ctx context.Context) attr.Type {
 }
 
 type RemoveResponse struct {
+}
+
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse) {
+}
+
+func (newState *RemoveResponse) SyncEffectiveFieldsDuringRead(existingState RemoveResponse) {
+}
+
+func (c RemoveResponse) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveResponse.
@@ -17432,7 +17332,9 @@ type UpdateClusterResource struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.Object `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in

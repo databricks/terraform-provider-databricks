@@ -165,6 +165,15 @@ In addition to all arguments above, the following attributes are exported:
 
 The resource cluster policy can be imported using the policy id:
 
+```hcl
+import {
+  to = databricks_cluster_policy.this
+  id = "<cluster-policy-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
+
 ```bash
 terraform import databricks_cluster_policy.this <cluster-policy-id>
 ```

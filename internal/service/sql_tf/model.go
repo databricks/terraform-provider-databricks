@@ -2321,20 +2321,9 @@ func (o *CreateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+// Create an alert
 type CreateAlertV2Request struct {
 	Alert types.Object `tfsdk:"alert"`
-}
-
-func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateAlertV2Request) {
-}
-
-func (newState *CreateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState CreateAlertV2Request) {
-}
-
-func (c CreateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-
-	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateAlertV2Request.
@@ -13117,6 +13106,10 @@ func (o TrashQueryRequest) Type(ctx context.Context) attr.Type {
 
 type UpdateAlertRequest struct {
 	Alert types.Object `tfsdk:"alert"`
+	// If true, automatically resolve alert display name conflicts. Otherwise,
+	// fail the request if the alert's display name conflicts with an existing
+	// alert's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
 
 	Id types.String `tfsdk:"-"`
 	// The field mask must be a single string, with multiple fields separated by
@@ -13141,6 +13134,7 @@ func (newState *UpdateAlertRequest) SyncEffectiveFieldsDuringRead(existingState 
 
 func (c UpdateAlertRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert"] = attrs["alert"].SetOptional()
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
@@ -13167,9 +13161,10 @@ func (o UpdateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert":       o.Alert,
-			"id":          o.Id,
-			"update_mask": o.UpdateMask,
+			"alert":                     o.Alert,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
+			"id":                        o.Id,
+			"update_mask":               o.UpdateMask,
 		})
 }
 
@@ -13177,9 +13172,10 @@ func (o UpdateAlertRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o UpdateAlertRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"alert":       UpdateAlertRequestAlert{}.Type(ctx),
-			"id":          types.StringType,
-			"update_mask": types.StringType,
+			"alert":                     UpdateAlertRequestAlert{}.Type(ctx),
+			"auto_resolve_display_name": types.BoolType,
+			"id":                        types.StringType,
+			"update_mask":               types.StringType,
 		},
 	}
 }
@@ -13335,6 +13331,7 @@ func (o *UpdateAlertRequestAlert) SetCondition(ctx context.Context, v AlertCondi
 	o.Condition = vs
 }
 
+// Update an alert
 type UpdateAlertV2Request struct {
 	Alert types.Object `tfsdk:"alert"`
 	// UUID identifying the alert.
@@ -13350,21 +13347,7 @@ type UpdateAlertV2Request struct {
 	// always explicitly list the fields being updated and avoid using `*`
 	// wildcards, as it can lead to unintended results if the API changes in the
 	// future.
-	UpdateMask types.String `tfsdk:"update_mask"`
-}
-
-func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringCreateOrUpdate(plan UpdateAlertV2Request) {
-}
-
-func (newState *UpdateAlertV2Request) SyncEffectiveFieldsDuringRead(existingState UpdateAlertV2Request) {
-}
-
-func (c UpdateAlertV2Request) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["alert"] = attrs["alert"].SetOptional()
-	attrs["id"] = attrs["id"].SetComputed()
-	attrs["update_mask"] = attrs["update_mask"].SetRequired()
-
-	return attrs
+	UpdateMask types.String `tfsdk:"-"`
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in UpdateAlertV2Request.
@@ -13433,6 +13416,11 @@ func (o *UpdateAlertV2Request) SetAlert(ctx context.Context, v AlertV2) {
 }
 
 type UpdateQueryRequest struct {
+	// If true, automatically resolve alert display name conflicts. Otherwise,
+	// fail the request if the alert's display name conflicts with an existing
+	// alert's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
+
 	Id types.String `tfsdk:"-"`
 
 	Query types.Object `tfsdk:"query"`
@@ -13457,6 +13445,7 @@ func (newState *UpdateQueryRequest) SyncEffectiveFieldsDuringRead(existingState 
 }
 
 func (c UpdateQueryRequest) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
@@ -13484,9 +13473,10 @@ func (o UpdateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":          o.Id,
-			"query":       o.Query,
-			"update_mask": o.UpdateMask,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
+			"id":                        o.Id,
+			"query":                     o.Query,
+			"update_mask":               o.UpdateMask,
 		})
 }
 
@@ -13494,9 +13484,10 @@ func (o UpdateQueryRequest) ToObjectValue(ctx context.Context) basetypes.ObjectV
 func (o UpdateQueryRequest) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id":          types.StringType,
-			"query":       UpdateQueryRequestQuery{}.Type(ctx),
-			"update_mask": types.StringType,
+			"auto_resolve_display_name": types.BoolType,
+			"id":                        types.StringType,
+			"query":                     UpdateQueryRequestQuery{}.Type(ctx),
+			"update_mask":               types.StringType,
 		},
 	}
 }

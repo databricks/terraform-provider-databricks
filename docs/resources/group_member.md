@@ -41,8 +41,8 @@ resource "databricks_group_member" "bb" {
 
 The following arguments are supported:
 
-* `group_id` - (Required) This is the id of the [group](group.md) resource.
-* `member_id` - (Required) This is the id of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
+* `group_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md) resource.
+* `member_id` - (Required) This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md).
 
 ## Attribute Reference
 
@@ -53,6 +53,15 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 You can import a `databricks_group_member` resource with name `my_group_member` like the following:
+
+```hcl
+import {
+  to = databricks_group_member.my_group_member
+  id = "<group_id>|<member_id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
 terraform import databricks_group_member.my_group_member "<group_id>|<member_id>"

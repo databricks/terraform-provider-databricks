@@ -47,10 +47,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The experiment resource can be imported using the id of the experiment
+The experiment resource can be imported using the id of the experiment:
+
+```hcl
+import {
+  to = databricks_mlflow_experiment.this
+  id = "<experiment-id>"
+}
+```
+
+Alternatively, when using `terraform` version 1.4 or earlier, import using the `terraform import` command:
 
 ```bash
-terraform import databricks_mlflow_experiment.this <experiment-id>
+terraform import databricks_mlflow_experiment.this "<experiment-id>"
 ```
 
 ## Related Resources

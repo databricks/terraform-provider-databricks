@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+ * Support updating `databricks_cluster` to Auto AZ [#4743](https://github.com/databricks/terraform-provider-databricks/pull/4743).
+
 ### Documentation
 
 ### Exporter

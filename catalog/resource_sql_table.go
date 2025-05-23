@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"reflect"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -699,14 +699,9 @@ func ResourceSqlTable() common.Resource {
 					partitionIndexes[c.PartitionIndex] = c.Name
 				}
 			}
-			indexes := []int{}
+			indexes := slices.Sorted(maps.Keys(partitionIndexes))
+
 			partitions := []string{}
-
-			for index := range partitionIndexes {
-				indexes = append(indexes, index)
-			}
-			sort.Ints(indexes)
-
 			for _, p := range indexes {
 				partitions = append(partitions, partitionIndexes[p])
 			}

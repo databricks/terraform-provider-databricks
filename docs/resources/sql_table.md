@@ -190,7 +190,7 @@ The following arguments are supported:
 
 ### `column` configuration block
 
-For table columns
+For table columns. These can be optional for external tables.
 Currently, changing the column definitions for a table will require dropping and re-creating the table
 
 * `name` - User-visible name of column

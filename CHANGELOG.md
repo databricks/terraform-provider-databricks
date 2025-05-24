@@ -1,5 +1,12 @@
 # Version changelog
 
+## Release v1.81.1
+
+### Bug Fixes
+
+ * Support updating `databricks_cluster` to Auto AZ [#4743](https://github.com/databricks/terraform-provider-databricks/pull/4743).
+
+
 ## Release v1.81.0
 
 ### Breaking Changes

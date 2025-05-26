@@ -2,9 +2,40 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_database_instance Resource
+Database Instances are managed Postgres instances, composed of a primary Postgres compute instance and 0 or more read replica instances. 
+
+### Use Cases
+
+Database Instances can be accessed for reading and writing structured data via SQL. 
+
+Database Instances can be mapped to Catalogs and Tables within a Unity Catalog Metastore to enable read access via REST API and Feature Store.
+
+### Permissions
+
+Database Instances are compute resources created at the workspace level. As such, management operations are controlled by high-level ACLs.
+
+* CAN_USE: Users with this permission can use the database instance for creating synced tables.
+* CAN_MANAGE: Users with this permission can update and delete Database Instances.
+
+### Sizing
+
+Database Instances can be created with the following compute sizes in terms of Capacity Units (CUs):
+
+* 1 (small)
+* 2 (medium)
+* 4 (large)
+
+**Note:** Each workspace is limited to 5 Database Instances in total.
 
 
 ## Example Usage
+```hcl
+resource "databricks_database_instance" "this" {
+  name = "my-database-instance"
+  capacity = "CU_2"
+  stopped = false
+}
+```
 
 
 ## Arguments

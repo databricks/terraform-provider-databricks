@@ -2,9 +2,20 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_database_instances Data Source
+This data source can be used to fetch the list of Database Instances within the workspace.
+The list can then be accessed via the data object's `database_instances` field.
 
 
 ## Example Usage
+Getting a list of all Database Instances:
+
+```hcl
+data "databricks_database_instances" "all" {
+}
+output "all_database_instances" {
+  value = data.databricks_database_instances.all.database_instances
+}
+```
 
 
 ## Arguments

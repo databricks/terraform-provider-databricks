@@ -2,9 +2,17 @@
 subcategory: "Unity Catalog"
 ---
 # databricks_database_instance Data Source
+This data source can be used to get a single Database Instance.
 
 
 ## Example Usage
+Referring to a Database Instance by name:
+
+```hcl
+data "databricks_database_instance" "this" {
+  name = "my-database-instance"
+}
+```
 
 
 ## Arguments

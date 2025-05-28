@@ -914,6 +914,12 @@ func (o GetAccountUserRequest_SdkV2) Type(ctx context.Context) attr.Type {
 // Get assignable roles for a resource
 type GetAssignableRolesForResourceRequest_SdkV2 struct {
 	// The resource name for which assignable roles will be listed.
+	//
+	// Examples | Summary :--- | :--- `resource=accounts/<ACCOUNT_ID>` | A
+	// resource name for the account.
+	// `resource=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>` | A resource name for
+	// the group. `resource=accounts/<ACCOUNT_ID>/servicePrincipals/<SP_ID>` | A
+	// resource name for the service principal.
 	Resource types.String `tfsdk:"-"`
 }
 
@@ -1317,8 +1323,21 @@ type GetRuleSetRequest_SdkV2 struct {
 	// avoid race conditions that is get an etag from a GET rule set request,
 	// and pass it with the PUT update request to identify the rule set version
 	// you are updating.
+	//
+	// Examples | Summary :--- | :--- `etag=` | An empty etag can only be used
+	// in GET to indicate no freshness requirements.
+	// `etag=RENUAAABhSweA4NvVmmUYdiU717H3Tgy0UJdor3gE4a+mq/oj9NjAf8ZsQ==` | An
+	// etag encoded a specific version of the rule set to get or to be updated.
 	Etag types.String `tfsdk:"-"`
 	// The ruleset name associated with the request.
+	//
+	// Examples | Summary :--- | :---
+	// `name=accounts/<ACCOUNT_ID>/ruleSets/default` | A name for a rule set on
+	// the account.
+	// `name=accounts/<ACCOUNT_ID>/groups/<GROUP_ID>/ruleSets/default` | A name
+	// for a rule set on the group.
+	// `name=accounts/<ACCOUNT_ID>/servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>/ruleSets/default`
+	// | A name for a rule set on the service principal.
 	Name types.String `tfsdk:"-"`
 }
 
@@ -1502,7 +1521,11 @@ func (o GetWorkspaceAssignmentRequest_SdkV2) Type(ctx context.Context) attr.Type
 }
 
 type GrantRule_SdkV2 struct {
-	// Principals this grant rule applies to.
+	// Principals this grant rule applies to. A principal can be a user (for end
+	// users), a service principal (for applications and compute workloads), or
+	// an account group. Each principal has its own identifier format: *
+	// users/<USERNAME> * groups/<GROUP_NAME> *
+	// servicePrincipals/<SERVICE_PRINCIPAL_APPLICATION_ID>
 	Principals types.List `tfsdk:"principals"`
 	// Role that is assigned to the list of principals.
 	Role types.String `tfsdk:"role"`
@@ -4156,7 +4179,15 @@ func (o Role_SdkV2) Type(ctx context.Context) attr.Type {
 }
 
 type RuleSetResponse_SdkV2 struct {
-	// Identifies the version of the rule set returned.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`
@@ -4171,9 +4202,9 @@ func (newState *RuleSetResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingSta
 }
 
 func (c RuleSetResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
-	attrs["etag"] = attrs["etag"].SetOptional()
+	attrs["etag"] = attrs["etag"].SetRequired()
 	attrs["grant_rules"] = attrs["grant_rules"].SetOptional()
-	attrs["name"] = attrs["name"].SetOptional()
+	attrs["name"] = attrs["name"].SetRequired()
 
 	return attrs
 }
@@ -4244,9 +4275,15 @@ func (o *RuleSetResponse_SdkV2) SetGrantRules(ctx context.Context, v []GrantRule
 }
 
 type RuleSetUpdateRequest_SdkV2 struct {
-	// The expected etag of the rule set to update. The update will fail if the
-	// value does not match the value that is stored in account access control
-	// service.
+	// Identifies the version of the rule set returned. Etag used for
+	// versioning. The response is at least as fresh as the eTag provided. Etag
+	// is used for optimistic concurrency control as a way to help prevent
+	// simultaneous updates of a rule set from overwriting each other. It is
+	// strongly suggested that systems make use of the etag in the read ->
+	// modify -> write pattern to perform rule set updates in order to avoid
+	// race conditions that is get an etag from a GET rule set request, and pass
+	// it with the PUT update request to identify the rule set version you are
+	// updating.
 	Etag types.String `tfsdk:"etag"`
 
 	GrantRules types.List `tfsdk:"grant_rules"`

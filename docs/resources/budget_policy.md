@@ -36,9 +36,7 @@ The following arguments are supported:
   - Must be unique among all custom tags of the same policy
   - Cannot be “budget-policy-name”, “budget-policy-id” or "budget-policy-resolution-result" -
   these tags are preserved.
-  
 * `value` (string, optional) - The value of the tag.
-  
 
 ## Attributes
 In addition to the above arguments, the following attributes are exported:

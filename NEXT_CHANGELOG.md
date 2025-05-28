@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+ * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
+
 ### Bug Fixes
 
  * Populate `partitions` when reading `databricks_sql_table` ([#4674](https://github.com/databricks/terraform-provider-databricks/pull/4674)).

@@ -236,7 +236,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetSuppressDiff()
 	s.SchemaPath("channel").SetSuppressDiff()
 	s.SchemaPath("cluster", "spark_conf").SetCustomSuppressDiff(clusters.SparkConfDiffSuppressFunc)
-	s.SchemaPath("cluster", "aws_attributes", "zone_id").SetCustomSuppressDiff(clusters.ZoneDiffSuppress)
 	s.SchemaPath("cluster", "autoscale", "mode").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("edition").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("storage").SetCustomSuppressDiff(suppressStorageDiff)

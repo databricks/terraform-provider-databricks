@@ -6,6 +6,8 @@
 
 ### New Features and Improvements
 
+ * Support configuration of file events in `databricks_external_location` [#4749](https://github.com/databricks/terraform-provider-databricks/pull/4749).
+
 ### Bug Fixes
 
  * Populate `partitions` when reading `databricks_sql_table` ([#4674](https://github.com/databricks/terraform-provider-databricks/pull/4674)).

@@ -10,7 +10,7 @@ Secure a workspace with private connectivity and mitigate data exfiltration risk
 
 ## Creating a GCP service account for Databricks Provisioning and Authenticate with Databricks account API
 
-To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp_workspace.md).
+To work with Databricks in GCP in an automated way, please create a service account and manually add it in the [Accounts Console](https://accounts.gcp.databricks.com/users) as an account admin. Databricks account-level APIs can only be called by account owners and account admins, and can only be authenticated using Google-issued OIDC tokens. The simplest way to do this would be via [Google Cloud CLI](https://cloud.google.com/sdk/gcloud). For details, please refer to [Provisioning Databricks workspaces on GCP](gcp-workspace.md).
 
 ## Creating a VPC network
 
@@ -35,14 +35,6 @@ resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" 
   ip_cidr_range = "10.0.0.0/16"
   region        = "us-central1"
   network       = google_compute_network.dbx_private_vpc.id
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-  secondary_ip_range {
-    range_name    = "svc"
-    ip_cidr_range = "10.2.0.0/20"
-  }
   private_ip_google_access = true
 }
 
@@ -89,8 +81,6 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network-with-private-secondary-ip-ranges.name
     subnet_region         = google_compute_subnetwork.network-with-private-secondary-ip-ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
   }
   vpc_endpoints {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay_vpce.vpc_endpoint_id]

@@ -226,7 +226,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc",
 				ExpectedRequest: Group{
 					DisplayName: "Data Ninjas",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -260,7 +260,7 @@ func TestResourceGroupUpdate(t *testing.T) {
 				Resource: "/api/2.0/preview/scim/v2/Groups/abc?attributes=displayName,externalId,entitlements",
 				Response: Group{
 					DisplayName: "Data Ninjas",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},

@@ -10,37 +10,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+type groupResource struct {
+	entitlements
+	DisplayName    string `json:"display_name"`
+	ExternalID     string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
+	URL            string `json:"url,omitempty" tf:"computed"`
+	AclPrincipalID string `json:"acl_principal_id,omitempty" tf:"computed"`
+	Force          bool   `json:"force,omitempty"`
+}
+
 // ResourceGroup manages user groups
 func ResourceGroup() common.Resource {
-	type entity struct {
-		DisplayName string `json:"display_name"`
-		ExternalID  string `json:"external_id,omitempty" tf:"force_new,suppress_diff"`
-		URL         string `json:"url,omitempty" tf:"computed"`
-	}
-	groupSchema := common.StructToSchema(entity{},
+	groupSchema := common.StructToSchema(groupResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(m)
 			// https://github.com/databricks/terraform-provider-databricks/issues/1089
 			m["display_name"].ValidateDiagFunc = validation.ToDiagFunc(
 				validation.StringNotInSlice([]string{"users", "admins"}, false))
-			m["force"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["acl_principal_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
 			return m
 		})
-	addEntitlementsToSchema(groupSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var groupResource groupResource
+			common.DataToStructPointer(d, groupSchema, &groupResource)
 			g := Group{
-				DisplayName:  d.Get("display_name").(string),
-				Entitlements: readEntitlementsFromData(d),
-				ExternalID:   d.Get("external_id").(string),
+				DisplayName:  groupResource.DisplayName,
+				Entitlements: groupResource.toComplexValueList(),
+				ExternalID:   groupResource.ExternalID,
 			}
 			groupsAPI := NewGroupsAPI(ctx, c)
 			group, err := groupsAPI.Create(g)
@@ -55,20 +50,23 @@ func ResourceGroup() common.Resource {
 			if err != nil {
 				return err
 			}
-			d.Set("display_name", group.DisplayName)
-			d.Set("external_id", group.ExternalID)
-			d.Set("acl_principal_id", fmt.Sprintf("groups/%s", group.DisplayName))
-			if c.Config.IsAccountClient() {
-				d.Set("url", c.FormatURL("users/groups/", d.Id(), "/information"))
-			} else {
-				d.Set("url", c.FormatURL("#setting/accounts/groups/", d.Id()))
+			groupResource := groupResource{
+				entitlements:   fromComplexValueList(ctx, group.Entitlements),
+				DisplayName:    group.DisplayName,
+				ExternalID:     group.ExternalID,
+				AclPrincipalID: fmt.Sprintf("groups/%s", group.DisplayName),
 			}
-			return group.Entitlements.readIntoData(d)
+			if c.Config.IsAccountClient() {
+				groupResource.URL = c.FormatURL("users/groups/", d.Id(), "/information")
+			} else {
+				groupResource.URL = c.FormatURL("#setting/accounts/groups/", d.Id())
+			}
+			return common.StructToData(groupResource, groupSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			groupName := d.Get("display_name").(string)
-			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupName,
-				d.Get("external_id").(string), readEntitlementsFromData(d))
+			var groupResource groupResource
+			common.DataToStructPointer(d, groupSchema, &groupResource)
+			return NewGroupsAPI(ctx, c).UpdateNameAndEntitlements(d.Id(), groupResource.DisplayName, groupResource.ExternalID, groupResource.entitlements.toComplexValueList())
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			return NewGroupsAPI(ctx, c).Delete(d.Id())

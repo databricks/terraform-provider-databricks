@@ -116,7 +116,7 @@ func TestResourceServicePrincipalCreate(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -178,7 +178,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -204,7 +204,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					Schemas:     []URN{ServicePrincipalSchema},
 					DisplayName: "Example Service Principal",
 					Active:      true,
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-instance-pool-create",
 						},
@@ -229,7 +229,7 @@ func TestResourceServicePrincipalUpdateOnAWS(t *testing.T) {
 					ApplicationID: "existing-application-id",
 					DisplayName:   "Example Service Principal",
 					Active:        true,
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-instance-pool-create",
 						},
@@ -291,7 +291,7 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 
 					Schemas:     []URN{ServicePrincipalSchema},
 					DisplayName: "Example Service Principal",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -306,7 +306,7 @@ func TestResourceServicePrincipalUpdateOnAzure(t *testing.T) {
 					Schemas:       []URN{ServicePrincipalSchema},
 					ApplicationID: "existing-application-id",
 					DisplayName:   "Example Service Principal",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -357,7 +357,7 @@ func TestResourceServicePrincipalUpdate_ErrorPut(t *testing.T) {
 					DisplayName: "Example Service Principal",
 					Active:      true,
 					ID:          "abc",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},

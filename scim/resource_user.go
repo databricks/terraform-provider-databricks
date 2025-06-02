@@ -31,74 +31,47 @@ func setCommonUserFields(d *schema.ResourceData, user User, username string) {
 	d.Set("repos", fmt.Sprintf("/Repos/%s", username))
 }
 
+type userResource struct {
+	entitlements
+	UserName              string `json:"user_name" tf:"force_new"`
+	DisplayName           string `json:"display_name,omitempty" tf:"computed"`
+	Active                bool   `json:"active,omitempty"`
+	ExternalID            string `json:"external_id,omitempty" tf:"suppress_diff"`
+	Force                 bool   `json:"force,omitempty"`
+	Home                  string `json:"home,omitempty" tf:"computed"`
+	Repos                 string `json:"repos,omitempty" tf:"computed"`
+	ForceDeleteRepos      bool   `json:"force_delete_repos,omitempty"`
+	ForceDeleteHomeDir    bool   `json:"force_delete_home_dir,omitempty"`
+	DisableAsUserDeletion bool   `json:"disable_as_user_deletion,omitempty"`
+	AclPrincipalID        string `json:"acl_principal_id,omitempty" tf:"computed"`
+}
+
 // ResourceUser manages users within workspace
 func ResourceUser() common.Resource {
-	type entity struct {
-		UserName    string `json:"user_name" tf:"force_new"`
-		DisplayName string `json:"display_name,omitempty" tf:"computed"`
-		Active      bool   `json:"active,omitempty"`
-		ExternalID  string `json:"external_id,omitempty" tf:"suppress_diff"`
-	}
-	userSchema := common.StructToSchema(entity{},
+	userSchema := common.StructToSchema(userResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(m)
 			m["user_name"].DiffSuppressFunc = common.EqualFoldDiffSuppress
 			m["active"].Default = true
-			m["force"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["home"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
-			m["repos"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
-			m["force_delete_repos"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["force_delete_home_dir"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["disable_as_user_deletion"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			}
-			m["acl_principal_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
 			return m
 		})
-	scimUserFromData := func(d *schema.ResourceData) (user User, err error) {
-		var u entity
-		common.DataToStructPointer(d, userSchema, &u)
-		return User{
-			UserName:     u.UserName,
-			DisplayName:  u.DisplayName,
-			Active:       u.Active,
-			Entitlements: readEntitlementsFromData(d),
-			ExternalID:   u.ExternalID,
-		}, nil
-	}
 	return common.Resource{
 		Schema: userSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			u, err := scimUserFromData(d)
-			if err != nil {
-				return err
+			var userResource userResource
+			common.DataToStructPointer(d, userSchema, &userResource)
+			u := User{
+				UserName:     userResource.UserName,
+				DisplayName:  userResource.DisplayName,
+				Active:       userResource.Active,
+				Entitlements: userResource.entitlements.toComplexValueList(),
+				ExternalID:   userResource.ExternalID,
 			}
 			usersAPI := NewUsersAPI(ctx, c)
 			user, err := usersAPI.Create(u)
 			if err != nil {
+				if !userResource.Force {
+					return err
+				}
 				return createForceOverridesManuallyAddedUser(err, d, usersAPI, u)
 			}
 			d.SetId(user.ID)
@@ -109,25 +82,38 @@ func ResourceUser() common.Resource {
 			if err != nil {
 				return err
 			}
-			setCommonUserFields(d, user, user.UserName)
-			d.Set("user_name", user.UserName)
-			d.Set("acl_principal_id", fmt.Sprintf("users/%s", user.UserName))
-			return user.Entitlements.readIntoData(d)
+			userResource := userResource{
+				DisplayName:    user.DisplayName,
+				Active:         user.Active,
+				ExternalID:     user.ExternalID,
+				Home:           fmt.Sprintf("/Users/%s", user.UserName),
+				Repos:          fmt.Sprintf("/Repos/%s", user.UserName),
+				UserName:       user.UserName,
+				AclPrincipalID: fmt.Sprintf("users/%s", user.UserName),
+				entitlements:   fromComplexValueList(ctx, user.Entitlements),
+			}
+			return common.StructToData(userResource, userSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			u, err := scimUserFromData(d)
-			if err != nil {
-				return err
+			var userResource userResource
+			common.DataToStructPointer(d, userSchema, &userResource)
+			u := User{
+				UserName:     userResource.UserName,
+				DisplayName:  userResource.DisplayName,
+				Active:       userResource.Active,
+				Entitlements: userResource.entitlements.toComplexValueList(),
+				ExternalID:   userResource.ExternalID,
 			}
 			return NewUsersAPI(ctx, c).Update(d.Id(), u)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var userResource userResource
+			common.DataToStructPointer(d, userSchema, &userResource)
 			user := NewUsersAPI(ctx, c)
-			userName := d.Get("user_name").(string)
 			var err error = nil
 			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
-			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
-			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
+			isForceDeleteRepos := userResource.ForceDeleteRepos
+			isForceDeleteHomeDir := userResource.ForceDeleteHomeDir
 			// Determine if disable or delete
 			var isDisable bool
 			if isDisableP, exists := d.GetOkExists("disable_as_user_deletion"); exists {
@@ -156,13 +142,13 @@ func ResourceUser() common.Resource {
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", userName), true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(userResource.Repos, true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", userName), true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(userResource.Home, true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
@@ -174,10 +160,6 @@ func ResourceUser() common.Resource {
 }
 
 func createForceOverridesManuallyAddedUser(err error, d *schema.ResourceData, usersAPI UsersAPI, u User) error {
-	forceCreate := d.Get("force").(bool)
-	if !forceCreate {
-		return err
-	}
 	// corner-case for overriding manually provisioned users
 	userName := strings.ReplaceAll(u.UserName, "'", "")
 	errStr := strings.ToLower(err.Error())

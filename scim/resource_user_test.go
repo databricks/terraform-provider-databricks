@@ -100,7 +100,7 @@ func TestResourceUserCreate(t *testing.T) {
 				ExpectedRequest: User{
 					DisplayName: "Example user",
 					Active:      true,
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -120,7 +120,7 @@ func TestResourceUserCreate(t *testing.T) {
 					Active:      true,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -163,7 +163,7 @@ func TestResourceUserCreateInactive(t *testing.T) {
 				ExpectedRequest: User{
 					DisplayName: "Example user",
 					Active:      false,
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -183,7 +183,7 @@ func TestResourceUserCreateInactive(t *testing.T) {
 					Active:      false,
 					UserName:    "me@example.com",
 					ID:          "abc",
-					Entitlements: entitlements{
+					Entitlements: []ComplexValue{
 						{
 							Value: "allow-cluster-create",
 						},
@@ -244,7 +244,7 @@ func TestResourceUserUpdate(t *testing.T) {
 		DisplayName: "Changed Name",
 		UserName:    "me@example.com",
 		Active:      true,
-		Entitlements: entitlements{
+		Entitlements: []ComplexValue{
 			{
 				Value: "allow-instance-pool-create",
 			},

@@ -94,71 +94,48 @@ func (a ServicePrincipalsAPI) Delete(servicePrincipalID string) error {
 	return a.client.Scim(a.context, "DELETE", servicePrincipalPath, nil, nil)
 }
 
+type servicePrincipalResource struct {
+	entitlements
+	ApplicationID         string `json:"application_id,omitempty" tf:"computed,force_new"`
+	DisplayName           string `json:"display_name,omitempty" tf:"computed"`
+	Active                bool   `json:"active,omitempty"`
+	ExternalID            string `json:"external_id,omitempty" tf:"suppress_diff"`
+	Force                 bool   `json:"force,omitempty"`
+	Home                  string `json:"home,omitempty" tf:"computed"`
+	Repos                 string `json:"repos,omitempty" tf:"computed"`
+	ForceDeleteRepos      bool   `json:"force_delete_repos,omitempty"`
+	ForceDeleteHomeDir    bool   `json:"force_delete_home_dir,omitempty"`
+	DisableAsUserDeletion bool   `json:"disable_as_user_deletion,omitempty"`
+	AclPrincipalID        string `json:"acl_principal_id,omitempty" tf:"computed"`
+}
+
 // ResourceServicePrincipal manages service principals within workspace
 func ResourceServicePrincipal() common.Resource {
-	type entity struct {
-		ApplicationID string `json:"application_id,omitempty" tf:"computed,force_new"`
-		DisplayName   string `json:"display_name,omitempty" tf:"computed"`
-		Active        bool   `json:"active,omitempty"`
-		ExternalID    string `json:"external_id,omitempty" tf:"suppress_diff"`
-	}
-	servicePrincipalSchema := common.StructToSchema(entity{},
+	servicePrincipalSchema := common.StructToSchema(servicePrincipalResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(m)
 			m["active"].Default = true
-			m["force"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["home"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
-			m["repos"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
-			m["force_delete_repos"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["force_delete_home_dir"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["disable_as_user_deletion"] = &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-			}
-			m["acl_principal_id"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			}
 			m["application_id"].AtLeastOneOf = []string{"application_id", "display_name"}
 			m["display_name"].AtLeastOneOf = []string{"application_id", "display_name"}
 			return m
 		})
-	spFromData := func(d *schema.ResourceData) User {
-		var u entity
-		common.DataToStructPointer(d, servicePrincipalSchema, &u)
-		return User{
-			ApplicationID: u.ApplicationID,
-			DisplayName:   u.DisplayName,
-			Active:        u.Active,
-			Entitlements:  readEntitlementsFromData(d),
-			ExternalID:    u.ExternalID,
-		}
-	}
 	return common.Resource{
 		Schema: servicePrincipalSchema,
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			sp := spFromData(d)
+			var u servicePrincipalResource
+			common.DataToStructPointer(d, servicePrincipalSchema, &u)
+			sp := User{
+				ApplicationID: u.ApplicationID,
+				DisplayName:   u.DisplayName,
+				Active:        u.Active,
+				Entitlements:  u.entitlements.toComplexValueList(),
+				ExternalID:    u.ExternalID,
+			}
 			spAPI := NewServicePrincipalsAPI(ctx, c)
 			servicePrincipal, err := spAPI.Create(sp)
 			if err != nil {
+				if !u.Force {
+					return err
+				}
 				return createForceOverridesManuallyAddedServicePrincipal(err, d, spAPI, sp)
 			}
 			d.SetId(servicePrincipal.ID)
@@ -169,31 +146,40 @@ func ResourceServicePrincipal() common.Resource {
 			if err != nil {
 				return err
 			}
-			setCommonUserFields(d, sp, sp.ApplicationID)
-			d.Set("acl_principal_id", fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID))
-			d.Set("application_id", sp.ApplicationID)
-			return sp.Entitlements.readIntoData(d)
+			spResource := servicePrincipalResource{
+				entitlements:   fromComplexValueList(ctx, sp.Entitlements),
+				ApplicationID:  sp.ApplicationID,
+				DisplayName:    sp.DisplayName,
+				Active:         sp.Active,
+				ExternalID:     sp.ExternalID,
+				Home:           fmt.Sprintf("/Users/%s", sp.ApplicationID),
+				Repos:          fmt.Sprintf("/Repos/%s", sp.ApplicationID),
+				AclPrincipalID: fmt.Sprintf("servicePrincipals/%s", sp.ApplicationID),
+			}
+			return common.StructToData(spResource, servicePrincipalSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			var applicationId string
-			if c.IsAzure() {
-				applicationId = d.Get("application_id").(string)
+			var u servicePrincipalResource
+			common.DataToStructPointer(d, servicePrincipalSchema, &u)
+			sp := User{
+				DisplayName:  u.DisplayName,
+				Active:       u.Active,
+				Entitlements: u.entitlements.toComplexValueList(),
+				ExternalID:   u.ExternalID,
 			}
-			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), User{
-				DisplayName:   d.Get("display_name").(string),
-				Active:        d.Get("active").(bool),
-				Entitlements:  readEntitlementsFromData(d),
-				ExternalID:    d.Get("external_id").(string),
-				ApplicationID: applicationId,
-			})
+			if c.IsAzure() {
+				sp.ApplicationID = u.ApplicationID
+			}
+			return NewServicePrincipalsAPI(ctx, c).Update(d.Id(), sp)
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
+			var u servicePrincipalResource
+			common.DataToStructPointer(d, servicePrincipalSchema, &u)
 			spAPI := NewServicePrincipalsAPI(ctx, c)
-			appId := d.Get("application_id").(string)
 			var err error = nil
 			isAccount := c.Config.IsAccountClient() && c.Config.AccountID != ""
-			isForceDeleteRepos := d.Get("force_delete_repos").(bool)
-			isForceDeleteHomeDir := d.Get("force_delete_home_dir").(bool)
+			isForceDeleteRepos := u.ForceDeleteRepos
+			isForceDeleteHomeDir := u.ForceDeleteHomeDir
 			// Determine if disable or delete
 			var isDisable bool
 			if isDisableP, exists := d.GetOkExists("disable_as_user_deletion"); exists {
@@ -222,13 +208,13 @@ func ResourceServicePrincipal() common.Resource {
 			// Handle force delete flags
 			if !isAccount && !isDisable && err == nil {
 				if isForceDeleteRepos {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Repos/%v", appId), true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(u.Repos, true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_repos: %s", err.Error())
 					}
 				}
 				if isForceDeleteHomeDir {
-					err = workspace.NewNotebooksAPI(ctx, c).Delete(fmt.Sprintf("/Users/%v", appId), true)
+					err = workspace.NewNotebooksAPI(ctx, c).Delete(u.Home, true)
 					if err != nil && !apierr.IsMissing(err) {
 						return fmt.Errorf("force_delete_home_dir: %s", err.Error())
 					}
@@ -240,10 +226,6 @@ func ResourceServicePrincipal() common.Resource {
 }
 
 func createForceOverridesManuallyAddedServicePrincipal(err error, d *schema.ResourceData, spAPI ServicePrincipalsAPI, u User) error {
-	forceCreate := d.Get("force").(bool)
-	if !forceCreate {
-		return err
-	}
 	// corner-case for overriding manually provisioned service principals
 	knownErrs := []string{
 		fmt.Sprintf("Service principal with application ID %s already exists.", u.ApplicationID),

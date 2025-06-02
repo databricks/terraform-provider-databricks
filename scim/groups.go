@@ -67,7 +67,7 @@ func (a GroupsAPI) Patch(groupID string, r patchRequest) error {
 	return a.client.Scim(a.context, http.MethodPatch, fmt.Sprintf("/preview/scim/v2/Groups/%v", groupID), r, nil)
 }
 
-func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, externalID string, e entitlements) error {
+func (a GroupsAPI) UpdateNameAndEntitlements(groupID string, name string, externalID string, e []ComplexValue) error {
 	g, err := a.Read(groupID, "displayName,entitlements,groups,members,externalId")
 	if err != nil {
 		return err

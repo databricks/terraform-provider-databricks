@@ -9,33 +9,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type entitlementsResource struct {
+	entitlements
+	GroupId string `json:"group_id,omitempty" tf:"force_new"`
+	UserId  string `json:"user_id,omitempty" tf:"force_new"`
+	SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
+}
+
 // ResourceGroup manages user groups
 func ResourceEntitlements() common.Resource {
-	type entity struct {
-		GroupId string `json:"group_id,omitempty" tf:"force_new"`
-		UserId  string `json:"user_id,omitempty" tf:"force_new"`
-		SpnId   string `json:"service_principal_id,omitempty" tf:"force_new"`
-	}
-	entitlementSchema := common.StructToSchema(entity{},
+	entitlementSchema := common.StructToSchema(entitlementsResource{},
 		func(m map[string]*schema.Schema) map[string]*schema.Schema {
-			addEntitlementsToSchema(m)
 			alof := []string{"group_id", "user_id", "service_principal_id"}
 			for _, field := range alof {
 				m[field].AtLeastOneOf = alof
 			}
 			return m
 		})
-	addEntitlementsToSchema(entitlementSchema)
 	return common.Resource{
 		Create: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
 			if c.Config.IsAccountClient() {
 				return fmt.Errorf("entitlements can only be managed with a provider configured at the workspace-level")
 			}
-			err := patchEntitlements(ctx, d, c, "replace")
+			var e entitlementsResource
+			common.DataToStructPointer(d, entitlementSchema, &e)
+			err := patchEntitlements(ctx, e, c, "replace")
 			if err != nil {
 				return err
 			}
-			d.SetId(getId(d))
+			d.SetId(getId(e))
 			return nil
 		},
 		Read: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
@@ -43,48 +45,50 @@ func ResourceEntitlements() common.Resource {
 			if len(split) != 2 {
 				return fmt.Errorf("ID must be two elements: %s", d.Id())
 			}
+			var entitlements entitlementsResource
 			switch strings.ToLower(split[0]) {
 			case "group":
 				group, err := NewGroupsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
-				d.Set("group_id", split[1])
-				group.Entitlements.generateEmpty(d)
-				return group.Entitlements.readIntoData(d)
+				entitlements.GroupId = split[1]
+				entitlements.entitlements = fromComplexValueList(ctx, group.Entitlements)
 			case "user":
 				user, err := NewUsersAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
-				d.Set("user_id", split[1])
-				user.Entitlements.generateEmpty(d)
-				return user.Entitlements.readIntoData(d)
+				entitlements.UserId = split[1]
+				entitlements.entitlements = fromComplexValueList(ctx, user.Entitlements)
 			case "spn":
 				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
-				d.Set("service_principal_id", split[1])
-				spn.Entitlements.generateEmpty(d)
-				return spn.Entitlements.readIntoData(d)
+				entitlements.SpnId = split[1]
+				entitlements.entitlements = fromComplexValueList(ctx, spn.Entitlements)
 			}
-			return nil
+			return common.StructToData(entitlements, entitlementSchema, d)
 		},
 		Update: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return patchEntitlements(ctx, d, c, "replace")
+			var e entitlementsResource
+			common.DataToStructPointer(d, entitlementSchema, &e)
+			return patchEntitlements(ctx, e, c, "replace")
 		},
 		Delete: func(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient) error {
-			return patchEntitlements(ctx, d, c, "remove")
+			var e entitlementsResource
+			common.DataToStructPointer(d, entitlementSchema, &e)
+			return patchEntitlements(ctx, e, c, "remove")
 		},
 		Schema: entitlementSchema,
 	}
 }
 
-func getId(d *schema.ResourceData) string {
-	groupId := d.Get("group_id").(string)
-	userId := d.Get("user_id").(string)
-	spnId := d.Get("service_principal_id").(string)
+func getId(e entitlementsResource) string {
+	groupId := e.GroupId
+	userId := e.UserId
+	spnId := e.SpnId
 	if groupId != "" {
 		return "group/" + groupId
 	}
@@ -97,12 +101,12 @@ func getId(d *schema.ResourceData) string {
 	return ""
 }
 
-func patchEntitlements(ctx context.Context, d *schema.ResourceData, c *common.DatabricksClient, op string) error {
-	groupId := d.Get("group_id").(string)
-	userId := d.Get("user_id").(string)
-	spnId := d.Get("service_principal_id").(string)
+func patchEntitlements(ctx context.Context, e entitlementsResource, c *common.DatabricksClient, op string) error {
+	groupId := e.GroupId
+	userId := e.UserId
+	spnId := e.SpnId
 	noEntitlementMessage := "invalidPath No such attribute with the name : entitlements in the current resource"
-	entitlements := readEntitlementsFromData(d)
+	entitlements := e.toComplexValueList()
 	if len(entitlements) == 1 && entitlements[0].Value == "" && op == "remove" {
 		// No updates are needed, so return early
 		return nil

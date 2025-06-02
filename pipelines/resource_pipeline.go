@@ -212,6 +212,11 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
 	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
+	// Required fields
+	s.SchemaPath("library", "glob", "include").SetRequired()
+	s.SchemaPath("library", "notebook", "path").SetRequired()
+	s.SchemaPath("library", "file", "path").SetRequired()
+
 	// Computed fields
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()

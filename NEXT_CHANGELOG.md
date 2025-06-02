@@ -7,6 +7,8 @@
 ### New Features and Improvements
 
  * Add `databricks_users` data source ([#4028](https://github.com/databricks/terraform-provider-databricks/pull/4028))
+ * Support configuration of file events in `databricks_external_location` [#4749](https://github.com/databricks/terraform-provider-databricks/pull/4749).
+ * Improve support for new fields in `databricks_pipeline` [#4744](https://github.com/databricks/terraform-provider-databricks/pull/4744).
 
 ### Bug Fixes
 

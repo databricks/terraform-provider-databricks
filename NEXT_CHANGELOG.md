@@ -15,6 +15,9 @@
 
 ### Documentation
 
+ * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4752](https://github.com/databricks/terraform-provider-databricks/pull/4752)).
+
+
 ### Exporter
 
 ### Internal Changes

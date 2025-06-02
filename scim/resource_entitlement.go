@@ -53,21 +53,21 @@ func ResourceEntitlements() common.Resource {
 					return err
 				}
 				entitlements.GroupId = split[1]
-				entitlements.entitlements = fromComplexValueList(ctx, group.Entitlements)
+				entitlements.entitlements = newEntitlements(ctx, group.Entitlements)
 			case "user":
 				user, err := NewUsersAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
 				entitlements.UserId = split[1]
-				entitlements.entitlements = fromComplexValueList(ctx, user.Entitlements)
+				entitlements.entitlements = newEntitlements(ctx, user.Entitlements)
 			case "spn":
 				spn, err := NewServicePrincipalsAPI(ctx, c).Read(split[1], "entitlements")
 				if err != nil {
 					return err
 				}
 				entitlements.SpnId = split[1]
-				entitlements.entitlements = fromComplexValueList(ctx, spn.Entitlements)
+				entitlements.entitlements = newEntitlements(ctx, spn.Entitlements)
 			}
 			return common.StructToData(entitlements, entitlementSchema, d)
 		},

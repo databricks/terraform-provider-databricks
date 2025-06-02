@@ -39,7 +39,7 @@ func (e entitlements) toComplexValueList() []ComplexValue {
 	return result
 }
 
-func fromComplexValueList(ctx context.Context, cv []ComplexValue) entitlements {
+func newEntitlements(ctx context.Context, cv []ComplexValue) entitlements {
 	var e entitlements
 	for _, c := range cv {
 		switch c.Value {

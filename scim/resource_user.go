@@ -23,14 +23,6 @@ const (
 	userAttributes = "userName,displayName,active,externalId,entitlements"
 )
 
-func setCommonUserFields(d *schema.ResourceData, user User, username string) {
-	d.Set("display_name", user.DisplayName)
-	d.Set("active", user.Active)
-	d.Set("external_id", user.ExternalID)
-	d.Set("home", fmt.Sprintf("/Users/%s", username))
-	d.Set("repos", fmt.Sprintf("/Repos/%s", username))
-}
-
 type userResource struct {
 	entitlements
 	UserName              string `json:"user_name" tf:"force_new"`
@@ -90,7 +82,7 @@ func ResourceUser() common.Resource {
 				Repos:          fmt.Sprintf("/Repos/%s", user.UserName),
 				UserName:       user.UserName,
 				AclPrincipalID: fmt.Sprintf("users/%s", user.UserName),
-				entitlements:   fromComplexValueList(ctx, user.Entitlements),
+				entitlements:   newEntitlements(ctx, user.Entitlements),
 			}
 			return common.StructToData(userResource, userSchema, d)
 		},

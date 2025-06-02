@@ -67,7 +67,7 @@ func DataSourceGroup() common.Resource {
 				for _, x := range current.Roles {
 					this.InstanceProfiles = append(this.InstanceProfiles, x.Value)
 				}
-				this.entitlements = fromComplexValueList(ctx, current.Entitlements)
+				this.entitlements = newEntitlements(ctx, current.Entitlements)
 				for _, x := range current.Groups {
 					this.Groups = append(this.Groups, x.Value)
 					if this.Recursive {

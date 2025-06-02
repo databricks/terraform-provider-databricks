@@ -147,7 +147,7 @@ func ResourceServicePrincipal() common.Resource {
 				return err
 			}
 			spResource := servicePrincipalResource{
-				entitlements:   fromComplexValueList(ctx, sp.Entitlements),
+				entitlements:   newEntitlements(ctx, sp.Entitlements),
 				ApplicationID:  sp.ApplicationID,
 				DisplayName:    sp.DisplayName,
 				Active:         sp.Active,

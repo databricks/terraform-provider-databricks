@@ -51,7 +51,7 @@ func ResourceGroup() common.Resource {
 				return err
 			}
 			groupResource := groupResource{
-				entitlements:   fromComplexValueList(ctx, group.Entitlements),
+				entitlements:   newEntitlements(ctx, group.Entitlements),
 				DisplayName:    group.DisplayName,
 				ExternalID:     group.ExternalID,
 				AclPrincipalID: fmt.Sprintf("groups/%s", group.DisplayName),

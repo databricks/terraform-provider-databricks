@@ -27,9 +27,17 @@ type UsersDataSource struct {
 }
 
 type UsersInfo struct {
-	Filter          types.String  `json:"filter,omitempty"`
-	ExtraAttributes types.String  `json:"extra_attributes,omitempty"`
-	Users           []iam_tf.User `json:"users,omitempty" tf:"computed"`
+	Filter          types.String  `tfsdk:"filter"`
+	ExtraAttributes types.String  `tfsdk:"extra_attributes"`
+	Users           []iam_tf.User `tfsdk:"users"`
+}
+
+func (UsersInfo) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["users"] = attrs["users"].SetComputed().SetOptional()
+	attrs["filter"] = attrs["filter"].SetOptional()
+	attrs["extra_attributes"] = attrs["extra_attributes"].SetOptional()
+
+	return attrs
 }
 
 func (d *UsersDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

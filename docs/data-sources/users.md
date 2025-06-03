@@ -4,11 +4,9 @@ subcategory: "Security"
 
 # databricks_users Data Source
 
--> This data source works with both the account-level and workspace-level provider. 
-
--> If you have a fully automated setup with workspaces created by [databricks_mws_workspaces](../resources/mws_workspaces.md) or [azurerm_databricks_workspace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/databricks_workspace), please make sure to add [depends_on attribute](../guides/troubleshooting.md#data-resources-and-authentication-is-not-configured-errors) in order to prevent _default auth: cannot configure default credentials_ errors.
-
 Retrieves information about multiple [databricks_user](../resources/user.md) resources.
+
+-> This data source works with both the account-level and workspace-level provider. 
 
 ## Example Usage
 
@@ -89,11 +87,7 @@ This data source exposes the following attributes:
 The following resources are used in the same context:
 
 - [**databricks_user**](../resources/user.md): Resource to manage individual users in Databricks.
-
 - [**databricks_group**](../resources/group.md): Resource to manage groups in Databricks.
-
 - [**databricks_group_member**](../resources/group_member.md): Resource to manage group memberships by adding users to groups.
-
 - [**databricks_permissions**](../resources/permissions.md): Resource to manage access control in the Databricks workspace.
-
 - [**databricks_current_user**](current_user.md): Data source to retrieve information about the user or service principal that is calling the Databricks REST API.

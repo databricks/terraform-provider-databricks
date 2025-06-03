@@ -148,14 +148,16 @@ The provider supports additional configuration parameters not related to authent
 
 The `host` argument configures the endpoint that the Terraform Provider for Databricks interacts with. This must be configured according to the following table:
 
-| Environment                          | `host`                                 |
-| -----------------------------------: | -------------------------------------- |
-| Databricks Account in AWS            | `https://accounts.cloud.databricks.com`|
-| Databricks Account in Azure          | `https://accounts.azuredatabricks.net` |
-| Databricks Account in Azure (US Gov) | `https://accounts.azuredatabricks.us`  |
-| Databricks Account in Azure (China)  | `https://accounts.azuredatabricks.cn`  |
-| Databricks Account in GCP            | `https://accounts.gcp.databricks.com`  |
-| Databricks Workspace (any cloud)     | `https://<workspace hostname>`         |
+| Environment                            | `host`                                     |
+| -------------------------------------: | ------------------------------------------ |
+| Databricks Account on AWS              | `https://accounts.cloud.databricks.com`    |
+| Databricks Account on AWS GovCloud     | `https://accounts.cloud.databricks.us`     |
+| Databricks Account on AWS GovCloud DOD | `https://accounts-dod.cloud.databricks.mil`|
+| Azure Databricks Account               | `https://accounts.azuredatabricks.net`     |
+| Azure Databricks Account (US Gov)      | `https://accounts.azuredatabricks.us`      |
+| Azure Databricks Account (China)       | `https://accounts.azuredatabricks.cn`      |
+| Databricks Account on GCP              | `https://accounts.gcp.databricks.com`      |
+| Databricks Workspace (any cloud)       | `https://<workspace hostname>`             |
 
 ## Authentication
 

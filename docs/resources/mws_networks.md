@@ -9,6 +9,8 @@ Use this resource to [configure VPC](https://docs.databricks.com/administration-
 
 -> This resource can only be used with an account-level provider!
 
+~> The `gke_cluster_service_ip_range` and `gke_pod_service_ip_range` arguments in `gcp_managed_network_config` are now deprecated and no longer supported. If you have already created a workspace using these fields, it is safe to remove them from your Terraform template.
+
 * Databricks must have access to at least two subnets for each workspace, with each subnet in a different Availability Zone. You cannot specify more than one Databricks workspace subnet per Availability Zone in the Create network configuration API call. You can have more than one subnet per Availability Zone as part of your network setup, but you can choose only one subnet per Availability Zone for the Databricks workspace.
 * Databricks assigns two IP addresses per node, one for management traffic and one for Spark applications. The total number of instances for each subnet is equal to half of the available IP addresses.
 * Each subnet must have a netmask between /17 and /25.
@@ -26,9 +28,8 @@ Please follow this [complete runnable example](../guides/aws-workspace.md) with 
 
 Use this resource to [configure VPC](https://docs.gcp.databricks.com/administration-guide/cloud-configurations/gcp/customer-managed-vpc.html) & subnet for new workspaces within GCP. It is essential to understand that this will require you to configure your provider separately for the multiple workspaces resources.
 
-* Databricks must have access to a subnet in the same region as the workspace, of which IP range will be used to allocate your workspace's GKE cluster nodes.
+* Databricks must have access to a subnet in the same region as the workspace, of which IP range will be used to allocate your workspace's GCE cluster nodes.
 * The subnet must have a netmask between /29 and /9.
-* Databricks must have access to 2 secondary IP ranges, one between /21 to /9 for workspace's GKE cluster pods, and one between /27 to /16 for workspace's GKE cluster services.
 * Subnet must have outbound access to the public network using a [gcp_compute_router_nat](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) or other similar customer-managed appliance infrastructure.
 
 Please follow this [complete runnable example](../guides/gcp-workspace.md) with new VPC and new workspace setup. Please pay special attention to the fact that there you have two different instances of a databricks provider - one for deploying workspaces (with `host="https://accounts.gcp.databricks.com/"`) and another for the workspace you've created with `databricks_mws_workspaces` resource. If you want both creations of workspaces & clusters within the same Terraform module (essentially the same directory), you should use the provider aliasing feature of Terraform. We strongly recommend having one terraform module to create workspace + PAT token and the rest in different modules.
@@ -118,14 +119,6 @@ resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" 
   ip_cidr_range = "10.0.0.0/16"
   region        = "us-central1"
   network       = google_compute_network.dbx_private_vpc.id
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-  secondary_ip_range {
-    range_name    = "svc"
-    ip_cidr_range = "10.2.0.0/20"
-  }
   private_ip_google_access = true
 }
 
@@ -151,8 +144,6 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network_with_private_secondary_ip_ranges.name
     subnet_region         = google_compute_subnetwork.network_with_private_secondary_ip_ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
   }
 }
 ```
@@ -168,8 +159,6 @@ resource "databricks_mws_networks" "this" {
     vpc_id                = google_compute_network.dbx_private_vpc.name
     subnet_id             = google_compute_subnetwork.network_with_private_secondary_ip_ranges.name
     subnet_region         = google_compute_subnetwork.network_with_private_secondary_ip_ranges.region
-    pod_ip_range_name     = "pods"
-    service_ip_range_name = "svc"
   }
   vpc_endpoints {
     dataplane_relay = [databricks_mws_vpc_endpoint.relay.vpc_endpoint_id]
@@ -201,8 +190,6 @@ The following arguments are available:
   * `vpc_id` - The ID of the VPC associated with this network. VPC IDs can be used in multiple network configurations.
   * `subnet_id` - The ID of the subnet associated with this network.
   * `subnet_region` - The Google Cloud region of the workspace data plane. For example, `us-east4`.
-  * `pod_ip_range_name` - The name of the secondary IP range for pods. A Databricks-managed GKE cluster uses this IP range for its pods. This secondary IP range can only be used by one workspace.
-  * `service_ip_range_name` - The name of the secondary IP range for services. A Databricks-managed GKE cluster uses this IP range for its services. This secondary IP range can only be used by one workspace.
 
 ## Attribute Reference
 

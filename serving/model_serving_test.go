@@ -125,8 +125,8 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				config {
 					served_entities{
 						name = "pt_model"
-						entity_name = "system.ai.mistral_7b_instruct_v0_2"
-						entity_version = "1"
+						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
+						entity_version = "2"
 						min_provisioned_throughput = 0
 						max_provisioned_throughput = 970
 					}
@@ -146,8 +146,8 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				config {
 					served_entities{
 						name = "pt_model"
-						entity_name = "system.ai.mistral_7b_instruct_v0_2"
-						entity_version = "1"
+						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
+						entity_version = "2"
 						min_provisioned_throughput = 970
 						max_provisioned_throughput = 1940
 					}
@@ -167,8 +167,8 @@ func TestUcAccModelServingProvisionedThroughput(t *testing.T) {
 				config {
 					served_entities{
 						name = "pt_model"
-						entity_name = "system.ai.mistral_7b_instruct_v0_2"
-						entity_version = "1"
+						entity_name = "system.ai.meta_llama_v3_1_8b_instruct"
+						entity_version = "2"
 						min_provisioned_throughput = 0
 						max_provisioned_throughput = 1940
 					}

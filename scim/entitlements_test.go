@@ -113,7 +113,6 @@ func TestAccEntitlementsAddToEmpty(t *testing.T) {
 				{"allow_instance_pool_create", true},
 				{"workspace_access", true},
 				{"databricks_sql_access", true},
-				{"workspace_consume", true},
 			},
 		})
 		acceptance.WorkspaceLevel(t, steps...)

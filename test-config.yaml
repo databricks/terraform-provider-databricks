@@ -111,4 +111,6 @@ ignored_tests:
     - package: github.com/databricks/terraform-provider-databricks/permissions
       test_name: TestMwsAccAccountServicePrincipalRuleSetsFullLifeCycle
       comment: Failure due to stale results being returned from cache on using empty etag.  
-      
+    - package: github.com/databricks/terraform-provider-databricks/permissions
+      test_name: TestMwsAccAccountGroupRuleSetsFullLifeCycle
+      comment: Failure due to stale results being returned from cache on using empty etag.        

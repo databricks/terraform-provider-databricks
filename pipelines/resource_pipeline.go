@@ -212,6 +212,11 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("ingestion_definition", "connection_name").SetForceNew()
 	s.SchemaPath("ingestion_definition", "ingestion_gateway_id").SetForceNew()
 
+	// Required fields
+	s.SchemaPath("library", "glob", "include").SetRequired()
+	s.SchemaPath("library", "notebook", "path").SetRequired()
+	s.SchemaPath("library", "file", "path").SetRequired()
+
 	// Computed fields
 	s.SchemaPath("cluster", "node_type_id").SetComputed()
 	s.SchemaPath("cluster", "driver_node_type_id").SetComputed()
@@ -231,7 +236,6 @@ func (Pipeline) CustomizeSchema(s *common.CustomizableSchema) *common.Customizab
 	s.SchemaPath("edition").SetSuppressDiff()
 	s.SchemaPath("channel").SetSuppressDiff()
 	s.SchemaPath("cluster", "spark_conf").SetCustomSuppressDiff(clusters.SparkConfDiffSuppressFunc)
-	s.SchemaPath("cluster", "aws_attributes", "zone_id").SetCustomSuppressDiff(clusters.ZoneDiffSuppress)
 	s.SchemaPath("cluster", "autoscale", "mode").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("edition").SetCustomSuppressDiff(common.EqualFoldDiffSuppress)
 	s.SchemaPath("storage").SetCustomSuppressDiff(suppressStorageDiff)

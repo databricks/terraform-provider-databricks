@@ -3,7 +3,7 @@ subcategory: "Compute"
 ---
 # databricks_pipeline Resource
 
-Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html).
+Use `databricks_pipeline` to deploy [Delta Live Tables](https://docs.databricks.com/aws/en/dlt).
 
 -> This resource can only be used with a workspace-level provider!
 
@@ -54,6 +54,12 @@ resource "databricks_pipeline" "this" {
     }
   }
 
+  library {
+    glob {
+      include = "${databricks_repo.dlt_demo.path}/subfolder/**"
+    }
+  }
+
   continuous = false
 
   notification {
@@ -75,8 +81,9 @@ The following arguments are supported:
 * `name` - A user-friendly name for this pipeline. The name can be used to identify pipeline jobs in the UI.
 * `storage` - A location on DBFS or cloud storage where output data and metadata required for pipeline execution are stored. By default, tables are stored in a subdirectory of this location. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `catalog`).
 * `configuration` - An optional list of values to apply to the entire pipeline. Elements must be formatted as key:value pairs.
-* `library` blocks - Specifies pipeline code and required artifacts. Syntax resembles [library](cluster.md#library-configuration-block) configuration block with the addition of a special `notebook` & `file` library types that should have the `path` attribute. *Right now only the `notebook` & `file` types are supported.*
-* `cluster` blocks - [Clusters](cluster.md) to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline. *Please note that DLT pipeline clusters are supporting only subset of attributes as described in [documentation](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-api-guide.html#pipelinesnewcluster).*  Also, note that `autoscale` block is extended with the `mode` parameter that controls the autoscaling algorithm (possible values are `ENHANCED` for new, enhanced autoscaling algorithm, or `LEGACY` for old algorithm).
+* `library` blocks - Specifies pipeline code.
+* `root_path` - An optional string specifying the root path for this pipeline. This is used as the root directory when editing the pipeline in the Databricks user interface and it is added to `sys.path` when executing Python sources during pipeline execution.
+* `cluster` blocks - [Clusters](cluster.md) to run the pipeline. If none is specified, pipelines will automatically select a default cluster configuration for the pipeline. *Please note that DLT pipeline clusters are supporting only subset of attributes as described in [documentation](https://docs.databricks.com/api/workspace/pipelines/create#clusters).*  Also, note that `autoscale` block is extended with the `mode` parameter that controls the autoscaling algorithm (possible values are `ENHANCED` for new, enhanced autoscaling algorithm, or `LEGACY` for old algorithm).
 * `continuous` - A flag indicating whether to run the pipeline continuously. The default value is `false`.
 * `development` - A flag indicating whether to run the pipeline in development mode. The default value is `false`.
 * `photon` - A flag indicating whether to use Photon engine. The default value is `false`.
@@ -84,7 +91,7 @@ The following arguments are supported:
 * `catalog` - The name of catalog in Unity Catalog. *Change of this parameter forces recreation of the pipeline.* (Conflicts with `storage`).
 * `target` - (Optional, String, Conflicts with `schema`) The name of a database (in either the Hive metastore or in a UC catalog) for persisting pipeline output data. Configuring the target setting allows you to view and query the pipeline output data from the Databricks UI.
 * `schema` - (Optional, String, Conflicts with `target`) The default schema (database) where tables are read from or published to. The presence of this attribute implies that the pipeline is in direct publishing mode. 
-* `edition` - optional name of the [product edition](https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-concepts.html#editions). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`.
+* `edition` - optional name of the [product edition](https://docs.databricks.com/aws/en/dlt/configure-pipeline#choose-a-product-edition). Supported values are: `CORE`, `PRO`, `ADVANCED` (default).  Not required when `serverless` is set to `true`.
 * `channel` - optional name of the release channel for Spark version used by DLT pipeline.  Supported values are: `CURRENT` (default) and `PREVIEW`.
 * `budget_policy_id` - optional string specifying ID of the budget policy for this DLT pipeline.
 * `allow_duplicate_names` - Optional boolean flag. If false, deployment will fail if name conflicts with that of another pipeline. default is `false`.
@@ -103,6 +110,14 @@ The following arguments are supported:
   * `name` - (Required) The table name the event log is published to in UC.
   * `catalog` - (Optional, default to `catalog` defined on pipeline level) The UC catalog the event log is published under.
   * `schema` - (Optional, default to `schema` defined on pipeline level) The UC schema the event log is published under.
+
+### library block
+
+Contains one of the blocks:
+
+* `notebook` - specifies path to a Databricks Notebook to include as source. Actual path is specified as `path` attribute inside the block.
+* `file` - specifies path to a file in Databricks Workspace to include as source. Actual path is specified as `path` attribute inside the block.
+* `glob` - The unified field to include source code. Each entry should have the `include` attribute that can specify a notebook path, a file path, or a folder path that ends `/**` (to include everything from that folder). This field cannot be used together with `notebook` or `file`.
 
 ### notification block
 
@@ -123,8 +138,6 @@ The configuration for a managed ingestion pipeline. These settings cannot be use
 * `ingestion_gateway_id` - Immutable. Identifier for the ingestion gateway used by this ingestion pipeline to communicate with the source. Specify either ingestion_gateway_id or connection_name.
 * `objects` - Required. Settings specifying tables to replicate and the destination for the replicated tables.
 * `table_configuration` - Configuration settings to control the ingestion of tables. These settings are applied to all tables in the pipeline.
-
-
 
 ## Attribute Reference
 
@@ -155,7 +168,7 @@ terraform import databricks_pipeline.this <pipeline-id>
 The following resources are often used in the same context:
 
 * [End to end workspace management](../guides/workspace-management.md) guide.
-* [databricks_pipelines](../data-sources/pipelines.md) to retrieve [Delta Live Tables](https://docs.databricks.com/data-engineering/delta-live-tables/index.html) pipeline data.
+* [databricks_pipelines](../data-sources/pipelines.md) to retrieve [Delta Live Tables](https://docs.databricks.com/aws/en/dlt) pipeline data.
 * [databricks_cluster](cluster.md) to create [Databricks Clusters](https://docs.databricks.com/clusters/index.html).
 * [databricks_job](job.md) to manage [Databricks Jobs](https://docs.databricks.com/jobs.html) to run non-interactive code in a [databricks_cluster](cluster.md).
 * [databricks_notebook](notebook.md) to manage [Databricks Notebooks](https://docs.databricks.com/notebooks/index.html).

@@ -681,6 +681,12 @@ type CleanRoomAssetNotebook struct {
 	// Base 64 representation of the notebook contents. This is the same format
 	// as returned by :method:workspace/export with the format of **HTML**.
 	NotebookContent types.String `tfsdk:"notebook_content"`
+	// top-level status derived from all reviews
+	ReviewState types.String `tfsdk:"review_state"`
+	// All existing approvals or rejections
+	Reviews types.List `tfsdk:"reviews"`
+	// collaborators that can run the notebook
+	RunnerCollaboratorAliases types.List `tfsdk:"runner_collaborator_aliases"`
 }
 
 func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomAssetNotebook) {
@@ -692,6 +698,9 @@ func (newState *CleanRoomAssetNotebook) SyncEffectiveFieldsDuringRead(existingSt
 func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["etag"] = attrs["etag"].SetComputed()
 	attrs["notebook_content"] = attrs["notebook_content"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["reviews"] = attrs["reviews"].SetOptional()
+	attrs["runner_collaborator_aliases"] = attrs["runner_collaborator_aliases"].SetOptional()
 
 	return attrs
 }
@@ -704,7 +713,10 @@ func (c CleanRoomAssetNotebook) ApplySchemaCustomizations(attrs map[string]tfsch
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a CleanRoomAssetNotebook) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"reviews":                     reflect.TypeOf(CleanRoomNotebookReview{}),
+		"runner_collaborator_aliases": reflect.TypeOf(types.String{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -714,8 +726,11 @@ func (o CleanRoomAssetNotebook) ToObjectValue(ctx context.Context) basetypes.Obj
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"etag":             o.Etag,
-			"notebook_content": o.NotebookContent,
+			"etag":                        o.Etag,
+			"notebook_content":            o.NotebookContent,
+			"review_state":                o.ReviewState,
+			"reviews":                     o.Reviews,
+			"runner_collaborator_aliases": o.RunnerCollaboratorAliases,
 		})
 }
 
@@ -725,8 +740,67 @@ func (o CleanRoomAssetNotebook) Type(ctx context.Context) attr.Type {
 		AttrTypes: map[string]attr.Type{
 			"etag":             types.StringType,
 			"notebook_content": types.StringType,
+			"review_state":     types.StringType,
+			"reviews": basetypes.ListType{
+				ElemType: CleanRoomNotebookReview{}.Type(ctx),
+			},
+			"runner_collaborator_aliases": basetypes.ListType{
+				ElemType: types.StringType,
+			},
 		},
 	}
+}
+
+// GetReviews returns the value of the Reviews field in CleanRoomAssetNotebook as
+// a slice of CleanRoomNotebookReview values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomAssetNotebook) GetReviews(ctx context.Context) ([]CleanRoomNotebookReview, bool) {
+	if o.Reviews.IsNull() || o.Reviews.IsUnknown() {
+		return nil, false
+	}
+	var v []CleanRoomNotebookReview
+	d := o.Reviews.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetReviews sets the value of the Reviews field in CleanRoomAssetNotebook.
+func (o *CleanRoomAssetNotebook) SetReviews(ctx context.Context, v []CleanRoomNotebookReview) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["reviews"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Reviews = types.ListValueMust(t, vs)
+}
+
+// GetRunnerCollaboratorAliases returns the value of the RunnerCollaboratorAliases field in CleanRoomAssetNotebook as
+// a slice of types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CleanRoomAssetNotebook) GetRunnerCollaboratorAliases(ctx context.Context) ([]types.String, bool) {
+	if o.RunnerCollaboratorAliases.IsNull() || o.RunnerCollaboratorAliases.IsUnknown() {
+		return nil, false
+	}
+	var v []types.String
+	d := o.RunnerCollaboratorAliases.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetRunnerCollaboratorAliases sets the value of the RunnerCollaboratorAliases field in CleanRoomAssetNotebook.
+func (o *CleanRoomAssetNotebook) SetRunnerCollaboratorAliases(ctx context.Context, v []types.String) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e)
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["runner_collaborator_aliases"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.RunnerCollaboratorAliases = types.ListValueMust(t, vs)
 }
 
 type CleanRoomAssetTable struct {
@@ -1160,6 +1234,74 @@ func (o CleanRoomCollaborator) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type CleanRoomNotebookReview struct {
+	// review comment
+	Comment types.String `tfsdk:"comment"`
+	// timestamp of when the review was submitted
+	CreatedAtMillis types.Int64 `tfsdk:"created_at_millis"`
+	// review outcome
+	ReviewState types.String `tfsdk:"review_state"`
+	// specified when the review was not explicitly made by a user
+	ReviewSubReason types.String `tfsdk:"review_sub_reason"`
+	// collaborator alias of the reviewer
+	ReviewerCollaboratorAlias types.String `tfsdk:"reviewer_collaborator_alias"`
+}
+
+func (newState *CleanRoomNotebookReview) SyncEffectiveFieldsDuringCreateOrUpdate(plan CleanRoomNotebookReview) {
+}
+
+func (newState *CleanRoomNotebookReview) SyncEffectiveFieldsDuringRead(existingState CleanRoomNotebookReview) {
+}
+
+func (c CleanRoomNotebookReview) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["comment"] = attrs["comment"].SetOptional()
+	attrs["created_at_millis"] = attrs["created_at_millis"].SetOptional()
+	attrs["review_state"] = attrs["review_state"].SetOptional()
+	attrs["review_sub_reason"] = attrs["review_sub_reason"].SetOptional()
+	attrs["reviewer_collaborator_alias"] = attrs["reviewer_collaborator_alias"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in CleanRoomNotebookReview.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a CleanRoomNotebookReview) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, CleanRoomNotebookReview
+// only implements ToObjectValue() and Type().
+func (o CleanRoomNotebookReview) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"comment":                     o.Comment,
+			"created_at_millis":           o.CreatedAtMillis,
+			"review_state":                o.ReviewState,
+			"review_sub_reason":           o.ReviewSubReason,
+			"reviewer_collaborator_alias": o.ReviewerCollaboratorAlias,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o CleanRoomNotebookReview) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"comment":                     types.StringType,
+			"created_at_millis":           types.Int64Type,
+			"review_state":                types.StringType,
+			"review_sub_reason":           types.StringType,
+			"reviewer_collaborator_alias": types.StringType,
+		},
+	}
+}
+
 // Stores information about a single task run.
 type CleanRoomNotebookTaskRun struct {
 	// Job run info of the task in the runner's local workspace. This field is
@@ -1167,10 +1309,15 @@ type CleanRoomNotebookTaskRun struct {
 	// workspace the API is being called. If the task run was in a different
 	// workspace under the same metastore, only the workspace_id is included.
 	CollaboratorJobRunInfo types.Object `tfsdk:"collaborator_job_run_info"`
+	// Etag of the notebook executed in this task run, used to identify the
+	// notebook version.
+	NotebookEtag types.String `tfsdk:"notebook_etag"`
 	// State of the task run.
 	NotebookJobRunState types.Object `tfsdk:"notebook_job_run_state"`
 	// Asset name of the notebook executed in this task run.
 	NotebookName types.String `tfsdk:"notebook_name"`
+	// The timestamp of when the notebook was last updated.
+	NotebookUpdatedAt types.Int64 `tfsdk:"notebook_updated_at"`
 	// Expiration time of the output schema of the task run (if any), in epoch
 	// milliseconds.
 	OutputSchemaExpirationTime types.Int64 `tfsdk:"output_schema_expiration_time"`
@@ -1191,8 +1338,10 @@ func (newState *CleanRoomNotebookTaskRun) SyncEffectiveFieldsDuringRead(existing
 
 func (c CleanRoomNotebookTaskRun) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["collaborator_job_run_info"] = attrs["collaborator_job_run_info"].SetOptional()
+	attrs["notebook_etag"] = attrs["notebook_etag"].SetOptional()
 	attrs["notebook_job_run_state"] = attrs["notebook_job_run_state"].SetOptional()
 	attrs["notebook_name"] = attrs["notebook_name"].SetOptional()
+	attrs["notebook_updated_at"] = attrs["notebook_updated_at"].SetOptional()
 	attrs["output_schema_expiration_time"] = attrs["output_schema_expiration_time"].SetOptional()
 	attrs["output_schema_name"] = attrs["output_schema_name"].SetOptional()
 	attrs["run_duration"] = attrs["run_duration"].SetOptional()
@@ -1223,8 +1372,10 @@ func (o CleanRoomNotebookTaskRun) ToObjectValue(ctx context.Context) basetypes.O
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
 			"collaborator_job_run_info":     o.CollaboratorJobRunInfo,
+			"notebook_etag":                 o.NotebookEtag,
 			"notebook_job_run_state":        o.NotebookJobRunState,
 			"notebook_name":                 o.NotebookName,
+			"notebook_updated_at":           o.NotebookUpdatedAt,
 			"output_schema_expiration_time": o.OutputSchemaExpirationTime,
 			"output_schema_name":            o.OutputSchemaName,
 			"run_duration":                  o.RunDuration,
@@ -1237,8 +1388,10 @@ func (o CleanRoomNotebookTaskRun) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"collaborator_job_run_info":     CollaboratorJobRunInfo{}.Type(ctx),
+			"notebook_etag":                 types.StringType,
 			"notebook_job_run_state":        jobs_tf.CleanRoomTaskRunState{}.Type(ctx),
 			"notebook_name":                 types.StringType,
+			"notebook_updated_at":           types.Int64Type,
 			"output_schema_expiration_time": types.Int64Type,
 			"output_schema_name":            types.StringType,
 			"run_duration":                  types.Int64Type,

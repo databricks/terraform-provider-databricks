@@ -72,6 +72,10 @@ type CreatePipeline struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -122,6 +126,7 @@ func (c CreatePipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attr
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
@@ -184,6 +189,7 @@ func (o CreatePipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue
 			"notifications":         o.Notifications,
 			"photon":                o.Photon,
 			"restart_window":        o.RestartWindow,
+			"root_path":             o.RootPath,
 			"run_as":                o.RunAs,
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
@@ -226,6 +232,7 @@ func (o CreatePipeline) Type(ctx context.Context) attr.Type {
 			},
 			"photon":         types.BoolType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
@@ -883,6 +890,10 @@ type EditPipeline struct {
 	PipelineId types.String `tfsdk:"-"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -934,6 +945,7 @@ func (c EditPipeline) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
@@ -997,6 +1009,7 @@ func (o EditPipeline) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"photon":                 o.Photon,
 			"pipeline_id":            o.PipelineId,
 			"restart_window":         o.RestartWindow,
+			"root_path":              o.RootPath,
 			"run_as":                 o.RunAs,
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
@@ -1040,6 +1053,7 @@ func (o EditPipeline) Type(ctx context.Context) attr.Type {
 			"photon":         types.BoolType,
 			"pipeline_id":    types.StringType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"run_as":         RunAs{}.Type(ctx),
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
@@ -4917,6 +4931,10 @@ type PipelineSpec struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.Object `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
@@ -4958,6 +4976,7 @@ func (c PipelineSpec) ApplySchemaCustomizations(attrs map[string]tfschema.Attrib
 	attrs["notifications"] = attrs["notifications"].SetOptional()
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
@@ -5016,6 +5035,7 @@ func (o PipelineSpec) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
 			"notifications":        o.Notifications,
 			"photon":               o.Photon,
 			"restart_window":       o.RestartWindow,
+			"root_path":            o.RootPath,
 			"schema":               o.Schema,
 			"serverless":           o.Serverless,
 			"storage":              o.Storage,
@@ -5055,6 +5075,7 @@ func (o PipelineSpec) Type(ctx context.Context) attr.Type {
 			},
 			"photon":         types.BoolType,
 			"restart_window": RestartWindow{}.Type(ctx),
+			"root_path":      types.StringType,
 			"schema":         types.StringType,
 			"serverless":     types.BoolType,
 			"storage":        types.StringType,

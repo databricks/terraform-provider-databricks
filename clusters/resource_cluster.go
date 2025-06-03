@@ -102,14 +102,6 @@ func SparkConfDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool 
 	return false
 }
 
-func ZoneDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	if old != "" && (new == "auto" || new == "") {
-		log.Printf("[INFO] Suppressing diff on availability zone")
-		return true
-	}
-	return false
-}
-
 // This method is a duplicate of ModifyRequestOnInstancePool() in clusters/clusters_api.go that uses Go SDK.
 // Long term, ModifyRequestOnInstancePool() in clusters_api.go will be removed once all the resources using clusters are migrated to Go SDK.
 func ModifyRequestOnInstancePool(cluster any) error {
@@ -349,7 +341,6 @@ func (ClusterSpec) CustomizeSchema(s *common.CustomizableSchema) *common.Customi
 	s.SchemaPath("docker_image", "basic_auth", "username").SetRequired()
 	s.SchemaPath("spark_conf").SetCustomSuppressDiff(SparkConfDiffSuppressFunc)
 	s.SchemaPath("aws_attributes").SetSuppressDiff().SetConflictsWith([]string{"azure_attributes", "gcp_attributes"})
-	s.SchemaPath("aws_attributes", "zone_id").SetCustomSuppressDiff(ZoneDiffSuppress)
 	s.SchemaPath("azure_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "gcp_attributes"})
 	s.SchemaPath("gcp_attributes").SetSuppressDiff().SetConflictsWith([]string{"aws_attributes", "azure_attributes"})
 	s.SchemaPath("autoscale", "max_workers").SetOptional()

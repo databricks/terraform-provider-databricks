@@ -1,9 +1,5 @@
 package scim
 
-import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
 // URN is a custom type for the SCIM spec for the schema
 type URN string
 
@@ -38,70 +34,6 @@ func (cv ComplexValues) HasValue(value string) bool {
 	return false
 }
 
-var entitlementMapping = map[string]string{
-	"allow-cluster-create":       "allow_cluster_create",
-	"allow-instance-pool-create": "allow_instance_pool_create",
-	"databricks-sql-access":      "databricks_sql_access",
-	"workspace-access":           "workspace_access",
-}
-
-// order is important for tests
-var possibleEntitlements = []string{
-	"allow-cluster-create",
-	"allow-instance-pool-create",
-	"databricks-sql-access",
-	"workspace-access",
-}
-
-type entitlements []ComplexValue
-
-func (e entitlements) generateEmpty(d *schema.ResourceData) error {
-	for _, entitlement := range possibleEntitlements {
-		d.Set(entitlementMapping[entitlement], false)
-	}
-	return nil
-}
-
-func (e entitlements) readIntoData(d *schema.ResourceData) error {
-	for _, ent := range e {
-		field_name := entitlementMapping[ent.Value]
-		if err := d.Set(field_name, true); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func readEntitlementsFromData(d *schema.ResourceData) entitlements {
-	var e entitlements
-	for _, entitlement := range possibleEntitlements {
-		field_name := entitlementMapping[entitlement]
-		if d.Get(field_name).(bool) {
-			e = append(e, ComplexValue{
-				Value: entitlement,
-			})
-		}
-	}
-	// if there is no nil value
-	if e == nil {
-		e = append(e, ComplexValue{
-			Value: "",
-		})
-	}
-	return e
-}
-
-func addEntitlementsToSchema(s map[string]*schema.Schema) {
-	for _, entitlement := range possibleEntitlements {
-		field_name := entitlementMapping[entitlement]
-		s[field_name] = &schema.Schema{
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		}
-	}
-}
-
 // ResourceMeta is a struct that contains the meta information about the SCIM group
 type ResourceMeta struct {
 	// ResourceType is the type of the resource: "Group" or "WorkspaceGroup"
@@ -116,7 +48,7 @@ type Group struct {
 	Members      []ComplexValue `json:"members,omitempty"`
 	Groups       []ComplexValue `json:"groups,omitempty"`
 	Roles        []ComplexValue `json:"roles,omitempty"`
-	Entitlements entitlements   `json:"entitlements,omitempty"`
+	Entitlements []ComplexValue `json:"entitlements,omitempty"`
 	ExternalID   string         `json:"externalId,omitempty"`
 	Meta         *ResourceMeta  `json:"meta,omitempty" tf:"computed"`
 }
@@ -148,7 +80,7 @@ type User struct {
 	Groups        []ComplexValue    `json:"groups,omitempty"`
 	Name          map[string]string `json:"name,omitempty"`
 	Roles         []ComplexValue    `json:"roles,omitempty"`
-	Entitlements  entitlements      `json:"entitlements,omitempty"`
+	Entitlements  []ComplexValue    `json:"entitlements,omitempty"`
 	ExternalID    string            `json:"externalId,omitempty"`
 }
 

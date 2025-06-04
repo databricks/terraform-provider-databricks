@@ -1,5 +1,24 @@
 # Version changelog
 
+## Release v1.82.0
+
+### New Features and Improvements
+
+ * Add `workspace_consume` entitlement [#4762](https://github.com/databricks/terraform-provider-databricks/pull/4762).
+ * Support configuration of file events in `databricks_external_location` [#4749](https://github.com/databricks/terraform-provider-databricks/pull/4749).
+ * Improve support for new fields in `databricks_pipeline` [#4744](https://github.com/databricks/terraform-provider-databricks/pull/4744).
+
+### Bug Fixes
+
+ * Populate `partitions` when reading `databricks_sql_table` ([#4674](https://github.com/databricks/terraform-provider-databricks/pull/4674)).
+ * Fail when creating `databricks_query` and `databricks_alert` with already existing names [#4697](https://github.com/databricks/terraform-provider-databricks/pull/4697).
+
+### Documentation
+
+ * Improve the landing page documentation to prioritize preferred authentication methods and provide better guidance on how to configure the `host` argument.
+ * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4752](https://github.com/databricks/terraform-provider-databricks/pull/4752)).
+
+
 ## Release v1.81.1
 
 ### Bug Fixes

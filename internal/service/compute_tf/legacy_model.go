@@ -107,6 +107,17 @@ func (o AddInstanceProfile_SdkV2) Type(ctx context.Context) attr.Type {
 type AddResponse_SdkV2 struct {
 }
 
+func (newState *AddResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan AddResponse_SdkV2) {
+}
+
+func (newState *AddResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState AddResponse_SdkV2) {
+}
+
+func (c AddResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in AddResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -1058,7 +1069,9 @@ type ClusterAttributes_SdkV2 struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -1788,7 +1801,9 @@ type ClusterDetails_SdkV2 struct {
 	// Total amount of cluster memory, in megabytes
 	ClusterMemoryMb types.Int64 `tfsdk:"cluster_memory_mb"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Determines whether the cluster was created by a user through the UI,
 	// created by the Databricks Jobs Scheduler, or through an API request.
@@ -4064,7 +4079,9 @@ type ClusterSpec_SdkV2 struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -5071,7 +5088,9 @@ type CreateCluster_SdkV2 struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -7478,7 +7497,9 @@ type EditCluster_SdkV2 struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in
@@ -8514,6 +8535,17 @@ func (o EditPolicyResponse_SdkV2) Type(ctx context.Context) attr.Type {
 type EditResponse_SdkV2 struct {
 }
 
+func (newState *EditResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan EditResponse_SdkV2) {
+}
+
+func (newState *EditResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState EditResponse_SdkV2) {
+}
+
+func (c EditResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in EditResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -8682,10 +8714,8 @@ func (o *EnforceClusterComplianceResponse_SdkV2) SetChanges(ctx context.Context,
 
 // The environment entity used to preserve serverless environment side panel,
 // jobs' environment for non-notebook task, and DLT's environment for classic
-// and serverless pipelines. (Note: DLT uses a copied version of the Environment
-// proto below, at
-// //spark/pipelines/api/protos/copied/libraries-environments-copy.proto) In
-// this minimal environment spec, only pip dependencies are supported.
+// and serverless pipelines. In this minimal environment spec, only pip
+// dependencies are supported.
 type Environment_SdkV2 struct {
 	// Client version used by the environment The client is the user-facing
 	// environment of the runtime. Each client comes with a specific set of
@@ -16137,6 +16167,17 @@ func (o RemoveInstanceProfile_SdkV2) Type(ctx context.Context) attr.Type {
 type RemoveResponse_SdkV2 struct {
 }
 
+func (newState *RemoveResponse_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan RemoveResponse_SdkV2) {
+}
+
+func (newState *RemoveResponse_SdkV2) SyncEffectiveFieldsDuringRead(existingState RemoveResponse_SdkV2) {
+}
+
+func (c RemoveResponse_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in RemoveResponse.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -17387,7 +17428,9 @@ type UpdateClusterResource_SdkV2 struct {
 	// is `$destination/$clusterId/executor`.
 	ClusterLogConf types.List `tfsdk:"cluster_log_conf"`
 	// Cluster name requested by the user. This doesn't have to be unique. If
-	// not specified at creation, the cluster name will be an empty string.
+	// not specified at creation, the cluster name will be an empty string. For
+	// job clusters, the cluster name is automatically set based on the job and
+	// job run IDs.
 	ClusterName types.String `tfsdk:"cluster_name"`
 	// Additional tags for cluster resources. Databricks will tag all cluster
 	// resources (e.g., AWS instances and EBS volumes) with these tags in

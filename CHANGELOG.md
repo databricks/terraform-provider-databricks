@@ -1,5 +1,59 @@
 # Version changelog
 
+## Release v1.81.1
+
+### Bug Fixes
+
+ * Support updating `databricks_cluster` to Auto AZ [#4743](https://github.com/databricks/terraform-provider-databricks/pull/4743).
+
+
+## Release v1.81.0
+
+### Breaking Changes
+* Removed `access_point` argument for `databricks_external_location` resource [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+
+### New Features and Improvements
+
+* Allow to specify budget policy for `databricks_vector_search_endpoint` [#4707](https://github.com/databricks/terraform-provider-databricks/pull/4707)
+* Added `account_network_policy` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+* Added `recipient_federation_policy` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+* Added `workspace_network_option` resource and data sources [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+
+### Bug Fixes
+
+ * Don't fail delete when `databricks_system_schema` can be disabled only by Databricks [#4727](https://github.com/databricks/terraform-provider-databricks/pull/4727)
+ * Fix debug logging for attributes used to configure the provider ([#4728](https://github.com/databricks/terraform-provider-databricks/pull/4728)).
+ * Add missing external Id in trust relationship for `databricks_aws_unity_catalog_assume_role_policy` ([#4738](https://github.com/databricks/terraform-provider-databricks/pull/4738)).
+
+### Documentation
+
+ * Fix links to Delta Live Tables docs [#4732](https://github.com/databricks/terraform-provider-databricks/pull/4732)
+ * Replaced `managed_policy_arns` with `aws_iam_role_policy_attachment` in AWS guides ([#4737](https://github.com/databricks/terraform-provider-databricks/pull/4737)).
+
+### Internal Changes
+* Bump Go SDK to v0.70.0 [#4735](https://github.com/databricks/terraform-provider-databricks/pull/4735)
+
+
+## Release v1.80.0
+
+### New Features and Improvements
+
+* Add `resource_model_serving_provisioned_throughput` for creation of [model serving provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints [#4701](https://github.com/databricks/terraform-provider-databricks/pull/4701)
+* Replace DBFS with Unity Catalog resources in [index page](https://registry.terraform.io/providers/databricks/databricks/latest/docs) storage section [#4718](https://github.com/databricks/terraform-provider-databricks/pull/4718) 
+
+### Bug Fixes
+
+ * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
+ * Fix reading of `external_id` for `databricks_service_principal` [#4712](https://github.com/databricks/terraform-provider-databricks/pull/4712)
+
+### Documentation
+* Added documentation for GITHUB OIDC authentication type [#4717] (https://github.com/databricks/terraform-provider-databricks/pull/4717)
+
+### Exporter
+
+ * Generate correct code for Databricks and Azure-managed service principals [#4715](https://github.com/databricks/terraform-provider-databricks/pull/4715)
+
+
 ## Release v1.79.1
 
 ### Bug Fixes

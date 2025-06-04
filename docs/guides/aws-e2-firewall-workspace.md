@@ -4,7 +4,7 @@ page_title: "Provisioning AWS Databricks workspace with a AWS Firewall"
 
 # Provisioning AWS Databricks workspace with a AWS Firewall
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy AWS Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform. This example shows how to deploy a Databricks workspace into a VPC, which uses an AWS Network firewall to manage egress out to the public network. For smaller Databricks deployments, this is our recommended configuration; for larger deployments, see [Provisioning AWS Databricks workspace with a Hub & Spoke firewall for data exfiltration protection](aws-e2-firewall-hub-and-spoke.md).
 

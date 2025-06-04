@@ -1,19 +1,23 @@
 # NEXT CHANGELOG
 
-## Release v1.80.0
+## Release v1.82.0
+
+### Breaking Changes
 
 ### New Features and Improvements
 
-* Add `resource_model_serving_provisioned_throughput` for creation of [model serving provisioned throughput](https://docs.databricks.com/aws/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis) endpoints [#4701](https://github.com/databricks/terraform-provider-databricks/pull/4701)
-* Replace DBFS with Unity Catalog resources in [index page](https://registry.terraform.io/providers/databricks/databricks/latest/docs) storage section [#4718](https://github.com/databricks/terraform-provider-databricks/pull/4718) 
+ * Support configuration of file events in `databricks_external_location` [#4749](https://github.com/databricks/terraform-provider-databricks/pull/4749).
+ * Improve support for new fields in `databricks_pipeline` [#4744](https://github.com/databricks/terraform-provider-databricks/pull/4744).
 
 ### Bug Fixes
 
- * Support updating all attributes for `databricks_model_serving` ([#4575](https://github.com/databricks/terraform-provider-databricks/pull/4575)).
- * Fix reading of `external_id` for `databricks_service_principal` [#4712](https://github.com/databricks/terraform-provider-databricks/pull/4712)
+ * Populate `partitions` when reading `databricks_sql_table` ([#4674](https://github.com/databricks/terraform-provider-databricks/pull/4674)).
+ * Fail when creating `databricks_query` and `databricks_alert` with already existing names [#4697](https://github.com/databricks/terraform-provider-databricks/pull/4697).
 
 ### Documentation
-* Added documentation for GITHUB OIDC authentication type [#4717] (https://github.com/databricks/terraform-provider-databricks/pull/4717)
+
+ * Improve the landing page documentation to prioritize preferred authentication methods and provide better guidance on how to configure the `host` argument.
+ * Mark GKE-related fields for `databricks_mws_workspaces` and `databricks_mws_networks` as deprecated([#4752](https://github.com/databricks/terraform-provider-databricks/pull/4752)).
 
 ### Exporter
 

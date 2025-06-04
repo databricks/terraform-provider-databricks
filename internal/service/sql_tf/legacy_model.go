@@ -13178,6 +13178,10 @@ func (o TrashQueryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 
 type UpdateAlertRequest_SdkV2 struct {
 	Alert types.List `tfsdk:"alert"`
+	// If true, automatically resolve alert display name conflicts. Otherwise,
+	// fail the request if the alert's display name conflicts with an existing
+	// alert's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
 
 	Id types.String `tfsdk:"-"`
 	// The field mask must be a single string, with multiple fields separated by
@@ -13203,6 +13207,7 @@ func (newState *UpdateAlertRequest_SdkV2) SyncEffectiveFieldsDuringRead(existing
 func (c UpdateAlertRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
 	attrs["alert"] = attrs["alert"].SetOptional()
 	attrs["alert"] = attrs["alert"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["update_mask"] = attrs["update_mask"].SetRequired()
 
@@ -13229,9 +13234,10 @@ func (o UpdateAlertRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"alert":       o.Alert,
-			"id":          o.Id,
-			"update_mask": o.UpdateMask,
+			"alert":                     o.Alert,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
+			"id":                        o.Id,
+			"update_mask":               o.UpdateMask,
 		})
 }
 
@@ -13242,8 +13248,9 @@ func (o UpdateAlertRequest_SdkV2) Type(ctx context.Context) attr.Type {
 			"alert": basetypes.ListType{
 				ElemType: UpdateAlertRequestAlert_SdkV2{}.Type(ctx),
 			},
-			"id":          types.StringType,
-			"update_mask": types.StringType,
+			"auto_resolve_display_name": types.BoolType,
+			"id":                        types.StringType,
+			"update_mask":               types.StringType,
 		},
 	}
 }
@@ -13483,6 +13490,11 @@ func (o *UpdateAlertV2Request_SdkV2) SetAlert(ctx context.Context, v AlertV2_Sdk
 }
 
 type UpdateQueryRequest_SdkV2 struct {
+	// If true, automatically resolve alert display name conflicts. Otherwise,
+	// fail the request if the alert's display name conflicts with an existing
+	// alert's display name.
+	AutoResolveDisplayName types.Bool `tfsdk:"auto_resolve_display_name"`
+
 	Id types.String `tfsdk:"-"`
 
 	Query types.List `tfsdk:"query"`
@@ -13507,6 +13519,7 @@ func (newState *UpdateQueryRequest_SdkV2) SyncEffectiveFieldsDuringRead(existing
 }
 
 func (c UpdateQueryRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["auto_resolve_display_name"] = attrs["auto_resolve_display_name"].SetOptional()
 	attrs["id"] = attrs["id"].SetRequired()
 	attrs["query"] = attrs["query"].SetOptional()
 	attrs["query"] = attrs["query"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -13535,9 +13548,10 @@ func (o UpdateQueryRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 	return types.ObjectValueMust(
 		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
 		map[string]attr.Value{
-			"id":          o.Id,
-			"query":       o.Query,
-			"update_mask": o.UpdateMask,
+			"auto_resolve_display_name": o.AutoResolveDisplayName,
+			"id":                        o.Id,
+			"query":                     o.Query,
+			"update_mask":               o.UpdateMask,
 		})
 }
 
@@ -13545,7 +13559,8 @@ func (o UpdateQueryRequest_SdkV2) ToObjectValue(ctx context.Context) basetypes.O
 func (o UpdateQueryRequest_SdkV2) Type(ctx context.Context) attr.Type {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"id": types.StringType,
+			"auto_resolve_display_name": types.BoolType,
+			"id":                        types.StringType,
 			"query": basetypes.ListType{
 				ElemType: UpdateQueryRequestQuery_SdkV2{}.Type(ctx),
 			},

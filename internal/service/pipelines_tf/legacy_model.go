@@ -73,6 +73,10 @@ type CreatePipeline_SdkV2 struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -129,6 +133,7 @@ func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["schema"] = attrs["schema"].SetOptional()
@@ -193,6 +198,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"notifications":         o.Notifications,
 			"photon":                o.Photon,
 			"restart_window":        o.RestartWindow,
+			"root_path":             o.RootPath,
 			"run_as":                o.RunAs,
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
@@ -247,6 +253,7 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
+			"root_path": types.StringType,
 			"run_as": basetypes.ListType{
 				ElemType: RunAs_SdkV2{}.Type(ctx),
 			},
@@ -893,6 +900,10 @@ type EditPipeline_SdkV2 struct {
 	PipelineId types.String `tfsdk:"-"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// Write-only setting, available only in Create/Update calls. Specifies the
 	// user or service principal that the pipeline runs as. If not specified,
 	// the pipeline runs as the user who created the pipeline.
@@ -950,6 +961,7 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["pipeline_id"] = attrs["pipeline_id"].SetRequired()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].SetOptional()
 	attrs["run_as"] = attrs["run_as"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["schema"] = attrs["schema"].SetOptional()
@@ -1015,6 +1027,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"photon":                 o.Photon,
 			"pipeline_id":            o.PipelineId,
 			"restart_window":         o.RestartWindow,
+			"root_path":              o.RootPath,
 			"run_as":                 o.RunAs,
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
@@ -1070,6 +1083,7 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
+			"root_path": types.StringType,
 			"run_as": basetypes.ListType{
 				ElemType: RunAs_SdkV2{}.Type(ctx),
 			},
@@ -4953,6 +4967,10 @@ type PipelineSpec_SdkV2 struct {
 	Photon types.Bool `tfsdk:"photon"`
 	// Restart window of this pipeline.
 	RestartWindow types.List `tfsdk:"restart_window"`
+	// Root path for this pipeline. This is used as the root directory when
+	// editing the pipeline in the Databricks user interface and it is added to
+	// sys.path when executing Python sources during pipeline execution.
+	RootPath types.String `tfsdk:"root_path"`
 	// The default schema (database) where tables are read from or published to.
 	Schema types.String `tfsdk:"schema"`
 	// Whether serverless compute is enabled for this pipeline.
@@ -5000,6 +5018,7 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["photon"] = attrs["photon"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].SetOptional()
 	attrs["restart_window"] = attrs["restart_window"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["root_path"] = attrs["root_path"].SetOptional()
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
@@ -5059,6 +5078,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"notifications":        o.Notifications,
 			"photon":               o.Photon,
 			"restart_window":       o.RestartWindow,
+			"root_path":            o.RootPath,
 			"schema":               o.Schema,
 			"serverless":           o.Serverless,
 			"storage":              o.Storage,
@@ -5110,6 +5130,7 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"restart_window": basetypes.ListType{
 				ElemType: RestartWindow_SdkV2{}.Type(ctx),
 			},
+			"root_path":  types.StringType,
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,

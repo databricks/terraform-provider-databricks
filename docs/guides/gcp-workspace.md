@@ -4,7 +4,7 @@ page_title: "Provisioning Databricks workspaces on GCP."
 
 # Provisioning Databricks workspaces on GCP
 
--> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy Azure Databricks resources.
+-> **Note** Refer to the [Databricks Terraform Registry modules](https://registry.terraform.io/modules/databricks/examples/databricks/latest) for Terraform modules and examples to deploy GCP Databricks resources.
 
 You can provision multiple Databricks workspaces with Terraform.
 
@@ -171,14 +171,6 @@ resource "google_compute_subnetwork" "network-with-private-secondary-ip-ranges" 
   ip_cidr_range = "10.0.0.0/16"
   region        = "us-central1"
   network       = google_compute_network.dbx_private_vpc.id
-  secondary_ip_range {
-    range_name    = "pods"
-    ip_cidr_range = "10.1.0.0/16"
-  }
-  secondary_ip_range {
-    range_name    = "svc"
-    ip_cidr_range = "10.2.0.0/20"
-  }
   private_ip_google_access = true
 }
 
@@ -232,10 +224,6 @@ resource "databricks_mws_workspaces" "this" {
   }
 
   network_id = databricks_mws_networks.this.network_id
-  gke_config {
-    connectivity_type = "PRIVATE_NODE_PUBLIC_MASTER"
-    master_ip_range   = "10.3.0.0/28"
-  }
 
   token {
     comment = "Terraform"

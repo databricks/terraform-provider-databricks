@@ -364,18 +364,18 @@ func emitUserSpOrGroup(ic *importContext, userOrSOrGroupPName string) {
 	}
 }
 
-func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitForUnityCatalog(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "owner" {
 		return d.Get(pathString).(string) == ""
 	}
-	return defaultShouldOmitFieldFunc(ic, pathString, as, d)
+	return defaultShouldOmitFieldFunc(ic, pathString, as, d, r)
 }
 
-func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData) bool {
+func shouldOmitWithIsolationMode(ic *importContext, pathString string, as *schema.Schema, d *schema.ResourceData, r *resource) bool {
 	if pathString == "isolation_mode" {
 		return d.Get(pathString).(string) != "ISOLATION_MODE_ISOLATED"
 	}
-	return shouldOmitForUnityCatalog(ic, pathString, as, d)
+	return shouldOmitForUnityCatalog(ic, pathString, as, d, r)
 }
 
 func createIsMatchingCatalogAndSchema(catalog_name_attr, schema_name_attr string) func(ic *importContext, res *resource,

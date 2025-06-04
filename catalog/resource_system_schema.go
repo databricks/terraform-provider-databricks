@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/databricks/databricks-sdk-go"
 	"github.com/databricks/databricks-sdk-go/service/catalog"
 	"github.com/databricks/terraform-provider-databricks/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -70,10 +71,7 @@ func ResourceSystemSchema() common.Resource {
 				log.Printf("[WARN] %s is auto enabled, ignoring it", old)
 				return nil
 			}
-			err = w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
-				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  old,
-			})
+			err = safeDisable(ctx, w, metastoreSummary.MetastoreId, old)
 			if err != nil {
 				return err
 			}
@@ -143,10 +141,22 @@ func ResourceSystemSchema() common.Resource {
 			if err != nil {
 				return err
 			}
-			return w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
-				MetastoreId: metastoreSummary.MetastoreId,
-				SchemaName:  schemaName,
-			})
+			return safeDisable(ctx, w, metastoreSummary.MetastoreId, schemaName)
 		},
 	}
+}
+
+func safeDisable(ctx context.Context, w *databricks.WorkspaceClient, metastoreId, schemaName string) error {
+	err := w.SystemSchemas.Disable(ctx, catalog.DisableRequest{
+		MetastoreId: metastoreId,
+		SchemaName:  schemaName,
+	})
+	if err != nil {
+		//ignore "<schema-name> system schema can only be disabled by Databricks" error
+		if !strings.Contains(err.Error(), "can only be disabled by Databricks") {
+			return err
+		}
+		log.Printf("[WARN] %s can be disabled only by Databricks, ignoring it", schemaName)
+	}
+	return nil
 }

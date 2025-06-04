@@ -6,6 +6,7 @@
 
 ### New Features and Improvements
 
+ * Add `workspace_consume` entitlement [#4762](https://github.com/databricks/terraform-provider-databricks/pull/4762).
  * Support configuration of file events in `databricks_external_location` [#4749](https://github.com/databricks/terraform-provider-databricks/pull/4749).
  * Improve support for new fields in `databricks_pipeline` [#4744](https://github.com/databricks/terraform-provider-databricks/pull/4744).
 

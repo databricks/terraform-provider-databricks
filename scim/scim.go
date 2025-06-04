@@ -43,6 +43,7 @@ var entitlementMapping = map[string]string{
 	"allow-instance-pool-create": "allow_instance_pool_create",
 	"databricks-sql-access":      "databricks_sql_access",
 	"workspace-access":           "workspace_access",
+	"workspace-consume":          "workspace_consume",
 }
 
 // order is important for tests
@@ -51,6 +52,7 @@ var possibleEntitlements = []string{
 	"allow-instance-pool-create",
 	"databricks-sql-access",
 	"workspace-access",
+	"workspace-consume",
 }
 
 type entitlements []ComplexValue
@@ -100,6 +102,7 @@ func addEntitlementsToSchema(s map[string]*schema.Schema) {
 			Default:  false,
 		}
 	}
+	s["workspace_consume"].ConflictsWith = []string{"workspace_access", "databricks_sql_access"}
 }
 
 // ResourceMeta is a struct that contains the meta information about the SCIM group

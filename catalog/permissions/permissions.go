@@ -26,7 +26,7 @@ func NewUnityCatalogPermissionsAPI(ctx context.Context, m any) UnityCatalogPermi
 	return UnityCatalogPermissionsAPI{client, ctx}
 }
 
-func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableType, name string) (list *catalog.PermissionsList, err error) {
+func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableType, name string) (list *catalog.GetPermissionsResponse, err error) {
 	if securable.String() == "share" {
 		sharePermissions, err := a.client.Shares.SharePermissions(a.context, sharing.SharePermissionsRequest{
 			Name: name,
@@ -34,7 +34,7 @@ func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableTy
 		if err != nil {
 			return nil, err
 		}
-		list = &catalog.PermissionsList{
+		list = &catalog.GetPermissionsResponse{
 			PrivilegeAssignments: make([]catalog.PrivilegeAssignment, len(sharePermissions.PrivilegeAssignments)),
 		}
 		for i, pa := range sharePermissions.PrivilegeAssignments {
@@ -45,7 +45,7 @@ func (a UnityCatalogPermissionsAPI) GetPermissions(securable catalog.SecurableTy
 		}
 		return list, nil
 	}
-	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, securable, name)
+	list, err = a.client.Grants.GetBySecurableTypeAndFullName(a.context, securable.String(), name)
 	return
 }
 
@@ -67,13 +67,13 @@ func (a UnityCatalogPermissionsAPI) UpdatePermissions(securable catalog.Securabl
 	}
 	_, err := a.client.Grants.Update(a.context, catalog.UpdatePermissions{
 		Changes:       diff,
-		SecurableType: securable,
+		SecurableType: securable.String(),
 		FullName:      name,
 	})
 	return err
 }
 
-func (a UnityCatalogPermissionsAPI) WaitForUpdate(timeout time.Duration, securable catalog.SecurableType, name string, desired catalog.PermissionsList, diff func(*catalog.PermissionsList, catalog.PermissionsList) []catalog.PermissionsChange) error {
+func (a UnityCatalogPermissionsAPI) WaitForUpdate(timeout time.Duration, securable catalog.SecurableType, name string, desired catalog.GetPermissionsResponse, diff func(*catalog.GetPermissionsResponse, catalog.GetPermissionsResponse) []catalog.PermissionsChange) error {
 	return retry.RetryContext(a.context, timeout, func() *retry.RetryError {
 		current, err := a.GetPermissions(securable, name)
 		if err != nil {

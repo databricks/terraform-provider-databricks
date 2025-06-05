@@ -72,6 +72,10 @@ Exactly one of the following attributes must be provided:
 * `job` attribute
   * `id` - Id of the job to grant permission on.
   * `permission` - Permissions to grant on the Job. Supported permissions are: `CAN_MANAGE`, `IS_OWNER`, `CAN_MANAGE_RUN`, `CAN_VIEW`.
+* `uc_securable` attribute (see the [API docs](https://docs.databricks.com/api/workspace/apps/create#resources-uc_securable) for full list of supported UC objects)
+  * `securable_type` - the ype of UC securable. I.e., `VOLUME`
+  * `securable_full_name` - the full name of UC securable, i.e. `my-catalog.my-schema.my-volume`
+  * `permission` - Permissions to grant on UC securable. I.e., `READ_VOLUME`, `WRITE_VOLUME`.
 
 ## Attribute Reference
 

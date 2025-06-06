@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
   * `name` - Name of schema, relative to parent catalog.
   * `owner` - the identifier of the user who owns the schema
   * `properties` - map of properties set on the schema
-  * `schema_id` - the unique identifier of the volume
+  * `schema_id` - the unique identifier of the schema
   * `storage_location` - the storage location on the cloud.
   * `storage_root` - storage root URL for managed tables within schema.
   * `updated_at` - the timestamp of the last time changes were made to the schema

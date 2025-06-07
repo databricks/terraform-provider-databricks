@@ -2,9 +2,22 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alerts_v2 Data Source
+The SQL Alerts v2 data source allows you to retrieve a list of alerts in Databricks SQL that are accessible to the current user. This data source returns alerts ordered by their creation time.
 
+You can use this data source to:
+- Get a comprehensive list of all alerts in your workspace
+- Monitor and audit alert configurations across your workspace
+
+### Pagination
+The data source supports pagination to efficiently retrieve alerts. You can control the page size to limit the number of results returned in a single request.
 
 ## Example Usage
+### List All Alerts
+This example retrieves all alerts accessible to the current user:
+
+```hcl
+data "databricks_alert_v2" "all" {}
+```
 
 
 ## Arguments

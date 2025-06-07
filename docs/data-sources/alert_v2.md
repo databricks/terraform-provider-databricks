@@ -2,9 +2,23 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Data Source
+The SQL Alert v2 data source allows you to retrieve detailed information about a specific alert in Databricks SQL. This data source provides access to all alert properties, including its configuration, evaluation criteria, notification settings, and schedule.
 
+You can use this data source to:
+- Retrieve alert details for reference in other resources
+- Check the current state and configuration of an alert
+- Verify notification settings and subscribers
+- Examine the schedule configuration
 
 ## Example Usage
+### Retrieve Alert by ID
+This example retrieves a specific alert by its ID:
+
+```hcl
+data "databricks_alert_v2" "this" {
+  id = "123"
+}
+```
 
 
 ## Arguments

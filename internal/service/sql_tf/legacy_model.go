@@ -2667,6 +2667,22 @@ type CreateQueryVisualizationsLegacyRequest_SdkV2 struct {
 	Type_ types.String `tfsdk:"type"`
 }
 
+func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan CreateQueryVisualizationsLegacyRequest_SdkV2) {
+}
+
+func (newState *CreateQueryVisualizationsLegacyRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState CreateQueryVisualizationsLegacyRequest_SdkV2) {
+}
+
+func (c CreateQueryVisualizationsLegacyRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["description"] = attrs["description"].SetOptional()
+	attrs["name"] = attrs["name"].SetOptional()
+	attrs["options"] = attrs["options"].SetRequired()
+	attrs["query_id"] = attrs["query_id"].SetRequired()
+	attrs["type"] = attrs["type"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in CreateQueryVisualizationsLegacyRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -10522,6 +10538,10 @@ type QueryMetrics_SdkV2 struct {
 	// Size of data temporarily written to disk while executing the query, in
 	// bytes.
 	SpillToDiskBytes types.Int64 `tfsdk:"spill_to_disk_bytes"`
+	// sum of task times completed in a range of wall clock time, approximated
+	// to a configurable number of points aggregated over all stages and jobs in
+	// the query (based on task_total_time_ms)
+	TaskTimeOverTimeRange types.List `tfsdk:"task_time_over_time_range"`
 	// Sum of execution time for all of the query’s tasks, in milliseconds.
 	TaskTotalTimeMs types.Int64 `tfsdk:"task_total_time_ms"`
 	// Total execution time of the query from the client’s point of view, in
@@ -10558,6 +10578,8 @@ func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["rows_produced_count"] = attrs["rows_produced_count"].SetOptional()
 	attrs["rows_read_count"] = attrs["rows_read_count"].SetOptional()
 	attrs["spill_to_disk_bytes"] = attrs["spill_to_disk_bytes"].SetOptional()
+	attrs["task_time_over_time_range"] = attrs["task_time_over_time_range"].SetOptional()
+	attrs["task_time_over_time_range"] = attrs["task_time_over_time_range"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
 	attrs["task_total_time_ms"] = attrs["task_total_time_ms"].SetOptional()
 	attrs["total_time_ms"] = attrs["total_time_ms"].SetOptional()
 	attrs["write_remote_bytes"] = attrs["write_remote_bytes"].SetOptional()
@@ -10573,7 +10595,9 @@ func (c QueryMetrics_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 // plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
 // SDK values.
 func (a QueryMetrics_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
-	return map[string]reflect.Type{}
+	return map[string]reflect.Type{
+		"task_time_over_time_range": reflect.TypeOf(TaskTimeOverRange_SdkV2{}),
+	}
 }
 
 // TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
@@ -10602,6 +10626,7 @@ func (o QueryMetrics_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"rows_produced_count":                o.RowsProducedCount,
 			"rows_read_count":                    o.RowsReadCount,
 			"spill_to_disk_bytes":                o.SpillToDiskBytes,
+			"task_time_over_time_range":          o.TaskTimeOverTimeRange,
 			"task_total_time_ms":                 o.TaskTotalTimeMs,
 			"total_time_ms":                      o.TotalTimeMs,
 			"write_remote_bytes":                 o.WriteRemoteBytes,
@@ -10631,11 +10656,40 @@ func (o QueryMetrics_SdkV2) Type(ctx context.Context) attr.Type {
 			"rows_produced_count":                types.Int64Type,
 			"rows_read_count":                    types.Int64Type,
 			"spill_to_disk_bytes":                types.Int64Type,
-			"task_total_time_ms":                 types.Int64Type,
-			"total_time_ms":                      types.Int64Type,
-			"write_remote_bytes":                 types.Int64Type,
+			"task_time_over_time_range": basetypes.ListType{
+				ElemType: TaskTimeOverRange_SdkV2{}.Type(ctx),
+			},
+			"task_total_time_ms": types.Int64Type,
+			"total_time_ms":      types.Int64Type,
+			"write_remote_bytes": types.Int64Type,
 		},
 	}
+}
+
+// GetTaskTimeOverTimeRange returns the value of the TaskTimeOverTimeRange field in QueryMetrics_SdkV2 as
+// a TaskTimeOverRange_SdkV2 value.
+// If the field is unknown or null, the boolean return value is false.
+func (o *QueryMetrics_SdkV2) GetTaskTimeOverTimeRange(ctx context.Context) (TaskTimeOverRange_SdkV2, bool) {
+	var e TaskTimeOverRange_SdkV2
+	if o.TaskTimeOverTimeRange.IsNull() || o.TaskTimeOverTimeRange.IsUnknown() {
+		return e, false
+	}
+	var v []TaskTimeOverRange_SdkV2
+	d := o.TaskTimeOverTimeRange.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	if len(v) == 0 {
+		return e, false
+	}
+	return v[0], true
+}
+
+// SetTaskTimeOverTimeRange sets the value of the TaskTimeOverTimeRange field in QueryMetrics_SdkV2.
+func (o *QueryMetrics_SdkV2) SetTaskTimeOverTimeRange(ctx context.Context, v TaskTimeOverRange_SdkV2) {
+	vs := []attr.Value{v.ToObjectValue(ctx)}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["task_time_over_time_range"]
+	o.TaskTimeOverTimeRange = types.ListValueMust(t, vs)
 }
 
 type QueryOptions_SdkV2 struct {
@@ -11774,6 +11828,20 @@ type SetRequest_SdkV2 struct {
 	ObjectType types.String `tfsdk:"-"`
 }
 
+func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan SetRequest_SdkV2) {
+}
+
+func (newState *SetRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState SetRequest_SdkV2) {
+}
+
+func (c SetRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["access_control_list"] = attrs["access_control_list"].SetOptional()
+	attrs["objectId"] = attrs["objectId"].SetRequired()
+	attrs["objectType"] = attrs["objectType"].SetRequired()
+
+	return attrs
+}
+
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in SetRequest.
 // Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
 // the type information of their elements in the Go type system. This function provides a way to
@@ -12756,6 +12824,139 @@ func (o Success_SdkV2) Type(ctx context.Context) attr.Type {
 	}
 }
 
+type TaskTimeOverRange_SdkV2 struct {
+	Entries types.List `tfsdk:"entries"`
+	// interval length for all entries (difference in start time and end time of
+	// an entry range) the same for all entries start time of first interval is
+	// query_start_time_ms
+	Interval types.Int64 `tfsdk:"interval"`
+}
+
+func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRange_SdkV2) {
+}
+
+func (newState *TaskTimeOverRange_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRange_SdkV2) {
+}
+
+func (c TaskTimeOverRange_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["entries"] = attrs["entries"].SetOptional()
+	attrs["interval"] = attrs["interval"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskTimeOverRange.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskTimeOverRange_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{
+		"entries": reflect.TypeOf(TaskTimeOverRangeEntry_SdkV2{}),
+	}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskTimeOverRange_SdkV2
+// only implements ToObjectValue() and Type().
+func (o TaskTimeOverRange_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"entries":  o.Entries,
+			"interval": o.Interval,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TaskTimeOverRange_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"entries": basetypes.ListType{
+				ElemType: TaskTimeOverRangeEntry_SdkV2{}.Type(ctx),
+			},
+			"interval": types.Int64Type,
+		},
+	}
+}
+
+// GetEntries returns the value of the Entries field in TaskTimeOverRange_SdkV2 as
+// a slice of TaskTimeOverRangeEntry_SdkV2 values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *TaskTimeOverRange_SdkV2) GetEntries(ctx context.Context) ([]TaskTimeOverRangeEntry_SdkV2, bool) {
+	if o.Entries.IsNull() || o.Entries.IsUnknown() {
+		return nil, false
+	}
+	var v []TaskTimeOverRangeEntry_SdkV2
+	d := o.Entries.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetEntries sets the value of the Entries field in TaskTimeOverRange_SdkV2.
+func (o *TaskTimeOverRange_SdkV2) SetEntries(ctx context.Context, v []TaskTimeOverRangeEntry_SdkV2) {
+	vs := make([]attr.Value, 0, len(v))
+	for _, e := range v {
+		vs = append(vs, e.ToObjectValue(ctx))
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["entries"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Entries = types.ListValueMust(t, vs)
+}
+
+type TaskTimeOverRangeEntry_SdkV2 struct {
+	// total task completion time in this time range, aggregated over all stages
+	// and jobs in the query
+	TaskCompletedTimeMs types.Int64 `tfsdk:"task_completed_time_ms"`
+}
+
+func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TaskTimeOverRangeEntry_SdkV2) {
+}
+
+func (newState *TaskTimeOverRangeEntry_SdkV2) SyncEffectiveFieldsDuringRead(existingState TaskTimeOverRangeEntry_SdkV2) {
+}
+
+func (c TaskTimeOverRangeEntry_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["task_completed_time_ms"] = attrs["task_completed_time_ms"].SetOptional()
+
+	return attrs
+}
+
+// GetComplexFieldTypes returns a map of the types of elements in complex fields in TaskTimeOverRangeEntry.
+// Container types (types.Map, types.List, types.Set) and object types (types.Object) do not carry
+// the type information of their elements in the Go type system. This function provides a way to
+// retrieve the type information of the elements in complex fields at runtime. The values of the map
+// are the reflected types of the contained elements. They must be either primitive values from the
+// plugin framework type system (types.String{}, types.Bool{}, types.Int64{}, types.Float64{}) or TF
+// SDK values.
+func (a TaskTimeOverRangeEntry_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string]reflect.Type {
+	return map[string]reflect.Type{}
+}
+
+// TFSDK types cannot implement the ObjectValuable interface directly, as it would otherwise
+// interfere with how the plugin framework retrieves and sets values in state. Thus, TaskTimeOverRangeEntry_SdkV2
+// only implements ToObjectValue() and Type().
+func (o TaskTimeOverRangeEntry_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectValue {
+	return types.ObjectValueMust(
+		o.Type(ctx).(basetypes.ObjectType).AttrTypes,
+		map[string]attr.Value{
+			"task_completed_time_ms": o.TaskCompletedTimeMs,
+		})
+}
+
+// Type implements basetypes.ObjectValuable.
+func (o TaskTimeOverRangeEntry_SdkV2) Type(ctx context.Context) attr.Type {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"task_completed_time_ms": types.Int64Type,
+		},
+	}
+}
+
 type TerminationReason_SdkV2 struct {
 	// status code indicating why the cluster was terminated
 	Code types.String `tfsdk:"code"`
@@ -13001,6 +13202,21 @@ type TransferOwnershipRequest_SdkV2 struct {
 	ObjectId types.List `tfsdk:"-"`
 	// The type of object on which to change ownership.
 	ObjectType types.String `tfsdk:"-"`
+}
+
+func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringCreateOrUpdate(plan TransferOwnershipRequest_SdkV2) {
+}
+
+func (newState *TransferOwnershipRequest_SdkV2) SyncEffectiveFieldsDuringRead(existingState TransferOwnershipRequest_SdkV2) {
+}
+
+func (c TransferOwnershipRequest_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
+	attrs["new_owner"] = attrs["new_owner"].SetOptional()
+	attrs["objectId"] = attrs["objectId"].SetRequired()
+	attrs["objectId"] = attrs["objectId"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
+	attrs["objectType"] = attrs["objectType"].SetRequired()
+
+	return attrs
 }
 
 // GetComplexFieldTypes returns a map of the types of elements in complex fields in TransferOwnershipRequest.

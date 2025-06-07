@@ -90,6 +90,10 @@ type CreatePipeline_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -139,6 +143,7 @@ func (c CreatePipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschem
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -166,6 +171,7 @@ func (a CreatePipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[stri
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
 		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -203,6 +209,7 @@ func (o CreatePipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.Objec
 			"schema":                o.Schema,
 			"serverless":            o.Serverless,
 			"storage":               o.Storage,
+			"tags":                  o.Tags,
 			"target":                o.Target,
 			"trigger":               o.Trigger,
 		})
@@ -260,7 +267,10 @@ func (o CreatePipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -552,6 +562,32 @@ func (o *CreatePipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
 	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in CreatePipeline_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *CreatePipeline_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in CreatePipeline_SdkV2.
+func (o *CreatePipeline_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in CreatePipeline_SdkV2 as
@@ -917,6 +953,10 @@ type EditPipeline_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -967,6 +1007,7 @@ func (c EditPipeline_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -994,6 +1035,7 @@ func (a EditPipeline_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
 		"run_as":               reflect.TypeOf(RunAs_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -1032,6 +1074,7 @@ func (o EditPipeline_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"schema":                 o.Schema,
 			"serverless":             o.Serverless,
 			"storage":                o.Storage,
+			"tags":                   o.Tags,
 			"target":                 o.Target,
 			"trigger":                o.Trigger,
 		})
@@ -1090,7 +1133,10 @@ func (o EditPipeline_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -1382,6 +1428,32 @@ func (o *EditPipeline_SdkV2) SetRunAs(ctx context.Context, v RunAs_SdkV2) {
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["run_as"]
 	o.RunAs = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in EditPipeline_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *EditPipeline_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in EditPipeline_SdkV2.
+func (o *EditPipeline_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in EditPipeline_SdkV2 as
@@ -4977,6 +5049,10 @@ type PipelineSpec_SdkV2 struct {
 	Serverless types.Bool `tfsdk:"serverless"`
 	// DBFS root directory for storing checkpoints and tables.
 	Storage types.String `tfsdk:"storage"`
+	// A map of tags associated with the pipeline. These are forwarded to the
+	// cluster as cluster tags, and are therefore subject to the same
+	// limitations. A maximum of 25 tags can be added to the pipeline.
+	Tags types.Map `tfsdk:"tags"`
 	// Target schema (database) to add tables in this pipeline to. Exactly one
 	// of `schema` or `target` must be specified. To publish to Unity Catalog,
 	// also specify `catalog`. This legacy field is deprecated for pipeline
@@ -5022,6 +5098,7 @@ func (c PipelineSpec_SdkV2) ApplySchemaCustomizations(attrs map[string]tfschema.
 	attrs["schema"] = attrs["schema"].SetOptional()
 	attrs["serverless"] = attrs["serverless"].SetOptional()
 	attrs["storage"] = attrs["storage"].SetOptional()
+	attrs["tags"] = attrs["tags"].SetOptional()
 	attrs["target"] = attrs["target"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].SetOptional()
 	attrs["trigger"] = attrs["trigger"].(tfschema.ListNestedAttributeBuilder).AddValidator(listvalidator.SizeAtMost(1)).(tfschema.AttributeBuilder)
@@ -5048,6 +5125,7 @@ func (a PipelineSpec_SdkV2) GetComplexFieldTypes(ctx context.Context) map[string
 		"libraries":            reflect.TypeOf(PipelineLibrary_SdkV2{}),
 		"notifications":        reflect.TypeOf(Notifications_SdkV2{}),
 		"restart_window":       reflect.TypeOf(RestartWindow_SdkV2{}),
+		"tags":                 reflect.TypeOf(types.String{}),
 		"trigger":              reflect.TypeOf(PipelineTrigger_SdkV2{}),
 	}
 }
@@ -5082,6 +5160,7 @@ func (o PipelineSpec_SdkV2) ToObjectValue(ctx context.Context) basetypes.ObjectV
 			"schema":               o.Schema,
 			"serverless":           o.Serverless,
 			"storage":              o.Storage,
+			"tags":                 o.Tags,
 			"target":               o.Target,
 			"trigger":              o.Trigger,
 		})
@@ -5134,7 +5213,10 @@ func (o PipelineSpec_SdkV2) Type(ctx context.Context) attr.Type {
 			"schema":     types.StringType,
 			"serverless": types.BoolType,
 			"storage":    types.StringType,
-			"target":     types.StringType,
+			"tags": basetypes.MapType{
+				ElemType: types.StringType,
+			},
+			"target": types.StringType,
 			"trigger": basetypes.ListType{
 				ElemType: PipelineTrigger_SdkV2{}.Type(ctx),
 			},
@@ -5400,6 +5482,32 @@ func (o *PipelineSpec_SdkV2) SetRestartWindow(ctx context.Context, v RestartWind
 	vs := []attr.Value{v.ToObjectValue(ctx)}
 	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["restart_window"]
 	o.RestartWindow = types.ListValueMust(t, vs)
+}
+
+// GetTags returns the value of the Tags field in PipelineSpec_SdkV2 as
+// a map of string to types.String values.
+// If the field is unknown or null, the boolean return value is false.
+func (o *PipelineSpec_SdkV2) GetTags(ctx context.Context) (map[string]types.String, bool) {
+	if o.Tags.IsNull() || o.Tags.IsUnknown() {
+		return nil, false
+	}
+	var v map[string]types.String
+	d := o.Tags.ElementsAs(ctx, &v, true)
+	if d.HasError() {
+		panic(pluginfwcommon.DiagToString(d))
+	}
+	return v, true
+}
+
+// SetTags sets the value of the Tags field in PipelineSpec_SdkV2.
+func (o *PipelineSpec_SdkV2) SetTags(ctx context.Context, v map[string]types.String) {
+	vs := make(map[string]attr.Value, len(v))
+	for k, e := range v {
+		vs[k] = e
+	}
+	t := o.Type(ctx).(basetypes.ObjectType).AttrTypes["tags"]
+	t = t.(attr.TypeWithElementType).ElementType()
+	o.Tags = types.MapValueMust(t, vs)
 }
 
 // GetTrigger returns the value of the Trigger field in PipelineSpec_SdkV2 as

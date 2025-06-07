@@ -15,7 +15,7 @@ import (
 )
 
 // diffPermissionsForPrincipal returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
-func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+func diffPermissionsForPrincipal(principal string, desired catalog.GetPermissionsResponse, existing catalog.GetPermissionsResponse) (diff []catalog.PermissionsChange) {
 	// diffs change sets for principal
 	configured := map[string]*schema.Set{}
 	for _, v := range desired.PrivilegeAssignments {
@@ -66,7 +66,7 @@ func diffPermissionsForPrincipal(principal string, desired catalog.PermissionsLi
 }
 
 // replacePermissionsForPrincipal merges removal diff of existing permissions on the platform
-func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.PermissionsList) error {
+func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, securable string, name string, principal string, list catalog.GetPermissionsResponse) error {
 	securableType := permissions.Mappings.GetSecurableType(securable)
 	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
@@ -76,13 +76,13 @@ func replacePermissionsForPrincipal(a permissions.UnityCatalogPermissionsAPI, se
 	if err != nil {
 		return err
 	}
-	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.GetPermissionsResponse, desired catalog.GetPermissionsResponse) []catalog.PermissionsChange {
 		return diffPermissionsForPrincipal(principal, desired, *current)
 	})
 }
 
 // filterPermissionsForPrincipal extracts permissions for the given principal and transforms to permissions.UnityCatalogPrivilegeAssignment to match Schema
-func filterPermissionsForPrincipal(in catalog.PermissionsList, principal string) (*permissions.UnityCatalogPrivilegeAssignment, error) {
+func filterPermissionsForPrincipal(in catalog.GetPermissionsResponse, principal string) (*permissions.UnityCatalogPrivilegeAssignment, error) {
 	grantsForPrincipal := []permissions.UnityCatalogPrivilegeAssignment{}
 	for _, v := range in.PrivilegeAssignments {
 		privileges := []string{}
@@ -166,7 +166,7 @@ func ResourceGrant() common.Resource {
 			}
 			principal := d.Get("principal").(string)
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			var grants = catalog.GetPermissionsResponse{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
@@ -216,7 +216,7 @@ func ResourceGrant() common.Resource {
 				return err
 			}
 			privileges := permissions.SetToSlice(d.Get("privileges").(*schema.Set))
-			var grants = catalog.PermissionsList{
+			var grants = catalog.GetPermissionsResponse{
 				PrivilegeAssignments: []catalog.PrivilegeAssignment{
 					{
 						Principal:  principal,
@@ -241,7 +241,7 @@ func ResourceGrant() common.Resource {
 				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.PermissionsList{})
+			return replacePermissionsForPrincipal(unityCatalogPermissionsAPI, securable, name, principal, catalog.GetPermissionsResponse{})
 		},
 	}
 }

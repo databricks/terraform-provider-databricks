@@ -67,9 +67,11 @@ func (r *AlertV2Resource) update(ctx context.Context, plan sql_tf.AlertV2, diags
 		return
 	}
 
-	var updateRequest = sql.UpdateAlertV2Request{Alert: alert_v2}
-	updateRequest.Id = plan.Id.ValueString()
-	updateRequest.UpdateMask = "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,schedule,warehouse_id"
+	updateRequest := sql.UpdateAlertV2Request{
+		Alert:      alert_v2,
+		Id:         plan.Id.ValueString(),
+		UpdateMask: "custom_description,custom_summary,display_name,evaluation,parent_path,query_text,schedule,warehouse_id",
+	}
 
 	response, err := client.AlertsV2.UpdateAlert(ctx, updateRequest)
 	if err != nil {
@@ -108,7 +110,11 @@ func (r *AlertV2Resource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	response, err := client.AlertsV2.CreateAlert(ctx, sql.CreateAlertV2Request{Alert: alert_v2})
+	createRequest := sql.CreateAlertV2Request{
+		Alert: alert_v2,
+	}
+
+	response, err := client.AlertsV2.CreateAlert(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create alert_v2", err.Error())
 		return

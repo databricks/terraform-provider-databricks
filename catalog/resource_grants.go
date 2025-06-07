@@ -27,7 +27,7 @@ type PermissionsList struct {
 }
 
 // diffPermissions returns an array of catalog.PermissionsChange of this permissions list with `diff` privileges removed
-func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsList) (diff []catalog.PermissionsChange) {
+func diffPermissions(pl catalog.GetPermissionsResponse, existing catalog.GetPermissionsResponse) (diff []catalog.PermissionsChange) {
 	// diffs change sets
 	configured := map[string]*schema.Set{}
 	for _, v := range pl.PrivilegeAssignments {
@@ -74,7 +74,7 @@ func diffPermissions(pl catalog.PermissionsList, existing catalog.PermissionsLis
 }
 
 // replaceAllPermissions merges removal diff of existing permissions on the platform
-func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.PermissionsList) error {
+func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable string, name string, list catalog.GetPermissionsResponse) error {
 	securableType := permissions.Mappings.GetSecurableType(securable)
 	existing, err := a.GetPermissions(securableType, name)
 	if err != nil {
@@ -84,12 +84,12 @@ func replaceAllPermissions(a permissions.UnityCatalogPermissionsAPI, securable s
 	if err != nil {
 		return err
 	}
-	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.PermissionsList, desired catalog.PermissionsList) []catalog.PermissionsChange {
+	return a.WaitForUpdate(1*time.Minute, securableType, name, list, func(current *catalog.GetPermissionsResponse, desired catalog.GetPermissionsResponse) []catalog.PermissionsChange {
 		return diffPermissions(desired, *current)
 	})
 }
 
-func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
+func (pl PermissionsList) toSdkPermissionsList() (out catalog.GetPermissionsResponse) {
 	for _, v := range pl.Assignments {
 		privileges := []catalog.Privilege{}
 		for _, p := range v.Privileges {
@@ -103,7 +103,7 @@ func (pl PermissionsList) toSdkPermissionsList() (out catalog.PermissionsList) {
 	return
 }
 
-func sdkPermissionsListToPermissionsList(sdkPermissionsList catalog.PermissionsList) (out PermissionsList) {
+func sdkPermissionsListToPermissionsList(sdkPermissionsList catalog.GetPermissionsResponse) (out PermissionsList) {
 	for _, v := range sdkPermissionsList.PrivilegeAssignments {
 		privileges := []string{}
 		for _, p := range v.Privileges {
@@ -235,7 +235,7 @@ func ResourceGrants() common.Resource {
 				return err
 			}
 			unityCatalogPermissionsAPI := permissions.NewUnityCatalogPermissionsAPI(ctx, c)
-			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.PermissionsList{})
+			return replaceAllPermissions(unityCatalogPermissionsAPI, securable, name, catalog.GetPermissionsResponse{})
 		},
 	}
 }

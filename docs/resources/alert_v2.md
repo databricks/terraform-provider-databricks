@@ -2,9 +2,63 @@
 subcategory: "Databricks SQL"
 ---
 # databricks_alert_v2 Resource
+The Alert v2 resource allows you to manage SQL alerts in Databricks SQL. Alerts monitor query results and notify you when specific conditions are met.
 
+Alerts run on a schedule and evaluate query results against defined thresholds. When an alert is triggered, notifications can be sent to specified users or destinations.
+
+### Alert Evaluation
+Alerts support various comparison operators and can evaluate query results against fixed values or other columns. You can configure alerts to trigger when results are empty or when specific conditions are met.
+
+### Notifications
+When an alert is triggered, notifications can be sent to:
+- User email addresses
+- Notification destinations (configured separately)
+
+You can also configure alerts to notify subscribers when the alert returns to normal state and set a retrigger interval to control how frequently the alert can be triggered.
+
+### Scheduling
+Alerts use Quartz cron syntax for scheduling. You can specify the timezone and pause status for the schedule.
 
 ## Example Usage
+### Basic Alert Example
+This example creates a basic alert that monitors a query and sends notifications to a user when the value exceeds a threshold:
+
+```hcl
+resource "databricks_sql_alert" "basic_alert" {
+  display_name = "High Error Rate Alert"
+  query_text   = "SELECT count(*) as error_count FROM logs WHERE level = 'ERROR' AND timestamp > now() - interval 1 hour"
+  warehouse_id = "a7066a8ef796be84"
+  parent_path  = "/Users/user@example.com"
+  
+  evaluation {
+    source {
+      name        = "error_count"
+      display     = "Error Count"
+      aggregation = "COUNT"
+    }
+    comparison_operator = "GREATER_THAN"
+    threshold {
+      value {
+        double_value = 100
+      }
+    }
+    empty_result_state = "OK"
+    
+    notification {
+      subscriptions {
+        user_email = "user@example.com"
+      }
+      notify_on_ok = true
+    }
+  }
+  
+  schedule {
+    quartz_cron_schedule = "0 0/15 * * * ?"  # Every 15 minutes
+    timezone_id          = "America/Los_Angeles"
+    pause_status         = "UNPAUSED"
+  }
+}
+```
 
 
 ## Arguments

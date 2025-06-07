@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func getTestNccRule() *settings.NccAzurePrivateEndpointRule {
-	return &settings.NccAzurePrivateEndpointRule{
+func getTestNccRule() *settings.NccPrivateEndpointRule {
+	return &settings.NccPrivateEndpointRule{
 		GroupId:                     "group_id",
 		ResourceId:                  "resource_id",
 		RuleId:                      "rule_id",
@@ -115,7 +115,7 @@ func TestResourceNccPrivateEndpointRuleDelete(t *testing.T) {
 		MockAccountClientFunc: func(a *mocks.MockAccountClient) {
 			a.GetMockNetworkConnectivityAPI().EXPECT().
 				DeletePrivateEndpointRuleByNetworkConnectivityConfigIdAndPrivateEndpointRuleId(mock.Anything, "ncc_id", "rule_id").
-				Return(&settings.NccAzurePrivateEndpointRule{}, nil)
+				Return(&settings.NccPrivateEndpointRule{}, nil)
 		},
 		Resource:  ResourceMwsNccPrivateEndpointRule(),
 		AccountID: "abc",

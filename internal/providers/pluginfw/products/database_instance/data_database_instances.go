@@ -6,12 +6,12 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/databricks/databricks-sdk-go/service/catalog"
+	"github.com/databricks/databricks-sdk-go/service/database"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/autogen"
 	pluginfwcontext "github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/context"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/converters"
 	"github.com/databricks/terraform-provider-databricks/internal/providers/pluginfw/tfschema"
-	"github.com/databricks/terraform-provider-databricks/internal/service/catalog_tf"
+	"github.com/databricks/terraform-provider-databricks/internal/service/database_tf"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -27,8 +27,8 @@ func DataSourceDatabaseInstances() datasource.DataSource {
 }
 
 type DatabaseInstancesList struct {
-	catalog_tf.ListDatabaseInstancesRequest
-	DatabaseInstances types.List `tfsdk:"database_instances"`
+	database_tf.ListDatabaseInstancesRequest
+	Database types.List `tfsdk:"database_instances"`
 }
 
 func (c DatabaseInstancesList) ApplySchemaCustomizations(attrs map[string]tfschema.AttributeBuilder) map[string]tfschema.AttributeBuilder {
@@ -38,7 +38,7 @@ func (c DatabaseInstancesList) ApplySchemaCustomizations(attrs map[string]tfsche
 
 func (DatabaseInstancesList) GetComplexFieldTypes(context.Context) map[string]reflect.Type {
 	return map[string]reflect.Type{
-		"database_instances": reflect.TypeOf(catalog_tf.DatabaseInstance{}),
+		"database_instances": reflect.TypeOf(database_tf.DatabaseInstance{}),
 	}
 }
 
@@ -78,13 +78,13 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	var listRequest catalog.ListDatabaseInstancesRequest
+	var listRequest database.ListDatabaseInstancesRequest
 	resp.Diagnostics.Append(converters.TfSdkToGoSdkStruct(ctx, config, &listRequest)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	response, err := client.DatabaseInstances.ListDatabaseInstancesAll(ctx, listRequest)
+	response, err := client.Database.ListDatabaseInstancesAll(ctx, listRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list database_instances", err.Error())
 		return
@@ -92,7 +92,7 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 
 	var database_instances = []attr.Value{}
 	for _, item := range response {
-		var database_instance catalog_tf.DatabaseInstance
+		var database_instance database_tf.DatabaseInstance
 		resp.Diagnostics.Append(converters.GoSdkToTfSdkStruct(ctx, item, &database_instance)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -101,6 +101,6 @@ func (r *DatabaseInstancesDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var newState DatabaseInstancesList
-	newState.DatabaseInstances = types.ListValueMust(catalog_tf.DatabaseInstance{}.Type(ctx), database_instances)
+	newState.Database = types.ListValueMust(database_tf.DatabaseInstance{}.Type(ctx), database_instances)
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 }

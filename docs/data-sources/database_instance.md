@@ -1,10 +1,18 @@
 ---
-subcategory: "Unity Catalog"
+subcategory: "Database Instances"
 ---
 # databricks_database_instance Data Source
+This data source can be used to get a single Database Instance.
 
 
 ## Example Usage
+Referring to a Database Instance by name:
+
+```hcl
+data "databricks_database_instance" "this" {
+  name = "my-database-instance"
+}
+```
 
 
 ## Arguments
@@ -13,9 +21,7 @@ The following arguments are supported:
 
 ## Attributes
 The following attributes are exported:
-* `admin_password` (string) - Password for admin user to create. If not provided, no user will be created
-* `admin_rolename` (string) - Name of the admin role for the instance. If not provided, defaults to 'databricks_admin'
-* `capacity` (string) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4"
+* `capacity` (string) - The sku of the instance. Valid values are "CU_1", "CU_2", "CU_4", "CU_8"
 * `creation_time` (string) - The timestamp when the instance was created
 * `creator` (string) - The email of the creator of the instance
 * `name` (string) - The name of the instance. This is the unique identifier for the instance

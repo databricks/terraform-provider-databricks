@@ -67,9 +67,11 @@ func (r *RecipientFederationPolicyResource) update(ctx context.Context, plan sha
 		return
 	}
 
-	var updateRequest = sharing.UpdateFederationPolicyRequest{Policy: federation_policy}
-	updateRequest.Name = plan.Name.ValueString()
-	updateRequest.UpdateMask = "comment,oidc_policy"
+	updateRequest := sharing.UpdateFederationPolicyRequest{
+		Policy:     federation_policy,
+		Name:       plan.Name.ValueString(),
+		UpdateMask: "comment,oidc_policy",
+	}
 
 	response, err := client.RecipientFederationPolicies.Update(ctx, updateRequest)
 	if err != nil {
@@ -108,7 +110,11 @@ func (r *RecipientFederationPolicyResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	response, err := client.RecipientFederationPolicies.Create(ctx, sharing.CreateFederationPolicyRequest{Policy: federation_policy})
+	createRequest := sharing.CreateFederationPolicyRequest{
+		Policy: federation_policy,
+	}
+
+	response, err := client.RecipientFederationPolicies.Create(ctx, createRequest)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create recipient_federation_policy", err.Error())
 		return

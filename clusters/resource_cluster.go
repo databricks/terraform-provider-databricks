@@ -59,6 +59,12 @@ func ResourceCluster() common.Resource {
 // This method copies the values for these keys from state to the plan.
 // This needs to be done in addition to setting these attributes as computed; otherwise, this customization
 // won't take effect for users who have set additional `spark_conf` or `custom_tags`.
+// singleNodeClusterChangesCustomizeDiff adjusts the plan when `is_single_node` is `true`. When this happens,
+// the API automatically sets the `ResourceClass` key in `custom_tags` and two other keys in the `spark_conf`.
+// If the user hasn't set these explicitly in their config, the plan marks these keys for removal.
+// This method copies the values for these keys from state to the plan.
+// This needs to be done in addition to setting these attributes as computed; otherwise, this customization
+// won't take effect for users who have set additional `spark_conf` or `custom_tags`.
 func singleNodeClusterChangesCustomizeDiff(d *schema.ResourceDiff) error {
 	autoConfigAttributes := map[string][]string{
 		"custom_tags": {"ResourceClass"},
